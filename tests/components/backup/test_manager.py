@@ -58,109 +58,6 @@ _EXPECTED_FILES_WITH_DATABASE = {
 }
 
 
-async def _mock_backup_generation(
-    hass: HomeAssistant,
-    manager: BackupManager,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
-    *,
-    agent_ids: list[str] | None = None,
-    include_database: bool = True,
-    name: str | None = "Core 2025.1.0",
-    password: str | None = None,
-) -> AgentBackup:
-    """Mock backup generator."""
-
-    agent_ids = agent_ids or [LOCAL_AGENT_ID]
-    progress: list[ManagerStateEvent] = []
-
-    def on_progress(_progress: ManagerStateEvent) -> None:
-        """Mock progress callback."""
-        progress.append(_progress)
-
-    assert manager._backup_task is None
-    manager.async_subscribe_events(on_progress)
-    await manager.async_initiate_backup(
-        agent_ids=agent_ids,
-        include_addons=[],
-        include_all_addons=False,
-        include_database=include_database,
-        include_folders=[],
-        include_homeassistant=True,
-        name=name,
-        password=password,
-    )
-    assert manager._backup_task is not None
-    assert progress == [
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
-    ]
-
-    finished_backup = await manager._backup_task
-    await manager._backup_finish_task
-    assert progress == [
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
-        CreateBackupEvent(
-            stage=CreateBackupStage.HOME_ASSISTANT, state=CreateBackupState.IN_PROGRESS
-        ),
-        CreateBackupEvent(
-            stage=CreateBackupStage.UPLOAD_TO_AGENTS,
-            state=CreateBackupState.IN_PROGRESS,
-        ),
-        CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED),
-        IdleEvent(),
-    ]
-
-    assert mocked_json_bytes.call_count == 1
-    backup_json_dict = mocked_json_bytes.call_args[0][0]
-    assert isinstance(backup_json_dict, dict)
-    assert backup_json_dict == {
-        "compressed": True,
-        "date": ANY,
-        "homeassistant": {
-            "exclude_database": not include_database,
-            "version": "2025.1.0",
-        },
-        "name": name,
-        "protected": bool(password),
-        "slug": ANY,
-        "type": "partial",
-        "version": 2,
-    }
-    backup = finished_backup.backup
-    assert isinstance(backup, AgentBackup)
-    assert backup == AgentBackup(
-        addons=[],
-        backup_id=ANY,
-        database_included=include_database,
-        date=ANY,
-        folders=[],
-        homeassistant_included=True,
-        homeassistant_version="2025.1.0",
-        name=name,
-        protected=bool(password),
-        size=ANY,
-    )
-    for agent_id in agent_ids:
-        agent = manager.backup_agents[agent_id]
-        assert len(agent._backups) == 1
-        agent_backup = agent._backups[backup.backup_id]
-        assert agent_backup.backup_id == backup.backup_id
-        assert agent_backup.date == backup.date
-        assert agent_backup.name == backup.name
-        assert agent_backup.protected == backup.protected
-        assert agent_backup.size == backup.size
-
-    outer_tar = mocked_tarfile.return_value
-    core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
-    expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
-        call(file, arcname=f"data/{file}", recursive=False)
-        for file in _EXPECTED_FILES_WITH_DATABASE[include_database]
-    ]
-    assert core_tar.add.call_args_list == expected_files
-
-    return backup
-
-
 async def _setup_backup_platform(
     hass: HomeAssistant,
     *,
@@ -326,9 +223,95 @@ async def test_async_initiate_backup(
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
     local_agent._loaded_backups = True
 
-    backup = await _mock_backup_generation(
-        hass, manager, mocked_json_bytes, mocked_tarfile, agent_ids=agent_ids, **params
+    agent_ids = agent_ids or [LOCAL_AGENT_ID]
+    include_database = params.get("include_database", True)
+    name = params.get("name", "Core 2025.1.0")
+    password = params.get("password")
+    progress: list[ManagerStateEvent] = []
+
+    def on_progress(_progress: ManagerStateEvent) -> None:
+        """Mock progress callback."""
+        progress.append(_progress)
+
+    assert manager._backup_task is None
+    manager.async_subscribe_events(on_progress)
+    await manager.async_initiate_backup(
+        agent_ids=agent_ids,
+        include_addons=[],
+        include_all_addons=False,
+        include_database=include_database,
+        include_folders=[],
+        include_homeassistant=True,
+        name=name,
+        password=password,
     )
+    assert manager._backup_task is not None
+    assert progress == [
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+    ]
+
+    finished_backup = await manager._backup_task
+    await manager._backup_finish_task
+    assert progress == [
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
+        CreateBackupEvent(
+            stage=CreateBackupStage.HOME_ASSISTANT, state=CreateBackupState.IN_PROGRESS
+        ),
+        CreateBackupEvent(
+            stage=CreateBackupStage.UPLOAD_TO_AGENTS,
+            state=CreateBackupState.IN_PROGRESS,
+        ),
+        CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED),
+        IdleEvent(),
+    ]
+
+    assert mocked_json_bytes.call_count == 1
+    backup_json_dict = mocked_json_bytes.call_args[0][0]
+    assert isinstance(backup_json_dict, dict)
+    assert backup_json_dict == {
+        "compressed": True,
+        "date": ANY,
+        "homeassistant": {
+            "exclude_database": not include_database,
+            "version": "2025.1.0",
+        },
+        "name": name,
+        "protected": bool(password),
+        "slug": ANY,
+        "type": "partial",
+        "version": 2,
+    }
+    backup = finished_backup.backup
+    assert isinstance(backup, AgentBackup)
+    assert backup == AgentBackup(
+        addons=[],
+        backup_id=ANY,
+        database_included=include_database,
+        date=ANY,
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2025.1.0",
+        name=name,
+        protected=bool(password),
+        size=ANY,
+    )
+    for agent_id in agent_ids:
+        agent = manager.backup_agents[agent_id]
+        assert len(agent._backups) == 1
+        agent_backup = agent._backups[backup.backup_id]
+        assert agent_backup.backup_id == backup.backup_id
+        assert agent_backup.date == backup.date
+        assert agent_backup.name == backup.name
+        assert agent_backup.protected == backup.protected
+        assert agent_backup.size == backup.size
+
+    outer_tar = mocked_tarfile.return_value
+    core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
+    expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
+        call(file, arcname=f"data/{file}", recursive=False)
+        for file in _EXPECTED_FILES_WITH_DATABASE[include_database]
+    ]
+    assert core_tar.add.call_args_list == expected_files
 
     assert "Generated new backup with backup_id " in caplog.text
     assert "Loaded 0 platforms" in caplog.text
