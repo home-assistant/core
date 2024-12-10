@@ -1468,9 +1468,6 @@ niko-home-control==0.2.1
 # homeassistant.components.nilu
 niluclient==0.1.2
 
-# homeassistant.components.compensation
-ninja==1.11.1.1
-
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.9
 
