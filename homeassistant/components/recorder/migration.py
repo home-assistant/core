@@ -313,7 +313,7 @@ def _migrate_schema(
 
     for version in range(current_version, end_version):
         new_version = version + 1
-        _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+        _LOGGER.warning("Upgrading recorder db schema to version %s", new_version)
         _apply_update(instance, hass, engine, session_maker, new_version, start_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
@@ -2326,9 +2326,15 @@ class BaseMigration(ABC):
         """
         if self.schema_version < self.required_schema_version:
             # Schema is too old, we must have to migrate
+            _LOGGER.info(
+                "Data migration '%s' needed, schema too old", self.migration_id
+            )
             return True
         if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
             # The migration changes table indicates that the migration has been done
+            _LOGGER.debug(
+                "Data migration '%s' not needed, already completed", self.migration_id
+            )
             return False
         # We do not know if the migration is done from the
         # migration changes table so we must check the index and data
@@ -2338,10 +2344,19 @@ class BaseMigration(ABC):
             and get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
             is not None
         ):
+            _LOGGER.info(
+                "Data migration '%s' needed, index to drop still exists",
+                self.migration_id,
+            )
             return True
         needs_migrate = self.needs_migrate_impl(instance, session)
         if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
+        _LOGGER.info(
+            "Data migration '%s' needed: %s",
+            self.migration_id,
+            needs_migrate.needs_migrate,
+        )
         return needs_migrate.needs_migrate
 
 
@@ -2354,10 +2369,17 @@ class BaseOffLineMigration(BaseMigration):
         """Migrate all data."""
         with session_scope(session=session_maker()) as session:
             if not self.needs_migrate(instance, session):
+                _LOGGER.debug("Migration not needed for '%s'", self.migration_id)
                 self.migration_done(instance, session)
                 return
+        _LOGGER.warning(
+            "The database is about to do data migration step '%s', %s",
+            self.migration_id,
+            MIGRATION_NOTE_OFFLINE,
+        )
         while not self.migrate_data(instance):
             pass
+        _LOGGER.warning("Data migration step '%s' completed", self.migration_id)
 
     @database_job_retry_wrapper_method("migrate data", 10)
     def migrate_data(self, instance: Recorder) -> bool:
@@ -2486,15 +2508,11 @@ class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate event_type to event_type_ids, return True if completed."""
@@ -2554,25 +2572,16 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
         _LOGGER.debug("Migrating event_types done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        _LOGGER.debug("Activating event_types manager as all data is migrated")
-        instance.event_type_manager.active = True
-
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate entity_ids to states_meta, return True if completed.
@@ -2641,18 +2650,6 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
-
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        # The migration has finished, now we start the post migration
-        # to remove the old entity_id data from the states table
-        # at this point we can also start using the StatesMeta table
-        # so we set active to True
-        _LOGGER.debug("Activating states_meta manager as all data is migrated")
-        instance.states_meta_manager.active = True
-        with contextlib.suppress(SQLAlchemyError):
-            migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
-            migrate.queue_migration(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2742,7 +2739,10 @@ class EventIDPostMigration(BaseRunTimeMigration):
 
 
 class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
-    """Migration to remove old entity_id strings from states."""
+    """Migration to remove old entity_id strings from states.
+
+    Introduced in HA Core 2023.4 by PR #89557.
+    """
 
     migration_id = "entity_id_post_migration"
     task = MigrationTask
@@ -2761,12 +2761,13 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 NON_LIVE_DATA_MIGRATORS = (
     StatesContextIDMigration,  # Introduced in HA Core 2023.4
     EventsContextIDMigration,  # Introduced in HA Core 2023.4
+    EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
+    EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
 LIVE_DATA_MIGRATORS = (
-    EventTypeIDMigration,
-    EntityIDMigration,
-    EventIDPostMigration,
+    EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
+    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
 

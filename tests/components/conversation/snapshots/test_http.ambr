@@ -6,7 +6,6 @@
         'id': 'conversation.home_assistant',
         'name': 'Home Assistant',
         'supported_languages': list([
-          'af',
           'ar',
           'bg',
           'bn',
@@ -24,22 +23,18 @@
           'fi',
           'fr',
           'gl',
-          'gu',
           'he',
-          'hi',
           'hr',
           'hu',
           'id',
           'is',
           'it',
           'ka',
-          'kn',
           'ko',
           'lb',
           'lt',
           'lv',
           'ml',
-          'mn',
           'ms',
           'nb',
           'nl',
@@ -52,7 +47,6 @@
           'sl',
           'sr',
           'sv',
-          'sw',
           'te',
           'th',
           'tr',
@@ -541,7 +535,7 @@
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on [all] <light> in <area>',
+        'sentence_template': '<turn> on [<all>] <light> <in> <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
@@ -577,7 +571,7 @@
           'name': 'HassGetState',
         }),
         'match': True,
-        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [<in_area_floor>]',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'lights',
@@ -612,7 +606,7 @@
           'name': 'OrderBeer',
         }),
         'match': True,
-        'sentence_template': "I'd like to order a {beer_style} [please]",
+        'sentence_template': "[I'd like to ]order a {beer_style} [please]",
         'slots': dict({
           'beer_style': 'lager',
         }),
@@ -699,6 +693,14 @@
   })
 # ---
 # name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'trigger_sentences': list([
+      'hello',
+      'hello[ world]',
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger.1
   dict({
     'results': list([
       dict({

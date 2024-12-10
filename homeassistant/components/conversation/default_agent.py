@@ -14,8 +14,14 @@ import re
 import time
 from typing import IO, Any, cast
 
-from hassil.expression import Expression, ListReference, Sequence
-from hassil.intents import Intents, SlotList, TextSlotList, WildcardSlotList
+from hassil.expression import Expression, ListReference, Sequence, TextChunk
+from hassil.intents import (
+    Intents,
+    SlotList,
+    TextSlotList,
+    TextSlotValue,
+    WildcardSlotList,
+)
 from hassil.recognize import (
     MISSING_ENTITY,
     RecognizeResult,
@@ -23,6 +29,7 @@ from hassil.recognize import (
     recognize_best,
 )
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
+from hassil.trie import Trie
 from hassil.util import merge_dict
 from home_assistant_intents import ErrorKey, get_intents, get_languages
 import yaml
@@ -63,7 +70,7 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
 REGEX_TYPE = type(re.compile(""))
 TRIGGER_CALLBACK_TYPE = Callable[
-    [str, RecognizeResult, str | None], Awaitable[str | None]
+    [ConversationInput, RecognizeResult], Awaitable[str | None]
 ]
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
@@ -110,8 +117,8 @@ class IntentMatchingStage(Enum):
     EXPOSED_ENTITIES_ONLY = auto()
     """Match against exposed entities only."""
 
-    ALL_ENTITIES = auto()
-    """Match against all entities in Home Assistant."""
+    UNEXPOSED_ENTITIES = auto()
+    """Match against unexposed entities in Home Assistant."""
 
     FUZZY = auto()
     """Capture names that are not known to Home Assistant."""
@@ -233,10 +240,13 @@ class DefaultAgent(ConversationEntity):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
-        self._all_entity_names: TextSlotList | None = None
+
+        # Used to filter slot lists before intent matching
+        self._exposed_names_trie: Trie | None = None
+        self._unexposed_names_trie: Trie | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
-        self._trigger_sentences: list[TriggerData] = []
+        self.trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
         self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
         self._load_intents_lock = asyncio.Lock()
@@ -304,6 +314,16 @@ class DefaultAgent(ConversationEntity):
 
         slot_lists = self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
+
+        if self._exposed_names_trie is not None:
+            # Filter by input string
+            text_lower = user_input.text.strip().lower()
+            slot_lists["name"] = TextSlotList(
+                name="name",
+                values=[
+                    result[2] for result in self._exposed_names_trie.find(text_lower)
+                ],
+            )
 
         start = time.monotonic()
 
@@ -540,29 +560,29 @@ class DefaultAgent(ConversationEntity):
             return None
 
         # Try again with all entities (including unexposed)
-        skip_all_entities_match = False
+        skip_unexposed_entities_match = False
         if cache_value is not None:
             if (cache_value.result is not None) and (
-                cache_value.stage == IntentMatchingStage.ALL_ENTITIES
+                cache_value.stage == IntentMatchingStage.UNEXPOSED_ENTITIES
             ):
                 _LOGGER.debug("Got cached result for all entities")
                 return cache_value.result
 
             # Continue with matching, but we know we won't succeed for all
             # entities.
-            skip_all_entities_match = True
+            skip_unexposed_entities_match = True
 
-        if not skip_all_entities_match:
-            all_entities_slot_lists = {
+        if not skip_unexposed_entities_match:
+            unexposed_entities_slot_lists = {
                 **slot_lists,
-                "name": self._get_all_entity_names(),
+                "name": self._get_unexposed_entity_names(user_input.text),
             }
 
             start_time = time.monotonic()
             strict_result = self._recognize_strict(
                 user_input,
                 lang_intents,
-                all_entities_slot_lists,
+                unexposed_entities_slot_lists,
                 intent_context,
                 language,
             )
@@ -575,7 +595,7 @@ class DefaultAgent(ConversationEntity):
             self._intent_cache.put(
                 cache_key,
                 IntentCacheValue(
-                    result=strict_result, stage=IntentMatchingStage.ALL_ENTITIES
+                    result=strict_result, stage=IntentMatchingStage.UNEXPOSED_ENTITIES
                 ),
             )
 
@@ -683,15 +703,43 @@ class DefaultAgent(ConversationEntity):
 
         return maybe_result
 
-    def _get_all_entity_names(self) -> TextSlotList:
-        """Get slot list with all entity names in Home Assistant."""
-        if self._all_entity_names is not None:
-            return self._all_entity_names
+    def _get_unexposed_entity_names(self, text: str) -> TextSlotList:
+        """Get filtered slot list with unexposed entity names in Home Assistant."""
+        if self._unexposed_names_trie is None:
+            # Build trie
+            self._unexposed_names_trie = Trie()
+            for name_tuple in self._get_entity_name_tuples(exposed=False):
+                self._unexposed_names_trie.insert(
+                    name_tuple[0].lower(),
+                    TextSlotValue.from_tuple(name_tuple, allow_template=False),
+                )
 
+        # Build filtered slot list
+        text_lower = text.strip().lower()
+        return TextSlotList(
+            name="name",
+            values=[
+                result[2] for result in self._unexposed_names_trie.find(text_lower)
+            ],
+        )
+
+    def _get_entity_name_tuples(
+        self, exposed: bool
+    ) -> Iterable[tuple[str, str, dict[str, Any]]]:
+        """Yield (input name, output name, context) tuples for entities."""
         entity_registry = er.async_get(self.hass)
-        all_entity_names: list[tuple[str, str, dict[str, Any]]] = []
 
         for state in self.hass.states.async_all():
+            entity_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
+            if exposed and (not entity_exposed):
+                # Required exposed, entity is not
+                continue
+
+            if (not exposed) and entity_exposed:
+                # Required not exposed, entity is
+                continue
+
+            # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
             if state.attributes:
                 # Include some attributes
@@ -700,28 +748,18 @@ class DefaultAgent(ConversationEntity):
                         continue
                     context[attr] = state.attributes[attr]
 
-            if entity := entity_registry.async_get(state.entity_id):
-                # Skip config/hidden entities
-                if (entity.entity_category is not None) or (
-                    entity.hidden_by is not None
-                ):
-                    continue
+            if (
+                entity := entity_registry.async_get(state.entity_id)
+            ) and entity.aliases:
+                for alias in entity.aliases:
+                    alias = alias.strip()
+                    if not alias:
+                        continue
 
-                if entity.aliases:
-                    # Also add aliases
-                    for alias in entity.aliases:
-                        if not alias.strip():
-                            continue
-
-                        all_entity_names.append((alias, alias, context))
+                    yield (alias, alias, context)
 
             # Default name
-            all_entity_names.append((state.name, state.name, context))
-
-        self._all_entity_names = TextSlotList.from_tuples(
-            all_entity_names, allow_template=False
-        )
-        return self._all_entity_names
+            yield (state.name, state.name, context)
 
     def _recognize_strict(
         self,
@@ -1013,7 +1051,8 @@ class DefaultAgent(ConversationEntity):
         if self._unsub_clear_slot_list is None:
             return
         self._slot_lists = None
-        self._all_entity_names = None
+        self._exposed_names_trie = None
+        self._unexposed_names_trie = None
         for unsub in self._unsub_clear_slot_list:
             unsub()
         self._unsub_clear_slot_list = None
@@ -1029,8 +1068,6 @@ class DefaultAgent(ConversationEntity):
 
         start = time.monotonic()
 
-        entity_registry = er.async_get(self.hass)
-
         # Gather entity names, keeping track of exposed names.
         # We try intent recognition with only exposed names first, then all names.
         #
@@ -1038,35 +1075,7 @@ class DefaultAgent(ConversationEntity):
         # have the same name. The intent matcher doesn't gather all matching
         # values for a list, just the first. So we will need to match by name no
         # matter what.
-        exposed_entity_names = []
-        for state in self.hass.states.async_all():
-            is_exposed = async_should_expose(self.hass, DOMAIN, state.entity_id)
-
-            # Checked against "requires_context" and "excludes_context" in hassil
-            context = {"domain": state.domain}
-            if state.attributes:
-                # Include some attributes
-                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
-                    if attr not in state.attributes:
-                        continue
-                    context[attr] = state.attributes[attr]
-
-            if (
-                entity := entity_registry.async_get(state.entity_id)
-            ) and entity.aliases:
-                for alias in entity.aliases:
-                    if not alias.strip():
-                        continue
-
-                    name_tuple = (alias, alias, context)
-                    if is_exposed:
-                        exposed_entity_names.append(name_tuple)
-
-            # Default name
-            name_tuple = (state.name, state.name, context)
-            if is_exposed:
-                exposed_entity_names.append(name_tuple)
-
+        exposed_entity_names = list(self._get_entity_name_tuples(exposed=True))
         _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
         # Expose all areas.
@@ -1099,11 +1108,17 @@ class DefaultAgent(ConversationEntity):
 
                 floor_names.append((alias, floor.name))
 
+        # Build trie
+        self._exposed_names_trie = Trie()
+        name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
+        for name_value in name_list.values:
+            assert isinstance(name_value.text_in, TextChunk)
+            name_text = name_value.text_in.text.strip().lower()
+            self._exposed_names_trie.insert(name_text, name_value)
+
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
-            "name": TextSlotList.from_tuples(
-                exposed_entity_names, allow_template=False
-            ),
+            "name": name_list,
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
         }
 
@@ -1173,7 +1188,7 @@ class DefaultAgent(ConversationEntity):
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
         trigger_data = TriggerData(sentences=sentences, callback=callback)
-        self._trigger_sentences.append(trigger_data)
+        self.trigger_sentences.append(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -1190,7 +1205,7 @@ class DefaultAgent(ConversationEntity):
                 # This works because the intents are rebuilt on every
                 # register/unregister.
                 str(trigger_id): {"data": [{"sentences": trigger_data.sentences}]}
-                for trigger_id, trigger_data in enumerate(self._trigger_sentences)
+                for trigger_id, trigger_data in enumerate(self.trigger_sentences)
             },
         }
 
@@ -1213,7 +1228,7 @@ class DefaultAgent(ConversationEntity):
     @core.callback
     def _unregister_trigger(self, trigger_data: TriggerData) -> None:
         """Unregister a set of trigger sentences."""
-        self._trigger_sentences.remove(trigger_data)
+        self.trigger_sentences.remove(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -1226,7 +1241,7 @@ class DefaultAgent(ConversationEntity):
         Calls the registered callbacks if there's a match and returns a sentence
         trigger result.
         """
-        if not self._trigger_sentences:
+        if not self.trigger_sentences:
             # No triggers registered
             return None
 
@@ -1271,9 +1286,7 @@ class DefaultAgent(ConversationEntity):
 
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self._trigger_sentences[trigger_id].callback(
-                user_input.text, trigger_result, user_input.device_id
-            )
+            self.trigger_sentences[trigger_id].callback(user_input, trigger_result)
             for trigger_id, trigger_result in result.matched_triggers.items()
         ]
 

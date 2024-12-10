@@ -35,7 +35,7 @@ def check_local_version_supported(api_version: str | None) -> bool:
 class DirectPanel(PanelEntry):
     """Helper class for wrapping a directly accessed Elmax Panel."""
 
-    def __init__(self, panel_uri):
+    def __init__(self, panel_uri) -> None:
         """Construct the object."""
         super().__init__(panel_uri, True, {})
 

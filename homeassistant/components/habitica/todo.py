@@ -27,6 +27,8 @@ from .entity import HabiticaBase
 from .types import HabiticaConfigEntry, HabiticaTaskType
 from .util import next_due_date
 
+PARALLEL_UPDATES = 1
+
 
 class HabiticaTodoList(StrEnum):
     """Habitica Entities."""

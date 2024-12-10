@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -45,18 +44,6 @@ async def test_media_player_alt(
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.MEDIA_PLAYER])
     assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_media_player_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the media player entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.MEDIA_PLAYER])
-    state = hass.states.get("media_player.test_media_player")
-    assert state.state == MediaPlayerState.OFF
 
 
 async def test_media_player_noscope(

@@ -65,7 +65,6 @@ class MelissaClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api, serial_number, init_data):
         """Initialize the climate device."""
