@@ -6,7 +6,11 @@ import asyncio
 import functools
 from typing import Any, cast
 
-from pydantic import ValidationError
+try:
+    from pydantic.v1 import ValidationError
+except ImportError:
+    from pydantic import ValidationError  # type: ignore[assignment]
+
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
 from uiprotect.exceptions import ClientError
