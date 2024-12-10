@@ -17,12 +17,12 @@ from .agent import (
 from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
-    Backup,
     BackupManager,
     BackupPlatformProtocol,
     BackupReaderWriter,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    ManagerBackup,
     NewBackup,
     WrittenBackup,
 )
@@ -32,7 +32,7 @@ from .websocket import async_register_websocket_handlers
 __all__ = [
     "AddonInfo",
     "AgentBackup",
-    "Backup",
+    "ManagerBackup",
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
