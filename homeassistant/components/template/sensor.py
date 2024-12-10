@@ -288,7 +288,11 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     def _async_setup_templates(self) -> None:
         """Set up templates."""
         self.add_template_attribute(
-            "_attr_native_value", self._template, None, self._update_state
+            "_attr_native_value",
+            self._template,
+            None,
+            self._update_state,
+            use_reported=True,
         )
         if self._attr_last_reset_template is not None:
             self.add_template_attribute(
