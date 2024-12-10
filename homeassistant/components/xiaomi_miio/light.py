@@ -45,7 +45,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import color, dt as dt_util
+from homeassistant.util import color as color_util, dt as dt_util
 
 from .const import (
     CONF_FLOW_TYPE,
@@ -430,26 +430,45 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         self._color_temp = None
 
     @property
-    def color_temp(self):
+    def _current_mireds(self):
         """Return the color temperature."""
         return self._color_temp
 
     @property
-    def min_mireds(self):
+    def _min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         return 175
 
     @property
-    def max_mireds(self):
+    def _max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 333
+
+    @property
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return (
+            color_util.color_temperature_mired_to_kelvin(self._color_temp)
+            if self._color_temp
+            else None
+        )
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(self._max_mireds)
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(self._min_mireds)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             percent_color_temp = self.translate(
-                color_temp, self.max_mireds, self.min_mireds, CCT_MIN, CCT_MAX
+                color_temp, self._max_mireds, self._min_mireds, CCT_MIN, CCT_MAX
             )
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -526,7 +545,11 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
-            state.color_temperature, CCT_MIN, CCT_MAX, self.max_mireds, self.min_mireds
+            state.color_temperature,
+            CCT_MIN,
+            CCT_MAX,
+            self._max_mireds,
+            self._min_mireds,
         )
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
@@ -560,12 +583,12 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         )
 
     @property
-    def min_mireds(self):
+    def _min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         return 175
 
     @property
-    def max_mireds(self):
+    def _max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 370
 
@@ -585,7 +608,11 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
-            state.color_temperature, CCT_MIN, CCT_MAX, self.max_mireds, self.min_mireds
+            state.color_temperature,
+            CCT_MIN,
+            CCT_MAX,
+            self._max_mireds,
+            self._min_mireds,
         )
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
@@ -797,12 +824,12 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         )
 
     @property
-    def min_mireds(self):
+    def _min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         return 153
 
     @property
-    def max_mireds(self):
+    def _max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 588
 
@@ -823,7 +850,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             percent_color_temp = self.translate(
-                color_temp, self.max_mireds, self.min_mireds, CCT_MIN, CCT_MAX
+                color_temp, self._max_mireds, self._min_mireds, CCT_MIN, CCT_MAX
             )
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -832,7 +859,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
-            rgb = color.color_hs_to_RGB(*hs_color)
+            rgb = color_util.color_hs_to_RGB(*hs_color)
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_HS_COLOR in kwargs:
             _LOGGER.debug(
@@ -936,9 +963,13 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
         self._color_temp = self.translate(
-            state.color_temperature, CCT_MIN, CCT_MAX, self.max_mireds, self.min_mireds
+            state.color_temperature,
+            CCT_MIN,
+            CCT_MAX,
+            self._max_mireds,
+            self._min_mireds,
         )
-        self._hs_color = color.color_RGB_to_hs(*state.rgb)
+        self._hs_color = color_util.color_RGB_to_hs(*state.rgb)
 
         self._state_attrs.update(
             {
@@ -1014,7 +1045,7 @@ class XiaomiGatewayLight(LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs:
-            rgb = color.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
         else:
             rgb = self._rgb
 
@@ -1052,7 +1083,7 @@ class XiaomiGatewayLight(LightEntity):
         if self._is_on:
             self._brightness_pct = state_dict["brightness"]
             self._rgb = state_dict["rgb"]
-            self._hs = color.color_RGB_to_hs(*self._rgb)
+            self._hs = color_util.color_RGB_to_hs(*self._rgb)
 
 
 class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
@@ -1067,7 +1098,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
         return round((self._sub_device.status["brightness"] * 255) / 100)
 
     @property
-    def color_temp(self):
+    def _current_mireds(self):
         """Return current color temperature."""
         return self._sub_device.status["color_temp"]
 
@@ -1077,12 +1108,12 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
         return self._sub_device.status["status"] == "on"
 
     @property
-    def min_mireds(self):
+    def _min_mireds(self):
         """Return min cct."""
         return self._sub_device.status["cct_min"]
 
     @property
-    def max_mireds(self):
+    def _max_mireds(self):
         """Return max cct."""
         return self._sub_device.status["cct_max"]
 
