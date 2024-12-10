@@ -1611,7 +1611,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.ituran
-pyituran==0.1.3
+pyituran==0.1.4
 
 # homeassistant.components.jvc_projector
 pyjvcprojector==1.1.2
