@@ -276,6 +276,7 @@ FLOWS = {
         "icloud",
         "idasen_desk",
         "ifttt",
+        "igloohome",
         "imap",
         "imgw_pib",
         "improv_ble",
