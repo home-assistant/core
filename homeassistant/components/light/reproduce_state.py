@@ -17,9 +17,9 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
+    _DEPRECATED_ATTR_COLOR_TEMP,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -39,7 +39,7 @@ ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT]
 
 COLOR_GROUP = [
     ATTR_HS_COLOR,
-    ATTR_COLOR_TEMP,
+    _DEPRECATED_ATTR_COLOR_TEMP.value,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -55,7 +55,9 @@ class ColorModeAttr(NamedTuple):
 
 
 COLOR_MODE_TO_ATTRIBUTE = {
-    ColorMode.COLOR_TEMP: ColorModeAttr(ATTR_COLOR_TEMP, ATTR_COLOR_TEMP),
+    ColorMode.COLOR_TEMP: ColorModeAttr(
+        _DEPRECATED_ATTR_COLOR_TEMP.value, _DEPRECATED_ATTR_COLOR_TEMP.value
+    ),
     ColorMode.HS: ColorModeAttr(ATTR_HS_COLOR, ATTR_HS_COLOR),
     ColorMode.RGB: ColorModeAttr(ATTR_RGB_COLOR, ATTR_RGB_COLOR),
     ColorMode.RGBW: ColorModeAttr(ATTR_RGBW_COLOR, ATTR_RGBW_COLOR),
