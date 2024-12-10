@@ -417,11 +417,11 @@ async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
-    """Test reconfiguring an entry."""
+async def test_reconfigure_to_different_device(hass: HomeAssistant) -> None:
+    """Test reconfiguring an entry to a different device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123.4567890",
+        unique_id="999.9999999",
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -433,15 +433,9 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with (
-        patch(
-            "pyfronius.Fronius.current_logger_info",
-            return_value=LOGGER_INFO_RETURN_VALUE,
-        ),
-        patch(
-            "pyfronius.Fronius.inverter_info",
-            return_value=INVERTER_INFO_RETURN_VALUE,
-        ),
+    with patch(
+        "pyfronius.Fronius.current_logger_info",
+        return_value=LOGGER_INFO_RETURN_VALUE,  # has different unique_id
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
