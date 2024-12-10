@@ -110,10 +110,10 @@ def get_config() -> Config:
         help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
     )
     parser.add_argument(
-        "--core-integrations-path",
+        "--core-path",
         type=Path,
-        default=Path("homeassistant/components"),
-        help="Path to core integrations",
+        default=Path(),
+        help="Path to core",
     )
     parsed = parser.parse_args()
 
@@ -129,12 +129,11 @@ def get_config() -> Config:
         raise RuntimeError("Run from Home Assistant root")
 
     return Config(
-        root=Path().absolute(),
+        root=parsed.core_path.absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
         requirements=parsed.requirements,
         plugins=set(parsed.plugins),
-        core_integrations_path=parsed.core_integrations_path,
     )
 
 
