@@ -70,6 +70,7 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
         "host": "10.9.8.1",
         "is_logger": True,
     }
+    assert result2["result"].unique_id == "123.4567"
 
 
 async def test_form_with_inverter(hass: HomeAssistant) -> None:
@@ -104,6 +105,7 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "host": "10.9.1.1",
         "is_logger": False,
     }
+    assert result2["result"].unique_id == "1234567"
 
 
 @pytest.mark.parametrize(
@@ -261,6 +263,7 @@ async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) ->
         "host": MOCK_DHCP_DATA.ip,
         "is_logger": True,
     }
+    assert result["result"].unique_id == "123.4567"
 
 
 async def test_dhcp_already_configured(
