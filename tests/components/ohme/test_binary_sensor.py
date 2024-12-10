@@ -5,11 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from homeassistant.components.ohme.binary_sensor import (
-    ChargerOnlineBinarySensor,
-    ChargingBinarySensor,
-    ConnectedBinarySensor,
-    PendingApprovalBinarySensor,
+    BINARY_SENSOR_DESCRIPTIONS,
+    OhmeBinarySensor,
 )
+from homeassistant.components.ohme.coordinator import OhmeApiResponse
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 
@@ -21,41 +20,55 @@ def mock_coordinator():
 
 def test_connected_binary_sensor(mock_coordinator) -> None:
     """Test ConnectedBinarySensor."""
-    sensor = ConnectedBinarySensor(mock_coordinator, AsyncMock(), MagicMock())
-    mock_coordinator.data = {"mode": "CONNECTED"}
+    description = next(
+        desc for desc in BINARY_SENSOR_DESCRIPTIONS if desc.key == "car_connected"
+    )
+    sensor = OhmeBinarySensor(mock_coordinator, AsyncMock(), MagicMock(), description)
+
+    mock_coordinator.data = OhmeApiResponse({"mode": "CONNECTED"}, {})
     assert sensor.is_on is True
 
-    mock_coordinator.data = {"mode": "DISCONNECTED"}
+    mock_coordinator.data = OhmeApiResponse({"mode": "DISCONNECTED"}, {})
     assert sensor.is_on is False
 
 
 def test_charging_binary_sensor(mock_coordinator) -> None:
     """Test ChargingBinarySensor."""
-    sensor = ChargingBinarySensor(mock_coordinator, AsyncMock(), MagicMock())
-    mock_coordinator.data = {
-        "power": {"watt": 100},
-        "batterySoc": {"wh": 50},
-        "mode": "CONNECTED",
-        "allSessionSlots": [],
-    }
+    description = next(
+        desc for desc in BINARY_SENSOR_DESCRIPTIONS if desc.key == "car_charging"
+    )
+    sensor = OhmeBinarySensor(mock_coordinator, AsyncMock(), MagicMock(), description)
+
+    mock_coordinator.data = OhmeApiResponse({"power": {"watt": 100}}, {})
     assert sensor.is_on is True
+
+    mock_coordinator.data = OhmeApiResponse({"power": {"watt": 0}}, {})
+    assert sensor.is_on is False
 
 
 def test_pending_approval_binary_sensor(mock_coordinator) -> None:
     """Test PendingApprovalBinarySensor."""
-    sensor = PendingApprovalBinarySensor(mock_coordinator, AsyncMock(), MagicMock())
-    mock_coordinator.data = {"mode": "PENDING_APPROVAL"}
+    description = next(
+        desc for desc in BINARY_SENSOR_DESCRIPTIONS if desc.key == "pending_approval"
+    )
+    sensor = OhmeBinarySensor(mock_coordinator, AsyncMock(), MagicMock(), description)
+
+    mock_coordinator.data = OhmeApiResponse({"mode": "PENDING_APPROVAL"}, {})
     assert sensor.is_on is True
 
-    mock_coordinator.data = {"mode": "CONNECTED"}
+    mock_coordinator.data = OhmeApiResponse({"mode": "CONNECTED"}, {})
     assert sensor.is_on is False
 
 
 def test_charger_online_binary_sensor(mock_coordinator) -> None:
     """Test ChargerOnlineBinarySensor."""
-    sensor = ChargerOnlineBinarySensor(mock_coordinator, AsyncMock(), MagicMock())
-    mock_coordinator.data = {"online": True}
+    description = next(
+        desc for desc in BINARY_SENSOR_DESCRIPTIONS if desc.key == "charger_online"
+    )
+    sensor = OhmeBinarySensor(mock_coordinator, AsyncMock(), MagicMock(), description)
+
+    mock_coordinator.data = OhmeApiResponse({}, {"online": True})
     assert sensor.is_on is True
 
-    mock_coordinator.data = {"online": False}
+    mock_coordinator.data = OhmeApiResponse({}, {"online": False})
     assert sensor.is_on is False

@@ -1,64 +1,56 @@
 """Ohme coordinators."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
-from ohme import ApiException
+from ohme import ApiException, OhmeApiClient
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DEFAULT_INTERVAL_ADVANCED, DEFAULT_INTERVAL_CHARGESESSIONS
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class OhmeChargeSessionsCoordinator(DataUpdateCoordinator[list[dict]]):
-    """Coordinator to pull main charge state and power/current draw."""
+@dataclass
+class OhmeApiResponse:
+    """Store API response data."""
 
-    def __init__(self, hass, config_entry):
+    charge_sessions: dict[str, Any]
+    advanced_settings: dict[str, Any]
+
+
+class OhmeCoordinator(DataUpdateCoordinator[OhmeApiResponse]):
+    """Coordinator to pull all updates from the API."""
+
+    def __init__(self, hass: HomeAssistant, client: OhmeApiClient) -> None:
         """Initialise coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name="Ohme Charge Sessions",
-            update_interval=timedelta(
-                minutes=config_entry.options.get(
-                    "interval_chargesessions", DEFAULT_INTERVAL_CHARGESESSIONS
-                )
-            ),
+            name="Ohme Coordinator",
+            update_interval=timedelta(seconds=30),
         )
-        self._client = config_entry.runtime_data.client
+        self._client: OhmeApiClient = client
+        self._response: OhmeApiResponse = OhmeApiResponse({}, {})
+        self._alternative_iteration: bool = True
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> OhmeApiResponse:
         """Fetch data from API endpoint."""
         try:
-            return await self._client.async_get_charge_sessions()
+            self._response.charge_sessions = (
+                await self._client.async_get_charge_sessions()
+            )
 
-        except ApiException as e:
-            raise UpdateFailed("Error communicating with API") from e
-
-
-class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator):
-    """Coordinator to pull CT clamp reading."""
-
-    def __init__(self, hass, config_entry):
-        """Initialise coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Ohme Advanced Settings",
-            update_interval=timedelta(
-                minutes=config_entry.options.get(
-                    "interval_advanced", DEFAULT_INTERVAL_ADVANCED
+            # Fetch on every other update
+            if self._alternative_iteration:
+                self._response.advanced_settings = (
+                    await self._client.async_get_advanced_settings()
                 )
-            ),
-        )
-        self._client = config_entry.runtime_data.client
 
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            return await self._client.async_get_advanced_settings()
-
+            self._alternative_iteration = not self._alternative_iteration
         except ApiException as e:
             raise UpdateFailed("Error communicating with API") from e
+        else:
+            return self._response

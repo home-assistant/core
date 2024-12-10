@@ -20,7 +20,7 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """First config step."""
 
-        errors: dict[str] = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             await self.async_set_unique_id(user_input["email"])

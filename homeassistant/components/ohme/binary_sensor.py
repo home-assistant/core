@@ -7,15 +7,41 @@ import logging
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATOR_ADVANCED, COORDINATOR_CHARGESESSIONS
 from .entity import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+BINARY_SENSOR_DESCRIPTIONS = [
+    BinarySensorEntityDescription(
+        key="car_connected",
+        name="Car Connected",
+        icon="mdi:ev-plug-type2",
+        device_class=BinarySensorDeviceClass.PLUG,
+    ),
+    BinarySensorEntityDescription(
+        key="car_charging",
+        name="Car Charging",
+        icon="mdi:battery-charging-100",
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    ),
+    BinarySensorEntityDescription(
+        key="pending_approval",
+        name="Pending Approval",
+        icon="mdi:alert-decagram",
+    ),
+    BinarySensorEntityDescription(
+        key="charger_online",
+        name="Charger Online",
+        icon="mdi:web",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -25,81 +51,42 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors and configure coordinator."""
     client = config_entry.runtime_data.client
-
-    coordinator = config_entry.runtime_data.coordinators[COORDINATOR_CHARGESESSIONS]
-    coordinator_advanced = config_entry.runtime_data.coordinators[COORDINATOR_ADVANCED]
+    coordinator = config_entry.runtime_data.coordinator
 
     sensors = [
-        ConnectedBinarySensor(coordinator, hass, client),
-        ChargingBinarySensor(coordinator, hass, client),
-        PendingApprovalBinarySensor(coordinator, hass, client),
-        ChargerOnlineBinarySensor(coordinator_advanced, hass, client),
+        OhmeBinarySensor(coordinator, hass, client, description)
+        for description in BINARY_SENSOR_DESCRIPTIONS
     ]
 
     async_add_entities(sensors, update_before_add=True)
 
 
-class ConnectedBinarySensor(OhmeEntity, BinarySensorEntity):
-    """Binary sensor for if car is plugged in."""
-
-    _attr_translation_key = "car_connected"
-    _attr_icon = "mdi:ev-plug-type2"
-    _attr_device_class = BinarySensorDeviceClass.PLUG
+class OhmeBinarySensor(OhmeEntity, BinarySensorEntity):
+    """Generic binary sensor for Ohme."""
 
     @property
     def is_on(self) -> bool:
-        """Calculate state."""
+        """Return the state of the binary sensor."""
+        if not self.coordinator.data:
+            return False
 
-        return bool(
-            self.coordinator.data and self.coordinator.data["mode"] != "DISCONNECTED"
-        )
-
-
-class ChargingBinarySensor(OhmeEntity, BinarySensorEntity):
-    """Binary sensor for if car is charging."""
-
-    _attr_translation_key = "car_charging"
-    _attr_icon = "mdi:battery-charging-100"
-    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-
-    @property
-    def is_on(self) -> bool:
-        """Return state."""
-
-        return bool(
-            self.coordinator.data
-            and self.coordinator.data["power"]
-            and self.coordinator.data["power"]["watt"] > 0
-        )
-
-
-class PendingApprovalBinarySensor(OhmeEntity, BinarySensorEntity):
-    """Binary sensor for if a charge is pending approval."""
-
-    _attr_translation_key = "pending_approval"
-    _attr_icon = "mdi:alert-decagram"
-
-    @property
-    def is_on(self) -> bool:
-        """Calculate state."""
-
-        return bool(
-            self.coordinator.data
-            and self.coordinator.data["mode"] == "PENDING_APPROVAL"
-        )
-
-
-class ChargerOnlineBinarySensor(OhmeEntity, BinarySensorEntity):
-    """Binary sensor for if charger is online."""
-
-    _attr_translation_key = "charger_online"
-    _attr_icon = "mdi:web"
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-    @property
-    def is_on(self):
-        """Calculate state."""
-
-        if self.coordinator.data:
-            return self.coordinator.data.get("online", False)
-        return None
+        handlers = {
+            "car_connected": lambda: bool(
+                self.coordinator.data.charge_sessions
+                and self.coordinator.data.charge_sessions["mode"] != "DISCONNECTED"
+            ),
+            "car_charging": lambda: bool(
+                self.coordinator.data.charge_sessions
+                and self.coordinator.data.charge_sessions.get("power")
+                and self.coordinator.data.charge_sessions["power"].get("watt", 0) > 0
+            ),
+            "pending_approval": lambda: bool(
+                self.coordinator.data.charge_sessions
+                and self.coordinator.data.charge_sessions["mode"] == "PENDING_APPROVAL"
+            ),
+            "charger_online": lambda: bool(
+                self.coordinator.data.advanced_settings
+                and self.coordinator.data.advanced_settings.get("online", False)
+            ),
+        }
+        return handlers.get(self.entity_description.key, lambda: False)()
