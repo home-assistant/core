@@ -165,51 +165,34 @@ async def test_zeroconf_discovery(
     assert len(mock_bsblan.device.mock_calls) == 1
 
 
-async def test_discovery_confirm(
+async def test_abort_if_existing_entry_with_same_host_port_zeroconf(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test the discovery confirm step."""
-    discovery_info = ZeroconfServiceInfo(
-        name="BSB-LAN web service._http._tcp.local.",
-        type="_http._tcp.local.",
-        properties={},
-        ip_addresses=[IPv4Address("10.0.2.60")],
-        ip_address=IPv4Address("10.0.2.60"),
-        port=80,
-        hostname="BSB-LAN.local.",
+    """Test we abort if the same host/port already exists during zeroconf discovery."""
+    # Create an existing entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "admin1234",
+        },
+        unique_id="00:80:41:19:69:90",
     )
+    entry.add_to_hass(hass)
+
+    # Mock zeroconf discovery of the same device
+    mock_zeroconf = MagicMock()
+    mock_zeroconf.ip_address = "127.0.0.1"
+    mock_zeroconf.port = 80
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
+        data=mock_zeroconf,
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "discovery_confirm"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_PASSKEY: "1234",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "admin1234",
-        },
-    )
-
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "00:80:41:19:69:90"
-    assert result2.get("data") == {
-        CONF_HOST: "10.0.2.60",
-        CONF_PORT: 80,
-        CONF_PASSKEY: "1234",
-        CONF_USERNAME: "admin",
-        CONF_PASSWORD: "admin1234",
-    }
-    assert "result" in result2
-    assert result2["result"].unique_id == format_mac("00:80:41:19:69:90")
-
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_bsblan.device.mock_calls) == 1
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
