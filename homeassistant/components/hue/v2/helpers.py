@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from homeassistant.util import color as color_util
+
 
 def normalize_hue_brightness(brightness: float | None) -> float | None:
     """Return calculated brightness values."""
@@ -24,6 +26,7 @@ def normalize_hue_transition(transition: float | None) -> float | None:
 def normalize_hue_colortemp(colortemp: int | None) -> int | None:
     """Return color temperature within Hue's ranges."""
     if colortemp is not None:
+        colortemp = color_util.color_temperature_kelvin_to_mired(colortemp)
         # Hue only accepts a range between 153..500
         colortemp = min(colortemp, 500)
         colortemp = max(colortemp, 153)
