@@ -1,6 +1,6 @@
 """Test the Teslemetry select platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,7 +12,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.teslemetry.select import LOW
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -99,3 +99,23 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+async def test_select_invalid_data(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Tests that the select entities handle invalid data."""
+
+    broken_data = VEHICLE_DATA_ALT.copy()
+    broken_data["response"]["climate_state"]["seat_heater_left"] = "green"
+    broken_data["response"]["climate_state"]["steering_wheel_heat_level"] = "yellow"
+
+    mock_vehicle_data.return_value = broken_data
+    await setup_platform(hass, [Platform.SELECT])
+    state = hass.states.get("select.test_seat_heater_front_left")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("select.test_steering_wheel_heater")
+    assert state.state == STATE_UNKNOWN

@@ -58,7 +58,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
-
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
