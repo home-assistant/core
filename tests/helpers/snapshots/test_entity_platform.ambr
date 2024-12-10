@@ -3,6 +3,11 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'heliport',
     'config_entries': <ANY>,
+    'config_subentries': dict({
+      'super-mock-id': set({
+        None,
+      }),
+    }),
     'configuration_url': 'http://192.168.0.100/config',
     'connections': set({
       tuple(
@@ -18,6 +23,47 @@
       tuple(
         'hue',
         '1234',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'test-manuf',
+    'model': 'test-model',
+    'model_id': None,
+    'name': 'test-name',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': 'Heliport',
+    'sw_version': 'test-sw',
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_device_info_called.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'heliport',
+    'config_entries': <ANY>,
+    'config_subentries': dict({
+      'super-mock-id': set({
+        'mock-subentry-id-1',
+      }),
+    }),
+    'configuration_url': 'http://192.168.0.100/config',
+    'connections': set({
+      tuple(
+        'mac',
+        'efgh',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': 'test-hw',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'hue',
+        'efgh',
       ),
     }),
     'is_new': False,
