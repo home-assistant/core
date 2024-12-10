@@ -7,8 +7,9 @@ from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionE
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_PORT, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
 from .utils import create_version
@@ -32,6 +33,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     host: str | None = None
     verify_ssl: bool = True
+    _hassio_discovery: dict[str, Any] | None = None
 
     async def check_connection(
         self, api_token: str
@@ -143,3 +145,34 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=USER_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Prepare configuration for a Mealie add-on.
+
+        This flow is triggered by the discovery component.
+        """
+        self._hassio_discovery = discovery_info.config
+
+        LOGGER.log(LOGGER.warning, "HassIO Discovery")
+        LOGGER.log(LOGGER.warning, self._hassio_discovery)
+
+        await self._async_handle_discovery_without_unique_id()
+
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm Supervisor discovery."""
+        if user_input is None and self._hassio_discovery is not None:
+            self.host = f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
+            self.verify_ssl = True
+
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                description_placeholders={"addon": self._hassio_discovery["addon"]},
+            )
+
+        return await self.async_step_user()
