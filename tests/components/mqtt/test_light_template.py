@@ -432,7 +432,7 @@ async def test_sending_mqtt_commands_and_optimistic(
             "brightness": 95,
             "hs_color": [100, 100],
             "effect": "random",
-            "color_temp": 100,
+            "color_temp_kelvin": 10000,
         },
     )
     mock_restore_cache(hass, (fake_state,))
