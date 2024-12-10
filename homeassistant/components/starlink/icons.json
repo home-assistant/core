@@ -18,6 +18,12 @@
       },
       "last_boot_time": {
         "default": "mdi:clock"
+      },
+      "upload": {
+        "default": "mdi:upload"
+      },
+      "download": {
+        "default": "mdi:download"
       }
     }
   }
