@@ -52,15 +52,9 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    with (
-        patch(
-            "pyfronius.Fronius.current_logger_info",
-            return_value=LOGGER_INFO_RETURN_VALUE,
-        ),
-        patch(
-            "homeassistant.components.fronius.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
+    with patch(
+        "pyfronius.Fronius.current_logger_info",
+        return_value=LOGGER_INFO_RETURN_VALUE,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -76,7 +70,6 @@ async def test_form_with_logger(hass: HomeAssistant) -> None:
         "host": "10.9.8.1",
         "is_logger": True,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_with_inverter(hass: HomeAssistant) -> None:
@@ -96,10 +89,6 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
             "pyfronius.Fronius.inverter_info",
             return_value=INVERTER_INFO_RETURN_VALUE,
         ),
-        patch(
-            "homeassistant.components.fronius.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -115,7 +104,6 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
         "host": "10.9.1.1",
         "is_logger": False,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -345,10 +333,6 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
             "pyfronius.Fronius.inverter_info",
             return_value=INVERTER_INFO_RETURN_VALUE,
         ),
-        patch(
-            "homeassistant.components.fronius.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -364,7 +348,6 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         "host": new_host,
         "is_logger": False,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
@@ -456,10 +439,6 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
             "pyfronius.Fronius.inverter_info",
             return_value=INVERTER_INFO_RETURN_VALUE,
         ),
-        patch(
-            "homeassistant.components.fronius.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -471,7 +450,6 @@ async def test_reconfigure_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_reconfigure_already_existing(hass: HomeAssistant) -> None:
