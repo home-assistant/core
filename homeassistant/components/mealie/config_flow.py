@@ -31,6 +31,8 @@ REAUTH_SCHEMA = vol.Schema(
 class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
     """Mealie config flow."""
 
+    VERSION = 1
+
     host: str | None = None
     verify_ssl: bool = True
     _hassio_discovery: dict[str, Any] | None = None
@@ -157,13 +159,13 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
+        await self._async_handle_discovery_without_unique_id()
+
         self._hassio_discovery = discovery_info.config
 
         # TODO - Remove these after testing
         LOGGER.warning("HassIO Discovery")
         LOGGER.warning(self._hassio_discovery)
-
-        await self._async_handle_discovery_without_unique_id()
 
         return await self.async_step_hassio_confirm()
 
