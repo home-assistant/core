@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 
@@ -60,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RokuDataUpdateCoordinator = entry.runtime_data
 
     async_add_entities(
         RokuBinarySensorEntity(
