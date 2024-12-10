@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 import re
 
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 _STRICT_TYPING_FILE = Path(".strict-typing")
 _COMPONENT_REGEX = r"homeassistant.components.([^.]+).*"
@@ -24,7 +24,7 @@ def _strict_typing_components() -> set[str]:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(config: Config, integration: Integration) -> list[str] | None:
     """Validate that the integration has strict typing enabled."""
 
     if integration.domain not in _strict_typing_components():

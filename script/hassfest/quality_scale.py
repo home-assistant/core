@@ -1357,7 +1357,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         if (
             status == "done"
             and (validator := VALIDATORS.get(rule_name))
-            and (errors := validator.validate(integration))
+            and (errors := validator.validate(config, integration))
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")
