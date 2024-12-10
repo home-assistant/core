@@ -204,7 +204,3 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
-
-# ninja 1.11.1.2 has a build loop
-# https://github.com/scikit-build/ninja-python-distributions/issues/274
-ninja==1.11.1.1
