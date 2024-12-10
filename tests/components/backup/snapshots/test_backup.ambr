@@ -67,6 +67,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',

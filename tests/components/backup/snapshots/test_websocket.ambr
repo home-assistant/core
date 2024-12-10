@@ -420,6 +420,8 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -509,6 +511,8 @@
 # name: test_config_update[command10].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -598,6 +602,8 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -687,6 +693,8 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -776,6 +784,8 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -869,6 +879,8 @@
 # name: test_config_update[command4].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -962,6 +974,8 @@
 # name: test_config_update[command5].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1051,6 +1065,8 @@
 # name: test_config_update[command6].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1140,6 +1156,8 @@
 # name: test_config_update[command7].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1229,6 +1247,8 @@
 # name: test_config_update[command8].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1318,6 +1338,8 @@
 # name: test_config_update[command9].2
   dict({
     'data': dict({
+      'backups': dict({
+      }),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1463,6 +1485,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1526,6 +1550,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1575,6 +1601,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1608,6 +1636,8 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1652,6 +1682,8 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1691,6 +1723,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1740,6 +1774,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -1812,6 +1848,8 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'failed_agent_ids': list([
+        ]),
         'folders': list([
           'media',
           'share',
@@ -1847,6 +1885,8 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'failed_agent_ids': list([
+        ]),
         'folders': list([
           'media',
           'share',
@@ -1895,6 +1935,8 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'failed_agent_ids': list([
+        ]),
         'folders': list([
           'media',
           'share',
@@ -1931,6 +1973,8 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'failed_agent_ids': list([
+        ]),
         'folders': list([
           'media',
           'share',
@@ -2191,6 +2235,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -2229,6 +2275,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -2268,6 +2316,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -2301,6 +2351,8 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -2325,6 +2377,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',
@@ -2364,6 +2418,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
           'folders': list([
             'media',
             'share',

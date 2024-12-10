@@ -722,6 +722,7 @@ async def test_agents_info(
     [
         None,
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -737,9 +738,10 @@ async def test_agents_info(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "daily"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -753,9 +755,10 @@ async def test_agents_info(
                 "retention": {"copies": 3, "days": None},
                 "last_automatic_backup": None,
                 "schedule": {"state": "never"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -771,9 +774,10 @@ async def test_agents_info(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "never"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -787,9 +791,10 @@ async def test_agents_info(
                 "retention": {"copies": None, "days": None},
                 "last_automatic_backup": None,
                 "schedule": {"state": "mon"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -803,7 +808,7 @@ async def test_agents_info(
                 "retention": {"copies": None, "days": None},
                 "last_automatic_backup": None,
                 "schedule": {"state": "sat"},
-            }
+            },
         },
     ],
 )
@@ -1106,6 +1111,7 @@ async def test_config_schedule_logic(
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1119,7 +1125,7 @@ async def test_config_schedule_logic(
             "retention": {"copies": None, "days": None},
             "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
             "schedule": {"state": "daily"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1375,6 +1381,7 @@ async def test_config_retention_copies_logic(
     """Test config backup retention copies logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1388,7 +1395,7 @@ async def test_config_retention_copies_logic(
             "retention": {"copies": None, "days": None},
             "last_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "daily"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1581,6 +1588,7 @@ async def test_config_retention_days_logic(
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1594,7 +1602,7 @@ async def test_config_retention_days_logic(
             "retention": {"copies": None, "days": None},
             "last_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "never"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
