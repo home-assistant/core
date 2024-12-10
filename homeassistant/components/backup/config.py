@@ -21,7 +21,7 @@ from .const import DOMAIN, LOGGER
 from .models import Folder
 
 if TYPE_CHECKING:
-    from .manager import Backup, BackupManager
+    from .manager import BackupManager, ManagerBackup
 
 # The time of the automatic backup event should be compatible with
 # the time of the recorder's nightly job which runs at 04:12.
@@ -179,7 +179,9 @@ class RetentionConfig:
             """Delete backups older than days."""
             self._schedule_next(manager)
 
-            def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
+            def _backups_filter(
+                backups: dict[str, ManagerBackup],
+            ) -> dict[str, ManagerBackup]:
                 """Return backups older than days to delete."""
                 # we need to check here since we await before
                 # this filter is applied
@@ -322,7 +324,9 @@ class BackupSchedule:
 
             # delete old backups more numerous than copies
 
-            def _backups_filter(backups: dict[str, Backup]) -> dict[str, Backup]:
+            def _backups_filter(
+                backups: dict[str, ManagerBackup],
+            ) -> dict[str, ManagerBackup]:
                 """Return oldest backups more numerous than copies to delete."""
                 # we need to check here since we await before
                 # this filter is applied
@@ -404,7 +408,7 @@ class CreateBackupParametersDict(TypedDict, total=False):
 
 async def _delete_filtered_backups(
     manager: BackupManager,
-    backup_filter: Callable[[dict[str, Backup]], dict[str, Backup]],
+    backup_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
 ) -> None:
     """Delete backups parsed with a filter.
 
