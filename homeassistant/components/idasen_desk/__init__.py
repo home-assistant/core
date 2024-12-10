@@ -71,9 +71,7 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
 ) -> None:
     """Handle options update."""
-    coordinator = entry.runtime_data
-    if entry.title != coordinator.name:
-        await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(
