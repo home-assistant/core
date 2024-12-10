@@ -10,7 +10,7 @@ from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
 VALID_EFFECT = {"effect": "random"}
-VALID_COLOR_TEMP = {"color_temp": 240}
+VALID_COLOR_TEMP = {"color_temp_kelvin": 4200}
 VALID_HS_COLOR = {"hs_color": (345, 75)}
 VALID_RGB_COLOR = {"rgb_color": (255, 63, 111)}
 VALID_RGBW_COLOR = {"rgbw_color": (255, 63, 111, 10)}
@@ -19,7 +19,7 @@ VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
 NONE_BRIGHTNESS = {"brightness": None}
 NONE_EFFECT = {"effect": None}
-NONE_COLOR_TEMP = {"color_temp": None}
+NONE_COLOR_TEMP = {"color_temp_kelvin": None}
 NONE_HS_COLOR = {"hs_color": None}
 NONE_RGB_COLOR = {"rgb_color": None}
 NONE_RGBW_COLOR = {"rgbw_color": None}
