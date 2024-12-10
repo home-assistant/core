@@ -29,7 +29,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
-TEST_HOST_ALT = "9.9.9.9"
 TEST_HOSTNAME = "smileabcdef"
 TEST_HOSTNAME2 = "stretchabc"
 TEST_PASSWORD = "test_password"
@@ -37,7 +36,6 @@ TEST_PORT = 81
 TEST_USERNAME = "smile"
 TEST_USERNAME2 = "stretch"
 MOCK_SMILE_ID = "smile12345"
-MOCK_SMILE_ID_ALT = "smile98765"
 
 TEST_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_HOST),
