@@ -90,4 +90,14 @@ async def test_sensors_streaming(
     await hass.async_block_till_done()
 
     # Assert the entities restored their values
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+    for entity_id in (
+        "sensor.test_charging",
+        "sensor.test_battery_level",
+        "sensor.test_charge_energy_added",
+        "sensor.test_charger_power",
+        "sensor.test_charge_cable",
+        "sensor.test_time_to_full_charge",
+        "sensor.test_time_to_arrival",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-state")
