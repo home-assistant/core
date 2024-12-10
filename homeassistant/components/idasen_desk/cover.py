@@ -17,19 +17,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeskData
-from .const import DOMAIN
+from . import IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ConfigEntry[IdasenDeskCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the cover platform for Idasen Desk."""
-    data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([IdasenDeskCover(data)])
+    coordinator = entry.runtime_data
+    async_add_entities([IdasenDeskCover(coordinator)])
 
 
 class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
@@ -45,9 +44,9 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     _attr_name = None
     _attr_translation_key = "desk"
 
-    def __init__(self, desk_data: DeskData) -> None:
+    def __init__(self, coordinator: IdasenDeskCoordinator) -> None:
         """Initialize an Idasen Desk cover."""
-        super().__init__(desk_data.address, desk_data)
+        super().__init__(coordinator.address, coordinator)
         self._attr_current_cover_position = self._desk.height_percent
 
     @property

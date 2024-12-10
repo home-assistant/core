@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from attr import dataclass
 from bleak.exc import BleakError
 from idasen_ha.errors import AuthFailedError
 
@@ -15,7 +14,6 @@ from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
 from .coordinator import IdasenDeskCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
@@ -23,23 +21,14 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class DeskData:
-    """Data for the Idasen Desk integration."""
-
-    address: str
-    device_name: str
-    coordinator: IdasenDeskCoordinator
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
+) -> bool:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
     coordinator = IdasenDeskCoordinator(hass, _LOGGER, entry.title, address)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = DeskData(
-        address, entry.title, coordinator
-    )
+    entry.runtime_data = coordinator
 
     try:
         if not await coordinator.async_connect():
@@ -78,18 +67,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
+) -> None:
     """Handle options update."""
-    data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.device_name:
+    coordinator = entry.runtime_data
+    if entry.title != coordinator.name:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: DeskData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.coordinator.async_disconnect()
-        bluetooth.async_rediscover_address(hass, data.address)
+        coordinator = entry.runtime_data
+        await coordinator.async_disconnect()
+        bluetooth.async_rediscover_address(hass, coordinator.address)
 
     return unload_ok
