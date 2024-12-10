@@ -20,7 +20,7 @@ from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
-MIN_MIREDS = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 
 
 async def async_setup_entry(
@@ -143,7 +143,7 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
 
     _attr_color_mode = ColorMode.COLOR_TEMP
     _attr_min_color_temp_kelvin = 2700  # 370 Mireds
-    _attr_max_color_temp_kelvin = 6500  # 154 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
