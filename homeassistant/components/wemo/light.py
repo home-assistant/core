@@ -8,7 +8,7 @@ from pywemo import Bridge, BridgeLight, Dimmer
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
@@ -123,9 +123,11 @@ class WemoLight(WemoEntity, LightEntity):
         return self.light.state.get("color_xy")
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature of this light in mireds."""
-        return self.light.state.get("temperature_mireds")
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if not (mireds := self.light.state.get("temperature_mireds")):
+            return None
+        return color_util.color_temperature_mired_to_kelvin(mireds)
 
     @property
     def color_mode(self) -> ColorMode:
@@ -165,7 +167,7 @@ class WemoLight(WemoEntity, LightEntity):
         xy_color = None
 
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         hs_color = kwargs.get(ATTR_HS_COLOR)
         transition_time = int(kwargs.get(ATTR_TRANSITION, 0))
 
@@ -182,9 +184,9 @@ class WemoLight(WemoEntity, LightEntity):
             if xy_color is not None:
                 self.light.set_color(xy_color, transition=transition_time)
 
-            if color_temp is not None:
+            if color_temp_kelvin is not None:
                 self.light.set_temperature(
-                    mireds=color_temp, transition=transition_time
+                    kelvin=color_temp_kelvin, transition=transition_time
                 )
 
             self.light.turn_on(**turn_on_kwargs)

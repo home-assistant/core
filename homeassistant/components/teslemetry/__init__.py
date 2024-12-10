@@ -253,7 +253,6 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
         """Handle vehicle data from the stream."""
         if "vehicle_data" in data:
             LOGGER.debug("Streaming received vehicle data from %s", vin)
-            coordinator.updated_once = True
             coordinator.async_set_updated_data(flatten(data["vehicle_data"]))
         elif "state" in data:
             LOGGER.debug("Streaming received state from %s", vin)

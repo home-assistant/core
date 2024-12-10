@@ -74,6 +74,8 @@ from .const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
+    BEOLINK_JOIN_SOURCES,
+    BEOLINK_JOIN_SOURCES_TO_UPPER,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
@@ -135,7 +137,10 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={vol.Optional("beolink_jid"): jid_regex},
+        schema={
+            vol.Optional("beolink_jid"): jid_regex,
+            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
+        },
         func="async_beolink_join",
     )
 
@@ -205,9 +210,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
         self._media_image: Art = Art()
-        self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(
+        self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(  # type: ignore[call-arg]
             software_version="",
-            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),
+            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),  # type: ignore[call-arg]
         )
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
@@ -891,9 +896,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         elif media_type == BangOlufsenMediaType.RADIO:
             await self._client.run_provided_scene(
-                scene_properties=SceneProperties(
+                scene_properties=SceneProperties(  # type: ignore[call-arg]
                     action_list=[
-                        Action(
+                        Action(  # type: ignore[call-arg]
                             type="radio",
                             radio_station_id=media_id,
                         )
@@ -914,7 +919,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         deezer_id = kwargs[ATTR_MEDIA_EXTRA]["id"]
 
                     await self._client.start_deezer_flow(
-                        user_flow=UserFlow(user_id=deezer_id)
+                        user_flow=UserFlow(user_id=deezer_id)  # type: ignore[call-arg]
                     )
 
                 # Play a playlist or album.
@@ -924,7 +929,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
 
                     await self._client.add_to_queue(
-                        play_queue_item=PlayQueueItem(
+                        play_queue_item=PlayQueueItem(  # type: ignore[call-arg]
                             provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=start_from,
                             type="playlist",
@@ -935,7 +940,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 # Play a track.
                 else:
                     await self._client.add_to_queue(
-                        play_queue_item=PlayQueueItem(
+                        play_queue_item=PlayQueueItem(  # type: ignore[call-arg]
                             provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=0,
                             type="track",
@@ -985,12 +990,23 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self.async_beolink_leave()
 
     # Custom actions:
-    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
+    async def async_beolink_join(
+        self, beolink_jid: str | None = None, source_id: str | None = None
+    ) -> None:
         """Join a Beolink multi-room experience."""
+        # Touch to join
         if beolink_jid is None:
             await self._client.join_latest_beolink_experience()
-        else:
+        # Join a peer
+        elif beolink_jid and source_id is None:
             await self._client.join_beolink_peer(jid=beolink_jid)
+        # Join a peer and select specific source
+        elif beolink_jid and source_id:
+            # Beolink Converter NL/ML sources need to be in upper case
+            if source_id in BEOLINK_JOIN_SOURCES_TO_UPPER:
+                source_id = source_id.upper()
+
+            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
