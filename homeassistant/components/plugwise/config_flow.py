@@ -42,14 +42,15 @@ from .const import (
 )
 
 
-def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+def base_schema(
+    cf_input: ZeroconfServiceInfo | dict[str, Any] | None,
+) -> vol.Schema:
     """Generate base schema for gateways."""
-    schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
-
-    if not discovery_info:
-        schema = schema.extend(
+    if not cf_input:  # no discovery- or user-input available
+        return vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
+                vol.Required(CONF_PASSWORD): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
@@ -57,7 +58,19 @@ def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
             }
         )
 
-    return schema
+    if isinstance(cf_input, ZeroconfServiceInfo):
+        return vol.Schema({vol.Required(CONF_PASSWORD): str})
+
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST, default=cf_input[CONF_HOST]): str,
+            vol.Required(CONF_PASSWORD, default=cf_input[CONF_PASSWORD]): str,
+            vol.Optional(CONF_PORT, default=cf_input[CONF_PORT]): int,
+            vol.Required(CONF_USERNAME, default=cf_input[CONF_USERNAME]): vol.In(
+                {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
+            ),
+        }
+    )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
@@ -92,8 +105,12 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare configuration for a discovered Plugwise Smile."""
         self.discovery_info = discovery_info
         _properties = discovery_info.properties
-
+        self.product = _product = _properties.get("product", "Unknown Smile")
+        _version = _properties.get("version", "n/a")
         unique_id = discovery_info.hostname.split(".")[0].split("-")[0]
+        if DEFAULT_USERNAME not in unique_id:
+            self._username = STRETCH_USERNAME
+
         if config_entry := await self.async_set_unique_id(unique_id):
             try:
                 await validate_input(
@@ -101,8 +118,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         CONF_HOST: discovery_info.host,
                         CONF_PORT: discovery_info.port,
-                        CONF_USERNAME: config_entry.data[CONF_USERNAME],
                         CONF_PASSWORD: config_entry.data[CONF_PASSWORD],
+                        CONF_USERNAME: self._username,
                     },
                 )
             except Exception:  # noqa: BLE001
@@ -115,12 +132,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-        if DEFAULT_USERNAME not in unique_id:
-            self._username = STRETCH_USERNAME
-        self.product = _product = _properties.get("product", "Unknown Smile")
-        _version = _properties.get("version", "n/a")
-        _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
-
         # This is an Anna, but we already have config entries.
         # Assuming that the user has already configured Adam, aborting discovery.
         if self._async_current_entries() and _product == "smile_thermo":
@@ -132,6 +143,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="anna_with_adam")
 
+        _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
         self.context.update(
             {
                 "title_placeholders": {CONF_NAME: _name},
@@ -160,36 +172,42 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step when using network/gateway setups."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            if self.discovery_info:
-                user_input[CONF_HOST] = self.discovery_info.host
-                user_input[CONF_PORT] = self.discovery_info.port
-                user_input[CONF_USERNAME] = self._username
+        if not user_input:
+            return self.async_show_form(
+                step_id=SOURCE_USER,
+                data_schema=base_schema(self.discovery_info),
+                errors=errors,
+            )
 
-            try:
-                api = await validate_input(self.hass, user_input)
-            except ConnectionFailedError:
-                errors[CONF_BASE] = "cannot_connect"
-            except InvalidAuthentication:
-                errors[CONF_BASE] = "invalid_auth"
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
-            except (InvalidXMLError, ResponseError):
-                errors[CONF_BASE] = "response_error"
-            except UnsupportedDeviceError:
-                errors[CONF_BASE] = "unsupported"
-            except Exception:  # noqa: BLE001
-                errors[CONF_BASE] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
+        if self.discovery_info:
+            user_input[CONF_HOST] = self.discovery_info.host
+            user_input[CONF_PORT] = self.discovery_info.port
+            user_input[CONF_USERNAME] = self._username
 
-                return self.async_create_entry(title=api.smile_name, data=user_input)
+        try:
+            api = await validate_input(self.hass, user_input)
+        except ConnectionFailedError:
+            errors[CONF_BASE] = "cannot_connect"
+        except InvalidAuthentication:
+            errors[CONF_BASE] = "invalid_auth"
+        except InvalidSetupError:
+            errors[CONF_BASE] = "invalid_setup"
+        except (InvalidXMLError, ResponseError):
+            errors[CONF_BASE] = "response_error"
+        except UnsupportedDeviceError:
+            errors[CONF_BASE] = "unsupported"
+        except Exception:  # noqa: BLE001
+            errors[CONF_BASE] = "unknown"
 
-        return self.async_show_form(
-            step_id=SOURCE_USER,
-            data_schema=base_schema(self.discovery_info),
-            errors=errors,
+        if errors:
+            return self.async_show_form(
+                step_id=SOURCE_USER,
+                data_schema=base_schema(user_input),
+                errors=errors,
+            )
+
+        await self.async_set_unique_id(
+            api.smile_hostname or api.gateway_id, raise_on_progress=False
         )
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=api.smile_name, data=user_input)
