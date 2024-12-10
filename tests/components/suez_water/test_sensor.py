@@ -42,7 +42,6 @@ async def test_sensors_failed_update(
     method: str,
 ) -> None:
     """Test that suez_water sensor reflect failure when api fails."""
-
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
