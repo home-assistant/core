@@ -11,7 +11,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from teslemetry_stream import TeslemetryStream
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -85,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     scopes = calls[0]["scopes"]
     region = calls[0]["region"]
+    metadata = calls[0]["vehicles"]
     products = calls[1]["response"]
 
     device_registry = dr.async_get(hass)
@@ -102,7 +103,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     )
 
     for product in products:
-        if "vin" in product and Scope.VEHICLE_DEVICE_DATA in scopes:
+        if (
+            "vin" in product
+            and metadata.get(product["vin"], {}).get("access")
+            and Scope.VEHICLE_DEVICE_DATA in scopes
+        ):
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
@@ -121,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 create_handle_vehicle_stream(vin, coordinator),
                 {"vin": vin},
             )
+            firmware = metadata[vin].get("firmware", "Unknown")
 
             vehicles.append(
                 TeslemetryVehicleData(
@@ -130,6 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     device=device,
                     remove_listener=remove_listener,
+                    firmware=firmware,
                 )
             )
 
@@ -174,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Run all first refreshes
     await asyncio.gather(
+        *(async_setup_stream(vehicle) for vehicle in vehicles),
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
@@ -261,3 +269,14 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
             coordinator.async_set_updated_data(coordinator.data)
 
     return handle_vehicle_stream
+
+
+async def async_setup_stream(vehicle: TeslemetryVehicleData):
+    """Set up the stream for a vehicle."""
+
+    # Create TeslemetryStreamVehicle directly so it can be patched for testing
+    vehicle.stream.vehicles[vehicle.vin] = TeslemetryStreamVehicle(
+        vehicle.stream, vehicle.vin
+    )
+    await vehicle.stream.vehicles[vehicle.vin].get_config()
+    await vehicle.stream.vehicles[vehicle.vin].prefer_typed(True)
