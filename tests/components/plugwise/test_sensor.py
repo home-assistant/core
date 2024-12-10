@@ -137,6 +137,7 @@ async def test_p1_dsmr_sensor_entities(
     assert not state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_p1_3ph_dsmr_sensor_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -156,23 +157,21 @@ async def test_p1_3ph_dsmr_sensor_entities(
     assert state
     assert int(state.state) == 2080
 
-    entity_id = "sensor.p1_voltage_phase_one"
-    state = hass.states.get(entity_id)
-    assert not state
+    # Default disabled sensor test
+    state = hass.states.get("sensor.p1_voltage_phase_one")
+    assert state
+    assert float(state.state) == 233.2
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_p1_3ph_dsmr_sensor_entities_disabled(
+async def test_p1_3ph_dsmr_sensor_disabled_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_smile_p1_2: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test creation of disabled power related sensor entities."""
+    """Test disabled power related sensor entities intent."""
     state = hass.states.get("sensor.p1_voltage_phase_one")
-
-    assert state
-    assert float(state.state) == 233.2
+    assert not state
 
 
 async def test_stretch_sensor_entities(
