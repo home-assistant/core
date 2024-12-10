@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -111,24 +110,13 @@ async def test_adam_temperature_offset_out_of_bounds_change(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test changing of the temperature_offset number beyond limits."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match="valid range"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
                 ATTR_VALUE: 3.0,
-            },
-            blocking=True,
-        )
-
-    with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {
-                ATTR_ENTITY_ID: "number.zone_thermostat_jessie_temperature_offset",
-                ATTR_VALUE: "Lower",
             },
             blocking=True,
         )

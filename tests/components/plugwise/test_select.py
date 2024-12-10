@@ -68,8 +68,8 @@ async def test_adam_select_regulation_mode(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            "entity_id": "select.adam_regulation_mode",
-            "option": "heating",
+            ATTR_ENTITY_ID: "select.adam_regulation_mode",
+            ATTR_OPTION: "heating",
         },
         blocking=True,
     )
@@ -96,13 +96,13 @@ async def test_adam_select_unavailable_regulation_mode(
 ) -> None:
     """Test a regulation_mode non-available preset."""
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match="valid options"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                "entity_id": "select.anna_thermostat_schedule",
-                "option": "freezing",
+                ATTR_ENTITY_ID: "select.anna_thermostat_schedule",
+                ATTR_OPTION: "freezing",
             },
             blocking=True,
         )
