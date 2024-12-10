@@ -225,6 +225,16 @@
           "description": "The name of the zone to remove."
         }
       }
+    },
+    "get_doorbell_user": {
+      "name": "Get users for NFC fingerprint events",
+      "description": "Use to get the IDs required for automations.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+        }
+      }
     }
   }
 }
