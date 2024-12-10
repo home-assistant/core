@@ -24,6 +24,8 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import (  # pylint: disable=hass-deprecated-import
     _CONF_UNIT_SYSTEM_IMPERIAL,
@@ -877,3 +879,35 @@ def test_imperial_converted_units(device_class: SensorDeviceClass) -> None:
             assert (device_class, unit) not in unit_system._conversions
             continue
         assert (device_class, unit) in unit_system._conversions
+
+
+async def test_imperial_deprecated_log_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test deprecated imperial unit system logs warning."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Home",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "currency": "USD",
+            "country": "US",
+            "language": "en",
+            "radius": 150,
+        },
+    )
+
+    assert hass.config.latitude == 60
+    assert hass.config.longitude == 50
+    assert hass.config.elevation == 25
+    assert hass.config.location_name == "Home"
+    assert hass.config.units is US_CUSTOMARY_SYSTEM
+    assert hass.config.time_zone == "America/New_York"
+    assert hass.config.currency == "USD"
+    assert hass.config.country == "US"
+    assert hass.config.language == "en"
+    assert hass.config.radius == 150
