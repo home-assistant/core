@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RokuConfigEntry
-from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 
 
@@ -60,11 +59,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
-    coordinator: RokuDataUpdateCoordinator = entry.runtime_data
-
     async_add_entities(
         RokuBinarySensorEntity(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
             description=description,
         )
         for description in BINARY_SENSORS

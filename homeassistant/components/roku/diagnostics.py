@@ -13,8 +13,6 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: RokuConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
-
     return {
         "entry": {
             "data": {
@@ -22,5 +20,5 @@ async def async_get_config_entry_diagnostics(
             },
             "unique_id": entry.unique_id,
         },
-        "data": coordinator.data.as_dict(),
+        "data": entry.runtime_data.data.as_dict(),
     }

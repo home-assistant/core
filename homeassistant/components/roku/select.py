@@ -110,12 +110,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roku select based on a config entry."""
-    coordinator = entry.runtime_data
-    device: RokuDevice = coordinator.data
+    device: RokuDevice = entry.runtime_data.data
 
     entities: list[RokuSelectEntity] = [
         RokuSelectEntity(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
             description=description,
         )
         for description in ENTITIES
@@ -124,7 +123,7 @@ async def async_setup_entry(
     if len(device.channels) > 0:
         entities.append(
             RokuSelectEntity(
-                coordinator=coordinator,
+                coordinator=entry.runtime_data,
                 description=CHANNEL_ENTITY,
             )
         )

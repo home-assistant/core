@@ -85,12 +85,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: RokuConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Roku config entry."""
-    coordinator = entry.runtime_data
-
     async_add_entities(
         [
             RokuMediaPlayer(
-                coordinator=coordinator,
+                coordinator=entry.runtime_data,
             )
         ],
         True,

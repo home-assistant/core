@@ -20,12 +20,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load Roku remote based on a config entry."""
-    coordinator = entry.runtime_data
-
     async_add_entities(
         [
             RokuRemote(
-                coordinator=coordinator,
+                coordinator=entry.runtime_data,
             )
         ],
         True,

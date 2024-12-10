@@ -45,11 +45,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roku sensor based on a config entry."""
-    coordinator = entry.runtime_data
-
     async_add_entities(
         RokuSensorEntity(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
             description=description,
         )
         for description in SENSORS
