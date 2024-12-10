@@ -518,7 +518,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iaqualink",
     "ibeacon",
     "icloud",
-    "idasen_desk",
     "idteck_prox",
     "ifttt",
     "iglo",
