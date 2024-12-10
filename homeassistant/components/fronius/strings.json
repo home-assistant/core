@@ -3,10 +3,12 @@
     "flow_title": "{device}",
     "step": {
       "user": {
-        "title": "Fronius SolarNet",
-        "description": "Configure the IP address or local hostname of your Fronius device.",
+        "description": "Configure your Fronius SolarAPI device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Fronius device."
         }
       },
       "confirm_discovery": {
