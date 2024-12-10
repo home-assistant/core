@@ -14,6 +14,11 @@
           "username": "Email / devolo ID",
           "password": "[%key:common::config_flow::data::password%]",
           "mydevolo_url": "mydevolo URL"
+        },
+        "data_description": {
+          "username": "Email address you used to register the central unit at mydevolo.",
+          "password": "Password of your mydevolo account.",
+          "mydevolo_url": "URL of the mydevolo stage to use. Please do not change the URL unless you know what you are doing."
         }
       },
       "zeroconf_confirm": {
@@ -21,6 +26,11 @@
           "username": "[%key:component::devolo_home_control::config::step::user::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "mydevolo_url": "[%key:component::devolo_home_control::config::step::user::data::mydevolo_url%]"
+        },
+        "data_description": {
+          "username": "[%key:component::devolo_home_control::config::step::user::data_description::username%]",
+          "password": "[%key:component::devolo_home_control::config::step::user::data_description::password%]",
+          "mydevolo_url": "[%key:component::devolo_home_control::config::step::user::data_description::mydevolo_url%]"
         }
       }
     }
