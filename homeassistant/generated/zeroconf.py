@@ -563,6 +563,10 @@ ZEROCONF = {
             "name": "shelly*",
         },
         {
+            "domain": "slide_local",
+            "name": "slide*",
+        },
+        {
             "domain": "synology_dsm",
             "properties": {
                 "vendor": "synology*",

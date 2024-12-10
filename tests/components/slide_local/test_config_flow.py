@@ -1,0 +1,202 @@
+"""Test the slide_local config flow."""
+
+from ipaddress import ip_address
+from unittest.mock import AsyncMock
+
+from goslideapi.goslideapi import (
+    AuthenticationFailed,
+    ClientConnectionError,
+    ClientTimeoutError,
+    DigestAuthCalcError,
+)
+import pytest
+
+from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from .const import HOST
+
+from tests.common import MockConfigEntry
+
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
+    ip_address=ip_address("127.0.0.2"),
+    ip_addresses=[ip_address("127.0.0.2")],
+    hostname="Slide-1234567890AB.local.",
+    name="Slide-1234567890AB._http._tcp.local.",
+    port=80,
+    properties={
+        "id": "slide-1234567890AB",
+        "arch": "esp32",
+        "app": "slide",
+        "fw_version": "2.0.0-1683059251",
+        "fw_id": "20230502-202745",
+    },
+    type="mock_type",
+)
+
+
+async def test_user(
+    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+            CONF_API_VERSION: "2",
+            CONF_INVERT_POSITION: False,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == HOST
+    assert result2["data"][CONF_HOST] == HOST
+    assert result2["data"][CONF_PASSWORD] == "pwd"
+    assert result2["data"][CONF_API_VERSION] == 2
+    assert result2["data"][CONF_INVERT_POSITION] is False
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ClientConnectionError, "cannot_connect"),
+        (ClientTimeoutError, "cannot_connect"),
+        (AuthenticationFailed, "invalid_auth"),
+        (DigestAuthCalcError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant,
+    exception: Exception,
+    error: str,
+    mock_slide_api: AsyncMock,
+) -> None:
+    """Test we can handle Form exceptions."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_slide_api.slide_info.side_effect = exception
+
+    # tests with connection error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+            CONF_API_VERSION: "2",
+            CONF_INVERT_POSITION: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == error
+
+    # tests with all provided
+    mock_slide_api.slide_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+            CONF_API_VERSION: "2",
+            CONF_INVERT_POSITION: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PASSWORD] == "pwd"
+    assert result["data"][CONF_API_VERSION] == 2
+    assert result["data"][CONF_INVERT_POSITION] is False
+
+
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
+    """Test we abort if the device is already setup."""
+
+    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST}).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+            CONF_API_VERSION: "2",
+            CONF_INVERT_POSITION: False,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf(
+    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test starting a flow from discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_INVERT_POSITION: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "127.0.0.2"
+    assert result["data"][CONF_HOST] == "127.0.0.2"
+    assert result["data"][CONF_INVERT_POSITION]
+    assert result["result"].unique_id == "12:34:56:78:90:ab"
+
+
+async def test_zeroconf_duplicate_entry(
+    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test starting a flow from discovery."""
+
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: HOST}, unique_id="12:34:56:78:90:ab"
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries[0].data[CONF_HOST] == "127.0.0.2"
