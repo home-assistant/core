@@ -296,9 +296,6 @@
     }
   },
   "exceptions": {
-    "no_supported_device_found": {
-      "message": "No supported Fronius SolarNet device found."
-    },
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
     },
