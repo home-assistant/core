@@ -14,8 +14,10 @@ from starlink_grpc import (
     GrpcError,
     LocationDict,
     ObstructionDict,
+    PowerDict,
     StatusDict,
     get_sleep_config,
+    history_stats,
     location_data,
     reboot,
     set_sleep_config,
@@ -39,6 +41,7 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    consumption: PowerDict
 
 
 class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
@@ -58,10 +61,11 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         channel_context = self.channel_context
-        status = status_data(channel_context)
         location = location_data(channel_context)
         sleep = get_sleep_config(channel_context)
-        return StarlinkData(location, sleep, *status)
+        status, obstruction, alert = status_data(channel_context)
+        statistics = history_stats(parse_samples=-1, context=channel_context)
+        return StarlinkData(location, sleep, status, obstruction, alert, statistics[-1])
 
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):

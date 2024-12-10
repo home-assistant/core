@@ -9,7 +9,7 @@ from jaraco.abode.devices.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -17,10 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from . import AbodeSystem
 from .const import DOMAIN
@@ -47,10 +43,8 @@ class AbodeLight(AbodeDevice, LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        if ATTR_COLOR_TEMP in kwargs and self._device.is_color_capable:
-            self._device.set_color_temp(
-                int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
-            )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._device.is_color_capable:
+            self._device.set_color_temp(kwargs[ATTR_COLOR_TEMP_KELVIN])
             return
 
         if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
@@ -85,10 +79,10 @@ class AbodeLight(AbodeDevice, LightEntity):
         return None
 
     @property
-    def color_temp(self) -> int | None:
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of the light."""
         if self._device.has_color:
-            return color_temperature_kelvin_to_mired(self._device.color_temp)
+            return int(self._device.color_temp)
         return None
 
     @property

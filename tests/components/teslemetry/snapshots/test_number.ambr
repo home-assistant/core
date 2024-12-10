@@ -149,7 +149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_current_request',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_current_request',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_current_request',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -206,7 +206,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_limit_soc',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_limit_soc',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_limit_soc',
     'unit_of_measurement': '%',
   })
 # ---

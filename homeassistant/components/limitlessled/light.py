@@ -19,7 +19,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
@@ -38,7 +38,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.color import color_hs_to_RGB, color_temperature_mired_to_kelvin
+from homeassistant.util.color import (
+    color_hs_to_RGB,
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -325,12 +329,14 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             else:
                 args["color"] = self.limitlessled_color()
 
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
             assert self.supported_color_modes
             if ColorMode.HS in self.supported_color_modes:
                 pipeline.white()
             self._attr_hs_color = WHITE
-            self._attr_color_temp = kwargs[ATTR_COLOR_TEMP]
+            self._attr_color_temp = color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             args["temperature"] = self.limitlessled_temperature()
 
         if args:

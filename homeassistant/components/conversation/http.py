@@ -36,6 +36,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
     websocket_api.async_register_command(hass, websocket_list_agents)
+    websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
 
@@ -148,6 +149,27 @@ async def websocket_list_agents(
         agents.append(agent_dict)
 
     connection.send_message(websocket_api.result_message(msg["id"], {"agents": agents}))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/sentences/list",
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_list_sentences(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List custom registered sentences."""
+    agent = hass.data.get(DATA_DEFAULT_ENTITY)
+    assert isinstance(agent, DefaultAgent)
+
+    sentences = []
+    for trigger_data in agent.trigger_sentences:
+        sentences.extend(trigger_data.sentences)
+
+    connection.send_result(msg["id"], {"trigger_sentences": sentences})
 
 
 @websocket_api.websocket_command(

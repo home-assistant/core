@@ -129,7 +129,7 @@ def test_support_properties(property_suffix: str) -> None:
     entity3 = MediaPlayerEntity()
     entity3._attr_supported_features = feature
     entity4 = MediaPlayerEntity()
-    entity4._attr_supported_features = all_features - feature
+    entity4._attr_supported_features = all_features & ~feature
 
     assert getattr(entity1, f"support_{property_suffix}") is False
     assert getattr(entity2, f"support_{property_suffix}") is True
@@ -447,23 +447,3 @@ async def test_get_async_get_browse_image_quoting(
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockMediaPlayerEntity(MediaPlayerEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
-
-    entity = MockMediaPlayerEntity()
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "MockMediaPlayerEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "MediaPlayerEntityFeature.PAUSE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
