@@ -139,7 +139,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
     items=[
         Source(
             id="uriStreamer",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
@@ -147,7 +147,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="bluetooth",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
@@ -155,7 +155,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="spotify",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
@@ -163,7 +163,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="lineIn",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
@@ -171,7 +171,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="spdif",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
@@ -179,7 +179,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="netRadio",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
@@ -187,7 +187,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="deezer",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
@@ -195,7 +195,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
         ),
         Source(
             id="tidalConnect",
-            is_enabled=True,
+            is_enabled=True,  # type: ignore[call-arg]
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
