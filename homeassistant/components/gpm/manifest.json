@@ -1,0 +1,14 @@
+{
+  "domain": "gpm",
+  "name": "GPM",
+  "codeowners": ["@tomasbedrich"],
+  "config_flow": true,
+  "dependencies": ["http", "lovelace"],
+  "documentation": "https://www.home-assistant.io/integrations/gpm",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "loggers": ["git"],
+  "requirements": ["GitPython==3.1.43"],
+  "ssdp": [],
+  "zeroconf": []
+}
