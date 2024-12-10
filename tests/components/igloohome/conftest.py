@@ -11,6 +11,17 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+GET_DEVICE_INFO_RESPONSE_LOCK = GetDeviceInfoResponse(
+    id="123456",
+    type="Lock",
+    deviceId="OE1X123cbb11",
+    deviceName="Front Door",
+    pairedAt="2024-11-09T11:19:25+00:00",
+    homeId=[],
+    linkedDevices=[],
+    batteryLevel=100,
+)
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -55,30 +66,8 @@ def api_single_lock():
         api.get_devices = AsyncMock(
             return_value=GetDevicesResponse(
                 nextCursor="",
-                payload=[
-                    GetDeviceInfoResponse(
-                        id="123456",
-                        type="Lock",
-                        deviceId="OE1X123cbb11",
-                        deviceName="Front Door",
-                        pairedAt="2024-11-09T11:19:25+00:00",
-                        homeId=[],
-                        linkedDevices=[],
-                        batteryLevel=100,
-                    )
-                ],
+                payload=[GET_DEVICE_INFO_RESPONSE_LOCK],
             )
         )
-        api.get_device_info = AsyncMock(
-            return_value=GetDeviceInfoResponse(
-                id="123456",
-                type="Lock",
-                deviceId="OE1X123cbb11",
-                deviceName="Front Door",
-                pairedAt="2024-11-09T11:19:25+00:00",
-                homeId=[],
-                linkedDevices=[],
-                batteryLevel=100,
-            )
-        )
+        api.get_device_info = AsyncMock(return_value=GET_DEVICE_INFO_RESPONSE_LOCK)
         yield api
