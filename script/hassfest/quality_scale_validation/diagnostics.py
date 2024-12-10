@@ -22,7 +22,7 @@ def _has_diagnostics_function(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(integration: Integration, *, rules_done: set[str]) -> list[str] | None:
     """Validate that the integration implements diagnostics."""
 
     diagnostics_file = integration.path / "diagnostics.py"

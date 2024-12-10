@@ -5,7 +5,7 @@ from typing import cast
 from aiohttp import ClientError
 from myuplink import DevicePoint
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import SelectEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,14 +30,12 @@ async def async_setup_entry(
         for point_id, device_point in point_data.items():
             if skip_entity(device_point.category, device_point):
                 continue
-            description = None
-            if find_matching_platform(device_point, description) == Platform.SELECT:
+            if find_matching_platform(device_point, None) == Platform.SELECT:
                 entities.append(
                     MyUplinkSelect(
                         coordinator=coordinator,
                         device_id=device_id,
                         device_point=device_point,
-                        entity_description=description,
                         unique_id_suffix=point_id,
                     )
                 )
@@ -53,7 +51,6 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
         coordinator: MyUplinkDataCoordinator,
         device_id: str,
         device_point: DevicePoint,
-        entity_description: SelectEntityDescription | None,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the select."""

@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from . import configure_mydevolo
-from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, DOMAIN, SUPPORTED_MODEL_TYPES
+from .const import DOMAIN, SUPPORTED_MODEL_TYPES
 from .exceptions import CredentialsInvalid, UuidChanged
 
 
@@ -35,14 +35,11 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
         }
-        self._url = DEFAULT_MYDEVOLO
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self.show_advanced_options:
-            self.data_schema[vol.Required(CONF_MYDEVOLO, default=self._url)] = str
         if user_input is None:
             return self._show_form(step_id="user")
         try:
@@ -78,7 +75,6 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
         self._reauth_entry = self._get_reauth_entry()
-        self._url = entry_data[CONF_MYDEVOLO]
         self.data_schema = {
             vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
@@ -104,7 +100,6 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _connect_mydevolo(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Connect to mydevolo."""
-        user_input[CONF_MYDEVOLO] = user_input.get(CONF_MYDEVOLO, self._url)
         mydevolo = configure_mydevolo(conf=user_input)
         credentials_valid = await self.hass.async_add_executor_job(
             mydevolo.credentials_valid
@@ -121,7 +116,6 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PASSWORD: mydevolo.password,
                     CONF_USERNAME: mydevolo.user,
-                    CONF_MYDEVOLO: mydevolo.url,
                 },
             )
 
