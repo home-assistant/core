@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from aiohttp import ClientError
 from igloohome_api import (
     Api as IgloohomeApi,
     ApiException,
     Auth as IgloohomeAuth,
     AuthException,
-    GetDevicesResponse,
+    GetDeviceInfoResponse,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +21,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type IgloohomeConfigEntry = ConfigEntry[(IgloohomeApi, GetDevicesResponse)]
+
+@dataclass
+class IgloohomeRuntimeData:
+    """Holding class for runtime data."""
+
+    api: IgloohomeApi
+    devices: list[GetDeviceInfoResponse]
+
+
+type IgloohomeConfigEntry = ConfigEntry[IgloohomeRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) -> bool:
@@ -39,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) ->
     except (ApiException, ClientError) as e:
         raise ConfigEntryNotReady from e
 
-    entry.runtime_data = (api, devices)
+    entry.runtime_data = IgloohomeRuntimeData(api, devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
