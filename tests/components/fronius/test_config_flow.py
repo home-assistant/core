@@ -44,37 +44,62 @@ MOCK_DHCP_DATA = DhcpServiceInfo(
 )
 
 
-async def test_form_with_logger(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-
+async def assert_finish_flow_with_logger(hass: HomeAssistant, flow_id: str) -> None:
+    """Assert finishing the flow with a logger device."""
     with patch(
         "pyfronius.Fronius.current_logger_info",
         return_value=LOGGER_INFO_RETURN_VALUE,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
             {
                 "host": "10.9.8.1",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "SolarNet Datalogger at 10.9.8.1"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SolarNet Datalogger at 10.9.8.1"
+    assert result["data"] == {
         "host": "10.9.8.1",
         "is_logger": True,
     }
-    assert result2["result"].unique_id == "123.4567"
+    assert result["result"].unique_id == "123.4567"
+
+
+async def assert_abort_flow_with_logger(
+    hass: HomeAssistant, flow_id: str, reason: str
+) -> config_entries.ConfigFlowResult:
+    """Assert the flow was aborted when a logger device responded."""
+    with patch(
+        "pyfronius.Fronius.current_logger_info",
+        return_value=LOGGER_INFO_RETURN_VALUE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                "host": "10.9.8.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+    return result
+
+
+async def test_form_with_logger(hass: HomeAssistant) -> None:
+    """Test the basic flow with a logger device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+    await assert_finish_flow_with_logger(hass, result["flow_id"])
 
 
 async def test_form_with_inverter(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test the basic flow with a Gen24 device."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -144,6 +169,7 @@ async def test_form_cannot_connect(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+    await assert_finish_flow_with_logger(hass, result2["flow_id"])
 
 
 async def test_form_unexpected(hass: HomeAssistant) -> None:
@@ -165,13 +191,14 @@ async def test_form_unexpected(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+    await assert_finish_flow_with_logger(hass, result2["flow_id"])
 
 
 async def test_form_already_existing(hass: HomeAssistant) -> None:
     """Test existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123.4567",
+        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
         data={CONF_HOST: "10.9.8.1", "is_logger": True},
     ).add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -179,20 +206,9 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        return_value=LOGGER_INFO_RETURN_VALUE,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "10.9.8.1",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    await assert_abort_flow_with_logger(
+        hass, result["flow_id"], reason="already_configured"
+    )
 
 
 async def test_config_flow_already_configured(
@@ -357,7 +373,7 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123.4567890",
+        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -387,12 +403,16 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    await assert_abort_flow_with_logger(
+        hass, result2["flow_id"], reason="reconfigure_successful"
+    )
+
 
 async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="123.4567890",
+        unique_id=LOGGER_INFO_RETURN_VALUE["unique_identifier"]["value"],
         data={
             CONF_HOST: "10.1.2.3",
             "is_logger": True,
@@ -416,6 +436,10 @@ async def test_reconfigure_unexpected(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    await assert_abort_flow_with_logger(
+        hass, result2["flow_id"], reason="reconfigure_successful"
+    )
+
 
 async def test_reconfigure_to_different_device(hass: HomeAssistant) -> None:
     """Test reconfiguring an entry to a different device."""
@@ -433,17 +457,6 @@ async def test_reconfigure_to_different_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with patch(
-        "pyfronius.Fronius.current_logger_info",
-        return_value=LOGGER_INFO_RETURN_VALUE,  # has different unique_id
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                "host": "10.1.2.3",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
+    await assert_abort_flow_with_logger(
+        hass, result["flow_id"], reason="unique_id_mismatch"
+    )
