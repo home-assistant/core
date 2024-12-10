@@ -185,6 +185,7 @@ FLOWS = {
         "fibaro",
         "file",
         "filesize",
+        "fing",
         "fireservicerota",
         "fitbit",
         "fivem",
