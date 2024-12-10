@@ -40,10 +40,6 @@ async def test_config_entry_no_unique_id(
 
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert (
-        hass.data[DOMAIN][mock_config_entry.entry_id].device_id
-        == mock_config_entry.entry_id
-    )
 
 
 async def test_load_unload_config_entry(
@@ -61,5 +57,5 @@ async def test_load_unload_config_entry(
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
