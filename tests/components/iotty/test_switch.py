@@ -20,7 +20,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from .conftest import test_ls_one_added, test_ls_one_removed
+from .conftest import test_ls_one_added, test_ls_one_removed, test_ou_one_added
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -296,6 +296,40 @@ async def test_devices_insertion_ok(
     assert hass.states.async_entity_ids() == snapshot
 
     mock_get_devices_twolightswitches.return_value = test_ls_one_added
+
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should have three devices
+    assert hass.states.async_entity_ids_count() == 3
+    assert hass.states.async_entity_ids() == snapshot
+
+
+async def test_outlet_insertion_ok(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_devices_two_outlets,
+    mock_get_status_filled,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test iotty switch insertion."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Should have two devices
+    assert hass.states.async_entity_ids_count() == 2
+    assert hass.states.async_entity_ids() == snapshot
+
+    mock_get_devices_two_outlets.return_value = test_ou_one_added
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
