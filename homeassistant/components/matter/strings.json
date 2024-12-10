@@ -243,6 +243,12 @@
       "switch_current_position": {
         "name": "Current switch position"
       },
+      "tank_volume": {
+        "name": "Tank volume"
+      }
+      "tank_percentage": {
+        "name": "Tank percentage"
+      }
       "valve_position": {
         "name": "Valve position"
       }
