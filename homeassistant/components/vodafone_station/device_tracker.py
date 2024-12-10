@@ -61,6 +61,7 @@ class VodafoneStationTracker(CoordinatorEntity[VodafoneStationRouter], ScannerEn
     """Representation of a Vodafone Station device."""
 
     _attr_translation_key = "device_tracker"
+    _attr_has_entity_name = True
     mac_address: str
 
     def __init__(
