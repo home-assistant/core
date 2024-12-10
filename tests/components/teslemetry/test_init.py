@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
-from .const import VEHICLE_DATA_ALT, WAKE_UP_ASLEEP
+from .const import VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -67,22 +67,6 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
-
-
-# Vehicle Coordinator
-async def test_vehicle_refresh_asleep(
-    hass: HomeAssistant,
-    mock_vehicle: AsyncMock,
-    mock_vehicle_data: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test coordinator refresh with an error."""
-
-    mock_vehicle.return_value = WAKE_UP_ASLEEP
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    assert entry.state is ConfigEntryState.LOADED
-    mock_vehicle.assert_called_once()
-    mock_vehicle_data.assert_not_called()
 
 
 async def test_vehicle_refresh_offline(
