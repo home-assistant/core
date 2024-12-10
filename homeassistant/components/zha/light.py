@@ -150,9 +150,11 @@ class Light(LightEntity, ZHAEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        if not (mireds := self.entity_data.entity.color_temp):
-            return None
-        return color_util.color_temperature_mired_to_kelvin(mireds)
+        return (
+            color_util.color_temperature_mired_to_kelvin(mireds)
+            if (mireds := self.entity_data.entity.color_temp)
+            else None
+        )
 
     @property
     def color_mode(self) -> ColorMode | None:
