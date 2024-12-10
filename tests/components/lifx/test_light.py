@@ -35,7 +35,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -1719,7 +1718,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
 
 
 async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
-    """Test set_state works with old and new kelvin parameter names."""
+    """Test set_state works with kelvin parameter names."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
     )
@@ -1747,15 +1746,6 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
     )
     assert bulb.set_power.calls[0][0][0] is False
     bulb.set_power.reset_mock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_state",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, ATTR_KELVIN: 3500},
-        blocking=True,
-    )
-    assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 3500]
-    bulb.set_color.reset_mock()
 
     await hass.services.async_call(
         DOMAIN,
