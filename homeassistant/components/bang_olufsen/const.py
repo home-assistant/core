@@ -137,65 +137,65 @@ VALID_MEDIA_TYPES: Final[tuple] = (
 # Fallback sources to use in case of API failure.
 FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
     items=[
-        Source(
+        Source(  # type: ignore[call-arg]
             id="uriStreamer",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Audio Streamer",
             type=SourceTypeEnum(value="uriStreamer"),
             is_seekable=False,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="bluetooth",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Bluetooth",
             type=SourceTypeEnum(value="bluetooth"),
             is_seekable=False,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="spotify",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Spotify Connect",
             type=SourceTypeEnum(value="spotify"),
             is_seekable=True,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="lineIn",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Line-In",
             type=SourceTypeEnum(value="lineIn"),
             is_seekable=False,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="spdif",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Optical",
             type=SourceTypeEnum(value="spdif"),
             is_seekable=False,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="netRadio",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="B&O Radio",
             type=SourceTypeEnum(value="netRadio"),
             is_seekable=False,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="deezer",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Deezer",
             type=SourceTypeEnum(value="deezer"),
             is_seekable=True,
         ),
-        Source(
+        Source(  # type: ignore[call-arg]
             id="tidalConnect",
-            is_enabled=True,  # type: ignore[call-arg]
+            is_enabled=True,
             is_playable=True,
             name="Tidal Connect",
             type=SourceTypeEnum(value="tidalConnect"),
