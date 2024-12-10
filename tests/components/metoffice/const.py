@@ -3,7 +3,7 @@
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-TEST_DATETIME_STRING = "2020-04-25T12:00:00+00:00"
+TEST_DATETIME_STRING = "2024-11-23T12:00:00+00:00"
 
 TEST_API_KEY = "test-metoffice-api-key"
 
@@ -34,31 +34,21 @@ METOFFICE_CONFIG_KINGSLYNN = {
 }
 
 KINGSLYNN_SENSOR_RESULTS = {
-    "weather": ("weather", "sunny"),
-    "visibility": ("visibility", "Very Good"),
-    "visibility_distance": ("visibility_distance", "20-40"),
-    "temperature": ("temperature", "14"),
-    "feels_like_temperature": ("feels_like_temperature", "13"),
-    "uv": ("uv_index", "6"),
-    "precipitation": ("probability_of_precipitation", "0"),
-    "wind_direction": ("wind_direction", "E"),
-    "wind_gust": ("wind_gust", "7"),
-    "wind_speed": ("wind_speed", "2"),
-    "humidity": ("humidity", "60"),
+    "significantWeatherCode": ("significantWeatherCode", "rainy"),
+    "screenTemperature": ("screenTemperature", "7.87"),
+    "uvIndex": ("uvIndex", "1"),
+    "probOfPrecipitation": ("probOfPrecipitation", "67"),
+    "mslp": ("mslp", "998.20"),
+    "windSpeed10m": ("windSpeed10m", "22.21"),
 }
 
 WAVERTREE_SENSOR_RESULTS = {
-    "weather": ("weather", "sunny"),
-    "visibility": ("visibility", "Good"),
-    "visibility_distance": ("visibility_distance", "10-20"),
-    "temperature": ("temperature", "17"),
-    "feels_like_temperature": ("feels_like_temperature", "14"),
-    "uv": ("uv_index", "5"),
-    "precipitation": ("probability_of_precipitation", "0"),
-    "wind_direction": ("wind_direction", "SSE"),
-    "wind_gust": ("wind_gust", "16"),
-    "wind_speed": ("wind_speed", "9"),
-    "humidity": ("humidity", "50"),
+    "significantWeatherCode": ("significantWeatherCode", "rainy"),
+    "screenTemperature": ("screenTemperature", "9.28"),
+    "uvIndex": ("uvIndex", "1"),
+    "probOfPrecipitation": ("probOfPrecipitation", "61"),
+    "mslp": ("mslp", "987.50"),
+    "windSpeed10m": ("windSpeed10m", "17.60"),
 }
 
 DEVICE_KEY_KINGSLYNN = {(DOMAIN, TEST_COORDINATES_KINGSLYNN)}
