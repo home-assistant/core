@@ -46,4 +46,7 @@ class BackupStore:
     @callback
     def _data_to_save(self) -> StoredBackupData:
         """Return data to save."""
-        return {"backups": {}, "config": self._manager.config.data.to_dict()}
+        return {
+            "backups": self._manager.known_backups.to_dict(),
+            "config": self._manager.config.data.to_dict(),
+        }

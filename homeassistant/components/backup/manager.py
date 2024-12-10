@@ -817,6 +817,12 @@ class KnownBackups:
             for backup_id, backup in stored_backups.items()
         }
 
+    def to_dict(self) -> dict[str, StoredKnownBackup]:
+        """Convert known backups to a dict."""
+        return {
+            backup_id: backup.to_dict() for backup_id, backup in self._backups.items()
+        }
+
     def add(self, backup: AgentBackup, agent_errors: dict[str, Exception]) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
@@ -844,7 +850,7 @@ class KnownBackup:
     failed_agent_ids: list[str]
 
     def to_dict(self) -> StoredKnownBackup:
-        """Convert created backup to a dict."""
+        """Convert known backup to a dict."""
         return {
             "failed_agent_ids": self.failed_agent_ids,
         }
