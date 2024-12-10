@@ -41,9 +41,6 @@
       "energy_total": {
         "name": "Total energy"
       },
-      "frequency_ac": {
-        "name": "[%key:component::sensor::entity_component::frequency::name%]"
-      },
       "current_ac": {
         "name": "AC current"
       },
@@ -156,9 +153,6 @@
       "power_apparent_phase_3": {
         "name": "Apparent power phase 3"
       },
-      "power_apparent": {
-        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
-      },
       "power_factor_phase_1": {
         "name": "Power factor phase 1"
       },
@@ -167,9 +161,6 @@
       },
       "power_factor_phase_3": {
         "name": "Power factor phase 3"
-      },
-      "power_factor": {
-        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
       },
       "power_reactive_phase_1": {
         "name": "Reactive power phase 1"
@@ -215,12 +206,6 @@
       },
       "energy_real_ac_consumed": {
         "name": "Energy consumed"
-      },
-      "power_real_ac": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "temperature_channel_1": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "state_code": {
         "name": "State code"
