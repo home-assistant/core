@@ -31,6 +31,7 @@ from .const import (
     OPTION_DISABLE_KEEP_ALIVE,
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
+from .coordinator import EnphaseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EnphaseConfigEntry,
     ) -> EnvoyOptionsFlowHandler:
         """Options flow handler for Enphase_Envoy."""
         return EnvoyOptionsFlowHandler()
