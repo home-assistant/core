@@ -60,8 +60,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
 
-        self.update_interval = VEHICLE_INTERVAL
-
         try:
             if self.data["state"] != TeslemetryState.ONLINE:
                 response = await self.api.vehicle()
@@ -84,24 +82,6 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message) from e
 
         self.updated_once = True
-
-        if self.api.pre2021 and data["state"] == TeslemetryState.ONLINE:
-            # Handle pre-2021 vehicles which cannot sleep by themselves
-            if (
-                data["charge_state"].get("charging_state") == "Charging"
-                or data["vehicle_state"].get("is_user_present")
-                or data["vehicle_state"].get("sentry_mode")
-            ):
-                # Vehicle is active, reset timer
-                self.last_active = datetime.now()
-            else:
-                elapsed = datetime.now() - self.last_active
-                if elapsed > timedelta(minutes=20):
-                    # Vehicle didn't sleep, try again in 15 minutes
-                    self.last_active = datetime.now()
-                elif elapsed > timedelta(minutes=15):
-                    # Let vehicle go to sleep now
-                    self.update_interval = VEHICLE_WAIT
 
         return flatten(data)
 
