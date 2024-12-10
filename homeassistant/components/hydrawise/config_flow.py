@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN, LOGGER
+from .const import APP_ID, DOMAIN, LOGGER
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -31,7 +31,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the config entry."""
 
         # Verify that the provided credentials work."""
-        api = client.Hydrawise(auth.Auth(username, password))
+        api = client.Hydrawise(auth.Auth(username, password), app_id=APP_ID)
         try:
             # Don't fetch zones because we don't need them yet.
             user = await api.get_user(fetch_zones=False)
