@@ -51,7 +51,6 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
     _attr_configuration_url = CONF_URL_CONTROL
     _attr_name = None
     device: NaModules.Fan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize of Netatmo fan."""

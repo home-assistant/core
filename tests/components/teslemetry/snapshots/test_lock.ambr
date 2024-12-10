@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_port_latch',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_latch',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_latch',
     'unit_of_measurement': None,
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_locked',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_locked',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_locked',
     'unit_of_measurement': None,
   })
 # ---

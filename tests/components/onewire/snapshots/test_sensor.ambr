@@ -363,7 +363,7 @@
       'supported_features': 0,
       'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.A',
-      'unit_of_measurement': 'count',
+      'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -396,7 +396,7 @@
       'supported_features': 0,
       'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.B',
-      'unit_of_measurement': 'count',
+      'unit_of_measurement': None,
     }),
   ])
 # ---
@@ -408,7 +408,6 @@
         'friendly_name': '1D.111111111111 Counter A',
         'raw_value': 251123.0,
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': 'count',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_a',
@@ -423,7 +422,6 @@
         'friendly_name': '1D.111111111111 Counter B',
         'raw_value': 248125.0,
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': 'count',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_b',
@@ -531,7 +529,7 @@
       'supported_features': 0,
       'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.A',
-      'unit_of_measurement': 'count',
+      'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -564,7 +562,7 @@
       'supported_features': 0,
       'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.B',
-      'unit_of_measurement': 'count',
+      'unit_of_measurement': None,
     }),
   ])
 # ---
@@ -576,7 +574,6 @@
         'friendly_name': '1D.111111111111 Counter A',
         'raw_value': 251123.0,
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': 'count',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_a',
@@ -591,7 +588,6 @@
         'friendly_name': '1D.111111111111 Counter B',
         'raw_value': 248125.0,
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': 'count',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.1d_111111111111_counter_b',
