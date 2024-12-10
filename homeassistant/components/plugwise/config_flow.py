@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 
 from .const import (
     DEFAULT_PORT,
@@ -191,5 +192,63 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id=SOURCE_USER,
             data_schema=base_schema(self.discovery_info),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        if user_input:
+            try:
+                api = await validate_input(self.hass, user_input)
+            except ConnectionFailedError:
+                errors[CONF_BASE] = "cannot_connect"
+            except InvalidAuthentication:
+                errors[CONF_BASE] = "invalid_auth"
+            except InvalidSetupError:
+                errors[CONF_BASE] = "invalid_setup"
+            except (InvalidXMLError, ResponseError):
+                errors[CONF_BASE] = "response_error"
+            except UnsupportedDeviceError:
+                errors[CONF_BASE] = "unsupported"
+            except Exception:  # noqa: BLE001
+                errors[CONF_BASE] = "unknown"
+            else:
+                await self.async_set_unique_id(
+                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch(reason="not_the_same_smile")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+        reconfigure_entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST,
+                        default=reconfigure_entry.data.get(CONF_HOST),
+                    ): TextSelector(),
+                    vol.Required(
+                        CONF_PORT,
+                        default=reconfigure_entry.data.get(CONF_PORT),
+                    ): vol.Coerce(int),
+                    vol.Required(
+                        CONF_PASSWORD,
+                        default=reconfigure_entry.data.get(CONF_PASSWORD),
+                    ): str,
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=reconfigure_entry.data.get(CONF_USERNAME),
+                    ): vol.In({SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}),
+                }
+            ),
+            description_placeholders={
+                "title": reconfigure_entry.title,
+            },
             errors=errors,
         )
