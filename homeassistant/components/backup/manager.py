@@ -54,7 +54,7 @@ class NewBackup:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class Backup(AgentBackup):
+class ManagerBackup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
@@ -380,12 +380,14 @@ class BackupManager:
                     "Error during backup upload - %s", result, exc_info=result
                 )
 
-    async def async_get_backups(self) -> tuple[dict[str, Backup], dict[str, Exception]]:
+    async def async_get_backups(
+        self,
+    ) -> tuple[dict[str, ManagerBackup], dict[str, Exception]]:
         """Get backups.
 
         Return a dictionary of Backup instances keyed by their ID.
         """
-        backups: dict[str, Backup] = {}
+        backups: dict[str, ManagerBackup] = {}
         agent_errors: dict[str, Exception] = {}
         agent_ids = list(self.backup_agents)
 
@@ -401,7 +403,7 @@ class BackupManager:
                 raise result
             for agent_backup in result:
                 if agent_backup.backup_id not in backups:
-                    backups[agent_backup.backup_id] = Backup(
+                    backups[agent_backup.backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
                         backup_id=agent_backup.backup_id,
@@ -420,9 +422,9 @@ class BackupManager:
 
     async def async_get_backup(
         self, backup_id: str
-    ) -> tuple[Backup | None, dict[str, Exception]]:
+    ) -> tuple[ManagerBackup | None, dict[str, Exception]]:
         """Get a backup."""
-        backup: Backup | None = None
+        backup: ManagerBackup | None = None
         agent_errors: dict[str, Exception] = {}
         agent_ids = list(self.backup_agents)
 
@@ -442,7 +444,7 @@ class BackupManager:
             if not result:
                 continue
             if backup is None:
-                backup = Backup(
+                backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
                     backup_id=result.backup_id,
