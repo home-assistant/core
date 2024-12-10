@@ -10,6 +10,8 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
+from .common import TEST_BACKUP_PATH_ABC123
+
 
 @pytest.fixture(name="mocked_json_bytes")
 def mocked_json_bytes_fixture() -> Generator[Mock]:
@@ -28,6 +30,15 @@ def mocked_tarfile_fixture() -> Generator[Mock]:
         "homeassistant.components.backup.manager.SecureTarFile"
     ) as mocked_tarfile:
         yield mocked_tarfile
+
+
+@pytest.fixture(name="path_glob")
+def path_glob_fixture() -> Generator[MagicMock]:
+    """Mock path glob."""
+    with patch(
+        "pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]
+    ) as path_glob:
+        yield path_glob
 
 
 CONFIG_DIR = {
