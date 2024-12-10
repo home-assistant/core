@@ -35,6 +35,12 @@ class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
+                    CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
+                }
+            )
             auth = IgloohomeAuth(
                 session=async_get_clientsession(self.hass),
                 client_id=user_input[CONF_CLIENT_ID],
@@ -47,10 +53,6 @@ class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_CLIENT_ID]}_{user_input[CONF_CLIENT_SECRET]}"
-                )
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Client Credentials", data=user_input
                 )
