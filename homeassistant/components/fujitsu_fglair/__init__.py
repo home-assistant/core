@@ -15,7 +15,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import API_TIMEOUT, CONF_EUROPE, CONF_REGION, REGION_DEFAULT, REGION_EU
 from .coordinator import FGLairCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 type FGLairConfigEntry = ConfigEntry[FGLairCoordinator]
 
