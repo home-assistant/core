@@ -59,14 +59,13 @@ STEP_AUTHENTICATION_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# CONF_ADDRESS validation is done later in code, as if ranges are set in voluptuous it turns into a slider
 STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PORT, default=10001): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=65535)
         ),
         vol.Required(CONF_ADDRESS, default=33): NumberSelector(
-            NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX)
+            NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX, step=1)
         ),
     }
 )
@@ -199,9 +198,6 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
 
         # If there's user_input, check the connection.
         if user_input is not None:
-            # convert to integer
-            user_input[CONF_ADDRESS] = int(user_input[CONF_ADDRESS])
-
             try:
                 device_info = await test_modbus_connection(self.host, user_input)
 
