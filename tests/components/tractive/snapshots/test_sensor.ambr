@@ -139,7 +139,7 @@
     'supported_features': 0,
     'translation_key': 'calories',
     'unique_id': 'pet_id_123_calories',
-    'unit_of_measurement': 'kcal',
+    'unit_of_measurement': <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
   })
 # ---
 # name: test_sensor[sensor.test_pet_calories_burned-state]
@@ -147,7 +147,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Pet Calories burned',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'kcal',
+      'unit_of_measurement': <UnitOfEnergy.KILO_CALORIE: 'kcal'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_pet_calories_burned',
