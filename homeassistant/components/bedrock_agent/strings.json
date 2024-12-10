@@ -1,0 +1,79 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Bedrock AWS Connection",
+        "description": "Enter your connections details.",
+        "data": {
+          "title": "Name",
+          "region": "Region",
+          "key_id": "Key ID",
+          "key_secret": "Key Secret"
+        },
+        "data_description": {
+          "title": "The title of your Agend in Home Assistant."
+        }
+      },
+      "modelconfig": {
+        "title": "Model Configuration",
+        "data": {
+          "use_knowledgebase": "Activate Knowledgebase",
+          "model_id": "Model",
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base",
+          "agent_id": "Agent",
+          "agent_alias_id": "AliasId"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "model_id": "Model",
+          "prompt_context": "Prompt Context",
+          "knowledgebase_id": "Knowledge Base",
+          "agent_id": "Agent",
+          "agent_alias_id": "AliasId"
+        }
+      }
+    }
+  },
+  "services": {
+    "cognitive_task": {
+      "name": "Cognitive Task",
+      "description": "This service provides a convenient and efficient way to send multimodal prompts to Antropic Claude models through the Amazon Bedrock platform. It supports both generic text-based prompts as well as prompts that include multiple images, allowing for a more comprehensive and engaging interaction with the AI models.",
+      "fields": {
+        "prompt": {
+          "name": "Prompt",
+          "description": "Textual input that the model uses to generate or continue output.",
+          "example": "Describe what you see in these images"
+        },
+        "model_id": {
+          "name": "Model ID",
+          "description": "Unique identifier assigned to a specific LLM. Default: anthropic.claude-3-haiku-20240307-v1:0",
+          "example": "anthropic.claude-3-haiku-20240307-v1:0"
+        },
+        "image_filenames": {
+          "name": "Image filenames",
+          "description": "One or multiple file names.",
+          "example": "- /config/www/image.jpg"
+        },
+        "image_urls": {
+          "name": "Image URLS",
+          "description": "URLs that point to images.",
+          "example": "- https://localhost:8123/local/image.jpg"
+        }
+      }
+    }
+  }
+}
