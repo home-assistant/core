@@ -288,7 +288,7 @@ async def async_setup_hass(
         # do a clean stop without knowing what is broken
         with contextlib.suppress(TimeoutError):
             async with hass.timeout.async_timeout(10):
-                await hass.async_stop()
+                await hass.async_stop(force=True)
 
     hass = await create_hass()
 
