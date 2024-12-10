@@ -34,6 +34,7 @@ LOGGER = logging.getLogger(__package__)
 class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
     """The Enigma2 data update coordinator."""
 
+    config_entry: ConfigEntry
     device: OpenWebIfDevice
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
