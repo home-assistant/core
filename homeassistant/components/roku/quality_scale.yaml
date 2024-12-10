@@ -1,0 +1,105 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration only has an entity service, registered in the media_player platform.
+  appropriate-polling:
+    status: done
+    comment: |
+      This integration uses 10 seconds as its default polling rate. Apps and Channels are fetched every 15 minutes.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration use coordinator and do not explicitly subscribe to events.
+  entity-unique-id:
+    status: done
+    comment: |
+      Entities of this integration have a unique id based on the device serial number and entity description key.
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: done
+    comment: |
+      Config entries of this integration have an unique id based on the device serial number.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration only has an entity service.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: This integration uses a coordinator.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: This integration uses a coordinator.
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration only polls data using a coordinator.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: done
+  # Gold
+  devices:
+    status: done
+    comment: |
+      This integration creates a single device that corresponds to the Roku device.
+  diagnostics: done
+  discovery-update-info:
+    status: done
+    comment: |
+      This integration updates Host IP when SSDP discovery for same serial number arrives.
+  discovery:
+    status: done
+    comment: |
+      This integration supports SSDP and HomeKit discovery protocols.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not raise any repairable issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
