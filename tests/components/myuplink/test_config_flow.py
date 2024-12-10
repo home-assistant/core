@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.myuplink import MyUplinkConfigEntry
 from homeassistant.components.myuplink.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -70,15 +69,15 @@ async def test_full_flow(
     with patch(
         f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-    entry: MyUplinkConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data["auth_implementation"] == DOMAIN
-    assert entry.data["token"]["refresh_token"] == "mock-refresh-token"
-    assert entry.unique_id == UNIQUE_ID
+
+    assert result["data"]["auth_implementation"] == DOMAIN
+    assert result["data"]["token"]["refresh_token"] == "mock-refresh-token"
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
