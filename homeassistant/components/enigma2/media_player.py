@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 from logging import getLogger
-from typing import cast
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
@@ -15,6 +14,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,8 +66,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            coordinator.device.mac_address
-            or cast(ConfigEntry, coordinator.config_entry).entry_id
+            coordinator.device.mac_address or coordinator.config_entry.entry_id
         )
 
         self._attr_device_info = coordinator.device_info
@@ -154,6 +153,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
 
         if not self.coordinator.data.in_standby:
             self._attr_extra_state_attributes = {
+                # TODO(2025.5): Remove media currently recording
                 ATTR_MEDIA_CURRENTLY_RECORDING: self.coordinator.data.is_recording,
                 ATTR_MEDIA_DESCRIPTION: self.coordinator.data.currservice.fulldescription,
                 ATTR_MEDIA_START_TIME: self.coordinator.data.currservice.begin,
