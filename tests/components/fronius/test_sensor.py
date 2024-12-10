@@ -7,19 +7,19 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
-    FroniusMeterUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import enable_all_entities, mock_responses, setup_fronius_integration
+from . import mock_responses, setup_fronius_integration
 
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_inverter(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -34,15 +34,8 @@ async def test_symo_inverter(
 
     # Init at night
     mock_responses(aioclient_mock, night=True)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 22
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusInverterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     assert_state("sensor.symo_20_dc_current", 0)
     assert_state("sensor.symo_20_energy_day", 10828)
@@ -56,13 +49,6 @@ async def test_symo_inverter(
     freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 62
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusInverterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
     # 4 additional AC entities
     assert_state("sensor.symo_20_dc_current", 2.19)
@@ -106,6 +92,7 @@ async def test_symo_logger(
     assert_state("sensor.solarnet_grid_import_tariff", 0.15)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_meter(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -119,15 +106,8 @@ async def test_symo_meter(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 26
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusMeterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
     # states are rounded to 4 decimals
     assert_state("sensor.smart_meter_63a_current_phase_1", 7.755)
@@ -208,6 +188,7 @@ async def test_symo_meter_forged(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_symo_power_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -222,15 +203,8 @@ async def test_symo_power_flow(
 
     # First test at night
     mock_responses(aioclient_mock, night=True)
-    config_entry = await setup_fronius_integration(hass)
+    await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 22
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusInverterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     # states are rounded to 4 decimals
     assert_state("sensor.solarnet_energy_day", 10828)
@@ -279,6 +253,7 @@ async def test_symo_power_flow(
     assert_state("sensor.solarnet_relative_self_consumption", 0)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_gen24(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -296,13 +271,6 @@ async def test_gen24(
     mock_responses(aioclient_mock, fixture_set="gen24")
     config_entry = await setup_fronius_integration(hass, is_logger=False)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 24
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusMeterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -324,6 +292,7 @@ async def test_gen24(
     assert_state("sensor.inverter_name_total_energy", "unknown")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_gen24_storage(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -344,13 +313,6 @@ async def test_gen24_storage(
         hass, is_logger=False, unique_id="12345678"
     )
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 37
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusMeterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 72
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -386,6 +348,7 @@ async def test_gen24_storage(
     assert storage.name == "BYD Battery-Box Premium HV"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_primo_s0(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -404,13 +367,6 @@ async def test_primo_s0(
     mock_responses(aioclient_mock, fixture_set="primo_s0", inverter_ids=[1, 2])
     config_entry = await setup_fronius_integration(hass, is_logger=True)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 31
-    await enable_all_entities(
-        hass,
-        freezer,
-        config_entry.entry_id,
-        FroniusMeterUpdateCoordinator.default_interval,
-    )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 47
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
