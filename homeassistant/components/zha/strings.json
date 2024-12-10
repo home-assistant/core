@@ -944,6 +944,12 @@
       "instantaneous_demand": {
         "name": "Instantaneous demand"
       },
+      "rms_current_ph_b": {
+        "name": "Current Phase B"
+      },
+      "rms_current_ph_c": {
+        "name": "Current Phase C"
+      },
       "summation_delivered": {
         "name": "Summation delivered"
       },
