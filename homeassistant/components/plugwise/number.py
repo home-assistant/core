@@ -20,6 +20,9 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseNumberEntityDescription(NumberEntityDescription):
