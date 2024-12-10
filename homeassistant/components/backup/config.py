@@ -99,9 +99,7 @@ class BackupConfig:
 
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
-        if stored_config:
-            self.data = BackupConfigData.from_dict(stored_config)
-
+        self.data = BackupConfigData.from_dict(stored_config)
         self.data.schedule.apply(self._manager)
 
     async def update(
