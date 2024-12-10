@@ -86,5 +86,9 @@
       'uplink_throughput_bps': 11802.771484375,
       'uptime': 804138,
     }),
+    'usage': dict({
+      'download_usage': 72504227,
+      'upload_usage': 5719755,
+    }),
   })
 # ---
