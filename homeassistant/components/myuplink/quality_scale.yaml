@@ -47,9 +47,7 @@ rules:
     status: exempt
     comment: Handled by coordinator
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: PR is pending review
+  test-coverage: done
 
   # Gold
   devices: done
