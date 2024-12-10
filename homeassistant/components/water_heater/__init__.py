@@ -56,7 +56,7 @@ STATE_GAS = "gas"
 
 
 class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
+    """Supported features of the water heater entity."""
 
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
