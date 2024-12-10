@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 import copy
+from functools import partial
 import logging
 import secrets
 import threading
@@ -571,6 +572,19 @@ class Stream:
     def get_diagnostics(self) -> dict[str, Any]:
         """Return diagnostics information for the stream."""
         return self._diagnostics.as_dict()
+
+    @staticmethod
+    async def async_has_stream_auth_error(hass: HomeAssistant, source: str) -> bool:
+        """Return true if rtsp stream raises an HTTPUnauthorizedError error."""
+        import av  # pylint: disable=import-outside-toplevel
+
+        pyav_options = {"rtsp_flags": "prefer_tcp", "timeout": "5000000"}
+        try:
+            func = partial(av.open, source, options=pyav_options, timeout=5)
+            await hass.loop.run_in_executor(None, func)
+        except av.HTTPUnauthorizedError:
+            return True
+        return False
 
 
 def _should_retry() -> bool:
