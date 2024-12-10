@@ -28,7 +28,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
@@ -465,8 +465,10 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             percent_color_temp = self.translate(
                 color_temp, self._max_mireds, self._min_mireds, CCT_MIN, CCT_MAX
             )
@@ -475,7 +477,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             brightness = kwargs[ATTR_BRIGHTNESS]
             percent_brightness = ceil(100 * brightness / 255.0)
 
-        if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
+        if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
                 "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
                 brightness,
@@ -495,7 +497,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
                 self._color_temp = color_temp
                 self._brightness = brightness
 
-        elif ATTR_COLOR_TEMP in kwargs:
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
                 "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
@@ -847,8 +849,10 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             percent_color_temp = self.translate(
                 color_temp, self._max_mireds, self._min_mireds, CCT_MIN, CCT_MAX
             )
@@ -880,7 +884,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 self._hs_color = hs_color
                 self._brightness = brightness
 
-        elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
+        elif ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
                 (
                     "Setting brightness and color temperature: "
@@ -913,7 +917,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             if result:
                 self._hs_color = hs_color
 
-        elif ATTR_COLOR_TEMP in kwargs:
+        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
                 "Setting color temperature: %s mireds, %s%% cct",
                 color_temp,
@@ -1121,8 +1125,10 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
         """Instruct the light to turn on."""
         await self.hass.async_add_executor_job(self._sub_device.on)
 
-        if ATTR_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             await self.hass.async_add_executor_job(
                 self._sub_device.set_color_temp, color_temp
             )
