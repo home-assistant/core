@@ -205,10 +205,10 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_updates_host(
+async def test_config_flow_already_configured(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test existing entry gets updated."""
+    """Test existing entry doesn't get updated by config flow."""
     old_host = "http://10.1.0.1"
     new_host = "http://10.1.0.2"
     entry = MockConfigEntry(
