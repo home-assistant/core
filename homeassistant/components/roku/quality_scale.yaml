@@ -7,7 +7,7 @@ rules:
   appropriate-polling:
     status: done
     comment: |
-      This integration uses 10 seconds as its default polling rate.
+      This integration uses 10 seconds as its default polling rate. Apps and Channels are fetched every 15 minutes.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -16,7 +16,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -75,10 +75,10 @@ rules:
     status: done
     comment: |
       This integration supports SSDP and HomeKit discovery protocols.
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
