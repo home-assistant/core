@@ -78,8 +78,10 @@ async def test_setup_multiple_systems_zones(
 
     # Set the temperature of each zone to its zone number so that we can
     # ensure we've created the right client for each zone.
-    for sz, client in mock_evolution_entry.runtime_data.items():
-        client.read_current_temperature.return_value = sz[1]
+    for sz in mock_evolution_entry.data[CONF_SYSTEM_ZONE]:
+        mock_client = await mock_evolution_client_factory(sz[0], sz[1], "/dev/ttyUSB0")
+        mock_client.read_current_temperature.return_value = sz[1]
+
     await trigger_polling(hass, freezer)
 
     # Check that each system and zone has the expected temperature value to
