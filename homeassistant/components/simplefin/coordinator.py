@@ -10,7 +10,7 @@ from simplefin4py.exceptions import SimpleFinAuthError, SimpleFinPaymentRequired
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
@@ -36,7 +36,7 @@ class SimpleFinDataUpdateCoordinator(DataUpdateCoordinator[FinancialData]):
         try:
             return await self.client.fetch_data()
         except SimpleFinAuthError as err:
-            raise ConfigEntryError("Authentication failed") from err
+            raise ConfigEntryAuthFailed("Authentication failed") from err
 
         except SimpleFinPaymentRequiredError as err:
             LOGGER.warning(
