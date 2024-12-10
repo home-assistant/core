@@ -58,7 +58,7 @@ def sync_access_token_proxy(
 @pytest.fixture(autouse=True)
 def mock_delay_save() -> Generator[None]:
     """Mock the delay save constant."""
-    with patch("homeassistant.components.backup.config.STORE_DELAY_SAVE", 0):
+    with patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0):
         yield
 
 
@@ -720,80 +720,90 @@ async def test_agents_info(
 @pytest.mark.parametrize(
     "storage_data",
     [
-        {},
+        None,
         {
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": ["test-addon"],
-                "include_all_addons": True,
-                "include_database": True,
-                "include_folders": ["media"],
-                "name": "test-name",
-                "password": "test-password",
-            },
-            "retention": {"copies": 3, "days": 7},
-            "last_automatic_backup": datetime.fromisoformat(
-                "2024-10-26T04:45:00+01:00"
-            ),
-            "schedule": {"state": "daily"},
+            "config": {
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": ["test-addon"],
+                    "include_all_addons": True,
+                    "include_database": True,
+                    "include_folders": ["media"],
+                    "name": "test-name",
+                    "password": "test-password",
+                },
+                "retention": {"copies": 3, "days": 7},
+                "last_automatic_backup": datetime.fromisoformat(
+                    "2024-10-26T04:45:00+01:00"
+                ),
+                "schedule": {"state": "daily"},
+            }
         },
         {
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": None,
-                "include_all_addons": False,
-                "include_database": False,
-                "include_folders": None,
-                "name": None,
-                "password": None,
-            },
-            "retention": {"copies": 3, "days": None},
-            "last_automatic_backup": None,
-            "schedule": {"state": "never"},
+            "config": {
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": 3, "days": None},
+                "last_automatic_backup": None,
+                "schedule": {"state": "never"},
+            }
         },
         {
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": None,
-                "include_all_addons": False,
-                "include_database": False,
-                "include_folders": None,
-                "name": None,
-                "password": None,
-            },
-            "retention": {"copies": None, "days": 7},
-            "last_automatic_backup": datetime.fromisoformat(
-                "2024-10-26T04:45:00+01:00"
-            ),
-            "schedule": {"state": "never"},
+            "config": {
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": 7},
+                "last_automatic_backup": datetime.fromisoformat(
+                    "2024-10-26T04:45:00+01:00"
+                ),
+                "schedule": {"state": "never"},
+            }
         },
         {
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": None,
-                "include_all_addons": False,
-                "include_database": False,
-                "include_folders": None,
-                "name": None,
-                "password": None,
-            },
-            "retention": {"copies": None, "days": None},
-            "last_automatic_backup": None,
-            "schedule": {"state": "mon"},
+            "config": {
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": None},
+                "last_automatic_backup": None,
+                "schedule": {"state": "mon"},
+            }
         },
         {
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": None,
-                "include_all_addons": False,
-                "include_database": False,
-                "include_folders": None,
-                "name": None,
-                "password": None,
-            },
-            "retention": {"copies": None, "days": None},
-            "last_automatic_backup": None,
-            "schedule": {"state": "sat"},
+            "config": {
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": None,
+                    "include_all_addons": False,
+                    "include_database": False,
+                    "include_folders": None,
+                    "name": None,
+                    "password": None,
+                },
+                "retention": {"copies": None, "days": None},
+                "last_automatic_backup": None,
+                "schedule": {"state": "sat"},
+            }
         },
     ],
 )
@@ -802,7 +812,7 @@ async def test_config_info(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
-    storage_data: dict[str, Any],
+    storage_data: dict[str, Any] | None,
 ) -> None:
     """Test getting backup config info."""
     hass_storage[DOMAIN] = {
@@ -1096,18 +1106,20 @@ async def test_config_schedule_logic(
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "create_backup": {
-            "agent_ids": ["test-agent"],
-            "include_addons": ["test-addon"],
-            "include_all_addons": False,
-            "include_database": True,
-            "include_folders": ["media"],
-            "name": "test-name",
-            "password": "test-password",
-        },
-        "retention": {"copies": None, "days": None},
-        "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
-        "schedule": {"state": "daily"},
+        "config": {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
+            "schedule": {"state": "daily"},
+        }
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1134,7 +1146,9 @@ async def test_config_schedule_logic(
     assert create_backup.call_args == call_args
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
-    assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_automatic_backup"] == backup_time
+    )
 
     freezer.move_to(time_2)
     async_fire_time_changed(hass)
@@ -1361,18 +1375,20 @@ async def test_config_retention_copies_logic(
     """Test config backup retention copies logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "create_backup": {
-            "agent_ids": ["test-agent"],
-            "include_addons": ["test-addon"],
-            "include_all_addons": False,
-            "include_database": True,
-            "include_folders": ["media"],
-            "name": "test-name",
-            "password": "test-password",
-        },
-        "retention": {"copies": None, "days": None},
-        "last_automatic_backup": datetime.fromisoformat(last_backup_time),
-        "schedule": {"state": "daily"},
+        "config": {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "schedule": {"state": "daily"},
+        }
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1401,7 +1417,9 @@ async def test_config_retention_copies_logic(
     assert delete_backup.call_args_list == delete_args_list
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
-    assert hass_storage[DOMAIN]["data"]["last_automatic_backup"] == backup_time
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_automatic_backup"] == backup_time
+    )
 
 
 @pytest.mark.parametrize(
@@ -1563,18 +1581,20 @@ async def test_config_retention_days_logic(
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "create_backup": {
-            "agent_ids": ["test-agent"],
-            "include_addons": ["test-addon"],
-            "include_all_addons": False,
-            "include_database": True,
-            "include_folders": ["media"],
-            "name": "test-name",
-            "password": "test-password",
-        },
-        "retention": {"copies": None, "days": None},
-        "last_automatic_backup": datetime.fromisoformat(last_backup_time),
-        "schedule": {"state": "never"},
+        "config": {
+            "create_backup": {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["test-addon"],
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "retention": {"copies": None, "days": None},
+            "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "schedule": {"state": "never"},
+        }
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
