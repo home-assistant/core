@@ -31,15 +31,6 @@ def read_backup_fixture(path_glob: MagicMock) -> Generator[MagicMock]:
         yield read_backup
 
 
-@pytest.fixture(name="path_glob")
-def path_glob_fixture() -> Generator[MagicMock]:
-    """Mock path glob."""
-    with patch(
-        "pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]
-    ) as path_glob:
-        yield path_glob
-
-
 @pytest.mark.parametrize(
     "side_effect",
     [
