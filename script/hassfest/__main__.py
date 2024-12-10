@@ -125,7 +125,10 @@ def get_config() -> Config:
             "Generate is not allowed when limiting to specific integrations"
         )
 
-    if not parsed.integration_path and not Path("requirements_all.txt").is_file():
+    if (
+        not parsed.integration_path
+        and not (parsed.core_path / "requirements_all.txt").is_file()
+    ):
         raise RuntimeError("Run from Home Assistant root")
 
     return Config(
