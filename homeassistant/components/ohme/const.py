@@ -3,4 +3,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "ohme"
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR]
+
+CONF_EMAIL = "email"
+CONF_PASSWORD = "password"

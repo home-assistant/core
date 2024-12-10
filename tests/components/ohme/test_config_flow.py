@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.ohme.const import DOMAIN
+from homeassistant.components.ohme.const import CONF_EMAIL, CONF_PASSWORD, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,7 +25,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     with patch("ohme.OhmeApiClient.async_refresh_session", return_value=None):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test@example.com", "password": "hunter1"},
+            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -35,7 +35,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     with patch("ohme.OhmeApiClient.async_refresh_session", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test@example.com", "password": "hunter2"},
+            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY

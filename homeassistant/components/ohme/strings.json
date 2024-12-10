@@ -16,18 +16,15 @@
   },
   "issues": {},
   "entity": {
-    "binary_sensor": {
-      "car_connected": {
-        "name": "Car Connected"
-      },
-      "car_charging": {
-        "name": "Car Charging"
-      },
-      "pending_approval": {
-        "name": "Pending Approval"
-      },
-      "charger_online": {
-        "name": "Online"
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged_in": "Plugged in",
+          "charging": "Charging",
+          "pending_approval": "Pending approval"
+        }
       }
     }
   }

@@ -2,7 +2,6 @@
 
 from ohme import OhmeApiClient
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -18,7 +17,6 @@ class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
     def __init__(
         self,
         coordinator: OhmeCoordinator,
-        hass: HomeAssistant,
         client: OhmeApiClient,
         entity_description: EntityDescription,
     ) -> None:
@@ -26,13 +24,15 @@ class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
+
+        self._client = client
         self._attr_translation_key = entity_description.key
         self._attr_device_info = DeviceInfo(**client.get_device_info())
-
-        self._hass = hass
-        self._client = client
+        self._attr_unique_id = f"{self._client.serial}_{self._attr_translation_key}"
 
     @property
-    def unique_id(self) -> str:
-        """Return unique ID of the entity."""
-        return f"{self._client.serial}_{self._attr_translation_key}"
+    def available(self) -> bool:
+        """Return if charger reporting as online."""
+        if self.coordinator.data.advanced_settings:
+            return self.coordinator.data.advanced_settings.get("online", False)
+        return False
