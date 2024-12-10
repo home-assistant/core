@@ -12,17 +12,17 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy/#actions
   docs-high-level-description:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy
   docs-installation-instructions:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#prerequisites
   docs-removal-instructions:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#removing-the-integration
   entity-event-setup:
     status: done
     comment: no events used.
@@ -41,11 +41,11 @@ rules:
       Pending https://github.com/pyenphase/pyenphase/pull/194
   config-entry-unloading: done
   docs-configuration-parameters:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#configuration
   docs-installation-parameters:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#required-manual-input
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -61,19 +61,19 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#data-updates
   docs-examples:
     status: todo
     comment: add blue-print examples, if any
   docs-known-limitations: todo
   docs-supported-devices:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#supported-devices
   docs-supported-functions: todo
   docs-troubleshooting:
-    status: todo
-    comment: pending https://github.com/home-assistant/home-assistant.io/pull/36128
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#troubleshooting
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
