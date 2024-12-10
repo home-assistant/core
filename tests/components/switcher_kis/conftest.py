@@ -67,14 +67,6 @@ def mock_api():
             "homeassistant.components.switcher_kis.entity.SwitcherApi.disconnect",
             new=api_mock,
         ),
-        patch(
-            "homeassistant.components.switcher_kis.entity.SwitcherApi.connect",
-            new=api_mock,
-        ),
-        patch(
-            "homeassistant.components.switcher_kis.entity.SwitcherApi.disconnect",
-            new=api_mock,
-        ),
     ]
 
     for patcher in patchers:
