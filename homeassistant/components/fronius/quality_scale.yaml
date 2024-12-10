@@ -11,8 +11,16 @@ rules:
     comment: |
       Single platform only, so no entity.py file.
       CoordinatorEntity is used.
-  config-flow-test-coverage: done
-  config-flow: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - Remove duplicated patch of `async_setup_entry`.
+      - Assert unique_id in test_form_with_logger and test_dhcp.
+      - All tests should end in either a CREATE_ENTRY or ABORT.
+  config-flow:
+    status: todo
+    comment: |
+      - Missing data_description for host.
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -27,7 +35,10 @@ rules:
       This integration does not subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: todo
+    comment: |
+      `async_remove_config_entry_device` does not use typed ConfigEntry.
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -55,7 +66,12 @@ rules:
     status: exempt
     comment: |
       This integration doesn't require authentication.
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      - Use fixture `enable_all_entities` instead of custom code.
+      - Use freezer.
+      - Use snapshots.
   # Gold
   devices: done
   diagnostics: done
@@ -72,8 +88,15 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
-  exception-translations: done
+  entity-translations:
+    status: todo
+    comment: |
+      - Remove name translations that are handled by device class translations.
+      - `Unknown` should not be a valid state of status_message.
+  exception-translations:
+    status: todo
+    comment: |
+      CannotConnect in config_flow.py shall not be translated - errors dict is used.
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
@@ -84,4 +107,7 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      The pyfronius library isn't strictly typed and doesn't export type information.
