@@ -18,6 +18,7 @@ VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
+METADATA = load_json_object_fixture("metadata.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
@@ -33,22 +34,6 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 
 RESPONSE_OK = {"response": {}, "error": None}
 
-METADATA = {
-    "uid": "abc-123",
-    "region": "NA",
-    "scopes": [
-        "openid",
-        "offline_access",
-        "user_data",
-        "vehicle_device_data",
-        "vehicle_cmds",
-        "vehicle_charging_cmds",
-        "energy_device_data",
-        "energy_cmds",
-    ],
-}
-METADATA_NOSCOPE = {
-    "uid": "abc-123",
-    "region": "NA",
-    "scopes": ["openid", "offline_access", "vehicle_device_data"],
-}
+
+METADATA_NOSCOPE = METADATA.copy()
+METADATA_NOSCOPE["scopes"] = ["openid", "offline_access", "vehicle_device_data"]
