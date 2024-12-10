@@ -17,7 +17,7 @@
       },
       "zeroconf_confirm": {
         "title": "Comfirm setup for Slide (local API)",
-        "description": "Do you want to setup {model}?"
+        "description": "Do you want to setup {host}?"
       }
     },
     "abort": {
