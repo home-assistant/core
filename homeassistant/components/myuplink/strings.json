@@ -50,7 +50,7 @@
       "message": "Error while loading the integration."
     },
     "incorrect_oauth2_scope": {
-      "message": "Incorrect OAuth2 scope."
+      "message": "Stored permissions are deprecated and are refreshed automatically."
     },
     "set_number_error": {
       "message": "Failed to set new value {value} for {point}/{entity}."
