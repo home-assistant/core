@@ -334,6 +334,12 @@ SSDP = {
             "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
     ],
+    "victronvenus": [
+        {
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+    ],
     "webostv": [
         {
             "st": "urn:lge-com:service:webos-second-screen:1",
