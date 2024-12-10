@@ -52,6 +52,12 @@
       "operational_state": {
         "default": "mdi:play-pause"
       },
+      "tank_volume": {
+        "name": "mdi:water-boiler"
+      }
+      "tank_percentage": {
+        "name": "mdi:water-boiler"
+      }
       "valve_position": {
         "default": "mdi:valve"
       }
