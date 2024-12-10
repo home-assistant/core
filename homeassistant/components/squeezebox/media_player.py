@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
@@ -179,6 +180,7 @@ class SqueezeBoxMediaPlayerEntity(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -428,7 +430,11 @@ class SqueezeBoxMediaPlayerEntity(
         await self.coordinator.async_refresh()
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -450,6 +456,66 @@ class SqueezeBoxMediaPlayerEntity(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
+
+        if announce:
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+
+            _announce_volume: str | None = extra.get("announce_volume", None)
+
+            if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
+                # do not process special squeezebox "source" media ids
+                media_id = async_process_play_media_url(self.hass, media_id)
+
+            _LOGGER.debug("Announce URL : %s", media_id)
+
+            # save current settings
+            _repeat: int | None = self._player.repeat
+            _power: int = self._player.power
+            _mixer_volume: str = self._player.volume
+            _mode: str = self._player.mode
+            _time: int = self.media_position
+
+            await self._player.async_command(
+                "playlist",
+                "save",
+                f"tempplaylist_{self._player.player_id.replace(":","")}",
+            )
+
+            if not _repeat:
+                _repeat = 0
+
+            if _announce_volume:
+                await (
+                    self._player.async_stop()
+                )  # Stop the current playlist before changing the volume
+                await self._player.async_set_volume(_announce_volume)
+
+            await self._player.async_play_announcement(media_id)
+
+            await self._player.async_command(
+                "playlist",
+                "resume",
+                f"tempplaylist_{self._player.player_id.replace(":","")}",
+                f"noplay:{0 if _mode == "play" else 1}",
+                "wipePlaylist",
+            )
+
+            # restore settings
+            match _repeat:
+                case 2:
+                    await self._player.async_set_repeat("playlist")
+                case 1:
+                    await self._player.async_set_repeat("song")
+                case _:
+                    await self._player.async_set_repeat("none")
+
+            await self._player.async_set_power(_power != 0)
+            if _announce_volume:
+                await self._player.async_set_volume(_mixer_volume)
+            if _time != 0:
+                await self.async_media_seek(_time)
+
+            return
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
