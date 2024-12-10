@@ -129,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
+class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
@@ -152,7 +152,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
     )
 
-    entity_description: WaterHeaterEntityEntityDescription
+    entity_description: WaterHeaterEntityDescription
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None
     _attr_is_away_mode_on: bool | None = None
