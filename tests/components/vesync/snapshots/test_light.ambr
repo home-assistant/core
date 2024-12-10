@@ -428,10 +428,10 @@
       }),
       'area_id': None,
       'capabilities': dict({
-        'max_color_temp_kelvin': 6493,
+        'max_color_temp_kelvin': 6500,
         'max_mireds': 370,
-        'min_color_temp_kelvin': 2702,
-        'min_mireds': 154,
+        'min_color_temp_kelvin': 2700,
+        'min_mireds': 153,
         'supported_color_modes': list([
           <ColorMode.COLOR_TEMP: 'color_temp'>,
         ]),
@@ -473,10 +473,10 @@
       'color_temp_kelvin': None,
       'friendly_name': 'Temperature Light',
       'hs_color': None,
-      'max_color_temp_kelvin': 6493,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
-      'min_color_temp_kelvin': 2702,
-      'min_mireds': 154,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,

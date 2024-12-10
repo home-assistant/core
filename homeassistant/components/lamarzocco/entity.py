@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.helpers.device_registry import (

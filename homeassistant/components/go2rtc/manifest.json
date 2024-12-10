@@ -8,6 +8,6 @@
   "integration_type": "system",
   "iot_class": "local_polling",
   "quality_scale": "legacy",
-  "requirements": ["go2rtc-client==0.1.1"],
+  "requirements": ["go2rtc-client==0.1.2"],
   "single_config_entry": true
 }

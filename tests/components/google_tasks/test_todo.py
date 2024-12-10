@@ -239,6 +239,7 @@ def mock_http_response(response_handler: list | Callable) -> Mock:
         yield mock_response
 
 
+@pytest.mark.parametrize("timezone", ["America/Regina", "UTC", "Asia/Tokyo"])
 @pytest.mark.parametrize(
     "api_responses",
     [
@@ -251,7 +252,7 @@ def mock_http_response(response_handler: list | Callable) -> Mock:
                         "title": "Task 1",
                         "status": "needsAction",
                         "position": "0000000000000001",
-                        "due": "2023-11-18T00:00:00+00:00",
+                        "due": "2023-11-18T00:00:00Z",
                     },
                     {
                         "id": "task-2",
@@ -271,8 +272,10 @@ async def test_get_items(
     integration_setup: Callable[[], Awaitable[bool]],
     hass_ws_client: WebSocketGenerator,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    timezone: str,
 ) -> None:
     """Test getting todo list items."""
+    await hass.config.async_set_time_zone(timezone)
 
     assert await integration_setup()
 
@@ -474,6 +477,39 @@ async def test_update_todo_list_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", ATTR_RENAME: "Soda", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize("timezone", ["America/Regina", "UTC", "Asia/Tokyo"])
+@pytest.mark.parametrize("api_responses", [UPDATE_API_RESPONSES])
+async def test_update_due_date(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+    timezone: str,
+) -> None:
+    """Test for updating the due date of a To-do item and timezone."""
+    await hass.config.async_set_time_zone(timezone)
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "some-task-id", ATTR_DUE_DATE: "2024-12-5"},
         target={ATTR_ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )

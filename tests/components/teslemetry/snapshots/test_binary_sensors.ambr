@@ -212,7 +212,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_heater_on',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_heater_on',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_heater_on',
     'unit_of_measurement': None,
   })
 # ---
@@ -259,7 +259,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_cabin_overheat_protection_actively_cooling',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_cabin_overheat_protection_actively_cooling',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection_actively_cooling',
     'unit_of_measurement': None,
   })
 # ---
@@ -306,7 +306,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_conn_charge_cable',
     'unit_of_measurement': None,
   })
 # ---
@@ -353,7 +353,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_phases',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_phases',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_phases',
     'unit_of_measurement': None,
   })
 # ---
@@ -399,7 +399,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_dashcam_state',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_dashcam_state',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_dashcam_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -446,7 +446,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_df',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_df',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_df',
     'unit_of_measurement': None,
   })
 # ---
@@ -493,7 +493,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_fd_window',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_fd_window',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_fd_window',
     'unit_of_measurement': None,
   })
 # ---
@@ -540,7 +540,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_pf',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_pf',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_pf',
     'unit_of_measurement': None,
   })
 # ---
@@ -587,7 +587,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_fp_window',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_fp_window',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_fp_window',
     'unit_of_measurement': None,
   })
 # ---
@@ -634,7 +634,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_is_preconditioning',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_is_preconditioning',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_is_preconditioning',
     'unit_of_measurement': None,
   })
 # ---
@@ -680,7 +680,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_preconditioning_enabled',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_preconditioning_enabled',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_preconditioning_enabled',
     'unit_of_measurement': None,
   })
 # ---
@@ -726,7 +726,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_dr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_dr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_dr',
     'unit_of_measurement': None,
   })
 # ---
@@ -773,7 +773,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rd_window',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rd_window',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rd_window',
     'unit_of_measurement': None,
   })
 # ---
@@ -820,7 +820,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_pr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_pr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_pr',
     'unit_of_measurement': None,
   })
 # ---
@@ -867,7 +867,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rp_window',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rp_window',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rp_window',
     'unit_of_measurement': None,
   })
 # ---
@@ -914,7 +914,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_scheduled_charging_pending',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_scheduled_charging_pending',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_scheduled_charging_pending',
     'unit_of_measurement': None,
   })
 # ---
@@ -960,7 +960,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'state',
-    'unique_id': 'LRWXF7EK4KC700000-state',
+    'unique_id': 'LRW3F7EK4NC700000-state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1007,7 +1007,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_fl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_fl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_soft_warning_fl',
     'unit_of_measurement': None,
   })
 # ---
@@ -1054,7 +1054,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_fr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_fr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_soft_warning_fr',
     'unit_of_measurement': None,
   })
 # ---
@@ -1101,7 +1101,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_rl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_rl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_soft_warning_rl',
     'unit_of_measurement': None,
   })
 # ---
@@ -1148,7 +1148,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_rr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_rr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_soft_warning_rr',
     'unit_of_measurement': None,
   })
 # ---
@@ -1195,7 +1195,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_trip_charging',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_trip_charging',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_trip_charging',
     'unit_of_measurement': None,
   })
 # ---
@@ -1241,7 +1241,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_is_user_present',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_is_user_present',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_is_user_present',
     'unit_of_measurement': None,
   })
 # ---
