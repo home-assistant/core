@@ -7,10 +7,9 @@ from ohme import OhmeApiClient
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import PLATFORMS
-from .coordinator import OhmeApiResponse, OhmeCoordinator
+from .coordinator import OhmeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,10 +21,10 @@ class OhmeRuntimeData:
     """Store volatile data."""
 
     client: OhmeApiClient
-    coordinator: DataUpdateCoordinator[OhmeApiResponse]
+    coordinator: OhmeCoordinator
 
 
-async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
     client = OhmeApiClient(entry.data["email"], entry.data["password"])
@@ -42,7 +41,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

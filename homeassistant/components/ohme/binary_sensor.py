@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -20,26 +21,23 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSOR_DESCRIPTIONS = [
     BinarySensorEntityDescription(
         key="car_connected",
-        name="Car Connected",
         icon="mdi:ev-plug-type2",
         device_class=BinarySensorDeviceClass.PLUG,
     ),
     BinarySensorEntityDescription(
         key="car_charging",
-        name="Car Charging",
         icon="mdi:battery-charging-100",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
     BinarySensorEntityDescription(
         key="pending_approval",
-        name="Pending Approval",
         icon="mdi:alert-decagram",
     ),
     BinarySensorEntityDescription(
         key="charger_online",
-        name="Charger Online",
         icon="mdi:web",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

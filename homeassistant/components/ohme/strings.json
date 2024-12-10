@@ -14,33 +14,6 @@
     },
     "abort": {}
   },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Update your Ohme account information.",
-        "data": {
-          "email": "Email address",
-          "password": "Password",
-          "never_session_specific": "Never update an ongoing session",
-          "never_collapse_slots": "Don't collapse charge slots",
-          "interval_chargesessions": "Charge sessions refresh rate (minutes)",
-          "interval_accountinfo": "Account info refresh rate (minutes)",
-          "interval_advanced": "Advanced settings refresh rate (minutes)",
-          "interval_schedules": "Schedules refresh rate (minutes)"
-        },
-        "data_description": {
-          "password": "If you are not changing your credentials, leave the password field empty.",
-          "never_session_specific": "When adjusting charge percentage, charge target or preconditioning settings, the schedule will always be updated even if a charge session is in progress.",
-          "never_collapse_slots": "By default, adjacent slots are merged into one. This option shows every slot, as shown in the Ohme app.",
-          "interval_schedules": "Details on which entities are updated by each coordinator are in the README."
-        }
-      }
-    },
-    "error": {
-      "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
-    },
-    "abort": {}
-  },
   "issues": {},
   "entity": {
     "binary_sensor": {
@@ -53,11 +26,8 @@
       "pending_approval": {
         "name": "Pending Approval"
       },
-      "slot_active": {
-        "name": "Charge Slot Active"
-      },
       "charger_online": {
-        "name": "Charger Online"
+        "name": "Online"
       }
     }
   }
