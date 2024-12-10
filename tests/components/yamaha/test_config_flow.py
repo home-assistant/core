@@ -57,7 +57,7 @@ def mock_get_device_info_invalid():
     with (
         patch("rxv.RXV", return_value=None),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             return_value=None,
         ),
     ):
@@ -68,7 +68,7 @@ def mock_get_device_info_invalid():
 def mock_get_device_info_exception():
     """Mock raising an unexpected Exception."""
     with patch(
-        "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+        "homeassistant.components.yamaha.utils.get_rxv_details",
         side_effect=Exception("mocked error"),
     ):
         yield
@@ -98,7 +98,7 @@ def mock_get_device_info_mc_ctrl_url():
 def mock_ssdp_yamaha():
     """Mock that the SSDP detected device is a Yamaha device."""
     with patch(
-        "homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp",
+        "homeassistant.components.yamaha.utils.check_yamaha_ssdp",
         return_value=True,
     ):
         yield
@@ -108,7 +108,7 @@ def mock_ssdp_yamaha():
 def mock_ssdp_no_yamaha():
     """Mock that the SSDP detected device is not a Yamaha device."""
     with patch(
-        "homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp",
+        "homeassistant.components.yamaha.utils.check_yamaha_ssdp",
         return_value=False,
     ):
         yield
@@ -136,7 +136,7 @@ def mock_valid_discovery_information():
             ],
         ),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             return_value=RxvDetails(
                 model_name="MC20",
                 ctrl_url=None,
@@ -158,7 +158,7 @@ def mock_empty_discovery_information():
             return_value=[],
         ),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             return_value=RxvDetails(
                 model_name="MC20",
                 ctrl_url=None,

@@ -28,7 +28,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import get_upnp_desc
+from . import get_upnp_desc, utils
 from .const import (
     CONF_SERIAL,
     CONF_UPNP_DESC,
@@ -37,7 +37,6 @@ from .const import (
     OPTION_INPUT_SOURCES,
     OPTION_INPUT_SOURCES_IGNORE,
 )
-from .yamaha_config_info import YamahaConfigInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
         # Check if device is a Yamaha receiver
         try:
             upnp_desc: str = await get_upnp_desc(self.hass, host)
-            info = await YamahaConfigInfo.get_rxv_details(upnp_desc, self.hass)
+            info = await utils.get_rxv_details(upnp_desc, self.hass)
         except ConnectionError:
             return self.async_abort(reason="cannot_connect")
         except Exception:
@@ -106,9 +105,7 @@ class YamahaFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle ssdp discoveries."""
         assert discovery_info.ssdp_location is not None
-        if not await YamahaConfigInfo.check_yamaha_ssdp(
-            discovery_info.ssdp_location, self.hass
-        ):
+        if not await utils.check_yamaha_ssdp(discovery_info.ssdp_location, self.hass):
             return self.async_abort(reason="yxc_control_url_missing")
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location

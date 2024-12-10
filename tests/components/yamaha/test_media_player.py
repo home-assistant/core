@@ -71,7 +71,7 @@ def device_fixture(main_zone):
     with (
         patch("rxv.RXV", return_value=device),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             return_value=RxvDetails(
                 model_name="MC20",
                 ctrl_url=device.ctrl_url,
@@ -93,7 +93,7 @@ def device2_fixture(main_zone):
     with (
         patch("rxv.RXV", return_value=device),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             return_value=RxvDetails(
                 model_name="AX100",
                 ctrl_url=device.ctrl_url,
@@ -111,7 +111,7 @@ def mock_invalid_discovery_information():
     """Mock that the ssdp scanner returns a useful upnp description."""
     with (
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.check_yamaha_ssdp",
+            "homeassistant.components.yamaha.utils.check_yamaha_ssdp",
             return_value=True,
         ),
         patch(
@@ -132,7 +132,7 @@ def mock_invalid_discovery_information():
             ],
         ),
         patch(
-            "homeassistant.components.yamaha.YamahaConfigInfo.get_rxv_details",
+            "homeassistant.components.yamaha.utils.get_rxv_details",
             side_effect=ConnectionError("mocked error"),
         ),
     ):

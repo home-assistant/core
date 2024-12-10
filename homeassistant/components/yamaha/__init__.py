@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
+from . import utils
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
-from .yamaha_config_info import YamahaConfigInfo
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -50,11 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     hass.data.setdefault(DOMAIN, {})
-    rxv_details = await YamahaConfigInfo.get_rxv_details(
-        entry.data[CONF_UPNP_DESC], hass
-    )
+    rxv_details = await utils.get_rxv_details(entry.data[CONF_UPNP_DESC], hass)
     entry.runtime_data = await hass.async_add_executor_job(
-        partial(rxv.RXV, **rxv_details._asdict())  # type: ignore[union-attr]
+        partial(rxv.RXV, **rxv_details._asdict())
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
