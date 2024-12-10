@@ -68,6 +68,10 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+
+        # TODO - Remove these after testing
+        LOGGER.warning("Here")
+
         errors: dict[str, str] = {}
         if user_input:
             self.host = user_input[CONF_HOST]
@@ -155,8 +159,9 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         self._hassio_discovery = discovery_info.config
 
-        LOGGER.log(LOGGER.warning, "HassIO Discovery")
-        LOGGER.log(LOGGER.warning, self._hassio_discovery)
+        # TODO - Remove these after testing
+        LOGGER.warning("HassIO Discovery")
+        LOGGER.warning(self._hassio_discovery)
 
         await self._async_handle_discovery_without_unique_id()
 
