@@ -35,6 +35,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.yeelight.const import (
@@ -931,9 +932,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -962,9 +961,7 @@ async def test_device_types(
             "rgb_color": (255, 121, 0),
             "xy_color": (0.62, 0.368),
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -992,9 +989,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1028,9 +1023,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1065,9 +1058,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1102,9 +1093,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1138,9 +1127,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": model_specs["color_temp"]["min"],
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1173,12 +1160,8 @@ async def test_device_types(
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
-            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1204,12 +1187,8 @@ async def test_device_types(
             "effect_list": YEELIGHT_TEMP_ONLY_EFFECT_LIST,
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
-            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1217,17 +1196,15 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": nl_br,
-            "color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
+            "color_temp_kelvin": model_specs["color_temp"]["min"],
             "color_temp": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
-            "hs_color": (28.391, 65.659),
-            "rgb_color": (255, 167, 88),
-            "xy_color": (0.524, 0.388),
+            "hs_color": (28.395, 65.723),
+            "rgb_color": (255, 167, 87),
+            "xy_color": (0.525, 0.388),
         },
     )
 
@@ -1245,12 +1222,8 @@ async def test_device_types(
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
-            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1279,12 +1252,8 @@ async def test_device_types(
             "flowing": False,
             "night_light": True,
             "supported_features": SUPPORT_YEELIGHT,
-            "min_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["max"])
-            ),
+            "min_color_temp_kelvin": model_specs["color_temp"]["min"],
+            "max_color_temp_kelvin": model_specs["color_temp"]["max"],
             "min_mireds": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["max"]
             ),
@@ -1292,17 +1261,15 @@ async def test_device_types(
                 model_specs["color_temp"]["min"]
             ),
             "brightness": nl_br,
-            "color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(model_specs["color_temp"]["min"])
-            ),
+            "color_temp_kelvin": model_specs["color_temp"]["min"],
             "color_temp": color_temperature_kelvin_to_mired(
                 model_specs["color_temp"]["min"]
             ),
             "color_mode": "color_temp",
             "supported_color_modes": ["color_temp"],
-            "hs_color": (28.391, 65.659),
-            "rgb_color": (255, 167, 88),
-            "xy_color": (0.524, 0.388),
+            "hs_color": (28.395, 65.723),
+            "rgb_color": (255, 167, 87),
+            "xy_color": (0.525, 0.388),
         },
     )
     # Background light - color mode CT
@@ -1315,16 +1282,18 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(6500)
-            ),
+            "max_color_temp_kelvin": 6500,
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
             "color_temp_kelvin": bg_ct,
             "color_temp": bg_ct_kelvin,
             "color_mode": "color_temp",
-            "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "supported_color_modes": [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+                ColorMode.RGB,
+            ],
             "hs_color": (27.001, 19.243),
             "rgb_color": (255, 228, 206),
             "xy_color": (0.371, 0.349),
@@ -1343,9 +1312,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(6500)
-            ),
+            "max_color_temp_kelvin": 6500,
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
@@ -1355,7 +1322,11 @@ async def test_device_types(
             "color_temp": None,
             "color_temp_kelvin": None,
             "color_mode": "hs",
-            "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "supported_color_modes": [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+                ColorMode.RGB,
+            ],
         },
         name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
@@ -1371,9 +1342,7 @@ async def test_device_types(
             "effect": None,
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
-            "max_color_temp_kelvin": color_temperature_mired_to_kelvin(
-                color_temperature_kelvin_to_mired(6500)
-            ),
+            "max_color_temp_kelvin": 6500,
             "min_mireds": color_temperature_kelvin_to_mired(6500),
             "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
@@ -1383,7 +1352,11 @@ async def test_device_types(
             "color_temp": None,
             "color_temp_kelvin": None,
             "color_mode": "rgb",
-            "supported_color_modes": ["color_temp", "hs", "rgb"],
+            "supported_color_modes": [
+                ColorMode.COLOR_TEMP,
+                ColorMode.HS,
+                ColorMode.RGB,
+            ],
         },
         name=f"{UNIQUE_FRIENDLY_NAME} Ambilight",
         entity_id=f"{ENTITY_LIGHT}_ambilight",
