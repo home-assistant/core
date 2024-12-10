@@ -6,7 +6,11 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: done
+    comment: |
+      Single platform only, so no entity.py file.
+      CoordinatorEntity is used.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -42,7 +46,11 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
+  parallel-updates:
+    status: done
+    comment: |
+      Coordinators are used and asyncio.Lock mutex across them ensure proper
+      rate limiting. Platforms are read-only.
   reauthentication-flow:
     status: exempt
     comment: |
