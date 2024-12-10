@@ -135,6 +135,7 @@ def mock_stream_update_config():
         yield mock_stream_update_config
 
 
+@pytest.fixture(autouse=True)
 def mock_stream_connected():
     """Mock Teslemetry Stream listen method."""
     with patch(
