@@ -23,13 +23,13 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
+from . import RokuConfigEntry
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -82,10 +82,10 @@ SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: RokuConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Roku config entry."""
-    coordinator: RokuDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [

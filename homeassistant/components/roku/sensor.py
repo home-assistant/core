@@ -8,12 +8,11 @@ from dataclasses import dataclass
 from rokuecp.models import Device as RokuDevice
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import RokuDataUpdateCoordinator
+from . import RokuConfigEntry
 from .entity import RokuEntity
 
 
@@ -42,11 +41,11 @@ SENSORS: tuple[RokuSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RokuConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roku sensor based on a config entry."""
-    coordinator: RokuDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         RokuSensorEntity(

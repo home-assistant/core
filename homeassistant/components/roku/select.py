@@ -9,11 +9,10 @@ from rokuecp import Roku
 from rokuecp.models import Device as RokuDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import RokuDataUpdateCoordinator
+from . import RokuConfigEntry
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
@@ -107,11 +106,11 @@ CHANNEL_ENTITY = RokuSelectEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RokuConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roku select based on a config entry."""
-    coordinator: RokuDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     device: RokuDevice = coordinator.data
 
     entities: list[RokuSelectEntity] = [
