@@ -56,7 +56,10 @@ async def validate_host(
         _LOGGER.debug(err)
         raise CannotConnect from err
     except StopIteration as err:
-        raise CannotConnect("No supported Fronius SolarNet device found.") from err
+        raise CannotConnect(
+            translation_domain=DOMAIN,
+            translation_key="no_supported_device_found",
+        ) from err
     first_inverter_uid: str = first_inverter["unique_id"]["value"]
     return first_inverter_uid, FroniusConfigEntryData(
         host=host,

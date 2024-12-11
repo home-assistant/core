@@ -359,7 +359,7 @@ async def async_api_set_color_temperature(
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_KELVIN: kelvin},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
         blocking=False,
         context=context,
     )
@@ -527,6 +527,7 @@ async def async_api_unlock(
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }:
         msg = (

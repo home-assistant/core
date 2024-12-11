@@ -8,7 +8,6 @@
     'data': dict({
       'host': '127.0.0.1',
       'mac': None,
-      'port': 9123,
     }),
     'description': None,
     'description_placeholders': None,
@@ -21,7 +20,6 @@
       'data': dict({
         'host': '127.0.0.1',
         'mac': None,
-        'port': 9123,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -53,7 +51,6 @@
     'data': dict({
       'host': '127.0.0.1',
       'mac': 'AA:BB:CC:DD:EE:FF',
-      'port': 9123,
     }),
     'description': None,
     'description_placeholders': None,
@@ -66,7 +63,6 @@
       'data': dict({
         'host': '127.0.0.1',
         'mac': 'AA:BB:CC:DD:EE:FF',
-        'port': 9123,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -97,7 +93,6 @@
     'data': dict({
       'host': '127.0.0.1',
       'mac': 'AA:BB:CC:DD:EE:FF',
-      'port': 9123,
     }),
     'description': None,
     'description_placeholders': None,
@@ -110,7 +105,6 @@
       'data': dict({
         'host': '127.0.0.1',
         'mac': 'AA:BB:CC:DD:EE:FF',
-        'port': 9123,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
