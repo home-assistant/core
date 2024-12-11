@@ -83,6 +83,7 @@ async def test_agents_list_backups(
             "name": "Kitchen sink syncer",
             "protected": False,
             "size": 1234,
+            "with_strategy_settings": False,
         }
     ]
 
@@ -161,6 +162,7 @@ async def test_agents_upload(
         "name": "Test",
         "protected": False,
         "size": 0.0,
+        "with_strategy_settings": False,
     }
 
 

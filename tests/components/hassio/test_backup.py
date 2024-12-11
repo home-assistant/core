@@ -137,6 +137,7 @@ async def test_agent_list_backups(
             "name": "Test",
             "protected": False,
             "size": 1048576,
+            "with_strategy_settings": False,
         }
     ]
 
