@@ -122,7 +122,7 @@ async def test_other_models_no_scale_battery(
 
 
 @pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
-async def test_new_lock(
+async def test_scale_added(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
