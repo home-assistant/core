@@ -12,9 +12,11 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -192,6 +194,8 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         self._device = device
         self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
+        self._attr_media_content_type = MediaType.MUSIC
+        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -274,6 +278,68 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     async def async_unjoin(self) -> None:
         """Handle the unjoin service."""
         raise NotImplementedError
+
+    def _get_metadata(self, key, default=None) -> Any:
+        """Get metadata from the current stream."""
+        if metadata := self.coordinator.server.stream(
+            self._current_group.stream
+        ).metadata:
+            return metadata.get(key, default)
+
+        return default
+
+    @property
+    def media_title(self) -> str | None:
+        """Title of current playing media."""
+        return self._get_metadata("title")
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of current playing media."""
+        return self._get_metadata("artUrl")
+
+    @property
+    def media_artist(self) -> str | None:
+        """Artist of current playing media, music track only."""
+        return self._get_metadata("artist", [None])[0]
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of current playing media, music track only."""
+        return self._get_metadata("album")
+
+    @property
+    def media_album_artist(self) -> str | None:
+        """Album artist of current playing media, music track only."""
+        return self._get_metadata("albumArtist", [None])[0]
+
+    @property
+    def media_track(self) -> int | None:
+        """Track number of current playing media, music track only."""
+        if value := self._get_metadata("trackNumber") is not None:
+            return int(value)
+
+        return None
+
+    @property
+    def media_duration(self) -> int | None:
+        """Duration of current playing media in seconds."""
+        if value := self._get_metadata("duration") is not None:
+            return int(value)
+
+        return None
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of current playing media in seconds."""
+        # Position is part of properties object, not metadata object
+        if properties := self.coordinator.server.stream(
+            self._current_group.stream
+        ).properties:
+            if value := properties.get("position", None) is not None:
+                return int(value)
+
+        return None
 
 
 class SnapcastGroupDevice(SnapcastBaseDevice):
