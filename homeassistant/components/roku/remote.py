@@ -16,7 +16,7 @@ from .entity import RokuEntity
 from .helpers import roku_exception_handler
 
 # Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
