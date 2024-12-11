@@ -1,6 +1,10 @@
 rules:
   # Bronze
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      All config flow tests should finish with CREATE_ENTRY and ABORT to
+      test they are able to recover from errors
   brands: done
   dependency-transparency: done
   common-modules: done
