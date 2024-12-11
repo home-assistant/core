@@ -376,7 +376,7 @@ async def test_hassio_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=HassioServiceInfo(
-            config={"addon": "Mealie", "url": "http://test:9090"},
+            config={"addon": "Mealie", "host": "http://test", "port": 9090},
             name="mealie",
             slug="mealie",
             uuid="1234",
@@ -392,37 +392,15 @@ async def test_hassio_success(
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
 
-    mock_client = create_mock_motioneye_client()
-
-    with (
-        patch(
-            "homeassistant.components.motioneye.MotionEyeClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.motioneye.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_ADMIN_USERNAME: "admin-username",
-                CONF_ADMIN_PASSWORD: "admin-password",
-                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
-                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Add-on"
-    assert result3.get("data") == {
-        CONF_URL: TEST_URL,
-        CONF_ADMIN_USERNAME: "admin-username",
-        CONF_ADMIN_PASSWORD: "admin-password",
-        CONF_SURVEILLANCE_USERNAME: "surveillance-username",
-        CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Mealie"
+    assert result3["data"] == {
+        CONF_HOST: "http://test:9090",
+        CONF_API_TOKEN: "token",
+        CONF_VERIFY_SSL: True,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert mock_client.async_client_close.called
+    assert result3["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
