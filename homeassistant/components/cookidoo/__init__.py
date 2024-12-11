@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> 
             email=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
             localization=CookidooLocalizationConfig(
-                country_code=entry.data[CONF_COUNTRY],
+                country_code=entry.data[CONF_COUNTRY].lower(),
                 language=entry.data[CONF_LANGUAGE],
             ),
         ),

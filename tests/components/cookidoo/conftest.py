@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 EMAIL = "test-email"
 PASSWORD = "test-password"
-COUNTRY = "ch"
+COUNTRY = "CH"
 LANGUAGE = "de-CH"
 
 

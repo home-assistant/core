@@ -107,7 +107,9 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         self.COUNTRY_DATA_SCHEMA = {
             vol.Required(CONF_COUNTRY): CountrySelector(
                 CountrySelectorConfig(
-                    countries=await get_country_options(),
+                    countries=[
+                        country.upper() for country in await get_country_options()
+                    ],
                 )
             )
         }
@@ -120,7 +122,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                     languages=[
                         option.language
                         for option in await get_localization_options(
-                            country=self.user_input[CONF_COUNTRY]
+                            country=self.user_input[CONF_COUNTRY].lower()
                         )
                     ],
                     native_name=True,
@@ -144,7 +146,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 email=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
                 localization=CookidooLocalizationConfig(
-                    country_code=user_input[CONF_COUNTRY],
+                    country_code=user_input[CONF_COUNTRY].lower(),
                     language=language_input[CONF_LANGUAGE]
                     if language_input
                     else "de-ch",
