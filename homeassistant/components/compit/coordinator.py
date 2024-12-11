@@ -59,7 +59,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
                         self.devices[device.id] = DeviceInstance(device_definition)
 
                     _LOGGER.debug(
-                        "  Device: %s, ID: %s, Class: %s, Type: %s",
+                        "Device: %s, id: %s, class: %s, type: %s",
                         device.label,
                         device.id,
                         device.device_class,

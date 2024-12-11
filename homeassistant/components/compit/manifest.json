@@ -3,12 +3,8 @@
   "name": "Compit",
   "codeowners": ["@Przemko92"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/compit",
-  "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiofiles==24.1.0", "compit-inext-api==0.1.7"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["compit-inext-api==0.1.9"]
 }

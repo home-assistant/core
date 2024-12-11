@@ -6,12 +6,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from compit_inext_api import CompitAPI
+from compit_inext_api import CannotConnect, CompitAPI, InvalidAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
@@ -64,7 +63,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:
+            except Exception as e:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -97,11 +96,3 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_EMAIL: reauth_entry_data[CONF_EMAIL]},
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

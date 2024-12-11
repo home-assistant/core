@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import logging
 
-from compit_inext_api import CompitAPI, DeviceDefinitionsLoader
+from compit_inext_api import (
+    CannotConnect,
+    CompitAPI,
+    DeviceDefinitionsLoader,
+    InvalidAuth,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,9 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         system_info = await api.authenticate()
 
         if system_info is False:
-            raise ConfigEntryAuthFailed(
-                f"Invalid credentials for {entry.data["email"]}"
-            )
+            _LOGGER.warning("Compit api error")
+            return False
 
         device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
             hass.config.language
@@ -40,9 +44,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data = coordinator
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
+    except CannotConnect as e:
+        _LOGGER.warning("Cannot connect: %s", e)
+        return False
+    except InvalidAuth as e:
+        raise ConfigEntryAuthFailed(
+            f"Invalid credentials for {entry.data["email"]}"
+        ) from e
     except ValueError as e:
-        _LOGGER.error("Value error: %s", e)
+        _LOGGER.warning("Value error: %s", e)
         return False
     return True
 
