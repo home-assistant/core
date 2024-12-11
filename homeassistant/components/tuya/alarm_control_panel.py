@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from base64 import b64decode
+
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
@@ -29,6 +31,11 @@ class Mode(StrEnum):
     HOME = "home"
     SOS = "sos"
 
+class State(StrEnum):
+    """Alarm states."""
+
+    NORMAL = "normal"
+    ALARM = "alarm"
 
 STATE_MAPPING: dict[str, AlarmControlPanelState] = {
     Mode.DISARMED: AlarmControlPanelState.DISARMED,
@@ -112,16 +119,22 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
-        if not (status := self.device.status.get(self.entity_description.key)):
-            return None
-        return STATE_MAPPING.get(status)
+        mode = self.device.status.get(DPCode.MASTER_MODE)
+        state = self.device.status.get(DPCode.MASTER_STATE)
+        # When the alarm is triggered, only its 'state' is changing. From 'normal' to 'alarm'.
+        # The 'mode' doesn't change, and stays as 'arm' or 'home'.
+        if state == State.ALARM:
+            return AlarmControlPanelState.TRIGGERED
+        return STATE_MAPPING.get(mode)
 
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        status = self.device.status.get(self.entity_description.key)
-        if status == Mode.SOS:
-            return self.device.status.get(DPCode.ALARM_MSG)
+        state = self.device.status.get(DPCode.MASTER_STATE)
+        if state == State.ALARM:            
+            encoded_msg = self.device.status.get(DPCode.ALARM_MSG)
+            if encoded_msg:
+                return b64decode(encoded_msg).decode('utf-16be')
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:

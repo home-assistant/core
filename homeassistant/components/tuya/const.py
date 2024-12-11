@@ -223,6 +223,7 @@ class DPCode(StrEnum):
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
+    MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
