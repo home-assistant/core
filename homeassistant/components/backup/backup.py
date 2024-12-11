@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
 from .agent import BackupAgent, LocalBackupAgent
-from .const import DATA_AGENT, LOGGER
+from .const import DOMAIN, LOGGER
 from .models import AgentBackup
 from .util import read_backup
 
@@ -24,14 +24,13 @@ async def async_get_backup_agents(
     """Return the local backup agent."""
     if is_hassio(hass):
         return []
-    if DATA_AGENT not in hass.data:
-        hass.data[DATA_AGENT] = CoreLocalBackupAgent(hass)
-    return [hass.data[DATA_AGENT]]
+    return [CoreLocalBackupAgent(hass)]
 
 
 class CoreLocalBackupAgent(LocalBackupAgent):
     """Local backup agent for Core and Container installations."""
 
+    domain = DOMAIN
     name = "local"
 
     def __init__(self, hass: HomeAssistant) -> None:

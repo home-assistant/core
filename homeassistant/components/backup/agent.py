@@ -7,6 +7,8 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
 
+from propcache import cached_property
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
@@ -26,7 +28,13 @@ class BackupAgentUnreachableError(BackupAgentError):
 class BackupAgent(abc.ABC):
     """Backup agent interface."""
 
+    domain: str
     name: str
+
+    @cached_property
+    def agent_id(self) -> str:
+        """Return the agent_id."""
+        return f"{self.domain}.{self.name}"
 
     @abc.abstractmethod
     async def async_download_backup(
@@ -107,4 +115,7 @@ class BackupAgentPlatformProtocol(Protocol):
         listener: Callable[[], None],
         **kwargs: Any,
     ) -> Callable[[], None]:
-        """Register a listener to be called when agents are added or removed."""
+        """Register a listener to be called when agents are added or removed.
+
+        :return: A function to unregister the listener.
+        """

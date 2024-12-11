@@ -11,11 +11,9 @@ from homeassistant.util.signal_type import SignalType
 if TYPE_CHECKING:
     from hass_nabucasa import Cloud
 
-    from .backup import CloudBackupAgent
     from .client import CloudClient
 
 DOMAIN = "cloud"
-DATA_BACKUP_AGENT: HassKey[CloudBackupAgent] = HassKey("{DOMAIN}.backup_agent")
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
 DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"

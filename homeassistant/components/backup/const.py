@@ -8,12 +8,10 @@ from typing import TYPE_CHECKING
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from .backup import BackupAgent
     from .manager import BackupManager
 
 BUF_SIZE = 2**20 * 4  # 4MB
 DOMAIN = "backup"
-DATA_AGENT: HassKey[BackupAgent] = HassKey(f"{DOMAIN}.agent")
 DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 

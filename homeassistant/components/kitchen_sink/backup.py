@@ -10,6 +10,8 @@ from typing import Any
 from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
 from homeassistant.core import HomeAssistant
 
+from . import DOMAIN
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -22,6 +24,8 @@ async def async_get_backup_agents(
 
 class KitchenSinkBackupAgent(BackupAgent):
     """Kitchen sink backup agent."""
+
+    domain = DOMAIN
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""

@@ -20,7 +20,7 @@ from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgen
 from homeassistant.core import HomeAssistant, callback
 
 from .client import CloudClient
-from .const import DATA_BACKUP_AGENT, DATA_CLOUD, DOMAIN
+from .const import DATA_CLOUD, DOMAIN
 
 _STORAGE_BACKUP = "backup"
 
@@ -40,14 +40,9 @@ async def async_get_backup_agents(
     """Return the cloud backup agent."""
     cloud = hass.data[DATA_CLOUD]
     if not cloud.is_logged_in:
-        if DATA_BACKUP_AGENT in hass.data:
-            del hass.data[DATA_BACKUP_AGENT]
         return []
 
-    if DATA_BACKUP_AGENT not in hass.data:
-        hass.data[DATA_BACKUP_AGENT] = CloudBackupAgent(hass=hass, cloud=cloud)
-
-    return [hass.data[DATA_BACKUP_AGENT]]
+    return [CloudBackupAgent(hass=hass, cloud=cloud)]
 
 
 class ChunkAsyncStreamIterator:
@@ -78,6 +73,7 @@ class ChunkAsyncStreamIterator:
 class CloudBackupAgent(BackupAgent):
     """Cloud backup agent."""
 
+    domain = DOMAIN
     name = DOMAIN
 
     def __init__(self, hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:

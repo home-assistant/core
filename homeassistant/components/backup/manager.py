@@ -306,27 +306,34 @@ class BackupManager:
 
         @callback
         def listener() -> None:
-            self.hass.async_create_task(self._async_reload_backup_agents())
+            self.hass.async_create_task(
+                self._async_reload_backup_agents(integration_domain)
+            )
 
         if hasattr(platform, "async_register_backup_agents_listener"):
             platform.async_register_backup_agents_listener(self.hass, listener=listener)
 
         listener()
 
-    async def _async_reload_backup_agents(self) -> None:
+    async def _async_reload_backup_agents(self, domain: str) -> None:
         """Add backup agent platform to the backup manager."""
-        for integration_domain, platform in self.backup_agent_platforms.items():
-            agents = await platform.async_get_backup_agents(self.hass)
-            self.backup_agents.update(
-                {f"{integration_domain}.{agent.name}": agent for agent in agents}
-            )
-            self.local_backup_agents.update(
-                {
-                    f"{integration_domain}.{agent.name}": agent
-                    for agent in agents
-                    if isinstance(agent, LocalBackupAgent)
-                }
-            )
+        platform = self.backup_agent_platforms[domain]
+
+        # Remove all agents for the domain
+        for agent_id in list(self.backup_agents):
+            if self.backup_agents[agent_id].domain == domain:
+                del self.backup_agents[agent_id]
+
+        # Add new agents
+        agents = await platform.async_get_backup_agents(self.hass)
+        self.backup_agents.update({agent.agent_id: agent for agent in agents})
+        self.local_backup_agents.update(
+            {
+                agent.agent_id: agent
+                for agent in agents
+                if isinstance(agent, LocalBackupAgent)
+            }
+        )
 
     async def _add_platform(
         self,
