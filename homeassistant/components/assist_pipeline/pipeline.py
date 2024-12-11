@@ -29,6 +29,7 @@ from homeassistant.components import (
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
@@ -1009,12 +1010,19 @@ class PipelineRun:
         if self.intent_agent is None:
             raise RuntimeError("Recognize intent was not prepared")
 
+        if self.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use pipeline language for
+            # intent fallback.
+            input_language = self.pipeline.language
+        else:
+            input_language = self.pipeline.conversation_language
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
                 {
                     "engine": self.intent_agent,
-                    "language": self.pipeline.conversation_language,
+                    "language": input_language,
                     "intent_input": intent_input,
                     "conversation_id": conversation_id,
                     "device_id": device_id,
@@ -1029,7 +1037,7 @@ class PipelineRun:
                 context=self.context,
                 conversation_id=conversation_id,
                 device_id=device_id,
-                language=self.pipeline.conversation_language,
+                language=input_language,
                 agent_id=self.intent_agent,
             )
             processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
