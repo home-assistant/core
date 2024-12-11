@@ -247,7 +247,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.1
+aiohasupervisor==0.2.2b0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -600,6 +600,7 @@ colorthief==0.2.1
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
+# homeassistant.components.backup
 # homeassistant.components.utility_meter
 cronsim==2.6
 
