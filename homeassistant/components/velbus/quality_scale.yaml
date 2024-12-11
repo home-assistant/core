@@ -1,6 +1,6 @@
 rules:
   # Bronze
-  action-setup: todo
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: |
