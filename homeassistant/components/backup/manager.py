@@ -323,6 +323,9 @@ class BackupManager:
         for agent_id in list(self.backup_agents):
             if self.backup_agents[agent_id].domain == domain:
                 del self.backup_agents[agent_id]
+        for agent_id in list(self.local_backup_agents):
+            if self.local_backup_agents[agent_id].domain == domain:
+                del self.local_backup_agents[agent_id]
 
         # Add new agents
         agents = await platform.async_get_backup_agents(self.hass)
