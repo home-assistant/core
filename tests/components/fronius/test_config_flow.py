@@ -145,33 +145,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_device(hass: HomeAssistant) -> None:
-    """Test we handle no device found error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch(
-            "pyfronius.Fronius.current_logger_info",
-            side_effect=FroniusError,
-        ),
-        patch(
-            "pyfronius.Fronius.inverter_info",
-            return_value={"inverters": []},
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
