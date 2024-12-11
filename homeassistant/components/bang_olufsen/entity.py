@@ -42,7 +42,7 @@ class BangOlufsenBase:
 
         # Objects that get directly updated by notifications.
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
-        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)  # type: ignore[call-arg]
+        self._playback_progress: PlaybackProgress = PlaybackProgress(total_duration=0)
         self._playback_source: Source = Source()
         self._playback_state: RenderingState = RenderingState()
         self._source_change: Source = Source()
