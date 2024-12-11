@@ -639,7 +639,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 message["color"]["s"] = hs_color[1]
 
             if self._optimistic:
-                self._attr_color_temp = None
+                self._attr_color_temp_kelvin = None
                 self._attr_hs_color = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
