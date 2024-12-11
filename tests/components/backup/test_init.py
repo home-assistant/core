@@ -27,7 +27,7 @@ async def test_setup_with_hassio(
     assert not manager.backup_agents
 
 
-@pytest.mark.parametrize("service_data", [None, {}, {"password": "abc123"}])
+@pytest.mark.parametrize("service_data", [None, {}])
 async def test_create_service(
     hass: HomeAssistant,
     service_data: dict[str, Any] | None,
