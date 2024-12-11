@@ -394,7 +394,7 @@ async def test_hassio_success(
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        {CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+        {CONF_HOST: "http://test:9090", CONF_API_TOKEN: "token"},
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Mealie"
