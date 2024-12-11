@@ -203,7 +203,7 @@ async def test_filter_color_modes_missing_attributes(
         "Color mode color_temp specified "
         "but attribute color_temp_kelvin missing for: light.entity"
     )
-    expected_fallback_log = "using color_temp as fallback"
+    expected_fallback_log = "using color_temp (mireds) as fallback"
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 

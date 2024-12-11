@@ -128,22 +128,9 @@ async def _async_reproduce_state(
             if cm_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
                 if (cm_attr_state := state.attributes.get(cm_attr.state_attr)) is None:
                     if (
-                        color_mode == ColorMode.COLOR_TEMP
-                        and (mireds := state.attributes.get(ATTR_COLOR_TEMP))
-                        is not None
+                        color_mode != ColorMode.COLOR_TEMP
+                        or (mireds := state.attributes.get(ATTR_COLOR_TEMP)) is None
                     ):
-                        _LOGGER.warning(
-                            "Color mode %s specified but attribute %s missing for: %s, "
-                            "using %s as fallback",
-                            color_mode,
-                            cm_attr.state_attr,
-                            state.entity_id,
-                            ATTR_COLOR_TEMP,
-                        )
-                        cm_attr_state = color_util.color_temperature_mired_to_kelvin(
-                            mireds
-                        )
-                    else:
                         _LOGGER.warning(
                             "Color mode %s specified but attribute %s missing for: %s",
                             color_mode,
@@ -151,6 +138,14 @@ async def _async_reproduce_state(
                             state.entity_id,
                         )
                         return
+                    _LOGGER.warning(
+                        "Color mode %s specified but attribute %s missing for: %s, "
+                        "using color_temp (mireds) as fallback",
+                        color_mode,
+                        cm_attr.state_attr,
+                        state.entity_id,
+                    )
+                    cm_attr_state = color_util.color_temperature_mired_to_kelvin(mireds)
                 service_data[cm_attr.parameter] = cm_attr_state
         else:
             # Fall back to Choosing the first color that is specified
