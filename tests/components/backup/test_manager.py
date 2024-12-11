@@ -488,6 +488,7 @@ async def test_async_initiate_backup_with_agent_error(
         "name": "Core 2025.1.0",
         "protected": False,
         "size": 123,
+        "with_strategy_settings": False,
     }
 
     await ws_client.send_json_auto_id(

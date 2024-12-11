@@ -60,6 +60,7 @@ class ManagerBackup(AgentBackup):
 
     agent_ids: list[str]
     failed_agent_ids: list[str]
+    with_strategy_settings: bool
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -417,8 +418,10 @@ class BackupManager:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
                         failed_agent_ids = known_backup.failed_agent_ids
+                        with_strategy_settings = known_backup.with_strategy_settings
                     else:
                         failed_agent_ids = []
+                        with_strategy_settings = False
                     backups[backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
@@ -432,6 +435,7 @@ class BackupManager:
                         name=agent_backup.name,
                         protected=agent_backup.protected,
                         size=agent_backup.size,
+                        with_strategy_settings=with_strategy_settings,
                     )
                 backups[backup_id].agent_ids.append(agent_ids[idx])
 
@@ -463,8 +467,10 @@ class BackupManager:
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
                     failed_agent_ids = known_backup.failed_agent_ids
+                    with_strategy_settings = known_backup.with_strategy_settings
                 else:
                     failed_agent_ids = []
+                    with_strategy_settings = False
                 backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
@@ -478,6 +484,7 @@ class BackupManager:
                     name=result.name,
                     protected=result.protected,
                     size=result.size,
+                    with_strategy_settings=with_strategy_settings,
                 )
             backup.agent_ids.append(agent_ids[idx])
 
