@@ -60,7 +60,7 @@ rules:
   dynamic-devices:
     status: todo
     comment: |
-      Dynamic devices are discoverd, but no entities are created for them
+      Dynamic devices are discovered, but no entities are created for them
   entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: done
