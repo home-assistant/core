@@ -51,15 +51,15 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
       This integration is connecting to a cloud service.
   discovery:
-    status: exempt
+    status: done
     comment: |
-      It can find poweropti devices via zeroconf, but will start a normal user flow.
+      It can find poweropti devices via zeroconf, and will start a normal user flow.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done

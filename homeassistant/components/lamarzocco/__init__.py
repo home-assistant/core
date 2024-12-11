@@ -3,9 +3,9 @@
 import logging
 
 from packaging import version
-from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
-from pylamarzocco.client_cloud import LaMarzoccoCloudClient
-from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
 from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -46,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     assert entry.unique_id
     serial = entry.unique_id
-    client = create_async_httpx_client(hass)
+
+    client = async_create_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
