@@ -193,11 +193,11 @@ async def test_create_backup_wrong_parameters(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("agent_ids", "backup_directory"),
+    ("agent_ids", "backup_directory", "temp_file_unlink_call_count"),
     [
-        ([LOCAL_AGENT_ID], "backups"),
-        (["test.remote"], "tmp_backups"),
-        ([LOCAL_AGENT_ID, "test.remote"], "backups"),
+        ([LOCAL_AGENT_ID], "backups", 0),
+        (["test.remote"], "tmp_backups", 1),
+        ([LOCAL_AGENT_ID, "test.remote"], "backups", 0),
     ],
 )
 @pytest.mark.parametrize(
@@ -220,6 +220,7 @@ async def test_async_initiate_backup(
     params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
+    temp_file_unlink_call_count: int,
 ) -> None:
     """Test generate backup."""
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
@@ -269,7 +270,10 @@ async def test_async_initiate_backup(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+    with (
+        patch("pathlib.Path.open", mock_open(read_data=b"test")),
+        patch("pathlib.Path.unlink") as unlink_mock,
+    ):
         await ws_client.send_json_auto_id(
             {"type": "backup/generate", "agent_ids": agent_ids} | params
         )
@@ -287,29 +291,31 @@ async def test_async_initiate_backup(
 
         await hass.async_block_till_done()
 
-    result = await ws_client.receive_json()
-    assert result["event"] == {
-        "manager_state": BackupManagerState.CREATE_BACKUP,
-        "stage": CreateBackupStage.HOME_ASSISTANT,
-        "state": CreateBackupState.IN_PROGRESS,
-    }
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "stage": CreateBackupStage.HOME_ASSISTANT,
+            "state": CreateBackupState.IN_PROGRESS,
+        }
 
-    result = await ws_client.receive_json()
-    assert result["event"] == {
-        "manager_state": BackupManagerState.CREATE_BACKUP,
-        "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
-        "state": CreateBackupState.IN_PROGRESS,
-    }
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+            "state": CreateBackupState.IN_PROGRESS,
+        }
 
-    result = await ws_client.receive_json()
-    assert result["event"] == {
-        "manager_state": BackupManagerState.CREATE_BACKUP,
-        "stage": None,
-        "state": CreateBackupState.COMPLETED,
-    }
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "stage": None,
+            "state": CreateBackupState.COMPLETED,
+        }
 
-    result = await ws_client.receive_json()
-    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+        result = await ws_client.receive_json()
+        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    assert unlink_mock.call_count == temp_file_unlink_call_count
 
     assert mocked_json_bytes.call_count == 1
     backup_json_dict = mocked_json_bytes.call_args[0][0]

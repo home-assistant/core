@@ -956,10 +956,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
 
-        suggested_tar_file_path = None
+        local_agent_tar_file_path = None
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            suggested_tar_file_path = local_agent.get_backup_path(backup_id)
+            local_agent_tar_file_path = local_agent.get_backup_path(backup_id)
 
         on_progress(
             CreateBackupEvent(
@@ -990,7 +990,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 backup_data,
                 include_database,
                 password,
-                suggested_tar_file_path,
+                local_agent_tar_file_path,
             )
             backup = AgentBackup(
                 addons=[],
@@ -1019,9 +1019,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 return send_backup()
 
             async def remove_backup() -> None:
-                if not suggested_tar_file_path:
+                if local_agent_tar_file_path:
                     return
-                await async_add_executor_job(suggested_tar_file_path.unlink, True)
+                await async_add_executor_job(tar_file_path.unlink, True)
 
             return WrittenBackup(
                 backup=backup, open_stream=open_backup, release_stream=remove_backup
