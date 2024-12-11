@@ -11,6 +11,13 @@ turn_on:
           min: 0
           max: 300
           unit_of_measurement: seconds
+    entity_filter:
+      selector:
+        entity:
+          multiple: true
+      example: |
+        - light.tv_back_light
+        - light.theatre
 
 reload:
 apply:
