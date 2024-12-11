@@ -54,6 +54,9 @@ if TYPE_CHECKING:
         FroniusStorageUpdateCoordinator,
     )
 
+
+PARALLEL_UPDATES = 0
+
 ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
 
 
