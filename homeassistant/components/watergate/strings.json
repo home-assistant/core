@@ -17,5 +17,54 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "water_meter_volume": {
+        "name": "Water Meter Volume"
+      },
+      "water_meter_duration": {
+        "name": "Water Meter Duration"
+      },
+      "ip": {
+        "name": "IP Address"
+      },
+      "gateway": {
+        "name": "Gateway Address"
+      },
+      "subnet": {
+        "name": "Subnet"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "rssi": {
+        "name": "RSSI"
+      },
+      "wifi_uptime": {
+        "name": "WIFI Uptime"
+      },
+      "mqtt_uptime": {
+        "name": "MQTT Uptime"
+      },
+      "water_temperature": {
+        "name": "Water Temperature"
+      },
+      "water_pressure": {
+        "name": "Water Pressure"
+      },
+      "water_flow_rate": {
+        "name": "Water Flow Rate"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "power_supply": {
+        "name": "Power Supply"
+      },
+      "auto_shut_off_event": {
+        "name": "Last Auto Shut Off Event"
+      }
+    }
   }
 }

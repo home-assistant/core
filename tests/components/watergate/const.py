@@ -1,6 +1,7 @@
 """Constants for the Watergate tests."""
 
 from watergate_local_api.models import DeviceState
+from watergate_local_api.models.water_meter import WaterMeter
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_WEBHOOK_ID
 
@@ -22,6 +23,6 @@ DEFAULT_DEVICE_STATE = DeviceState(
     "battery",
     "1.0.0",
     100,
-    {"volume": 1.2, "duration": 100},
+    WaterMeter(1.2, 100),
     DEFAULT_SERIAL_NUMBER,
 )
