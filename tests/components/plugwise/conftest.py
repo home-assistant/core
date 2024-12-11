@@ -77,9 +77,15 @@ def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_multiple_devices_per_zone"
 
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
+    with (
+        patch(
+            "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+        ) as smile_mock,
+        patch(
+            "homeassistant.components.plugwise.config_flow.Smile",
+            new=smile_mock,
+        ),
+    ):
         smile = smile_mock.return_value
 
         smile.gateway_id = "fe799307f1624099878210aa0b9f1475"
