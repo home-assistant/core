@@ -11,7 +11,10 @@ rules:
     status: todo
     comment: |
       Split test_flow_usb from the test that tests already_configured, test_flow_usb should also assert the unique_id of the entry
-  config-flow: todo
+  config-flow:
+    status: todo
+    comment: |
+      Dynamicly build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
   dependency-transparency: done
   docs-actions: todo
   docs-high-level-description: todo
