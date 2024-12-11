@@ -8,9 +8,6 @@ from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
-VALID_DEPRECATED_COLOR_TEMP = {"color_temp": 240}
-NONE_DEPRECATED_COLOR_TEMP = {"color_temp": None}
-
 VALID_BRIGHTNESS = {"brightness": 180}
 VALID_EFFECT = {"effect": "random"}
 VALID_COLOR_TEMP_KELVIN = {"color_temp_kelvin": 4200}
@@ -37,7 +34,6 @@ async def test_reproducing_states(
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
-    hass.states.async_set("light.entity_temp", "on", VALID_DEPRECATED_COLOR_TEMP)
     hass.states.async_set("light.entity_temp_kelvin", "on", VALID_COLOR_TEMP_KELVIN)
     hass.states.async_set("light.entity_hs", "on", VALID_HS_COLOR)
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
@@ -53,7 +49,6 @@ async def test_reproducing_states(
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
             State("light.entity_effect", "on", VALID_EFFECT),
-            State("light.entity_temp", "on", VALID_DEPRECATED_COLOR_TEMP),
             State("light.entity_temp_kelvin", "on", VALID_COLOR_TEMP_KELVIN),
             State("light.entity_hs", "on", VALID_HS_COLOR),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
@@ -79,14 +74,13 @@ async def test_reproducing_states(
             State("light.entity_off", "on", VALID_BRIGHTNESS),
             State("light.entity_bright", "on", VALID_EFFECT),
             State("light.entity_effect", "on", VALID_COLOR_TEMP_KELVIN),
-            State("light.entity_temp", "on", VALID_HS_COLOR),
             State("light.entity_temp_kelvin", "on", VALID_HS_COLOR),
             State("light.entity_hs", "on", VALID_RGB_COLOR),
             State("light.entity_rgb", "on", VALID_XY_COLOR),
         ],
     )
 
-    assert len(turn_on_calls) == 7
+    assert len(turn_on_calls) == 6
 
     expected_calls = []
 
@@ -104,10 +98,6 @@ async def test_reproducing_states(
 
     expected_temp = dict(VALID_HS_COLOR)
     expected_temp["entity_id"] = "light.entity_temp"
-    expected_calls.append(expected_temp)
-
-    expected_temp = dict(VALID_HS_COLOR)
-    expected_temp["entity_id"] = "light.entity_temp_kelvin"
     expected_calls.append(expected_temp)
 
     expected_hs = dict(VALID_RGB_COLOR)
@@ -151,7 +141,7 @@ async def test_reproducing_states(
     ],
 )
 async def test_filter_color_modes(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, color_mode: light.ColorMode
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, color_mode
 ) -> None:
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
@@ -256,7 +246,6 @@ async def test_filter_color_modes_missing_attributes(
     [
         NONE_BRIGHTNESS,
         NONE_EFFECT,
-        NONE_DEPRECATED_COLOR_TEMP,
         NONE_COLOR_TEMP_KELVIN,
         NONE_HS_COLOR,
         NONE_RGB_COLOR,
@@ -265,7 +254,7 @@ async def test_filter_color_modes_missing_attributes(
         NONE_XY_COLOR,
     ],
 )
-async def test_filter_none(hass: HomeAssistant, saved_state: dict[str, None]) -> None:
+async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
     """Test filtering of parameters which are None."""
     hass.states.async_set("light.entity", "off", {})
 
