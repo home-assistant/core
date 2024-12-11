@@ -47,7 +47,6 @@ from .helpers import format_channel_name, roku_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
 
-
 STREAM_FORMAT_TO_MEDIA_TYPE = {
     "dash": MediaType.VIDEO,
     "hls": MediaType.VIDEO,
@@ -80,6 +79,9 @@ ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
 }
 
 SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
