@@ -54,6 +54,15 @@
       "outside_temperature": {
         "name": "Outside temperature"
       },
+      "thermostat_water_setpoint": {
+        "name": "Water target temperature"
+      },
+      "thermostat_room_temperature": {
+        "name": "Current room temperature"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "name": "Room temperature setpoint"
+      },
       "dhw_top_temperature": {
         "name": "DHW top temperature"
       },

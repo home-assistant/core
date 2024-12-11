@@ -29,7 +29,9 @@ type TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator[
 type TwenteMilieuConfigEntry = ConfigEntry[TwenteMilieuDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TwenteMilieuConfigEntry
+) -> bool:
     """Set up Twente Milieu from a config entry."""
     session = async_get_clientsession(hass)
     twentemilieu = TwenteMilieu(
@@ -42,17 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: TwenteMilieuDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=DOMAIN,
         update_interval=SCAN_INTERVAL,
         update_method=twentemilieu.update,
     )
     await coordinator.async_config_entry_first_refresh()
-
-    # For backwards compat, set unique ID
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=str(entry.data[CONF_ID])
-        )
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -60,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TwenteMilieuConfigEntry
+) -> bool:
     """Unload Twente Milieu config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -73,8 +73,8 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.attributes.get(ATTR_RGB_COLOR) == (250, 252, 255)
-    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.326)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (251, 253, 255)
+    assert state.attributes.get(ATTR_XY_COLOR) == (0.319, 0.327)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

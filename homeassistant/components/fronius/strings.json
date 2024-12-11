@@ -26,7 +26,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier"
     }
   },
   "entity": {
@@ -292,6 +293,17 @@
       "temperature_cell": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       }
+    }
+  },
+  "exceptions": {
+    "no_supported_device_found": {
+      "message": "No supported Fronius SolarNet device found."
+    },
+    "entry_cannot_connect": {
+      "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while attempting to fetch data: {fronius_error}"
     }
   }
 }

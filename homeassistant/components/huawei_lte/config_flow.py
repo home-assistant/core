@@ -69,7 +69,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def _async_show_user_form(
         self,
@@ -320,8 +320,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
+        entry = self._get_reauth_entry()
         if not user_input:
             return await self._async_show_reauth_form(
                 user_input={
@@ -340,17 +339,11 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        self.hass.config_entries.async_update_entry(entry, data=new_data)
-        await self.hass.config_entries.async_reload(entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(entry, data=new_data)
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Huawei LTE options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

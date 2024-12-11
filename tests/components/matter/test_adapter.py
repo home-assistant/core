@@ -18,8 +18,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "name"),
     [
@@ -54,8 +52,6 @@ async def test_device_registry_single_node_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
@@ -125,8 +121,6 @@ async def test_device_registry_bridge(
 
 
 @pytest.mark.usefixtures("integration")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_node_added_subscription(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -141,13 +135,13 @@ async def test_node_added_subscription(
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
     node = create_node_from_fixture("onoff_light")
 
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
 
     node_added_callback(EventType.NODE_ADDED, node)
     await hass.async_block_till_done()
 
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
 
 
@@ -206,6 +200,6 @@ async def test_bad_node_not_crash_integration(
     await hass.async_block_till_done()
 
     assert matter_client.get_nodes.call_count == 1
-    assert hass.states.get("light.mock_onoff_light_light") is not None
+    assert hass.states.get("light.mock_onoff_light") is not None
     assert len(hass.states.async_all("light")) == 1
     assert "Error setting up node" in caplog.text

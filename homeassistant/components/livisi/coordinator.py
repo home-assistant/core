@@ -6,8 +6,9 @@ from datetime import timedelta
 from typing import Any
 
 from aiohttp import ClientConnectorError
-from aiolivisi import AioLivisi, LivisiEvent, Websocket
-from aiolivisi.errors import TokenExpiredException
+from livisi import LivisiEvent, Websocket
+from livisi.aiolivisi import AioLivisi
+from livisi.errors import TokenExpiredException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD

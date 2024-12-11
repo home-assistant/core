@@ -473,13 +473,13 @@ class _ScriptRun:
             script_execution_set("aborted")
         except _StopScript as err:
             script_execution_set("finished", err.response)
-            response = err.response
 
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                # We already consumed the response, do not pass it on
-                err.response = None
                 raise
+
+            response = err.response
+
         except Exception:
             script_execution_set("error")
             raise
@@ -1133,7 +1133,11 @@ class _ScriptRun:
         self._step_log("wait for trigger", timeout)
 
         variables = {**self._variables}
-        self._variables["wait"] = {"remaining": timeout, "trigger": None}
+        self._variables["wait"] = {
+            "remaining": timeout,
+            "completed": False,
+            "trigger": None,
+        }
         trace_set_result(wait=self._variables["wait"])
 
         if timeout == 0:
@@ -1151,6 +1155,7 @@ class _ScriptRun:
             variables: dict[str, Any], context: Context | None = None
         ) -> None:
             self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
             _set_result_unless_done(done)
 

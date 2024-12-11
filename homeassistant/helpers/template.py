@@ -9,6 +9,7 @@ import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
+from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
@@ -22,7 +23,16 @@ import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
-from typing import Any, Concatenate, Literal, NoReturn, Self, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Concatenate,
+    Literal,
+    NoReturn,
+    Self,
+    cast,
+    overload,
+)
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -86,6 +96,9 @@ from .deprecation import deprecated_function
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
+
+if TYPE_CHECKING:
+    from _typeshed import OptExcInfo
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -514,18 +527,16 @@ class Template:
         will be non optional in Home Assistant Core 2025.10.
         """
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
 
         if not hass:
-            report(
-                (
-                    "creates a template object without passing hass, "
-                    "which will stop working in HA Core 2025.10"
-                ),
-                error_if_core=False,
+            report_usage(
+                "creates a template object without passing hass",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.10",
             )
 
         self.template: str = template.strip()
@@ -533,7 +544,7 @@ class Template:
         self._compiled: jinja2.Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
-        self._exc_info: sys._OptExcInfo | None = None
+        self._exc_info: OptExcInfo | None = None
         self._limited: bool | None = None
         self._strict: bool | None = None
         self._log_fn: Callable[[int, str], None] | None = None
@@ -1280,7 +1291,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
     False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
-
+    All other values are falsy
     """
     if template_result is None:
         return False
@@ -2172,7 +2183,8 @@ def merge_response(value: ServiceResponse) -> list[Any]:
 
     is_single_list = False
     response_items: list = []
-    for entity_id, entity_response in value.items():  # pylint: disable=too-many-nested-blocks
+    input_service_response = deepcopy(value)
+    for entity_id, entity_response in input_service_response.items():  # pylint: disable=too-many-nested-blocks
         if not isinstance(entity_response, dict):
             raise TypeError("Response is not a dictionary")
         for value_key, type_response in entity_response.items():

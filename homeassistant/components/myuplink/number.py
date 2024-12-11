@@ -10,8 +10,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
     "DM": NumberEntityDescription(
@@ -22,6 +23,13 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
 }
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, NumberEntityDescription]] = {
+    F_SERIES: {
+        "40940": NumberEntityDescription(
+            key="degree_minutes",
+            translation_key="degree_minutes",
+            native_unit_of_measurement="DM",
+        ),
+    },
     "NIBEF": {
         "40940": NumberEntityDescription(
             key="degree_minutes",
@@ -41,6 +49,7 @@ def get_description(device_point: DevicePoint) -> NumberEntityDescription | None
     3. Default to None
     """
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )

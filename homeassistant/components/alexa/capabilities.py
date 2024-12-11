@@ -26,6 +26,7 @@ from homeassistant.components import (
 )
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.components.climate import HVACMode
@@ -36,10 +37,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -439,7 +436,7 @@ class AlexaPowerController(AlexaCapability):
         elif self.entity.domain == remote.DOMAIN:
             is_on = self.entity.state not in (STATE_OFF, STATE_UNKNOWN)
         elif self.entity.domain == vacuum.DOMAIN:
-            is_on = self.entity.state == vacuum.STATE_CLEANING
+            is_on = self.entity.state == vacuum.VacuumActivity.CLEANING
         elif self.entity.domain == timer.DOMAIN:
             is_on = self.entity.state != STATE_IDLE
         elif self.entity.domain == water_heater.DOMAIN:
@@ -819,13 +816,19 @@ class AlexaPlaybackController(AlexaCapability):
         """
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        operations = {
-            media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
-            media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
-            media_player.MediaPlayerEntityFeature.PLAY: "Play",
-            media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
-            media_player.MediaPlayerEntityFeature.STOP: "Stop",
-        }
+        operations: dict[
+            cover.CoverEntityFeature | media_player.MediaPlayerEntityFeature, str
+        ]
+        if self.entity.domain == cover.DOMAIN:
+            operations = {cover.CoverEntityFeature.STOP: "Stop"}
+        else:
+            operations = {
+                media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
+                media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
+                media_player.MediaPlayerEntityFeature.PLAY: "Play",
+                media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
+                media_player.MediaPlayerEntityFeature.STOP: "Stop",
+            }
 
         return [
             value
@@ -1317,13 +1320,13 @@ class AlexaSecurityPanelController(AlexaCapability):
             raise UnsupportedProperty(name)
 
         arm_state = self.entity.state
-        if arm_state == STATE_ALARM_ARMED_HOME:
+        if arm_state == AlarmControlPanelState.ARMED_HOME:
             return "ARMED_STAY"
-        if arm_state == STATE_ALARM_ARMED_AWAY:
+        if arm_state == AlarmControlPanelState.ARMED_AWAY:
             return "ARMED_AWAY"
-        if arm_state == STATE_ALARM_ARMED_NIGHT:
+        if arm_state == AlarmControlPanelState.ARMED_NIGHT:
             return "ARMED_NIGHT"
-        if arm_state == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+        if arm_state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
             return "ARMED_STAY"
         return "DISARMED"
 

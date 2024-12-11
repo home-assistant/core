@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
 
+import aiohttp
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
 
 from homeassistant.components.backup import BackupManager
@@ -62,7 +64,7 @@ async def _mock_backup_generation(manager: BackupManager):
             "2025.1.0",
         ),
     ):
-        await manager.generate_backup()
+        await manager.async_create_backup()
 
         assert mocked_json_bytes.call_count == 1
         backup_json_dict = mocked_json_bytes.call_args[0][0]
@@ -108,7 +110,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
         ),
     ):
         await manager.load_backups()
-    backups = await manager.get_backups()
+    backups = await manager.async_get_backups()
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
 
@@ -123,7 +125,7 @@ async def test_load_backups_with_exception(
         patch("tarfile.open", side_effect=OSError("Test exception")),
     ):
         await manager.load_backups()
-    backups = await manager.get_backups()
+    backups = await manager.async_get_backups()
     assert f"Unable to read backup {TEST_BACKUP.path}: Test exception" in caplog.text
     assert backups == {}
 
@@ -138,7 +140,7 @@ async def test_removing_backup(
     manager.loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=True):
-        await manager.remove_backup(TEST_BACKUP.slug)
+        await manager.async_remove_backup(slug=TEST_BACKUP.slug)
     assert "Removed backup located at" in caplog.text
 
 
@@ -149,7 +151,7 @@ async def test_removing_non_existing_backup(
     """Test removing not existing backup."""
     manager = BackupManager(hass)
 
-    await manager.remove_backup("non_existing")
+    await manager.async_remove_backup(slug="non_existing")
     assert "Removed backup located at" not in caplog.text
 
 
@@ -163,7 +165,7 @@ async def test_getting_backup_that_does_not_exist(
     manager.loaded_backups = True
 
     with patch("pathlib.Path.exists", return_value=False):
-        backup = await manager.get_backup(TEST_BACKUP.slug)
+        backup = await manager.async_get_backup(slug=TEST_BACKUP.slug)
         assert backup is None
 
         assert (
@@ -172,15 +174,15 @@ async def test_getting_backup_that_does_not_exist(
         ) in caplog.text
 
 
-async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
+async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
     manager.backing_up = True
     with pytest.raises(HomeAssistantError, match="Backup already in progress"):
-        await manager.generate_backup()
+        await manager.async_create_backup()
 
 
-async def test_generate_backup(
+async def test_async_create_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -285,7 +287,7 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
         await _mock_backup_generation(manager)
 
 
-async def test_loading_platforms_when_running_pre_backup_actions(
+async def test_loading_platforms_when_running_async_pre_backup_actions(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -302,7 +304,7 @@ async def test_loading_platforms_when_running_pre_backup_actions(
             async_post_backup=AsyncMock(),
         ),
     )
-    await manager.pre_backup_actions()
+    await manager.async_pre_backup_actions()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 1
@@ -310,7 +312,7 @@ async def test_loading_platforms_when_running_pre_backup_actions(
     assert "Loaded 1 platforms" in caplog.text
 
 
-async def test_loading_platforms_when_running_post_backup_actions(
+async def test_loading_platforms_when_running_async_post_backup_actions(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -327,9 +329,71 @@ async def test_loading_platforms_when_running_post_backup_actions(
             async_post_backup=AsyncMock(),
         ),
     )
-    await manager.post_backup_actions()
+    await manager.async_post_backup_actions()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 1
 
     assert "Loaded 1 platforms" in caplog.text
+
+
+async def test_async_receive_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving a backup file."""
+    manager = BackupManager(hass)
+
+    size = 2 * 2**16
+    protocol = Mock(_reading_paused=False)
+    stream = aiohttp.StreamReader(protocol, 2**16)
+    stream.feed_data(b"0" * size + b"\r\n--:--")
+    stream.feed_eof()
+
+    open_mock = mock_open()
+
+    with patch("pathlib.Path.open", open_mock), patch("shutil.move") as mover_mock:
+        await manager.async_receive_backup(
+            contents=aiohttp.BodyPartReader(
+                b"--:",
+                CIMultiDictProxy(
+                    CIMultiDict(
+                        {
+                            aiohttp.hdrs.CONTENT_DISPOSITION: "attachment; filename=abc123.tar"
+                        }
+                    )
+                ),
+                stream,
+            )
+        )
+        assert open_mock.call_count == 1
+        assert mover_mock.call_count == 1
+        assert mover_mock.mock_calls[0].args[1].name == "abc123.tar"
+
+
+async def test_async_trigger_restore(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+    manager.backups = {TEST_BACKUP.slug: TEST_BACKUP}
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text") as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+    ):
+        await manager.async_restore_backup(TEST_BACKUP.slug)
+        assert mocked_write_text.call_args[0][0] == '{"path": "abc123.tar"}'
+        assert mocked_service_call.called
+
+
+async def test_async_trigger_restore_missing_backup(hass: HomeAssistant) -> None:
+    """Test trigger restore."""
+    manager = BackupManager(hass)
+    manager.loaded_backups = True
+
+    with pytest.raises(HomeAssistantError, match="Backup abc123 not found"):
+        await manager.async_restore_backup(TEST_BACKUP.slug)

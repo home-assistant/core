@@ -32,7 +32,6 @@ from homeassistant.components.google_assistant import (
     smart_home as sh,
     trait,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_CALL_SERVICE,
@@ -41,6 +40,7 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -209,7 +209,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                     },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -329,7 +329,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],
@@ -402,7 +402,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     light.async_write_ha_state()
 
     light2 = DemoLight(
-        None, "Another Light", state=True, hs_color=(180, 75), ct=400, brightness=78
+        None, "Another Light", state=True, hs_color=(180, 75), ct=2500, brightness=78
     )
     light2.hass = hass
     light2.entity_id = "light.another_light"
@@ -410,7 +410,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     light2._attr_name = "Another Light"
     light2.async_write_ha_state()
 
-    light3 = DemoLight(None, "Color temp Light", state=True, ct=400, brightness=200)
+    light3 = DemoLight(None, "Color temp Light", state=True, ct=2500, brightness=200)
     light3.hass = hass
     light3.entity_id = "light.color_temp_light"
     light3._attr_device_info = None
@@ -926,7 +926,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
                     "name": {"name": "Demo Light"},
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
-                        trait.TRAIT_ONOFF,
+                        trait.TRAIT_ON_OFF,
                         trait.TRAIT_COLOR_SETTING,
                         trait.TRAIT_MODES,
                     ],

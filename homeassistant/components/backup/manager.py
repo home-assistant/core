@@ -2,19 +2,25 @@
 
 from __future__ import annotations
 
+import abc
 import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
 import io
 import json
 from pathlib import Path
+from queue import SimpleQueue
+import shutil
 import tarfile
 from tarfile import TarError
+from tempfile import TemporaryDirectory
 import time
 from typing import Any, Protocol, cast
 
+import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 
+from homeassistant.backup_restore import RESTORE_BACKUP_FILE
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -53,18 +59,16 @@ class BackupPlatformProtocol(Protocol):
         """Perform operations after a backup finishes."""
 
 
-class BackupManager:
-    """Backup manager for the Backup integration."""
+class BaseBackupManager(abc.ABC):
+    """Define the format that backup managers can have."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup manager."""
         self.hass = hass
-        self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
         self.backups: dict[str, Backup] = {}
-        self.platforms: dict[str, BackupPlatformProtocol] = {}
-        self.loaded_backups = False
         self.loaded_platforms = False
+        self.platforms: dict[str, BackupPlatformProtocol] = {}
 
     @callback
     def _add_platform(
@@ -84,7 +88,7 @@ class BackupManager:
             return
         self.platforms[integration_domain] = platform
 
-    async def pre_backup_actions(self) -> None:
+    async def async_pre_backup_actions(self, **kwargs: Any) -> None:
         """Perform pre backup actions."""
         if not self.loaded_platforms:
             await self.load_platforms()
@@ -100,7 +104,7 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def post_backup_actions(self) -> None:
+    async def async_post_backup_actions(self, **kwargs: Any) -> None:
         """Perform post backup actions."""
         if not self.loaded_platforms:
             await self.load_platforms()
@@ -116,13 +120,6 @@ class BackupManager:
             if isinstance(result, Exception):
                 raise result
 
-    async def load_backups(self) -> None:
-        """Load data of stored backup files."""
-        backups = await self.hass.async_add_executor_job(self._read_backups)
-        LOGGER.debug("Loaded %s backups", len(backups))
-        self.backups = backups
-        self.loaded_backups = True
-
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
@@ -130,6 +127,55 @@ class BackupManager:
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True
+
+    @abc.abstractmethod
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+        """Restore a backup."""
+
+    @abc.abstractmethod
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
+        """Generate a backup."""
+
+    @abc.abstractmethod
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
+        """Get backups.
+
+        Return a dictionary of Backup instances keyed by their slug.
+        """
+
+    @abc.abstractmethod
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
+        """Get a backup."""
+
+    @abc.abstractmethod
+    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
+        """Remove a backup."""
+
+    @abc.abstractmethod
+    async def async_receive_backup(
+        self,
+        *,
+        contents: aiohttp.BodyPartReader,
+        **kwargs: Any,
+    ) -> None:
+        """Receive and store a backup file from upload."""
+
+
+class BackupManager(BaseBackupManager):
+    """Backup manager for the Backup integration."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the backup manager."""
+        super().__init__(hass=hass)
+        self.backup_dir = Path(hass.config.path("backups"))
+        self.loaded_backups = False
+
+    async def load_backups(self) -> None:
+        """Load data of stored backup files."""
+        backups = await self.hass.async_add_executor_job(self._read_backups)
+        LOGGER.debug("Loaded %s backups", len(backups))
+        self.backups = backups
+        self.loaded_backups = True
 
     def _read_backups(self) -> dict[str, Backup]:
         """Read backups from disk."""
@@ -151,14 +197,14 @@ class BackupManager:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 
-    async def get_backups(self) -> dict[str, Backup]:
+    async def async_get_backups(self, **kwargs: Any) -> dict[str, Backup]:
         """Return backups."""
         if not self.loaded_backups:
             await self.load_backups()
 
         return self.backups
 
-    async def get_backup(self, slug: str) -> Backup | None:
+    async def async_get_backup(self, *, slug: str, **kwargs: Any) -> Backup | None:
         """Return a backup."""
         if not self.loaded_backups:
             await self.load_backups()
@@ -180,23 +226,80 @@ class BackupManager:
 
         return backup
 
-    async def remove_backup(self, slug: str) -> None:
+    async def async_remove_backup(self, *, slug: str, **kwargs: Any) -> None:
         """Remove a backup."""
-        if (backup := await self.get_backup(slug)) is None:
+        if (backup := await self.async_get_backup(slug=slug)) is None:
             return
 
         await self.hass.async_add_executor_job(backup.path.unlink, True)
         LOGGER.debug("Removed backup located at %s", backup.path)
         self.backups.pop(slug)
 
-    async def generate_backup(self) -> Backup:
+    async def async_receive_backup(
+        self,
+        *,
+        contents: aiohttp.BodyPartReader,
+        **kwargs: Any,
+    ) -> None:
+        """Receive and store a backup file from upload."""
+        queue: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None] = (
+            SimpleQueue()
+        )
+        temp_dir_handler = await self.hass.async_add_executor_job(TemporaryDirectory)
+        target_temp_file = Path(
+            temp_dir_handler.name, contents.filename or "backup.tar"
+        )
+
+        def _sync_queue_consumer() -> None:
+            with target_temp_file.open("wb") as file_handle:
+                while True:
+                    if (_chunk_future := queue.get()) is None:
+                        break
+                    _chunk, _future = _chunk_future
+                    if _future is not None:
+                        self.hass.loop.call_soon_threadsafe(_future.set_result, None)
+                    file_handle.write(_chunk)
+
+        fut: asyncio.Future[None] | None = None
+        try:
+            fut = self.hass.async_add_executor_job(_sync_queue_consumer)
+            megabytes_sending = 0
+            while chunk := await contents.read_chunk(BUF_SIZE):
+                megabytes_sending += 1
+                if megabytes_sending % 5 != 0:
+                    queue.put_nowait((chunk, None))
+                    continue
+
+                chunk_future = self.hass.loop.create_future()
+                queue.put_nowait((chunk, chunk_future))
+                await asyncio.wait(
+                    (fut, chunk_future),
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                if fut.done():
+                    # The executor job failed
+                    break
+
+            queue.put_nowait(None)  # terminate queue consumer
+        finally:
+            if fut is not None:
+                await fut
+
+        def _move_and_cleanup() -> None:
+            shutil.move(target_temp_file, self.backup_dir / target_temp_file.name)
+            temp_dir_handler.cleanup()
+
+        await self.hass.async_add_executor_job(_move_and_cleanup)
+        await self.load_backups()
+
+    async def async_create_backup(self, **kwargs: Any) -> Backup:
         """Generate a backup."""
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
         try:
             self.backing_up = True
-            await self.pre_backup_actions()
+            await self.async_pre_backup_actions()
             backup_name = f"Core {HAVERSION}"
             date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -229,7 +332,7 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
-            await self.post_backup_actions()
+            await self.async_post_backup_actions()
 
     def _mkdir_and_generate_backup_contents(
         self,
@@ -262,6 +365,25 @@ class BackupManager:
                 )
 
         return tar_file_path.stat().st_size
+
+    async def async_restore_backup(self, slug: str, **kwargs: Any) -> None:
+        """Restore a backup.
+
+        This will write the restore information to .HA_RESTORE which
+        will be handled during startup by the restore_backup module.
+        """
+        if (backup := await self.async_get_backup(slug=slug)) is None:
+            raise HomeAssistantError(f"Backup {slug} not found")
+
+        def _write_restore_file() -> None:
+            """Write the restore file."""
+            Path(self.hass.config.path(RESTORE_BACKUP_FILE)).write_text(
+                json.dumps({"path": backup.path.as_posix()}),
+                encoding="utf-8",
+            )
+
+        await self.hass.async_add_executor_job(_write_restore_file)
+        await self.hass.services.async_call("homeassistant", "restart", {})
 
 
 def _generate_slug(date: str, name: str) -> str:
