@@ -443,7 +443,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.state == STATE_ON
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
-    assert state.attributes.get("color_temp") is None  # hs_color has priority
+    assert state.attributes.get("color_temp_kelvin") is None  # hs_color has priority
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "light.test")
