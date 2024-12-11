@@ -268,13 +268,18 @@ class SensorFilter(SensorEntity):
         self._update_filter_sensor_state(event.data["new_state"])
 
     def update(self) -> None:
-        """Update TimeSMAFilter value."""
-        temp_state = _State(dt_util.now(), 0)
-        self._run_filters(temp_state, timed_update=True)
+        """Time-based update of the filter without an input state change."""
+        state = copy(self.hass.states.get(self.entity_id))
+        if state is not None:
+            state.last_updated = dt_util.utcnow()
+        self._update_filter_sensor_state(state, update_ha=False, timed_update=True)
 
     @callback
     def _update_filter_sensor_state(
-        self, new_state: State | None, update_ha: bool = True
+        self,
+        new_state: State | None,
+        update_ha: bool = True,
+        timed_update: bool = False,
     ) -> None:
         """Process device state changes."""
         if new_state is None:
@@ -295,10 +300,23 @@ class SensorFilter(SensorEntity):
             self.async_write_ha_state()
             return
 
+        self._attr_available = True
+
         temp_state = _State(new_state.last_updated, new_state.state)
 
         try:
-            self._run_filters(temp_state)
+            for filt in self._filters:
+                filtered_state = filt.filter_state(copy(temp_state), timed_update)
+                _LOGGER.debug(
+                    "%s(%s=%s) -> %s",
+                    filt.name,
+                    self._entity,
+                    temp_state.state,
+                    "skip" if filt.skip_processing else filtered_state.state,
+                )
+                if filt.skip_processing:
+                    return
+                temp_state = filtered_state
         except ValueError:
             _LOGGER.error(
                 "Could not convert state: %s (%s) to number",
@@ -306,6 +324,8 @@ class SensorFilter(SensorEntity):
                 type(new_state.state),
             )
             return
+
+        self._state = temp_state.state
 
         self._attr_icon = new_state.attributes.get(ATTR_ICON, ICON)
         self._attr_device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
@@ -322,24 +342,6 @@ class SensorFilter(SensorEntity):
 
         if update_ha:
             self.async_write_ha_state()
-
-    def _run_filters(self, temp_state: _State, timed_update: bool = False) -> None:
-        self._attr_available = True
-
-        for filt in self._filters:
-            filtered_state = filt.filter_state(copy(temp_state), timed_update)
-            _LOGGER.debug(
-                "%s(%s=%s) -> %s",
-                filt.name,
-                self._entity,
-                temp_state.state,
-                "skip" if filt.skip_processing else filtered_state.state,
-            )
-            if filt.skip_processing:
-                return
-            temp_state = filtered_state
-
-        self._state = temp_state.state
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
