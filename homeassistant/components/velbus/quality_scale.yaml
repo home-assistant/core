@@ -14,7 +14,7 @@ rules:
   config-flow:
     status: todo
     comment: |
-      Dynamicly build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
+      Dynamically build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
   dependency-transparency: done
   docs-actions: todo
   docs-high-level-description: todo
