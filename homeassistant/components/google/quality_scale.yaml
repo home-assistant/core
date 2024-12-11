@@ -1,8 +1,8 @@
 rules:
   # Bronze
   config-flow:
-    status: done
-    comment: Integration uses an OAuth config flow.
+    status: todo
+    comment: Some fields missing data_description
   brands: done
   dependency-transparency: todo
   common-modules: done
