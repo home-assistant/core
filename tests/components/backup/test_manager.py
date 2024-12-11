@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from io import StringIO
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, call, mock_open, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 import pytest
 
@@ -21,12 +22,11 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    BackupManagerState,
     CoreBackupReaderWriter,
     CreateBackupEvent,
     CreateBackupStage,
     CreateBackupState,
-    IdleEvent,
-    ManagerStateEvent,
     NewBackup,
     WrittenBackup,
 )
@@ -68,6 +68,14 @@ async def _setup_backup_platform(
     mock_platform(hass, f"{domain}.backup", platform or MockPlatform())
     assert await async_setup_component(hass, domain, {})
     await hass.async_block_till_done()
+
+
+@pytest.fixture(name="generate_backup_id")
+def generate_backup_id_fixture() -> Generator[MagicMock]:
+    """Mock generate backup id."""
+    with patch("homeassistant.components.backup.manager._generate_backup_id") as mock:
+        mock.return_value = "abc123"
+        yield mock
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -191,79 +199,109 @@ async def test_create_backup_wrong_parameters(
         {},
         {"include_database": True, "name": "abc123"},
         {"include_database": False},
-        {"password": "abc123"},
+        {"password": "pass123"},
     ],
 )
 async def test_async_initiate_backup(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
-    params: dict,
+    generate_backup_id: MagicMock,
+    path_glob: MagicMock,
+    params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
 ) -> None:
     """Test generate backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
+    remote_agent = BackupAgentTest("remote", backups=[])
+    agents = {
+        f"backup.{local_agent.name}": local_agent,
+        f"test.{remote_agent.name}": remote_agent,
+    }
+    with patch(
+        "homeassistant.components.backup.backup.async_get_backup_agents"
+    ) as core_get_backup_agents:
+        core_get_backup_agents.return_value = [local_agent]
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
     await _setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
-            async_get_backup_agents=AsyncMock(
-                return_value=[BackupAgentTest("remote", backups=[])]
-            ),
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
             spec_set=BackupAgentPlatformProtocol,
         ),
     )
-    await manager.load_platforms()
 
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._loaded_backups = True
+    ws_client = await hass_ws_client(hass)
 
-    agent_ids = agent_ids or [LOCAL_AGENT_ID]
     include_database = params.get("include_database", True)
     name = params.get("name", "Core 2025.1.0")
     password = params.get("password")
-    progress: list[ManagerStateEvent] = []
+    path_glob.return_value = []
 
-    def on_progress(_progress: ManagerStateEvent) -> None:
-        """Mock progress callback."""
-        progress.append(_progress)
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
 
-    assert manager._backup_task is None
-    manager.async_subscribe_events(on_progress)
-    await manager.async_initiate_backup(
-        agent_ids=agent_ids,
-        include_addons=[],
-        include_all_addons=False,
-        include_database=include_database,
-        include_folders=[],
-        include_homeassistant=True,
-        name=name,
-        password=password,
-    )
-    assert manager._backup_task is not None
-    assert progress == [
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
-    ]
+    assert result["success"] is True
+    assert result["result"] == {
+        "backups": [],
+        "agent_errors": {},
+        "last_automatic_backup": None,
+    }
 
-    finished_backup = await manager._backup_task
-    await manager._backup_finish_task
-    assert progress == [
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS),
-        CreateBackupEvent(
-            stage=CreateBackupStage.HOME_ASSISTANT, state=CreateBackupState.IN_PROGRESS
-        ),
-        CreateBackupEvent(
-            stage=CreateBackupStage.UPLOAD_TO_AGENTS,
-            state=CreateBackupState.IN_PROGRESS,
-        ),
-        CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED),
-        IdleEvent(),
-    ]
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids} | params
+        )
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "stage": None,
+            "state": CreateBackupState.IN_PROGRESS,
+        }
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        backup_id = result["result"]["backup_job_id"]
+        assert backup_id == generate_backup_id.return_value
+
+        await hass.async_block_till_done()
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": CreateBackupStage.HOME_ASSISTANT,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": None,
+        "state": CreateBackupState.COMPLETED,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
     assert mocked_json_bytes.call_count == 1
     backup_json_dict = mocked_json_bytes.call_args[0][0]
@@ -281,8 +319,19 @@ async def test_async_initiate_backup(
         "type": "partial",
         "version": 2,
     }
-    backup = finished_backup.backup
-    assert isinstance(backup, AgentBackup)
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/details", "backup_id": backup_id}
+    )
+    result = await ws_client.receive_json()
+
+    backup_data = result["result"]["backup"]
+    backup_agent_ids = backup_data.pop("agent_ids")
+
+    assert backup_agent_ids == agent_ids
+
+    backup = AgentBackup.from_dict(backup_data)
+
     assert backup == AgentBackup(
         addons=[],
         backup_id=ANY,
@@ -296,7 +345,7 @@ async def test_async_initiate_backup(
         size=ANY,
     )
     for agent_id in agent_ids:
-        agent = manager.backup_agents[agent_id]
+        agent = agents[agent_id]
         assert len(agent._backups) == 1
         agent_backup = agent._backups[backup.backup_id]
         assert agent_backup.backup_id == backup.backup_id
@@ -313,14 +362,9 @@ async def test_async_initiate_backup(
     ]
     assert core_tar.add.call_args_list == expected_files
 
-    assert "Generated new backup with backup_id " in caplog.text
-    assert "Loaded 0 platforms" in caplog.text
-    assert "Loaded 2 agents" in caplog.text
-
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
     assert tar_file_path == f"{backup_directory}/{backup.backup_id}.tar"
-    assert isinstance(tar_file_path, str)
 
 
 async def test_loading_platforms(
