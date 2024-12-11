@@ -95,6 +95,7 @@ async def test_scale_battery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the scale battery sensor."""
@@ -102,6 +103,11 @@ async def test_scale_battery(
 
     state = hass.states.get("sensor.lmz_123a45_battery")
     assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry == snapshot
 
 
 @pytest.mark.parametrize(

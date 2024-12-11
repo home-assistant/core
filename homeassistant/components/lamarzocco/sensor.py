@@ -105,9 +105,6 @@ SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
         supported_fn=lambda coordinator: coordinator.device.model
         == MachineModel.LINEA_MINI,
-        available_fn=lambda device: (
-            device.config.scale.connected if device.config.scale else False
-        ),
     ),
 )
 
@@ -120,7 +117,7 @@ async def async_setup_entry(
     """Set up sensor entities."""
     coordinator = entry.runtime_data
 
-    entities: list[SensorEntity] = [
+    entities = [
         LaMarzoccoSensorEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
