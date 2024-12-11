@@ -79,6 +79,6 @@ async def test_select_states(
     entity_registry: er.EntityRegistry,
     setup_platform: None,
 ) -> None:
-    """Test number entity state."""
+    """Test select entity state."""
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
