@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any, Self
 
 from plugwise import Smile
@@ -59,6 +60,20 @@ def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
         )
 
     return schema
+
+
+def reconfigure_schema(reconfigure_data: MappingProxyType[str, Any]) -> vol.Schema:
+    """Generate reconfigure schema for gateways."""
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_HOST, default=reconfigure_data.get(CONF_HOST)
+            ): TextSelector(),
+            vol.Required(
+                CONF_PORT, default=reconfigure_data.get(CONF_PORT)
+            ): vol.Coerce(int),
+        }
+    )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
@@ -155,39 +170,55 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return False
 
+    async def _verify_connection(
+        self, user_input: dict[str, Any]
+    ) -> tuple[Smile | None, dict[str, str]]:
+        """Verify gateway connection helper function user and reconfiguration steps."""
+        errors: dict[str, str] = {}
+
+        try:
+            api = await validate_input(self.hass, user_input)
+        except ConnectionFailedError:
+            errors[CONF_BASE] = "cannot_connect"
+        except InvalidAuthentication:
+            errors[CONF_BASE] = "invalid_auth"
+        except InvalidSetupError:
+            errors[CONF_BASE] = "invalid_setup"
+        except (InvalidXMLError, ResponseError):
+            errors[CONF_BASE] = "response_error"
+        except UnsupportedDeviceError:
+            errors[CONF_BASE] = "unsupported"
+        except Exception:  # noqa: BLE001
+            errors[CONF_BASE] = "unknown"
+        else:
+            await self.async_set_unique_id(
+                api.smile_hostname or api.gateway_id, raise_on_progress=False
+            )
+            return (api, errors)
+        return (None, errors)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step when using network/gateway setups."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            if self.discovery_info:
-                user_input[CONF_HOST] = self.discovery_info.host
-                user_input[CONF_PORT] = self.discovery_info.port
-                user_input[CONF_USERNAME] = self._username
+        if not user_input:
+            return self.async_show_form(
+                step_id=SOURCE_USER,
+                data_schema=base_schema(self.discovery_info),
+                errors=errors,
+            )
 
-            try:
-                api = await validate_input(self.hass, user_input)
-            except ConnectionFailedError:
-                errors[CONF_BASE] = "cannot_connect"
-            except InvalidAuthentication:
-                errors[CONF_BASE] = "invalid_auth"
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
-            except (InvalidXMLError, ResponseError):
-                errors[CONF_BASE] = "response_error"
-            except UnsupportedDeviceError:
-                errors[CONF_BASE] = "unsupported"
-            except Exception:  # noqa: BLE001
-                errors[CONF_BASE] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
-                )
-                self._abort_if_unique_id_configured()
+        if self.discovery_info:
+            user_input[CONF_HOST] = self.discovery_info.host
+            user_input[CONF_PORT] = self.discovery_info.port
+            user_input[CONF_USERNAME] = self._username
 
-                return self.async_create_entry(title=api.smile_name, data=user_input)
+        api, errors = await self._verify_connection(user_input)
+        if not errors and api:
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
             step_id=SOURCE_USER,
@@ -200,53 +231,29 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
         if user_input:
-            try:
-                api = await validate_input(self.hass, user_input)
-            except ConnectionFailedError:
-                errors[CONF_BASE] = "cannot_connect"
-            except InvalidAuthentication:
-                errors[CONF_BASE] = "invalid_auth"
-            except InvalidSetupError:
-                errors[CONF_BASE] = "invalid_setup"
-            except (InvalidXMLError, ResponseError):
-                errors[CONF_BASE] = "response_error"
-            except UnsupportedDeviceError:
-                errors[CONF_BASE] = "unsupported"
-            except Exception:  # noqa: BLE001
-                errors[CONF_BASE] = "unknown"
-            else:
-                await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
-                )
+            user_input = {
+                CONF_HOST: user_input.get(CONF_HOST),
+                CONF_PORT: user_input.get(CONF_PORT),
+                CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+                CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
+            }
+
+            _, errors = await self._verify_connection(user_input)
+            if not errors:
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")
                 return self.async_update_reload_and_abort(
                     self._get_reconfigure_entry(),
                     data_updates=user_input,
                 )
+
         reconfigure_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        default=reconfigure_entry.data.get(CONF_HOST),
-                    ): TextSelector(),
-                    vol.Required(
-                        CONF_PORT,
-                        default=reconfigure_entry.data.get(CONF_PORT),
-                    ): vol.Coerce(int),
-                    vol.Required(
-                        CONF_PASSWORD,
-                        default=reconfigure_entry.data.get(CONF_PASSWORD),
-                    ): str,
-                    vol.Required(
-                        CONF_USERNAME,
-                        default=reconfigure_entry.data.get(CONF_USERNAME),
-                    ): vol.In({SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}),
-                }
-            ),
+            data_schema=reconfigure_schema(reconfigure_entry.data),
             description_placeholders={
                 "title": reconfigure_entry.title,
             },
