@@ -167,6 +167,7 @@ async def test_agents_list_backups(
             "protected": False,
             "size": 34519040,
             "agent_ids": ["cloud.cloud"],
+            "failed_agent_ids": [],
         }
     ]
 
@@ -212,6 +213,7 @@ async def test_agents_list_backups_fail_cloud(
                 "protected": False,
                 "size": 34519040,
                 "agent_ids": ["cloud.cloud"],
+                "failed_agent_ids": [],
             },
         ),
         (

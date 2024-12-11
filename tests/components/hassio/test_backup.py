@@ -130,6 +130,7 @@ async def test_agent_list_backups(
             "backup_id": "abc123",
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
+            "failed_agent_ids": [],
             "folders": ["share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
