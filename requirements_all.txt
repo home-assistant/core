@@ -2031,7 +2031,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.3.3
+pylamarzocco==1.4.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -3027,7 +3027,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.33.0
 
 # homeassistant.components.knx
-xknx==3.3.0
+xknx==3.4.0
 
 # homeassistant.components.knx
 xknxproject==3.8.1
