@@ -284,5 +284,28 @@
         "name": "Relay"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "data_incomplete_or_missing": {
+      "message": "Data incomplete or missing."
+    },
+    "error_communicating_with_api": {
+      "message": "Error communicating with API: {error}."
+    },
+    "failed_to_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_xml_data": {
+      "message": "[%key:component::plugwise::config::error::response_error%]"
+    },
+    "unsupported_firmware": {
+      "message": "[%key:component::plugwise::config::error::unsupported%]"
+    },
+    "unsupported_hvac_mode_requested": {
+      "message": "Unsupported mode {hvac_mode} requested, valid modes are: {hvac_modes}."
+    }
   }
 }
