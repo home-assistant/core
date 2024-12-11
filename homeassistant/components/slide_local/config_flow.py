@@ -18,28 +18,10 @@ from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import (
-    BooleanSelector,
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .const import CONF_INVERT_POSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-API_VERSION_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[
-            SelectOptionDict(value="1", label="API 1"),
-            SelectOptionDict(value="2", label="API 2"),
-        ],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key=CONF_API_VERSION,
-    )
-)
 
 
 class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -47,6 +29,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _mac: str = ""
     _host: str = ""
+    _api_version: int | None = None
 
     VERSION = 1
     MINOR_VERSION = 1
@@ -56,10 +39,12 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, str]:
         """Reusable Auth Helper."""
         slide = SlideLocalApi()
+
+        # first test, if API version 2 is working
         await slide.slide_add(
             user_input[CONF_HOST],
             user_input.get(CONF_PASSWORD, ""),
-            user_input[CONF_API_VERSION],
+            2,
         )
 
         try:
@@ -72,6 +57,34 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
+        if result is not None:
+            self._api_version = 2
+            self._mac = result["mac"]
+            return {}
+
+        # API version 2 is not working, try API version 1 instead
+        await slide.slide_del(user_input[CONF_HOST])
+        await slide.slide_add(
+            user_input[CONF_HOST],
+            user_input.get(CONF_PASSWORD, ""),
+            1,
+        )
+
+        try:
+            result = await slide.slide_info(user_input[CONF_HOST])
+        except (ClientConnectionError, ClientTimeoutError):
+            return {"base": "cannot_connect"}
+        except (AuthenticationFailed, DigestAuthCalcError):
+            return {"base": "invalid_auth"}
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception("Exception occurred during connection test")
+            return {"base": "unknown"}
+
+        if result is None:
+            # API version 1 isn't working either
+            return {"base": "unknown"}
+
+        self._api_version = 1
         self._mac = result["mac"]
 
         return {}
@@ -83,11 +96,13 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            user_input[CONF_API_VERSION] = int(user_input[CONF_API_VERSION])
 
             if not (errors := await self.async_test_connection(user_input)):
                 await self.async_set_unique_id(self._mac)
-                user_input |= {CONF_MAC: format_mac(self._mac)}
+                user_input |= {
+                    CONF_MAC: format_mac(self._mac),
+                    CONF_API_VERSION: self._api_version,
+                }
 
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
@@ -104,10 +119,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Required(CONF_API_VERSION, default="2"): API_VERSION_SELECTOR,
-                    vol.Required(
-                        CONF_INVERT_POSITION, default=False
-                    ): BooleanSelector(),
                 }
             ),
             errors=errors,
@@ -133,21 +144,32 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-
+        errors = {}
         if user_input is not None:
-            user_input |= {
-                CONF_HOST: self._host,
-                CONF_API_VERSION: 2,
-                CONF_MAC: format_mac(self._mac),
-            }
-
-            if not await self.async_test_connection(user_input):
+            if not (
+                errors := await self.async_test_connection(
+                    {
+                        CONF_HOST: self._host,
+                    }
+                )
+            ):
+                user_input |= {
+                    CONF_HOST: self._host,
+                    CONF_API_VERSION: 2,
+                    CONF_MAC: format_mac(self._mac),
+                }
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data=user_input,
                     options={CONF_INVERT_POSITION: False},
                 )
-            return self.async_abort(reason="discovery_connection_failed")
+
+            return self.async_abort(
+                reason="discovery_connection_failed",
+                description_placeholders={
+                    "error": errors["base"],
+                },
+            )
 
         self._set_confirm_only()
         return self.async_show_form(

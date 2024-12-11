@@ -18,7 +18,7 @@ from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import HOST
+from .const import HOST, SLIDE_INFO_DATA
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +55,6 @@ async def test_user(
         {
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
-            CONF_API_VERSION: "2",
         },
     )
 
@@ -68,6 +67,66 @@ async def test_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_api_1(
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_slide_api.slide_info.side_effect = [None, SLIDE_INFO_DATA]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == HOST
+    assert result2["data"][CONF_HOST] == HOST
+    assert result2["data"][CONF_PASSWORD] == "pwd"
+    assert result2["data"][CONF_API_VERSION] == 1
+    assert not result2["options"][CONF_INVERT_POSITION]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_api_error(
+    hass: HomeAssistant,
+    mock_slide_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_slide_api.slide_info.return_value = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "unknown"
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -78,13 +137,13 @@ async def test_user(
         (Exception, "unknown"),
     ],
 )
-async def test_form_exceptions(
+async def test_api_1_exceptions(
     hass: HomeAssistant,
     exception: Exception,
     error: str,
     mock_slide_api: AsyncMock,
 ) -> None:
-    """Test we can handle Form exceptions."""
+    """Test we can handle Form exceptions for api 1."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -92,7 +151,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_slide_api.slide_info.side_effect = exception
+    mock_slide_api.slide_info.side_effect = [None, exception]
 
     # tests with connection error
     result = await hass.config_entries.flow.async_configure(
@@ -100,8 +159,6 @@ async def test_form_exceptions(
         {
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
-            CONF_API_VERSION: "2",
-            CONF_INVERT_POSITION: False,
         },
     )
 
@@ -117,7 +174,64 @@ async def test_form_exceptions(
         {
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
-            CONF_API_VERSION: "2",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PASSWORD] == "pwd"
+    assert result["data"][CONF_API_VERSION] == 2
+    assert not result["options"][CONF_INVERT_POSITION]
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ClientConnectionError, "cannot_connect"),
+        (ClientTimeoutError, "cannot_connect"),
+        (AuthenticationFailed, "invalid_auth"),
+        (DigestAuthCalcError, "invalid_auth"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_api_2_exceptions(
+    hass: HomeAssistant,
+    exception: Exception,
+    error: str,
+    mock_slide_api: AsyncMock,
+) -> None:
+    """Test we can handle Form exceptions for api 2."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_slide_api.slide_info.side_effect = exception
+
+    # tests with connection error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == error
+
+    # tests with all provided
+    mock_slide_api.slide_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: HOST,
+            CONF_PASSWORD: "pwd",
         },
     )
 
@@ -148,7 +262,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         {
             CONF_HOST: HOST,
             CONF_PASSWORD: "pwd",
-            CONF_API_VERSION: "2",
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -167,8 +280,7 @@ async def test_zeroconf(
     assert result["step_id"] == "zeroconf_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -195,3 +307,40 @@ async def test_zeroconf_duplicate_entry(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].data[CONF_HOST] == "127.0.0.2"
+
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        (ClientConnectionError),
+        (ClientTimeoutError),
+        (AuthenticationFailed),
+        (DigestAuthCalcError),
+        (Exception),
+    ],
+)
+async def test_zeroconf_connection_error(
+    hass: HomeAssistant,
+    exception: Exception,
+    mock_slide_api: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test starting a flow from discovery."""
+
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "slide_host"}, unique_id="12:34:56:78:90:cd"
+    ).add_to_hass(hass)
+
+    mock_slide_api.slide_info.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "discovery_connection_failed"

@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
 
-from .const import HOST
+from .const import HOST, SLIDE_INFO_DATA
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -36,10 +36,8 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_slide_api():
     """Build a fixture for the SlideLocalApi that connects successfully and returns one device."""
 
-    data = load_json_object_fixture("slide_1.json", DOMAIN)
-
     mock_slide_local_api = AsyncMock()
-    mock_slide_local_api.slide_info.return_value = data
+    mock_slide_local_api.slide_info.return_value = SLIDE_INFO_DATA
 
     with (
         patch(
