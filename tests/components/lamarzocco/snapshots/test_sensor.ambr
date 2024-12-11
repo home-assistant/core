@@ -1,4 +1,20 @@
 # serializer version: 1
+# name: test_scale_battery[Linea Mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'LMZ-123A45 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lmz_123a45_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '64',
+  })
+# ---
 # name: test_sensors[GS012345_current_coffee_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

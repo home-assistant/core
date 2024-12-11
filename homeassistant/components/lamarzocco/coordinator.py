@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -67,6 +68,8 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self._last_firmware_data_update: float | None = None
         self._last_statistics_data_update: float | None = None
         self._local_client = local_client
+        self._scale_address: str | None = None
+        self.new_scale_callback: list[Callable] = []
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -115,6 +118,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             self._last_statistics_data_update = time()
 
         _LOGGER.debug("Current status: %s", str(self.device.config))
+        self._async_add_remove_scale()
 
     async def _async_handle_request[**_P](
         self,
@@ -134,3 +138,20 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="api_error"
             ) from ex
+
+    def _async_add_remove_scale(self) -> None:
+        """Add or remove a scale when added or removed."""
+        if self.device.config.scale and not self._scale_address:
+            self._scale_address = self.device.config.scale.address
+            for callback in self.new_scale_callback:
+                callback()
+        elif not self.device.config.scale and self._scale_address:
+            device_registry = dr.async_get(self.hass)
+            if device := device_registry.async_get_device(
+                identifiers={(DOMAIN, self._scale_address)}
+            ):
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            self._scale_address = None
