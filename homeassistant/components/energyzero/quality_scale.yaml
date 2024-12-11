@@ -23,7 +23,7 @@ rules:
   has-entity-name: done
   runtime-data: todo
   test-before-configure: todo
-  test-before-setup: todo
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
@@ -75,10 +75,7 @@ rules:
       Not applicable for this integration.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      This integration does not have any entities that should disabled by default.
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
   icon-translations:
