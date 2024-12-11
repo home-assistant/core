@@ -32,6 +32,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -863,7 +864,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: ColorMode | str | None = None
-    _attr_color_temp: int | None = None
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
@@ -872,14 +872,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # https://developers.meethue.com/documentation/core-concepts
     _attr_max_color_temp_kelvin: int | None = None
     _attr_min_color_temp_kelvin: int | None = None
-    _attr_max_mireds: int = 500  # 2000 K
-    _attr_min_mireds: int = 153  # 6500 K
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
     _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
+
+    # Deprecated, see https://github.com/home-assistant/core/pull/79591
+    _attr_color_temp: Final[int | None] = None
+    _attr_max_mireds: Final[int] = 500  # 2000 K
+    _attr_min_mireds: Final[int] = 153  # 6500 K
 
     __color_mode_reported = False
 
@@ -956,32 +959,66 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the rgbww color value [int, int, int, int, int]."""
         return self._attr_rgbww_color
 
+    @final
     @cached_property
     def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
+        """Return the CT color value in mireds.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_color_temp
 
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in Kelvin."""
         if self._attr_color_temp_kelvin is None and (color_temp := self.color_temp):
+            report_usage(
+                "is using mireds for current light color temperature, when "
+                "it should be adjusted to use kelvin (see "
+                "https://github.com/home-assistant/core/pull/79591)",
+                breaks_in_ha_version="2026.1",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name
+                if self.platform
+                else None,
+                exclude_integrations={DOMAIN},
+            )
             return color_util.color_temperature_mired_to_kelvin(color_temp)
         return self._attr_color_temp_kelvin
 
+    @final
     @cached_property
     def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
+        """Return the coldest color_temp that this light supports.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_min_mireds
 
+    @final
     @cached_property
     def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
+        """Return the warmest color_temp that this light supports.
+
+        Deprecated, see https://github.com/home-assistant/core/pull/79591
+        """
         return self._attr_max_mireds
 
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         if self._attr_min_color_temp_kelvin is None:
+            report_usage(
+                "is using mireds for warmest color light temperature, when "
+                "it should be adjusted to use kelvin (see "
+                "https://github.com/home-assistant/core/pull/79591)",
+                breaks_in_ha_version="2026.1",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name
+                if self.platform
+                else None,
+                exclude_integrations={DOMAIN},
+            )
             return color_util.color_temperature_mired_to_kelvin(self.max_mireds)
         return self._attr_min_color_temp_kelvin
 
@@ -989,6 +1026,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         if self._attr_max_color_temp_kelvin is None:
+            report_usage(
+                "is using mireds for coldest light color temperature, when "
+                "it should be adjusted to use kelvin (see "
+                "https://github.com/home-assistant/core/pull/79591)",
+                breaks_in_ha_version="2026.1",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name
+                if self.platform
+                else None,
+                exclude_integrations={DOMAIN},
+            )
             return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
         return self._attr_max_color_temp_kelvin
 
