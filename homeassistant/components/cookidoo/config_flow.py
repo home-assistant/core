@@ -21,11 +21,10 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    CountrySelector,
+    CountrySelectorConfig,
     LanguageSelector,
     LanguageSelectorConfig,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -106,14 +105,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     async def generate_country_schema(self) -> None:
         """Generate country schema."""
         self.COUNTRY_DATA_SCHEMA = {
-            vol.Required(CONF_COUNTRY): SelectSelector(
-                SelectSelectorConfig(
-                    mode=SelectSelectorMode.DROPDOWN,
-                    translation_key="country",
-                    options=await get_country_options(),
-                    sort=True,
-                ),
-            ),
+            vol.Required(CONF_COUNTRY): CountrySelector(
+                CountrySelectorConfig(
+                    countries=await get_country_options(),
+                )
+            )
         }
 
     async def generate_language_schema(self) -> None:
