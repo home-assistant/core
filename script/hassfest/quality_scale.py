@@ -890,7 +890,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rtorrent",
     "rtsp_to_webrtc",
     "ruckus_unleashed",
-    "russound_rio",
     "russound_rnet",
     "ruuvi_gateway",
     "ruuvitag_ble",
