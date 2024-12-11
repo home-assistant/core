@@ -7,9 +7,10 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules:
-    status: todo
+    status: exempt
     comment: |
-      The entity.py file is not used in this integration.
+      It uses a coordinator.py file, but an entity.py file
+      is not used since it only has a sensor platform.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -69,7 +70,7 @@ rules:
       provider, which uses the users home address to get the data.
   docs-data-update: done
   docs-examples: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
