@@ -203,22 +203,16 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step when using network/gateway setups."""
         errors: dict[str, str] = {}
 
-        if not user_input:
-            return self.async_show_form(
-                step_id=SOURCE_USER,
-                data_schema=base_schema(self.discovery_info),
-                errors=errors,
-            )
+        if user_input is not None:
+            if self.discovery_info:
+                user_input[CONF_HOST] = self.discovery_info.host
+                user_input[CONF_PORT] = self.discovery_info.port
+                user_input[CONF_USERNAME] = self._username
 
-        if self.discovery_info:
-            user_input[CONF_HOST] = self.discovery_info.host
-            user_input[CONF_PORT] = self.discovery_info.port
-            user_input[CONF_USERNAME] = self._username
-
-        api, errors = await self._verify_connection(user_input)
-        if not errors and api:
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=api.smile_name, data=user_input)
+            api, errors = await self._verify_connection(user_input)
+            if not errors and api:
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
             step_id=SOURCE_USER,
@@ -235,6 +229,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input:
+            # Redefine ingest existing username and password
             user_input = {
                 CONF_HOST: user_input.get(CONF_HOST),
                 CONF_PORT: user_input.get(CONF_PORT),
@@ -250,7 +245,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
-        reconfigure_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=reconfigure_schema(reconfigure_entry.data),
