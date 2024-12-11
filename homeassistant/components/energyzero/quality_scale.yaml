@@ -37,12 +37,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates:
-    status: exempt
-    comment: |
-      This integration only polls data using a coordinator.
-      Since the integration is read-only and poll-only (only provide sensor
-      data), there is no need to implement parallel updates.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
