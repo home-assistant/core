@@ -144,7 +144,6 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        snapshot: bytes | None = await try_function(
+        return await try_function(
             self._host.api.get_snapshot(self._channel, self.entity_description.stream)
         )
-        return snapshot

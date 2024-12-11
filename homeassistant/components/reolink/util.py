@@ -73,7 +73,7 @@ def get_device_uid_and_ch(
     return (device_uid, ch, is_chime)
 
 
-async def try_function(func: Coroutine) -> Any:
+async def try_function[T](func: Coroutine[Any, Any, T]) -> T:
     """Try a reolink-aio function and translate any potential errors."""
     try:
         return await func
