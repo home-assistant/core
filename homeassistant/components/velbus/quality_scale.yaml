@@ -7,7 +7,10 @@ rules:
       This integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Split test_flow_usb from the test that tests already_configured, test_flow_usb should also assert the unique_id of the entry
   config-flow: todo
   dependency-transparency: done
   docs-actions: todo
@@ -20,7 +23,10 @@ rules:
   runtime-data: todo
   test-before-configure: done
   test-before-setup: todo
-  unique-config-entry: done
+  unique-config-entry:
+    status: todo
+    comment: |
+      Manual step does not generate an unique-id
 
   # Silver
   action-exceptions: todo
