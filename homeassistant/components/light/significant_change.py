@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import check_absolute_change
 
-from . import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR
+from . import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN, ATTR_EFFECT, ATTR_HS_COLOR
 
 
 @callback
@@ -44,10 +44,10 @@ def async_check_significant_change(
         return True
 
     if check_absolute_change(
-        # Default range 153..500
-        old_attrs.get(ATTR_COLOR_TEMP),
-        new_attrs.get(ATTR_COLOR_TEMP),
-        5,
+        # Default range 2000..6500
+        old_attrs.get(ATTR_COLOR_TEMP_KELVIN),
+        new_attrs.get(ATTR_COLOR_TEMP_KELVIN),
+        50,
     ):
         return True
 
