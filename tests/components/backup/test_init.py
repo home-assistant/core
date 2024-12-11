@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotFound
 
 from .common import setup_backup_integration
 
@@ -45,3 +46,11 @@ async def test_create_service(
         )
 
     assert generate_backup.called
+
+
+async def test_create_service_with_hassio(hass: HomeAssistant) -> None:
+    """Test action backup.create does not exist with hassio."""
+    await setup_backup_integration(hass, with_hassio=True)
+
+    with pytest.raises(ServiceNotFound):
+        await hass.services.async_call(DOMAIN, "create", blocking=True)

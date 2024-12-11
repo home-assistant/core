@@ -83,12 +83,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password=call.data.get(CONF_PASSWORD),
         )
 
-    hass.services.async_register(
-        DOMAIN,
-        "create",
-        async_handle_create_service,
-        schema=SERVICE_CREATE_SCHEMA,
-    )
+    if not with_hassio:
+        hass.services.async_register(
+            DOMAIN,
+            "create",
+            async_handle_create_service,
+            schema=SERVICE_CREATE_SCHEMA,
+        )
 
     async_register_http_views(hass)
 
