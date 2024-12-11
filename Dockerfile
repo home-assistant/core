@@ -6,6 +6,7 @@ FROM ${BUILD_FROM}
 
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
+    container=oci \
     S6_SERVICES_GRACETIME=240000 \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
