@@ -21,7 +21,9 @@ from .coordinator import CompitDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry[CompitDataUpdateCoordinator],
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the CompitClimate platform from a config entry."""
 
