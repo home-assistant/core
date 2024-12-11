@@ -245,6 +245,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      ,
+      "PowerSourceBatReplacementDescription": {
+        "name": "Battery type"
       }
     },
     "switch": {
