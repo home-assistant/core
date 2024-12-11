@@ -10,7 +10,30 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-from .mocks import HomeControlMock, HomeControlMockConsumption, HomeControlMockSensor
+from .mocks import (
+    HomeControlMock,
+    HomeControlMockBrightness,
+    HomeControlMockConsumption,
+    HomeControlMockSensor,
+)
+
+
+async def test_brightness_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+) -> None:
+    """Test setup of a brightness sensor device."""
+    entry = configure_integration(hass)
+    test_gateway = HomeControlMockBrightness()
+    with patch(
+        "homeassistant.components.devolo_home_control.HomeControl",
+        side_effect=[test_gateway, HomeControlMock()],
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(f"{SENSOR_DOMAIN}.test_brightness")
+    assert state == snapshot
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.test_brightness") == snapshot
 
 
 async def test_temperature_sensor(
