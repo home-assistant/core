@@ -240,7 +240,9 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.PowerSource.Attributes.BatReplacementDescription,),
+        required_attributes=(
+            clusters.PowerSource.Attributes.BatReplacementDescription,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
