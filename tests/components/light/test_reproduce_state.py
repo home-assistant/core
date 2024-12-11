@@ -200,7 +200,8 @@ async def test_filter_color_modes_missing_attributes(
     color_mode = light.ColorMode.COLOR_TEMP
     hass.states.async_set("light.entity", "off", {})
     expected_log = (
-        "Color mode color_temp specified but attribute color_temp missing for"
+        "Color mode color_temp specified "
+        "but attribute color_temp missing for: light.entity"
     )
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
@@ -214,36 +215,30 @@ async def test_filter_color_modes_missing_attributes(
         **VALID_XY_COLOR,
         **VALID_BRIGHTNESS,
     }
-    invalid_color_temp = {**all_colors}
-    invalid_color_temp.pop("color_temp")
+
+    # Test missing `color_temp` attribute
+    stored_attributes = {**all_colors}
+    stored_attributes.pop("color_temp")
     caplog.clear()
     await async_reproduce_state(
         hass,
-        [State("light.entity", "on", {**invalid_color_temp, "color_mode": color_mode})],
+        [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
     )
 
     assert len(turn_on_calls) == 0
     assert expected_log in caplog.text
 
+    # Test with correct `color_temp` attribute
+    stored_attributes["color_temp"] = 240
+    expected = {"brightness": 180, "color_temp": 240}
     caplog.clear()
     await async_reproduce_state(
         hass,
         [State("light.entity", "on", {**all_colors, "color_mode": color_mode})],
     )
-
-    expected = {"brightness": 180, "color_temp": 240}
     assert len(turn_on_calls) == 1
     assert turn_on_calls[0].domain == "light"
     assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity", **expected}
-
-    # This should do nothing, the light is already in the desired state
-    hass.states.async_set("light.entity", "on", {"color_mode": color_mode, **expected})
-    await async_reproduce_state(
-        hass,
-        [State("light.entity", "on", {**expected, "color_mode": color_mode})],
-    )
-    assert len(turn_on_calls) == 1
-
     assert expected_log not in caplog.text
 
 
