@@ -7,7 +7,7 @@ import ast
 
 from homeassistant.const import Platform
 from script.hassfest import ast_parse_module
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 
 def _has_parallel_updates_defined(module: ast.Module) -> bool:
@@ -18,7 +18,9 @@ def _has_parallel_updates_defined(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration sets PARALLEL_UPDATES constant."""
 
     errors = []

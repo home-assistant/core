@@ -294,5 +294,16 @@
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       }
     }
+  },
+  "exceptions": {
+    "no_supported_device_found": {
+      "message": "No supported Fronius SolarNet device found."
+    },
+    "entry_cannot_connect": {
+      "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while attempting to fetch data: {fronius_error}"
+    }
   }
 }
