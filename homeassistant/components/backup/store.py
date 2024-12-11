@@ -21,7 +21,7 @@ STORAGE_VERSION = 1
 class StoredBackupData(TypedDict):
     """Represent the stored backup config."""
 
-    backups: dict[str, StoredKnownBackup]
+    backups: list[StoredKnownBackup]
     config: StoredBackupConfig
 
 
@@ -47,6 +47,6 @@ class BackupStore:
     def _data_to_save(self) -> StoredBackupData:
         """Return data to save."""
         return {
-            "backups": self._manager.known_backups.to_dict(),
+            "backups": self._manager.known_backups.to_list(),
             "config": self._manager.config.data.to_dict(),
         }

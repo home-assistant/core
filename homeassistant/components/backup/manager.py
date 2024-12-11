@@ -809,20 +809,19 @@ class KnownBackups:
         self._backups: dict[str, KnownBackup] = {}
         self._manager = manager
 
-    def load(self, stored_backups: dict[str, StoredKnownBackup]) -> None:
+    def load(self, stored_backups: list[StoredKnownBackup]) -> None:
         """Load backups."""
         self._backups = {
-            backup_id: KnownBackup(
-                backup_id=backup_id, failed_agent_ids=backup["failed_agent_ids"]
+            backup["backup_id"]: KnownBackup(
+                backup_id=backup["backup_id"],
+                failed_agent_ids=backup["failed_agent_ids"],
             )
-            for backup_id, backup in stored_backups.items()
+            for backup in stored_backups
         }
 
-    def to_dict(self) -> dict[str, StoredKnownBackup]:
+    def to_list(self) -> list[StoredKnownBackup]:
         """Convert known backups to a dict."""
-        return {
-            backup_id: backup.to_dict() for backup_id, backup in self._backups.items()
-        }
+        return [backup.to_dict() for backup in self._backups.values()]
 
     def add(self, backup: AgentBackup, agent_errors: dict[str, Exception]) -> None:
         """Add a backup."""
@@ -853,6 +852,7 @@ class KnownBackup:
     def to_dict(self) -> StoredKnownBackup:
         """Convert known backup to a dict."""
         return {
+            "backup_id": self.backup_id,
             "failed_agent_ids": self.failed_agent_ids,
         }
 
@@ -860,6 +860,7 @@ class KnownBackup:
 class StoredKnownBackup(TypedDict):
     """Stored persistent backup data."""
 
+    backup_id: str
     failed_agent_ids: list[str]
 
 

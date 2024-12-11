@@ -420,8 +420,8 @@
 # name: test_config_update[command0].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -511,8 +511,8 @@
 # name: test_config_update[command10].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -602,8 +602,8 @@
 # name: test_config_update[command1].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -693,8 +693,8 @@
 # name: test_config_update[command2].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -784,8 +784,8 @@
 # name: test_config_update[command3].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -879,8 +879,8 @@
 # name: test_config_update[command4].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -974,8 +974,8 @@
 # name: test_config_update[command5].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1065,8 +1065,8 @@
 # name: test_config_update[command6].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1156,8 +1156,8 @@
 # name: test_config_update[command7].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1247,8 +1247,8 @@
 # name: test_config_update[command8].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([
@@ -1338,8 +1338,8 @@
 # name: test_config_update[command9].2
   dict({
     'data': dict({
-      'backups': dict({
-      }),
+      'backups': list([
+      ]),
       'config': dict({
         'create_backup': dict({
           'agent_ids': list([

@@ -278,7 +278,7 @@ async def test_delete(
     [
         DEFAULT_STORAGE_DATA,
         DEFAULT_STORAGE_DATA
-        | {"backups": {"abc123": {"failed_agent_ids": ["test.remote"]}}},
+        | {"backups": [{"backup_id": "abc123", "failed_agent_ids": ["test.remote"]}]},
     ],
 )
 @pytest.mark.parametrize(
