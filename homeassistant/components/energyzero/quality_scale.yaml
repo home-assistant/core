@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: exempt
+    comment: |
+      It uses a coordinator.py file, but an entity.py file
+      is not used since it only has a sensor platform.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: todo
+  test-before-setup: todo
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration only polls data using a coordinator.
+      Since the integration is read-only and poll-only (only provide sensor
+      data), there is no need to implement parallel updates.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no authentication in the integration.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider.
+  discovery:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This is an service, which doesn't integrate with any devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration does not have any entities that should disabled by default.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations:
+    status: todo
+    comment: |
+      Not yet done for all sensor entities.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

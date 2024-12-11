@@ -352,7 +352,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "emulated_roku",
     "energenie_power_sockets",
     "energy",
-    "energyzero",
     "enigma2",
     "enocean",
     "enphase_envoy",
