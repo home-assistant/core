@@ -15,11 +15,13 @@ base_platforms: &base_platforms
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
   - homeassistant/components/assist_satellite/**
+  - homeassistant/components/backup/**
   - homeassistant/components/binary_sensor/**
   - homeassistant/components/button/**
   - homeassistant/components/calendar/**
   - homeassistant/components/camera/**
   - homeassistant/components/climate/**
+  - homeassistant/components/cloud/**
   - homeassistant/components/cover/**
   - homeassistant/components/date/**
   - homeassistant/components/datetime/**
@@ -28,6 +30,7 @@ base_platforms: &base_platforms
   - homeassistant/components/event/**
   - homeassistant/components/fan/**
   - homeassistant/components/geo_location/**
+  - homeassistant/components/hassio/**
   - homeassistant/components/humidifier/**
   - homeassistant/components/image/**
   - homeassistant/components/image_processing/**
