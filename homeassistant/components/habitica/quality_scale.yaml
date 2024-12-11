@@ -4,9 +4,11 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: test already_configured, tests should finish with create_entry or abort, assert unique_id
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency: todo
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -75,6 +77,6 @@ rules:
     comment: Not applicable. Only one device per config entry. Removed together with the config entry.
 
   # Platinum
-  async-dependency: done
+  async-dependency: todo
   inject-websession: done
   strict-typing: todo
