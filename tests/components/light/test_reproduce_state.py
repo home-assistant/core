@@ -222,3 +222,60 @@ async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
     hass.states.async_set("light.entity", "on", {})
     await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
     assert len(turn_on_calls) == 1
+
+
+async def test_filter_color_modes_missing_attributes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test filtering of parameters according to color mode."""
+    color_mode = light.ColorMode.COLOR_TEMP
+    hass.states.async_set("light.entity", "off", {})
+
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    all_colors = {
+        **VALID_COLOR_TEMP,
+        **VALID_HS_COLOR,
+        **VALID_RGB_COLOR,
+        **VALID_RGBW_COLOR,
+        **VALID_RGBWW_COLOR,
+        **VALID_XY_COLOR,
+        **VALID_BRIGHTNESS,
+    }
+    invalid_color_temp = {**all_colors}
+    invalid_color_temp.pop("color_temp")
+    caplog.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**invalid_color_temp, "color_mode": color_mode})],
+    )
+
+    assert len(turn_on_calls) == 0
+    assert (
+        "Color mode color_temp specified but attribute color_temp missing for"
+        in caplog.text
+    )
+
+    caplog.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**all_colors, "color_mode": color_mode})],
+    )
+
+    expected = {"brightness": 180, "color_temp": 240}
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].domain == "light"
+    assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity", **expected}
+
+    # This should do nothing, the light is already in the desired state
+    hass.states.async_set("light.entity", "on", {"color_mode": color_mode, **expected})
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**expected, "color_mode": color_mode})],
+    )
+    assert len(turn_on_calls) == 1
+
+    assert (
+        "Color mode color_temp specified but attribute color_temp missing for"
+        not in caplog.text
+    )
