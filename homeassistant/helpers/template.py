@@ -1883,7 +1883,7 @@ def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) ->
         attr = state_obj.attributes.get(name, _SENTINEL)
         if attr is _SENTINEL:
             return False
-        return (attr is not None and attr == value) or (attr is None and value is None)
+        return bool(attr == value)
     return False
 
 
