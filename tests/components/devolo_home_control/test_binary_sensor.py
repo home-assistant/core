@@ -38,11 +38,9 @@ async def test_binary_sensor(
     assert state == snapshot
     assert entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_door") == snapshot
 
-    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_overload")
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_safety")
     assert state == snapshot
-    assert (
-        entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_overload") == snapshot
-    )
+    assert entity_registry.async_get(f"{BINARY_SENSOR_DOMAIN}.test_safety") == snapshot
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("Test", True))
