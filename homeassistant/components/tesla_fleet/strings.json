@@ -415,14 +415,16 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid Status",
+        "name": "Grid status",
         "state": {
-          "island_status_unknown": "Unknown",
-          "on_grid": "Connected",
-          "off_grid": "Disconnected",
-          "off_grid_unintentional": "Disconnected unintentionally",
-          "off_grid_intentional": "Disconnected intentionally"
+          "on_grid": "[%key:common::state::connected%]",
+          "off_grid": "[%key:common::state::disconnected%]",
+          "off_grid_intentional": "Disconnected intentionally",
+          "off_grid_unintentional": "Disconnected unintentionally"
         }
+      },
+      "storm_mode_active": {
+        "name": "Storm Watch active"
       },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
@@ -437,7 +439,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle"
@@ -453,6 +455,69 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "solar_energy_exported": {
+        "name": "Solar exported"
+      },
+      "generator_energy_exported": {
+        "name": "Generator exported"
+      },
+      "grid_energy_imported": {
+        "name": "Grid imported"
+      },
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
+      },
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
+      },
+      "grid_energy_exported_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_energy_exported_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_energy_exported_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_energy_exported": {
+        "name": "Battery exported"
+      },
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
+      },
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
+      },
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
+      },
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
+      },
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
+      },
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
       }
     },
     "switch": {
