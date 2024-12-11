@@ -63,8 +63,8 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception as e:
-                _LOGGER.exception("Unexpected exception")
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.error("Unexpected exception %s", e)
                 errors["base"] = "unknown"
 
         return self.async_show_form(
