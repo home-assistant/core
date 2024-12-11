@@ -712,6 +712,7 @@ class BackupManager:
             if with_strategy_settings:
                 # create backup was successful, update last_completed_strategy_backup
                 self.config.data.last_completed_strategy_backup = dt_util.now()
+                self.store.save()
             self.known_backups.add(
                 written_backup.backup, agent_errors, with_strategy_settings
             )
