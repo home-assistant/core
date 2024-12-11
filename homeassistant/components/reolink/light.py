@@ -24,7 +24,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 
@@ -154,7 +154,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
         )
         self.async_write_ha_state()
@@ -165,13 +165,13 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
             brightness := kwargs.get(ATTR_BRIGHTNESS)
         ) is not None and self.entity_description.set_brightness_fn is not None:
             brightness_pct = int(brightness / 255.0 * 100)
-            await try_function(
+            await raise_translated_error(
                 self.entity_description.set_brightness_fn(
                     self._host.api, self._channel, brightness_pct
                 )
             )
 
-        await try_function(
+        await raise_translated_error(
             self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
         )
         self.async_write_ha_state()
@@ -200,12 +200,12 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.turn_on_off_fn(self._host.api, False)
         )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        await try_function(self.entity_description.turn_on_off_fn(self._host.api, True))
+        await raise_translated_error(self.entity_description.turn_on_off_fn(self._host.api, True))
         self.async_write_ha_state()

@@ -25,7 +25,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 
@@ -589,7 +589,7 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.method(self._host.api, self._channel, value)
         )
         self.async_write_ha_state()
@@ -618,7 +618,7 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await try_function(self.entity_description.method(self._host.api, value))
+        await raise_translated_error(self.entity_description.method(self._host.api, value))
         self.async_write_ha_state()
 
 
@@ -646,5 +646,5 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await try_function(self.entity_description.method(self._chime, value))
+        await raise_translated_error(self.entity_description.method(self._chime, value))
         self.async_write_ha_state()

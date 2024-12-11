@@ -14,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .host import ReolinkHost
-from .util import get_device_uid_and_ch, try_function
+from .util import get_device_uid_and_ch, raise_translated_error
 
 ATTR_RINGTONE = "ringtone"
 
@@ -57,7 +57,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
-            await try_function(chime.play(ChimeToneEnum[ringtone].value))
+            await raise_translated_error(chime.play(ChimeToneEnum[ringtone].value))
 
     hass.services.async_register(
         DOMAIN,

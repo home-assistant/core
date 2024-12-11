@@ -31,7 +31,7 @@ from .entity import (
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -354,7 +354,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.method(self._host.api, self._channel, option)
         )
         self.async_write_ha_state()
@@ -393,5 +393,5 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await try_function(self.entity_description.method(self._chime, option))
+        await raise_translated_error(self.entity_description.method(self._chime, option))
         self.async_write_ha_state()

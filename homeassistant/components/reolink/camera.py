@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -144,6 +144,6 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return await try_function(
+        return await raise_translated_error(
             self._host.api.get_snapshot(self._channel, self.entity_description.stream)
         )

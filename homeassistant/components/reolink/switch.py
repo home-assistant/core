@@ -23,7 +23,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 
@@ -430,14 +430,14 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.method(self._host.api, self._channel, True)
         )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.method(self._host.api, self._channel, False)
         )
         self.async_write_ha_state()
@@ -464,12 +464,12 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await try_function(self.entity_description.method(self._host.api, True))
+        await raise_translated_error(self.entity_description.method(self._host.api, True))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await try_function(self.entity_description.method(self._host.api, False))
+        await raise_translated_error(self.entity_description.method(self._host.api, False))
         self.async_write_ha_state()
 
 
@@ -495,10 +495,10 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await try_function(self.entity_description.method(self._chime, True))
+        await raise_translated_error(self.entity_description.method(self._chime, True))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await try_function(self.entity_description.method(self._chime, False))
+        await raise_translated_error(self.entity_description.method(self._chime, False))
         self.async_write_ha_state()

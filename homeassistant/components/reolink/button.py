@@ -29,7 +29,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 ATTR_SPEED = "speed"
@@ -205,14 +205,14 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await try_function(
+        await raise_translated_error(
             self.entity_description.method(self._host.api, self._channel)
         )
 
     async def async_ptz_move(self, **kwargs: Any) -> None:
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
-        await try_function(
+        await raise_translated_error(
             self._host.api.set_ptz_command(
                 self._channel, command=self.entity_description.ptz_cmd, speed=speed
             )
@@ -235,4 +235,4 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the button action."""
-        await try_function(self.entity_description.method(self._host.api))
+        await raise_translated_error(self.entity_description.method(self._host.api))

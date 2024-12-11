@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
-from .util import ReolinkConfigEntry, ReolinkData, try_function
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 
@@ -77,12 +77,12 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            await try_function(
+            await raise_translated_error(
                 self._host.api.set_volume(self._channel, int(volume * 100))
             )
         duration = kwargs.get(ATTR_DURATION)
-        await try_function(self._host.api.set_siren(self._channel, True, duration))
+        await raise_translated_error(self._host.api.set_siren(self._channel, True, duration))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
-        await try_function(self._host.api.set_siren(self._channel, False, None))
+        await raise_translated_error(self._host.api.set_siren(self._channel, False, None))
