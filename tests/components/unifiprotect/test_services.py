@@ -273,13 +273,11 @@ async def test_get_doorbell_user(
     )
 
     assert response == {
-        "keys": [
-            {
-                "full_name": "Test User",
-                "user_status": "active",
-                "key_type": "nfc",
-                "nfc_id": "123456",
-                "user_ulp_id": "user_ulp_id",
-            }
-        ]
+        "1": {
+            "full_name": "Test User",
+            "user_status": "active",
+            "key_type": "nfc",
+            "nfc_id": "123456",
+            "user_ulp_id": "user_ulp_id",
+        }
     }
