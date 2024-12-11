@@ -49,10 +49,8 @@ rules:
   log-when-unavailable:
     status: done
     comment: This integration uses a coordinator.
-  parallel-updates:
+  parallel-updates: done
     status: exempt
-    comment: |
-      This integration only polls data using a coordinator.
   reauthentication-flow:
     status: exempt
     comment: |
