@@ -443,9 +443,6 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
-#log_cli = true
-#log_cli_level = "DEBUG"
-
 testpaths = [
     "tests",
 ]
