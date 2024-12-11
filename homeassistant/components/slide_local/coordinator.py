@@ -75,7 +75,7 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ) as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="config_entry_not_ready",  # CENR translation_key, as CENR-Exception is not explicitly raised
+                translation_key="update_error",
             ) from ex
 
         if data is None:

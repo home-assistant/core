@@ -59,7 +59,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if result is not None:
             self._api_version = 2
-            self._mac = result["mac"]
+            self._mac = format_mac(result["mac"])
             return {}
 
         # API version 2 is not working, try API version 1 instead
@@ -85,7 +85,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "unknown"}
 
         self._api_version = 1
-        self._mac = result["mac"]
+        self._mac = format_mac(result["mac"])
 
         return {}
 
@@ -95,12 +95,11 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
             if not (errors := await self.async_test_connection(user_input)):
                 await self.async_set_unique_id(self._mac)
+                self._abort_if_unique_id_configured()
                 user_input |= {
-                    CONF_MAC: format_mac(self._mac),
+                    CONF_MAC: self._mac,
                     CONF_API_VERSION: self._api_version,
                 }
 
@@ -115,11 +114,14 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=self._host): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST, default=self._host): str,
+                        vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+                {CONF_HOST: self._host},
             ),
             errors=errors,
         )
@@ -134,7 +136,22 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(self._mac)
 
-        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: discovery_info.host}, reload_on_update=True
+        )
+
+        errors = {}
+        if errors := await self.async_test_connection(
+            {
+                CONF_HOST: self._host,
+            }
+        ):
+            return self.async_abort(
+                reason="discovery_connection_failed",
+                description_placeholders={
+                    "error": errors["base"],
+                },
+            )
 
         self._host = discovery_info.host
 
@@ -144,31 +161,17 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
-        errors = {}
-        if user_input is not None:
-            if not (
-                errors := await self.async_test_connection(
-                    {
-                        CONF_HOST: self._host,
-                    }
-                )
-            ):
-                user_input |= {
-                    CONF_HOST: self._host,
-                    CONF_API_VERSION: 2,
-                    CONF_MAC: format_mac(self._mac),
-                }
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST],
-                    data=user_input,
-                    options={CONF_INVERT_POSITION: False},
-                )
 
-            return self.async_abort(
-                reason="discovery_connection_failed",
-                description_placeholders={
-                    "error": errors["base"],
-                },
+        if user_input is not None:
+            user_input |= {
+                CONF_HOST: self._host,
+                CONF_API_VERSION: 2,
+                CONF_MAC: format_mac(self._mac),
+            }
+            return self.async_create_entry(
+                title=user_input[CONF_HOST],
+                data=user_input,
+                options={CONF_INVERT_POSITION: False},
             )
 
         self._set_confirm_only()

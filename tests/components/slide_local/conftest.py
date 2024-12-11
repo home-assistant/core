@@ -1,4 +1,4 @@
-"""Test helpers."""
+"""Test fixtures for Slide local."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
-from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_VERSION, CONF_HOST
 
 from .const import HOST, SLIDE_INFO_DATA
 
@@ -21,13 +21,13 @@ def mock_config_entry() -> MockConfigEntry:
         title="slide",
         data={
             CONF_HOST: HOST,
-            CONF_PASSWORD: "pwd",
             CONF_API_VERSION: 2,
         },
         options={
             CONF_INVERT_POSITION: False,
         },
         minor_version=1,
+        unique_id="12:34:56:78:90:ab",
         entry_id="ce5f5431554d101905d31797e1232da8",
     )
 

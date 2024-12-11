@@ -33,9 +33,6 @@
   "exceptions": {
     "update_error": {
       "message": "Error while updating data from the API."
-    },
-    "config_entry_not_ready": {
-      "message": "Error while loading the config entry."
     }
   }
 }

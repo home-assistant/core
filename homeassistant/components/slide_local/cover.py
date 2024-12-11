@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
-from homeassistant.const import CONF_HOST, STATE_CLOSED, STATE_CLOSING, STATE_OPENING
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,11 +27,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up cover(s) for Slide platform."""
 
-    _LOGGER.debug(
-        "Initializing Slide cover '%s'",
-        entry.data[CONF_HOST],
-    )
-
     coordinator = entry.runtime_data
 
     async_add_entities(
@@ -42,8 +37,6 @@ async def async_setup_entry(
             )
         ]
     )
-
-    _LOGGER.debug("Setup Slide '%s' successful", entry.data[CONF_HOST])
 
 
 class SlideCoverLocal(SlideEntity, CoverEntity):
