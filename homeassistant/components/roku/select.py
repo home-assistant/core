@@ -18,6 +18,9 @@ from .coordinator import RokuDataUpdateCoordinator
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 def _get_application_name(device: RokuDevice) -> str | None:
     if device.app is None or device.app.name is None:
