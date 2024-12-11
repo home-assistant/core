@@ -1,10 +1,6 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: |
-      All config flow tests should finish with CREATE_ENTRY and ABORT to
-      test they are able to recover from errors
+  config-flow: done
   brands: done
   dependency-transparency: done
   common-modules: done
@@ -38,7 +34,11 @@ rules:
   docs-removal-instructions: todo
   test-before-setup: done
   docs-high-level-description: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      All config flow tests should finish with CREATE_ENTRY and ABORT to
+      test they are able to recover from errors
   docs-actions: done
   runtime-data:
     status: todo
