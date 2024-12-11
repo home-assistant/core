@@ -37,7 +37,7 @@ rules:
     comment: handled by coordinator
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
