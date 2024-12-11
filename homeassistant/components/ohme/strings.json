@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Configure your Ohme account.",
+        "data": {
+          "email": "Email address",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
+    },
+    "abort": {}
+  },
+  "issues": {},
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged_in": "Plugged in",
+          "charging": "Charging",
+          "pending_approval": "Pending approval"
+        }
+      }
+    }
+  }
+}
