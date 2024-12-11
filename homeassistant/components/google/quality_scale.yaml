@@ -2,7 +2,7 @@ rules:
   # Bronze
   config-flow:
     status: todo
-    comment: Some fields missing data_description
+    comment: Some fields missing data_description in the option flow.
   brands: done
   dependency-transparency: todo
   common-modules: done
