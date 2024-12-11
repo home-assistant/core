@@ -298,13 +298,15 @@ class BackupSchedule:
                     name=config_data.create_backup.name,
                     password=config_data.create_backup.password,
                 )
-                backup_completed = True
             except Exception:  # noqa: BLE001
                 # another more specific exception will be added
                 # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
+            else:
+                # create backup was successful, set flag to update
+                # last_completed_automatic_backup
+                backup_completed = True
             finally:
-                # create backup was successful, update last_completed_automatic_backup
                 now = dt_util.now()
                 config_data.last_attempted_automatic_backup = now
                 if backup_completed:
