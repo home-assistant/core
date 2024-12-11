@@ -19,6 +19,14 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "exceptions": {
+    "entry_not_found": {
+      "message": "HEOS entry not found."
+    },
+    "entry_not_loaded": {
+      "message": "HEOS entry not loaded."
+    }
+  },
   "services": {
     "sign_in": {
       "name": "Sign in",
