@@ -46,7 +46,10 @@ rules:
   # Silver
   log-when-unavailable: todo
   config-entry-unloading: todo
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Supports reauthentication, however can be improved to ensure the user does not change accounts
   action-exceptions: todo
   docs-installation-parameters: todo
   integration-owner: todo
