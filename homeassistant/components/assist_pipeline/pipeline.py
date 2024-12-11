@@ -1029,7 +1029,7 @@ class PipelineRun:
                 context=self.context,
                 conversation_id=conversation_id,
                 device_id=device_id,
-                language=self.pipeline.language,
+                language=self.pipeline.conversation_language,
                 agent_id=self.intent_agent,
             )
             processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
