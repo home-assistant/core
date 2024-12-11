@@ -10,7 +10,7 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -23,7 +23,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data: todo
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -32,10 +32,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: |
@@ -49,7 +46,10 @@ rules:
     comment: |
       This integration does not have an options flow.
   # Gold
-  entity-translations: todo
+  entity-translations:
+    status: exempt
+    comment: |
+      There are no entities to translate.
   entity-device-class: done
   devices: done
   entity-category: done
@@ -65,10 +65,7 @@ rules:
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration raises an issue for importing via deprecated yaml. To be removed in 2025.2.
+  repair-issues: done
   docs-use-cases: todo
   docs-supported-devices: done
   docs-supported-functions: todo
