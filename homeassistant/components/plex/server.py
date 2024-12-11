@@ -425,7 +425,7 @@ class PlexServer:
                 client = resource.connect(timeout=3)
                 _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error(
+                _LOGGER.info(
                     "Resource connection failed to plex.tv: %s", resource.name
                 )
             else:
