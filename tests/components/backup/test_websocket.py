@@ -42,6 +42,30 @@ BACKUP_CALL = call(
     password="test-password",
 )
 
+DEFAULT_STORAGE_DATA = {
+    "backups": {},
+    "config": {
+        "create_backup": {
+            "agent_ids": [],
+            "include_addons": None,
+            "include_all_addons": False,
+            "include_database": True,
+            "include_folders": None,
+            "name": None,
+            "password": None,
+        },
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "retention": {
+            "copies": None,
+            "days": None,
+        },
+        "schedule": {
+            "state": "never",
+        },
+    },
+}
+
 
 @pytest.fixture
 def sync_access_token_proxy(
@@ -251,15 +275,30 @@ async def test_delete(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "storage_data",
+    [
+        DEFAULT_STORAGE_DATA,
+        DEFAULT_STORAGE_DATA
+        | {"backups": [{"backup_id": "abc123", "failed_agent_ids": ["test.remote"]}]},
+    ],
+)
+@pytest.mark.parametrize(
+    "side_effect", [None, HomeAssistantError("Boom!"), BackupAgentUnreachableError]
 )
 async def test_delete_with_errors(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
     side_effect: Exception,
+    storage_data: dict[str, Any] | None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test deleting a backup with one unavailable agent."""
+    hass_storage[DOMAIN] = {
+        "data": storage_data,
+        "key": DOMAIN,
+        "version": 1,
+    }
     await setup_backup_integration(
         hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
     )
@@ -271,6 +310,9 @@ async def test_delete_with_errors(
     with patch.object(BackupAgentTest, "async_delete_backup", side_effect=side_effect):
         await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
         assert await client.receive_json() == snapshot
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    assert await client.receive_json() == snapshot
 
 
 async def test_agent_delete_backup(
@@ -722,6 +764,7 @@ async def test_agents_info(
     [
         None,
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -740,9 +783,10 @@ async def test_agents_info(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "daily"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -757,9 +801,10 @@ async def test_agents_info(
                 "last_attempted_automatic_backup": None,
                 "last_completed_automatic_backup": None,
                 "schedule": {"state": "never"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -778,9 +823,10 @@ async def test_agents_info(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "never"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -795,9 +841,10 @@ async def test_agents_info(
                 "last_attempted_automatic_backup": None,
                 "last_completed_automatic_backup": None,
                 "schedule": {"state": "mon"},
-            }
+            },
         },
         {
+            "backups": {},
             "config": {
                 "create_backup": {
                     "agent_ids": ["test-agent"],
@@ -812,7 +859,7 @@ async def test_agents_info(
                 "last_attempted_automatic_backup": None,
                 "last_completed_automatic_backup": None,
                 "schedule": {"state": "sat"},
-            }
+            },
         },
     ],
 )
@@ -1124,6 +1171,7 @@ async def test_config_schedule_logic(
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1142,7 +1190,7 @@ async def test_config_schedule_logic(
                 last_completed_automatic_backup
             ),
             "schedule": {"state": "daily"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1403,6 +1451,7 @@ async def test_config_retention_copies_logic(
     """Test config backup retention copies logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1417,7 +1466,7 @@ async def test_config_retention_copies_logic(
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "daily"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,
@@ -1615,6 +1664,7 @@ async def test_config_retention_days_logic(
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
     storage_data = {
+        "backups": {},
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -1629,7 +1679,7 @@ async def test_config_retention_days_logic(
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "never"},
-        }
+        },
     }
     hass_storage[DOMAIN] = {
         "data": storage_data,

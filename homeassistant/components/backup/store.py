@@ -11,7 +11,7 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .config import StoredBackupConfig
-    from .manager import BackupManager
+    from .manager import BackupManager, StoredKnownBackup
 
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
@@ -21,6 +21,7 @@ STORAGE_VERSION = 1
 class StoredBackupData(TypedDict):
     """Represent the stored backup config."""
 
+    backups: list[StoredKnownBackup]
     config: StoredBackupConfig
 
 
@@ -45,4 +46,7 @@ class BackupStore:
     @callback
     def _data_to_save(self) -> StoredBackupData:
         """Return data to save."""
-        return {"config": self._manager.config.data.to_dict()}
+        return {
+            "backups": self._manager.known_backups.to_list(),
+            "config": self._manager.config.data.to_dict(),
+        }

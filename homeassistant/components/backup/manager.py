@@ -14,7 +14,7 @@ from pathlib import Path
 import shutil
 import tarfile
 import time
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -59,6 +59,7 @@ class ManagerBackup(AgentBackup):
     """Backup class."""
 
     agent_ids: list[str]
+    failed_agent_ids: list[str]
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -246,6 +247,7 @@ class BackupManager:
 
         self.config = BackupConfig(hass, self)
         self._reader_writer = reader_writer
+        self.known_backups = KnownBackups(self)
         self.store = BackupStore(hass, self)
 
         # Tasks and flags tracking backup and restore progress
@@ -265,6 +267,8 @@ class BackupManager:
         stored = await self.store.load()
         if stored:
             self.config.load(stored["config"])
+            self.known_backups.load(stored["backups"])
+
         await self.load_platforms()
 
     @property
@@ -364,8 +368,10 @@ class BackupManager:
         backup: AgentBackup,
         agent_ids: list[str],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-    ) -> None:
+    ) -> dict[str, Exception]:
         """Upload a backup to selected agents."""
+        agent_errors: dict[str, Exception] = {}
+
         LOGGER.debug("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
         sync_backup_results = await asyncio.gather(
@@ -378,11 +384,13 @@ class BackupManager:
             ),
             return_exceptions=True,
         )
-        for result in sync_backup_results:
+        for idx, result in enumerate(sync_backup_results):
             if isinstance(result, Exception):
+                agent_errors[agent_ids[idx]] = result
                 LOGGER.exception(
                     "Error during backup upload - %s", result, exc_info=result
                 )
+        return agent_errors
 
     async def async_get_backups(
         self,
@@ -406,13 +414,18 @@ class BackupManager:
             if isinstance(result, BaseException):
                 raise result
             for agent_backup in result:
-                if agent_backup.backup_id not in backups:
-                    backups[agent_backup.backup_id] = ManagerBackup(
+                if (backup_id := agent_backup.backup_id) not in backups:
+                    if known_backup := self.known_backups.get(backup_id):
+                        failed_agent_ids = known_backup.failed_agent_ids
+                    else:
+                        failed_agent_ids = []
+                    backups[backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
-                        backup_id=agent_backup.backup_id,
+                        backup_id=backup_id,
                         date=agent_backup.date,
                         database_included=agent_backup.database_included,
+                        failed_agent_ids=failed_agent_ids,
                         folders=agent_backup.folders,
                         homeassistant_included=agent_backup.homeassistant_included,
                         homeassistant_version=agent_backup.homeassistant_version,
@@ -420,7 +433,7 @@ class BackupManager:
                         protected=agent_backup.protected,
                         size=agent_backup.size,
                     )
-                backups[agent_backup.backup_id].agent_ids.append(agent_ids[idx])
+                backups[backup_id].agent_ids.append(agent_ids[idx])
 
         return (backups, agent_errors)
 
@@ -448,12 +461,17 @@ class BackupManager:
             if not result:
                 continue
             if backup is None:
+                if known_backup := self.known_backups.get(backup_id):
+                    failed_agent_ids = known_backup.failed_agent_ids
+                else:
+                    failed_agent_ids = []
                 backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
                     database_included=result.database_included,
+                    failed_agent_ids=failed_agent_ids,
                     folders=result.folders,
                     homeassistant_included=result.homeassistant_included,
                     homeassistant_version=result.homeassistant_version,
@@ -483,6 +501,9 @@ class BackupManager:
                 continue
             if isinstance(result, BaseException):
                 raise result
+
+        if not agent_errors:
+            self.known_backups.remove(backup_id)
 
         return agent_errors
 
@@ -537,12 +558,13 @@ class BackupManager:
                 state=ReceiveBackupState.IN_PROGRESS,
             )
         )
-        await self._async_upload_backup(
+        agent_errors = await self._async_upload_backup(
             backup=written_backup.backup,
             agent_ids=agent_ids,
             open_stream=written_backup.open_stream,
         )
         await written_backup.release_stream()
+        self.known_backups.add(written_backup.backup, agent_errors)
 
     async def async_create_backup(
         self,
@@ -670,12 +692,13 @@ class BackupManager:
                     state=CreateBackupState.IN_PROGRESS,
                 )
             )
-            await self._async_upload_backup(
+            agent_errors = await self._async_upload_backup(
                 backup=written_backup.backup,
                 agent_ids=agent_ids,
                 open_stream=written_backup.open_stream,
             )
             await written_backup.release_stream()
+            self.known_backups.add(written_backup.backup, agent_errors)
             self.async_on_backup_event(
                 CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED)
             )
@@ -776,6 +799,69 @@ class BackupManager:
 
         self._backup_event_subscriptions.append(on_event)
         return remove_subscription
+
+
+class KnownBackups:
+    """Track known backups."""
+
+    def __init__(self, manager: BackupManager) -> None:
+        """Initialize."""
+        self._backups: dict[str, KnownBackup] = {}
+        self._manager = manager
+
+    def load(self, stored_backups: list[StoredKnownBackup]) -> None:
+        """Load backups."""
+        self._backups = {
+            backup["backup_id"]: KnownBackup(
+                backup_id=backup["backup_id"],
+                failed_agent_ids=backup["failed_agent_ids"],
+            )
+            for backup in stored_backups
+        }
+
+    def to_list(self) -> list[StoredKnownBackup]:
+        """Convert known backups to a dict."""
+        return [backup.to_dict() for backup in self._backups.values()]
+
+    def add(self, backup: AgentBackup, agent_errors: dict[str, Exception]) -> None:
+        """Add a backup."""
+        self._backups[backup.backup_id] = KnownBackup(
+            backup_id=backup.backup_id, failed_agent_ids=list(agent_errors)
+        )
+        self._manager.store.save()
+
+    def get(self, backup_id: str) -> KnownBackup | None:
+        """Get a backup."""
+        return self._backups.get(backup_id)
+
+    def remove(self, backup_id: str) -> None:
+        """Remove a backup."""
+        if backup_id not in self._backups:
+            return
+        self._backups.pop(backup_id)
+        self._manager.store.save()
+
+
+@dataclass(kw_only=True)
+class KnownBackup:
+    """Persistent backup data."""
+
+    backup_id: str
+    failed_agent_ids: list[str]
+
+    def to_dict(self) -> StoredKnownBackup:
+        """Convert known backup to a dict."""
+        return {
+            "backup_id": self.backup_id,
+            "failed_agent_ids": self.failed_agent_ids,
+        }
+
+
+class StoredKnownBackup(TypedDict):
+    """Stored persistent backup data."""
+
+    backup_id: str
+    failed_agent_ids: list[str]
 
 
 class CoreBackupReaderWriter(BackupReaderWriter):
