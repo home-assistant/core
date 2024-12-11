@@ -257,8 +257,8 @@ async def test_async_initiate_backup(
     assert result["result"] == {
         "backups": [],
         "agent_errors": {},
-        "last_attempted_automatic_backup": None,
-        "last_completed_automatic_backup": None,
+        "last_attempted_strategy_backup": None,
+        "last_completed_strategy_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -416,8 +416,8 @@ async def test_async_initiate_backup_with_agent_error(
     assert result["result"] == {
         "backups": [],
         "agent_errors": {},
-        "last_attempted_automatic_backup": None,
-        "last_completed_automatic_backup": None,
+        "last_attempted_strategy_backup": None,
+        "last_completed_strategy_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -504,8 +504,8 @@ async def test_async_initiate_backup_with_agent_error(
     assert result["result"] == {
         "agent_errors": {},
         "backups": [expected_backup_data],
-        "last_attempted_automatic_backup": None,
-        "last_completed_automatic_backup": None,
+        "last_attempted_strategy_backup": None,
+        "last_completed_strategy_backup": None,
     }
 
     await hass.async_block_till_done()
@@ -513,7 +513,7 @@ async def test_async_initiate_backup_with_agent_error(
         {
             "backup_id": "abc123",
             "failed_agent_ids": ["test.remote"],
-            "with_stored_settings": False,
+            "with_strategy_settings": False,
         }
     ]
 

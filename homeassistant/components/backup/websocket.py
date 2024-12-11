@@ -25,7 +25,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_create)
-    websocket_api.async_register_command(hass, handle_create_with_stored_settings)
+    websocket_api.async_register_command(hass, handle_create_with_strategy_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
     websocket_api.async_register_command(hass, handle_subscribe_events)
@@ -52,8 +52,8 @@ async def handle_info(
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
             "backups": list(backups.values()),
-            "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
-            "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "last_attempted_strategy_backup": manager.config.data.last_attempted_strategy_backup,
+            "last_completed_strategy_backup": manager.config.data.last_completed_strategy_backup,
         },
     )
 
@@ -181,11 +181,11 @@ async def handle_create(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/generate_with_stored_settings",
+        vol.Required("type"): "backup/generate_with_strategy_settings",
     }
 )
 @websocket_api.async_response
-async def handle_create_with_stored_settings(
+async def handle_create_with_strategy_settings(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -202,7 +202,7 @@ async def handle_create_with_stored_settings(
         include_homeassistant=True,  # always include HA
         name=config_data.create_backup.name,
         password=config_data.create_backup.password,
-        with_stored_settings=True,
+        with_strategy_settings=True,
     )
     connection.send_result(msg["id"], backup)
 

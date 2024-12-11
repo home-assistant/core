@@ -57,8 +57,8 @@ DEFAULT_STORAGE_DATA = {
             "name": None,
             "password": None,
         },
-        "last_attempted_automatic_backup": None,
-        "last_completed_automatic_backup": None,
+        "last_attempted_strategy_backup": None,
+        "last_completed_strategy_backup": None,
         "retention": {
             "copies": None,
             "days": None,
@@ -294,7 +294,7 @@ async def test_delete(
                 {
                     "backup_id": "abc123",
                     "failed_agent_ids": ["test.remote"],
-                    "with_stored_settings": False,
+                    "with_strategy_settings": False,
                 }
             ]
         },
@@ -505,7 +505,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": None,
                 "password": None,
-                "with_stored_settings": True,
+                "with_strategy_settings": True,
             },
         ),
         (
@@ -527,7 +527,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": "test-name",
                 "password": "test-password",
-                "with_stored_settings": True,
+                "with_strategy_settings": True,
             },
         ),
     ],
@@ -540,7 +540,7 @@ async def test_generate_with_default_settings_calls_create(
     create_backup_settings: dict[str, Any],
     expected_call_params: dict[str, Any],
 ) -> None:
-    """Test backup/generate_with_stored_settings calls async_initiate_backup."""
+    """Test backup/generate_with_strategy_settings calls async_initiate_backup."""
     await setup_backup_integration(hass, with_hassio=False)
 
     client = await hass_ws_client(hass)
@@ -557,7 +557,9 @@ async def test_generate_with_default_settings_calls_create(
         "homeassistant.components.backup.manager.BackupManager.async_initiate_backup",
         return_value=NewBackup(backup_job_id="abc123"),
     ) as generate_backup:
-        await client.send_json_auto_id({"type": "backup/generate_with_stored_settings"})
+        await client.send_json_auto_id(
+            {"type": "backup/generate_with_strategy_settings"}
+        )
         result = await client.receive_json()
         assert result["success"]
         assert result["result"] == {"backup_job_id": "abc123"}
@@ -796,10 +798,10 @@ async def test_agents_info(
                     "password": "test-password",
                 },
                 "retention": {"copies": 3, "days": 7},
-                "last_attempted_automatic_backup": datetime.fromisoformat(
+                "last_attempted_strategy_backup": datetime.fromisoformat(
                     "2024-10-26T04:45:00+01:00"
                 ),
-                "last_completed_automatic_backup": datetime.fromisoformat(
+                "last_completed_strategy_backup": datetime.fromisoformat(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "daily"},
@@ -818,8 +820,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": 3, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
+                "last_attempted_strategy_backup": None,
+                "last_completed_strategy_backup": None,
                 "schedule": {"state": "never"},
             },
         },
@@ -836,10 +838,10 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": 7},
-                "last_attempted_automatic_backup": datetime.fromisoformat(
+                "last_attempted_strategy_backup": datetime.fromisoformat(
                     "2024-10-27T04:45:00+01:00"
                 ),
-                "last_completed_automatic_backup": datetime.fromisoformat(
+                "last_completed_strategy_backup": datetime.fromisoformat(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "never"},
@@ -858,8 +860,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
+                "last_attempted_strategy_backup": None,
+                "last_completed_strategy_backup": None,
                 "schedule": {"state": "mon"},
             },
         },
@@ -876,8 +878,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
+                "last_attempted_strategy_backup": None,
+                "last_completed_strategy_backup": None,
                 "schedule": {"state": "sat"},
             },
         },
@@ -1046,7 +1048,7 @@ async def test_config_update_errors(
 @pytest.mark.parametrize(
     (
         "command",
-        "last_completed_automatic_backup",
+        "last_completed_strategy_backup",
         "time_1",
         "time_2",
         "attempted_backup_time",
@@ -1178,7 +1180,7 @@ async def test_config_schedule_logic(
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
     command: dict[str, Any],
-    last_completed_automatic_backup: str,
+    last_completed_strategy_backup: str,
     time_1: str,
     time_2: str,
     attempted_backup_time: str,
@@ -1203,11 +1205,11 @@ async def test_config_schedule_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_automatic_backup": datetime.fromisoformat(
-                last_completed_automatic_backup
+            "last_attempted_strategy_backup": datetime.fromisoformat(
+                last_completed_strategy_backup
             ),
-            "last_completed_automatic_backup": datetime.fromisoformat(
-                last_completed_automatic_backup
+            "last_completed_strategy_backup": datetime.fromisoformat(
+                last_completed_strategy_backup
             ),
             "schedule": {"state": "daily"},
         },
@@ -1238,11 +1240,11 @@ async def test_config_schedule_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_strategy_backup"]
         == attempted_backup_time
     )
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_strategy_backup"]
         == completed_backup_time
     )
 
@@ -1483,8 +1485,8 @@ async def test_config_retention_copies_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_automatic_backup": None,
-            "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "last_attempted_strategy_backup": None,
+            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "daily"},
         },
     }
@@ -1516,11 +1518,11 @@ async def test_config_retention_copies_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_strategy_backup"]
         == backup_time
     )
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_strategy_backup"]
         == backup_time
     )
 
@@ -1696,8 +1698,8 @@ async def test_config_retention_days_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_automatic_backup": None,
-            "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "last_attempted_strategy_backup": None,
+            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "never"},
         },
     }
