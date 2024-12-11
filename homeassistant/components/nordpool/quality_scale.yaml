@@ -39,7 +39,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  parallel-updates: todo
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
