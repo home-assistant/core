@@ -481,7 +481,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hddtemp",
     "hdmi_cec",
     "heatmiser",
-    "heos",
     "here_travel_time",
     "hikvision",
     "hikvisioncam",
