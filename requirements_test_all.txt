@@ -233,9 +233,6 @@ aioemonitor==1.0.5
 # homeassistant.components.esphome
 aioesphomeapi==28.0.0
 
-# homeassistant.components.compit
-aiofiles==24.1.0
-
 # homeassistant.components.flo
 aioflo==2021.11.0
 
@@ -601,7 +598,7 @@ colorlog==6.8.2
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.1.7
+compit-inext-api==0.1.9
 
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
