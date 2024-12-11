@@ -733,7 +733,10 @@ async def test_agents_info(
                     "password": "test-password",
                 },
                 "retention": {"copies": 3, "days": 7},
-                "last_automatic_backup": datetime.fromisoformat(
+                "last_attempted_automatic_backup": datetime.fromisoformat(
+                    "2024-10-26T04:45:00+01:00"
+                ),
+                "last_completed_automatic_backup": datetime.fromisoformat(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "daily"},
@@ -751,7 +754,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": 3, "days": None},
-                "last_automatic_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "never"},
             }
         },
@@ -767,7 +771,10 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": 7},
-                "last_automatic_backup": datetime.fromisoformat(
+                "last_attempted_automatic_backup": datetime.fromisoformat(
+                    "2024-10-27T04:45:00+01:00"
+                ),
+                "last_completed_automatic_backup": datetime.fromisoformat(
                     "2024-10-26T04:45:00+01:00"
                 ),
                 "schedule": {"state": "never"},
@@ -785,7 +792,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_automatic_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "mon"},
             }
         },
@@ -801,7 +809,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_automatic_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "sat"},
             }
         },
@@ -970,10 +979,11 @@ async def test_config_update_errors(
 @pytest.mark.parametrize(
     (
         "command",
-        "last_automatic_backup",
+        "last_completed_automatic_backup",
         "time_1",
         "time_2",
-        "backup_time",
+        "attempted_backup_time",
+        "completed_backup_time",
         "backup_calls_1",
         "backup_calls_2",
         "call_args",
@@ -990,6 +1000,7 @@ async def test_config_update_errors(
             "2024-11-12T04:45:00+01:00",
             "2024-11-13T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1004,6 +1015,7 @@ async def test_config_update_errors(
             "2024-11-11T04:45:00+01:00",
             "2024-11-18T04:45:00+01:00",
             "2024-11-25T04:45:00+01:00",
+            "2024-11-18T04:45:00+01:00",
             "2024-11-18T04:45:00+01:00",
             1,
             2,
@@ -1020,6 +1032,7 @@ async def test_config_update_errors(
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
             "2034-11-11T13:00:00+01:00",
             "2024-11-11T04:45:00+01:00",
+            "2024-11-11T04:45:00+01:00",
             0,
             0,
             None,
@@ -1034,6 +1047,7 @@ async def test_config_update_errors(
             "2024-10-26T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-13T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
             2,
@@ -1050,6 +1064,7 @@ async def test_config_update_errors(
             "2024-11-12T04:45:00+01:00",
             "2024-11-13T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
+            "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
             1,
             1,
             BACKUP_CALL,
@@ -1065,6 +1080,7 @@ async def test_config_update_errors(
             "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
             "2034-11-12T12:00:00+01:00",
             "2024-10-26T04:45:00+01:00",
+            "2024-10-26T04:45:00+01:00",
             0,
             0,
             None,
@@ -1079,6 +1095,7 @@ async def test_config_update_errors(
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-13T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",  # attempted to create backup but failed
             "2024-11-11T04:45:00+01:00",
             1,
             2,
@@ -1094,10 +1111,11 @@ async def test_config_schedule_logic(
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
     command: dict[str, Any],
-    last_automatic_backup: str,
+    last_completed_automatic_backup: str,
     time_1: str,
     time_2: str,
-    backup_time: str,
+    attempted_backup_time: str,
+    completed_backup_time: str,
     backup_calls_1: int,
     backup_calls_2: int,
     call_args: Any,
@@ -1117,7 +1135,12 @@ async def test_config_schedule_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_automatic_backup": datetime.fromisoformat(last_automatic_backup),
+            "last_attempted_automatic_backup": datetime.fromisoformat(
+                last_completed_automatic_backup
+            ),
+            "last_completed_automatic_backup": datetime.fromisoformat(
+                last_completed_automatic_backup
+            ),
             "schedule": {"state": "daily"},
         }
     }
@@ -1147,7 +1170,12 @@ async def test_config_schedule_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_automatic_backup"] == backup_time
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        == attempted_backup_time
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        == completed_backup_time
     )
 
     freezer.move_to(time_2)
@@ -1386,7 +1414,8 @@ async def test_config_retention_copies_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "last_attempted_automatic_backup": None,
+            "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "daily"},
         }
     }
@@ -1418,7 +1447,12 @@ async def test_config_retention_copies_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_automatic_backup"] == backup_time
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        == backup_time
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        == backup_time
     )
 
 
@@ -1592,7 +1626,8 @@ async def test_config_retention_days_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_automatic_backup": datetime.fromisoformat(last_backup_time),
+            "last_attempted_automatic_backup": None,
+            "last_completed_automatic_backup": datetime.fromisoformat(last_backup_time),
             "schedule": {"state": "never"},
         }
     }
