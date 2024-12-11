@@ -166,7 +166,6 @@ def websocket_get_entities(
         vol.Optional("icon"): vol.Any(
             vol.Schema(
                 {
-                    vol.Required("default"): str,
                     vol.Optional("state"): dict,
                 }
             ),
