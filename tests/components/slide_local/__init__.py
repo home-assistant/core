@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 async def setup_platform(
     hass: HomeAssistant, config_entry: MockConfigEntry, platforms: list[Platform]
 ) -> MockConfigEntry:
-    """Set up the SolarLog platform."""
+    """Set up the slide local integration."""
     config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.slide_local.PLATFORMS", platforms):
