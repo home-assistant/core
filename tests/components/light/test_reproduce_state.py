@@ -193,41 +193,10 @@ async def test_filter_color_modes(
     assert len(turn_on_calls) == 1
 
 
-@pytest.mark.parametrize(
-    "saved_state",
-    [
-        NONE_BRIGHTNESS,
-        NONE_EFFECT,
-        NONE_COLOR_TEMP,
-        NONE_HS_COLOR,
-        NONE_RGB_COLOR,
-        NONE_RGBW_COLOR,
-        NONE_RGBWW_COLOR,
-        NONE_XY_COLOR,
-    ],
-)
-async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
-    """Test filtering of parameters which are None."""
-    hass.states.async_set("light.entity", "off", {})
-
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
-
-    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
-
-    assert len(turn_on_calls) == 1
-    assert turn_on_calls[0].domain == "light"
-    assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity"}
-
-    # This should do nothing, the light is already in the desired state
-    hass.states.async_set("light.entity", "on", {})
-    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
-    assert len(turn_on_calls) == 1
-
-
 async def test_filter_color_modes_missing_attributes(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test filtering of parameters according to color mode."""
+    """Test warning on missing attribute when filtering for color mode."""
     color_mode = light.ColorMode.COLOR_TEMP
     hass.states.async_set("light.entity", "off", {})
 
@@ -279,3 +248,34 @@ async def test_filter_color_modes_missing_attributes(
         "Color mode color_temp specified but attribute color_temp missing for"
         not in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "saved_state",
+    [
+        NONE_BRIGHTNESS,
+        NONE_EFFECT,
+        NONE_COLOR_TEMP,
+        NONE_HS_COLOR,
+        NONE_RGB_COLOR,
+        NONE_RGBW_COLOR,
+        NONE_RGBWW_COLOR,
+        NONE_XY_COLOR,
+    ],
+)
+async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
+    """Test filtering of parameters which are None."""
+    hass.states.async_set("light.entity", "off", {})
+
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
+
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].domain == "light"
+    assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity"}
+
+    # This should do nothing, the light is already in the desired state
+    hass.states.async_set("light.entity", "on", {})
+    await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
+    assert len(turn_on_calls) == 1
