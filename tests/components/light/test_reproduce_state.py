@@ -199,6 +199,9 @@ async def test_filter_color_modes_missing_attributes(
     """Test warning on missing attribute when filtering for color mode."""
     color_mode = light.ColorMode.COLOR_TEMP
     hass.states.async_set("light.entity", "off", {})
+    expected_log = (
+        "Color mode color_temp specified but attribute color_temp missing for"
+    )
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 
@@ -220,10 +223,7 @@ async def test_filter_color_modes_missing_attributes(
     )
 
     assert len(turn_on_calls) == 0
-    assert (
-        "Color mode color_temp specified but attribute color_temp missing for"
-        in caplog.text
-    )
+    assert expected_log in caplog.text
 
     caplog.clear()
     await async_reproduce_state(
@@ -244,10 +244,7 @@ async def test_filter_color_modes_missing_attributes(
     )
     assert len(turn_on_calls) == 1
 
-    assert (
-        "Color mode color_temp specified but attribute color_temp missing for"
-        not in caplog.text
-    )
+    assert expected_log not in caplog.text
 
 
 @pytest.mark.parametrize(
