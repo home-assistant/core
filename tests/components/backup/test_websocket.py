@@ -54,7 +54,8 @@ DEFAULT_STORAGE_DATA = {
             "name": None,
             "password": None,
         },
-        "last_automatic_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
         "retention": {
             "copies": None,
             "days": None,
