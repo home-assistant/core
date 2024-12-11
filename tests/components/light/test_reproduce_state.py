@@ -224,7 +224,6 @@ async def test_filter_color_modes_missing_attributes(
         hass,
         [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
     )
-
     assert len(turn_on_calls) == 0
     assert expected_log in caplog.text
 
