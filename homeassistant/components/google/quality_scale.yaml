@@ -24,7 +24,7 @@ rules:
   test-before-setup:
     status: todo
     comment: |
-      The integration does not test the connection in `async_setup` but
+      The integration does not test the connection in `async_setup_entry` but
       instead does this in the calendar platform only, which can be improved.
   docs-high-level-description: done
   config-flow-test-coverage: done
