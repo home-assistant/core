@@ -27,8 +27,3 @@ class SlideEntity(CoordinatorEntity[SlideCoordinator]):
             serial_number=coordinator.data["mac"],
             configuration_url=f"http://{coordinator.host}",
         )
-
-    @property
-    def available(self) -> bool:
-        """Return False if state is not available."""
-        return super().available and "pos" in self.coordinator.data
