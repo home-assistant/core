@@ -34,7 +34,7 @@ async def test_reproducing_states(
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
-    hass.states.async_set("light.entity_temp_kelvin", "on", VALID_COLOR_TEMP_KELVIN)
+    hass.states.async_set("light.entity_temp", "on", VALID_COLOR_TEMP_KELVIN)
     hass.states.async_set("light.entity_hs", "on", VALID_HS_COLOR)
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
     hass.states.async_set("light.entity_xy", "on", VALID_XY_COLOR)
@@ -49,7 +49,7 @@ async def test_reproducing_states(
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
             State("light.entity_effect", "on", VALID_EFFECT),
-            State("light.entity_temp_kelvin", "on", VALID_COLOR_TEMP_KELVIN),
+            State("light.entity_temp", "on", VALID_COLOR_TEMP_KELVIN),
             State("light.entity_hs", "on", VALID_HS_COLOR),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
@@ -74,7 +74,7 @@ async def test_reproducing_states(
             State("light.entity_off", "on", VALID_BRIGHTNESS),
             State("light.entity_bright", "on", VALID_EFFECT),
             State("light.entity_effect", "on", VALID_COLOR_TEMP_KELVIN),
-            State("light.entity_temp_kelvin", "on", VALID_HS_COLOR),
+            State("light.entity_temp", "on", VALID_HS_COLOR),
             State("light.entity_hs", "on", VALID_RGB_COLOR),
             State("light.entity_rgb", "on", VALID_XY_COLOR),
         ],
