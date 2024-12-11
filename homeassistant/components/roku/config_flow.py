@@ -20,6 +20,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import RokuConfigEntry
 from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
@@ -164,7 +165,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RokuConfigEntry,
     ) -> RokuOptionsFlowHandler:
         """Create the options flow."""
         return RokuOptionsFlowHandler()
