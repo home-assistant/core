@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from elgato import BatteryInfo, Elgato, ElgatoConnectionError, Info, Settings, State
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,7 +34,6 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
         self.config_entry = entry
         self.client = Elgato(
             entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
             session=async_get_clientsession(hass),
         )
         super().__init__(
