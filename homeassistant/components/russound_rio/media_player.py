@@ -28,6 +28,8 @@ from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
