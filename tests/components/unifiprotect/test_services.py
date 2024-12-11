@@ -12,7 +12,7 @@ from uiprotect.exceptions import BadRequest
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
-    SERVICE_GET_DOORBELL_USER,
+    SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
@@ -266,7 +266,7 @@ async def test_get_doorbell_user(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_DOORBELL_USER,
+        SERVICE_GET_USER_KEYRING_INFO,
         {ATTR_DEVICE_ID: camera_entry.device_id},
         blocking=True,
         return_response=True,

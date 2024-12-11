@@ -38,14 +38,14 @@ SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
-SERVICE_GET_DOORBELL_USER = "get_doorbell_user"
+SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_GET_DOORBELL_USER,
+    SERVICE_GET_USER_KEYRING_INFO,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.All(
@@ -78,7 +78,7 @@ REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
-GET_DOORBELL_USER = vol.All(
+GET_USER_KEYRING_INFO_SCHEMA = vol.All(
     vol.Schema(
         {
             **cv.ENTITY_SERVICE_FIELDS,
@@ -226,31 +226,32 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     await chime.save_device(data_before_changed)
 
 
-async def get_doorbell_user(hass: HomeAssistant, call: ServiceCall) -> ServiceResponse:
-    """Get the user of the doorbell."""
+async def get_user_keyring_info(
+    hass: HomeAssistant, call: ServiceCall
+) -> ServiceResponse:
+    """Get the user keyring info."""
     camera = _async_get_ufp_camera(hass, call)
     ulp_users = camera.api.bootstrap.ulp_users
-    keys = [
-        {
+    return {
+        str(index + 1): {
             "full_name": user.full_name,
             "user_status": user.status,
             "key_type": key.registry_type,
             **({"nfc_id": key.registry_id} if key.registry_type == "nfc" else {}),
             "user_ulp_id": key.ulp_user,
         }
-        for key in camera.api.bootstrap.keyrings.as_list()
+        for index, key in enumerate(camera.api.bootstrap.keyrings.as_list())
         if (user := ulp_users.by_ulp_id(key.ulp_user))
-    ]
-    return {"keys": keys}  # type: ignore[dict-item]
+    }
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_DOORBELL_USER,
-        functools.partial(get_doorbell_user, hass),
-        schema=GET_DOORBELL_USER,
+        SERVICE_GET_USER_KEYRING_INFO,
+        functools.partial(get_user_keyring_info, hass),
+        schema=GET_USER_KEYRING_INFO_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     services = [
@@ -258,28 +259,24 @@ def async_setup_services(hass: HomeAssistant) -> None:
             SERVICE_ADD_DOORBELL_TEXT,
             functools.partial(add_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
-            SupportsResponse.NONE,
         ),
         (
             SERVICE_REMOVE_DOORBELL_TEXT,
             functools.partial(remove_doorbell_text, hass),
             DOORBELL_TEXT_SCHEMA,
-            SupportsResponse.NONE,
         ),
         (
             SERVICE_SET_CHIME_PAIRED,
             functools.partial(set_chime_paired_doorbells, hass),
             CHIME_PAIRED_SCHEMA,
-            SupportsResponse.NONE,
         ),
         (
             SERVICE_REMOVE_PRIVACY_ZONE,
             functools.partial(remove_privacy_zone, hass),
             REMOVE_PRIVACY_ZONE_SCHEMA,
-            SupportsResponse.NONE,
         ),
     ]
-    for name, method, schema, supports_response in services:
+    for name, method, schema in services:
         if hass.services.has_service(DOMAIN, name):
             continue
-        hass.services.async_register(DOMAIN, name, method, schema, supports_response)
+        hass.services.async_register(DOMAIN, name, method, schema=schema)
