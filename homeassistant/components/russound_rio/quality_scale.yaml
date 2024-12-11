@@ -10,7 +10,10 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Missing unique_id check in test_form() and test_import(). Test for adding same device twice missing.
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -23,7 +26,9 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data:
+    status: todo
+    comment: Can use RussoundConfigEntry in async_unload_entry
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -59,7 +64,7 @@ rules:
       This integration doesn't have enough / noisy entities that warrant being disabled by default.
   discovery: todo
   stale-devices: todo
-  diagnostics: todo
+  diagnostics: done
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
