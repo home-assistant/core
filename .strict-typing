@@ -41,6 +41,7 @@ homeassistant.util.unit_system
 # --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
+homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
@@ -364,6 +365,7 @@ homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.powerfox.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
@@ -385,6 +387,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.reolink.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*
 homeassistant.components.rest_command.*
@@ -404,6 +407,7 @@ homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
+homeassistant.components.schlage.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
@@ -436,7 +440,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
-homeassistant.components.stookalert.*
+homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
 homeassistant.components.stt.*

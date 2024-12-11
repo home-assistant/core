@@ -5697,8 +5697,8 @@ async def test_starting_config_flow_on_single_config_entry(
             "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 @pytest.mark.parametrize(
@@ -5778,8 +5778,8 @@ async def test_starting_config_flow_on_single_config_entry_2(
             "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 async def test_avoid_adding_second_config_entry_on_single_config_entry(

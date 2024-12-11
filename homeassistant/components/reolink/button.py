@@ -212,7 +212,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
 
-    async def async_ptz_move(self, **kwargs) -> None:
+    async def async_ptz_move(self, **kwargs: Any) -> None:
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
         try:

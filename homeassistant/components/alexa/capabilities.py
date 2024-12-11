@@ -436,7 +436,7 @@ class AlexaPowerController(AlexaCapability):
         elif self.entity.domain == remote.DOMAIN:
             is_on = self.entity.state not in (STATE_OFF, STATE_UNKNOWN)
         elif self.entity.domain == vacuum.DOMAIN:
-            is_on = self.entity.state == vacuum.STATE_CLEANING
+            is_on = self.entity.state == vacuum.VacuumActivity.CLEANING
         elif self.entity.domain == timer.DOMAIN:
             is_on = self.entity.state != STATE_IDLE
         elif self.entity.domain == water_heater.DOMAIN:
@@ -816,13 +816,19 @@ class AlexaPlaybackController(AlexaCapability):
         """
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        operations = {
-            media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
-            media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
-            media_player.MediaPlayerEntityFeature.PLAY: "Play",
-            media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
-            media_player.MediaPlayerEntityFeature.STOP: "Stop",
-        }
+        operations: dict[
+            cover.CoverEntityFeature | media_player.MediaPlayerEntityFeature, str
+        ]
+        if self.entity.domain == cover.DOMAIN:
+            operations = {cover.CoverEntityFeature.STOP: "Stop"}
+        else:
+            operations = {
+                media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
+                media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
+                media_player.MediaPlayerEntityFeature.PLAY: "Play",
+                media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
+                media_player.MediaPlayerEntityFeature.STOP: "Stop",
+            }
 
         return [
             value

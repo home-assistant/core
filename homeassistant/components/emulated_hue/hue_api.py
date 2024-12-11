@@ -39,7 +39,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_HUMIDITY, SERVICE_SET_HUMIDITY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -67,6 +67,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
 
@@ -500,7 +501,11 @@ class HueOneLightChangeView(HomeAssistantView):
                     light.color_temp_supported(color_modes)
                     and parsed[STATE_COLOR_TEMP] is not None
                 ):
-                    data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+                    data[ATTR_COLOR_TEMP_KELVIN] = (
+                        color_util.color_temperature_mired_to_kelvin(
+                            parsed[STATE_COLOR_TEMP]
+                        )
+                    )
 
                 if (
                     entity_features & LightEntityFeature.TRANSITION
@@ -702,7 +707,12 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         else:
             data[STATE_HUE] = HUE_API_STATE_HUE_MIN
             data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-        data[STATE_COLOR_TEMP] = attributes.get(ATTR_COLOR_TEMP) or 0
+        kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+        data[STATE_COLOR_TEMP] = (
+            color_util.color_temperature_kelvin_to_mired(kelvin)
+            if kelvin is not None
+            else 0
+        )
 
     else:
         data[STATE_BRIGHTNESS] = 0

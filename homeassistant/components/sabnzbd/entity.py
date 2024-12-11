@@ -1,5 +1,6 @@
 """Base entity for Sabnzbd."""
 
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,4 +28,6 @@ class SabnzbdEntity(CoordinatorEntity[SabnzbdUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
+            sw_version=coordinator.data["version"],
+            configuration_url=coordinator.config_entry.data[CONF_URL],
         )

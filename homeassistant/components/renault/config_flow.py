@@ -5,7 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+import aiohttp
 from renault_api.const import AVAILABLE_LOCALES
+from renault_api.gigya.exceptions import GigyaException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -27,12 +29,11 @@ REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Renault config flow."""
 
-    VERSION = 1
+    renault_hub: RenaultHub
 
     def __init__(self) -> None:
         """Initialize the Renault config flow."""
         self.renault_config: dict[str, Any] = {}
-        self.renault_hub: RenaultHub | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -41,24 +42,28 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Ask the user for API keys.
         """
+        errors: dict[str, str] = {}
         if user_input:
             locale = user_input[CONF_LOCALE]
             self.renault_config.update(user_input)
             self.renault_config.update(AVAILABLE_LOCALES[locale])
             self.renault_hub = RenaultHub(self.hass, locale)
-            if not await self.renault_hub.attempt_login(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            ):
-                return self._show_user_form({"base": "invalid_credentials"})
-            return await self.async_step_kamereon()
-        return self._show_user_form()
-
-    def _show_user_form(self, errors: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Show the API keys form."""
+            try:
+                login_success = await self.renault_hub.attempt_login(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            except (aiohttp.ClientConnectionError, GigyaException):
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                errors["base"] = "unknown"
+            else:
+                if login_success:
+                    return await self.async_step_kamereon()
+                errors["base"] = "invalid_credentials"
         return self.async_show_form(
             step_id="user",
             data_schema=USER_SCHEMA,
-            errors=errors or {},
+            errors=errors,
         )
 
     async def async_step_kamereon(
@@ -74,18 +79,12 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=user_input[CONF_KAMEREON_ACCOUNT_ID], data=self.renault_config
             )
 
-        assert self.renault_hub
         accounts = await self.renault_hub.get_account_ids()
         if len(accounts) == 0:
             return self.async_abort(reason="kamereon_no_account")
         if len(accounts) == 1:
-            await self.async_set_unique_id(accounts[0])
-            self._abort_if_unique_id_configured()
-
-            self.renault_config[CONF_KAMEREON_ACCOUNT_ID] = accounts[0]
-            return self.async_create_entry(
-                title=self.renault_config[CONF_KAMEREON_ACCOUNT_ID],
-                data=self.renault_config,
+            return await self.async_step_kamereon(
+                user_input={CONF_KAMEREON_ACCOUNT_ID: accounts[0]}
             )
 
         return self.async_show_form(
@@ -122,6 +121,6 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
-            errors=errors or {},
+            errors=errors,
             description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
         )

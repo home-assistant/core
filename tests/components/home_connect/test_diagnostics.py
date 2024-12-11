@@ -60,3 +60,28 @@ async def test_async_get_device_diagnostics(
     )
 
     assert await async_get_device_diagnostics(hass, config_entry, device) == snapshot
+
+
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_async_device_diagnostics_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device config entry diagnostics."""
+    get_appliances.side_effect = get_all_appliances
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "Random-Device-ID")},
+    )
+
+    with pytest.raises(ValueError):
+        await async_get_device_diagnostics(hass, config_entry, device)

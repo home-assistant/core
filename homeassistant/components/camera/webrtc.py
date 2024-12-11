@@ -10,6 +10,7 @@ from functools import cache, partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
+from mashumaro import MissingField
 import voluptuous as vol
 from webrtc_models import (
     RTCConfiguration,
@@ -22,6 +23,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ulid import ulid
 
@@ -89,7 +91,7 @@ class WebRTCCandidate(WebRTCMessage):
         """Return a dict representation of the message."""
         return {
             "type": self._get_type(),
-            "candidate": self.candidate.candidate,
+            "candidate": self.candidate.to_dict(),
         }
 
 
@@ -328,12 +330,20 @@ async def ws_get_client_config(
     )
 
 
+def _parse_webrtc_candidate_init(value: Any) -> RTCIceCandidateInit:
+    """Validate and parse a WebRTCCandidateInit dict."""
+    try:
+        return RTCIceCandidateInit.from_dict(value)
+    except (MissingField, ValueError) as ex:
+        raise vol.Invalid(str(ex)) from ex
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "camera/webrtc/candidate",
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("session_id"): str,
-        vol.Required("candidate"): str,
+        vol.Required("candidate"): _parse_webrtc_candidate_init,
     }
 )
 @websocket_api.async_response
@@ -342,9 +352,7 @@ async def ws_candidate(
     connection: websocket_api.ActiveConnection, msg: dict[str, Any], camera: Camera
 ) -> None:
     """Handle WebRTC candidate websocket command."""
-    await camera.async_on_webrtc_candidate(
-        msg["session_id"], RTCIceCandidateInit(msg["candidate"])
-    )
+    await camera.async_on_webrtc_candidate(msg["session_id"], msg["candidate"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
@@ -438,6 +446,7 @@ class _CameraRtspToWebRTCProvider(CameraWebRTCLegacyProvider):
         return await self._fn(stream_source, offer_sdp, camera.entity_id)
 
 
+@deprecated_function("async_register_webrtc_provider", breaks_in_ha_version="2025.6")
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
     domain: str,

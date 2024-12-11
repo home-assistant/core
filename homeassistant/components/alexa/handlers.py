@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -358,7 +359,7 @@ async def async_api_set_color_temperature(
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_KELVIN: kelvin},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
         blocking=False,
         context=context,
     )
@@ -764,9 +765,25 @@ async def async_api_stop(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
-    )
+    if entity.domain == cover.DOMAIN:
+        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        feature_services: dict[int, str] = {
+            cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
+            cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
+        }
+        await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    entity.domain, service, data, blocking=False, context=context
+                )
+                for feature, service in feature_services.items()
+                if feature & supported
+            )
+        )
+    else:
+        await hass.services.async_call(
+            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        )
 
     return directive.response()
 
