@@ -50,7 +50,6 @@ rules:
     status: done
     comment: This integration uses a coordinator.
   parallel-updates: done
-    status: exempt
   reauthentication-flow:
     status: exempt
     comment: |
