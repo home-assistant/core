@@ -34,11 +34,7 @@ rules:
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
-  runtime-data:
-    status: todo
-    comment: |
-      The integration stores config entry data in `hass.data` and needs to
-      be moved to use `runtime_data`.
+  runtime-data: done
 
   # Silver
   log-when-unavailable: todo
