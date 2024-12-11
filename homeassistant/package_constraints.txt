@@ -5,7 +5,7 @@ aiodiscover==2.1.0
 aiodns==3.2.0
 aiohasupervisor==0.2.1
 aiohttp-fast-zlib==0.2.0
-aiohttp==3.11.9
+aiohttp==3.11.10
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
@@ -24,18 +24,18 @@ bluetooth-auto-recovery==1.4.2
 bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
 certifi>=2021.5.30
-ciso8601==2.3.1
+ciso8601==2.3.2
 cryptography==44.0.0
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
-go2rtc-client==0.1.1
+go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.6.0
-hass-nabucasa==0.85.0
+hass-nabucasa==0.86.0
 hassil==2.0.5
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241127.3
-home-assistant-intents==2024.12.2
+home-assistant-frontend==20241127.7
+home-assistant-intents==2024.12.9
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
@@ -115,7 +115,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.1.3
+numpy==2.2.0
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -125,9 +125,8 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Required to avoid breaking (#101042).
-# v2 has breaking changes (#99218).
-pydantic==1.10.19
+# ensure pydantic version does not float since it might have breaking changes
+pydantic==2.10.3
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -205,8 +204,3 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
-
-# 0.22.0 causes CI failures on Python 3.13
-# python3 -X dev -m pytest tests/components/matrix
-# python3 -X dev -m pytest tests/components/zha
-rpds-py==0.21.0

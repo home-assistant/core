@@ -431,7 +431,9 @@ async def test_dock_vacuum(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None, None)
 
-    trt = trait.DockTrait(hass, State("vacuum.bla", vacuum.STATE_IDLE), BASIC_CONFIG)
+    trt = trait.DockTrait(
+        hass, State("vacuum.bla", vacuum.VacuumActivity.IDLE), BASIC_CONFIG
+    )
 
     assert trt.sync_attributes() == {}
 
@@ -454,7 +456,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_IDLE,
+            vacuum.VacuumActivity.IDLE,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
@@ -485,7 +487,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_DOCKED,
+            vacuum.VacuumActivity.DOCKED,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
@@ -511,7 +513,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_CLEANING,
+            vacuum.VacuumActivity.CLEANING,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
@@ -551,7 +553,7 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_PAUSED,
+            vacuum.VacuumActivity.PAUSED,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
