@@ -1,9 +1,10 @@
 """Tests for the Backup integration."""
 
+from asyncio import Future
 from collections.abc import Generator
 from datetime import datetime
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupState,
     NewBackup,
+    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -32,14 +34,15 @@ from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
-    agent_ids=["test-agent"],
+    agent_ids=["test.test-agent"],
+    backup_name="test-name",
     include_addons=["test-addon"],
     include_all_addons=False,
     include_database=True,
     include_folders=["media"],
     include_homeassistant=True,
-    name="test-name",
     password="test-password",
+    on_progress=ANY,
 )
 
 DEFAULT_STORAGE_DATA = {
@@ -89,9 +92,16 @@ def mock_delay_save() -> Generator[None]:
 @pytest.fixture(name="create_backup")
 def mock_create_backup() -> Generator[AsyncMock]:
     """Mock manager create backup."""
+    mock_written_backup = MagicMock(spec_set=WrittenBackup)
+    mock_written_backup.backup.backup_id = "abc123"
+    mock_written_backup.open_stream = AsyncMock()
+    mock_written_backup.release_stream = AsyncMock()
+    fut = Future()
+    fut.set_result(mock_written_backup)
     with patch(
-        "homeassistant.components.backup.BackupManager.async_create_backup"
+        "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
     ) as mock_create_backup:
+        mock_create_backup.return_value = (MagicMock(), fut)
         yield mock_create_backup
 
 
@@ -279,7 +289,15 @@ async def test_delete(
     [
         DEFAULT_STORAGE_DATA,
         DEFAULT_STORAGE_DATA
-        | {"backups": [{"backup_id": "abc123", "failed_agent_ids": ["test.remote"]}]},
+        | {
+            "backups": [
+                {
+                    "backup_id": "abc123",
+                    "failed_agent_ids": ["test.remote"],
+                    "with_stored_settings": False,
+                }
+            ]
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -487,6 +505,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": None,
                 "password": None,
+                "with_stored_settings": True,
             },
         ),
         (
@@ -508,6 +527,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": "test-name",
                 "password": "test-password",
+                "with_stored_settings": True,
             },
         ),
     ],
@@ -1040,7 +1060,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "daily",
             },
             "2024-11-11T04:45:00+01:00",
@@ -1056,7 +1076,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "mon",
             },
             "2024-11-11T04:45:00+01:00",
@@ -1072,7 +1092,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "never",
             },
             "2024-11-11T04:45:00+01:00",
@@ -1088,7 +1108,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "daily",
             },
             "2024-10-26T04:45:00+01:00",
@@ -1104,7 +1124,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "mon",
             },
             "2024-10-26T04:45:00+01:00",
@@ -1120,7 +1140,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "never",
             },
             "2024-10-26T04:45:00+01:00",
@@ -1136,7 +1156,7 @@ async def test_config_update_errors(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "schedule": "daily",
             },
             "2024-11-11T04:45:00+01:00",
@@ -1201,7 +1221,7 @@ async def test_config_schedule_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, remote_agents=["test-agent"])
     await hass.async_block_till_done()
 
     await client.send_json_auto_id(command)
@@ -1252,7 +1272,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": None, "days": None},
                 "schedule": "daily",
             },
@@ -1274,7 +1294,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 3, "days": None},
                 "schedule": "daily",
             },
@@ -1296,7 +1316,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 3, "days": None},
                 "schedule": "daily",
             },
@@ -1319,7 +1339,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
@@ -1342,7 +1362,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
@@ -1364,7 +1384,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 2, "days": None},
                 "schedule": "daily",
             },
@@ -1386,7 +1406,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 0, "days": None},
                 "schedule": "daily",
             },
@@ -1409,7 +1429,7 @@ async def test_config_schedule_logic(
         (
             {
                 "type": "backup/config/update",
-                "create_backup": {"agent_ids": ["test-agent"]},
+                "create_backup": {"agent_ids": ["test.test-agent"]},
                 "retention": {"copies": 0, "days": None},
                 "schedule": "daily",
             },
@@ -1478,7 +1498,7 @@ async def test_config_retention_copies_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, remote_agents=["test-agent"])
     await hass.async_block_till_done()
 
     await client.send_json_auto_id(command)

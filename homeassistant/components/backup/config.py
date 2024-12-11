@@ -281,7 +281,6 @@ class BackupSchedule:
 
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
-            backup_completed = False
             manager.remove_next_backup_event = None
             config_data = manager.config.data
             self._schedule_next(cron_pattern, manager)
@@ -297,21 +296,12 @@ class BackupSchedule:
                     include_homeassistant=True,  # always include HA
                     name=config_data.create_backup.name,
                     password=config_data.create_backup.password,
+                    with_stored_settings=True,
                 )
             except Exception:  # noqa: BLE001
                 # another more specific exception will be added
                 # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
-            else:
-                # create backup was successful, set flag to update
-                # last_completed_automatic_backup
-                backup_completed = True
-            finally:
-                now = dt_util.now()
-                config_data.last_attempted_automatic_backup = now
-                if backup_completed:
-                    config_data.last_completed_automatic_backup = now
-                manager.store.save()
 
             # delete old backups more numerous than copies
 

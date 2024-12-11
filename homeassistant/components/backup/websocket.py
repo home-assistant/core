@@ -202,6 +202,7 @@ async def handle_create_with_stored_settings(
         include_homeassistant=True,  # always include HA
         name=config_data.create_backup.name,
         password=config_data.create_backup.password,
+        with_stored_settings=True,
     )
     connection.send_result(msg["id"], backup)
 

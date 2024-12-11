@@ -510,7 +510,11 @@ async def test_async_initiate_backup_with_agent_error(
 
     await hass.async_block_till_done()
     assert hass_storage[DOMAIN]["data"]["backups"] == [
-        {"backup_id": "abc123", "failed_agent_ids": ["test.remote"]}
+        {
+            "backup_id": "abc123",
+            "failed_agent_ids": ["test.remote"],
+            "with_stored_settings": False,
+        }
     ]
 
 
