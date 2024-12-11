@@ -229,7 +229,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.PowerSource.Attributes.Voltage,),
+        required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
