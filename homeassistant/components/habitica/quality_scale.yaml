@@ -33,7 +33,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: done
+  parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: todo
 
