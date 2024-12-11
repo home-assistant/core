@@ -56,17 +56,17 @@
   "services": {
     "set_preset_mode": {
       "name": "Set preset mode",
-      "description": "Sets preset mode.",
+      "description": "Sets preset fan mode.",
       "fields": {
         "preset_mode": {
           "name": "Preset mode",
-          "description": "Preset mode."
+          "description": "Preset fan mode."
         }
       }
     },
     "set_percentage": {
       "name": "Set speed",
-      "description": "Sets the fan speed.",
+      "description": "Sets the speed of a fan.",
       "fields": {
         "percentage": {
           "name": "Percentage",
@@ -94,45 +94,45 @@
     },
     "oscillate": {
       "name": "Oscillate",
-      "description": "Controls oscillatation of the fan.",
+      "description": "Controls the oscillation of a fan.",
       "fields": {
         "oscillating": {
           "name": "Oscillating",
-          "description": "Turn on/off oscillation."
+          "description": "Turns oscillation on/off."
         }
       }
     },
     "toggle": {
       "name": "[%key:common::action::toggle%]",
-      "description": "Toggles the fan on/off."
+      "description": "Toggles a fan on/off."
     },
     "set_direction": {
       "name": "Set direction",
-      "description": "Sets the fan rotation direction.",
+      "description": "Sets a fan's rotation direction.",
       "fields": {
         "direction": {
           "name": "Direction",
-          "description": "Direction to rotate."
+          "description": "Direction of the fan rotation."
         }
       }
     },
     "increase_speed": {
       "name": "Increase speed",
-      "description": "Increases the speed of the fan.",
+      "description": "Increases the speed of a fan.",
       "fields": {
         "percentage_step": {
           "name": "Increment",
-          "description": "Increases the speed by a percentage step."
+          "description": "Percentage step by which the speed should be increased."
         }
       }
     },
     "decrease_speed": {
       "name": "Decrease speed",
-      "description": "Decreases the speed of the fan.",
+      "description": "Decreases the speed of a fan.",
       "fields": {
         "percentage_step": {
           "name": "Decrement",
-          "description": "Decreases the speed by a percentage step."
+          "description": "Percentage step by which the speed should be decreased."
         }
       }
     }

@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/datadog",
   "iot_class": "local_push",
   "loggers": ["datadog"],
+  "quality_scale": "legacy",
   "requirements": ["datadog==0.15.0"]
 }

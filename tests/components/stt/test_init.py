@@ -34,6 +34,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    reset_translation_cache,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -517,6 +518,9 @@ async def test_default_engine_prefer_cloud_entity(
     assert provider_engine is not None
     assert provider_engine.name == "test"
     assert async_default_engine(hass) == "stt.cloud_stt_entity"
+
+    # Reset the `cloud` translations cache to avoid flaky translation checks
+    reset_translation_cache(hass, ["cloud"])
 
 
 async def test_get_engine_legacy(

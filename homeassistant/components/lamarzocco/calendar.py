@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
-from lmcloud.models import LaMarzoccoWakeUpSleepEntry
+from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -12,6 +12,9 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 CALENDAR_KEY = "auto_on_off_schedule"
 

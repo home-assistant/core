@@ -75,6 +75,7 @@ class Telegrams:
             )
         )
         self.recent_telegrams: deque[TelegramDict] = deque(maxlen=log_size)
+        self.last_ga_telegrams: dict[str, TelegramDict] = {}
 
     async def load_history(self) -> None:
         """Load history from store."""
@@ -88,6 +89,9 @@ class Telegrams:
             if isinstance(telegram["payload"], list):
                 telegram["payload"] = tuple(telegram["payload"])  # type: ignore[unreachable]
         self.recent_telegrams.extend(telegrams)
+        self.last_ga_telegrams = {
+            t["destination"]: t for t in telegrams if t["payload"] is not None
+        }
 
     async def save_history(self) -> None:
         """Save history to store."""
@@ -98,6 +102,9 @@ class Telegrams:
         """Handle incoming and outgoing telegrams from xknx."""
         telegram_dict = self.telegram_to_dict(telegram)
         self.recent_telegrams.append(telegram_dict)
+        if telegram_dict["payload"] is not None:
+            # exclude GroupValueRead telegrams
+            self.last_ga_telegrams[telegram_dict["destination"]] = telegram_dict
         async_dispatcher_send(self.hass, SIGNAL_KNX_TELEGRAM, telegram, telegram_dict)
 
     def telegram_to_dict(self, telegram: Telegram) -> TelegramDict:

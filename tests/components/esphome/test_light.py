@@ -676,7 +676,7 @@ async def test_light_rgb(
                 color_mode=LightColorCapability.RGB
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -814,7 +814,7 @@ async def test_light_rgbw(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -993,7 +993,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
                 | LightColorCapability.BRIGHTNESS,
                 cold_white=0,
                 warm_white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]
@@ -1226,7 +1226,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
                 | LightColorCapability.ON_OFF
                 | LightColorCapability.BRIGHTNESS,
                 white=0,
-                rgb=(pytest.approx(0.32941176470588235), 1.0, 0.0),
+                rgb=(pytest.approx(0.3333333333333333), 1.0, 0.0),
                 brightness=pytest.approx(0.4980392156862745),
             )
         ]

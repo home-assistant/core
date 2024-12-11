@@ -18,7 +18,10 @@ from . import BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
+PARALLEL_UPDATES = 1
+
 DOOR_LOCK_STATE = "door_lock_state"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     if not coordinator.read_only:
         async_add_entities(

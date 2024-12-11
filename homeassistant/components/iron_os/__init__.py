@@ -19,15 +19,27 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .coordinator import IronOSFirmwareUpdateCoordinator, IronOSLiveDataCoordinator
+from .coordinator import (
+    IronOSCoordinators,
+    IronOSFirmwareUpdateCoordinator,
+    IronOSLiveDataCoordinator,
+    IronOSSettingsCoordinator,
+)
 
-PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.UPDATE]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.UPDATE,
+]
 
-
-type IronOSConfigEntry = ConfigEntry[IronOSLiveDataCoordinator]
-IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
+IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,10 +71,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
 
     device = Pynecil(ble_device)
 
-    coordinator = IronOSLiveDataCoordinator(hass, device)
-    await coordinator.async_config_entry_first_refresh()
+    live_data = IronOSLiveDataCoordinator(hass, device)
+    await live_data.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    settings = IronOSSettingsCoordinator(hass, device)
+    await settings.async_config_entry_first_refresh()
+
+    entry.runtime_data = IronOSCoordinators(
+        live_data=live_data,
+        settings=settings,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

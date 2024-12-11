@@ -222,6 +222,9 @@
       "hdr": {
         "default": "mdi:hdr"
       },
+      "binning_mode": {
+        "default": "mdi:code-block-brackets"
+      },
       "hub_alarm_ringtone": {
         "default": "mdi:music-note",
         "state": {
@@ -246,6 +249,12 @@
           "off": "mdi:music-note-off"
         }
       },
+      "vehicle_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
+      },
       "visitor_tone": {
         "default": "mdi:music-note",
         "state": {
@@ -257,11 +266,26 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "main_frame_rate": {
+        "default": "mdi:play-speed"
+      },
+      "sub_frame_rate": {
+        "default": "mdi:play-speed"
+      },
+      "main_bit_rate": {
+        "default": "mdi:play-speed"
+      },
+      "sub_bit_rate": {
+        "default": "mdi:play-speed"
       }
     },
     "sensor": {
       "ptz_pan_position": {
-        "default": "mdi:pan"
+        "default": "mdi:pan-horizontal"
+      },
+      "ptz_tilt_position": {
+        "default": "mdi:pan-vertical"
       },
       "battery_temperature": {
         "default": "mdi:thermometer"

@@ -7,7 +7,6 @@ ATTR_SPEED = "speed"
 ATTR_API_KEY = "api_key"
 
 DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "SABnzbd"
 DEFAULT_PORT = 8080
 DEFAULT_SPEED_LIMIT = "100"
 DEFAULT_SSL = False

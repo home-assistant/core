@@ -36,6 +36,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_audio_pipeline.4
@@ -58,6 +59,7 @@
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_audio_pipeline.5
@@ -73,7 +75,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -117,6 +119,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_audio_pipeline_debug.4
@@ -139,6 +142,7 @@
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_audio_pipeline_debug.5
@@ -154,7 +158,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -210,6 +214,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.4
@@ -232,6 +237,7 @@
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.5
@@ -247,7 +253,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -313,6 +319,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'test transcript',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.6
@@ -335,6 +342,7 @@
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.7
@@ -350,7 +358,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
-      'url': '/api/tts_proxy/dae2cdcb27a1d1c3b07ba2c7db91480f9d4bfd8f_en-us_031e2ec052_test.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -519,6 +527,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_intent_failed.2
@@ -541,6 +550,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_intent_timeout.2
@@ -569,6 +579,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'never mind',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_pipeline_empty_tts_output.2
@@ -592,6 +603,7 @@
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_pipeline_empty_tts_output.3
@@ -680,6 +692,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg0].2
@@ -697,11 +710,12 @@
         'speech': dict({
           'plain': dict({
             'extra_data': None,
-            'speech': 'Sorry, I am not aware of any area called are',
+            'speech': 'Sorry, I am not aware of any area called Are',
           }),
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg0].3
@@ -724,6 +738,7 @@
     'engine': 'conversation.home_assistant',
     'intent_input': 'Are the lights on?',
     'language': 'en',
+    'prefer_local_intents': False,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg1].2
@@ -741,11 +756,12 @@
         'speech': dict({
           'plain': dict({
             'extra_data': None,
-            'speech': 'Sorry, I am not aware of any area called are',
+            'speech': 'Sorry, I am not aware of any area called Are',
           }),
         }),
       }),
     }),
+    'processed_locally': True,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg1].3

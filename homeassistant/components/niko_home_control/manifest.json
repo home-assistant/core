@@ -1,7 +1,8 @@
 {
   "domain": "niko_home_control",
   "name": "Niko Home Control",
-  "codeowners": [],
+  "codeowners": ["@VandeurenGlenn"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/niko_home_control",
   "iot_class": "local_polling",
   "loggers": ["nikohomecontrol"],

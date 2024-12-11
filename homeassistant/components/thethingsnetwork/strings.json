@@ -22,11 +22,5 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
-  },
-  "issues": {
-    "manual_migration": {
-      "description": "Configuring {domain} using YAML was removed as part of migrating to [The Things Network v3]({v2_v3_migration_url}). [The Things Network v2 has shutted down]({v2_deprecation_url}).\n\nPlease remove the {domain} entry from the configuration.yaml and add re-add the integration using the config_flow",
-      "title": "The {domain} YAML configuration is not supported"
-    }
   }
 }

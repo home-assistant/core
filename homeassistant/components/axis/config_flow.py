@@ -284,8 +284,7 @@ class AxisOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Axis device stream options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
+            return self.async_create_entry(data=self.config_entry.options | user_input)
 
         schema = {}
 

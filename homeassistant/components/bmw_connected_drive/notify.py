@@ -22,6 +22,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, BMWConfigEntry
 
+PARALLEL_UPDATES = 1
+
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
 
 POI_SCHEMA = vol.Schema(
@@ -51,7 +53,7 @@ def get_service(
     targets = {}
     if (
         config_entry
-        and (coordinator := config_entry.runtime_data.coordinator)
+        and (coordinator := config_entry.runtime_data)
         and not coordinator.read_only
     ):
         targets.update({v.name: v for v in coordinator.account.vehicles})

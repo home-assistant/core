@@ -1,6 +1,6 @@
 """Mock inputs for tests."""
 
-from lmcloud.const import MachineModel
+from pylamarzocco.const import MachineModel
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant

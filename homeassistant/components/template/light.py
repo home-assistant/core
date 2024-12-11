@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -39,6 +39,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import color as color_util
 
 from .const import DOMAIN
 from .template_entity import (
@@ -262,25 +263,27 @@ class LightTemplate(TemplateEntity, LightEntity):
         return self._brightness
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        return self._temperature
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if self._temperature is None:
+            return None
+        return color_util.color_temperature_mired_to_kelvin(self._temperature)
 
     @property
-    def max_mireds(self) -> int:
-        """Return the max mireds value in mireds."""
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
         if self._max_mireds is not None:
-            return self._max_mireds
+            return color_util.color_temperature_mired_to_kelvin(self._max_mireds)
 
-        return super().max_mireds
+        return super().min_color_temp_kelvin
 
     @property
-    def min_mireds(self) -> int:
-        """Return the min mireds value in mireds."""
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
         if self._min_mireds is not None:
-            return self._min_mireds
+            return color_util.color_temperature_mired_to_kelvin(self._min_mireds)
 
-        return super().min_mireds
+        return super().max_color_temp_kelvin
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -447,13 +450,16 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
-        if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
+        if self._temperature_template is None and ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
-                kwargs[ATTR_COLOR_TEMP],
+                color_temp,
             )
             self._color_mode = ColorMode.COLOR_TEMP
-            self._temperature = kwargs[ATTR_COLOR_TEMP]
+            self._temperature = color_temp
             if self._hs_template is None and self._color_template is None:
                 self._hs_color = None
             if self._rgb_template is None:
@@ -544,8 +550,10 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
 
-        if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
-            common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._temperature_script:
+            common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
             await self.async_run_script(
                 self._temperature_script,

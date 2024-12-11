@@ -913,7 +913,7 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_ROUTE_BACK: False,
         CONF_KNX_TUNNEL_ENDPOINT_IA: None,
         CONF_KNX_STATE_UPDATER: True,
-        CONF_KNX_TELEGRAM_LOG_SIZE: 200,
+        CONF_KNX_TELEGRAM_LOG_SIZE: 1000,
     }
     knx_setup.assert_called_once()
 
@@ -1210,7 +1210,7 @@ async def test_options_flow_connection_type(
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
             CONF_KNX_SECURE_USER_ID: None,
             CONF_KNX_SECURE_USER_PASSWORD: None,
-            CONF_KNX_TELEGRAM_LOG_SIZE: 200,
+            CONF_KNX_TELEGRAM_LOG_SIZE: 1000,
         }
 
 

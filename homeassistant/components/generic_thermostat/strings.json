@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add generic thermostat helper",
+        "title": "Create generic thermostat",
         "description": "Create a climate entity that controls the temperature via a switch and sensor.",
         "data": {
           "ac_mode": "Cooling mode",
@@ -12,13 +12,15 @@
           "min_cycle_duration": "Minimum cycle duration",
           "name": "[%key:common::config_flow::data::name%]",
           "cold_tolerance": "Cold tolerance",
-          "hot_tolerance": "Hot tolerance"
+          "hot_tolerance": "Hot tolerance",
+          "min_temp": "Minimum target temperature",
+          "max_temp": "Maximum target temperature"
         },
         "data_description": {
           "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
           "heater": "Switch entity used to cool or heat depending on A/C mode.",
-          "target_sensor": "Temperature sensor that reflect the current temperature.",
-          "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on. This option will be ignored if the keep alive option is set.",
+          "target_sensor": "Temperature sensor that reflects the current temperature.",
+          "min_cycle_duration": "Set a minimum amount of time that the switch specified must be in its current state prior to being switched either off or on.",
           "cold_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched on. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will start when the sensor equals or goes below 24.5.",
           "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5."
         }
@@ -45,7 +47,9 @@
           "target_sensor": "[%key:component::generic_thermostat::config::step::user::data::target_sensor%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data::min_cycle_duration%]",
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data::cold_tolerance%]",
-          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]"
+          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]",
+          "min_temp": "[%key:component::generic_thermostat::config::step::user::data::min_temp%]",
+          "max_temp": "[%key:component::generic_thermostat::config::step::user::data::max_temp%]"
         },
         "data_description": {
           "heater": "[%key:component::generic_thermostat::config::step::user::data_description::heater%]",

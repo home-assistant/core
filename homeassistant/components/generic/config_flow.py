@@ -282,7 +282,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "timeout"}
         await stream.stop()
     except StreamWorkerError as err:
-        return {CONF_STREAM_SOURCE: str(err)}
+        return {CONF_STREAM_SOURCE: "unknown_with_details", "error_details": str(err)}
     except PermissionError:
         return {CONF_STREAM_SOURCE: "stream_not_permitted"}
     except OSError as err:
@@ -324,7 +324,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return GenericOptionsFlowHandler(config_entry)
+        return GenericOptionsFlowHandler()
 
     def check_for_existing(self, options: dict[str, Any]) -> bool:
         """Check whether an existing entry is using the same URLs."""
@@ -339,6 +339,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
+        description_placeholders = {}
         hass = self.hass
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
@@ -372,6 +373,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # temporary preview for user to check the image
                     self.preview_cam = user_input
                     return await self.async_step_user_confirm_still()
+                if "error_details" in errors:
+                    description_placeholders["error"] = errors.pop("error_details")
         elif self.user_input:
             user_input = self.user_input
         else:
@@ -379,6 +382,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=build_schema(user_input),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -409,9 +413,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
-        self.config_entry = config_entry
         self.preview_cam: dict[str, Any] = {}
         self.user_input: dict[str, Any] = {}
 

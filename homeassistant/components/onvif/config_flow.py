@@ -109,7 +109,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OnvifOptionsFlowHandler()
+        return OnvifOptionsFlowHandler(config_entry)
 
     def __init__(self) -> None:
         """Initialize the ONVIF config flow."""
@@ -388,6 +388,10 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class OnvifOptionsFlowHandler(OptionsFlow):
     """Handle ONVIF options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize ONVIF options flow."""
+        self.options = dict(config_entry.options)
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the ONVIF options."""

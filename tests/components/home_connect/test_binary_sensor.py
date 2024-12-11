@@ -152,6 +152,7 @@ async def test_create_issue(
     """Test we create an issue when an automation or script is using a deprecated entity."""
     entity_id = "binary_sensor.washer_door"
     get_appliances.return_value = [appliance]
+    issue_id = f"deprecated_binary_common_door_sensor_{entity_id}"
 
     assert await async_setup_component(
         hass,
@@ -196,6 +197,11 @@ async def test_create_issue(
     assert scripts_with_entity(hass, entity_id)[0] == "script.test"
 
     assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_binary_common_door_sensor_{entity_id}"
-    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

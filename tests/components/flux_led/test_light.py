@@ -517,7 +517,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     await hass.services.async_call(
@@ -534,7 +534,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 56)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 56)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -652,7 +652,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     # which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128

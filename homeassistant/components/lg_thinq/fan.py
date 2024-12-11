@@ -72,8 +72,11 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
         super().__init__(coordinator, entity_description, property_id)
 
         self._ordered_named_fan_speeds = []
-        self._attr_supported_features |= FanEntityFeature.SET_SPEED
-
+        self._attr_supported_features = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
         if (fan_modes := self.data.fan_modes) is not None:
             self._attr_speed_count = len(fan_modes)
             if self.speed_count == 4:
@@ -98,7 +101,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             self._attr_percentage = 0
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s (percntage=%s)",
+            "[%s:%s] update status: %s -> %s (percentage=%s)",
             self.coordinator.device_name,
             self.property_id,
             self.data.is_on,
@@ -120,7 +123,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             return
 
         _LOGGER.debug(
-            "[%s:%s] async_set_percentage. percntage=%s, value=%s",
+            "[%s:%s] async_set_percentage. percentage=%s, value=%s",
             self.coordinator.device_name,
             self.property_id,
             percentage,

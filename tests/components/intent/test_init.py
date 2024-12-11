@@ -455,3 +455,14 @@ async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> No
             "HassSetPosition",
             {"name": {"value": "test light"}, "position": {"value": 100}},
         )
+
+
+async def test_intents_with_no_responses(hass: HomeAssistant) -> None:
+    """Test intents that should not return a response during handling."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # The "respond" intent gets its response text from home-assistant-intents
+    for intent_name in (intent.INTENT_NEVERMIND, intent.INTENT_RESPOND):
+        response = await intent.async_handle(hass, "test", intent_name, {})
+        assert not response.speech

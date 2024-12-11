@@ -8,7 +8,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The URL of your Mealie instance."
+          "host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234"
         }
       },
       "reauth_confirm": {
@@ -29,6 +29,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "ingress_url": "Ingress URLs are only used for accessing the Mealie UI. Use your Home Assistant IP address and the network port within the configuration tab of the Mealie add-on.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "mealie_version": "Minimum required version is v1.0.0. Please upgrade Mealie and then retry."
     },
@@ -56,19 +57,24 @@
     },
     "sensor": {
       "recipes": {
-        "name": "Recipes"
+        "name": "Recipes",
+        "unit_of_measurement": "recipes"
       },
       "users": {
-        "name": "Users"
+        "name": "Users",
+        "unit_of_measurement": "users"
       },
       "categories": {
-        "name": "Categories"
+        "name": "Categories",
+        "unit_of_measurement": "categories"
       },
       "tags": {
-        "name": "Tags"
+        "name": "Tags",
+        "unit_of_measurement": "tags"
       },
       "tools": {
-        "name": "Tools"
+        "name": "Tools",
+        "unit_of_measurement": "tools"
       }
     }
   },

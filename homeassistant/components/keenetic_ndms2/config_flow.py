@@ -55,7 +55,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return KeeneticOptionsFlowHandler(config_entry)
+        return KeeneticOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -138,9 +138,8 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 class KeeneticOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self._interface_options: dict[str, str] = {}
 
     async def async_step_init(

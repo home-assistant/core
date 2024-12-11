@@ -429,3 +429,11 @@ SERVICES = (
     (LcnService.DYN_TEXT, DynText),
     (LcnService.PCK, Pck),
 )
+
+
+async def register_services(hass: HomeAssistant) -> None:
+    """Register services for LCN."""
+    for service_name, service in SERVICES:
+        hass.services.async_register(
+            DOMAIN, service_name, service(hass).async_call_service, service.schema
+        )

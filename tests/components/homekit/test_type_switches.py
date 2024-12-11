@@ -26,8 +26,7 @@ from homeassistant.components.vacuum import (
     SERVICE_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_CLEANING,
-    STATE_DOCKED,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -295,7 +294,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
 
     hass.states.async_set(
         entity_id,
-        STATE_CLEANING,
+        VacuumActivity.CLEANING,
         {
             ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.START
@@ -306,7 +305,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
 
     hass.states.async_set(
         entity_id,
-        STATE_DOCKED,
+        VacuumActivity.DOCKED,
         {
             ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.RETURN_HOME
             | VacuumEntityFeature.START

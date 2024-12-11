@@ -60,12 +60,14 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
         statinfo = await self.hass.async_add_executor_job(self._update)
         size = statinfo.st_size
         last_updated = dt_util.utc_from_timestamp(statinfo.st_mtime)
+        created = dt_util.utc_from_timestamp(statinfo.st_ctime)
 
         _LOGGER.debug("size %s, last updated %s", size, last_updated)
         data: dict[str, int | float | datetime] = {
             "file": round(size / 1e6, 2),
             "bytes": size,
             "last_updated": last_updated,
+            "created": created,
         }
 
         return data

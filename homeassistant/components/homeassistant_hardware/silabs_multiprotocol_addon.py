@@ -318,7 +318,6 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self.start_task: asyncio.Task | None = None
         self.stop_task: asyncio.Task | None = None
         self._zha_migration_mgr: ZhaMultiPANMigrationHelper | None = None
-        self.config_entry = config_entry
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 

@@ -14,15 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
-from .entity import JewishCalendarEntity
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,17 +167,15 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Jewish calendar sensors ."""
-    entry = hass.data[DOMAIN][config_entry.entry_id]
     sensors = [
-        JewishCalendarSensor(config_entry, entry, description)
-        for description in INFO_SENSORS
+        JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
     ]
     sensors.extend(
-        JewishCalendarTimeSensor(config_entry, entry, description)
+        JewishCalendarTimeSensor(config_entry, description)
         for description in TIME_SENSORS
     )
 
@@ -193,12 +189,11 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
-        data: dict[str, Any],
+        config_entry: JewishCalendarConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the Jewish calendar sensor."""
-        super().__init__(config_entry, data, description)
+        super().__init__(config_entry, description)
         self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
@@ -280,15 +275,18 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
-            self._attrs = {
-                "id": after_shkia_date.holiday_name,
-                "type": after_shkia_date.holiday_type.name,
-                "type_id": after_shkia_date.holiday_type.value,
-            }
-            self._attr_options = [
-                h.description.hebrew.long if self._hebrew else h.description.english
-                for h in htables.HOLIDAYS
-            ]
+            _id = _type = _type_id = ""
+            _holiday_type = after_shkia_date.holiday_type
+            if isinstance(_holiday_type, list):
+                _id = ", ".join(after_shkia_date.holiday_name)
+                _type = ", ".join([_htype.name for _htype in _holiday_type])
+                _type_id = ", ".join([str(_htype.value) for _htype in _holiday_type])
+            else:
+                _id = after_shkia_date.holiday_name
+                _type = _holiday_type.name
+                _type_id = _holiday_type.value
+            self._attrs = {"id": _id, "type": _type, "type_id": _type_id}
+            self._attr_options = htables.get_all_holidays(self._language)
 
             return after_shkia_date.holiday_description
         if self.entity_description.key == "omer_count":

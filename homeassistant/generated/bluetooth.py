@@ -9,6 +9,26 @@ from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
+        "domain": "acaia",
+        "manufacturer_id": 16962,
+    },
+    {
+        "domain": "acaia",
+        "local_name": "ACAIA*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "PYXIS-*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "LUNAR-*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "PROCHBT001",
+    },
+    {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
         "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",

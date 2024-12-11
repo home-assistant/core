@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from http import HTTPStatus
+import logging
 
 from aiohttp import ClientError, ClientResponseError
+import jwt
 from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +23,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
 from .coordinator import MyUplinkDataCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -73,14 +77,16 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
 def create_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
+    hass: HomeAssistant,
+    config_entry: MyUplinkConfigEntry,
+    coordinator: MyUplinkDataCoordinator,
 ) -> None:
     """Update all devices."""
     device_registry = dr.async_get(hass)
@@ -109,3 +115,27 @@ async def async_remove_config_entry_device(
     return not device_entry.identifiers.intersection(
         (DOMAIN, device_id) for device_id in myuplink_data.data.devices
     )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: MyUplinkConfigEntry
+) -> bool:
+    """Migrate old entry."""
+
+    # Use sub(ject) from access_token as unique_id
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        token = jwt.decode(
+            config_entry.data["token"]["access_token"],
+            options={"verify_signature": False},
+        )
+        uid = token["sub"]
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=uid, minor_version=2
+        )
+        _LOGGER.info(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+    return True

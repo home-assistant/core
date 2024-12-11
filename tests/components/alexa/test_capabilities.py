@@ -159,7 +159,7 @@ async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["kelvin"] == 7500
+    assert call_light[0].data["color_temp_kelvin"] == 7500
     assert msg["header"]["name"] == "Response"
 
 

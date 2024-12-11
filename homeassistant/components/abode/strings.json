@@ -28,7 +28,6 @@
       "invalid_mfa_code": "Invalid MFA code"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

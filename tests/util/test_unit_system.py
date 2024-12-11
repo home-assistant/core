@@ -7,12 +7,14 @@ import pytest
 from homeassistant.components.sensor import DEVICE_CLASS_UNITS, SensorDeviceClass
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
     TEMPERATURE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -44,6 +46,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -57,6 +60,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
@@ -70,6 +74,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -83,6 +88,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -96,6 +102,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=INVALID_UNIT,
@@ -109,6 +116,7 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -122,6 +130,21 @@ def test_invalid_units() -> None:
         UnitSystem(
             SYSTEM_NAME,
             accumulated_precipitation=INVALID_UNIT,
+            area=UnitOfArea.SQUARE_METERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=INVALID_UNIT,
             conversions={},
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
@@ -146,6 +169,8 @@ def test_invalid_value() -> None:
         METRIC_SYSTEM.pressure("50Pa", UnitOfPressure.PA)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.area("2m²", UnitOfArea.SQUARE_METERS)
 
 
 def test_as_dict() -> None:
@@ -158,6 +183,7 @@ def test_as_dict() -> None:
         MASS: UnitOfMass.GRAMS,
         PRESSURE: UnitOfPressure.PA,
         ACCUMULATED_PRECIPITATION: UnitOfLength.MILLIMETERS,
+        AREA: UnitOfArea.SQUARE_METERS,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -303,6 +329,29 @@ def test_accumulated_precipitation_to_imperial() -> None:
     ) == pytest.approx(10, abs=1e-4)
 
 
+def test_area_same_unit() -> None:
+    """Test no conversion happens if to unit is same as from unit."""
+    assert METRIC_SYSTEM.area(5, METRIC_SYSTEM.area_unit) == 5
+
+
+def test_area_unknown_unit() -> None:
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        METRIC_SYSTEM.area(5, "abc")
+
+
+def test_area_to_metric() -> None:
+    """Test area conversion to metric system."""
+    assert METRIC_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 25
+    assert round(METRIC_SYSTEM.area(10, IMPERIAL_SYSTEM.area_unit), 1) == 0.9
+
+
+def test_area_to_imperial() -> None:
+    """Test area conversion to imperial system."""
+    assert IMPERIAL_SYSTEM.area(77, IMPERIAL_SYSTEM.area_unit) == 77
+    assert IMPERIAL_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 269.09776041774313
+
+
 def test_properties() -> None:
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
@@ -312,6 +361,7 @@ def test_properties() -> None:
     assert METRIC_SYSTEM.volume_unit == UnitOfVolume.LITERS
     assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
     assert METRIC_SYSTEM.accumulated_precipitation_unit == UnitOfLength.MILLIMETERS
+    assert METRIC_SYSTEM.area_unit == UnitOfArea.SQUARE_METERS
 
 
 @pytest.mark.parametrize(
@@ -338,6 +388,18 @@ def test_get_unit_system_invalid(key: str) -> None:
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
     [
+        # Test area conversion
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_FEET, UnitOfArea.SQUARE_METERS),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_INCHES,
+            UnitOfArea.SQUARE_CENTIMETERS,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_MILES, UnitOfArea.SQUARE_KILOMETERS),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_YARDS, UnitOfArea.SQUARE_METERS),
+        (SensorDeviceClass.AREA, UnitOfArea.ACRES, UnitOfArea.HECTARES),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, None),
+        (SensorDeviceClass.AREA, "very_long", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -495,6 +557,13 @@ def test_get_metric_converted_unit_(
 
 
 UNCONVERTED_UNITS_METRIC_SYSTEM = {
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_MILLIMETERS,
+        UnitOfArea.SQUARE_CENTIMETERS,
+        UnitOfArea.SQUARE_METERS,
+        UnitOfArea.SQUARE_KILOMETERS,
+        UnitOfArea.HECTARES,
+    ),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.HPA,),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.CENTIMETERS,
@@ -544,6 +613,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
 @pytest.mark.parametrize(
     "device_class",
     [
+        SensorDeviceClass.AREA,
         SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         SensorDeviceClass.DISTANCE,
         SensorDeviceClass.GAS,
@@ -572,6 +642,21 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
 @pytest.mark.parametrize(
     ("device_class", "original_unit", "state_unit"),
     [
+        # Test area conversion
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_MILLIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (
+            SensorDeviceClass.AREA,
+            UnitOfArea.SQUARE_CENTIMETERS,
+            UnitOfArea.SQUARE_INCHES,
+        ),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_METERS, UnitOfArea.SQUARE_FEET),
+        (SensorDeviceClass.AREA, UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_MILES),
+        (SensorDeviceClass.AREA, UnitOfArea.HECTARES, UnitOfArea.ACRES),
+        (SensorDeviceClass.AREA, "very_area", None),
         # Test atmospheric pressure
         (
             SensorDeviceClass.ATMOSPHERIC_PRESSURE,
@@ -721,6 +806,13 @@ def test_get_us_converted_unit(
 
 
 UNCONVERTED_UNITS_US_SYSTEM = {
+    SensorDeviceClass.AREA: (
+        UnitOfArea.SQUARE_FEET,
+        UnitOfArea.SQUARE_INCHES,
+        UnitOfArea.SQUARE_MILES,
+        UnitOfArea.SQUARE_YARDS,
+        UnitOfArea.ACRES,
+    ),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.INHG,),
     SensorDeviceClass.DISTANCE: (
         UnitOfLength.FEET,

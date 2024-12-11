@@ -4,10 +4,10 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import BoilerType
-from lmcloud.exceptions import RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.const import BoilerType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity, LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,7 +110,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_error",
-                translation_placeholders={"name": self.entity_description.key},
+                translation_placeholders={"key": self.entity_description.key},
             ) from exc
         self.async_write_ha_state()
 

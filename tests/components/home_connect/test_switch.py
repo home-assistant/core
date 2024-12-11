@@ -29,7 +29,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import get_all_appliances
 
@@ -162,7 +162,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*off.*appliance.*value",
+            r"Error.*turn.*off.*",
         ),
         (
             "switch.dishwasher_power",
@@ -170,7 +170,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*on.*appliance.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -178,7 +178,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*on.*key.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -186,7 +186,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*off.*key.*",
+            r"Error.*turn.*off.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -219,7 +219,7 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
@@ -297,7 +297,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "FridgeFreezer",
-            r"Error.*turn.*on.*key.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
@@ -305,7 +305,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "FridgeFreezer",
-            r"Error.*turn.*off.*key.*",
+            r"Error.*turn.*off.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -344,7 +344,7 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -502,7 +502,7 @@ async def test_power_switch_service_validation_errors(
 
     appliance.status.update({BSH_POWER_STATE: {"value": BSH_POWER_ON}})
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )

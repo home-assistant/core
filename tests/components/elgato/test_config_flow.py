@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import zeroconf
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
+from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,7 +33,7 @@ async def test_full_user_flow_implementation(
     assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 9123}
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
@@ -94,7 +94,7 @@ async def test_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
+        data={CONF_HOST: "127.0.0.1"},
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -135,7 +135,7 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 9123},
+        data={CONF_HOST: "127.0.0.1"},
     )
 
     assert result.get("type") is FlowResultType.ABORT

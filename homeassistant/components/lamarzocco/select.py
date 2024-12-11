@@ -4,10 +4,10 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
-from lmcloud.exceptions import RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 STEAM_LEVEL_HA_TO_LM = {
     "1": SteamLevel.LEVEL_1,

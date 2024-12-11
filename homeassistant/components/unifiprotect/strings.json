@@ -137,10 +137,32 @@
     },
     "event": {
       "doorbell": {
+        "name": "Doorbell",
         "state_attributes": {
           "event_type": {
             "state": {
               "ring": "Ring"
+            }
+          }
+        }
+      },
+      "nfc": {
+        "name": "NFC",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "fingerprint": {
+        "name": "Fingerprint",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "identified": "Identified",
+              "not_identified": "Not identified"
             }
           }
         }
@@ -182,7 +204,7 @@
       "fields": {
         "device_id": {
           "name": "Chime",
-          "description": "The chimes to link to the doorbells to."
+          "description": "The chimes to link to the doorbells."
         },
         "doorbells": {
           "name": "Doorbells",

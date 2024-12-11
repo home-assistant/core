@@ -5632,6 +5632,91 @@ async def test_stop_action_subscript(
     )
 
 
+@pytest.mark.parametrize(
+    ("var", "response"),
+    [(1, "If: Then"), (2, "Testing 123")],
+)
+async def test_stop_action_response_variables(
+    hass: HomeAssistant,
+    var: int,
+    response: str,
+) -> None:
+    """Test setting stop response_variable in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"output": {"value": "Testing 123"}}},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [
+                    {"variables": {"output": {"value": "If: Then"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+            },
+            {"stop": "In the name of love", "response_variable": "output"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.service_response == {"value": response}
+
+
+@pytest.mark.parametrize(
+    ("var", "if_result", "choice", "response"),
+    [(1, True, "then", "If: Then"), (2, False, "else", "If: Else")],
+)
+async def test_stop_action_nested_response_variables(
+    hass: HomeAssistant,
+    var: int,
+    if_result: bool,
+    choice: str,
+    response: str,
+) -> None:
+    """Test setting stop response_variable in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"output": {"value": "Testing 123"}}},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [
+                    {"variables": {"output": {"value": "If: Then"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+                "else": [
+                    {"variables": {"output": {"value": "If: Else"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.service_response == {"value": response}
+
+    expected_trace = {
+        "0": [
+            {
+                "variables": {"var": var, "output": {"value": "Testing 123"}},
+            }
+        ],
+        "1": [{"result": {"choice": choice}}],
+        "1/if": [{"result": {"result": if_result}}],
+        "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+        f"1/{choice}/0": [{"variables": {"output": {"value": response}}}],
+        f"1/{choice}/1": [{"result": {"stop": "In the name of love", "error": False}}],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_stop_action_with_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:

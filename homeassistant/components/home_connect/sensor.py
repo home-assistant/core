@@ -14,14 +14,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .api import ConfigEntryAuth
+from . import HomeConnectConfigEntry
 from .const import (
     ATTR_VALUE,
     BSH_DOOR_STATE,
@@ -34,7 +33,6 @@ from .const import (
     COFFEE_EVENT_WATER_TANK_EMPTY,
     DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
     DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
-    DOMAIN,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
     REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
@@ -253,7 +251,7 @@ EVENT_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
@@ -261,8 +259,7 @@ async def async_setup_entry(
     def get_entities() -> list[SensorEntity]:
         """Get a list of entities."""
         entities: list[SensorEntity] = []
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
-        for device in hc_api.devices:
+        for device in entry.runtime_data.devices:
             entities.extend(
                 HomeConnectSensor(
                     device,

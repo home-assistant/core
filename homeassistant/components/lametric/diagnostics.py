@@ -26,5 +26,5 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     # Round-trip via JSON to trigger serialization
-    data = json.loads(coordinator.data.json())
+    data = json.loads(coordinator.data.to_json())
     return async_redact_data(data, TO_REDACT)

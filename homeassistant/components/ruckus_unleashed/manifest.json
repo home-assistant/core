@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioruckus"],
-  "requirements": ["aioruckus==0.41"]
+  "requirements": ["aioruckus==0.42"]
 }

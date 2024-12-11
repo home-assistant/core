@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 import logging
 from typing import Any
 
@@ -172,11 +173,15 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RoborockOptionsFlowHandler:
         """Create the options flow."""
-        return RoborockOptionsFlowHandler()
+        return RoborockOptionsFlowHandler(config_entry)
 
 
 class RoborockOptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Roborock."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.options = deepcopy(dict(config_entry.options))
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

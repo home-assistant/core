@@ -22,6 +22,8 @@ from .entity import BMWBaseEntity
 if TYPE_CHECKING:
     from .coordinator import BMWDataUpdateCoordinator
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -71,7 +73,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BMW buttons from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities: list[BMWButton] = []
 

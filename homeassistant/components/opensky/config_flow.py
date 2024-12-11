@@ -18,7 +18,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_RADIUS,
     CONF_USERNAME,
@@ -112,10 +111,7 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
                 except OpenSkyUnauthenticatedError:
                     errors["base"] = "invalid_auth"
             if not errors:
-                return self.async_create_entry(
-                    title=self.options.get(CONF_NAME, "OpenSky"),
-                    data=user_input,
-                )
+                return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -130,6 +126,6 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
                         vol.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
                     }
                 ),
-                user_input or self.options,
+                user_input or self.config_entry.options,
             ),
         )

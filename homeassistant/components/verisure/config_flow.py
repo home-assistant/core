@@ -43,9 +43,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> VerisureOptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return VerisureOptionsFlowHandler(config_entry)
+        return VerisureOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -290,10 +292,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 class VerisureOptionsFlowHandler(OptionsFlow):
     """Handle Verisure options."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Verisure options flow."""
-        self.entry = entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -310,7 +308,7 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_LOCK_CODE_DIGITS,
                         description={
-                            "suggested_value": self.entry.options.get(
+                            "suggested_value": self.config_entry.options.get(
                                 CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
                             )
                         },

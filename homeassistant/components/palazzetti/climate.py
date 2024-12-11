@@ -7,18 +7,18 @@ from pypalazzetti.exceptions import CommunicationError, ValidationError
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PalazzettiConfigEntry
-from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES, FAN_SILENT, PALAZZETTI
+from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES, FAN_SILENT
 from .coordinator import PalazzettiDataUpdateCoordinator
+from .entity import PalazzettiEntity
 
 
 async def async_setup_entry(
@@ -30,9 +30,7 @@ async def async_setup_entry(
     async_add_entities([PalazzettiClimateEntity(entry.runtime_data)])
 
 
-class PalazzettiClimateEntity(
-    CoordinatorEntity[PalazzettiDataUpdateCoordinator], ClimateEntity
-):
+class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     """Defines a Palazzetti climate."""
 
     _attr_has_entity_name = True
@@ -52,15 +50,7 @@ class PalazzettiClimateEntity(
         super().__init__(coordinator)
         client = coordinator.client
         mac = coordinator.config_entry.unique_id
-        assert mac is not None
         self._attr_unique_id = mac
-        self._attr_device_info = dr.DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-            name=client.name,
-            manufacturer=PALAZZETTI,
-            sw_version=client.sw_version,
-            hw_version=client.hw_version,
-        )
         self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
         self._attr_min_temp = client.target_temperature_min
         self._attr_max_temp = client.target_temperature_max
@@ -75,15 +65,18 @@ class PalazzettiClimateEntity(
             self._attr_fan_modes.append(FAN_AUTO)
 
     @property
-    def available(self) -> bool:
-        """Is the entity available."""
-        return super().available and self.coordinator.client.connected
-
-    @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat or off mode."""
-        is_heating = bool(self.coordinator.client.is_heating)
-        return HVACMode.HEAT if is_heating else HVACMode.OFF
+        return HVACMode.HEAT if self.coordinator.client.is_on else HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return hvac action ie. heating or idle."""
+        return (
+            HVACAction.HEATING
+            if self.coordinator.client.is_heating
+            else HVACAction.IDLE
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""

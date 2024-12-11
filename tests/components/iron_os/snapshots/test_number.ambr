@@ -1,4 +1,732 @@
 # serializer version: 1
+# name: test_state[number.pinecil_boost_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 450,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_boost_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Boost temperature',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.BOOST_TEMP: 'boost_temp'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_boost_temp',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_state[number.pinecil_boost_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pinecil Boost temperature',
+      'max': 450,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 10,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_boost_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420',
+  })
+# ---
+# name: test_state[number.pinecil_calibration_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 2500,
+      'min': 100,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_calibration_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration offset',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.CALIBRATION_OFFSET: 'calibration_offset'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_calibration_offset',
+    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+  })
+# ---
+# name: test_state[number.pinecil_calibration_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Calibration offset',
+      'max': 2500,
+      'min': 100,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_calibration_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '900',
+  })
+# ---
+# name: test_state[number.pinecil_display_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_display_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display brightness',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.DISPLAY_BRIGHTNESS: 'display_brightness'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_display_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[number.pinecil_display_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Display brightness',
+      'max': 5,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_display_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_state[number.pinecil_hall_effect_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_hall_effect_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hall effect sensitivity',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.HALL_SENSITIVITY: 'hall_sensitivity'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_hall_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[number.pinecil_hall_effect_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Hall effect sensitivity',
+      'max': 9,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_hall_effect_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 22.5,
+      'min': 2.5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 2.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keep-awake pulse delay',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_DELAY: 'keep_awake_pulse_delay'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_delay',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Keep-awake pulse delay',
+      'max': 22.5,
+      'min': 2.5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 2.5,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 2250,
+      'min': 250,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 250,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keep-awake pulse duration',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_DURATION: 'keep_awake_pulse_duration'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_duration',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Keep-awake pulse duration',
+      'max': 2250,
+      'min': 250,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 250,
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '250',
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9.9,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keep-awake pulse intensity',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.KEEP_AWAKE_PULSE_POWER: 'keep_awake_pulse_power'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_keep_awake_pulse_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_state[number.pinecil_keep_awake_pulse_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Keep-awake pulse intensity',
+      'max': 9.9,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_keep_awake_pulse_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.5',
+  })
+# ---
+# name: test_state[number.pinecil_long_press_temperature_step-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 90,
+      'min': 5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_long_press_temperature_step',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Long-press temperature step',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.TEMP_INCREMENT_LONG: 'temp_increment_long'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_temp_increment_long',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_state[number.pinecil_long_press_temperature_step-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Long-press temperature step',
+      'max': 90,
+      'min': 5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_long_press_temperature_step',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_state[number.pinecil_min_voltage_per_cell-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 3.8,
+      'min': 2.4,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_min_voltage_per_cell',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Min. voltage per cell',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.MIN_VOLTAGE_PER_CELL: 'min_voltage_per_cell'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_min_voltage_per_cell',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_state[number.pinecil_min_voltage_per_cell-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Min. voltage per cell',
+      'max': 3.8,
+      'min': 2.4,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_min_voltage_per_cell',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_state[number.pinecil_motion_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_motion_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion sensitivity',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.ACCEL_SENSITIVITY: 'accel_sensitivity'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_accel_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[number.pinecil_motion_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Motion sensitivity',
+      'max': 9,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_motion_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_state[number.pinecil_power_delivery_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5.0,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_power_delivery_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Power Delivery timeout',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.PD_TIMEOUT: 'pd_timeout'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_pd_timeout',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_state[number.pinecil_power_delivery_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Pinecil Power Delivery timeout',
+      'max': 5.0,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_power_delivery_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.0',
+  })
+# ---
+# name: test_state[number.pinecil_power_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 12,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_power_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power limit',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.POWER_LIMIT: 'power_limit'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_power_limit',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_state[number.pinecil_power_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Power limit',
+      'max': 12,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_power_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.0',
+  })
+# ---
+# name: test_state[number.pinecil_quick_charge_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 22.0,
+      'min': 9.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_quick_charge_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Quick Charge voltage',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.QC_MAX_VOLTAGE: 'qc_max_voltage'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_qc_max_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_state[number.pinecil_quick_charge_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Pinecil Quick Charge voltage',
+      'max': 22.0,
+      'min': 9.0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_quick_charge_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.0',
+  })
+# ---
 # name: test_state[number.pinecil_setpoint_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -54,5 +782,286 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '300',
+  })
+# ---
+# name: test_state[number.pinecil_short_press_temperature_step-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 50,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_short_press_temperature_step',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Short-press temperature step',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.TEMP_INCREMENT_SHORT: 'temp_increment_short'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_temp_increment_short',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_state[number.pinecil_short_press_temperature_step-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Short-press temperature step',
+      'max': 50,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_short_press_temperature_step',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_state[number.pinecil_shutdown_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_shutdown_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Shutdown timeout',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.SHUTDOWN_TIMEOUT: 'shutdown_timeout'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_shutdown_timeout',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_state[number.pinecil_shutdown_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Pinecil Shutdown timeout',
+      'max': 60,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_shutdown_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_state[number.pinecil_sleep_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 450,
+      'min': 10,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 10,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_sleep_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Sleep temperature',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.SLEEP_TEMP: 'sleep_temperature'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_sleep_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_state[number.pinecil_sleep_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pinecil Sleep temperature',
+      'max': 450,
+      'min': 10,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 10,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_sleep_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '150',
+  })
+# ---
+# name: test_state[number.pinecil_sleep_timeout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_sleep_timeout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep timeout',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.SLEEP_TIMEOUT: 'sleep_timeout'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_sleep_timeout',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_state[number.pinecil_sleep_timeout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Sleep timeout',
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_sleep_timeout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_state[number.pinecil_voltage_divider-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 900,
+      'min': 360,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.pinecil_voltage_divider',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Voltage divider',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilNumber.VOLTAGE_DIV: 'voltage_div'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_voltage_div',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[number.pinecil_voltage_divider-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Voltage divider',
+      'max': 900,
+      'min': 360,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pinecil_voltage_divider',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '600',
   })
 # ---

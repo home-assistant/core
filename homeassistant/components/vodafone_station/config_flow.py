@@ -159,7 +159,7 @@ class VodafoneStationOptionsFlowHandler(OptionsFlow):
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    default=self.options.get(
+                    default=self.config_entry.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))

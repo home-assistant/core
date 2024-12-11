@@ -164,8 +164,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
     def __init__(self, device):
         """Init the class."""
         super().__init__(device)
@@ -347,7 +345,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _hvac_modes: list[HVACMode]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device) -> None:
         """Init the class."""

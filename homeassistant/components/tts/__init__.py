@@ -13,6 +13,7 @@ import logging
 import mimetypes
 import os
 import re
+import secrets
 import subprocess
 import tempfile
 from typing import Any, Final, TypedDict, final
@@ -540,6 +541,10 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
+        # filename <-> token
+        self.filename_to_token: dict[str, str] = {}
+        self.token_to_filename: dict[str, str] = {}
+
     def _init_cache(self) -> dict[str, str]:
         """Init cache folder and fetch files."""
         try:
@@ -656,7 +661,17 @@ class SpeechManager:
                 engine_instance, cache_key, message, use_cache, language, options
             )
 
-        return f"/api/tts_proxy/{filename}"
+        # Use a randomly generated token instead of exposing the filename
+        token = self.filename_to_token.get(filename)
+        if not token:
+            # Keep extension (.mp3, etc.)
+            token = secrets.token_urlsafe(16) + os.path.splitext(filename)[1]
+
+            # Map token <-> filename
+            self.filename_to_token[filename] = token
+            self.token_to_filename[token] = filename
+
+        return f"/api/tts_proxy/{token}"
 
     async def async_get_tts_audio(
         self,
@@ -910,11 +925,15 @@ class SpeechManager:
             ),
         )
 
-    async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
+    async def async_read_tts(self, token: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
 
         This method is a coroutine.
         """
+        filename = self.token_to_filename.get(token)
+        if not filename:
+            raise HomeAssistantError(f"{token} was not recognized!")
+
         if not (record := _RE_VOICE_FILE.match(filename.lower())) and not (
             record := _RE_LEGACY_VOICE_FILE.match(filename.lower())
         ):
@@ -1076,6 +1095,7 @@ class TextToSpeechView(HomeAssistantView):
     async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
+            # filename is actually token, but we keep its name for compatibility
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)

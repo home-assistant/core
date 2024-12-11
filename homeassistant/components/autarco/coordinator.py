@@ -7,6 +7,7 @@ from typing import NamedTuple
 from autarco import (
     AccountSite,
     Autarco,
+    AutarcoAuthenticationError,
     AutarcoConnectionError,
     Battery,
     Inverter,
@@ -16,6 +17,7 @@ from autarco import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -60,8 +62,10 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
             inverters = await self.client.get_inverters(self.account_site.public_key)
             if site.has_battery:
                 battery = await self.client.get_battery(self.account_site.public_key)
-        except AutarcoConnectionError as error:
-            raise UpdateFailed(error) from error
+        except AutarcoAuthenticationError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        except AutarcoConnectionError as err:
+            raise UpdateFailed(err) from err
         return AutarcoData(
             solar=solar,
             inverters=inverters,

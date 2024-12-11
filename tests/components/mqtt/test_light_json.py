@@ -674,12 +674,12 @@ async def test_controlling_state_via_topic(
     assert state.attributes.get("rgb_color") == (
         255,
         253,
-        248,
+        249,
     )  # temp converted to color
     assert state.attributes.get("brightness") == 255
     assert state.attributes.get("color_temp") == 155
     assert state.attributes.get("effect") == "colorloop"
-    assert state.attributes.get("xy_color") == (0.328, 0.334)  # temp converted to color
+    assert state.attributes.get("xy_color") == (0.328, 0.333)  # temp converted to color
     assert state.attributes.get("hs_color") == (44.098, 2.43)  # temp converted to color
 
     # Turn the light off
@@ -706,7 +706,7 @@ async def test_controlling_state_via_topic(
     )
 
     light_state = hass.states.get("light.test")
-    assert light_state.attributes.get("xy_color") == (0.141, 0.14)
+    assert light_state.attributes.get("xy_color") == (0.141, 0.141)
 
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "color":{"h":180,"s":50}}'
@@ -1015,10 +1015,10 @@ async def test_controlling_the_state_with_legacy_color_handling(
         assert state.attributes.get("color_temp") == 353
         assert state.attributes.get("effect") is None
         assert state.attributes.get("hs_color") == (28.125, 61.661)
-        assert state.attributes.get("rgb_color") == (255, 171, 97)
+        assert state.attributes.get("rgb_color") == (255, 171, 98)
         assert state.attributes.get("rgbw_color") is None
         assert state.attributes.get("rgbww_color") is None
-        assert state.attributes.get("xy_color") == (0.513, 0.386)
+        assert state.attributes.get("xy_color") == (0.512, 0.385)
 
 
 @pytest.mark.parametrize(
@@ -1053,7 +1053,7 @@ async def test_sending_mqtt_commands_and_optimistic(
             "brightness": 95,
             "hs_color": [100, 100],
             "effect": "random",
-            "color_temp": 100,
+            "color_temp_kelvin": 10000,
         },
     )
     mock_restore_cache(hass, (fake_state,))
@@ -1065,7 +1065,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
-    assert state.attributes.get("color_temp") is None  # hs_color has priority
+    assert state.attributes.get("color_temp_kelvin") is None  # hs_color has priority
     color_modes = [light.ColorMode.COLOR_TEMP, light.ColorMode.HS]
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     expected_features = (
@@ -1113,8 +1113,8 @@ async def test_sending_mqtt_commands_and_optimistic(
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator(
-            '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255,'
-            ' "x": 0.14, "y": 0.131, "h": 210.824, "s": 100.0},'
+            '{"state": "ON", "color": {"r": 0, "g": 124, "b": 255,'
+            ' "x": 0.14, "y": 0.133, "h": 210.824, "s": 100.0},'
             ' "brightness": 50}'
         ),
         2,
@@ -1125,8 +1125,8 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("color_mode") == light.ColorMode.HS
     assert state.attributes["brightness"] == 50
     assert state.attributes["hs_color"] == (210.824, 100.0)
-    assert state.attributes["rgb_color"] == (0, 123, 255)
-    assert state.attributes["xy_color"] == (0.14, 0.131)
+    assert state.attributes["rgb_color"] == (0, 124, 255)
+    assert state.attributes["xy_color"] == (0.14, 0.133)
 
     await common.async_turn_on(hass, "light.test", brightness=50, hs_color=(359, 78))
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1205,7 +1205,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
         "on",
         {
             "brightness": 95,
-            "color_temp": 100,
+            "color_temp_kelvin": 10000,
             "color_mode": "rgb",
             "effect": "random",
             "hs_color": [100, 100],
@@ -1514,7 +1514,7 @@ async def test_sending_rgb_color_no_brightness(
             ),
             call(
                 "test_light_rgb/set",
-                JsonValidator('{"state": "ON", "color": {"r": 50, "g": 11, "b": 11}}'),
+                JsonValidator('{"state": "ON", "color": {"r": 50, "g": 11, "b": 12}}'),
                 0,
                 False,
             ),
@@ -1646,7 +1646,7 @@ async def test_sending_rgb_color_with_brightness(
             call(
                 "test_light_rgb/set",
                 JsonValidator(
-                    '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255},'
+                    '{"state": "ON", "color": {"r": 0, "g": 124, "b": 255},'
                     ' "brightness": 50}'
                 ),
                 0,
@@ -1716,7 +1716,7 @@ async def test_sending_rgb_color_with_scaled_brightness(
             call(
                 "test_light_rgb/set",
                 JsonValidator(
-                    '{"state": "ON", "color": {"r": 0, "g": 123, "b": 255},'
+                    '{"state": "ON", "color": {"r": 0, "g": 124, "b": 255},'
                     ' "brightness": 20}'
                 ),
                 0,
@@ -1830,7 +1830,7 @@ async def test_sending_xy_color(
             call(
                 "test_light_rgb/set",
                 JsonValidator(
-                    '{"state": "ON", "color": {"x": 0.14, "y": 0.131},'
+                    '{"state": "ON", "color": {"x": 0.14, "y": 0.133},'
                     ' "brightness": 50}'
                 ),
                 0,

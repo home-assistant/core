@@ -91,6 +91,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT HVAC"
 
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
@@ -519,7 +521,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> VolSchemaType:

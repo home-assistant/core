@@ -158,8 +158,6 @@ async def async_modbus_setup(
 
     async def async_stop_modbus(event: Event) -> None:
         """Stop Modbus service."""
-
-        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
         for client in hub_collect.values():
             await client.async_close()
 

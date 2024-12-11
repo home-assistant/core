@@ -275,7 +275,9 @@ async def test_limit_refetch(
 
     with (
         pytest.raises(aiohttp.ServerTimeoutError),
-        patch("asyncio.timeout", side_effect=TimeoutError()),
+        patch.object(
+            client.session._connector, "connect", side_effect=asyncio.TimeoutError
+        ),
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
 

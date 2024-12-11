@@ -69,6 +69,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_GET_POSITION_TOPIC = "position_topic"
 CONF_GET_POSITION_TEMPLATE = "position_template"
 CONF_SET_POSITION_TOPIC = "set_position_topic"

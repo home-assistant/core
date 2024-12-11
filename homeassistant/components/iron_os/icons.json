@@ -1,8 +1,73 @@
 {
   "entity": {
+    "binary_sensor": {
+      "tip_connected": {
+        "default": "mdi:pencil-outline",
+        "state": {
+          "off": "mdi:pencil-off-outline"
+        }
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
+      },
+      "sleep_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "sleep_timeout": {
+        "default": "mdi:timer-sand"
+      },
+      "qc_max_voltage": {
+        "default": "mdi:flash-alert-outline"
+      },
+      "pd_timeout": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "boost_temp": {
+        "default": "mdi:thermometer-high"
+      },
+      "shutdown_timeout": {
+        "default": "mdi:thermometer-off"
+      },
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "voltage_div": {
+        "default": "mdi:call-split"
+      },
+      "temp_increment_short": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "temp_increment_long": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "accel_sensitivity": {
+        "default": "mdi:motion"
+      },
+      "calibration_offset": {
+        "default": "mdi:contrast"
+      },
+      "hall_sensitivity": {
+        "default": "mdi:leak"
+      },
+      "keep_awake_pulse_delay": {
+        "default": "mdi:clock-end"
+      },
+      "keep_awake_pulse_duration": {
+        "default": "mdi:clock-start"
+      },
+      "keep_awake_pulse_power": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "min_voltage_per_cell": {
+        "default": "mdi:fuel-cell"
+      },
+      "min_dc_voltage_cells": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "power_limit": {
+        "default": "mdi:flash-alert"
       }
     },
     "sensor": {
