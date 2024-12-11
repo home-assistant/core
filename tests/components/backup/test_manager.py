@@ -250,7 +250,8 @@ async def test_async_initiate_backup(
     assert result["result"] == {
         "backups": [],
         "agent_errors": {},
-        "last_automatic_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})

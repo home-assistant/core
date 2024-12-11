@@ -52,7 +52,8 @@ async def handle_info(
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
             "backups": list(backups.values()),
-            "last_automatic_backup": manager.config.data.last_automatic_backup,
+            "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
+            "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
         },
     )
 

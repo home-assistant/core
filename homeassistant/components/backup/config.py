@@ -33,8 +33,9 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
+    last_attempted_automatic_backup: datetime | None
+    last_completed_automatic_backup: datetime | None
     retention: StoredRetentionConfig
-    last_automatic_backup: datetime | None
     schedule: StoredBackupSchedule
 
 
@@ -43,8 +44,9 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
+    last_attempted_automatic_backup: datetime | None = None
+    last_completed_automatic_backup: datetime | None = None
     retention: RetentionConfig
-    last_automatic_backup: datetime | None = None
     schedule: BackupSchedule
 
     @classmethod
@@ -67,11 +69,12 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
+            last_attempted_automatic_backup=data["last_attempted_automatic_backup"],
+            last_completed_automatic_backup=data["last_completed_automatic_backup"],
             retention=RetentionConfig(
                 copies=retention["copies"],
                 days=retention["days"],
             ),
-            last_automatic_backup=data["last_automatic_backup"],
             schedule=BackupSchedule(state=ScheduleState(data["schedule"]["state"])),
         )
 
@@ -79,8 +82,9 @@ class BackupConfigData:
         """Convert backup config data to a dict."""
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
+            last_attempted_automatic_backup=self.last_attempted_automatic_backup,
+            last_completed_automatic_backup=self.last_completed_automatic_backup,
             retention=self.retention.to_dict(),
-            last_automatic_backup=self.last_automatic_backup,
             schedule=self.schedule.to_dict(),
         )
 
@@ -262,7 +266,7 @@ class BackupSchedule:
         self._unschedule_next(manager)
         now = dt_util.now()
         if (cron_event := self.cron_event) is None:
-            seed_time = manager.config.data.last_automatic_backup or now
+            seed_time = manager.config.data.last_completed_automatic_backup or now
             cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 
@@ -277,6 +281,7 @@ class BackupSchedule:
 
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
+            backup_completed = False
             manager.remove_next_backup_event = None
             config_data = manager.config.data
             self._schedule_next(cron_pattern, manager)
@@ -298,8 +303,14 @@ class BackupSchedule:
                 # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
             else:
-                # create backup was successful, update last_automatic_backup
-                config_data.last_automatic_backup = dt_util.now()
+                # create backup was successful, set flag to update
+                # last_completed_automatic_backup
+                backup_completed = True
+            finally:
+                now = dt_util.now()
+                config_data.last_attempted_automatic_backup = now
+                if backup_completed:
+                    config_data.last_completed_automatic_backup = now
                 manager.store.save()
 
             # delete old backups more numerous than copies

@@ -190,7 +190,8 @@ async def test_agents_list_backups_fail_cloud(
     assert response["result"] == {
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
-        "last_automatic_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
     }
 
 
