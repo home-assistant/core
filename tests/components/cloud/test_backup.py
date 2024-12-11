@@ -168,6 +168,7 @@ async def test_agents_list_backups(
             "size": 34519040,
             "agent_ids": ["cloud.cloud"],
             "failed_agent_ids": [],
+            "with_strategy_settings": False,
         }
     ]
 
@@ -214,6 +215,7 @@ async def test_agents_list_backups_fail_cloud(
                 "size": 34519040,
                 "agent_ids": ["cloud.cloud"],
                 "failed_agent_ids": [],
+                "with_strategy_settings": False,
             },
         ),
         (
