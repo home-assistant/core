@@ -19,10 +19,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANURFACER_NAME
 from .coordinator import CompitDataUpdateCoordinator
 
+type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[CompitDataUpdateCoordinator],
+    entry: CompitConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the CompitClimate platform from a config entry."""

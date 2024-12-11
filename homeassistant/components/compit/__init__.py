@@ -21,10 +21,10 @@ from .coordinator import CompitDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry[CompitDataUpdateCoordinator]
-) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:
     """Set up Compit from a config entry."""
 
     session = async_get_clientsession(hass)
@@ -59,8 +59,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ConfigEntry[CompitDataUpdateCoordinator]
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:
     """Unload an entry for the Compit integration."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
