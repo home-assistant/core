@@ -1105,7 +1105,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velbus",
     "velux",
     "venstar",
     "vera",
@@ -1358,7 +1357,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     for rule_name in rules_done:
         if (validator := VALIDATORS.get(rule_name)) and (
-            errors := validator.validate(integration, rules_done=rules_done)
+            errors := validator.validate(config, integration, rules_done=rules_done)
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")

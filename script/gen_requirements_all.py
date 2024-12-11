@@ -148,7 +148,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.1.3
+numpy==2.2.0
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -628,7 +628,6 @@ def _get_hassfest_config() -> Config:
         specific_integrations=None,
         action="validate",
         requirements=True,
-        core_integrations_path=Path("homeassistant/components"),
     )
 
 
