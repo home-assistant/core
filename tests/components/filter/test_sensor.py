@@ -552,7 +552,7 @@ def test_time_sma(values: list[State]) -> None:
 
 
 async def test_time_sma_by_time(recorder_mock: Recorder, hass: HomeAssistant) -> None:
-    """Test if time_sma filter with update_by_timemworks."""
+    """Test if time_sma filter with update_by_time works."""
 
     with freeze_time() as frozen_datetime:
 
