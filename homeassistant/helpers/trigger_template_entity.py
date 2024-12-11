@@ -222,12 +222,14 @@ class TriggerBaseEntity(Entity):
                     self._config[CONF_ATTRIBUTES],
                     variables,
                 )
-
-            self._rendered = rendered
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
+            # Availability property specifically checks if self._rendered is not self._static_rendered
+            self._rendered = self._static_rendered
+            return
+        self._rendered = rendered
 
 
 class ManualTriggerEntity(TriggerBaseEntity):
