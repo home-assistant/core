@@ -291,29 +291,29 @@ async def test_async_initiate_backup(
 
         await hass.async_block_till_done()
 
-        result = await ws_client.receive_json()
-        assert result["event"] == {
-            "manager_state": BackupManagerState.CREATE_BACKUP,
-            "stage": CreateBackupStage.HOME_ASSISTANT,
-            "state": CreateBackupState.IN_PROGRESS,
-        }
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": CreateBackupStage.HOME_ASSISTANT,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
 
-        result = await ws_client.receive_json()
-        assert result["event"] == {
-            "manager_state": BackupManagerState.CREATE_BACKUP,
-            "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
-            "state": CreateBackupState.IN_PROGRESS,
-        }
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
 
-        result = await ws_client.receive_json()
-        assert result["event"] == {
-            "manager_state": BackupManagerState.CREATE_BACKUP,
-            "stage": None,
-            "state": CreateBackupState.COMPLETED,
-        }
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "stage": None,
+        "state": CreateBackupState.COMPLETED,
+    }
 
-        result = await ws_client.receive_json()
-        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
