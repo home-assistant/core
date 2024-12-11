@@ -27,7 +27,7 @@ rules:
       The integration does not test the connection in `async_setup_entry` but
       instead does this in the calendar platform only, which can be improved.
   docs-high-level-description: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage:
     status: todo
     comment: |
       The config flow has 100% test coverage, however there are opportunities
