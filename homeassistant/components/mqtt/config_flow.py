@@ -471,22 +471,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
         broker_config: dict[str, Any] = {}
-        reconfigure_entry: ConfigEntry | None = None
-        reconfigure_entry_data: MappingProxyType[str, Any] | None = None
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
-            reconfigure_entry_data = reconfigure_entry.data
         if await async_get_broker_settings(
             self,
             fields,
-            reconfigure_entry_data,
+            reconfigure_entry.data if is_reconfigure else None,
             user_input,
             validated_user_input,
             errors,
         ):
             if is_reconfigure:
-                if TYPE_CHECKING:
-                    assert reconfigure_entry is not None
                 broker_config.update(
                     update_password_from_user_input(
                         reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
@@ -501,8 +496,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
             if can_connect:
-                if TYPE_CHECKING:
-                    assert reconfigure_entry is not None
                 if is_reconfigure:
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
