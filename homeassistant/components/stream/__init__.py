@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 import copy
+from enum import StrEnum, auto
 from functools import partial
 import logging
 import secrets
@@ -46,6 +47,7 @@ from .const import (
     CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
     CONF_PART_DURATION,
+    CONF_PREFER_TCP,
     CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
@@ -94,6 +96,51 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class StreamClientError(StrEnum):
+    """Enum for stream client errors."""
+
+    BadRequest = auto()
+    Unauthorized = auto()
+    Forbidden = auto()
+    NotFound = auto()
+    Other = auto()
+
+
+async def async_check_stream_client_error(
+    hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
+) -> StreamClientError | None:
+    """Return an enum value representing a stream client error or None."""
+    import av  # pylint: disable=import-outside-toplevel
+
+    if not pyav_options:
+        pyav_options = {}
+
+    default_pyav_options = {
+        "rtsp_flags": CONF_PREFER_TCP,
+        "timeout": str(SOURCE_TIMEOUT),
+    }
+
+    pyav_options = {
+        **default_pyav_options,
+        **pyav_options,
+    }
+    error_lookup = {
+        av.HTTPBadRequestError: StreamClientError.BadRequest,
+        av.HTTPUnauthorizedError: StreamClientError.Unauthorized,
+        av.HTTPForbiddenError: StreamClientError.Forbidden,
+        av.HTTPNotFoundError: StreamClientError.NotFound,
+        av.HTTPOtherClientError: StreamClientError.Other,
+    }
+
+    try:
+        func = partial(av.open, source, options=pyav_options, timeout=5)
+        await hass.loop.run_in_executor(None, func)
+    except av.HTTPClientError as ex:
+        return error_lookup.get(ex.__class__, StreamClientError.Other)
+
+    return None
 
 
 def redact_credentials(url: str) -> str:
@@ -572,19 +619,6 @@ class Stream:
     def get_diagnostics(self) -> dict[str, Any]:
         """Return diagnostics information for the stream."""
         return self._diagnostics.as_dict()
-
-    @staticmethod
-    async def async_has_stream_auth_error(hass: HomeAssistant, source: str) -> bool:
-        """Return true if rtsp stream raises an HTTPUnauthorizedError error."""
-        import av  # pylint: disable=import-outside-toplevel
-
-        pyav_options = {"rtsp_flags": "prefer_tcp", "timeout": "5000000"}
-        try:
-            func = partial(av.open, source, options=pyav_options, timeout=5)
-            await hass.loop.run_in_executor(None, func)
-        except av.HTTPUnauthorizedError:
-            return True
-        return False
 
 
 def _should_retry() -> bool:
