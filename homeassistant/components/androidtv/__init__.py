@@ -17,6 +17,7 @@ from adb_shell.exceptions import (
     TcpTimeoutException,
 )
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync, PythonRSASigner
+from androidtv.constants import DEFAULT_TRANSPORT_TIMEOUT_S
 from androidtv.setup_async import (
     AndroidTVAsync,
     FireTVAsync,
@@ -144,6 +145,8 @@ async def async_connect_androidtv(
         config[CONF_DEVICE_CLASS],
         timeout,
         signer,
+        DEFAULT_TRANSPORT_TIMEOUT_S,
+        False,
     )
 
     if not aftv.available:
