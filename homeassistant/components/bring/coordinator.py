@@ -24,15 +24,16 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BringData(BringList, BringItemsResponse):
+class BringData(BringItemsResponse):
     """Coordinator data class."""
 
 
-class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
+class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
     """A Bring Data Update Coordinator."""
 
     config_entry: ConfigEntry
     user_settings: BringUserSettingsResponse
+    lists: list[BringList]
 
     def __init__(self, hass: HomeAssistant, bring: Bring) -> None:
         """Initialize the Bring data coordinator."""
@@ -44,12 +45,15 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         )
         self.bring = bring
 
-    async def _async_update_data(self) -> dict[str, BringData]:
+    async def _async_update_data(self) -> list[BringData]:
+        """Fetch the latest data from bring."""
+        items = []
+
         try:
-            lists_response = await self.bring.load_lists()
+            self.lists = (await self.bring.load_lists())["lists"]
         except BringRequestException as e:
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
-        except BringParseException as e:
+        except (BringParseException, KeyError) as e:
             raise UpdateFailed("Unable to parse response from bring") from e
         except BringAuthException as e:
             # try to recover by refreshing access token, otherwise
@@ -68,28 +72,21 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 "Authentication failed but re-authentication was successful, trying again later"
             ) from e
 
-        list_dict: dict[str, BringData] = {}
-        for lst in lists_response["lists"]:
+        for lst in self.lists:
             try:
-                items = await self.bring.get_list(lst["listUuid"])
+                response = await self.bring.get_list(lst["listUuid"])
+                items.append(BringData(**response))
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            else:
-                list_dict[lst["listUuid"]] = BringData(**lst, **items)
 
-        return list_dict
+        return items
 
     async def _async_setup(self) -> None:
         """Set up coordinator."""
-
-        await self.async_refresh_user_settings()
-
-    async def async_refresh_user_settings(self) -> None:
-        """Refresh user settings."""
         try:
             self.user_settings = await self.bring.get_all_user_settings()
         except (BringAuthException, BringRequestException, BringParseException) as e:
