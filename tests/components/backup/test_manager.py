@@ -235,14 +235,14 @@ async def test_async_initiate_backup(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-    await _setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
-    )
+        await _setup_backup_platform(
+            hass,
+            domain="test",
+            platform=Mock(
+                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+                spec_set=BackupAgentPlatformProtocol,
+            ),
+        )
 
     ws_client = await hass_ws_client(hass)
 
@@ -402,14 +402,14 @@ async def test_async_initiate_backup_with_agent_error(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-    await _setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
-    )
+        await _setup_backup_platform(
+            hass,
+            domain="test",
+            platform=Mock(
+                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+                spec_set=BackupAgentPlatformProtocol,
+            ),
+        )
 
     ws_client = await hass_ws_client(hass)
 

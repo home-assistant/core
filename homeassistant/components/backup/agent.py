@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .models import AgentBackup
@@ -98,3 +98,13 @@ class BackupAgentPlatformProtocol(Protocol):
         **kwargs: Any,
     ) -> list[BackupAgent]:
         """Return a list of backup agents."""
+
+    @callback
+    def async_register_backup_agents_listener(
+        self,
+        hass: HomeAssistant,
+        *,
+        listener: Callable[[], None],
+        **kwargs: Any,
+    ) -> Callable[[], None]:
+        """Register a listener to be called when agents are added or removed."""
