@@ -61,6 +61,12 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
             dev_reg.async_update_device(device.id, new_identifiers=new_identifier)
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the actions for the Velbus component."""
+    setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Establish connection with velbus."""
     hass.data.setdefault(DOMAIN, {})
@@ -113,10 +119,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(config_entry, version=2)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the actions for the Velbus component."""
-    setup_services(hass)
     return True
