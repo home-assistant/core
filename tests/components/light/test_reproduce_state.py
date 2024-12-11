@@ -201,13 +201,14 @@ async def test_filter_color_modes_missing_attributes(
     hass.states.async_set("light.entity", "off", {})
     expected_log = (
         "Color mode color_temp specified "
-        "but attribute color_temp missing for: light.entity"
+        "but attribute color_temp_kelvin missing for: light.entity"
     )
+    expected_fallback_log = "using color_temp as fallback"
 
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
 
     all_colors = {
-        **VALID_COLOR_TEMP,
+        **VALID_COLOR_TEMP_KELVIN,
         **VALID_HS_COLOR,
         **VALID_RGB_COLOR,
         **VALID_RGBW_COLOR,
@@ -216,9 +217,9 @@ async def test_filter_color_modes_missing_attributes(
         **VALID_BRIGHTNESS,
     }
 
-    # Test missing `color_temp` attribute
+    # Test missing `color_temp_kelvin` attribute
     stored_attributes = {**all_colors}
-    stored_attributes.pop("color_temp")
+    stored_attributes.pop("color_temp_kelvin")
     caplog.clear()
     await async_reproduce_state(
         hass,
@@ -226,11 +227,25 @@ async def test_filter_color_modes_missing_attributes(
     )
     assert len(turn_on_calls) == 0
     assert expected_log in caplog.text
+    assert expected_fallback_log not in caplog.text
 
-    # Test with correct `color_temp` attribute
-    stored_attributes["color_temp"] = 240
-    expected = {"brightness": 180, "color_temp": 240}
+    # Test with deprecated `color_temp` attribute
+    stored_attributes["color_temp"] = 250
+    expected = {"brightness": 180, "color_temp_kelvin": 4000}
     caplog.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
+    )
+
+    assert len(turn_on_calls) == 1
+    assert expected_log in caplog.text
+    assert expected_fallback_log in caplog.text
+
+    # Test with correct `color_temp_kelvin` attribute
+    expected = {"brightness": 180, "color_temp_kelvin": 4200}
+    caplog.clear()
+    turn_on_calls.clear()
     await async_reproduce_state(
         hass,
         [State("light.entity", "on", {**all_colors, "color_mode": color_mode})],
@@ -239,6 +254,7 @@ async def test_filter_color_modes_missing_attributes(
     assert turn_on_calls[0].domain == "light"
     assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity", **expected}
     assert expected_log not in caplog.text
+    assert expected_fallback_log not in caplog.text
 
 
 @pytest.mark.parametrize(
