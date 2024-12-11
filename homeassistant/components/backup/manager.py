@@ -502,7 +502,8 @@ class BackupManager:
             if isinstance(result, BaseException):
                 raise result
 
-        self.known_backups.remove(backup_id)
+        if not agent_errors:
+            self.known_backups.remove(backup_id)
 
         return agent_errors
 

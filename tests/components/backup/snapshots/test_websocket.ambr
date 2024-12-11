@@ -1793,7 +1793,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_with_errors[BackupAgentUnreachableError]
+# name: test_delete_with_errors[BackupAgentUnreachableError-storage_data0]
   dict({
     'id': 1,
     'result': dict({
@@ -1805,7 +1805,202 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_with_errors[side_effect0]
+# name: test_delete_with_errors[BackupAgentUnreachableError-storage_data0].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[BackupAgentUnreachableError-storage_data1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+        'domain.test': 'The backup agent is unreachable.',
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[BackupAgentUnreachableError-storage_data1].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[None-storage_data0]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[None-storage_data0].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[None-storage_data1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[None-storage_data1].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect1-storage_data0]
   dict({
     'error': dict({
       'code': 'home_assistant_error',
@@ -1813,6 +2008,98 @@
     }),
     'id': 1,
     'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect1-storage_data0].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect1-storage_data1]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Boom!',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_delete_with_errors[side_effect1-storage_data1].1
+  dict({
+    'id': 2,
+    'result': dict({
+      'agent_errors': dict({
+      }),
+      'backups': list([
+        dict({
+          'addons': list([
+            dict({
+              'name': 'Test',
+              'slug': 'test',
+              'version': '1.0.0',
+            }),
+          ]),
+          'agent_ids': list([
+            'domain.test',
+          ]),
+          'backup_id': 'abc123',
+          'database_included': True,
+          'date': '1970-01-01T00:00:00Z',
+          'failed_agent_ids': list([
+            'test.remote',
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test',
+          'protected': False,
+          'size': 13,
+        }),
+      ]),
+      'last_automatic_backup': None,
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
