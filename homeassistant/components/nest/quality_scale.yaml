@@ -39,7 +39,6 @@ rules:
       unique id of the created entry. Additional tests coverage for combinations of feautres like
       `test_dhcp_discovery_with_creds` would also be useful.
       Tests can be improved so that all end in either CREATE_ENTRY or ABORT.
-      
   docs-actions: done
   runtime-data: done
 
