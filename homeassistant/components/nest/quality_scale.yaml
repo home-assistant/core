@@ -36,7 +36,7 @@ rules:
     status: todo
     comment: |
       The integration has full test coverage however it does not yet assert the specific contents of the
-      unique id of the created entry. Additional tests coverage for combinations of feautres like
+      unique id of the created entry. Additional tests coverage for combinations of features like
       `test_dhcp_discovery_with_creds` would also be useful.
       Tests can be improved so that all end in either CREATE_ENTRY or ABORT.
   docs-actions: done
