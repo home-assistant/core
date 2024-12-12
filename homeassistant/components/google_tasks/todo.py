@@ -11,15 +11,13 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .api import AsyncConfigEntryAuth
-from .const import DOMAIN
 from .coordinator import TaskUpdateCoordinator
+from .types import GoogleTasksConfigEntry
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -69,20 +67,20 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GoogleTasksConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Google Tasks todo platform."""
-    api: AsyncConfigEntryAuth = hass.data[DOMAIN][entry.entry_id]
-    task_lists = await api.list_task_lists()
     async_add_entities(
         (
             GoogleTaskTodoListEntity(
-                TaskUpdateCoordinator(hass, api, task_list["id"]),
+                TaskUpdateCoordinator(hass, entry.runtime_data.api, task_list["id"]),
                 task_list["title"],
                 entry.entry_id,
                 task_list["id"],
             )
-            for task_list in task_lists
+            for task_list in entry.runtime_data.task_lists
         ),
         True,
     )

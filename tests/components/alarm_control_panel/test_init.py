@@ -54,29 +54,6 @@ async def help_test_async_alarm_control_panel_service(
     await hass.async_block_till_done()
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockAlarmControlPanelEntity(alarm_control_panel.AlarmControlPanelEntity):
-        _attr_supported_features = 1
-
-    entity = MockAlarmControlPanelEntity()
-    assert (
-        entity.supported_features
-        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
-    )
-    assert "MockAlarmControlPanelEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "AlarmControlPanelEntityFeature.ARM_HOME" in caplog.text
-    caplog.clear()
-    assert (
-        entity.supported_features
-        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
-    )
-    assert "is using deprecated supported features values" not in caplog.text
-
-
 async def test_set_mock_alarm_control_panel_options(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

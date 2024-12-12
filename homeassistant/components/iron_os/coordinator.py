@@ -92,6 +92,17 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         except CommunicationError as e:
             raise UpdateFailed("Cannot connect to device") from e
 
+    @property
+    def has_tip(self) -> bool:
+        """Return True if the tip is connected."""
+        if (
+            self.data.max_tip_temp_ability is not None
+            and self.data.live_temp is not None
+        ):
+            threshold = self.data.max_tip_temp_ability - 5
+            return self.data.live_temp <= threshold
+        return False
+
 
 class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
     """IronOS coordinator for retrieving update information from github."""
