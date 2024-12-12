@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type ElgatoConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
+
 
 @dataclass
 class ElgatoData:
