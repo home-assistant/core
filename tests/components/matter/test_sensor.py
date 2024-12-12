@@ -184,14 +184,14 @@ async def test_battery_sensor_description(
     """Test battery replacement description sensor."""
     state = hass.states.get("sensor.smoke_sensor_none")
     assert state
-    assert state.state == "CR2032"
+    assert state.state == "CR123A"
 
-    set_node_attribute(matter_node, 1, 47, 19, "CR123A")
+    set_node_attribute(matter_node, 1, 47, 19, "CR2032")
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.smoke_sensor_none")
     assert state
-    assert state.state == "CR123A"
+    assert state.state == "CR2032"
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
