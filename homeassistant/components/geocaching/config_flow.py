@@ -159,36 +159,36 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 ),
             )
 
+        def get_or_default(path: list[str], default: Any) -> Any:
+            """Get a value from a nested dictionary or return a default value."""
+            if len(path) < 1:
+                raise ValueError("Path must contain at least one key")
+
+            value = user_input
+            for key in path:
+                if key not in value:
+                    return default
+                value = value[key]
+            return value
+
         # Store the provided nearby caches count
-        self.data[NEARBY_CACHES_COUNT_TITLE] = (
-            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
-                NEARBY_CACHES_COUNT_TITLE
-            ]
-            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
-            else 0
+        self.data[NEARBY_CACHES_COUNT_TITLE] = get_or_default(
+            [CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID, NEARBY_CACHES_COUNT_TITLE], 0
         )
 
         # Store the provided nearby caches radius
-        self.data[NEARBY_CACHES_RADIUS_TITLE] = (
-            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
-                NEARBY_CACHES_RADIUS_TITLE
-            ]
-            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
-            else 1
+        self.data[NEARBY_CACHES_RADIUS_TITLE] = get_or_default(
+            [CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID, NEARBY_CACHES_RADIUS_TITLE], 1
         )
 
         # Store the provided tracked caches
-        self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = (
-            user_input[CONFIG_FLOW_GEOCACHES_SECTION_ID][CACHES_SINGLE_TITLE]
-            if user_input.get(CONFIG_FLOW_GEOCACHES_SECTION_ID)
-            else []
+        self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = get_or_default(
+            [CONFIG_FLOW_GEOCACHES_SECTION_ID, CACHES_SINGLE_TITLE], []
         )
 
         # Store the provided tracked trackables
-        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = (
-            user_input[CONFIG_FLOW_TRACKABLES_SECTION_ID][TRACKABLES_SINGLE_TITLE]
-            if user_input.get(CONFIG_FLOW_TRACKABLES_SECTION_ID)
-            else []
+        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = get_or_default(
+            [CONFIG_FLOW_TRACKABLES_SECTION_ID, TRACKABLES_SINGLE_TITLE], []
         )
 
         return self.async_create_entry(title=self.title, data=self.data)

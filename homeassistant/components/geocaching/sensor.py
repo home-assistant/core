@@ -35,7 +35,7 @@ class GeocachingSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
-SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
+PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="find_count",
         translation_key="find_count",
@@ -97,11 +97,13 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator: GeocachingDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        GeocachingSensor(coordinator, description) for description in SENSORS
+        GeocachingProfileSensor(coordinator, description)
+        for description in PROFILE_SENSORS
     )
 
     status: GeocachingStatus = await coordinator.fetch_new_status()
     entities: list[Entity] = []
+
     # Add entities for nearby caches
     for cache in status.nearby_caches:
         entities.extend(get_cache_entities(coordinator, cache, GeocacheCategory.NEARBY))
@@ -115,10 +117,11 @@ async def async_setup_entry(
     # Add entities for tracked trackables
     for trackable in status.trackables.values():
         entities.extend(get_trackable_entities(coordinator, trackable))
+
     async_add_entities(entities)
 
 
-class GeocachingSensor(
+class GeocachingProfileSensor(
     CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Sensor."""
