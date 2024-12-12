@@ -8,8 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
-from .typing import TailwindConfigEntry
+from .coordinator import TailwindConfigEntry, TailwindDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.NUMBER]
 
