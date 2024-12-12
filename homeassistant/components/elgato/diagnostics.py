@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import ElgatoConfigEntry
+from .coordinator import ElgatoConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

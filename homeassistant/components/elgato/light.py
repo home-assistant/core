@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util import color as color_util
 
-from . import ElgatoConfigEntry
 from .const import SERVICE_IDENTIFY
-from .coordinator import ElgatoDataUpdateCoordinator
+from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
