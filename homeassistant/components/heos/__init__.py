@@ -8,14 +8,12 @@ from datetime import timedelta
 import logging
 
 from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -33,14 +31,6 @@ from .const import (
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
