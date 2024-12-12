@@ -9,6 +9,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCK_CONFIG, MODEL
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound_client: AsyncMock
@@ -29,6 +31,7 @@ async def test_form(
     assert result["title"] == MODEL
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 async def test_form_cannot_connect(
@@ -60,6 +63,31 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_duplicate(
+    hass: HomeAssistant,
+    mock_russound_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_import(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_russound_client: AsyncMock
 ) -> None:
@@ -74,6 +102,7 @@ async def test_import(
     assert result["title"] == MODEL
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 async def test_import_cannot_connect(
