@@ -18,6 +18,8 @@ from . import ElgatorConfigEntry
 from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class ElgatoSwitchEntityDescription(SwitchEntityDescription):
