@@ -29,53 +29,6 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture(autouse=True)
-def patch_timeouts():
-    """Patch timeouts to avoid tests waiting."""
-    with (
-        patch(
-            "homeassistant.components.onkyo.receiver.DEVICE_INTERVIEW_TIMEOUT", new=0
-        ),
-        patch(
-            "homeassistant.components.onkyo.receiver.DEVICE_DISCOVERY_TIMEOUT", new=0
-        ),
-    ):
-        yield
-
-
-@pytest.fixture
-async def default_mock_discovery():
-    """Mock discovery with a single device."""
-
-    async def mock_discover(host=None, discovery_callback=None, timeout=0):
-        await discovery_callback(create_connection(1))
-
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
-        yield
-
-
-@pytest.fixture
-async def stub_mock_discovery():
-    """Mock discovery with no devices."""
-
-    async def mock_discover(host=None, discovery_callback=None, timeout=0):
-        pass
-
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
-        yield
-
-
-@pytest.fixture
-async def empty_mock_discovery():
-    """Mock discovery with an empty connection."""
-
-    async def mock_discover(host=None, discovery_callback=None, timeout=0):
-        await discovery_callback(None)
-
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
-        yield
-
-
 async def test_user_initial_menu(hass: HomeAssistant) -> None:
     """Test initial menu."""
     init_result = await hass.config_entries.flow.async_init(
