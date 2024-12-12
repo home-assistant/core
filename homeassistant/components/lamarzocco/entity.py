@@ -88,17 +88,24 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         self.entity_description = entity_description
 
 
-def get_scale_device_info(coordinator: LaMarzoccoUpdateCoordinator) -> DeviceInfo:
-    """Return device info for the scale."""
-    scale = coordinator.device.config.scale
-    if TYPE_CHECKING:
-        assert scale
+class LaMarzoccScaleEntity(LaMarzoccoEntity):
+    """Common class for scale."""
 
-    return DeviceInfo(
-        identifiers={(DOMAIN, scale.address)},
-        name=scale.name,
-        manufacturer="Acaia",
-        model="Lunar",
-        model_id="Y.301",
-        via_device=(DOMAIN, coordinator.device.serial_number),
-    )
+    def __init__(
+        self,
+        coordinator: LaMarzoccoUpdateCoordinator,
+        entity_description: LaMarzoccoEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description)
+        scale = coordinator.device.config.scale
+        if TYPE_CHECKING:
+            assert scale
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, scale.address)},
+            name=scale.name,
+            manufacturer="Acaia",
+            model="Lunar",
+            model_id="Y.301",
+            via_device=(DOMAIN, coordinator.device.serial_number),
+        )

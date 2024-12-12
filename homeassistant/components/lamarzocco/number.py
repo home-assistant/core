@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, get_scale_device_info
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
 
 PARALLEL_UPDATES = 1
 
@@ -347,16 +347,7 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
             self.async_write_ha_state()
 
 
-class LaMarzoccoScaleTargetNumber(LaMarzoccoKeyNumberEntity):
+class LaMarzoccoScaleTargetNumber(LaMarzoccoKeyNumberEntity, LaMarzoccScaleEntity):
     """Entity representing a key number on the scale."""
 
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        description: LaMarzoccoKeyNumberEntityDescription,
-        pyhsical_key: int,
-    ) -> None:
-        """Init the scale number."""
-        super().__init__(coordinator, description, pyhsical_key)
-        self._attr_device_info = get_scale_device_info(coordinator)
-        self._attr_entity_registry_enabled_default = True
+    entity_description: LaMarzoccoKeyNumberEntityDescription

@@ -21,8 +21,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, get_scale_device_info
+from .coordinator import LaMarzoccoConfigEntry
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -154,14 +154,7 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.device)
 
 
-class LaMarzoccoScaleSensor(LaMarzoccoSensorEntity):
-    """Sensor representing the battery level of a La Marzocco scale."""
+class LaMarzoccoScaleSensor(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
+    """Sensor for a La Marzocco scale."""
 
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        entity_description: LaMarzoccoSensorEntityDescription,
-    ) -> None:
-        """Init a scale sensor."""
-        super().__init__(coordinator, entity_description)
-        self._attr_device_info = get_scale_device_info(coordinator)
+    entity_description: LaMarzoccoSensorEntityDescription

@@ -447,6 +447,7 @@ async def test_number_error(
 
 
 @pytest.mark.parametrize("physical_key", [PhysicalKey.A, PhysicalKey.B])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
 async def test_set_target(
     hass: HomeAssistant,

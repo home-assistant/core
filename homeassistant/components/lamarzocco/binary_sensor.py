@@ -15,8 +15,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, get_scale_device_info
+from .coordinator import LaMarzoccoConfigEntry
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -114,14 +114,9 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
         return self.entity_description.is_on_fn(self.coordinator.device.config)
 
 
-class LaMarzoccoScaleBinarySensorEntity(LaMarzoccoBinarySensorEntity):
-    """Binary sensor for lamarzocco scales."""
+class LaMarzoccoScaleBinarySensorEntity(
+    LaMarzoccoBinarySensorEntity, LaMarzoccScaleEntity
+):
+    """Binary sensor for La Marzocco scales."""
 
-    def __init__(
-        self,
-        coordinator: LaMarzoccoUpdateCoordinator,
-        entity_description: LaMarzoccoBinarySensorEntityDescription,
-    ) -> None:
-        """Init a scale sensor."""
-        super().__init__(coordinator, entity_description)
-        self._attr_device_info = get_scale_device_info(coordinator)
+    entity_description: LaMarzoccoBinarySensorEntityDescription
