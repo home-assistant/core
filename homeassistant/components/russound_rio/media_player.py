@@ -148,37 +148,37 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         return MediaPlayerState.ON
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Get the currently selected source."""
         return self._source.name
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """Return a list of available input sources."""
         return [x.name for x in self._sources.values()]
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._source.song_name
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._source.artist_name
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._source.album_name
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self._source.cover_art_url
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1).
 
         Value is returned based on a range (0..50).
