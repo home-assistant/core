@@ -1,5 +1,7 @@
 """Base class for entities."""
 
+from typing import Any
+
 from ohme import OhmeApiClient
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,12 +29,19 @@ class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
 
         self._client = client
         self._attr_translation_key = entity_description.key
-        self._attr_device_info = DeviceInfo(**client.get_device_info())
         self._attr_unique_id = f"{self._client.serial}_{self._attr_translation_key}"
+
+        device_info: dict[str, Any] = client.device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers=device_info["identifiers"],
+            name=device_info["name"],
+            manufacturer=device_info["manufacturer"],
+            model=device_info["model"],
+            sw_version=device_info["sw_version"],
+            serial_number=device_info["serial_number"],
+        )
 
     @property
     def available(self) -> bool:
         """Return if charger reporting as online."""
-        if self.coordinator.data.advanced_settings:
-            return self.coordinator.data.advanced_settings.get("online", False)
-        return False
+        return self._client.available

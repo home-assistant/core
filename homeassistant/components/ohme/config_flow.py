@@ -28,7 +28,7 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
             instance = OhmeApiClient(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
-            if await instance.async_refresh_session() is None:
+            if not await instance.async_login():
                 errors["base"] = "auth_error"
             else:
                 return self.async_create_entry(

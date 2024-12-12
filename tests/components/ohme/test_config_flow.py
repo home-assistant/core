@@ -22,7 +22,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     # Failed login
-    with patch("ohme.OhmeApiClient.async_refresh_session", return_value=None):
+    with patch("ohme.OhmeApiClient.async_login", return_value=False):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
@@ -32,7 +32,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "auth_error"}
 
     # Successful login
-    with patch("ohme.OhmeApiClient.async_refresh_session", return_value=True):
+    with patch("ohme.OhmeApiClient.async_login", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},

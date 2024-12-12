@@ -1,10 +1,13 @@
 """Platform for sensor."""
 
 from __future__ import annotations
-from dataclasses import dataclass
+
 from collections.abc import Callable
-from typing import Any
+from dataclasses import dataclass
 import logging
+from typing import Any
+
+from ohme import ChargerStatus, OhmeApiClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,10 +15,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from .coordinator import OhmeApiResponse, OhmeCoordinator
+
 from .entity import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,26 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 class OhmeSensorDescription(SensorEntityDescription):
     """Class describing Ohme sensor entities."""
 
-    value_fn: Callable[[OhmeApiResponse], Any]
+    value_fn: Callable[[OhmeApiClient], Any]
+    is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
 
-def charge_status(data: OhmeApiResponse):
-    """Determine charge status from API responses."""
-
-    if data.charge_sessions["mode"] == "PENDING_APPROVAL":
-        return "pending_approval"
-    if data.charge_sessions["mode"] == "DISCONNECTED":
-        return "unplugged"
-    elif data.charge_sessions.get("power") and data.charge_sessions["power"].get("watt", 0) > 0:
-        return "charging"
-    else:
-        return "plugged_in"
 
 SENSOR_DESCRIPTIONS = [
     OhmeSensorDescription(
         key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=["unplugged", "pending_approval", "plugged_in", "charging"],
-        value_fn=charge_status
+        options=[e.value for e in ChargerStatus],
+        value_fn=lambda client: client.status.value,
     ),
 ]
 
@@ -61,6 +53,7 @@ async def async_setup_entry(
     sensors = [
         OhmeSensor(coordinator, client, description)
         for description in SENSOR_DESCRIPTIONS
+        if description.is_supported_fn(client)
     ]
 
     async_add_entities(sensors)
