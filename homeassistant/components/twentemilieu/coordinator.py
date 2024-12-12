@@ -41,6 +41,7 @@ class TwenteMilieuDataUpdateCoordinator(
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
     async def _async_update_data(self) -> dict[WasteType, list[date]]:
