@@ -95,8 +95,8 @@ async def test_telemetry_webhook(
         {"entity_id": "sensor.sonic_ssid", "result": "Sonic"},
         {"entity_id": "sensor.sonic_rssi", "result": "-50"},
         {"entity_id": "sensor.sonic_subnet", "result": "255.255.255.0"},
-        {"entity_id": "sensor.sonic_gateway", "result": "192.168.2.1"},
-        {"entity_id": "sensor.sonic_ip", "result": "192.168.2.137"},
+        {"entity_id": "sensor.sonic_gateway_address", "result": "192.168.2.1"},
+        {"entity_id": "sensor.sonic_ip_address", "result": "192.168.2.137"},
     ],
 )
 async def test_wifi_webhook(

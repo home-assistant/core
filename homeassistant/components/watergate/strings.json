@@ -24,13 +24,13 @@
         "name": "Water Meter Volume"
       },
       "water_meter_duration": {
-        "name": "Water Meter Duration"
+        "name": "Water meter duration"
       },
       "ip": {
-        "name": "IP Address"
+        "name": "IP address"
       },
       "gateway": {
-        "name": "Gateway Address"
+        "name": "Gateway address"
       },
       "subnet": {
         "name": "Subnet"
@@ -42,28 +42,28 @@
         "name": "RSSI"
       },
       "wifi_uptime": {
-        "name": "WIFI Uptime"
+        "name": "Wi-Fi uptime"
       },
       "mqtt_uptime": {
-        "name": "MQTT Uptime"
+        "name": "MQTT uptime"
       },
       "water_temperature": {
-        "name": "Water Temperature"
+        "name": "Water temperature"
       },
       "water_pressure": {
-        "name": "Water Pressure"
+        "name": "Water pressure"
       },
       "water_flow_rate": {
-        "name": "Water Flow Rate"
+        "name": "Water flow rate"
       },
       "uptime": {
         "name": "Uptime"
       },
       "power_supply": {
-        "name": "Power Supply"
+        "name": "Power supply"
       },
       "auto_shut_off_event": {
-        "name": "Last Auto Shut Off Event"
+        "name": "Last auto shut off event"
       }
     }
   }
