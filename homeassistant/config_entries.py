@@ -3236,7 +3236,7 @@ class ConfigSubentryFlowManager(
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
         if subentry_type not in handler.async_supported_subentries(entry):
             raise data_entry_flow.UnknownHandler(
-                f"Config entry {entry.domain} does not support subentry {subentry_type}"
+                f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
             )
         return handler.async_get_subentry_flow(entry, handler_key[1])
 
