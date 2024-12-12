@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_loading_saving_data[command0]
+  dict({
+    'backups': list([
+    ]),
+    'config': dict({
+      'create_backup': dict({
+        'agent_ids': list([
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
+      'last_attempted_strategy_backup': None,
+      'last_completed_strategy_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
+      'schedule': dict({
+        'state': 'never',
+      }),
+    }),
+  })
+# ---
+# name: test_loading_saving_data[command1]
+  dict({
+    'backups': list([
+      dict({
+        'backup_id': 'abc123',
+        'failed_agent_ids': list([
+        ]),
+        'with_strategy_settings': True,
+      }),
+    ]),
+    'config': dict({
+      'create_backup': dict({
+        'agent_ids': list([
+          'backup.local',
+        ]),
+        'include_addons': list([
+          'test-addon',
+        ]),
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': list([
+          'media',
+        ]),
+        'name': 'test-name',
+        'password': 'test-password',
+      }),
+      'last_attempted_strategy_backup': '2024-11-12T12:00:00+01:00',
+      'last_completed_strategy_backup': '2024-11-12T12:00:00+01:00',
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
+      'schedule': dict({
+        'state': 'daily',
+      }),
+    }),
+  })
+# ---

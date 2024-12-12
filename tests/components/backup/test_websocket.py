@@ -1,6 +1,5 @@
 """Tests for the Backup integration."""
 
-from asyncio import Future
 from collections.abc import Generator
 from datetime import datetime
 from typing import Any
@@ -17,7 +16,6 @@ from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupState,
     NewBackup,
-    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -87,22 +85,6 @@ def mock_delay_save() -> Generator[None]:
     """Mock the delay save constant."""
     with patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0):
         yield
-
-
-@pytest.fixture(name="create_backup")
-def mock_create_backup() -> Generator[AsyncMock]:
-    """Mock manager create backup."""
-    mock_written_backup = MagicMock(spec_set=WrittenBackup)
-    mock_written_backup.backup.backup_id = "abc123"
-    mock_written_backup.open_stream = AsyncMock()
-    mock_written_backup.release_stream = AsyncMock()
-    fut = Future()
-    fut.set_result(mock_written_backup)
-    with patch(
-        "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
-    ) as mock_create_backup:
-        mock_create_backup.return_value = (MagicMock(), fut)
-        yield mock_create_backup
 
 
 @pytest.fixture(name="delete_backup")

@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from dataclasses import is_dataclass
+from enum import StrEnum
 from io import StringIO
 import json
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
+from cronsim import CronSim
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -41,7 +46,7 @@ from .common import (
     BackupAgentTest,
 )
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import MockPlatform, async_fire_time_changed, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
@@ -911,3 +916,79 @@ async def test_async_trigger_restore_wrong_parameters(
         pytest.raises(HomeAssistantError, match=expected_error),
     ):
         await manager.async_restore_backup(**(default_parameters | parameters))
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "backup/config/update",
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {
+                "agent_ids": ["backup.local"],
+                "include_addons": ["test-addon"],
+                "include_folders": ["media"],
+                "name": "test-name",
+                "password": "test-password",
+            },
+            "schedule": "daily",
+        },
+    ],
+)
+async def test_loading_saving_data(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_ws_client: WebSocketGenerator,
+    create_backup: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    command: dict[str, Any],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test loading and saving data."""
+    ws_client = await hass_ws_client(hass)
+
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-11 12:00:00+01:00")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    manager1 = hass.data[DATA_MANAGER]
+
+    # Configure the manager
+    await ws_client.send_json_auto_id(command)
+    result = await ws_client.receive_json()
+    assert result["success"]
+
+    freezer.move_to("2024-11-12 12:00:00+01:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Trigger store save
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage[DOMAIN]["data"] == snapshot
+
+    manager2 = BackupManager(hass, CoreBackupReaderWriter(hass))
+    await manager2.async_setup()
+
+    def compare_config_dataclass(obj1, obj2):
+        """Compare two BackupConfigData instances."""
+        for field in obj1.__dataclass_fields__:
+            value1 = getattr(obj1, field)
+            value2 = getattr(obj2, field)
+            if isinstance(value1, CronSim):
+                assert value1.explain() == value2.explain()
+            elif isinstance(value1, StrEnum):
+                assert type(value1) is type(value2)
+                assert value1 == value2
+            elif is_dataclass(value1):
+                compare_config_dataclass(value1, value2)
+            else:
+                assert value1 == value2
+
+    compare_config_dataclass(manager1.config.data, manager2.config.data)
+    assert manager1.known_backups.to_list() == manager2.known_backups.to_list()
