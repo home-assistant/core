@@ -26,7 +26,10 @@ from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 @pytest.fixture(autouse=True)
 async def setup_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, cloud: MagicMock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    cloud: MagicMock,
+    cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
     """Set up cloud integration."""
     with patch("homeassistant.components.backup.is_hassio", return_value=False):

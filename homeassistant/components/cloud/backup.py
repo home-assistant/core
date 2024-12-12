@@ -38,7 +38,11 @@ async def async_get_backup_agents(
     **kwargs: Any,
 ) -> list[BackupAgent]:
     """Return the cloud backup agent."""
-    return [CloudBackupAgent(hass=hass, cloud=hass.data[DATA_CLOUD])]
+    cloud = hass.data[DATA_CLOUD]
+    if not cloud.is_logged_in:
+        return []
+
+    return [CloudBackupAgent(hass=hass, cloud=cloud)]
 
 
 class ChunkAsyncStreamIterator:
@@ -69,6 +73,7 @@ class ChunkAsyncStreamIterator:
 class CloudBackupAgent(BackupAgent):
     """Cloud backup agent."""
 
+    domain = DOMAIN
     name = DOMAIN
 
     def __init__(self, hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
