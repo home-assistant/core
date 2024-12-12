@@ -637,7 +637,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.0.0
+demetriek==1.1.0
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
