@@ -435,7 +435,7 @@ async def test_single_color_mode(
     assert state.state == STATE_ON
 
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 5208
     assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
     assert state.attributes.get(light.ATTR_COLOR_MODE) == color_modes[0]
 
@@ -494,7 +494,7 @@ async def test_controlling_state_with_unknown_color_mode(
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) is None
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) is None
     assert state.attributes.get(light.ATTR_BRIGHTNESS) is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == light.ColorMode.UNKNOWN
 
@@ -507,7 +507,7 @@ async def test_controlling_state_with_unknown_color_mode(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 5208
     assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
     assert state.attributes.get(light.ATTR_COLOR_MODE) == light.ColorMode.COLOR_TEMP
 
