@@ -565,17 +565,18 @@ class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
 
 @pytest.mark.parametrize(
     ("agent_class", "num_local_agents"),
-    [(LocalBackupAgentTest, 1), (BackupAgentTest, 0)],
+    [(LocalBackupAgentTest, 2), (BackupAgentTest, 1)],
 )
 async def test_loading_platform_with_listener(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     agent_class: type[BackupAgentTest],
     num_local_agents: int,
 ) -> None:
     """Test loading a backup agent platform which can be listened to."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
+    ws_client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    manager = hass.data[DATA_MANAGER]
 
     get_agents_mock = AsyncMock(return_value=[agent_class("remote1", backups=[])])
     register_listener_mock = Mock()
@@ -588,9 +589,14 @@ async def test_loading_platform_with_listener(
             async_register_backup_agents_listener=register_listener_mock,
         ),
     )
-    await manager.load_platforms()
     await hass.async_block_till_done()
-    assert list(manager.backup_agents) == ["test.remote1"]
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local"},
+        {"agent_id": "test.remote1"},
+    ]
     assert len(manager.local_backup_agents) == num_local_agents
 
     get_agents_mock.assert_called_once_with(hass)
@@ -602,7 +608,12 @@ async def test_loading_platform_with_listener(
     listener()
 
     get_agents_mock.assert_called_once_with(hass)
-    assert list(manager.backup_agents) == ["test.remote2"]
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local"},
+        {"agent_id": "test.remote2"},
+    ]
     assert len(manager.local_backup_agents) == num_local_agents
 
 
