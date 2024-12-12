@@ -59,9 +59,9 @@ def setup_services(hass: HomeAssistant) -> None:
         entry = get_config_entry(call.data[CONF_INTERFACE])
         if entry:
             memo_text = call.data[CONF_MEMO_TEXT]
-            await entry.runtime_data.cntrl.get_module(
-                call.data[CONF_ADDRESS]
-            ).set_memo_text(memo_text.async_render())
+            module = entry.runtime_data.cntrl.get_module(call.data[CONF_ADDRESS])
+            if module:
+                await module.set_memo_text(memo_text.async_render())
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
