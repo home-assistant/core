@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.connect_task
     entities = []
-    for channel in entry.runtime_data.cntrl.get_all("sensor"):
+    for channel in entry.runtime_data.cntrl.get_all_sensor():
         entities.append(VelbusSensor(channel))
         if channel.is_counter_channel():
             entities.append(VelbusSensor(channel, True))

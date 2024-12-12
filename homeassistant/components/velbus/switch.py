@@ -20,7 +20,7 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.connect_task
     async_add_entities(
-        VelbusSwitch(channel) for channel in entry.runtime_data.cntrl.get_all("switch")
+        VelbusSwitch(channel) for channel in entry.runtime_data.cntrl.get_al_switch()
     )
 
 

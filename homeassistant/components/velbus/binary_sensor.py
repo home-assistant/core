@@ -19,7 +19,7 @@ async def async_setup_entry(
     await entry.runtime_data.connect_task
     cntrl = entry.runtime_data.cntrl
     async_add_entities(
-        VelbusBinarySensor(channel) for channel in cntrl.get_all("binary_sensor")
+        VelbusBinarySensor(channel) for channel in cntrl.get_all_binary_sensor()
     )
 
 
