@@ -276,7 +276,7 @@ async def _run_appliance_service[*_Ts](
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call: ServiceCall, method: str):
+    async def _async_service_program(call: ServiceCall, method: str) -> None:
         """Execute calls to services taking a program."""
         data = dict(call.data)
         program = data.pop(ATTR_PROGRAM)
@@ -441,11 +441,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             },
         )
 
-    async def async_service_pause_program(call: ServiceCall):
+    async def async_service_pause_program(call: ServiceCall) -> None:
         """Service for pausing a program."""
         await _async_service_command(call, BSH_PAUSE)
 
-    async def async_service_resume_program(call: ServiceCall):
+    async def async_service_resume_program(call: ServiceCall) -> None:
         """Service for resuming a paused program."""
         await _async_service_command(call, BSH_RESUME)
 
@@ -453,7 +453,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service for selecting a program."""
         await _async_service_program(call, "select_program")
 
-    async def async_service_start_program(call: ServiceCall):
+    async def async_service_start_program(call: ServiceCall) -> None:
         """Service for starting a program."""
         await _async_service_program(call, "start_program")
 
