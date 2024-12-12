@@ -5,7 +5,6 @@
         "title": "Details for Slide (local API)",
         "description": "Provide information to connect to the Slide device",
         "data": {
-          "api_version": "API version",
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
