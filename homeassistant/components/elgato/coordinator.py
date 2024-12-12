@@ -39,6 +39,7 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL,
         )
