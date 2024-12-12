@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
 from typing import Any, Self
 
 from plugwise import Smile
@@ -29,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import TextSelector
 
 from .const import (
     DEFAULT_PORT,
@@ -43,8 +41,15 @@ from .const import (
     ZEROCONF_MAP,
 )
 
+SMILE_RECONF_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
 
-def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+
+def SMILE_USER_SCHEMA(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema for gateways."""
     schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -62,24 +67,10 @@ def base_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     return schema
 
 
-def reconfigure_schema(reconfigure_data: MappingProxyType[str, Any]) -> vol.Schema:
-    """Generate reconfigure schema for gateways."""
-    return vol.Schema(
-        {
-            vol.Required(
-                CONF_HOST, default=reconfigure_data.get(CONF_HOST)
-            ): TextSelector(),
-            vol.Required(
-                CONF_PORT, default=reconfigure_data.get(CONF_PORT)
-            ): vol.Coerce(int),
-        }
-    )
-
-
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
     """Validate whether the user input allows us to connect to the gateway.
 
-    Data has the keys from base_schema() with values provided by the user.
+    Data has the keys from the schema with values provided by the user.
     """
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = Smile(
@@ -173,7 +164,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _verify_connection(
         self, user_input: dict[str, Any]
     ) -> tuple[Smile | None, dict[str, str]]:
-        """Helper function to verify gateway connection."""
+        """Verify and return the gateway connection using helper function."""
         errors: dict[str, str] = {}
 
         try:
@@ -191,9 +182,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             errors[CONF_BASE] = "unknown"
         else:
-            await self.async_set_unique_id(
-                api.smile_hostname or api.gateway_id, raise_on_progress=False
-            )
             return (api, errors)
         return (None, errors)
 
@@ -211,12 +199,15 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
             api, errors = await self._verify_connection(user_input)
             if not errors and api:
+                await self.async_set_unique_id(
+                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=api.smile_name, data=user_input)
 
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=base_schema(self.discovery_info),
+            data_schema=SMILE_USER_SCHEMA(self.discovery_info),
             errors=errors,
         )
 
@@ -237,19 +228,23 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
             }
 
-            _, errors = await self._verify_connection(user_input)
-            if not errors:
+            api, errors = await self._verify_connection(full_input)
+            if not errors and api:
+                await self.async_set_unique_id(
+                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                )
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data_updates=user_input,
+                    data_updates=full_input,
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=reconfigure_schema(reconfigure_entry.data),
-            description_placeholders={
-                "title": reconfigure_entry.title,
-            },
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=SMILE_RECONF_SCHEMA,
+                suggested_values=reconfigure_entry.data,
+            ),
+            description_placeholders={"title": reconfigure_entry.title},
             errors=errors,
         )
