@@ -29,6 +29,7 @@ from homeassistant.components import (
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent
@@ -1009,15 +1010,23 @@ class PipelineRun:
         if self.intent_agent is None:
             raise RuntimeError("Recognize intent was not prepared")
 
+        if self.pipeline.conversation_language == MATCH_ALL:
+            # LLMs support all languages ('*') so use pipeline language for
+            # intent fallback.
+            input_language = self.pipeline.language
+        else:
+            input_language = self.pipeline.conversation_language
+
         self.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_START,
                 {
                     "engine": self.intent_agent,
-                    "language": self.pipeline.conversation_language,
+                    "language": input_language,
                     "intent_input": intent_input,
                     "conversation_id": conversation_id,
                     "device_id": device_id,
+                    "prefer_local_intents": self.pipeline.prefer_local_intents,
                 },
             )
         )
@@ -1028,43 +1037,43 @@ class PipelineRun:
                 context=self.context,
                 conversation_id=conversation_id,
                 device_id=device_id,
-                language=self.pipeline.language,
+                language=input_language,
                 agent_id=self.intent_agent,
             )
+            processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
-            # Sentence triggers override conversation agent
-            if (
-                trigger_response_text
-                := await conversation.async_handle_sentence_triggers(
-                    self.hass, user_input
-                )
-            ):
-                # Sentence trigger matched
-                trigger_response = intent.IntentResponse(
-                    self.pipeline.conversation_language
-                )
-                trigger_response.async_set_speech(trigger_response_text)
-                conversation_result = conversation.ConversationResult(
-                    response=trigger_response,
-                    conversation_id=user_input.conversation_id,
-                )
-            # Try local intents first, if preferred.
-            # Skip this step if the default agent is already used.
-            elif (
-                self.pipeline.prefer_local_intents
-                and (user_input.agent_id != conversation.HOME_ASSISTANT_AGENT)
-                and (
+            conversation_result: conversation.ConversationResult | None = None
+            if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
+                # Sentence triggers override conversation agent
+                if (
+                    trigger_response_text
+                    := await conversation.async_handle_sentence_triggers(
+                        self.hass, user_input
+                    )
+                ) is not None:
+                    # Sentence trigger matched
+                    trigger_response = intent.IntentResponse(
+                        self.pipeline.conversation_language
+                    )
+                    trigger_response.async_set_speech(trigger_response_text)
+                    conversation_result = conversation.ConversationResult(
+                        response=trigger_response,
+                        conversation_id=user_input.conversation_id,
+                    )
+                # Try local intents first, if preferred.
+                elif self.pipeline.prefer_local_intents and (
                     intent_response := await conversation.async_handle_intents(
                         self.hass, user_input
                     )
-                )
-            ):
-                # Local intent matched
-                conversation_result = conversation.ConversationResult(
-                    response=intent_response,
-                    conversation_id=user_input.conversation_id,
-                )
-            else:
+                ):
+                    # Local intent matched
+                    conversation_result = conversation.ConversationResult(
+                        response=intent_response,
+                        conversation_id=user_input.conversation_id,
+                    )
+                    processed_locally = True
+
+            if conversation_result is None:
                 # Fall back to pipeline conversation agent
                 conversation_result = await conversation.async_converse(
                     hass=self.hass,
@@ -1087,7 +1096,10 @@ class PipelineRun:
         self.process_event(
             PipelineEvent(
                 PipelineEventType.INTENT_END,
-                {"intent_output": conversation_result.as_dict()},
+                {
+                    "processed_locally": processed_locally,
+                    "intent_output": conversation_result.as_dict(),
+                },
             )
         )
 

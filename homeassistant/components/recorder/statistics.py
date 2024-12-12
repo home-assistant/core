@@ -11,6 +11,7 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
+from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
@@ -27,6 +28,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
     ConductivityConverter,
@@ -129,6 +131,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
     **{
         unit: BloodGlucoseConcentrationConverter
         for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
@@ -444,8 +447,9 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 }
 
     # Insert compiled hourly statistics in the database
+    now_timestamp = time_time()
     session.add_all(
-        Statistics.from_stats_ts(metadata_id, summary_item)
+        Statistics.from_stats_ts(metadata_id, summary_item, now_timestamp)
         for metadata_id, summary_item in summary.items()
     )
 
@@ -576,6 +580,7 @@ def _compile_statistics(
 
     new_short_term_stats: list[StatisticsBase] = []
     updated_metadata_ids: set[int] = set()
+    now_timestamp = time_time()
     # Insert collected statistics in the database
     for stats in platform_stats:
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
@@ -585,10 +590,7 @@ def _compile_statistics(
             modified_statistic_ids.add(modified_statistic_id)
         updated_metadata_ids.add(metadata_id)
         if new_stat := _insert_statistics(
-            session,
-            StatisticsShortTerm,
-            metadata_id,
-            stats["stat"],
+            session, StatisticsShortTerm, metadata_id, stats["stat"], now_timestamp
         ):
             new_short_term_stats.append(new_stat)
 
@@ -664,10 +666,11 @@ def _insert_statistics(
     table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
+    now_timestamp: float,
 ) -> StatisticsBase | None:
     """Insert statistics in the database."""
     try:
-        stat = table.from_stats(metadata_id, statistic)
+        stat = table.from_stats(metadata_id, statistic, now_timestamp)
         session.add(stat)
     except SQLAlchemyError:
         _LOGGER.exception(
@@ -2345,11 +2348,12 @@ def _import_statistics_with_session(
     _, metadata_id = statistics_meta_manager.update_or_add(
         session, metadata, old_metadata_dict
     )
+    now_timestamp = time_time()
     for stat in statistics:
         if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
             _update_statistics(session, table, stat_id, stat)
         else:
-            _insert_statistics(session, table, metadata_id, stat)
+            _insert_statistics(session, table, metadata_id, stat, now_timestamp)
 
     if table != StatisticsShortTerm:
         return True

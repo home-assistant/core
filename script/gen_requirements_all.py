@@ -148,7 +148,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.1.3
+numpy==2.2.0
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -158,9 +158,8 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Required to avoid breaking (#101042).
-# v2 has breaking changes (#99218).
-pydantic==1.10.19
+# ensure pydantic version does not float since it might have breaking changes
+pydantic==2.10.3
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -185,10 +184,12 @@ protobuf==5.28.3
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 11.0 is missing files in the source distribution
-# which break wheel builds so we need at least 11.0.1
-# https://github.com/aaugustin/websockets/issues/1329
-websockets>=11.0.1
+# websockets 13.1 is the first version to fully support the new
+# asyncio implementation. The legacy implementation is now
+# deprecated as of websockets 14.0.
+# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
+# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
+websockets>=13.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
@@ -228,6 +229,14 @@ tenacity!=8.4.0
 # 5.0.0 breaks Timeout as a context manager
 # TypeError: 'Timeout' object does not support the context manager protocol
 async-timeout==4.0.3
+
+# aiofiles keeps getting downgraded by custom components
+# causing newer methods to not be available and breaking
+# some integrations at startup
+# https://github.com/home-assistant/core/issues/127529
+# https://github.com/home-assistant/core/issues/122508
+# https://github.com/home-assistant/core/issues/118004
+aiofiles>=24.1.0
 """
 
 GENERATED_MESSAGE = (
@@ -348,8 +357,8 @@ def gather_modules() -> dict[str, list[str]] | None:
     gather_requirements_from_manifests(errors, reqs)
     gather_requirements_from_modules(errors, reqs)
 
-    for key in reqs:
-        reqs[key] = sorted(reqs[key], key=lambda name: (len(name.split(".")), name))
+    for value in reqs.values():
+        value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
     if errors:
         print("******* ERROR")
@@ -619,7 +628,6 @@ def _get_hassfest_config() -> Config:
         specific_integrations=None,
         action="validate",
         requirements=True,
-        core_integrations_path=Path("homeassistant/components"),
     )
 
 
