@@ -41,4 +41,4 @@ class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
     @property
     def available(self) -> bool:
         """Return if charger reporting as online."""
-        return self.coordinator.client.available
+        return super().available and self.coordinator.client.available

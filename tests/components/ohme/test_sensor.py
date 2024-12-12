@@ -12,8 +12,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-SENSORS = ("power", "energy", "current", "ct_current" "status")
-
 
 async def test_sensors(
     hass: HomeAssistant,
@@ -26,8 +24,3 @@ async def test_sensors(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-    for sensor in SENSORS:
-        assert hass.states.get(f"sensor.ohme_home_pro_{sensor}") == snapshot(
-            name=f"sensor.ohme_home_pro_{sensor}-state"
-        )

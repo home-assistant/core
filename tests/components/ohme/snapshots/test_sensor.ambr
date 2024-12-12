@@ -47,9 +47,6 @@
     'state': '0.1',
   })
 # ---
-# name: test_sensors[sensor.ohme_home_pro_ct_currentstatus-state]
-  None
-# ---
 # name: test_sensors[sensor.ohme_home_pro_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -11,7 +11,32 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_config_flow_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test config flow."""
+
+    # Initial form load
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    # Successful login
+    with patch("ohme.OhmeApiClient.async_login", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_config_flow_fail(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test config flow."""
 
     # Initial form load
@@ -31,15 +56,6 @@ async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "auth_error"}
-
-    # Successful login
-    with patch("ohme.OhmeApiClient.async_login", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
-        )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(
