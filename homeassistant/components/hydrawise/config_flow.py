@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN, LOGGER
+from .const import APP_ID, DOMAIN, LOGGER
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -39,7 +39,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             return on_failure("timeout_connect")
 
         try:
-            api = client.Hydrawise(auth)
+            api = client.Hydrawise(auth, app_id=APP_ID)
             # Don't fetch zones because we don't need them yet.
             user = await api.get_user(fetch_zones=False)
         except TimeoutError:

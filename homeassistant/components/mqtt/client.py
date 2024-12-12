@@ -119,7 +119,7 @@ MAX_PACKETS_TO_READ = 500
 
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
-type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes | bytearray  # Only bytes if encoding is None
 
 
 def publish(

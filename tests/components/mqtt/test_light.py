@@ -1008,7 +1008,7 @@ async def test_sending_mqtt_commands_and_optimistic(
             "brightness": 95,
             "hs_color": [100, 100],
             "effect": "random",
-            "color_temp": 100,
+            "color_temp_kelvin": 100000,
             "color_mode": "hs",
         },
     )
@@ -1021,7 +1021,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get("brightness") == 95
     assert state.attributes.get("hs_color") == (100, 100)
     assert state.attributes.get("effect") == "random"
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "hs"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
     assert state.attributes.get(ATTR_ASSUMED_STATE)
