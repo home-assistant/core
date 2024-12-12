@@ -158,9 +158,6 @@
           "seconds_5": "5 second",
           "loop": "Loop"
         }
-      },
-      "ui_language": {
-        "name": "Interface language"
       }
     },
     "sensor": {

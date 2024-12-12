@@ -13,7 +13,6 @@ from pynecil import (
     BatteryType,
     CharSetting,
     CommunicationError,
-    LanguageCode,
     LockingMode,
     LogoDuration,
     ScreenOrientationMode,
@@ -55,7 +54,6 @@ class PinecilSelect(StrEnum):
     TEMP_UNIT = "temp_unit"
     DESC_SCROLL_SPEED = "desc_scroll_speed"
     LOCKING_MODE = "locking_mode"
-    UI_LANGUAGE = "ui_language"
     LOGO_DURATION = "logo_duration"
 
 
@@ -131,16 +129,6 @@ PINECIL_SELECT_DESCRIPTIONS: tuple[IronOSSelectEntityDescription, ...] = (
         raw_value_fn=lambda value: LockingMode[value.upper()],
         options=[x.name.lower() for x in LockingMode],
         entity_category=EntityCategory.CONFIG,
-    ),
-    IronOSSelectEntityDescription(
-        key=PinecilSelect.UI_LANGUAGE,
-        translation_key=PinecilSelect.UI_LANGUAGE,
-        characteristic=CharSetting.UI_LANGUAGE,
-        value_fn=lambda x: enum_to_str(x.get("ui_language")),
-        raw_value_fn=lambda value: LanguageCode[value.upper()],
-        options=[x.name.lower() for x in LanguageCode],
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
     ),
     IronOSSelectEntityDescription(
         key=PinecilSelect.LOGO_DURATION,

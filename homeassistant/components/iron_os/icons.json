@@ -92,9 +92,6 @@
       "desc_scroll_speed": {
         "default": "mdi:message-text-fast"
       },
-      "ui_language": {
-        "default": "mdi:translate-variant"
-      },
       "logo_duration": {
         "default": "mdi:clock-digital"
       }

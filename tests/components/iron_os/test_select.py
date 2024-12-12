@@ -11,7 +11,6 @@ from pynecil import (
     BatteryType,
     CharSetting,
     CommunicationError,
-    LanguageCode,
     LockingMode,
     LogoDuration,
     ScreenOrientationMode,
@@ -100,11 +99,6 @@ async def test_state(
             "select.pinecil_button_locking_mode",
             "full_locking",
             (CharSetting.LOCKING_MODE, LockingMode.FULL_LOCKING),
-        ),
-        (
-            "select.pinecil_interface_language",
-            "de",
-            (CharSetting.UI_LANGUAGE, LanguageCode.DE),
         ),
         (
             "select.pinecil_boot_logo_duration",

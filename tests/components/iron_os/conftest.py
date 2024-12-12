@@ -10,7 +10,6 @@ from pynecil import (
     AutostartMode,
     BatteryType,
     DeviceInfoResponse,
-    LanguageCode,
     LatestRelease,
     LiveDataResponse,
     LockingMode,
@@ -182,7 +181,6 @@ def mock_pynecil() -> Generator[AsyncMock]:
             autostart_mode=AutostartMode.IDLE,
             temp_unit=TempUnit.CELSIUS,
             desc_scroll_speed=ScrollSpeed.FAST,
-            ui_language=LanguageCode.DE,
             logo_duration=LogoDuration.LOOP,
             locking_mode=LockingMode.FULL_LOCKING,
         )
