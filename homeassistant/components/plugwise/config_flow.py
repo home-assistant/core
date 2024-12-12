@@ -173,7 +173,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _verify_connection(
         self, user_input: dict[str, Any]
     ) -> tuple[Smile | None, dict[str, str]]:
-        """Verify gateway connection helper function user and reconfiguration steps."""
+        """Helper function to verify gateway connection."""
         errors: dict[str, str] = {}
 
         try:
