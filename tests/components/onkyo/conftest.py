@@ -24,13 +24,10 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 def patch_timeouts():
     """Patch timeouts to avoid tests waiting."""
-    with (
-        patch(
-            "homeassistant.components.onkyo.receiver.DEVICE_INTERVIEW_TIMEOUT", new=0
-        ),
-        patch(
-            "homeassistant.components.onkyo.receiver.DEVICE_DISCOVERY_TIMEOUT", new=0
-        ),
+    with patch.multiple(
+        "homeassistant.components.onkyo.receiver",
+        DEVICE_INTERVIEW_TIMEOUT=0,
+        DEVICE_DISCOVERY_TIMEOUT=0,
     ):
         yield
 

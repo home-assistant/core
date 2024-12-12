@@ -360,7 +360,10 @@ async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
     async def mock_discover(host, discovery_callback, timeout):
         await discovery_callback(mock_connection)
 
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
+    with patch(
+        "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
+        new=mock_discover,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={"host": mock_connection.host}
         )
@@ -411,7 +414,10 @@ async def test_import_fail(
     async def mock_discover(host, discovery_callback, timeout):
         raise exception
 
-    with patch("pyeiscp.Connection.discover", new=mock_discover):
+    with patch(
+        "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
+        new=mock_discover,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
         )
