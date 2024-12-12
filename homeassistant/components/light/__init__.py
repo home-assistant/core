@@ -1042,7 +1042,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 exclude_integrations={DOMAIN},
             )
             return color_util.color_temperature_mired_to_kelvin(min_mireds)
-        return 6500  # 153 mireds
+        return 6535  # 153 mireds
 
     @cached_property
     def effect_list(self) -> list[str] | None:
