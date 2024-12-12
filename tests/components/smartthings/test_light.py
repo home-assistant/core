@@ -102,7 +102,7 @@ async def test_entity_state(hass: HomeAssistant, light_devices) -> None:
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert ATTR_HS_COLOR not in state.attributes[ATTR_HS_COLOR]
     assert isinstance(state.attributes[ATTR_COLOR_TEMP_KELVIN], int)
-    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4504
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4500
 
 
 async def test_entity_and_device_attributes(
@@ -273,7 +273,7 @@ async def test_turn_on_with_color_temp(hass: HomeAssistant, light_devices) -> No
     await hass.services.async_call(
         "light",
         "turn_on",
-        {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_COLOR_TEMP_KELVIN: 300},
+        {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_COLOR_TEMP_KELVIN: 3333},
         blocking=True,
     )
     # This test schedules and update right after the call
