@@ -1890,7 +1890,6 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
 
     async def _async_call(
         self,
-        hass: HomeAssistant,
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
