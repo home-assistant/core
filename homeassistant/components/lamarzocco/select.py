@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

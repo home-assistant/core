@@ -56,7 +56,9 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         except NotAuthorizedError as ex:
             raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
-            raise UpdateFailed("Failed to refresh Schlage data") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="schlage_refresh_failed"
+            ) from ex
         lock_data = await asyncio.gather(
             *(
                 self.hass.async_add_executor_job(self._get_lock_data, lock)

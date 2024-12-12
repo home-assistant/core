@@ -21,12 +21,11 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import media_browser
+from . import CambridgeAudioConfigEntry, media_browser
 from .const import (
     CAMBRIDGE_MEDIA_TYPE_AIRABLE,
     CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
@@ -65,7 +64,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CambridgeAudioConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio device based on a config entry."""

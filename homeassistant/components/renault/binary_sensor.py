@@ -19,6 +19,9 @@ from homeassistant.helpers.typing import StateType
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RenaultBinarySensorEntityDescription(

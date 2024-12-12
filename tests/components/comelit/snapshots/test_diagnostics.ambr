@@ -71,6 +71,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 1,
@@ -135,6 +137,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 1,

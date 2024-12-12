@@ -8,12 +8,11 @@ import logging
 from time import time
 from typing import Any
 
-from pylamarzocco.client_bluetooth import LaMarzoccoBluetoothClient
-from pylamarzocco.client_cloud import LaMarzoccoCloudClient
-from pylamarzocco.client_local import LaMarzoccoLocalClient
+from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
-from websockets.protocol import State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -86,9 +85,8 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 if (
                     self._local_client is not None
                     and self._local_client.websocket is not None
-                    and self._local_client.websocket.state is State.OPEN
+                    and not self._local_client.websocket.closed
                 ):
-                    self._local_client.terminating = True
                     await self._local_client.websocket.close()
 
             self.config_entry.async_on_unload(

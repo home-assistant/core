@@ -543,6 +543,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },
@@ -557,6 +561,10 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*",
+        },
+        {
+            "domain": "slide_local",
+            "name": "slide*",
         },
         {
             "domain": "synology_dsm",

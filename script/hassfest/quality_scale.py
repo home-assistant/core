@@ -17,9 +17,13 @@ from .quality_scale_validation import (
     config_entry_unloading,
     config_flow,
     diagnostics,
+    discovery,
+    parallel_updates,
     reauthentication_flow,
     reconfiguration_flow,
+    runtime_data,
     strict_typing,
+    unique_config_entry,
 )
 
 QUALITY_SCALE_TIERS = {value.name.lower(): value for value in ScaledQualityScaleTiers}
@@ -50,10 +54,10 @@ ALL_RULES = [
     Rule("entity-event-setup", ScaledQualityScaleTiers.BRONZE),
     Rule("entity-unique-id", ScaledQualityScaleTiers.BRONZE),
     Rule("has-entity-name", ScaledQualityScaleTiers.BRONZE),
-    Rule("runtime-data", ScaledQualityScaleTiers.BRONZE),
+    Rule("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data),
     Rule("test-before-configure", ScaledQualityScaleTiers.BRONZE),
     Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE),
-    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE),
+    Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
     Rule(
@@ -64,7 +68,7 @@ ALL_RULES = [
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
     Rule(
         "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
     ),
@@ -72,7 +76,7 @@ ALL_RULES = [
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
     Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
-    Rule("discovery", ScaledQualityScaleTiers.GOLD),
+    Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
     Rule("docs-examples", ScaledQualityScaleTiers.GOLD),
@@ -103,6 +107,12 @@ SCALE_RULES = {
 }
 
 VALIDATORS = {rule.name: rule.validator for rule in ALL_RULES if rule.validator}
+
+RULE_URL = (
+    "Please check the documentation at "
+    "https://developers.home-assistant.io/docs/core/"
+    "integration-quality-scale/rules/{rule_name}/"
+)
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
@@ -212,7 +222,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bond",
     "bosch_shc",
     "braviatv",
-    "bring",
     "broadlink",
     "brother",
     "brottsplatskartan",
@@ -225,7 +234,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bthome",
     "buienradar",
     "caldav",
-    "cambridge_audio",
     "canary",
     "cast",
     "ccm15",
@@ -303,7 +311,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "drop_connect",
     "dsmr",
     "dsmr_reader",
-    "dte_energy_bridge",
     "dublin_bus_transport",
     "duckdns",
     "duke_energy",
@@ -382,7 +389,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
-    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -416,7 +422,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fujitsu_fglair",
     "fujitsu_hvac",
     "futurenow",
-    "fyta",
     "garadget",
     "garages_amsterdam",
     "gardena_bluetooth",
@@ -449,7 +454,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_generative_ai_conversation",
     "google_mail",
     "google_maps",
-    "google_photos",
     "google_pubsub",
     "google_sheets",
     "google_tasks",
@@ -477,7 +481,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hddtemp",
     "hdmi_cec",
     "heatmiser",
-    "heos",
     "here_travel_time",
     "hikvision",
     "hikvisioncam",
@@ -503,7 +506,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
-    "husqvarna_automower",
     "husqvarna_automower_ble",
     "huum",
     "hvv_departures",
@@ -537,13 +539,11 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ipp",
     "iqvia",
     "irish_rail_transport",
-    "iron_os",
     "isal",
     "iskra",
     "islamic_prayer_times",
     "israel_rail",
     "iss",
-    "ista_ecotrend",
     "isy994",
     "itach",
     "itunes",
@@ -634,7 +634,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "manual_mqtt",
     "map",
     "marytts",
-    "mastodon",
     "matrix",
     "matter",
     "maxcube",
@@ -699,7 +698,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mysensors",
     "mystrom",
     "mythicbeastsdns",
-    "myuplink",
     "nad",
     "nam",
     "namecheapdns",
@@ -708,7 +706,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "neato",
     "nederlandse_spoorwegen",
     "ness_alarm",
-    "nest",
     "netatmo",
     "netdata",
     "netgear",
@@ -733,7 +730,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "no_ip",
     "noaa_tides",
     "nobo_hub",
-    "nordpool",
     "norway_air",
     "notify_events",
     "notion",
@@ -758,7 +754,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "oncue",
     "ondilo_ico",
     "onewire",
-    "onkyo",
     "onvif",
     "open_meteo",
     "openai_conversation",
@@ -810,7 +805,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "plaato",
     "plant",
     "plex",
-    "plugwise",
     "plum_lightpad",
     "pocketcasts",
     "point",
@@ -868,7 +862,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
-    "reolink",
     "repetier",
     "rest",
     "rest_command",
@@ -895,7 +888,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rtorrent",
     "rtsp_to_webrtc",
     "ruckus_unleashed",
-    "russound_rio",
     "russound_rnet",
     "ruuvi_gateway",
     "ruuvitag_ble",
@@ -992,11 +984,9 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "steam_online",
     "steamist",
     "stiebel_eltron",
-    "stookalert",
     "stream",
     "streamlabswater",
     "subaru",
-    "suez_water",
     "sun",
     "sunweg",
     "supervisord",
@@ -1066,7 +1056,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "tomorrowio",
     "toon",
     "torque",
-    "totalconnect",
     "touchline",
     "touchline_sl",
     "tplink",
@@ -1113,7 +1102,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velbus",
     "velux",
     "venstar",
     "vera",
@@ -1354,19 +1342,23 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
 
+    rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue
         rules_met.add(rule_name)
-        if (
-            status == "done"
-            and (validator := VALIDATORS.get(rule_name))
-            and (errors := validator.validate(integration))
+        if status == "done":
+            rules_done.add(rule_name)
+
+    for rule_name in rules_done:
+        if (validator := VALIDATORS.get(rule_name)) and (
+            errors := validator.validate(config, integration, rules_done=rules_done)
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")
+            integration.add_error("quality_scale", RULE_URL.format(rule_name=rule_name))
 
     # An integration must have all the necessary rules for the declared
     # quality scale, and all the rules below.

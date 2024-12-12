@@ -5,12 +5,12 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from energyzero import Electricity, Gas, VatOption
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,6 +21,9 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import EnergyZeroConfigEntry
 
 from .const import DOMAIN
 from .coordinator import EnergyZeroDataUpdateCoordinator
@@ -88,7 +91,7 @@ def __get_coordinator(
 ) -> EnergyZeroDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
+    entry: EnergyZeroConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
 
     if not entry:
         raise ServiceValidationError(
@@ -107,8 +110,7 @@ def __get_coordinator(
             },
         )
 
-    coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
-    return coordinator
+    return entry.runtime_data
 
 
 async def __get_prices(

@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
@@ -150,7 +150,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, True
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on_light",
                 translation_placeholders={
@@ -169,7 +169,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    raise ServiceValidationError(
+                    raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="select_light_custom_color",
                         translation_placeholders={
@@ -187,7 +187,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    raise ServiceValidationError(
+                    raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="set_light_color",
                         translation_placeholders={
@@ -219,7 +219,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             f"#{hex_val}",
                         )
                     except HomeConnectError as err:
-                        raise ServiceValidationError(
+                        raise HomeAssistantError(
                             translation_domain=DOMAIN,
                             translation_key="set_light_color",
                             translation_placeholders={
@@ -244,7 +244,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     self.device.appliance.set_setting, self._brightness_key, brightness
                 )
             except HomeConnectError as err:
-                raise ServiceValidationError(
+                raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_light_brightness",
                     translation_placeholders={
@@ -263,7 +263,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, False
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_light",
                 translation_placeholders={
