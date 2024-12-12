@@ -2983,6 +2983,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "ituran": {
+      "name": "Ituran",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "izone": {
       "name": "iZone",
       "integration_type": "hub",
@@ -5599,12 +5605,6 @@
       "integration_type": "virtual",
       "supported_by": "overkiz"
     },
-    "simulated": {
-      "name": "Simulated",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "sinch": {
       "name": "Sinch SMS",
       "integration_type": "hub",
@@ -5956,12 +5956,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "stookalert": {
-      "name": "RIVM Stookalert",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "stookwijzer": {
       "name": "Stookwijzer",
@@ -6903,6 +6897,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "watergate": {
+      "name": "Watergate",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "watttime": {
       "name": "WattTime",

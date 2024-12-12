@@ -6,10 +6,7 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      The coordinator isn't in the common module yet.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow:
     status: todo

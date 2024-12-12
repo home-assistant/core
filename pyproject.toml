@@ -28,7 +28,7 @@ dependencies    = [
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
-    "aiohasupervisor==0.2.1",
+    "aiohasupervisor==0.2.2b0",
     "aiohttp==3.11.10",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
@@ -41,7 +41,7 @@ dependencies    = [
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
     "certifi>=2021.5.30",
-    "ciso8601==2.3.1",
+    "ciso8601==2.3.2",
     "fnv-hash-fast==1.0.2",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
