@@ -221,8 +221,8 @@ class GoogleActionsSyncView(HomeAssistantView):
 class CloudLoginView(HomeAssistantView):
     """Login to Home Assistant cloud."""
 
-    session_tokens: dict[str, str] = {}
-    session_tokens_set_time: float = 0
+    _mfa_tokens: dict[str, str] = {}
+    _mfa_tokens_set_time: float = 0
 
     url = "/api/cloud/login"
     name = "api:cloud:login"
@@ -253,21 +253,21 @@ class CloudLoginView(HomeAssistantView):
 
             else:
                 if (
-                    not self.session_tokens
-                    or time.time() - self.session_tokens_set_time > LOGIN_MFA_TIMEOUT
+                    not self._mfa_tokens
+                    or time.time() - self._mfa_tokens_set_time > LOGIN_MFA_TIMEOUT
                 ):
                     raise MFAExpiredOrNotStarted
 
                 # Voluptuous should ensure that both are set
                 assert email is not None and code is not None
 
-                await cloud.login_verify_totp(email, code, self.session_tokens)
-                self.session_tokens = {}
-                self.session_tokens_set_time = 0
+                await cloud.login_verify_totp(email, code, self._mfa_tokens)
+                self._mfa_tokens = {}
+                self._mfa_tokens_set_time = 0
 
         except auth.MFARequired as mfa_err:
-            self.session_tokens = mfa_err.session_tokens
-            self.session_tokens_set_time = time.time()
+            self._mfa_tokens = mfa_err.mfa_tokens
+            self._mfa_tokens_set_time = time.time()
             raise
 
         if "assist_pipeline" in hass.config.components:

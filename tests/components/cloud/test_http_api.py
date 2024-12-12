@@ -390,7 +390,7 @@ async def test_login_view_mfa_required(
 ) -> None:
     """Test logging in when MFA is required."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
 
     req = await cloud_client.post(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -408,7 +408,7 @@ async def test_login_view_mfa_required_tokens_missing(
 ) -> None:
     """Test logging in when MFA is required, code is provided, but session tokens are missing."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = MFARequired(session_tokens={})
+    cloud.login.side_effect = MFARequired(mfa_tokens={})
 
     # Login with password and get MFA required error
     req = await cloud_client.post(
@@ -453,7 +453,7 @@ async def test_login_view_invalid_totp_code(
 ) -> None:
     """Test logging in when MFA is required and invalid code is provided."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
     cloud.login_verify_totp.side_effect = InvalidTotpCode
 
     # Login with password and get MFA required error
@@ -483,7 +483,7 @@ async def test_login_view_valid_totp_provided(
 ) -> None:
     """Test logging in with valid TOTP code."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = MFARequired(session_tokens={"session": "tokens"})
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
 
     # Login with password and get MFA required error
     req = await cloud_client.post(
