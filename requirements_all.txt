@@ -1028,6 +1028,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.slide
+# homeassistant.components.slide_local
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
