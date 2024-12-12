@@ -14,6 +14,7 @@ from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupState,
+    ManagerBackup,
     NewBackup,
 )
 from homeassistant.core import HomeAssistant
@@ -1248,9 +1249,26 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1270,9 +1288,26 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1292,10 +1327,31 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-4": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-09T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1315,10 +1371,31 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-4": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-09T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1338,9 +1415,26 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {"test-agent": BackupAgentError("Boom!")},
             {},
@@ -1360,9 +1454,26 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {"test-agent": BackupAgentError("Boom!")},
@@ -1382,10 +1493,31 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
-                "backup-4": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-09T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1405,7 +1537,16 @@ async def test_config_schedule_logic(
                 "schedule": "daily",
             },
             {
-                "backup-1": MagicMock(date="2024-11-12T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-12T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1518,8 +1659,21 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1538,8 +1692,21 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1558,9 +1725,26 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-09T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
@@ -1579,8 +1763,21 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {"test-agent": BackupAgentError("Boom!")},
             {},
@@ -1599,8 +1796,21 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {"test-agent": BackupAgentError("Boom!")},
@@ -1619,9 +1829,26 @@ async def test_config_retention_copies_logic(
                 "schedule": "never",
             },
             {
-                "backup-1": MagicMock(date="2024-11-09T04:45:00+01:00"),
-                "backup-2": MagicMock(date="2024-11-10T04:45:00+01:00"),
-                "backup-3": MagicMock(date="2024-11-11T04:45:00+01:00"),
+                "backup-1": MagicMock(
+                    date="2024-11-09T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_strategy_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_strategy_settings=False,
+                    spec=ManagerBackup,
+                ),
             },
             {},
             {},
