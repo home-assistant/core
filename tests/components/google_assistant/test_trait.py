@@ -924,9 +924,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
-                light.ATTR_COLOR_TEMP: 0,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
+                light.ATTR_COLOR_TEMP_KELVIN: 0,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
             },
         ),
         BASIC_CONFIG,
