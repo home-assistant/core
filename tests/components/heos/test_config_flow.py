@@ -105,7 +105,7 @@ async def test_discovery_shows_create_form(
         "Bedroom (127.0.0.2)": "127.0.0.2",
     }
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_in_progress"
 
 
 async def test_discovery_flow_aborts_already_setup(
