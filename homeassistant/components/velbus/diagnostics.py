@@ -17,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: VelbusConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    controller = entry.runtime_data.cntrl
+    controller = entry.runtime_data.controller
     data: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
     for module in controller.get_modules().values():
         data["modules"].append(_build_module_diagnostics_info(module))
@@ -28,7 +28,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: VelbusConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    controller = entry.runtime_data.cntrl
+    controller = entry.runtime_data.controller
     channel = list(next(iter(device.identifiers)))[1]
     modules = controller.get_modules()
     return _build_module_diagnostics_info(modules[int(channel)])

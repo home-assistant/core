@@ -43,7 +43,7 @@ type VelbusConfigEntry = ConfigEntry[VelbusData]
 class VelbusData:
     """Runtime data for the Velbus config entry."""
 
-    cntrl: Velbus
+    controller: Velbus
     connect_task: asyncio.Task
 
 
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
-    entry.runtime_data = VelbusData(cntrl=controller, connect_task=task)
+    entry.runtime_data = VelbusData(controller=controller, connect_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
@@ -98,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Unload (close) the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await entry.runtime_data.cntrl.stop()
+    await entry.runtime_data.controller.stop()
     return unload_ok
 
 

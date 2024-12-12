@@ -37,10 +37,12 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.connect_task
     entities: list[Entity] = [
-        VelbusLight(channel) for channel in entry.runtime_data.cntrl.get_all_light()
+        VelbusLight(channel)
+        for channel in entry.runtime_data.controller.get_all_light()
     ]
     entities.extend(
-        VelbusButtonLight(channel) for channel in entry.runtime_data.cntrl.get_all_led()
+        VelbusButtonLight(channel)
+        for channel in entry.runtime_data.controller.get_all_led()
     )
     async_add_entities(entities)
 

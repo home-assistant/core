@@ -46,20 +46,20 @@ def setup_services(hass: HomeAssistant) -> None:
         """Handle a scan service call."""
         entry = get_config_entry(call.data[CONF_INTERFACE])
         if entry:
-            await entry.runtime_data.cntrl.scan()
+            await entry.runtime_data.controller.scan()
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
         entry = get_config_entry(call.data[CONF_INTERFACE])
         if entry:
-            await entry.runtime_data.cntrl.sync_clock()
+            await entry.runtime_data.controller.sync_clock()
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         entry = get_config_entry(call.data[CONF_INTERFACE])
         if entry:
             memo_text = call.data[CONF_MEMO_TEXT]
-            module = entry.runtime_data.cntrl.get_module(call.data[CONF_ADDRESS])
+            module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
             if module:
                 await module.set_memo_text(memo_text.async_render())
 

@@ -29,7 +29,8 @@ async def async_setup_entry(
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.connect_task
     async_add_entities(
-        VelbusClimate(channel) for channel in entry.runtime_data.cntrl.get_all_climate()
+        VelbusClimate(channel)
+        for channel in entry.runtime_data.controller.get_all_climate()
     )
 
 
