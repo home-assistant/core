@@ -5660,9 +5660,20 @@
     },
     "slide": {
       "name": "Slide",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "slide": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "name": "Slide"
+        },
+        "slide_local": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Slide Local"
+        }
+      }
     },
     "slimproto": {
       "name": "SlimProto (Squeezebox players)",

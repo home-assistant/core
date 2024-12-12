@@ -877,6 +877,10 @@ google-photos-library-api==0.12.1
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
 
+# homeassistant.components.slide
+# homeassistant.components.slide_local
+goslide-api==0.7.0
+
 # homeassistant.components.tailwind
 gotailwind==0.3.0
 
