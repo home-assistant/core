@@ -83,4 +83,4 @@ rules:
     status: exempt
     comment: |
       This integration uses telnet exclusively and does not make http calls.
-  strict-typing: todo
+  strict-typing: done
