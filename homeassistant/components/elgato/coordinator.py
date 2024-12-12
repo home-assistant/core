@@ -28,10 +28,10 @@ class ElgatoData:
 class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
     """Class to manage fetching Elgato data."""
 
-    config_entry: ConfigEntry
+    config_entry: ElgatoConfigEntry
     has_battery: bool | None = None
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ElgatoConfigEntry) -> None:
         """Initialize the coordinator."""
         self.config_entry = entry
         self.client = Elgato(
