@@ -43,19 +43,12 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Show selection form
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Occurs when an entry is setup through config."""
-        host = import_data[CONF_HOST]
-        # raise_on_progress is False here in case ssdp discovers
-        # heos first which would block the import
-        await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
-        return self.async_create_entry(title=format_title(host), data={CONF_HOST: host})
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
         self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
+        await self.async_set_unique_id(DOMAIN)
         # Only a single entry is needed for all devices
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -70,7 +63,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await heos.connect()
                 self.hass.data.pop(DATA_DISCOVERED_HOSTS)
-                return await self.async_step_import({CONF_HOST: host})
+                return self.async_create_entry(
+                    title=format_title(host), data={CONF_HOST: host}
+                )
             except HeosError:
                 errors[CONF_HOST] = "cannot_connect"
             finally:

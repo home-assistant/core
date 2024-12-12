@@ -10,7 +10,7 @@ import logging
 from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -24,7 +24,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
-from .config_flow import format_title
 from .const import (
     COMMAND_RETRY_ATTEMPTS,
     COMMAND_RETRY_DELAY,
@@ -63,25 +62,6 @@ type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
-    if DOMAIN not in config:
-        return True
-    host = config[DOMAIN][CONF_HOST]
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        # Create new entry based on config
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-            )
-        )
-    else:
-        # Check if host needs to be updated
-        entry = entries[0]
-        if entry.data[CONF_HOST] != host:
-            hass.config_entries.async_update_entry(
-                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
-            )
-
     return True
 
 

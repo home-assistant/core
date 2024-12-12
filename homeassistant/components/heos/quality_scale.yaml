@@ -8,19 +8,12 @@ rules:
     comment: Integration is a local push integration
   brands: done
   common-modules: todo
-  config-flow-test-coverage:
-    status: todo
-    comment:
-      1. The config flow is 100% covered, however some tests need to let HA create the flow
-      handler instead of doing it manually in the test.
-      2. We should also make sure every test ends in either CREATE_ENTRY or ABORT so we test
-      that the flow is able to recover from an error.
+  config-flow-test-coverage: done
   config-flow:
     status: todo
     comment: |
-      1. YAML import to be removed after core team meeting discussion on approach.
-      2. Consider enhnacement to automatically select a host when multiple are discovered.
-      3. Move hass.data[heos_discovered_hosts] into hass.data[heos]
+      1. Consider enhnacement to automatically select a host when multiple are discovered.
+      2. Move hass.data[heos_discovered_hosts] into hass.data[heos]
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
