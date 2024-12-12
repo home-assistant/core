@@ -33,25 +33,28 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: EnergyZeroConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    coordinator_data = entry.runtime_data.data
+    energy_today = coordinator_data.energy_today
+
     return {
         "entry": {
             "title": entry.title,
         },
         "energy": {
-            "current_hour_price": entry.runtime_data.data.energy_today.current_price,
-            "next_hour_price": entry.runtime_data.data.energy_today.price_at_time(
-                entry.runtime_data.data.energy_today.utcnow() + timedelta(hours=1)
+            "current_hour_price": energy_today.current_price,
+            "next_hour_price": energy_today.price_at_time(
+                energy_today.utcnow() + timedelta(hours=1)
             ),
-            "average_price": entry.runtime_data.data.energy_today.average_price,
-            "max_price": entry.runtime_data.data.energy_today.extreme_prices[1],
-            "min_price": entry.runtime_data.data.energy_today.extreme_prices[0],
-            "highest_price_time": entry.runtime_data.data.energy_today.highest_price_time,
-            "lowest_price_time": entry.runtime_data.data.energy_today.lowest_price_time,
-            "percentage_of_max": entry.runtime_data.data.energy_today.pct_of_max_price,
-            "hours_priced_equal_or_lower": entry.runtime_data.data.energy_today.hours_priced_equal_or_lower,
+            "average_price": energy_today.average_price,
+            "max_price": energy_today.extreme_prices[1],
+            "min_price": energy_today.extreme_prices[0],
+            "highest_price_time": energy_today.highest_price_time,
+            "lowest_price_time": energy_today.lowest_price_time,
+            "percentage_of_max": energy_today.pct_of_max_price,
+            "hours_priced_equal_or_lower": energy_today.hours_priced_equal_or_lower,
         },
         "gas": {
-            "current_hour_price": get_gas_price(entry.runtime_data.data, 0),
-            "next_hour_price": get_gas_price(entry.runtime_data.data, 1),
+            "current_hour_price": get_gas_price(coordinator_data, 0),
+            "next_hour_price": get_gas_price(coordinator_data, 1),
         },
     }
