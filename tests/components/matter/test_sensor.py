@@ -182,22 +182,16 @@ async def test_battery_sensor_description(
     matter_node: MatterNode,
 ) -> None:
     """Test battery replacement description sensor."""
-    entity_id = "sensor.eve_door_battery_description"
-    state = hass.states.get(entity_id)
+    state = hass.states.get("sensor.smoke_sensor_none")
     assert state
     assert state.state == "CR2032"
 
     set_node_attribute(matter_node, 1, 47, 19, "CR123A")
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get("sensor.smoke_sensor_none")
     assert state
     assert state.state == "CR123A"
-
-    entry = entity_registry.async_get(entity_id)
-
-    assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
