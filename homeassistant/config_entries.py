@@ -3231,6 +3231,9 @@ class ConfigSubentryFlowManager(
 
         The entry_id and the flow.handler is the same thing to map entry with flow.
         """
+        if not context or "source" not in context:
+            raise KeyError("Context not set or doesn't have a source set")
+
         entry_id, subentry_type = handler_key
         entry = self._async_get_config_entry(entry_id)
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
@@ -3238,7 +3241,9 @@ class ConfigSubentryFlowManager(
             raise data_entry_flow.UnknownHandler(
                 f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
             )
-        return handler.async_get_subentry_flow(entry, handler_key[1])
+        subentry_flow = handler.async_get_subentry_flow(entry, handler_key[1])
+        subentry_flow.init_step = context["source"]
+        return subentry_flow
 
     async def async_finish_flow(
         self,
@@ -3301,6 +3306,9 @@ class ConfigSubentryFlow(
         unique_id: str,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
+        if self.source != SOURCE_USER:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_USER}")
+
         result = super().async_create_entry(
             title=title,
             data=data,

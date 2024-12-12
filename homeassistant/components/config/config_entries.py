@@ -322,6 +322,12 @@ class SubentryManagerFlowIndexView(
         """
         return await super()._post_impl(request, data)
 
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        context = super().get_context(data)
+        context["source"] = config_entries.SOURCE_USER
+        return context
+
 
 class SubentryManagerFlowResourceView(
     FlowManagerResourceView[config_entries.ConfigSubentryFlowManager]

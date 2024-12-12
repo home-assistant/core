@@ -1113,6 +1113,9 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
         def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
                 async def async_step_init(self, user_input=None):
+                    raise NotImplementedError
+
+                async def async_step_user(self, user_input=None):
                     schema = OrderedDict()
                     schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
@@ -1120,9 +1123,6 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
                         data_schema=schema,
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
-
-                async def async_step_user(self, user_input=None):
-                    raise NotImplementedError
 
             return SubentryFlowHandler()
 
@@ -1223,7 +1223,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
         @callback
         def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_init(self, user_input=None):
+                async def async_step_user(self, user_input=None):
                     return await self.async_step_finish()
 
                 async def async_step_finish(self, user_input=None):
@@ -1304,7 +1304,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
         @callback
         def async_get_subentry_flow(config_entry, subentry_type: str):
             class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_init(self, user_input=None):
+                async def async_step_user(self, user_input=None):
                     return self.async_show_form(
                         step_id="finish",
                         data_schema=vol.Schema(
