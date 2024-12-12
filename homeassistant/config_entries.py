@@ -3304,14 +3304,14 @@ class ConfigSubentryFlow(
     handler: tuple[str, str]
 
     @callback
-    def async_create_entry(  # type: ignore[override]
+    def async_create_entry(
         self,
         *,
         title: str | None = None,
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        unique_id: str | None,
+        unique_id: str | None = None,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
         result = super().async_create_entry(
