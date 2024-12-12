@@ -65,7 +65,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices: todo
   discovery-update-info: todo
   repair-issues: done
