@@ -27,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: EasyEnergyConfigEntry) -> bool:
     """Set up easyEnergy from a config entry."""
 
-    coordinator = EasyEnergyDataUpdateCoordinator(hass)
+    coordinator = EasyEnergyDataUpdateCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:

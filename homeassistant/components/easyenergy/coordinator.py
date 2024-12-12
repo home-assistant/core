@@ -35,15 +35,16 @@ class EasyEnergyData(NamedTuple):
 class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
     """Class to manage fetching easyEnergy data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: EasyEnergyConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EasyEnergyConfigEntry) -> None:
         """Initialize global easyEnergy data updater."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
         self.easyenergy = EasyEnergy(session=async_get_clientsession(hass))
