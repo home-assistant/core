@@ -6,7 +6,7 @@ from inelsmqtt import InelsMqtt
 from inelsmqtt.const import MQTT_TRANSPORT
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import HA_INELS_PATH
 from .common import MockConfigEntry, config_flow, inels
@@ -82,7 +83,7 @@ async def test_user_config_flow_finished_successfully(
         inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result[CONF_TYPE] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -117,7 +118,7 @@ async def test_user_config_flow_errors(
         inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result[CONF_TYPE] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -125,7 +126,7 @@ async def test_user_config_flow_errors(
         default_config,
     )
 
-    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result[CONF_TYPE] == FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
     assert len(mock_try_connection.mock_calls) == 1
@@ -141,7 +142,7 @@ async def test_config_setup(
         inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result[CONF_TYPE] == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
