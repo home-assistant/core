@@ -3314,9 +3314,6 @@ class ConfigSubentryFlow(
         unique_id: str | None,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
-        if self.source != SOURCE_USER:
-            raise ValueError(f"Source is {self.source}, expected {SOURCE_USER}")
-
         result = super().async_create_entry(
             title=title,
             data=data,
