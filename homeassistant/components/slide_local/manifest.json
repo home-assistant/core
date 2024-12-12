@@ -1,6 +1,6 @@
 {
   "domain": "slide_local",
-  "name": "Slide (local API)",
+  "name": "Slide Local",
   "codeowners": ["@dontinelli"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slide_local",
