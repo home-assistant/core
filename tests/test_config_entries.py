@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import logging
 import re
@@ -2079,8 +2080,51 @@ async def test_entry_subentry_non_string(
             )
 
 
+@pytest.mark.parametrize("context", [None, {}, {"bla": "bleh"}])
+async def test_entry_subentry_no_context(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries, context: dict | None
+) -> None:
+    """Test starting a subentry flow without "source" in context."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow), pytest.raises(KeyError):
+        await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context=context, data=None
+        )
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected_result"),
+    [(None, does_not_raise()), ("test", pytest.raises(HomeAssistantError))],
+)
 async def test_entry_subentry_duplicate(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unique_id: str | None,
+    expected_result: AbstractContextManager,
 ) -> None:
     """Test adding a duplicated subentry to an entry."""
     mock_integration(hass, MockModule("test"))
@@ -2093,7 +2137,7 @@ async def test_entry_subentry_duplicate(
                 data={},
                 subentry_id="blabla",
                 title="Mock title",
-                unique_id="test",
+                unique_id=unique_id,
             )
         ],
     )
@@ -2126,14 +2170,14 @@ async def test_entry_subentry_duplicate(
 
         flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
 
-        with pytest.raises(HomeAssistantError):
+        with expected_result:
             await manager.subentries.async_finish_flow(
                 flow,
                 {
                     "data": {"second": True},
                     "title": "Mock title",
                     "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
-                    "unique_id": "test",
+                    "unique_id": unique_id,
                 },
             )
 
