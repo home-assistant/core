@@ -579,7 +579,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kwb",
     "lacrosse",
     "lacrosse_view",
-    "lametric",
     "landisgyr_heat_meter",
     "lannouncer",
     "lastfm",
