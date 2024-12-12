@@ -2393,6 +2393,8 @@ class ConfigEntries:
     @callback
     def async_add_subentry(self, entry: ConfigEntry, subentry: ConfigSubentry) -> bool:
         """Add a subentry to a config entry."""
+        self._raise_if_subentry_unique_id_exists(entry, subentry.unique_id)
+
         return self._async_update_entry(
             entry,
             subentries=entry.subentries | {subentry.subentry_id: subentry},
@@ -2408,6 +2410,16 @@ class ConfigEntries:
             raise UnknownSubEntry from err
 
         return self._async_update_entry(entry, subentries=subentries)
+
+    def _raise_if_subentry_unique_id_exists(
+        self, entry: ConfigEntry, unique_id: str | None
+    ) -> None:
+        """Raise if a subentry with the same unique_id exists."""
+        if unique_id is None:
+            return
+        for existing_subentry in entry.subentries.values():
+            if existing_subentry.unique_id == unique_id:
+                raise ValueError(f"Subentry with unique id {unique_id} already exists")
 
     @callback
     def _async_dispatch(
