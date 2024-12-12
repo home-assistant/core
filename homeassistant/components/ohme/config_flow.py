@@ -1,4 +1,4 @@
-"""UI configuration flow."""
+"""Config flow for ohme integration."""
 
 from typing import Any
 
