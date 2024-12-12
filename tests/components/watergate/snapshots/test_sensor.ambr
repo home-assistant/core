@@ -23,7 +23,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Gateway Address',
+    'original_name': 'Gateway address',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -35,7 +35,7 @@
 # name: test_sensor[sensor.sonic_gateway_address-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic Gateway Address',
+      'friendly_name': 'Sonic Gateway address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_gateway_address',
@@ -69,7 +69,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'IP Address',
+    'original_name': 'IP address',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -81,7 +81,7 @@
 # name: test_sensor[sensor.sonic_ip_address-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic IP Address',
+      'friendly_name': 'Sonic IP address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_ip_address',
@@ -115,7 +115,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Last Auto Shut Off Event',
+    'original_name': 'Last auto shut off event',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -128,7 +128,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Sonic Last Auto Shut Off Event',
+      'friendly_name': 'Sonic Last auto shut off event',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_last_auto_shut_off_event',
@@ -162,7 +162,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'MQTT Uptime',
+    'original_name': 'MQTT uptime',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -175,7 +175,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Sonic MQTT Uptime',
+      'friendly_name': 'Sonic MQTT uptime',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -210,7 +210,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power Supply',
+    'original_name': 'Power supply',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -222,7 +222,7 @@
 # name: test_sensor[sensor.sonic_power_supply-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic Power Supply',
+      'friendly_name': 'Sonic Power supply',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_power_supply',
@@ -444,7 +444,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
-    'original_name': 'Water Flow Rate',
+    'original_name': 'Water flow rate',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -457,7 +457,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
-      'friendly_name': 'Sonic Water Flow Rate',
+      'friendly_name': 'Sonic Water flow rate',
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
@@ -492,7 +492,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Water Meter Duration',
+    'original_name': 'Water meter duration',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -505,7 +505,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Sonic Water Meter Duration',
+      'friendly_name': 'Sonic Water meter duration',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -591,7 +591,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
-    'original_name': 'Water Pressure',
+    'original_name': 'Water pressure',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -604,7 +604,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
-      'friendly_name': 'Sonic Water Pressure',
+      'friendly_name': 'Sonic Water pressure',
       'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
     }),
     'context': <ANY>,
@@ -639,7 +639,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Water Temperature',
+    'original_name': 'Water temperature',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -652,7 +652,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Sonic Water Temperature',
+      'friendly_name': 'Sonic Water temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -663,7 +663,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.sonic_wifi_uptime-entry]
+# name: test_sensor[sensor.sonic_wi_fi_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -675,7 +675,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_wifi_uptime',
+    'entity_id': 'sensor.sonic_wi_fi_uptime',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -687,7 +687,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'WIFI Uptime',
+    'original_name': 'Wi-Fi uptime',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -696,15 +696,15 @@
     'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
   })
 # ---
-# name: test_sensor[sensor.sonic_wifi_uptime-state]
+# name: test_sensor[sensor.sonic_wi_fi_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Sonic WIFI Uptime',
+      'friendly_name': 'Sonic Wi-Fi uptime',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_wifi_uptime',
+    'entity_id': 'sensor.sonic_wi_fi_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
