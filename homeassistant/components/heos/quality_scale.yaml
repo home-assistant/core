@@ -1,19 +1,36 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: todo
+    comment: Future enhancement to move custom actions for login/out into an options flow.
   appropriate-polling:
     status: done
     comment: Integration is a local push integration
   brands: done
   common-modules: todo
-  config-flow-test-coverage: done
-  config-flow: done
+  config-flow-test-coverage:
+    status: todo
+    comment:
+      1. The config flow is 100% covered, however some tests need to let HA create the flow
+      handler instead of doing it manually in the test.
+      2. We should also make sure every test ends in either CREATE_ENTRY or ABORT so we test
+      that the flow is able to recover from an error.
+  config-flow:
+    status: todo
+    comment: |
+      1. YAML import to be removed after core team meeting discussion on approach.
+      2. Consider enhnacement to automatically select a host when multiple are discovered.
+      3. Move hass.data[heos_discovered_hosts] into hass.data[heos]
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  entity-event-setup: done
+  entity-event-setup:
+    status: todo
+    comment: |
+      Simplify by using async_on_remove instead of keeping track of listeners to remove
+      later in async_will_remove_from_hass.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -27,7 +44,9 @@ rules:
       a single node yields access to all the devices setup with HEOS on your network. The HEOS API
       documentation does not recommend connecting to multiple nodes which would provide no bennefit.
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: todo
+    comment: Actions currently only log and instead should raise exceptions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: done
@@ -47,9 +66,22 @@ rules:
     status: exempt
     comment: |
       This integration doesn't require re-authentication.
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      1. Integration has >95% coverage, however tests need to be updated to not patch internals.
+      2. test_async_setup_entry_connect_failure and test_async_setup_entry_player_failure -> Instead of
+         calling async_setup_entry directly, rather use hass.config_entries.async_setup and then assert
+         the config_entry.state is what we expect.
+      3. test_unload_entry -> We should use hass.config_entries.async_unload and assert the entry state
+      4. Recommend using snapshot in test_state_attributes.
+      5. Find a way to avoid using internal dispatcher in test_updates_from_connection_event.
   # Gold
-  devices: done
+  devices:
+    status: todo
+    comment: |
+      The integraiton creates devices, but needs to stringify the id for the device identifier and
+      also migrate the device.
   diagnostics: todo
   discovery-update-info:
     status: todo
