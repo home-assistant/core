@@ -7,11 +7,12 @@ import os
 import shutil
 
 from velbusaio.controller import Velbus
+from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -75,6 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
+
+    try:
+        await controller.connect(True)
+    except VelbusConnectionFailed as error:
+        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+
     hass.data[DOMAIN][entry.entry_id] = {}
     hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
     hass.data[DOMAIN][entry.entry_id]["tsk"] = hass.async_create_task(
