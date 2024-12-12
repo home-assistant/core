@@ -10,7 +10,7 @@ from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
-from .const import DATA_DISCOVERED_HOSTS, DOMAIN
+from .const import DOMAIN
 
 
 def format_title(host: str) -> str:
@@ -34,8 +34,8 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         friendly_name = (
             f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         )
-        self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
-        self.hass.data[DATA_DISCOVERED_HOSTS][friendly_name] = hostname
+        self.hass.data.setdefault(DOMAIN, {})
+        self.hass.data[DOMAIN][friendly_name] = hostname
         await self.async_set_unique_id(DOMAIN)
         # Show selection form
         return self.async_show_form(step_id="user")
@@ -44,7 +44,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
-        self.hass.data.setdefault(DATA_DISCOVERED_HOSTS, {})
+        self.hass.data.setdefault(DOMAIN, {})
         await self.async_set_unique_id(DOMAIN)
         # Try connecting to host if provided
         errors = {}
@@ -52,11 +52,11 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             # Map host from friendly name if in discovered hosts
-            host = self.hass.data[DATA_DISCOVERED_HOSTS].get(host, host)
+            host = self.hass.data[DOMAIN].get(host, host)
             heos = Heos(host)
             try:
                 await heos.connect()
-                self.hass.data.pop(DATA_DISCOVERED_HOSTS)
+                self.hass.data.pop(DOMAIN)
                 return self.async_create_entry(
                     title=format_title(host), data={CONF_HOST: host}
                 )
@@ -67,9 +67,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Return form
         host_type = (
-            str
-            if not self.hass.data[DATA_DISCOVERED_HOSTS]
-            else vol.In(list(self.hass.data[DATA_DISCOVERED_HOSTS]))
+            str if not self.hass.data[DOMAIN] else vol.In(list(self.hass.data[DOMAIN]))
         )
         return self.async_show_form(
             step_id="user",

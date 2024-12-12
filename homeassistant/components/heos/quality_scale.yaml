@@ -10,10 +10,8 @@ rules:
   common-modules: todo
   config-flow-test-coverage: done
   config-flow:
-    status: todo
-    comment: |
-      1. Consider enhnacement to automatically select a host when multiple are discovered.
-      2. Move hass.data[heos_discovered_hosts] into hass.data[heos]
+    status: done
+    comment: Consider enhnacement to automatically select a host when multiple are discovered.
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -27,7 +25,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: todo
+  test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
   # Silver

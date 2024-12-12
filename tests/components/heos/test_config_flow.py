@@ -3,7 +3,7 @@
 from pyheos import HeosError
 
 from homeassistant.components import heos, ssdp
-from homeassistant.components.heos.const import DATA_DISCOVERED_HOSTS, DOMAIN
+from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,7 @@ async def test_create_entry_when_friendly_name_valid(
     hass: HomeAssistant, controller
 ) -> None:
     """Test result type is create entry when friendly name is valid."""
-    hass.data[DATA_DISCOVERED_HOSTS] = {"Office (127.0.0.1)": "127.0.0.1"}
+    hass.data[DOMAIN] = {"Office (127.0.0.1)": "127.0.0.1"}
     data = {CONF_HOST: "Office (127.0.0.1)"}
 
     result = await hass.config_entries.flow.async_init(
@@ -77,7 +77,7 @@ async def test_create_entry_when_friendly_name_valid(
     assert result["data"] == {CONF_HOST: "127.0.0.1"}
     assert controller.connect.call_count == 2  # Also called in async_setup_entry
     assert controller.disconnect.call_count == 1
-    assert DATA_DISCOVERED_HOSTS not in hass.data
+    assert DOMAIN not in hass.data
 
 
 async def test_discovery_shows_create_form(
@@ -92,7 +92,7 @@ async def test_discovery_shows_create_form(
     result = await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
     )
-    assert hass.data[DATA_DISCOVERED_HOSTS] == {"Office (127.0.0.1)": "127.0.0.1"}
+    assert hass.data[DOMAIN] == {"Office (127.0.0.1)": "127.0.0.1"}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -100,7 +100,7 @@ async def test_discovery_shows_create_form(
     result = await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
     )
-    assert hass.data[DATA_DISCOVERED_HOSTS] == {
+    assert hass.data[DOMAIN] == {
         "Office (127.0.0.1)": "127.0.0.1",
         "Bedroom (127.0.0.2)": "127.0.0.2",
     }
