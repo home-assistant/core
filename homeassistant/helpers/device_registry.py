@@ -360,7 +360,7 @@ class DeviceEntry:
                 {
                     "area_id": self.area_id,
                     # The config_entries list can be removed from the storage
-                    # representation in 2025.11
+                    # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
                     "config_subentries": {
                         entry: list(subentries)
@@ -430,7 +430,7 @@ class DeletedDeviceEntry:
             json_bytes(
                 {
                     # The config_entries list can be removed from the storage
-                    # representation in 2025.11
+                    # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
                     "config_subentries": {
                         entry: list(subentries)
@@ -478,7 +478,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         old_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Migrate to the new version."""
-        # Support for a future major version bump to 2 added in HA Core 2024.11.
+        # Support for a future major version bump to 2 added in HA Core 2025.1.
         # Major versions 1 and 2 will be the same, except that version 2 will no
         # longer store a list of config_entries.
         if old_major_version < 3:
@@ -529,7 +529,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for device in old_data["deleted_devices"]:
                     device["created_at"] = device["modified_at"] = created_at
             if old_minor_version < 9:
-                # Introduced in 2024.11
+                # Introduced in 2025.1
                 for device in old_data["devices"]:
                     device["config_subentries"] = {
                         entry: {None} for entry in device["config_entries"]
