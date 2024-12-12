@@ -2419,7 +2419,7 @@ class ConfigEntries:
             return
         for existing_subentry in entry.subentries.values():
             if existing_subentry.unique_id == unique_id:
-                raise ValueError(f"Subentry with unique id {unique_id} already exists")
+                raise data_entry_flow.AbortFlow("already_configured")
 
     @callback
     def _async_dispatch(
@@ -3281,11 +3281,6 @@ class ConfigSubentryFlowManager(
         unique_id = result.get("unique_id")
         if unique_id is not None and not isinstance(unique_id, str):
             raise HomeAssistantError("unique_id must be a string")
-
-        if unique_id is not None and any(
-            subentry.unique_id == unique_id for subentry in entry.subentries.values()
-        ):
-            raise data_entry_flow.AbortFlow("already_configured")
 
         self.hass.config_entries.async_add_subentry(
             entry,
