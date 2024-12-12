@@ -525,6 +525,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
