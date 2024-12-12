@@ -10,7 +10,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "api_version": "1 or 2. 1 is pre Aug-2023 firmware. 2 is for Aug-2023 or later (default = 2)",
           "ip_address": "The hostname or IP address of your local Slide",
           "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). NOTE: With api_version 2 you can fill in anything here, it is not used by the local API."
         }
