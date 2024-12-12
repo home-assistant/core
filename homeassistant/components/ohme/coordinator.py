@@ -6,7 +6,7 @@ import logging
 from ohme import ApiException, OhmeApiClient
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EMAIL, CONF_PASSWORD
@@ -25,6 +25,9 @@ class OhmeCoordinator(DataUpdateCoordinator[OhmeApiClient]):
             name="Ohme Coordinator",
             update_interval=timedelta(seconds=30),
         )
+        if not self.config_entry:
+            raise ConfigEntryError("ConfigEntry was not passed to coordinator")
+
         self.client: OhmeApiClient = OhmeApiClient(
             self.config_entry.data[CONF_EMAIL], self.config_entry.data[CONF_PASSWORD]
         )

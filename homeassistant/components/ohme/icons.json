@@ -1,27 +1,27 @@
 {
-    "entity": {
-        "sensor": {
-            "status": {
-                "default": "mdi:car",
-                "state": {
-                    "unplugged": "mdi:power-plug-off",
-                    "plugged_in": "mdi:power-plug",
-                    "charging": "mdi:battery-charging-100",
-                    "pending_approval": "mdi:alert-decagram"
-                }
-            },
-            "current": {
-                "default": "mdi:current-ac"
-            },
-            "ct_current": {
-                "default": "mdi:gauge"
-            },
-            "power": {
-                "default": "mdi:lightning-bolt"
-            },
-            "energy": {
-                "default": "mdi:lightning-bolt-circle"
-            }
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:car",
+        "state": {
+          "unplugged": "mdi:power-plug-off",
+          "plugged_in": "mdi:power-plug",
+          "charging": "mdi:battery-charging-100",
+          "pending_approval": "mdi:alert-decagram"
         }
+      },
+      "current": {
+        "default": "mdi:current-ac"
+      },
+      "ct_current": {
+        "default": "mdi:gauge"
+      },
+      "power": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy": {
+        "default": "mdi:lightning-bolt-circle"
+      }
     }
+  }
 }

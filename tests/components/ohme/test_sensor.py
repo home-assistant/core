@@ -49,7 +49,9 @@ def mock_config_entry(mock_coordinator):
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry(mock_config_entry, mock_coordinator, mock_client):
+async def test_async_setup_entry(
+    mock_config_entry, mock_coordinator, mock_client
+) -> None:
     """Test async_setup_entry sets up entities properly."""
     mock_coordinator.client = mock_client
     async_add_entities = AsyncMock()
@@ -65,7 +67,7 @@ async def test_async_setup_entry(mock_config_entry, mock_coordinator, mock_clien
         assert entity.entity_description.key == description.key
 
 
-def test_status_sensor(mock_coordinator, mock_client):
+def test_status_sensor(mock_coordinator, mock_client) -> None:
     """Test OhmeSensor properties return correct values."""
     description = SENSOR_DESCRIPTIONS[0]
     mock_coordinator.data = mock_client

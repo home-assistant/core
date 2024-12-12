@@ -57,6 +57,8 @@ SENSOR_DESCRIPTIONS = [
         key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=1,
         value_fn=lambda client: client.power.watts,
     ),
     OhmeSensorDescription(
