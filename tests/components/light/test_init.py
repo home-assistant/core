@@ -1839,8 +1839,8 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
 
     entity1 = entities[1]
     entity1.supported_color_modes = {light.ColorMode.RGBWW}
-    assert entity1.min_mireds == 153
-    assert entity1.max_mireds == 500
+    assert entity1.min_mireds is None
+    assert entity1.max_mireds is None
     assert entity1.min_color_temp_kelvin == 2000
     assert entity1.max_color_temp_kelvin == 6500
 
