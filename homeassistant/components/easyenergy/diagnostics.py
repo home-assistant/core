@@ -7,8 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import EasyEnergyConfigEntry
-from .coordinator import EasyEnergyData
+from .coordinator import EasyEnergyConfigEntry, EasyEnergyData
 
 
 def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:

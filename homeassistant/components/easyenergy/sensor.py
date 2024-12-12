@@ -25,9 +25,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import EasyEnergyConfigEntry
 from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
-from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
+from .coordinator import (
+    EasyEnergyConfigEntry,
+    EasyEnergyData,
+    EasyEnergyDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)

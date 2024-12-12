@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
+type EasyEnergyConfigEntry = ConfigEntry[EasyEnergyDataUpdateCoordinator]
+
 
 class EasyEnergyData(NamedTuple):
     """Class for defining data in dict."""
