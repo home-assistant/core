@@ -164,7 +164,8 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                 if source_id in self._zone.enabled_sources
             ]
             if is_feature_supported(
-                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+                self._client.rio_version,  # type: ignore[arg-type]
+                FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION,
             )
             else self._sources.values()
         )
