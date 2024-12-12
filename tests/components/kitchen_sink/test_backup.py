@@ -13,7 +13,6 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
