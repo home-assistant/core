@@ -30,10 +30,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: |
-      Does not set parallel-updates on button/switch action calls.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
