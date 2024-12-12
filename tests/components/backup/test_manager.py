@@ -8,7 +8,7 @@ from dataclasses import is_dataclass
 from enum import StrEnum
 from io import StringIO
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 from cronsim import CronSim
@@ -48,6 +48,9 @@ from .common import (
 
 from tests.common import MockPlatform, async_fire_time_changed, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 _EXPECTED_FILES = [
     "test.txt",
@@ -975,7 +978,7 @@ async def test_loading_saving_data(
     manager2 = BackupManager(hass, CoreBackupReaderWriter(hass))
     await manager2.async_setup()
 
-    def compare_config_dataclass(obj1, obj2):
+    def compare_config_dataclass(obj1: DataclassInstance, obj2: Any) -> None:
         """Compare two BackupConfigData instances."""
         for field in obj1.__dataclass_fields__:
             value1 = getattr(obj1, field)
