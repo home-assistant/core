@@ -1,7 +1,6 @@
 """Tests for the Backup integration."""
 
 from collections.abc import Generator
-from datetime import datetime
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
@@ -780,12 +779,8 @@ async def test_agents_info(
                     "password": "test-password",
                 },
                 "retention": {"copies": 3, "days": 7},
-                "last_attempted_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
-                "last_completed_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
+                "last_attempted_strategy_backup": "2024-10-26T04:45:00+01:00",
+                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "daily"},
             },
         },
@@ -820,12 +815,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": 7},
-                "last_attempted_strategy_backup": datetime.fromisoformat(
-                    "2024-10-27T04:45:00+01:00"
-                ),
-                "last_completed_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
+                "last_attempted_strategy_backup": "2024-10-27T04:45:00+01:00",
+                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "never"},
             },
         },
@@ -1187,12 +1178,8 @@ async def test_config_schedule_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": datetime.fromisoformat(
-                last_completed_strategy_backup
-            ),
-            "last_completed_strategy_backup": datetime.fromisoformat(
-                last_completed_strategy_backup
-            ),
+            "last_attempted_strategy_backup": last_completed_strategy_backup,
+            "last_completed_strategy_backup": last_completed_strategy_backup,
             "schedule": {"state": "daily"},
         },
     }
@@ -1468,7 +1455,7 @@ async def test_config_retention_copies_logic(
             },
             "retention": {"copies": None, "days": None},
             "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
+            "last_completed_strategy_backup": last_backup_time,
             "schedule": {"state": "daily"},
         },
     }
@@ -1681,7 +1668,7 @@ async def test_config_retention_days_logic(
             },
             "retention": {"copies": None, "days": None},
             "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
+            "last_completed_strategy_backup": last_backup_time,
             "schedule": {"state": "never"},
         },
     }
