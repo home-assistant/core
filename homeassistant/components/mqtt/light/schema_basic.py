@@ -261,8 +261,16 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
-        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
+        self._attr_min_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(max_mireds)
+            if (max_mireds := config.get(CONF_MAX_MIREDS))
+            else super().min_color_temp_kelvin
+        )
+        self._attr_max_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(min_mireds)
+            if (min_mireds := config.get(CONF_MIN_MIREDS))
+            else super().max_color_temp_kelvin
+        )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
         topic: dict[str, str | None] = {
