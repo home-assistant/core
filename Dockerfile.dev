@@ -52,7 +52,6 @@ USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 RUN uv venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-ENV container=oci
 
 WORKDIR /tmp
 
