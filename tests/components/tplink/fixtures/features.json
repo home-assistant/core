@@ -34,6 +34,16 @@
     "type": "Switch",
     "category": "Config"
   },
+  "child_lock": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "pir_enabled": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
   "current_consumption": {
     "value": 5.23,
     "type": "Sensor",
@@ -200,10 +210,20 @@
     "type": "BinarySensor",
     "category": "Primary"
   },
+  "motion_detected": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Primary"
+  },
   "alarm": {
     "value": false,
     "type": "BinarySensor",
     "category": "Info"
+  },
+  "reboot": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
   },
   "test_alarm": {
     "value": "<Action>",
@@ -293,5 +313,10 @@
     "type": "Choice",
     "category": "Config",
     "choices": ["low", "normal", "high"]
+  },
+  "water_alert_timestamp": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": "2024-06-24 10:03:11.046643+01:00"
   }
 }

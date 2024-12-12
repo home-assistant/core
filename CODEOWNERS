@@ -40,6 +40,8 @@ build.json @home-assistant/supervisor
 # Integrations
 /homeassistant/components/abode/ @shred86
 /tests/components/abode/ @shred86
+/homeassistant/components/acaia/ @zweckj
+/tests/components/acaia/ @zweckj
 /homeassistant/components/accuweather/ @bieniu
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray
@@ -498,8 +500,8 @@ build.json @home-assistant/supervisor
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
-/homeassistant/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
-/tests/components/fritz/ @mammuth @AaronDavidSchneider @chemelli74 @mib1185
+/homeassistant/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
+/tests/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
 /homeassistant/components/fritzbox/ @mib1185 @flabbamann
 /tests/components/fritzbox/ @mib1185 @flabbamann
 /homeassistant/components/fritzbox_callmonitor/ @cdce8p
@@ -588,8 +590,8 @@ build.json @home-assistant/supervisor
 /tests/components/group/ @home-assistant/core
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
-/homeassistant/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
-/tests/components/habitica/ @ASMfreaK @leikoilja @tr4nt0r
+/homeassistant/components/habitica/ @tr4nt0r
+/tests/components/habitica/ @tr4nt0r
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
@@ -619,8 +621,8 @@ build.json @home-assistant/supervisor
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/holiday/ @jrieger @gjohansson-ST
 /tests/components/holiday/ @jrieger @gjohansson-ST
-/homeassistant/components/home_connect/ @DavidMStraub
-/tests/components/home_connect/ @DavidMStraub
+/homeassistant/components/home_connect/ @DavidMStraub @Diegorro98
+/tests/components/home_connect/ @DavidMStraub @Diegorro98
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
 /homeassistant/components/homeassistant_alerts/ @home-assistant/core
@@ -661,6 +663,8 @@ build.json @home-assistant/supervisor
 /tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /homeassistant/components/husqvarna_automower/ @Thomas55555
 /tests/components/husqvarna_automower/ @Thomas55555
+/homeassistant/components/husqvarna_automower_ble/ @alistair23
+/tests/components/husqvarna_automower_ble/ @alistair23
 /homeassistant/components/huum/ @frwickst
 /tests/components/huum/ @frwickst
 /homeassistant/components/hvv_departures/ @vigonotion
@@ -725,8 +729,8 @@ build.json @home-assistant/supervisor
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
 /tests/components/iotawatt/ @gtdiehl @jyavenard
-/homeassistant/components/iotty/ @pburgio @shapournemati-iotty
-/tests/components/iotty/ @pburgio @shapournemati-iotty
+/homeassistant/components/iotty/ @shapournemati-iotty
+/tests/components/iotty/ @shapournemati-iotty
 /homeassistant/components/iperf3/ @rohankapoorcom
 /homeassistant/components/ipma/ @dgomes
 /tests/components/ipma/ @dgomes
@@ -751,6 +755,8 @@ build.json @home-assistant/supervisor
 /tests/components/ista_ecotrend/ @tr4nt0r
 /homeassistant/components/isy994/ @bdraco @shbatm
 /tests/components/isy994/ @bdraco @shbatm
+/homeassistant/components/ituran/ @shmuelzon
+/tests/components/ituran/ @shmuelzon
 /homeassistant/components/izone/ @Swamp-Ig
 /tests/components/izone/ @Swamp-Ig
 /homeassistant/components/jellyfin/ @j-stienstra @ctalkington
@@ -821,6 +827,8 @@ build.json @home-assistant/supervisor
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
+/homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
+/tests/components/lg_thinq/ @LG-ThinQ-Integration
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/lifx/ @Djelibeybi
@@ -952,6 +960,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mullvad/ @meichthys
 /tests/components/mullvad/ @meichthys
+/homeassistant/components/music_assistant/ @music-assistant
+/tests/components/music_assistant/ @music-assistant
 /homeassistant/components/mutesync/ @currentoor
 /tests/components/mutesync/ @currentoor
 /homeassistant/components/my/ @home-assistant/core
@@ -966,8 +976,8 @@ build.json @home-assistant/supervisor
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu @joostlek
 /tests/components/nanoleaf/ @milanmeu @joostlek
-/homeassistant/components/neato/ @Santobert
-/tests/components/neato/ @Santobert
+/homeassistant/components/nasweb/ @nasWebio
+/tests/components/nasweb/ @nasWebio
 /homeassistant/components/nederlandse_spoorwegen/ @YarmoM
 /homeassistant/components/ness_alarm/ @nickw444
 /tests/components/ness_alarm/ @nickw444
@@ -998,6 +1008,8 @@ build.json @home-assistant/supervisor
 /tests/components/nice_go/ @IceBotYT
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
+/homeassistant/components/niko_home_control/ @VandeurenGlenn
+/tests/components/niko_home_control/ @VandeurenGlenn
 /homeassistant/components/nilu/ @hfurubotten
 /homeassistant/components/nina/ @DeerMaximum
 /tests/components/nina/ @DeerMaximum
@@ -1006,6 +1018,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
 /tests/components/nobo_hub/ @echoromeo @oyvindwe
+/homeassistant/components/nordpool/ @gjohansson-ST
+/tests/components/nordpool/ @gjohansson-ST
 /homeassistant/components/notify/ @home-assistant/core
 /tests/components/notify/ @home-assistant/core
 /homeassistant/components/notify_events/ @matrozov @papajojo
@@ -1049,6 +1063,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz
+/tests/components/onkyo/ @arturpragacz
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
@@ -1090,10 +1105,10 @@ build.json @home-assistant/supervisor
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
 /tests/components/p1_monitor/ @klaasnicolaas
+/homeassistant/components/palazzetti/ @dotvav
+/tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
-/homeassistant/components/panel_iframe/ @home-assistant/frontend
-/tests/components/panel_iframe/ @home-assistant/frontend
 /homeassistant/components/peco/ @IceBotYT
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
@@ -1122,6 +1137,8 @@ build.json @home-assistant/supervisor
 /tests/components/point/ @fredrike
 /homeassistant/components/poolsense/ @haemishkyd
 /tests/components/poolsense/ @haemishkyd
+/homeassistant/components/powerfox/ @klaasnicolaas
+/tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
 /homeassistant/components/private_ble_device/ @Jc2k
@@ -1241,8 +1258,8 @@ build.json @home-assistant/supervisor
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter
 /tests/components/romy/ @xeniter
-/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
-/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Xitee1 @Orhideous
+/homeassistant/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
+/tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
 /homeassistant/components/rpi_power/ @shenxn @swetoast
@@ -1335,6 +1352,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
+/homeassistant/components/sky_remote/ @dunnmj @saty9
+/tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
 /tests/components/skybell/ @tkdrob
 /homeassistant/components/slack/ @tkdrob @fletcherau
@@ -1353,6 +1372,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/smarttub/ @mdz
 /tests/components/smarttub/ @mdz
 /homeassistant/components/smarty/ @z0mbieprocess
+/tests/components/smarty/ @z0mbieprocess
 /homeassistant/components/smhi/ @gjohansson-ST
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
@@ -1399,15 +1419,13 @@ build.json @home-assistant/supervisor
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/starlink/ @boswelja
 /tests/components/starlink/ @boswelja
-/homeassistant/components/statistics/ @ThomDietrich
-/tests/components/statistics/ @ThomDietrich
+/homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
+/tests/components/statistics/ @ThomDietrich @gjohansson-ST
 /homeassistant/components/steam_online/ @tkdrob
 /tests/components/steam_online/ @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm
-/homeassistant/components/stookalert/ @fwestenberg @frenck
-/tests/components/stookalert/ @fwestenberg @frenck
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
@@ -1416,8 +1434,8 @@ build.json @home-assistant/supervisor
 /tests/components/stt/ @home-assistant/core
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
-/homeassistant/components/suez_water/ @ooii
-/tests/components/suez_water/ @ooii
+/homeassistant/components/suez_water/ @ooii @jb101010-2
+/tests/components/suez_water/ @ooii @jb101010-2
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
 /homeassistant/components/sunweg/ @rokam
@@ -1475,8 +1493,8 @@ build.json @home-assistant/supervisor
 /tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
-/homeassistant/components/template/ @PhracturedBlue @tetienne @home-assistant/core
-/tests/components/template/ @PhracturedBlue @tetienne @home-assistant/core
+/homeassistant/components/template/ @PhracturedBlue @home-assistant/core
+/tests/components/template/ @PhracturedBlue @home-assistant/core
 /homeassistant/components/tesla_fleet/ @Bre77
 /tests/components/tesla_fleet/ @Bre77
 /homeassistant/components/tesla_wall_connector/ @einarhauks
@@ -1561,6 +1579,8 @@ build.json @home-assistant/supervisor
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
+/homeassistant/components/unifiprotect/ @RaHehl
+/tests/components/unifiprotect/ @RaHehl
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff
@@ -1628,6 +1648,8 @@ build.json @home-assistant/supervisor
 /tests/components/waqi/ @joostlek
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
+/homeassistant/components/watergate/ @adam-the-hero
+/tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya

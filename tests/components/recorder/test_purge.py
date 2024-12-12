@@ -112,6 +112,9 @@ async def test_purge_big_database(hass: HomeAssistant, recorder_mock: Recorder) 
 
 async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) -> None:
     """Test deleting old states."""
+    assert recorder_mock.states_manager.oldest_ts is None
+    oldest_ts = recorder_mock.states_manager.oldest_ts
+
     await _add_test_states(hass)
 
     # make sure we start with 6 states
@@ -127,6 +130,10 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
 
+        assert recorder_mock.states_manager.oldest_ts != oldest_ts
+        assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
+        oldest_ts = recorder_mock.states_manager.oldest_ts
+
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -140,6 +147,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         repack=False,
     )
     assert not finished
+    # states_manager.oldest_ts is not updated until after the purge is complete
+    assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -162,12 +171,18 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
 
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
+    # states_manager.oldest_ts should now be updated
+    assert recorder_mock.states_manager.oldest_ts != oldest_ts
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
         assert states.count() == 2
         assert state_attributes.count() == 1
+
+        assert recorder_mock.states_manager.oldest_ts != oldest_ts
+        assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
+        oldest_ts = recorder_mock.states_manager.oldest_ts
 
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -181,6 +196,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         repack=False,
     )
     assert not finished
+    # states_manager.oldest_ts is not updated until after the purge is complete
+    assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
     with session_scope(hass=hass) as session:
         assert states.count() == 0
@@ -352,6 +369,8 @@ async def test_purge_old_recorder_runs(
     with session_scope(hass=hass) as session:
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
+        # Make sure we have a run that is not closed
+        assert sum(run.end is None for run in recorder_runs) == 1
 
     purge_before = dt_util.utcnow()
 
@@ -376,7 +395,9 @@ async def test_purge_old_recorder_runs(
 
     with session_scope(hass=hass) as session:
         recorder_runs = session.query(RecorderRuns)
-        assert recorder_runs.count() == 1
+        assert recorder_runs.count() == 3
+        # Make sure we did not purge the unclosed run
+        assert sum(run.end is None for run in recorder_runs) == 1
 
 
 async def test_purge_old_statistics_runs(
@@ -543,7 +564,7 @@ async def test_purge_edge_case(
                     event_type="EVENT_TEST_PURGE",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             session.add(
@@ -551,8 +572,8 @@ async def test_purge_edge_case(
                     entity_id="test.recorder2",
                     state="purgeme",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                     event_id=1001,
                     attributes_id=1002,
                 )
@@ -614,7 +635,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     event_type="KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    time_fired_ts=timestamp_keep.timestamp(),
                 )
             )
             session.add(
@@ -622,8 +643,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     entity_id="test.cutoff",
                     state="keep",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp_keep),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    last_changed_ts=timestamp_keep.timestamp(),
+                    last_updated_ts=timestamp_keep.timestamp(),
                     event_id=1000,
                     attributes_id=1000,
                 )
@@ -642,7 +663,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         event_type="PURGE",
                         event_data="{}",
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        time_fired_ts=timestamp_purge.timestamp(),
                     )
                 )
                 session.add(
@@ -650,8 +671,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         entity_id="test.cutoff",
                         state="purge",
                         attributes="{}",
-                        last_changed_ts=dt_util.utc_to_timestamp(timestamp_purge),
-                        last_updated_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        last_changed_ts=timestamp_purge.timestamp(),
+                        last_updated_ts=timestamp_purge.timestamp(),
                         event_id=1000 + row,
                         attributes_id=1000 + row,
                     )
@@ -800,8 +821,8 @@ async def test_purge_filtered_states(
                     entity_id="sensor.excluded",
                     state="purgeme",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                 )
             )
             # Add states and state_changed events that should be keeped
@@ -826,8 +847,8 @@ async def test_purge_filtered_states(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=1,
                 state_attributes=state_attrs,
             )
@@ -836,8 +857,8 @@ async def test_purge_filtered_states(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=2,
                 state_attributes=state_attrs,
             )
@@ -845,8 +866,8 @@ async def test_purge_filtered_states(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=62,  # keep
                 state_attributes=state_attrs,
             )
@@ -858,7 +879,7 @@ async def test_purge_filtered_states(
                     event_type="EVENT_KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             convert_pending_states_to_meta(recorder_mock, session)
@@ -964,6 +985,171 @@ async def test_purge_filtered_states(
         assert session.query(StateAttributes).count() == 0
 
 
+@pytest.mark.parametrize(
+    "recorder_config", [{"exclude": {"entities": ["sensor.excluded"]}}]
+)
+async def test_purge_filtered_states_multiple_rounds(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test filtered states are purged when there are multiple rounds to purge."""
+    assert recorder_mock.entity_filter("sensor.excluded") is False
+
+    def _add_db_entries(hass: HomeAssistant) -> None:
+        with session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            for days in range(1, 4):
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(1000, 1020):
+                    _add_state_with_state_attributes(
+                        session,
+                        "sensor.excluded",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+            # Add state **without** state_changed event that should be purged
+            timestamp = dt_util.utcnow() - timedelta(days=1)
+            session.add(
+                States(
+                    entity_id="sensor.excluded",
+                    state="purgeme",
+                    attributes="{}",
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
+                )
+            )
+            # Add states and state_changed events that should be keeped
+            timestamp = dt_util.utcnow() - timedelta(days=2)
+            for event_id in range(200, 210):
+                _add_state_with_state_attributes(
+                    session,
+                    "sensor.keep",
+                    "keep",
+                    timestamp,
+                    event_id,
+                )
+            # Add states with linked old_state_ids that need to be handled
+            timestamp = dt_util.utcnow() - timedelta(days=0)
+            state_attrs = StateAttributes(
+                hash=0,
+                shared_attrs=json.dumps(
+                    {"sensor.linked_old_state_id": "sensor.linked_old_state_id"}
+                ),
+            )
+            state_1 = States(
+                entity_id="sensor.linked_old_state_id",
+                state="keep",
+                attributes="{}",
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
+                old_state_id=1,
+                state_attributes=state_attrs,
+            )
+            timestamp = dt_util.utcnow() - timedelta(days=4)
+            state_2 = States(
+                entity_id="sensor.linked_old_state_id",
+                state="keep",
+                attributes="{}",
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
+                old_state_id=2,
+                state_attributes=state_attrs,
+            )
+            state_3 = States(
+                entity_id="sensor.linked_old_state_id",
+                state="keep",
+                attributes="{}",
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
+                old_state_id=62,  # keep
+                state_attributes=state_attrs,
+            )
+            session.add_all((state_attrs, state_1, state_2, state_3))
+            # Add event that should be keeped
+            session.add(
+                Events(
+                    event_id=100,
+                    event_type="EVENT_KEEP",
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired_ts=timestamp.timestamp(),
+                )
+            )
+            convert_pending_states_to_meta(recorder_mock, session)
+            convert_pending_events_to_event_types(recorder_mock, session)
+
+    service_data = {"keep_days": 10, "apply_filter": True}
+    _add_db_entries(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 74
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
+        assert events_keep.count() == 1
+
+    await hass.services.async_call(
+        RECORDER_DOMAIN, SERVICE_PURGE, service_data, blocking=True
+    )
+
+    for _ in range(2):
+        # Make sure the second round of purging runs
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
+
+    assert "Cleanup filtered data hasn't fully completed yet" in caplog.text
+    caplog.clear()
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 13
+        events_keep = session.query(Events).filter(
+            Events.event_type_id.in_(select_event_type_ids(("EVENT_KEEP",)))
+        )
+        assert events_keep.count() == 1
+
+        states_sensor_excluded = (
+            session.query(States)
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .filter(StatesMeta.entity_id == "sensor.excluded")
+        )
+        assert states_sensor_excluded.count() == 0
+        query = session.query(States)
+
+        assert query.filter(States.state_id == 72).first().old_state_id is None
+        assert query.filter(States.state_id == 72).first().attributes_id == 71
+        assert query.filter(States.state_id == 73).first().old_state_id is None
+        assert query.filter(States.state_id == 73).first().attributes_id == 71
+
+        final_keep_state = session.query(States).filter(States.state_id == 74).first()
+        assert final_keep_state.old_state_id == 62  # should have been kept
+        assert final_keep_state.attributes_id == 71
+
+        assert session.query(StateAttributes).count() == 11
+
+    # Do it again to make sure nothing changes
+    await hass.services.async_call(RECORDER_DOMAIN, SERVICE_PURGE, service_data)
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass) as session:
+        final_keep_state = session.query(States).filter(States.state_id == 74).first()
+        assert final_keep_state.old_state_id == 62  # should have been kept
+        assert final_keep_state.attributes_id == 71
+
+        assert session.query(StateAttributes).count() == 11
+
+    for _ in range(2):
+        # Make sure the second round of purging runs
+        await async_recorder_block_till_done(hass)
+        await async_wait_purge_done(hass)
+
+    assert "Cleanup filtered data hasn't fully completed yet" not in caplog.text
+
+
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 @pytest.mark.parametrize(
     "recorder_config", [{"exclude": {"entities": ["sensor.excluded"]}}]
@@ -1042,8 +1228,8 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                     entity_id="sensor.old_format",
                     state=STATE_ON,
                     attributes=json.dumps({"old": "not_using_state_attributes"}),
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                     event_id=event_id,
                     state_attributes=None,
                 )
@@ -1054,7 +1240,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                     event_type=EVENT_STATE_CHANGED,
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             session.add(
@@ -1063,7 +1249,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                     event_type=EVENT_THEMES_UPDATED,
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             convert_pending_states_to_meta(recorder_mock, session)
@@ -1118,7 +1304,7 @@ async def test_purge_filtered_events(
                             event_type="EVENT_PURGE",
                             event_data="{}",
                             origin="LOCAL",
-                            time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                            time_fired_ts=timestamp.timestamp(),
                         )
                     )
 
@@ -1225,7 +1411,7 @@ async def test_purge_filtered_events_state_changed(
                         event_type="EVENT_KEEP",
                         event_data="{}",
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                        time_fired_ts=timestamp.timestamp(),
                     )
                 )
             # Add states with linked old_state_ids that need to be handled
@@ -1234,8 +1420,8 @@ async def test_purge_filtered_events_state_changed(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=1,
             )
             timestamp = dt_util.utcnow() - timedelta(days=4)
@@ -1243,16 +1429,16 @@ async def test_purge_filtered_events_state_changed(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=2,
             )
             state_3 = States(
                 entity_id="sensor.linked_old_state_id",
                 state="keep",
                 attributes="{}",
-                last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                last_changed_ts=timestamp.timestamp(),
+                last_updated_ts=timestamp.timestamp(),
                 old_state_id=62,  # keep
             )
             session.add_all((state_1, state_2, state_3))
@@ -1262,7 +1448,7 @@ async def test_purge_filtered_events_state_changed(
                     event_type="excluded_event",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             session.add(
@@ -1270,8 +1456,8 @@ async def test_purge_filtered_events_state_changed(
                     entity_id="sensor.old_format",
                     state="remove",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                 )
             )
             convert_pending_events_to_event_types(recorder_mock, session)
@@ -1637,8 +1823,8 @@ def _add_state_without_event_linkage(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=None,
             state_attributes=state_attrs,
         )
@@ -1662,8 +1848,8 @@ def _add_state_with_state_attributes(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=event_id,
             state_attributes=state_attrs,
         )
@@ -1744,8 +1930,6 @@ async def test_purge_old_events_purges_the_event_type_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
     """Test deleting old events purges event type ids."""
-    assert recorder_mock.event_type_manager.active is True
-
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
@@ -1785,7 +1969,7 @@ async def test_purge_old_events_purges_the_event_type_ids(
                         Events(
                             event_type=None,
                             event_type_id=event_type.event_type_id,
-                            time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                            time_fired_ts=timestamp.timestamp(),
                         )
                     )
             return recorder_mock.event_type_manager.get_many(
@@ -1915,7 +2099,7 @@ async def test_purge_old_states_purges_the_state_metadata_ids(
                         States(
                             metadata_id=metadata_id,
                             state="any",
-                            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                            last_updated_ts=timestamp.timestamp(),
                         )
                     )
             return recorder_mock.states_meta_manager.get_many(

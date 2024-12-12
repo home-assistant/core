@@ -25,6 +25,9 @@ from . import ElgatorConfigEntry
 from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ElgatoSensorEntityDescription(SensorEntityDescription):

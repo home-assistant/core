@@ -5,14 +5,31 @@ DOMAIN = "home_connect"
 OAUTH2_AUTHORIZE = "https://api.home-connect.com/security/oauth/authorize"
 OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
 
+APPLIANCES_WITH_PROGRAMS = (
+    "CleaningRobot",
+    "CoffeeMaker",
+    "Dishwasher",
+    "Dryer",
+    "Hood",
+    "Oven",
+    "WarmingDrawer",
+    "Washer",
+    "WasherDryer",
+)
+
 BSH_POWER_STATE = "BSH.Common.Setting.PowerState"
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
 BSH_POWER_OFF = "BSH.Common.EnumType.PowerState.Off"
 BSH_POWER_STANDBY = "BSH.Common.EnumType.PowerState.Standby"
+BSH_SELECTED_PROGRAM = "BSH.Common.Root.SelectedProgram"
 BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_REMOTE_CONTROL_ACTIVATION_STATE = "BSH.Common.Status.RemoteControlActive"
 BSH_REMOTE_START_ALLOWANCE_STATE = "BSH.Common.Status.RemoteControlStartAllowed"
 BSH_CHILD_LOCK_STATE = "BSH.Common.Setting.ChildLock"
+
+BSH_REMAINING_PROGRAM_TIME = "BSH.Common.Option.RemainingProgramTime"
+BSH_COMMON_OPTION_DURATION = "BSH.Common.Option.Duration"
+BSH_COMMON_OPTION_PROGRAM_PROGRESS = "BSH.Common.Option.ProgramProgress"
 
 BSH_EVENT_PRESENT_STATE_PRESENT = "BSH.Common.EnumType.EventPresentState.Present"
 BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confirmed"
@@ -31,6 +48,11 @@ COFFEE_EVENT_BEAN_CONTAINER_EMPTY = (
 )
 COFFEE_EVENT_WATER_TANK_EMPTY = "ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty"
 COFFEE_EVENT_DRIP_TRAY_FULL = "ConsumerProducts.CoffeeMaker.Event.DripTrayFull"
+
+DISHWASHER_EVENT_SALT_NEARLY_EMPTY = "Dishcare.Dishwasher.Event.SaltNearlyEmpty"
+DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY = (
+    "Dishcare.Dishwasher.Event.RinseAidNearlyEmpty"
+)
 
 REFRIGERATION_INTERNAL_LIGHT_POWER = "Refrigeration.Common.Setting.Light.Internal.Power"
 REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS = (
@@ -91,12 +113,51 @@ SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
+ATTR_ALLOWED_VALUES = "allowedvalues"
 ATTR_AMBIENT = "ambient"
+ATTR_BSH_KEY = "bsh_key"
+ATTR_CONSTRAINTS = "constraints"
 ATTR_DESC = "desc"
 ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
+ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
+
+SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
+SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
+SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
+SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
+SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
+
+OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
+    "ChildLock": BSH_CHILD_LOCK_STATE,
+    "Operation State": BSH_OPERATION_STATE,
+    "Light": COOKING_LIGHTING,
+    "AmbientLight": BSH_AMBIENT_LIGHT_ENABLED,
+    "Power": BSH_POWER_STATE,
+    "Remaining Program Time": BSH_REMAINING_PROGRAM_TIME,
+    "Duration": BSH_COMMON_OPTION_DURATION,
+    "Program Progress": BSH_COMMON_OPTION_PROGRAM_PROGRESS,
+    "Remote Control": BSH_REMOTE_CONTROL_ACTIVATION_STATE,
+    "Remote Start": BSH_REMOTE_START_ALLOWANCE_STATE,
+    "Supermode Freezer": REFRIGERATION_SUPERMODEFREEZER,
+    "Supermode Refrigerator": REFRIGERATION_SUPERMODEREFRIGERATOR,
+    "Dispenser Enabled": REFRIGERATION_DISPENSER,
+    "Internal Light": REFRIGERATION_INTERNAL_LIGHT_POWER,
+    "External Light": REFRIGERATION_EXTERNAL_LIGHT_POWER,
+    "Chiller Door": REFRIGERATION_STATUS_DOOR_CHILLER,
+    "Freezer Door": REFRIGERATION_STATUS_DOOR_FREEZER,
+    "Refrigerator Door": REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
+    "Door Alarm Freezer": REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+    "Door Alarm Refrigerator": REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
+    "Temperature Alarm Freezer": REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
+    "Bean Container Empty": COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+    "Water Tank Empty": COFFEE_EVENT_WATER_TANK_EMPTY,
+    "Drip Tray Full": COFFEE_EVENT_DRIP_TRAY_FULL,
+}

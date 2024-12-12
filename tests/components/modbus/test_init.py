@@ -52,7 +52,6 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -68,7 +67,6 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN as DOMAIN,
     RTUOVERTCP,
     SERIAL,
-    SERVICE_RESTART,
     SERVICE_STOP,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -566,18 +564,6 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
-            CONF_RETRIES: 3,
             CONF_SENSORS: [
                 {
                     CONF_NAME: "dummy",
@@ -1147,61 +1133,6 @@ async def test_shutdown(
     await hass.async_block_till_done()
     assert mock_pymodbus.close.called
     assert caplog.text == ""
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_SLAVE: 0,
-                }
-            ]
-        },
-    ],
-)
-async def test_stop_restart(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
-) -> None:
-    """Run test for service stop."""
-
-    caplog.set_level(logging.WARNING)
-    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
-    assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-    hass.states.async_set(entity_id, 17)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "17"
-
-    mock_modbus.reset_mock()
-    caplog.clear()
-    data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-    }
-    await hass.services.async_call(DOMAIN, SERVICE_STOP, data, blocking=True)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-    assert mock_modbus.close.called
-    assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
-
-    mock_modbus.reset_mock()
-    caplog.clear()
-    await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
-    await hass.async_block_till_done()
-    assert not mock_modbus.close.called
-    assert mock_modbus.connect.called
-    assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
-
-    mock_modbus.reset_mock()
-    caplog.clear()
-    await hass.services.async_call(DOMAIN, SERVICE_RESTART, data, blocking=True)
-    await hass.async_block_till_done()
-    assert mock_modbus.close.called
-    assert mock_modbus.connect.called
-    assert f"modbus {TEST_MODBUS_NAME} communication closed" in caplog.text
-    assert f"modbus {TEST_MODBUS_NAME} communication open" in caplog.text
 
 
 @pytest.mark.parametrize("do_config", [{}])

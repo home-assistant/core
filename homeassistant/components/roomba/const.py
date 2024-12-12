@@ -9,5 +9,5 @@ CONF_CONTINUOUS = "continuous"
 CONF_BLID = "blid"
 DEFAULT_CERT = "/etc/ssl/certs/ca-certificates.crt"
 DEFAULT_CONTINUOUS = True
-DEFAULT_DELAY = 1
+DEFAULT_DELAY = 30
 ROOMBA_SESSION = "roomba_session"

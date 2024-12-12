@@ -29,8 +29,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -56,6 +54,7 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -103,20 +102,6 @@ _KNX_YAML_CONFIG: Final = "knx_yaml_config"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
-            # deprecated since 2021.12
-            cv.deprecated(CONF_KNX_STATE_UPDATER),
-            cv.deprecated(CONF_KNX_RATE_LIMIT),
-            cv.deprecated(CONF_KNX_ROUTING),
-            cv.deprecated(CONF_KNX_TUNNELING),
-            cv.deprecated(CONF_KNX_INDIVIDUAL_ADDRESS),
-            cv.deprecated(CONF_KNX_MCAST_GRP),
-            cv.deprecated(CONF_KNX_MCAST_PORT),
-            cv.deprecated("event_filter"),
-            # deprecated since 2021.4
-            cv.deprecated("config_file"),
-            # deprecated since 2021.2
-            cv.deprecated("fire_event"),
-            cv.deprecated("fire_event_filter"),
             vol.Schema(
                 {
                     **EventSchema.SCHEMA,
@@ -192,14 +177,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
         },
     )
-
-    # set up notify service for backwards compatibility - remove 2024.11
-    if NotifySchema.PLATFORM in config:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
-            )
-        )
 
     await register_panel(hass)
 
@@ -376,6 +353,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
@@ -388,6 +366,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 secure_config=SecureConfig(

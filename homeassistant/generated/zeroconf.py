@@ -267,6 +267,11 @@ HOMEKIT = {
 }
 
 ZEROCONF = {
+    "_PowerView-G3._tcp.local.": [
+        {
+            "domain": "hunterdouglas_powerview",
+        },
+    ],
     "_Volumio._tcp.local.": [
         {
             "domain": "volumio",
@@ -542,6 +547,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },
@@ -616,6 +625,12 @@ ZEROCONF = {
         {
             "domain": "lutron_caseta",
             "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
                 "SYSTYPE": "radiora3*",
             },
         },
@@ -630,6 +645,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
         },
     ],
     "_matter._tcp.local.": [
@@ -697,11 +717,6 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
-        },
-    ],
-    "_powerview-g3._tcp.local.": [
-        {
-            "domain": "hunterdouglas_powerview",
         },
     ],
     "_powerview._tcp.local.": [
@@ -863,6 +878,12 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "*zigate*",
+        },
+    ],
+    "_zigbee-coordinator._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*",
         },
     ],
     "_zigstar_gw._tcp.local.": [

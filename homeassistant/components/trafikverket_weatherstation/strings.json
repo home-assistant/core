@@ -23,7 +23,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "station": "[%key:component::trafikverket_weatherstation::config::step::user::data::station%]"

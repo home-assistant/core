@@ -111,7 +111,11 @@ class EntityPlatformModule(Protocol):
 
 
 class EntityPlatform:
-    """Manage the entities for a single platform."""
+    """Manage the entities for a single platform.
+
+    An example of an entity platform is 'hue.light', which is managed by
+    the entity component 'light'.
+    """
 
     def __init__(
         self,
@@ -141,6 +145,7 @@ class EntityPlatform:
         self.platform_translations: dict[str, str] = {}
         self.object_id_component_translations: dict[str, str] = {}
         self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -475,6 +480,14 @@ class EntityPlatform:
             )
             self.object_id_platform_translations = await self._async_get_translations(
                 object_id_language, "entity", self.platform_name
+            )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
             )
 
     def _schedule_add_entities(

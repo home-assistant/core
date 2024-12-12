@@ -2,15 +2,14 @@
 
 import logging
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.const import BT_MODEL_PREFIXES, FirmwareType
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from packaging import version
+from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
+from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -23,10 +22,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -41,8 +40,6 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
     """Set up La Marzocco as config entry."""
@@ -50,10 +47,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     assert entry.unique_id
     serial = entry.unique_id
 
+    client = async_create_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=get_async_client(hass),
+        client=client,
     )
 
     # initialize local API
@@ -63,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         local_client = LaMarzoccoLocalClient(
             host=host,
             local_bearer=entry.data[CONF_TOKEN],
-            client=get_async_client(hass),
+            client=client,
         )
 
     # initialize Bluetooth
@@ -103,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     coordinator = LaMarzoccoUpdateCoordinator(
         hass=hass,
+        entry=entry,
         local_client=local_client,
         cloud_client=cloud_client,
         bluetooth_client=bluetooth_client,
@@ -126,7 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    async def update_listener(
+        hass: HomeAssistant, entry: LaMarzoccoConfigEntry
+    ) -> None:
         await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -134,12 +135,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: LaMarzoccoConfigEntry
+) -> bool:
     """Migrate config entry."""
     if entry.version > 2:
         # guard against downgrade from a future version
