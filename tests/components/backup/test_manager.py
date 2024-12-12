@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Generator
 from io import StringIO
 import json
+from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
 
@@ -18,6 +19,7 @@ from homeassistant.components.backup import (
     BackupManager,
     BackupPlatformProtocol,
     Folder,
+    LocalBackupAgent,
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -534,20 +536,74 @@ async def test_loading_platforms(
 
     assert not manager.platforms
 
+    get_agents_mock = AsyncMock(return_value=[])
+
     await _setup_backup_platform(
         hass,
         platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
-            async_get_backup_agents=AsyncMock(),
+            async_get_backup_agents=get_agents_mock,
         ),
     )
     await manager.load_platforms()
     await hass.async_block_till_done()
 
     assert len(manager.platforms) == 1
-
     assert "Loaded 1 platforms" in caplog.text
+
+    get_agents_mock.assert_called_once_with(hass)
+
+
+class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
+    """Local backup agent."""
+
+    def get_backup_path(self, backup_id: str) -> Path:
+        """Return the local path to a backup."""
+        return "test.tar"
+
+
+@pytest.mark.parametrize(
+    ("agent_class", "num_local_agents"),
+    [(LocalBackupAgentTest, 1), (BackupAgentTest, 0)],
+)
+async def test_loading_platform_with_listener(
+    hass: HomeAssistant,
+    agent_class: type[BackupAgentTest],
+    num_local_agents: int,
+) -> None:
+    """Test loading a backup agent platform which can be listened to."""
+    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+
+    assert not manager.platforms
+
+    get_agents_mock = AsyncMock(return_value=[agent_class("remote1", backups=[])])
+    register_listener_mock = Mock()
+
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=get_agents_mock,
+            async_register_backup_agents_listener=register_listener_mock,
+        ),
+    )
+    await manager.load_platforms()
+    await hass.async_block_till_done()
+    assert list(manager.backup_agents) == ["test.remote1"]
+    assert len(manager.local_backup_agents) == num_local_agents
+
+    get_agents_mock.assert_called_once_with(hass)
+    register_listener_mock.assert_called_once_with(hass, listener=ANY)
+
+    get_agents_mock.reset_mock()
+    get_agents_mock.return_value = [agent_class("remote2", backups=[])]
+    listener = register_listener_mock.call_args[1]["listener"]
+    listener()
+
+    get_agents_mock.assert_called_once_with(hass)
+    assert list(manager.backup_agents) == ["test.remote2"]
+    assert len(manager.local_backup_agents) == num_local_agents
 
 
 @pytest.mark.parametrize(
