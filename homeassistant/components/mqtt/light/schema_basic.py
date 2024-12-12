@@ -486,10 +486,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         def _converter(
             r: int, g: int, b: int, cw: int, ww: int
         ) -> tuple[int, int, int]:
-            min_kelvin = color_util.color_temperature_mired_to_kelvin(self.max_mireds)
-            max_kelvin = color_util.color_temperature_mired_to_kelvin(self.min_mireds)
             return color_util.color_rgbww_to_rgb(
-                r, g, b, cw, ww, min_kelvin, max_kelvin
+                r, g, b, cw, ww, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
 
         rgbww = self._rgbx_received(
