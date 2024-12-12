@@ -66,8 +66,9 @@ class GeoEntityTrackableLocation(GeoEntityBaseTrackable, TrackerEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
+        """Return the extra state attributes."""
         return {
+            "URL": self.trackable.url,
             "travel_log": []
             if self.trackable.journeys is None
             else [
@@ -110,3 +111,10 @@ class GeoEntityCacheLocation(GeoEntityBaseCache, TrackerEntity):
         """Return the location of the cache."""
         # TODO: Figure out another way of displaying the code as label in the map, rather than this with `label_mode: state` in the map | pylint: disable=fixme
         return self.cache.reference_code
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the extra state attributes."""
+        return {
+            "URL": self.cache.url,
+        }
