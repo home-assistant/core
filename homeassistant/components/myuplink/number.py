@@ -117,7 +117,7 @@ class MyUplinkNumber(MyUplinkEntity, NumberEntity):
         self._attr_native_max_value = (
             device_point.max_value if device_point.max_value else 30000
         ) * _scale
-        self._attr_step_value = (
+        self._attr_native_step = (
             device_point.step_value if device_point.step_value else 1.0
         ) * _scale
         if entity_description is not None:
