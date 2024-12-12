@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 from amberelectric.models.actual_interval import ActualInterval
+from amberelectric.models.advanced_price import AdvancedPrice
 from amberelectric.models.channel import ChannelType
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.forecast_interval import ForecastInterval
@@ -53,6 +54,7 @@ def generate_current_interval(
             spike_status=SpikeStatus.NONE,
             descriptor=PriceDescriptor.EXTREMELYLOW,
             estimate=True,
+            advancedPrice=AdvancedPrice(low=10, predicted=15, high=20),
         )
     )
 

@@ -123,6 +123,9 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "general"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == 0.1
+    assert attributes["advanced_price_predicted"] == 0.15
+    assert attributes["advanced_price_high"] == 0.2
     assert attributes.get("range_min") is None
     assert attributes.get("range_max") is None
 
@@ -161,6 +164,9 @@ async def test_general_and_controlled_load_price_sensor(hass: HomeAssistant) -> 
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "controlledLoad"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == 0.1
+    assert attributes["advanced_price_predicted"] == 0.15
+    assert attributes["advanced_price_high"] == 0.2
 
 
 @pytest.mark.usefixtures("setup_general_and_feed_in")
@@ -183,6 +189,9 @@ async def test_general_and_feed_in_price_sensor(hass: HomeAssistant) -> None:
     assert attributes["spike_status"] == "none"
     assert attributes["channel_type"] == "feedIn"
     assert attributes["attribution"] == "Data provided by Amber Electric"
+    assert attributes["advanced_price_low"] == -0.1
+    assert attributes["advanced_price_predicted"] == -0.15
+    assert attributes["advanced_price_high"] == -0.2
 
 
 async def test_general_forecast_sensor(
