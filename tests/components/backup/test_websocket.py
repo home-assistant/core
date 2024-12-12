@@ -42,7 +42,7 @@ BACKUP_CALL = call(
     on_progress=ANY,
 )
 
-DEFAULT_STORAGE_DATA = {
+DEFAULT_STORAGE_DATA: dict[str, Any] = {
     "backups": {},
     "config": {
         "create_backup": {
