@@ -9,6 +9,18 @@
                     "charging": "mdi:battery-charging-100",
                     "pending_approval": "mdi:alert-decagram"
                 }
+            },
+            "current": {
+                "default": "mdi:current-ac"
+            },
+            "ct_current": {
+                "default": "mdi:gauge"
+            },
+            "power": {
+                "default": "mdi:lightning-bolt"
+            },
+            "energy": {
+                "default": "mdi:lightning-bolt-circle"
             }
         }
     }

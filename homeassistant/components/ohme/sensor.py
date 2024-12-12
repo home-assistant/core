@@ -13,8 +13,10 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,6 +39,34 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=[e.value for e in ChargerStatus],
         value_fn=lambda client: client.status.value,
+    ),
+    OhmeSensorDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda client: client.power.amps,
+    ),
+    OhmeSensorDescription(
+        key="ct_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda client: client.power.ct_amps,
+        is_supported_fn=lambda client: client.ct_connected,
+    ),
+    OhmeSensorDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda client: client.power.watts,
+    ),
+    OhmeSensorDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda client: client.energy,
     ),
 ]
 

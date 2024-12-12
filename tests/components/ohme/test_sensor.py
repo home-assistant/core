@@ -1,17 +1,17 @@
 """Tests for sensors."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import EntityCategory
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.ohme.sensor import (
-    async_setup_entry,
-    OhmeSensor,
-    SENSOR_DESCRIPTIONS,
-)
+
+from ohme import ChargerStatus, OhmeApiClient
+import pytest
+
 from homeassistant.components.ohme.coordinator import OhmeCoordinator
-from ohme import OhmeApiClient, ChargerStatus
+from homeassistant.components.ohme.sensor import (
+    SENSOR_DESCRIPTIONS,
+    OhmeSensor,
+    async_setup_entry,
+)
+from homeassistant.components.sensor import SensorDeviceClass
 
 
 @pytest.fixture
@@ -28,14 +28,15 @@ def mock_client():
     client = MagicMock(spec=OhmeApiClient)
     client.status = ChargerStatus.CHARGING
     client.serial = "chargerid"
+    client.ct_connected = True
     client.device_info = {
-            "identifiers": ("ohme", "ohme_charger_chargerid"),
-            "name": "Ohme Home Pro",
-            "manufacturer": "Ohme",
-            "model": "Home Pro",
-            "sw_version": "1.0",
-            "serial_number": "chargerid",
-        }
+        "identifiers": ("ohme", "ohme_charger_chargerid"),
+        "name": "Ohme Home Pro",
+        "manufacturer": "Ohme",
+        "model": "Home Pro",
+        "sw_version": "1.0",
+        "serial_number": "chargerid",
+    }
     return client
 
 
@@ -59,7 +60,7 @@ async def test_async_setup_entry(mock_config_entry, mock_coordinator, mock_clien
     entities = async_add_entities.call_args[0][0]
 
     assert len(entities) == len(SENSOR_DESCRIPTIONS)
-    for entity, description in zip(entities, SENSOR_DESCRIPTIONS):
+    for entity, description in zip(entities, SENSOR_DESCRIPTIONS, strict=False):
         assert isinstance(entity, OhmeSensor)
         assert entity.entity_description.key == description.key
 

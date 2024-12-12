@@ -25,6 +25,18 @@
           "charging": "Charging",
           "pending_approval": "Pending approval"
         }
+      },
+      "current": {
+        "name": "Current"
+      },
+      "ct_current": {
+        "name": "CT current"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "energy": {
+        "name": "Energy"
       }
     }
   }
