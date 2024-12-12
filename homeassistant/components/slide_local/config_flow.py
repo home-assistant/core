@@ -117,7 +117,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_HOST, default=self._host): str,
+                        vol.Required(CONF_HOST): str,
                         vol.Required(CONF_PASSWORD): str,
                     }
                 ),
