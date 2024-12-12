@@ -1890,6 +1890,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
 
     async def _async_call(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
@@ -1899,7 +1900,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
         return_response: bool = False,
     ) -> ServiceResponse:
         calls.append(
-            ServiceCall(domain, service, service_data, context, return_response)
+            ServiceCall(hass, domain, service, service_data, context, return_response)
         )
         try:
             return await _original_async_call(
