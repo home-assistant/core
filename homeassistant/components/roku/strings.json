@@ -11,15 +11,6 @@
           "host": "The hostname or IP address of the Roku device to control."
         }
       },
-      "reconfigure": {
-        "description": "Reconfigure your Roku.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "[%key:component::roku::config::step::user::data_description::host%]"
-        }
-      },
       "discovery_confirm": {
         "description": "Do you want to set up {name}?"
       }

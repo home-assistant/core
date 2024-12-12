@@ -58,11 +58,23 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_info = {}
 
     @callback
-    def _show_form(self, errors: dict[str, Any] | None = None) -> ConfigFlowResult:
+    def _show_form(
+        self,
+        errors: dict[str, Any] | None = None,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
         """Show the form to the user."""
+        suggested_values = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = {
+                CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST]
+            }
+
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, suggested_values
+            ),
             errors=errors or {},
         )
 
@@ -70,12 +82,6 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=DATA_SCHEMA,
-            )
-
         return await self.async_step_user(user_input)
 
     async def async_step_user(
@@ -83,7 +89,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
-            return self._show_form()
+            return self._show_form(None, user_input)
 
         errors = {}
 
@@ -92,7 +98,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             errors["base"] = ERROR_CANNOT_CONNECT
-            return self._show_form(errors)
+            return self._show_form(errors, user_input)
         except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
@@ -106,7 +112,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates={CONF_HOST: user_input[CONF_HOST]},
             )
 
-        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
