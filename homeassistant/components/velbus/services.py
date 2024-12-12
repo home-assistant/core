@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 import os
 import shutil
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -13,7 +14,9 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from . import VelbusConfigEntry
+if TYPE_CHECKING:
+    from . import VelbusConfigEntry
+
 from .const import (
     CONF_INTERFACE,
     CONF_MEMO_TEXT,
