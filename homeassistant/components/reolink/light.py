@@ -28,6 +28,8 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkLightEntityDescription(
@@ -57,6 +59,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
         cmd_key="GetWhiteLed",
+        cmd_id=291,
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),

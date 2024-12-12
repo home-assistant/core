@@ -7,18 +7,10 @@ from homeassistant.components import automation
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    EntityCategory,
-)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -354,7 +346,7 @@ async def test_if_state(
             ]
         },
     )
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -366,7 +358,7 @@ async def test_if_state(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "is_triggered - event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.DISARMED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -378,7 +370,7 @@ async def test_if_state(
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "is_disarmed - event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_HOME)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -390,7 +382,7 @@ async def test_if_state(
     assert len(service_calls) == 3
     assert service_calls[2].data["some"] == "is_armed_home - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_AWAY)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -402,7 +394,7 @@ async def test_if_state(
     assert len(service_calls) == 4
     assert service_calls[3].data["some"] == "is_armed_away - event - test_event4"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_NIGHT)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -414,7 +406,7 @@ async def test_if_state(
     assert len(service_calls) == 5
     assert service_calls[4].data["some"] == "is_armed_night - event - test_event5"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_VACATION)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -426,7 +418,7 @@ async def test_if_state(
     assert len(service_calls) == 6
     assert service_calls[5].data["some"] == "is_armed_vacation - event - test_event6"
 
-    hass.states.async_set(entry.entity_id, STATE_ALARM_ARMED_CUSTOM_BYPASS)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     hass.bus.async_fire("test_event3")
@@ -488,7 +480,7 @@ async def test_if_state_legacy(
             ]
         },
     )
-    hass.states.async_set(entry.entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entry.entity_id, AlarmControlPanelState.TRIGGERED)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
     assert len(service_calls) == 1

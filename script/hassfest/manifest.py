@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import StrEnum, auto
 import json
 from pathlib import Path
 import subprocess
@@ -20,7 +20,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-from .model import Config, Integration
+from .model import Config, Integration, ScaledQualityScaleTiers
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
@@ -28,16 +28,20 @@ DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 
-class QualityScale(IntEnum):
+class NonScaledQualityScaleTiers(StrEnum):
     """Supported manifest quality scales."""
 
-    INTERNAL = -1
-    SILVER = 1
-    GOLD = 2
-    PLATINUM = 3
+    CUSTOM = auto()
+    NO_SCORE = auto()
+    INTERNAL = auto()
+    LEGACY = auto()
 
 
-SUPPORTED_QUALITY_SCALES = [enum.name.lower() for enum in QualityScale]
+SUPPORTED_QUALITY_SCALES = [
+    value.name.lower()
+    for enum in [ScaledQualityScaleTiers, NonScaledQualityScaleTiers]
+    for value in enum
+]
 SUPPORTED_IOT_CLASSES = [
     "assumed_state",
     "calculated",
@@ -110,19 +114,6 @@ NO_IOT_CLASS = [
     "webhook",
     "websocket_api",
     "zone",
-]
-# Grandfather rule for older integrations
-# https://github.com/home-assistant/developers.home-assistant/pull/1512
-NO_DIAGNOSTICS = [
-    "dlna_dms",
-    "hyperion",
-    "nightscout",
-    "pvpc_hourly_pricing",
-    "risco",
-    "smarttub",
-    "songpal",
-    "vizio",
-    "yeelight",
 ]
 
 
@@ -268,7 +259,6 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
             )
         ],
         vol.Required("documentation"): vol.All(vol.Url(), documentation_url),
-        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Optional("requirements"): [str],
         vol.Optional("dependencies"): [str],
@@ -304,6 +294,7 @@ def manifest_schema(value: dict[str, Any]) -> vol.Schema:
 CUSTOM_INTEGRATION_MANIFEST_SCHEMA = INTEGRATION_MANIFEST_SCHEMA.extend(
     {
         vol.Optional("version"): vol.All(str, verify_version),
+        vol.Optional("issue_tracker"): vol.Url(),
         vol.Optional("import_executor"): bool,
     }
 )
@@ -359,35 +350,16 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
             "Virtual integration points to non-existing supported_by integration",
         )
 
-    if (quality_scale := integration.manifest.get("quality_scale")) and QualityScale[
-        quality_scale.upper()
-    ] > QualityScale.SILVER:
+    if (
+        (quality_scale := integration.manifest.get("quality_scale"))
+        and quality_scale.upper() in ScaledQualityScaleTiers
+        and ScaledQualityScaleTiers[quality_scale.upper()]
+        >= ScaledQualityScaleTiers.SILVER
+    ):
         if not integration.manifest.get("codeowners"):
             integration.add_error(
                 "manifest",
                 f"{quality_scale} integration does not have a code owner",
-            )
-        if (
-            domain not in NO_DIAGNOSTICS
-            and not (integration.path / "diagnostics.py").exists()
-        ):
-            integration.add_error(
-                "manifest",
-                f"{quality_scale} integration does not implement diagnostics",
-            )
-
-    if domain in NO_DIAGNOSTICS:
-        if quality_scale and QualityScale[quality_scale.upper()] < QualityScale.GOLD:
-            integration.add_error(
-                "manifest",
-                "{quality_scale} integration should be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
-            )
-        elif (integration.path / "diagnostics.py").exists():
-            integration.add_error(
-                "manifest",
-                "Implements diagnostics and can be "
-                "removed from NO_DIAGNOSTICS in script/hassfest/manifest.py",
             )
 
     if not integration.core:

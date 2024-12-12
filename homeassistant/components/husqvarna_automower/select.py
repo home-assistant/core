@@ -16,6 +16,7 @@ from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 HEADLIGHT_MODES: list = [
     HeadlightModes.ALWAYS_OFF.lower(),

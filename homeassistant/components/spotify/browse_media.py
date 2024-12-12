@@ -14,6 +14,7 @@ from spotifyaio import (
     SpotifyClient,
     Track,
 )
+from spotifyaio.models import ItemType, SimplifiedEpisode
 import yarl
 
 from homeassistant.components.media_player import (
@@ -90,6 +91,16 @@ def _get_track_item_payload(
     }
 
 
+def _get_episode_item_payload(episode: SimplifiedEpisode) -> ItemPayload:
+    return {
+        "id": episode.episode_id,
+        "name": episode.name,
+        "type": MediaType.EPISODE,
+        "uri": episode.uri,
+        "thumbnail": fetch_image_url(episode.images),
+    }
+
+
 class BrowsableMedia(StrEnum):
     """Enum of browsable media."""
 
@@ -101,8 +112,6 @@ class BrowsableMedia(StrEnum):
     CURRENT_USER_RECENTLY_PLAYED = "current_user_recently_played"
     CURRENT_USER_TOP_ARTISTS = "current_user_top_artists"
     CURRENT_USER_TOP_TRACKS = "current_user_top_tracks"
-    CATEGORIES = "categories"
-    FEATURED_PLAYLISTS = "featured_playlists"
     NEW_RELEASES = "new_releases"
 
 
@@ -115,8 +124,6 @@ LIBRARY_MAP = {
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: "Recently played",
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: "Top Artists",
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: "Top Tracks",
-    BrowsableMedia.CATEGORIES.value: "Categories",
-    BrowsableMedia.FEATURED_PLAYLISTS.value: "Featured Playlists",
     BrowsableMedia.NEW_RELEASES.value: "New Releases",
 }
 
@@ -152,18 +159,6 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str, Any] = {
     BrowsableMedia.CURRENT_USER_TOP_TRACKS.value: {
         "parent": MediaClass.DIRECTORY,
         "children": MediaClass.TRACK,
-    },
-    BrowsableMedia.FEATURED_PLAYLISTS.value: {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.PLAYLIST,
-    },
-    BrowsableMedia.CATEGORIES.value: {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.GENRE,
-    },
-    "category_playlists": {
-        "parent": MediaClass.DIRECTORY,
-        "children": MediaClass.PLAYLIST,
     },
     BrowsableMedia.NEW_RELEASES.value: {
         "parent": MediaClass.DIRECTORY,
@@ -253,7 +248,6 @@ async def async_browse_media(
     result = await async_browse_media_internal(
         hass,
         info.coordinator.client,
-        info.coordinator.current_user,
         media_content_type,
         media_content_id,
         can_play_artist=can_play_artist,
@@ -270,7 +264,6 @@ async def async_browse_media(
 async def async_browse_media_internal(
     hass: HomeAssistant,
     spotify: SpotifyClient,
-    current_user: dict[str, Any],
     media_content_type: str | None,
     media_content_id: str | None,
     *,
@@ -290,7 +283,6 @@ async def async_browse_media_internal(
     }
     response = await build_item_response(
         spotify,
-        current_user,
         payload,
         can_play_artist=can_play_artist,
     )
@@ -301,7 +293,6 @@ async def async_browse_media_internal(
 
 async def build_item_response(  # noqa: C901
     spotify: SpotifyClient,
-    user: dict[str, Any],
     payload: dict[str, str | None],
     *,
     can_play_artist: bool,
@@ -330,12 +321,13 @@ async def build_item_response(  # noqa: C901
                 for saved_album in saved_albums
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
-        if media := await spotify.get_saved_tracks():
+        if saved_tracks := await spotify.get_saved_tracks():
             items = [
-                _get_track_item_payload(saved_track.track) for saved_track in media
+                _get_track_item_payload(saved_track.track)
+                for saved_track in saved_tracks
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_SHOWS:
-        if media := await spotify.get_saved_shows():
+        if saved_shows := await spotify.get_saved_shows():
             items = [
                 {
                     "id": saved_show.show.show_id,
@@ -344,117 +336,63 @@ async def build_item_response(  # noqa: C901
                     "uri": saved_show.show.uri,
                     "thumbnail": fetch_image_url(saved_show.show.images),
                 }
-                for saved_show in media
+                for saved_show in saved_shows
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED:
-        if media := await spotify.get_recently_played_tracks():
-            items = [_get_track_item_payload(item.track) for item in media]
+        if recently_played_tracks := await spotify.get_recently_played_tracks():
+            items = [
+                _get_track_item_payload(item.track) for item in recently_played_tracks
+            ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_ARTISTS:
-        if media := await spotify.get_top_artists():
-            items = [_get_artist_item_payload(artist) for artist in media]
+        if top_artists := await spotify.get_top_artists():
+            items = [_get_artist_item_payload(artist) for artist in top_artists]
     elif media_content_type == BrowsableMedia.CURRENT_USER_TOP_TRACKS:
-        if media := await spotify.get_top_tracks():
-            items = [_get_track_item_payload(track) for track in media]
-    elif media_content_type == BrowsableMedia.FEATURED_PLAYLISTS:
-        if media := await spotify.get_featured_playlists():
-            items = [_get_playlist_item_payload(playlist) for playlist in media]
-    elif media_content_type == BrowsableMedia.CATEGORIES:
-        if media := await spotify.get_categories():
-            items = [
-                {
-                    "id": category.category_id,
-                    "name": category.name,
-                    "type": "category_playlists",
-                    "uri": category.category_id,
-                    "thumbnail": category.icons[0].url if category.icons else None,
-                }
-                for category in media
-            ]
-    elif media_content_type == "category_playlists":
-        if (
-            media := await spotify.get_category_playlists(category_id=media_content_id)
-        ) and (category := await spotify.get_category(media_content_id)):
-            title = category.name
-            image = category.icons[0].url if category.icons else None
-            items = [_get_playlist_item_payload(playlist) for playlist in media]
+        if top_tracks := await spotify.get_top_tracks():
+            items = [_get_track_item_payload(track) for track in top_tracks]
     elif media_content_type == BrowsableMedia.NEW_RELEASES:
-        if media := await spotify.get_new_releases():
-            items = [_get_album_item_payload(album) for album in media]
+        if new_releases := await spotify.get_new_releases():
+            items = [_get_album_item_payload(album) for album in new_releases]
     elif media_content_type == MediaType.PLAYLIST:
-        if media := await spotify.get_playlist(media_content_id):
-            title = media.name
-            image = media.images[0].url if media.images else None
-            items = [
-                _get_track_item_payload(playlist_track.track)
-                for playlist_track in media.tracks.items
-            ]
+        if playlist := await spotify.get_playlist(media_content_id):
+            title = playlist.name
+            image = playlist.images[0].url if playlist.images else None
+            for playlist_item in playlist.tracks.items:
+                if playlist_item.track.type is ItemType.TRACK:
+                    if TYPE_CHECKING:
+                        assert isinstance(playlist_item.track, Track)
+                    items.append(_get_track_item_payload(playlist_item.track))
+                elif playlist_item.track.type is ItemType.EPISODE:
+                    if TYPE_CHECKING:
+                        assert isinstance(playlist_item.track, SimplifiedEpisode)
+                    items.append(_get_episode_item_payload(playlist_item.track))
     elif media_content_type == MediaType.ALBUM:
-        if media := await spotify.get_album(media_content_id):
-            title = media.name
-            image = media.images[0].url if media.images else None
+        if album := await spotify.get_album(media_content_id):
+            title = album.name
+            image = album.images[0].url if album.images else None
             items = [
                 _get_track_item_payload(track, show_thumbnails=False)
-                for track in media.tracks
+                for track in album.tracks
             ]
     elif media_content_type == MediaType.ARTIST:
-        if (media := await spotify.get_artist_albums(media_content_id)) and (
+        if (artist_albums := await spotify.get_artist_albums(media_content_id)) and (
             artist := await spotify.get_artist(media_content_id)
         ):
             title = artist.name
             image = artist.images[0].url if artist.images else None
-            items = [_get_album_item_payload(album) for album in media]
+            items = [_get_album_item_payload(album) for album in artist_albums]
     elif media_content_type == MEDIA_TYPE_SHOW:
-        if (media := await spotify.get_show_episodes(media_content_id)) and (
+        if (show_episodes := await spotify.get_show_episodes(media_content_id)) and (
             show := await spotify.get_show(media_content_id)
         ):
             title = show.name
             image = show.images[0].url if show.images else None
-            items = [
-                {
-                    "id": episode.episode_id,
-                    "name": episode.name,
-                    "type": MediaType.EPISODE,
-                    "uri": episode.uri,
-                    "thumbnail": fetch_image_url(episode.images),
-                }
-                for episode in media
-            ]
+            items = [_get_episode_item_payload(episode) for episode in show_episodes]
 
     try:
         media_class = CONTENT_TYPE_MEDIA_CLASS[media_content_type]
     except KeyError:
         _LOGGER.debug("Unknown media type received: %s", media_content_type)
         return None
-
-    if media_content_type == BrowsableMedia.CATEGORIES:
-        media_item = BrowseMedia(
-            can_expand=True,
-            can_play=False,
-            children_media_class=media_class["children"],
-            media_class=media_class["parent"],
-            media_content_id=media_content_id,
-            media_content_type=f"{MEDIA_PLAYER_PREFIX}{media_content_type}",
-            title=LIBRARY_MAP.get(media_content_id, "Unknown"),
-        )
-
-        media_item.children = []
-        for item in items:
-            if (item_id := item["id"]) is None:
-                _LOGGER.debug("Missing ID for media item: %s", item)
-                continue
-            media_item.children.append(
-                BrowseMedia(
-                    can_expand=True,
-                    can_play=False,
-                    children_media_class=MediaClass.TRACK,
-                    media_class=MediaClass.PLAYLIST,
-                    media_content_id=item_id,
-                    media_content_type=f"{MEDIA_PLAYER_PREFIX}category_playlists",
-                    thumbnail=item["thumbnail"],
-                    title=item["name"],
-                )
-            )
-        return media_item
 
     if title is None:
         title = LIBRARY_MAP.get(media_content_id, "Unknown")

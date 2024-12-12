@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import logging
+import re
 from typing import Any, Self
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -16,9 +18,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_NAME,
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -36,10 +38,11 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
@@ -85,8 +88,27 @@ def mock_handlers() -> Generator[None]:
             """Mock Reauth."""
             return await self.async_step_reauth_confirm()
 
+    class MockFlowHandler2(config_entries.ConfigFlow):
+        """Define a second mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return await self.async_step_reauth_confirm()
+
+        async def async_step_reauth_confirm(self, user_input=None):
+            """Test reauth confirm step."""
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    description_placeholders={CONF_NAME: "Custom title"},
+                )
+            return self.async_abort(reason="test")
+
     with patch.dict(
-        config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
+        config_entries.HANDLERS,
+        {"comp": MockFlowHandler, "test": MockFlowHandler, "test2": MockFlowHandler2},
     ):
         yield
 
@@ -884,7 +906,7 @@ async def test_entries_excludes_ignore_and_disabled(
 
 
 async def test_saving_and_loading(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, hass_storage: dict[str, Any]
 ) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
@@ -901,7 +923,17 @@ async def test_saving_and_loading(
         async def async_step_user(self, user_input=None):
             """Test user step."""
             await self.async_set_unique_id("unique")
-            return self.async_create_entry(title="Test Title", data={"token": "abcd"})
+            subentries = [
+                config_entries.ConfigSubentryData(
+                    data={"foo": "bar"}, title="subentry 1"
+                ),
+                config_entries.ConfigSubentryData(
+                    data={"sun": "moon"}, title="subentry 2", unique_id="very_unique"
+                ),
+            ]
+            return self.async_create_entry(
+                title="Test Title", data={"token": "abcd"}, subentries=subentries
+            )
 
     with mock_config_flow("test", TestFlow):
         await hass.config_entries.flow.async_init(
@@ -950,6 +982,98 @@ async def test_saving_and_loading(
     # To execute the save
     await hass.async_block_till_done()
 
+    stored_data = hass_storage["core.config_entries"]
+    assert stored_data == {
+        "data": {
+            "entries": [
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "token": "abcd",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {},
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": True,
+                    "pref_disable_polling": True,
+                    "source": "user",
+                    "subentries": [
+                        {
+                            "data": {"foo": "bar"},
+                            "subentry_id": ANY,
+                            "title": "subentry 1",
+                            "unique_id": None,
+                        },
+                        {
+                            "data": {"sun": "moon"},
+                            "subentry_id": ANY,
+                            "title": "subentry 2",
+                            "unique_id": "very_unique",
+                        },
+                    ],
+                    "title": "Test Title",
+                    "unique_id": "unique",
+                    "version": 5,
+                },
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "username": "bla",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {
+                        "test": [
+                            {"domain": "test", "key": "blah", "version": 1},
+                        ],
+                    },
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Test 2 Title",
+                    "unique_id": None,
+                    "version": 3,
+                },
+                {
+                    "created_at": ANY,
+                    "data": {
+                        "username": "bla",
+                    },
+                    "disabled_by": None,
+                    "discovery_keys": {
+                        "test": [
+                            {"domain": "test", "key": ["a", "b"], "version": 1},
+                        ],
+                    },
+                    "domain": "test",
+                    "entry_id": ANY,
+                    "minor_version": 1,
+                    "modified_at": ANY,
+                    "options": {},
+                    "pref_disable_new_entities": False,
+                    "pref_disable_polling": False,
+                    "source": "user",
+                    "subentries": [],
+                    "title": "Test 2 Title",
+                    "unique_id": None,
+                    "version": 3,
+                },
+            ],
+        },
+        "key": "core.config_entries",
+        "minor_version": 5,
+        "version": 1,
+    }
+
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
     await manager.async_initialize()
@@ -961,6 +1085,25 @@ async def test_saving_and_loading(
         hass.config_entries.async_entries(), manager.async_entries(), strict=False
     ):
         assert orig.as_dict() == loaded.as_dict()
+
+    hass.config_entries.async_update_entry(
+        entry_1,
+        pref_disable_polling=False,
+        pref_disable_new_entities=False,
+    )
+
+    # To trigger the call_later
+    freezer.tick(1.0)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    # Assert no data is lost when storing again
+    expected_stored_data = stored_data
+    expected_stored_data["data"]["entries"][0]["modified_at"] = ANY
+    expected_stored_data["data"]["entries"][0]["pref_disable_new_entities"] = False
+    expected_stored_data["data"]["entries"][0]["pref_disable_polling"] = False
+    assert hass_storage["core.config_entries"] == expected_stored_data | {}
 
 
 @freeze_time("2024-02-14 12:00:00")
@@ -1094,8 +1237,8 @@ async def test_async_forward_entry_setup_deprecated(
     assert (
         "Detected code that calls async_forward_entry_setup for integration, "
         f"original with title: Mock Title and entry_id: {entry_id}, "
-        "which is deprecated and will stop working in Home Assistant 2025.6, "
-        "await async_forward_entry_setups instead. Please report this issue."
+        "which is deprecated, await async_forward_entry_setups instead. "
+        "This will stop working in Home Assistant 2025.6, please report this issue"
     ) in caplog.text
 
 
@@ -1157,6 +1300,9 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
 
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
@@ -1190,7 +1336,11 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
 
         # Start first reauth flow to assert that reconfigure notification fires
         flow1 = await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_REAUTH}
+            "test",
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
         )
 
         await hass.async_block_till_done()
@@ -1200,7 +1350,11 @@ async def test_reauth_notification(hass: HomeAssistant) -> None:
         # Start a second reauth flow so we can finish the first and assert that
         # the reconfigure notification persists until the second one is complete
         flow2 = await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_REAUTH}
+            "test",
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
         )
 
         flow1 = await hass.config_entries.flow.async_configure(flow1["flow_id"], {})
@@ -1382,6 +1536,42 @@ async def test_update_entry_options_and_trigger_listener(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.options == {"second": True}
     assert len(update_listener_calls) == 1
+
+
+async def test_update_subentry_and_trigger_listener(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can update subentry and trigger listener."""
+    entry = MockConfigEntry(domain="test", options={"first": True})
+    entry.add_to_manager(manager)
+    update_listener_calls = []
+
+    subentry = config_entries.ConfigSubentry(
+        data={"test": "test"}, unique_id="test", title="Mock title"
+    )
+
+    async def update_listener(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Test function."""
+        assert entry.subentries == expected_subentries
+        update_listener_calls.append(None)
+
+    entry.add_update_listener(update_listener)
+
+    expected_subentries = {subentry.subentry_id: subentry}
+    assert manager.async_add_subentry(entry, subentry) is True
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.subentries == expected_subentries
+    assert len(update_listener_calls) == 1
+
+    expected_subentries = {}
+    assert manager.async_remove_subentry(entry, subentry.subentry_id) is True
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.subentries == expected_subentries
+    assert len(update_listener_calls) == 2
 
 
 async def test_setup_raise_not_ready(
@@ -1710,17 +1900,453 @@ async def test_entry_options_unknown_config_entry(
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
 
-    class TestFlow:
+    with pytest.raises(config_entries.UnknownEntry):
+        await manager.options.async_create_flow(
+            "blah", context={"source": "test"}, data=None
+        )
+
+
+async def test_create_entry_subentries(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test a config entry being created with subentries."""
+
+    subentrydata = config_entries.ConfigSubentryData(
+        data={"test": "test"},
+        title="Mock title",
+        unique_id="test",
+    )
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={"data": "data", "subentry": subentrydata},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_import(self, user_input):
+            """Test import step creating entry, with subentry."""
+            return self.async_create_entry(
+                title="title",
+                data={"example": user_input["data"]},
+                subentries=[user_input["subentry"]],
+            )
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+
+        await hass.async_block_till_done()
+
+        assert len(async_setup_entry.mock_calls) == 1
+
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].supported_subentries == ()
+        assert entries[0].data == {"example": "data"}
+        assert len(entries[0].subentries) == 1
+        subentry_id = list(entries[0].subentries)[0]
+        subentry = config_entries.ConfigSubentry(
+            data=subentrydata["data"],
+            subentry_id=subentry_id,
+            title=subentrydata["title"],
+            unique_id="test",
+        )
+        assert entries[0].subentries == {subentry_id: subentry}
+
+
+async def test_entry_subentry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can add a subentry to an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
         @staticmethod
         @callback
-        def async_get_options_flow(config_entry):
-            """Test options flow."""
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+
+        await manager.subentries.async_finish_flow(
+            flow,
+            {
+                "data": {"second": True},
+                "title": "Mock title",
+                "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                "unique_id": "test",
+            },
+        )
+
+        assert entry.data == {"first": True}
+        assert entry.options == {}
+        subentry_id = list(entry.subentries)[0]
+        assert entry.subentries == {
+            subentry_id: config_entries.ConfigSubentry(
+                data={"second": True},
+                subentry_id=subentry_id,
+                title="Mock title",
+                unique_id="test",
+            )
+        }
+        assert entry.supported_subentries == ("test",)
+
+
+async def test_entry_subentry_non_string(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test adding an invalid subentry to an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+
+        with pytest.raises(HomeAssistantError):
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": 123,
+                },
+            )
+
+
+@pytest.mark.parametrize("context", [None, {}, {"bla": "bleh"}])
+async def test_entry_subentry_no_context(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries, context: dict | None
+) -> None:
+    """Test starting a subentry flow without "source" in context."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow), pytest.raises(KeyError):
+        await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context=context, data=None
+        )
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected_result"),
+    [(None, does_not_raise()), ("test", pytest.raises(HomeAssistantError))],
+)
+async def test_entry_subentry_duplicate(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unique_id: str | None,
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test adding a duplicated subentry to an entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(
+        domain="test",
+        data={"first": True},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="blabla",
+                title="Mock title",
+                unique_id=unique_id,
+            )
+        ],
+    )
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+
+        with expected_result:
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": unique_id,
+                },
+            )
+
+
+async def test_entry_subentry_abort(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can abort subentry flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+
+        assert await manager.subentries.async_finish_flow(
+            flow, {"type": data_entry_flow.FlowResultType.ABORT, "reason": "test"}
+        )
+
+
+async def test_entry_subentry_unknown_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to start a subentry flow for an unknown config entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
 
     with pytest.raises(config_entries.UnknownEntry):
-        await manager.options.async_create_flow(
-            "blah", context={"source": "test"}, data=None
+        await manager.subentries.async_create_flow(
+            ("blah", "blah"), context={"source": "test"}, data=None
+        )
+
+
+async def test_entry_subentry_deleted_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to finish a subentry flow for a deleted config entry."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with mock_config_flow("test", TestFlow):
+        flow = await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
+        )
+
+        flow.handler = (entry.entry_id, "test")  # Set to keep reference to config entry
+
+        await hass.config_entries.async_remove(entry.entry_id)
+
+        with pytest.raises(config_entries.UnknownEntry):
+            await manager.subentries.async_finish_flow(
+                flow,
+                {
+                    "data": {"second": True},
+                    "title": "Mock title",
+                    "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
+                    "unique_id": "test",
+                },
+            )
+
+
+async def test_entry_subentry_unsupported(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to start a subentry flow for a config entry without support."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_subentry_flow(config_entry, subentry_type: str):
+            """Test subentry flow."""
+
+            class SubentryFlowHandler(data_entry_flow.FlowHandler):
+                """Test subentry flow handler."""
+
+            return SubentryFlowHandler()
+
+        @classmethod
+        @callback
+        def async_supported_subentries(
+            cls, config_entry: ConfigEntry
+        ) -> tuple[str, ...]:
+            return ("test",)
+
+    with (
+        mock_config_flow("test", TestFlow),
+        pytest.raises(data_entry_flow.UnknownHandler),
+    ):
+        await manager.subentries.async_create_flow(
+            (
+                entry.entry_id,
+                "unknown",
+            ),
+            context={"source": "test"},
+            data=None,
+        )
+
+
+async def test_entry_subentry_unsupported_subentry_type(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test attempting to start a subentry flow for a config entry without support."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+    with (
+        mock_config_flow("test", TestFlow),
+        pytest.raises(data_entry_flow.UnknownHandler),
+    ):
+        await manager.subentries.async_create_flow(
+            (entry.entry_id, "test"), context={"source": "test"}, data=None
         )
 
 
@@ -3879,21 +4505,20 @@ async def test_updating_entry_with_and_without_changes(
 
     assert manager.async_update_entry(entry) is False
 
-    for change in (
-        {"data": {"second": True, "third": 456}},
-        {"data": {"second": True}},
-        {"minor_version": 2},
-        {"options": {"hello": True}},
-        {"pref_disable_new_entities": True},
-        {"pref_disable_polling": True},
-        {"title": "sometitle"},
-        {"unique_id": "abcd1234"},
-        {"version": 2},
+    for change, expected_value in (
+        ({"data": {"second": True, "third": 456}}, {"second": True, "third": 456}),
+        ({"data": {"second": True}}, {"second": True}),
+        ({"minor_version": 2}, 2),
+        ({"options": {"hello": True}}, {"hello": True}),
+        ({"pref_disable_new_entities": True}, True),
+        ({"pref_disable_polling": True}, True),
+        ({"title": "sometitle"}, "sometitle"),
+        ({"unique_id": "abcd1234"}, "abcd1234"),
+        ({"version": 2}, 2),
     ):
         assert manager.async_update_entry(entry, **change) is True
         key = next(iter(change))
-        value = next(iter(change.values()))
-        assert getattr(entry, key) == value
+        assert getattr(entry, key) == expected_value
         assert manager.async_update_entry(entry, **change) is False
 
     assert manager.async_entry_for_domain_unique_id("test", "abc123") is None
@@ -4747,6 +5372,75 @@ async def test_reauth(
     assert len(hass.config_entries.flow.async_progress()) == 1
 
 
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_reauth_reconfigure_missing_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the async_reauth_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        RuntimeError,
+        match=f"Detected code that initialises a {source} flow without a link "
+        "to the config entry. Please report this issue",
+    ):
+        await manager.flow.async_init("test", context={"source": source})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 0
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+@pytest.mark.parametrize(
+    "source", [config_entries.SOURCE_REAUTH, config_entries.SOURCE_RECONFIGURE]
+)
+async def test_reauth_reconfigure_missing_entry_component(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the async_reauth_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await manager.flow.async_init("test", context={"source": source})
+        await hass.async_block_till_done()
+
+    # Flow still created, but deprecation logged
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == source
+
+    assert (
+        f"Detected that integration 'hue' initialises a {source} flow"
+        " without a link to the config entry at homeassistant/components" in caplog.text
+    )
+
+
 async def test_reconfigure(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -4939,20 +5633,46 @@ async def test_async_wait_component_startup(hass: HomeAssistant) -> None:
     assert "test" in hass.config.components
 
 
-async def test_options_flow_options_not_mutated() -> None:
+@pytest.mark.parametrize(
+    "integration_frame_path",
+    ["homeassistant/components/my_integration", "homeassistant.core"],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_options_flow_with_config_entry_core() -> None:
+    """Test that OptionsFlowWithConfigEntry cannot be used in core."""
+    entry = MockConfigEntry(
+        domain="hue",
+        data={"first": True},
+        options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
+    )
+
+    with pytest.raises(RuntimeError, match="inherits from OptionsFlowWithConfigEntry"):
+        _ = config_entries.OptionsFlowWithConfigEntry(entry)
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_options_flow_with_config_entry(caplog: pytest.LogCaptureFixture) -> None:
     """Test that OptionsFlowWithConfigEntry doesn't mutate entry options."""
     entry = MockConfigEntry(
-        domain="test",
+        domain="hue",
         data={"first": True},
         options={"sub_dict": {"1": "one"}, "sub_list": ["one"]},
     )
 
     options_flow = config_entries.OptionsFlowWithConfigEntry(entry)
+    assert caplog.text == ""  # No deprecation warning for custom components
 
-    options_flow._options["sub_dict"]["2"] = "two"
-    options_flow._options["sub_list"].append("two")
+    # Ensure available at startup
+    assert options_flow.config_entry is entry
+    assert options_flow.options == entry.options
 
-    assert options_flow._options == {
+    options_flow.options["sub_dict"]["2"] = "two"
+    options_flow.options["sub_list"].append("two")
+
+    # Ensure it does not mutate the entry options
+    assert options_flow.options == {
         "sub_dict": {"1": "one", "2": "two"},
         "sub_list": ["one", "two"],
     }
@@ -4980,7 +5700,9 @@ async def test_initializing_flows_canceled_on_shutdown(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
         task = asyncio.create_task(
-            manager.flow.async_init("test", context={"source": "reauth"})
+            manager.flow.async_init(
+                "test", context={"source": "reauth", "entry_id": "abc"}
+            )
         )
         await hass.async_block_till_done()
         manager.flow.async_shutdown()
@@ -5317,10 +6039,10 @@ async def test_update_entry_and_reload(
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
-async def test_unhashable_unique_id(
+async def test_unhashable_unique_id_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict handles unhashable unique_id."""
+    """Test the ConfigEntryItems user dict fails unhashable unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
@@ -5330,28 +6052,105 @@ async def test_unhashable_unique_id(
         minor_version=1,
         options={},
         source="test",
+        subentries_data=(),
         title="title",
         unique_id=unique_id,
         version=1,
     )
 
+    unique_id_string = re.escape(str(unique_id))
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"The entry unique id {unique_id_string} is not a string.",
+    ):
+        entries[entry.entry_id] = entry
+
+    assert entry.entry_id not in entries
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"The entry unique id {unique_id_string} is not a string.",
+    ):
+        entries.get_entry_by_domain_and_unique_id("test", unique_id)
+
+
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
+async def test_unhashable_unique_id_fails_on_update(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict fails non-hashable unique_id on update."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        discovery_keys={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        subentries_data=(),
+        title="title",
+        unique_id="123",
+        version=1,
+    )
+
     entries[entry.entry_id] = entry
+    assert entry.entry_id in entries
+
+    unique_id_string = re.escape(str(unique_id))
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"The entry unique id {unique_id_string} is not a string.",
+    ):
+        entries.update_unique_id(entry, unique_id)
+
+
+async def test_string_unique_id_no_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the ConfigEntryItems user dict string unique id doesn't log warning."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        discovery_keys={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        subentries_data=(),
+        title="title",
+        unique_id="123",
+        version=1,
+    )
+
+    entries[entry.entry_id] = entry
+
     assert (
-        "Config entry 'title' from integration test has an invalid unique_id "
-        f"'{unique_id!s}'"
-    ) in caplog.text
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    assert entries.get_entry_by_domain_and_unique_id("test", "123") == entry
     del entries[entry.entry_id]
     assert not entries
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+    assert entries.get_entry_by_domain_and_unique_id("test", "123") is None
 
 
-@pytest.mark.parametrize("unique_id", [123])
-async def test_hashable_non_string_unique_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+@pytest.mark.parametrize(
+    ("unique_id", "type_name"),
+    [
+        (123, "int"),
+        (2.3, "float"),
+    ],
+)
+async def test_hashable_unique_id(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    unique_id: Any,
+    type_name: str,
 ) -> None:
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
@@ -5363,14 +6162,17 @@ async def test_hashable_non_string_unique_id(
         minor_version=1,
         options={},
         source="test",
+        subentries_data=(),
         title="title",
         unique_id=unique_id,
         version=1,
     )
 
     entries[entry.entry_id] = entry
+
     assert (
         "Config entry 'title' from integration test has an invalid unique_id"
+        f" '{unique_id}' of type {type_name} when a string is expected"
     ) in caplog.text
 
     assert entry.entry_id in entries
@@ -5381,26 +6183,56 @@ async def test_hashable_non_string_unique_id(
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
 
 
+async def test_no_unique_id_no_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the ConfigEntryItems user dict don't log warning with no unique id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        discovery_keys={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        subentries_data=(),
+        title="title",
+        unique_id=None,
+        version=1,
+    )
+
+    entries[entry.entry_id] = entry
+
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+
+
 @pytest.mark.parametrize(
-    ("source", "user_input", "expected_result"),
+    ("context", "user_input", "expected_result"),
     [
         (
-            config_entries.SOURCE_IGNORE,
+            {"source": config_entries.SOURCE_IGNORE},
             {"unique_id": "blah", "title": "blah"},
             {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
         ),
         (
-            config_entries.SOURCE_REAUTH,
+            {"source": config_entries.SOURCE_REAUTH, "entry_id": "1234"},
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_RECONFIGURE,
+            {"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "1234"},
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_USER,
+            {"source": config_entries.SOURCE_USER},
             None,
             {
                 "type": data_entry_flow.FlowResultType.ABORT,
@@ -5413,7 +6245,7 @@ async def test_hashable_non_string_unique_id(
 async def test_starting_config_flow_on_single_config_entry(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    source: str,
+    context: dict[str, Any],
     user_input: dict,
     expected_result: dict,
 ) -> None:
@@ -5436,6 +6268,7 @@ async def test_starting_config_flow_on_single_config_entry(
     entry = MockConfigEntry(
         domain="comp",
         unique_id="1234",
+        entry_id="1234",
         title="Test",
         data={"vendor": "data"},
         options={"vendor": "options"},
@@ -5444,6 +6277,7 @@ async def test_starting_config_flow_on_single_config_entry(
     ignored_entry = MockConfigEntry(
         domain="comp",
         unique_id="2345",
+        entry_id="2345",
         title="Test",
         data={"vendor": "data"},
         options={"vendor": "options"},
@@ -5458,42 +6292,50 @@ async def test_starting_config_flow_on_single_config_entry(
         return_value=integration,
     ):
         result = await hass.config_entries.flow.async_init(
-            "comp", context={"source": source}, data=user_input
+            "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 @pytest.mark.parametrize(
-    ("source", "user_input", "expected_result"),
+    ("context", "user_input", "expected_result"),
     [
         (
-            config_entries.SOURCE_IGNORE,
+            {"source": config_entries.SOURCE_IGNORE},
             {"unique_id": "blah", "title": "blah"},
             {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
         ),
         (
-            config_entries.SOURCE_REAUTH,
+            {"source": config_entries.SOURCE_REAUTH, "entry_id": "2345"},
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_RECONFIGURE,
+            {"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "2345"},
             None,
             {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
         ),
         (
-            config_entries.SOURCE_USER,
+            {"source": config_entries.SOURCE_USER},
             None,
             {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            {"source": config_entries.SOURCE_ZEROCONF},
+            None,
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "single_instance_allowed",
+            },
         ),
     ],
 )
 async def test_starting_config_flow_on_single_config_entry_2(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    source: str,
+    context: dict[str, Any],
     user_input: dict,
     expected_result: dict,
 ) -> None:
@@ -5516,6 +6358,7 @@ async def test_starting_config_flow_on_single_config_entry_2(
     ignored_entry = MockConfigEntry(
         domain="comp",
         unique_id="2345",
+        entry_id="2345",
         title="Test",
         data={"vendor": "data"},
         options={"vendor": "options"},
@@ -5530,11 +6373,11 @@ async def test_starting_config_flow_on_single_config_entry_2(
         return_value=integration,
     ):
         result = await hass.config_entries.flow.async_init(
-            "comp", context={"source": source}, data=user_input
+            "comp", context=context, data=user_input
         )
 
-    for key in expected_result:
-        assert result[key] == expected_result[key]
+    for key, value in expected_result.items():
+        assert result[key] == value
 
 
 async def test_avoid_adding_second_config_entry_on_single_config_entry(
@@ -5601,8 +6444,20 @@ async def test_avoid_adding_second_config_entry_on_single_config_entry(
         assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
+@pytest.mark.parametrize(
+    ("flow_1_unique_id", "flow_2_unique_id"),
+    [
+        (None, None),
+        ("very_unique", "very_unique"),
+        (None, config_entries.DEFAULT_DISCOVERY_UNIQUE_ID),
+        ("very_unique", config_entries.DEFAULT_DISCOVERY_UNIQUE_ID),
+    ],
+)
 async def test_in_progress_get_canceled_when_entry_is_created(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    flow_1_unique_id: str | None,
+    flow_2_unique_id: str | None,
 ) -> None:
     """Test that we abort all in progress flows when a new entry is created on a single instance only integration."""
     integration = loader.Integration(
@@ -5630,6 +6485,15 @@ async def test_in_progress_get_canceled_when_entry_is_created(
             if user_input is not None:
                 return self.async_create_entry(title="Test Title", data=user_input)
 
+            await self.async_set_unique_id(flow_1_unique_id, raise_on_progress=False)
+            return self.async_show_form(step_id="user")
+
+        async def async_step_zeroconfg(self, user_input=None):
+            """Test user step."""
+            if user_input is not None:
+                return self.async_create_entry(title="Test Title", data=user_input)
+
+            await self.async_set_unique_id(flow_2_unique_id, raise_on_progress=False)
             return self.async_show_form(step_id="user")
 
     with (
@@ -5978,7 +6842,7 @@ async def test_non_awaited_async_forward_entry_setups(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setups, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -6050,7 +6914,7 @@ async def test_non_awaited_async_forward_entry_setup(
         "test with title: Mock Title and entry_id: test2, during setup without "
         "awaiting async_forward_entry_setup, which can cause the setup lock "
         "to be released before the setup is done. This will stop working in "
-        "Home Assistant 2025.1. Please report this issue."
+        "Home Assistant 2025.1, please report this issue"
     ) in caplog.text
 
 
@@ -6258,6 +7122,7 @@ async def test_migration_from_1_2(
                     "pref_disable_new_entities": False,
                     "pref_disable_polling": False,
                     "source": "import",
+                    "subentries": {},
                     "title": "Sun",
                     "unique_id": None,
                     "version": 1,
@@ -6891,7 +7756,10 @@ async def test_create_entry_reauth_reconfigure(
 
     assert len(hass.config_entries.async_entries("test")) == 1
 
-    with mock_config_flow("test", TestFlow):
+    with (
+        mock_config_flow("test", TestFlow),
+        patch.object(frame, "_REPORTED_INTEGRATIONS", set()),
+    ):
         result = await getattr(entry, f"start_{source}_flow")(hass)
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -6903,10 +7771,10 @@ async def test_create_entry_reauth_reconfigure(
         assert entries[0].entry_id != entry.entry_id
 
     assert (
-        f"Detected {source} config flow creating a new entry, when it is expected "
-        "to update an existing entry and abort. This will stop working in "
-        "2025.11, please create a bug report at https://github.com/home"
-        "-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+        f"Detected that integration 'test' creates a new entry in a '{source}' flow, "
+        "when it is expected to update an existing entry and abort. This will stop "
+        "working in Home Assistant 2025.11, please create a bug report at "
+        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
         "label%3A%22integration%3A+test%22"
     ) in caplog.text
 
@@ -6915,8 +7783,13 @@ async def test_async_update_entry_unique_id_collision(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we warn when async_update_entry creates a unique_id collision."""
+    """Test we warn when async_update_entry creates a unique_id collision.
+
+    Also test an issue registry issue is created.
+    """
+    assert len(issue_registry.issues) == 0
 
     entry1 = MockConfigEntry(domain="test", unique_id=None)
     entry2 = MockConfigEntry(domain="test", unique_id="not none")
@@ -6928,15 +7801,141 @@ async def test_async_update_entry_unique_id_collision(
     entry4.add_to_manager(manager)
 
     manager.async_update_entry(entry2, unique_id=None)
+    assert len(issue_registry.issues) == 0
     assert len(caplog.record_tuples) == 0
 
     manager.async_update_entry(entry4, unique_id="very unique")
+    assert len(issue_registry.issues) == 1
     assert len(caplog.record_tuples) == 1
 
     assert (
         "Unique id of config entry 'Mock Title' from integration test changed to "
         "'very unique' which is already in use"
     ) in caplog.text
+
+    issue_id = "config_entry_unique_id_collision_test_very unique"
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
+
+
+@pytest.mark.parametrize("domain", ["flipr"])
+async def test_async_update_entry_unique_id_collision_allowed_domain(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    domain: str,
+) -> None:
+    """Test we warn when async_update_entry creates a unique_id collision.
+
+    This tests we don't warn and don't create issues for domains which have
+    their own migration path.
+    """
+    assert len(issue_registry.issues) == 0
+
+    entry1 = MockConfigEntry(domain=domain, unique_id=None)
+    entry2 = MockConfigEntry(domain=domain, unique_id="not none")
+    entry3 = MockConfigEntry(domain=domain, unique_id="very unique")
+    entry4 = MockConfigEntry(domain=domain, unique_id="also very unique")
+    entry1.add_to_manager(manager)
+    entry2.add_to_manager(manager)
+    entry3.add_to_manager(manager)
+    entry4.add_to_manager(manager)
+
+    manager.async_update_entry(entry2, unique_id=None)
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    manager.async_update_entry(entry4, unique_id="very unique")
+    assert len(issue_registry.issues) == 0
+    assert len(caplog.record_tuples) == 0
+
+    assert ("already in use") not in caplog.text
+
+
+async def test_unique_id_collision_issues(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test issue registry issues are created and remove on unique id collision."""
+    assert len(issue_registry.issues) == 0
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    for i in range(3):
+        mock_integration(
+            hass, MockModule(f"test{i+1}", async_setup_entry=mock_setup_entry)
+        )
+        mock_platform(hass, f"test{i+1}.config_flow", None)
+
+    test2_group_1: list[MockConfigEntry] = []
+    test2_group_2: list[MockConfigEntry] = []
+    test3: list[MockConfigEntry] = []
+    for _ in range(3):
+        await manager.async_add(MockConfigEntry(domain="test1", unique_id=None))
+        test2_group_1.append(MockConfigEntry(domain="test2", unique_id="group_1"))
+        test2_group_2.append(MockConfigEntry(domain="test2", unique_id="group_2"))
+        await manager.async_add(test2_group_1[-1])
+        await manager.async_add(test2_group_2[-1])
+    for _ in range(6):
+        test3.append(MockConfigEntry(domain="test3", unique_id="not_unique"))
+        await manager.async_add(test3[-1])
+    # Add an ignored config entry
+    await manager.async_add(
+        MockConfigEntry(
+            domain="test2", unique_id="group_1", source=config_entries.SOURCE_IGNORE
+        )
+    )
+
+    # Check we get one issue for domain test2 and one issue for domain test3
+    assert len(issue_registry.issues) == 2
+    issue_id = "config_entry_unique_id_collision_test2_group_1"
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
+    issue_id = "config_entry_unique_id_collision_test3_not_unique"
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
+
+    # Remove one config entry for domain test3, the translations should be updated
+    await manager.async_remove(test3[0].entry_id)
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test3_not_unique"),
+    }
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id) == snapshot
+
+    # Remove all but two config entries for domain test 3
+    for i in range(3):
+        await manager.async_remove(test3[1 + i].entry_id)
+        assert set(issue_registry.issues) == {
+            (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
+            (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test3_not_unique"),
+        }
+
+    # Remove the last test3 duplicate, the issue is cleared
+    await manager.async_remove(test3[-1].entry_id)
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
+    }
+
+    await manager.async_remove(test2_group_1[0].entry_id)
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_1"),
+    }
+
+    # Remove the last test2 group1 duplicate, a new issue is created
+    await manager.async_remove(test2_group_1[1].entry_id)
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
+    }
+
+    await manager.async_remove(test2_group_2[0].entry_id)
+    assert set(issue_registry.issues) == {
+        (HOMEASSISTANT_DOMAIN, "config_entry_unique_id_collision_test2_group_2"),
+    }
+
+    # Remove the last test2 group2 duplicate, the issue is cleared
+    await manager.async_remove(test2_group_2[1].entry_id)
+    assert not issue_registry.issues
 
 
 async def test_context_no_leak(hass: HomeAssistant) -> None:
@@ -7006,3 +8005,213 @@ async def test_context_no_leak(hass: HomeAssistant) -> None:
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert entry.runtime_data is entry
     assert config_entries.current_entry.get() is None
+
+
+async def test_options_flow_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test _config_entry_id and config_entry properties in options flow."""
+    original_entry = MockConfigEntry(domain="test", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlow):
+                """Test flow."""
+
+                def __init__(self) -> None:
+                    """Test initialisation."""
+                    try:
+                        self.init_entry_id = self._config_entry_id
+                    except ValueError as err:
+                        self.init_entry_id = err
+                    try:
+                        self.init_entry = self.config_entry
+                    except ValueError as err:
+                        self.init_entry = err
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    errors = {}
+                    if user_input is not None:
+                        if user_input.get("abort"):
+                            return self.async_abort(reason="abort")
+
+                        errors["entry_id"] = self._config_entry_id
+                        try:
+                            errors["entry"] = self.config_entry
+                        except config_entries.UnknownEntry as err:
+                            errors["entry"] = err
+
+                    return self.async_show_form(step_id="init", errors=errors)
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+
+    options_flow = hass.config_entries.options._progress.get(result["flow_id"])
+    assert isinstance(options_flow, config_entries.OptionsFlow)
+    assert options_flow.handler == original_entry.entry_id
+    assert isinstance(options_flow.init_entry_id, ValueError)
+    assert (
+        str(options_flow.init_entry_id)
+        == "The config entry id is not available during initialisation"
+    )
+    assert isinstance(options_flow.init_entry, ValueError)
+    assert (
+        str(options_flow.init_entry)
+        == "The config entry is not available during initialisation"
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"]["entry_id"] == original_entry.entry_id
+    assert result["errors"]["entry"] is original_entry
+
+    # Bad handler - not linked to a config entry
+    options_flow.handler = "123"
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"]["entry_id"] == "123"
+    assert isinstance(result["errors"]["entry"], config_entries.UnknownEntry)
+    # Reset handler
+    options_flow.handler = original_entry.entry_id
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"abort": True}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "abort"
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_options_flow_deprecated_config_entry_setter(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setting config_entry explicitly still works."""
+    original_entry = MockConfigEntry(domain="my_integration", data={})
+    original_entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass, MockModule("my_integration", async_setup_entry=mock_setup_entry)
+    )
+    mock_platform(hass, "my_integration.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(config_entries.OptionsFlow):
+                """Test flow."""
+
+                def __init__(self, entry) -> None:
+                    """Test initialisation."""
+                    self.config_entry = entry
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    errors = {}
+                    if user_input is not None:
+                        if user_input.get("abort"):
+                            return self.async_abort(reason="abort")
+
+                        errors["entry_id"] = self._config_entry_id
+                        try:
+                            errors["entry"] = self.config_entry
+                        except config_entries.UnknownEntry as err:
+                            errors["entry"] = err
+
+                    return self.async_show_form(step_id="init", errors=errors)
+
+            return _OptionsFlow(config_entry)
+
+    with mock_config_flow("my_integration", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+
+    options_flow = hass.config_entries.options._progress.get(result["flow_id"])
+    assert options_flow.config_entry is original_entry
+
+    assert (
+        "Detected that custom integration 'my_integration' sets option flow "
+        "config_entry explicitly, which is deprecated at "
+        "custom_components/my_integration/light.py, line 23: "
+        "self.light.is_on. This will stop working in Home Assistant 2025.12, please "
+        "create a bug report at " in caplog.text
+    )
+
+
+async def test_add_description_placeholder_automatically(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test entry title is added automatically to reauth flows description placeholder."""
+
+    entry = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    entry.add_to_hass(hass)
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test")
+    assert len(flows) == 1
+
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
+    assert result["type"] == FlowResultType.FORM
+    assert result["description_placeholders"] == {"name": "test_title"}
+
+
+async def test_add_description_placeholder_automatically_not_overwrites(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test entry title is not added automatically to reauth flows when custom name exist."""
+
+    entry = MockConfigEntry(title="test_title", domain="test2")
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryAuthFailed())
+    mock_integration(hass, MockModule("test2", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test2.config_flow", None)
+
+    entry.add_to_hass(hass)
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test2")
+    assert len(flows) == 1
+
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
+    assert result["type"] == FlowResultType.FORM
+    assert result["description_placeholders"] == {"name": "Custom title"}

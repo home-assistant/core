@@ -283,9 +283,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
     }
 
 
-async def _async_get_custom_components(
-    hass: HomeAssistant,
-) -> dict[str, Integration]:
+def _get_custom_components(hass: HomeAssistant) -> dict[str, Integration]:
     """Return list of custom integrations."""
     if hass.config.recovery_mode or hass.config.safe_mode:
         return {}
@@ -295,21 +293,14 @@ async def _async_get_custom_components(
     except ImportError:
         return {}
 
-    def get_sub_directories(paths: list[str]) -> list[pathlib.Path]:
-        """Return all sub directories in a set of paths."""
-        return [
-            entry
-            for path in paths
-            for entry in pathlib.Path(path).iterdir()
-            if entry.is_dir()
-        ]
+    dirs = [
+        entry
+        for path in custom_components.__path__
+        for entry in pathlib.Path(path).iterdir()
+        if entry.is_dir()
+    ]
 
-    dirs = await hass.async_add_executor_job(
-        get_sub_directories, custom_components.__path__
-    )
-
-    integrations = await hass.async_add_executor_job(
-        _resolve_integrations_from_root,
+    integrations = _resolve_integrations_from_root(
         hass,
         custom_components,
         [comp.name for comp in dirs],
@@ -330,7 +321,7 @@ async def async_get_custom_components(
     if comps_or_future is None:
         future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        comps = await _async_get_custom_components(hass)
+        comps = await hass.async_add_executor_job(_get_custom_components, hass)
 
         hass.data[DATA_CUSTOM_COMPONENTS] = comps
         future.set_result(comps)
@@ -839,6 +830,9 @@ class Integration:
     @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
+        # Custom integrations default to "custom" quality scale.
+        if not self.is_built_in or self.overwrites_built_in:
+            return "custom"
         return self.manifest.get("quality_scale")
 
     @cached_property
@@ -1565,16 +1559,16 @@ class Components:
             raise ImportError(f"Unable to load {comp_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
-            (
-                f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.3, it"
-                f" should be updated to import functions used from {comp_name} directly"
-            ),
-            error_if_core=False,
-            log_custom_component_only=True,
+        report_usage(
+            f"accesses hass.components.{comp_name}, which"
+            f" should be updated to import functions used from {comp_name} directly",
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.3",
         )
 
         wrapped = ModuleWrapper(self._hass, component)
@@ -1594,16 +1588,18 @@ class Helpers:
         helper = importlib.import_module(f"homeassistant.helpers.{helper_name}")
 
         # Local import to avoid circular dependencies
-        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from .helpers.frame import ReportBehavior, report_usage
 
-        report(
+        report_usage(
             (
-                f"accesses hass.helpers.{helper_name}."
-                " This is deprecated and will stop working in Home Assistant 2025.5, it"
+                f"accesses hass.helpers.{helper_name}, which"
                 f" should be updated to import functions used from {helper_name} directly"
             ),
-            error_if_core=False,
-            log_custom_component_only=True,
+            core_behavior=ReportBehavior.IGNORE,
+            core_integration_behavior=ReportBehavior.IGNORE,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         wrapped = ModuleWrapper(self._hass, helper)
@@ -1691,6 +1687,29 @@ def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
 
 
 @callback
+def async_get_issue_integration(
+    hass: HomeAssistant | None,
+    integration_domain: str | None,
+) -> Integration | None:
+    """Return details of an integration for issue reporting."""
+    integration: Integration | None = None
+    if not hass or not integration_domain:
+        # We are unable to get the integration
+        return None
+
+    if (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS)) and not isinstance(
+        comps_or_future, asyncio.Future
+    ):
+        integration = comps_or_future.get(integration_domain)
+
+    if not integration:
+        with suppress(IntegrationNotLoaded):
+            integration = async_get_loaded_integration(hass, integration_domain)
+
+    return integration
+
+
+@callback
 def async_get_issue_tracker(
     hass: HomeAssistant | None,
     *,
@@ -1703,20 +1722,11 @@ def async_get_issue_tracker(
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
     if not integration and not integration_domain and not module:
-        # If we know nothing about the entity, suggest opening an issue on HA core
+        # If we know nothing about the integration, suggest opening an issue on HA core
         return issue_tracker
 
-    if (
-        not integration
-        and (hass and integration_domain)
-        and (comps_or_future := hass.data.get(DATA_CUSTOM_COMPONENTS))
-        and not isinstance(comps_or_future, asyncio.Future)
-    ):
-        integration = comps_or_future.get(integration_domain)
-
-    if not integration and (hass and integration_domain):
-        with suppress(IntegrationNotLoaded):
-            integration = async_get_loaded_integration(hass, integration_domain)
+    if not integration:
+        integration = async_get_issue_integration(hass, integration_domain)
 
     if integration and not integration.is_built_in:
         return integration.issue_tracker
