@@ -59,6 +59,7 @@ async def test_agents_info(
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
@@ -67,6 +68,7 @@ async def test_agents_info(
     assert response["result"] == {"agents": [{"agent_id": "backup.local"}]}
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()

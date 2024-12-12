@@ -306,6 +306,7 @@ class BackupManager:
 
         @callback
         def listener() -> None:
+            LOGGER.debug("Loading backup agents for %s", integration_domain)
             self.hass.async_create_task(
                 self._async_reload_backup_agents(integration_domain)
             )
