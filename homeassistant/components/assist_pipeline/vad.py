@@ -140,7 +140,7 @@ class VoiceCommandSegmenter:
 
         self._timeout_seconds_left -= chunk_seconds
         if self._timeout_seconds_left <= 0:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "VAD end of speech detection timed out after %s seconds",
                 self.timeout_seconds,
             )
