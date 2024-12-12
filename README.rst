@@ -1,4 +1,4 @@
-Home Assistant |Chat Status|
+Home Assistant |Chat Status| |Gurubase|
 =================================================================================
 
 Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
@@ -31,3 +31,5 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 .. |ohf-logo| image:: https://www.openhomefoundation.org/badges/home-assistant.png
    :alt: Home Assistant - A project from the Open Home Foundation
    :target: https://www.openhomefoundation.org/
+.. |Gurubase| image:: https://img.shields.io/badge/Gurubase-Ask%20Home%20Assistant%20Guru-006BFF
+   :target: https://gurubase.io/g/home-assistant
