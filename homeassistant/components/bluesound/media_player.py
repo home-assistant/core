@@ -292,14 +292,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = dt_util.utcnow()
             self._status = status
 
-            group_name = status.group_name
-            if group_name != self._group_name:
-                _LOGGER.debug("Group name change detected on device: %s", self.id)
-                self._group_name = group_name
-
-                # rebuild ordered list of entity_ids that are in the group, master is first
-                self._group_list = self.rebuild_bluesound_group()
-
             self.async_write_ha_state()
         except PlayerUnreachableError:
             self._attr_available = False
@@ -322,6 +314,8 @@ class BluesoundPlayer(MediaPlayerEntity):
         )
 
         self._sync_status = sync_status
+
+        self._group_list = self.rebuild_bluesound_group()
 
         if sync_status.master is not None:
             self._is_master = False
@@ -619,21 +613,32 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     def rebuild_bluesound_group(self) -> list[str]:
         """Rebuild the list of entities in speaker group."""
-        if self._group_name is None:
+        if self.sync_status.master is None and self.sync_status.slaves is None:
             return []
 
-        device_group = self._group_name.split("+")
+        player_entities: list[BluesoundPlayer] = self.hass.data[DATA_BLUESOUND]
 
-        sorted_entities: list[BluesoundPlayer] = sorted(
-            self.hass.data[DATA_BLUESOUND],
-            key=lambda entity: entity.is_master,
-            reverse=True,
-        )
-        return [
-            entity.sync_status.name
-            for entity in sorted_entities
-            if entity.bluesound_device_name in device_group
+        leader_sync_status: SyncStatus | None = None
+        if self.sync_status.master is None:
+            leader_sync_status = self.sync_status
+        else:
+            required_id = f"{self.sync_status.master.ip}:{self.sync_status.master.port}"
+            for x in player_entities:
+                if x.sync_status.id == required_id:
+                    leader_sync_status = x.sync_status
+                    break
+
+        if leader_sync_status is None or leader_sync_status.slaves is None:
+            return []
+
+        follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.slaves]
+        follower_names = [
+            x.sync_status.name
+            for x in player_entities
+            if x.sync_status.id in follower_ids
         ]
+        follower_names.insert(0, leader_sync_status.name)
+        return follower_names
 
     async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""

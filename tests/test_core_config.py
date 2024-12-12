@@ -1075,9 +1075,8 @@ async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
     with pytest.raises(
         RuntimeError,
         match=re.escape(
-            "Detected code that set the time zone using set_time_zone instead of "
-            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
-            "Please report this issue.",
+            "Detected code that sets the time zone using set_time_zone instead of "
+            "async_set_time_zone. Please report this issue"
         ),
     ):
         await hass.config.set_time_zone("America/New_York")

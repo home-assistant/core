@@ -38,6 +38,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_ACTIVITY_STATE_TOPIC = "activity_state_topic"
 CONF_ACTIVITY_VALUE_TEMPLATE = "activity_value_template"
 CONF_DOCK_COMMAND_TOPIC = "dock_command_topic"

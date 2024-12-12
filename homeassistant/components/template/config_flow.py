@@ -157,7 +157,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     type=selector.TextSelectorType.TEXT, multiline=False
                 )
             ),
-            vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
+            vol.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }
 
     if domain == Platform.SELECT:

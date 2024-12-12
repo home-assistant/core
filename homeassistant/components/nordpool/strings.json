@@ -12,12 +12,20 @@
         "data": {
           "currency": "Currency",
           "areas": "Areas"
+        },
+        "data_description": {
+          "currency": "Select currency to display prices in, EUR is the base currency.",
+          "areas": "Areas to display prices for according to Nordpool market areas."
         }
       },
       "reconfigure": {
         "data": {
           "currency": "[%key:component::nordpool::config::step::user::data::currency%]",
           "areas": "[%key:component::nordpool::config::step::user::data::areas%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::nordpool::config::step::user::data_description::currency%]",
+          "areas": "[%key:component::nordpool::config::step::user::data_description::areas%]"
         }
       }
     }
@@ -60,6 +68,11 @@
       "daily_average": {
         "name": "Daily average"
       }
+    }
+  },
+  "exceptions": {
+    "initial_update_failed": {
+      "message": "Initial update failed on startup with error {error}"
     }
   }
 }

@@ -44,6 +44,7 @@ class JewishCalendarEntity(Entity):
         data = config_entry.runtime_data
         self._location = data.location
         self._hebrew = data.language == "hebrew"
+        self._language = data.language
         self._candle_lighting_offset = data.candle_lighting_offset
         self._havdalah_offset = data.havdalah_offset
         self._diaspora = data.diaspora

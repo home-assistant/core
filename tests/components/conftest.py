@@ -27,13 +27,14 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
     FlowManager,
     FlowResultType,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 
@@ -515,6 +516,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.addons = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
+    supervisor_client.host = AsyncMock()
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
     supervisor_client.supervisor = AsyncMock()
@@ -529,6 +531,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.backup.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -713,6 +719,23 @@ async def _check_create_issue_translations(
         )
 
 
+async def _check_exception_translation(
+    hass: HomeAssistant,
+    exception: HomeAssistantError,
+    translation_errors: dict[str, str],
+) -> None:
+    if exception.translation_key is None:
+        return
+    await _validate_translation(
+        hass,
+        translation_errors,
+        "exceptions",
+        exception.translation_domain,
+        f"{exception.translation_key}.message",
+        exception.translation_placeholders,
+    )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_translations: str | list[str],
@@ -733,6 +756,7 @@ async def check_translations(
     # Keep reference to original functions
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
+    _original_service_registry_async_call = ServiceRegistry.async_call
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -755,6 +779,33 @@ async def check_translations(
         )
         return result
 
+    async def _service_registry_async_call(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        blocking: bool = False,
+        context: Context | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool = False,
+    ) -> ServiceResponse:
+        try:
+            return await _original_service_registry_async_call(
+                self,
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+                return_response,
+            )
+        except HomeAssistantError as err:
+            translation_coros.add(
+                _check_exception_translation(self._hass, err, translation_errors)
+            )
+            raise
+
     # Use override functions
     with (
         patch(
@@ -764,6 +815,10 @@ async def check_translations(
         patch(
             "homeassistant.helpers.issue_registry.IssueRegistry.async_get_or_create",
             _issue_registry_async_create_issue,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_call",
+            _service_registry_async_call,
         ),
     ):
         yield

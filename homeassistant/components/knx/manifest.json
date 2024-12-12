@@ -9,9 +9,8 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["xknx", "xknxproject"],
-  "quality_scale": "platinum",
   "requirements": [
-    "xknx==3.3.0",
+    "xknx==3.4.0",
     "xknxproject==3.8.1",
     "knx-frontend==2024.11.16.205004"
   ],

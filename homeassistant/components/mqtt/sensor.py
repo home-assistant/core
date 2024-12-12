@@ -47,6 +47,8 @@ from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
 CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"

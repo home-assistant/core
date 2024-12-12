@@ -123,7 +123,7 @@
     'system': dict({
       'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
-      'serial_number': 123,
+      'serial_number': '123',
     }),
     'work_area_dict': dict({
       '0': 'my_lawn',

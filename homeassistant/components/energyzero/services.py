@@ -107,7 +107,7 @@ def __get_coordinator(
             },
         )
 
-    coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+    coordinator: EnergyZeroDataUpdateCoordinator = entry.runtime_data
     return coordinator
 
 
