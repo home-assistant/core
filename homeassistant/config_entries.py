@@ -3241,7 +3241,7 @@ class ConfigSubentryFlowManager(
     ) -> ConfigSubentryFlow:
         """Create a subentry flow for a config entry.
 
-        The entry_id and the flow.handler is the same thing to map entry with flow.
+        The entry_id and flow.handler[0] is the same thing to map entry with flow.
         """
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
@@ -3253,7 +3253,7 @@ class ConfigSubentryFlowManager(
             raise data_entry_flow.UnknownHandler(
                 f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
             )
-        subentry_flow = handler.async_get_subentry_flow(entry, handler_key[1])
+        subentry_flow = handler.async_get_subentry_flow(entry, subentry_type)
         subentry_flow.init_step = context["source"]
         return subentry_flow
 
@@ -3266,16 +3266,17 @@ class ConfigSubentryFlowManager(
     ) -> SubentryFlowResult:
         """Finish a subentry flow and add a new subentry to the configuration entry.
 
-        The flow.handler and the entry_id is the same thing to map flow with entry.
+        The flow.handler[0] and entry_id is the same thing to map flow with entry.
         """
         flow = cast(ConfigSubentryFlow, flow)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
-        entry = self.hass.config_entries.async_get_entry(flow.handler[0])
+        entry_id = flow.handler[0]
+        entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
-            raise UnknownEntry(flow.handler[0])
+            raise UnknownEntry(entry_id)
 
         unique_id = result.get("unique_id")
         if unique_id is not None and not isinstance(unique_id, str):
@@ -3315,7 +3316,7 @@ class ConfigSubentryFlow(
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        unique_id: str,
+        unique_id: str | None,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
         if self.source != SOURCE_USER:
