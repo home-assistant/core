@@ -22,11 +22,17 @@
           },
           "tracked_geocache_ids": {
             "name": "Tracked Geocaches",
-            "description": "Optionally add geocaches to track"
+            "description": "Optionally add geocaches to track",
+            "data": {
+              "tracked_cache_ref_code": "Geocache Reference Code"
+            }
           },
           "tracked_trackable_ids": {
             "name": "Tracked Trackables",
-            "description": "Optionally add trackables to track"
+            "description": "Optionally add trackables to track",
+            "data": {
+              "tracked_trackable_ref_code": "Trackable Reference Code"
+            }
           }
         }
       }

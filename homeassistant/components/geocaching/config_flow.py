@@ -21,6 +21,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CACHES_SINGLE_TITLE,
     CONFIG_FLOW_GEOCACHES_SECTION_ID,
     CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID,
     CONFIG_FLOW_TRACKABLES_SECTION_ID,
@@ -28,6 +29,7 @@ from .const import (
     ENVIRONMENT,
     NEARBY_CACHES_COUNT_TITLE,
     NEARBY_CACHES_RADIUS_TITLE,
+    TRACKABLES_SINGLE_TITLE,
     USE_TEST_CONFIG,
 )
 
@@ -90,9 +92,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle additional user input after authentication."""
-
-        CACHES_SINGLE_TITLE = "Cache Reference Code"
-        TRACKABLES_SINGLE_TITLE = "Trackable Reference Code"
 
         # Returns a schema for entering a list of strings
         def string_list_schema(single_entry_title: str) -> vol.Schema:
@@ -160,36 +159,36 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 ),
             )
 
+        def get_or_default(path: list[str], default: Any) -> Any:
+            """Get a value from a nested dictionary or return a default value."""
+            if len(path) < 1:
+                raise ValueError("Path must contain at least one key")
+
+            value = user_input
+            for key in path:
+                if key not in value:
+                    return default
+                value = value[key]
+            return value
+
         # Store the provided nearby caches count
-        self.data[NEARBY_CACHES_COUNT_TITLE] = (
-            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
-                NEARBY_CACHES_COUNT_TITLE
-            ]
-            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
-            else 0
+        self.data[NEARBY_CACHES_COUNT_TITLE] = get_or_default(
+            [CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID, NEARBY_CACHES_COUNT_TITLE], 0
         )
 
         # Store the provided nearby caches radius
-        self.data[NEARBY_CACHES_RADIUS_TITLE] = (
-            user_input[CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID][
-                NEARBY_CACHES_RADIUS_TITLE
-            ]
-            if user_input.get(CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID)
-            else 1
+        self.data[NEARBY_CACHES_RADIUS_TITLE] = get_or_default(
+            [CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID, NEARBY_CACHES_RADIUS_TITLE], 1
         )
 
         # Store the provided tracked caches
-        self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = (
-            user_input[CONFIG_FLOW_GEOCACHES_SECTION_ID][CACHES_SINGLE_TITLE]
-            if user_input.get(CONFIG_FLOW_GEOCACHES_SECTION_ID)
-            else []
+        self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = get_or_default(
+            [CONFIG_FLOW_GEOCACHES_SECTION_ID, CACHES_SINGLE_TITLE], []
         )
 
         # Store the provided tracked trackables
-        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = (
-            user_input[CONFIG_FLOW_TRACKABLES_SECTION_ID][TRACKABLES_SINGLE_TITLE]
-            if user_input.get(CONFIG_FLOW_TRACKABLES_SECTION_ID)
-            else []
+        self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = get_or_default(
+            [CONFIG_FLOW_TRACKABLES_SECTION_ID, TRACKABLES_SINGLE_TITLE], []
         )
 
         return self.async_create_entry(title=self.title, data=self.data)
