@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.kitchen_sink import DOMAIN
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -48,6 +49,27 @@ async def test_agents_info(
 ) -> None:
     """Test backup agent info."""
     client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+    }
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, ConfigEntryDisabler.USER
+    )
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agents": [{"agent_id": "backup.local"}]}
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
