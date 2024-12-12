@@ -704,6 +704,9 @@ connect-box==0.3.1
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
+# homeassistant.components.cookidoo
+cookidoo-api==0.10.0
+
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
 cronsim==2.6
