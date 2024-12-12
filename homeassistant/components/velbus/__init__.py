@@ -98,10 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Unload (close) the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
-    hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    await entry.runtime_data.cntrl.stop()
     return unload_ok
 
 
