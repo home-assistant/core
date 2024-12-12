@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -48,11 +47,6 @@ class HeosRuntimeData:
 
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the HEOS component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
