@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.tsk
+    await entry.runtime_data.connect_task
     entities = []
     for channel in entry.runtime_data.cntrl.get_all("sensor"):
         entities.append(VelbusSensor(channel))

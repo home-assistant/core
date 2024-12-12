@@ -16,7 +16,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.tsk
+    await entry.runtime_data.connect_task
     cntrl = entry.runtime_data.cntrl
     async_add_entities(
         VelbusBinarySensor(channel) for channel in cntrl.get_all("binary_sensor")

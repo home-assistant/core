@@ -44,7 +44,7 @@ class VelbusData:
     """Runtime data for the Velbus config entry."""
 
     cntrl: Velbus
-    tsk: asyncio.Task
+    connect_task: asyncio.Task
 
 
 async def velbus_connect_task(
@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
-    entry.runtime_data = VelbusData(cntrl=controller, tsk=task)
+    entry.runtime_data = VelbusData(cntrl=controller, connect_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
