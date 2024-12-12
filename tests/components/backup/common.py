@@ -57,6 +57,8 @@ TEST_DOMAIN = "test"
 class BackupAgentTest(BackupAgent):
     """Test backup agent."""
 
+    domain = "test"
+
     def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
