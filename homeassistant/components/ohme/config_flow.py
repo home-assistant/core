@@ -6,11 +6,30 @@ from ohme import OhmeApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
-from .const import CONF_EMAIL, CONF_PASSWORD, DOMAIN
+from .const import DOMAIN
 
 USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_EMAIL): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="email",
+            ),
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+    }
 )
 
 
@@ -25,8 +44,8 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
+
             instance = OhmeApiClient(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             if not await instance.async_login():
                 errors["base"] = "auth_error"

@@ -4,17 +4,22 @@
       "user": {
         "description": "Configure your Ohme account.",
         "data": {
-          "email": "Email address",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Enter the email address associated with your Ohme account",
+          "password": "Enter the password for your Ohme account"
         }
       }
     },
     "error": {
       "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
     },
-    "abort": {}
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
   },
-  "issues": {},
   "entity": {
     "sensor": {
       "status": {
@@ -26,17 +31,8 @@
           "pending_approval": "Pending approval"
         }
       },
-      "current": {
-        "name": "Current"
-      },
       "ct_current": {
         "name": "CT current"
-      },
-      "power": {
-        "name": "Power"
-      },
-      "energy": {
-        "name": "Energy"
       }
     }
   }

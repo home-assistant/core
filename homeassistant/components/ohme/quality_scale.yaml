@@ -1,16 +1,25 @@
 rules:
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      This integration has no custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration has no custom actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      This integration has no explicit subscriptions to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done

@@ -3,20 +3,17 @@
 import logging
 
 from homeassistant import core
-from homeassistant.config_entries import ConfigEntry
 
 from .const import PLATFORMS
-from .coordinator import OhmeCoordinator
+from .coordinator import OhmeConfigEntry, OhmeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-type OhmeConfigEntry = ConfigEntry[OhmeCoordinator]
 
-
-async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: core.HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
-    coordinator = OhmeCoordinator(hass)
+    coordinator = OhmeCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -26,7 +23,7 @@ async def async_setup_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: core.HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

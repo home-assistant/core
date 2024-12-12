@@ -15,11 +15,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ class OhmeSensorDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS = [
     OhmeSensorDescription(
         key="status",
+        translation_key="status",
         device_class=SensorDeviceClass.ENUM,
         options=[e.value for e in ChargerStatus],
         value_fn=lambda client: client.status.value,
@@ -48,6 +49,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     OhmeSensorDescription(
         key="ct_current",
+        translation_key="ct_current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda client: client.power.ct_amps,
@@ -75,20 +77,18 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OhmeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors and configure coordinator."""
     coordinator = config_entry.runtime_data
     client = coordinator.client
 
-    sensors = [
-        OhmeSensor(coordinator, client, description)
+    async_add_entities(
+        OhmeSensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
         if description.is_supported_fn(client)
-    ]
-
-    async_add_entities(sensors)
+    )
 
 
 class OhmeSensor(OhmeEntity, SensorEntity):
