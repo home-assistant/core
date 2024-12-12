@@ -704,6 +704,9 @@ connect-box==0.3.1
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
+# homeassistant.components.cookidoo
+cookidoo-api==0.10.0
+
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
 cronsim==2.6
@@ -747,7 +750,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.0.0
+demetriek==1.1.0
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
@@ -1028,6 +1031,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.slide
+# homeassistant.components.slide_local
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
