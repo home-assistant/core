@@ -19,11 +19,8 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
-    if (
-        not (entries := hass.config_entries.async_entries(DOMAIN))
-        or entries[0].disabled_by
-    ):
-        LOGGER.info("No config entry found or entry is disabled")
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        LOGGER.info("No config entry found or entry is not loaded")
         return []
     return [KitchenSinkBackupAgent("syncer")]
 
