@@ -863,17 +863,14 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
     _attr_color_mode: ColorMode | str | None = None
-    _attr_color_temp: int | None = None
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
     # Default to the Philips Hue value that HA has always assumed
     # https://developers.meethue.com/documentation/core-concepts
-    _attr_max_color_temp_kelvin: int | None = None
-    _attr_min_color_temp_kelvin: int | None = None
-    _attr_max_mireds: int = 500  # 2000 K
-    _attr_min_mireds: int = 153  # 6500 K
+    _attr_max_color_temp_kelvin: int = 6500
+    _attr_min_color_temp_kelvin: int = 2000
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
@@ -956,40 +953,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the rgbww color value [int, int, int, int, int]."""
         return self._attr_rgbww_color
 
-    @cached_property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        return self._attr_color_temp
-
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in Kelvin."""
-        if self._attr_color_temp_kelvin is None and (color_temp := self.color_temp):
-            return color_util.color_temperature_mired_to_kelvin(color_temp)
         return self._attr_color_temp_kelvin
-
-    @cached_property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._attr_min_mireds
-
-    @cached_property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self._attr_max_mireds
 
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if self._attr_min_color_temp_kelvin is None:
-            return color_util.color_temperature_mired_to_kelvin(self.max_mireds)
         return self._attr_min_color_temp_kelvin
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if self._attr_max_color_temp_kelvin is None:
-            return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
         return self._attr_max_color_temp_kelvin
 
     @cached_property
