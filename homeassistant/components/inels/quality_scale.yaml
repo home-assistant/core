@@ -1,0 +1,129 @@
+rules:
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry:
+    status: todo # exempt ?
+    comment: >
+      The integration only allows one ConfigEntry, otherwise aborted with reason
+      "single_instance_allowed".
+
+      There is a historical reason for this, since we sell hardware with
+      embedded Linux:
+      https://www.elkoep.com/third-party-integration-gateway---inels-bridge
+
+      In all other cases, our customers use only one broker per household.
+  config-flow-test-coverage: done
+  runtime-data:
+    status: exempt
+    comment: >
+      Because the hardware does not publish configuration to MQTT, this is a
+      workaround to the current hardware limitation.
+
+      As a result, I must keep a persistent record of device history
+      (OLD_ENTITIES) in persistent storage rather than runtime_data to handle
+      cleanup properly.
+  test-before-setup:
+    status: todo
+    comment: >
+      async_setup_entry returns False but it can be improved with specific
+      exceptions.
+  appropriate-polling:
+    status: done
+    comment: |
+      Integration uses local_push.
+  entity-unique-id:
+    status: done
+    comment: |
+      {MAC}_{DEVICE_ID} is used, for example, 0e97f8b7d30_02E8.
+  has-entity-name: todo
+  entity-event-setup:
+    status: done
+    comment: |
+      Subscribe in async_added_to_hass & unsubscribe from async_unload_entry.
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions:
+    status: done
+    comment: |
+      A link to the wiki is provided.
+  docs-removal-instructions: todo
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  brands: done
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable:
+    status: done
+    comment: |
+      available property.
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  reauthentication-flow: todo
+  parallel-updates:
+    status: todo
+    comment: |
+      For all platforms, add a constant PARALLEL_UPDATES = 0.
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters:
+    status: done
+    comment: |
+      A link to the wiki is provided.
+  docs-configuration-parameters:
+    status: exempt
+    comment: >
+      There is the same options flow in the integration as there is in the
+      configuration.
+  entity-translations:
+    status: todo
+    comment: |
+      There is room for improvement here.
+  entity-device-class: todo
+  devices: done
+  entity-category: todo
+  entity-disabled-by-default: todo
+  discovery:
+    status: todo
+    comment: |
+      Currently blocked by a hw limitation.
+  stale-devices:
+    status: todo
+    comment: >
+      Same as discovery. The async_remove_config_entry_device function should be
+      implemented at a minimum.
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  dynamic-devices: todo
+  discovery-update-info:
+    status: todo
+    comment: |
+      Same as discovery.
+  repair-issues: todo
+  docs-use-cases: todo
+  docs-supported-devices:
+    status: todo
+    comment: >
+      In regards to this and below doc requirements, I am not sure whether the
+      wiki link is acceptable.
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: |
+      The integration is not making any HTTP requests.
+  strict-typing: done
