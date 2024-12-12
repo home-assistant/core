@@ -44,9 +44,13 @@ CACHE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}_{}"
 TRACKABLE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
 
 # Section IDs for the config flow
+# Note that changing these will require updating the `strings.json` paths, and recompiling the translations
 CONFIG_FLOW_GEOCACHES_SECTION_ID = "tracked_geocache_ids"
 CONFIG_FLOW_TRACKABLES_SECTION_ID = "tracked_trackable_ids"
 CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID = "nearby_settings"
+
+CACHES_SINGLE_TITLE = "tracked_cache_ref_code"
+TRACKABLES_SINGLE_TITLE = "tracked_trackable_ref_code"
 
 NEARBY_CACHES_COUNT_TITLE = "nearby_caches_max_count"
 NEARBY_CACHES_RADIUS_TITLE = "nearby_caches_radius"

@@ -21,6 +21,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CACHES_SINGLE_TITLE,
     CONFIG_FLOW_GEOCACHES_SECTION_ID,
     CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID,
     CONFIG_FLOW_TRACKABLES_SECTION_ID,
@@ -28,6 +29,7 @@ from .const import (
     ENVIRONMENT,
     NEARBY_CACHES_COUNT_TITLE,
     NEARBY_CACHES_RADIUS_TITLE,
+    TRACKABLES_SINGLE_TITLE,
     USE_TEST_CONFIG,
 )
 
@@ -90,9 +92,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         user_input: dict[str, Any] | None,
     ) -> ConfigFlowResult:
         """Handle additional user input after authentication."""
-
-        CACHES_SINGLE_TITLE = "Cache Reference Code"
-        TRACKABLES_SINGLE_TITLE = "Trackable Reference Code"
 
         # Returns a schema for entering a list of strings
         def string_list_schema(single_entry_title: str) -> vol.Schema:
