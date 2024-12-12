@@ -1,4 +1,5 @@
 rules:
+  # Bronze
   config-flow: done
   test-before-configure: done
   unique-config-entry:
@@ -57,6 +58,7 @@ rules:
     comment: |
       No custom actions are defined.
   brands: done
+  # Silver
   config-entry-unloading: done
   log-when-unavailable: todo
   entity-unavailable:
@@ -83,6 +85,8 @@ rules:
     comment: >
       There is the same options flow in the integration as there is in the
       configuration.
+
+  # Gold
   entity-translations:
     status: todo
     comment: |
@@ -121,6 +125,8 @@ rules:
   docs-known-limitations: todo
   docs-troubleshooting: todo
   docs-examples: todo
+
+  # Platinum
   async-dependency: todo
   inject-websession:
     status: exempt
