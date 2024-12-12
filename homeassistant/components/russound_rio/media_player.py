@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiorussound import Controller
 from aiorussound.const import FeatureFlag
@@ -157,6 +158,8 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """Return a list of available input sources."""
+        if TYPE_CHECKING:
+            assert self._client.rio_version
         available_sources = (
             [
                 source
@@ -164,8 +167,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
                 if source_id in self._zone.enabled_sources
             ]
             if is_feature_supported(
-                self._client.rio_version,  # type: ignore[arg-type]
-                FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION,
+                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
             )
             else self._sources.values()
         )
