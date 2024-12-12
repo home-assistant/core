@@ -88,9 +88,6 @@
     "set_lock": {
       "message": "Could not set lock for {name}: {error}"
     },
-    "no_code": {
-      "message": "Can not unlock without code"
-    },
     "could_not_change_lock": {
       "message": "Could not set lock, check system ready for lock"
     },
