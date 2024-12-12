@@ -423,7 +423,14 @@ async def _delete_filtered_backups(
             get_agent_errors,
         )
 
-    LOGGER.debug("Total backups: %s", backups)
+    # only delete backups that are created by the backup strategy
+    backups = {
+        backup_id: backup
+        for backup_id, backup in backups.items()
+        if backup.with_strategy_settings
+    }
+
+    LOGGER.debug("Total strategy backups: %s", backups)
 
     filtered_backups = backup_filter(backups)
 
