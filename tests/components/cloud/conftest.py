@@ -143,9 +143,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
 
         # Methods that we mock with a custom side effect.
 
-        async def mock_login(
-            email: str, password: str, code: str | None = None
-        ) -> None:
+        async def mock_login(email: str, password: str) -> None:
             """Mock login.
 
             When called, it should call the on_start callback.
