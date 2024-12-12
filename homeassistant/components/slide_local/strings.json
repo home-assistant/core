@@ -2,19 +2,18 @@
   "config": {
     "step": {
       "user": {
-        "title": "Details for Slide (local API)",
         "description": "Provide information to connect to the Slide device",
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "ip_address": "The hostname or IP address of your local Slide",
-          "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). NOTE: With api_version 2 you can fill in anything here, it is not used by the local API."
+          "host": "The hostname or IP address of your local Slide",
+          "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). If your Slide runs firmware version 2 this is optional, as it is not used by the local API."
         }
       },
       "zeroconf_confirm": {
-        "title": "Comfirm setup for Slide (local API)",
+        "title": "Confirm setup for Slide",
         "description": "Do you want to setup {host}?"
       }
     },
