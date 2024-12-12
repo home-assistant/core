@@ -1148,7 +1148,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "xy"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
-    await common.async_turn_on(hass, "light.test", color_temp=125)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=8000)
     mqtt_mock.async_publish.assert_has_calls(
         [
             call("test_light_rgb/color_temp/set", "125", 2, False),
@@ -1321,7 +1321,7 @@ async def test_sending_mqtt_color_temp_command_with_template(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", color_temp=100)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=10000)
 
     mqtt_mock.async_publish.assert_has_calls(
         [
