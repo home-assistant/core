@@ -24,7 +24,7 @@ from yeelight.main import _MODEL_SPECS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
@@ -107,7 +107,6 @@ from homeassistant.util.color import (
     color_RGB_to_hs,
     color_RGB_to_xy,
     color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
 )
 
 from . import (
@@ -289,7 +288,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # turn_on color_temp
     brightness = 100
-    color_temp = 200
+    color_temp = 5000
     transition = 1
     mocked_bulb.last_properties["power"] = "off"
     await hass.services.async_call(
@@ -298,7 +297,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         {
             ATTR_ENTITY_ID: ENTITY_LIGHT,
             ATTR_BRIGHTNESS: brightness,
-            ATTR_COLOR_TEMP: color_temp,
+            ATTR_COLOR_TEMP_KELVIN: color_temp,
             ATTR_FLASH: FLASH_LONG,
             ATTR_EFFECT: EFFECT_STOP,
             ATTR_TRANSITION: transition,
@@ -316,7 +315,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         brightness / 255 * 100, duration=transition * 1000, light_type=LightType.Main
     )
     mocked_bulb.async_set_color_temp.assert_called_once_with(
-        color_temperature_mired_to_kelvin(color_temp),
+        color_temp,
         duration=transition * 1000,
         light_type=LightType.Main,
     )
@@ -327,7 +326,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # turn_on color_temp - flash short
     brightness = 100
-    color_temp = 200
+    color_temp = 5000
     transition = 1
     mocked_bulb.async_start_music.reset_mock()
     mocked_bulb.async_set_brightness.reset_mock()
@@ -342,7 +341,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         {
             ATTR_ENTITY_ID: ENTITY_LIGHT,
             ATTR_BRIGHTNESS: brightness,
-            ATTR_COLOR_TEMP: color_temp,
+            ATTR_COLOR_TEMP_KELVIN: color_temp,
             ATTR_FLASH: FLASH_SHORT,
             ATTR_EFFECT: EFFECT_STOP,
             ATTR_TRANSITION: transition,
@@ -360,7 +359,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         brightness / 255 * 100, duration=transition * 1000, light_type=LightType.Main
     )
     mocked_bulb.async_set_color_temp.assert_called_once_with(
-        color_temperature_mired_to_kelvin(color_temp),
+        color_temp,
         duration=transition * 1000,
         light_type=LightType.Main,
     )
@@ -691,7 +690,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -707,7 +706,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
@@ -720,7 +719,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "light",
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP: 250},
+        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
     assert mocked_bulb.async_set_hsv.mock_calls == []
