@@ -5,15 +5,11 @@
         "description": "Update configuration for {title}.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "password": "[%key:component::plugwise::config::step::user::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:component::plugwise::config::step::user::data::username%]"
         },
         "data_description": {
           "host": "[%key:component::plugwise::config::step::user::data_description::host%]",
-          "password": "[%key:component::plugwise::config::step::user::data_description::password%]",
           "port": "[%key:component::plugwise::config::step::user::data_description::port%]",
-          "username": "[%key:component::plugwise::config::step::user::data_description::username%]"
         }
       },
       "user": {

@@ -229,8 +229,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input:
-            # Redefine ingest existing username and password
-            user_input = {
+            # Keep current username and password
+            full_input = {
                 CONF_HOST: user_input.get(CONF_HOST),
                 CONF_PORT: user_input.get(CONF_PORT),
                 CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
@@ -241,7 +241,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")
                 return self.async_update_reload_and_abort(
-                    self._get_reconfigure_entry(),
+                    reconfigure_entry,
                     data_updates=user_input,
                 )
 
