@@ -8,12 +8,12 @@ import shutil
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from . import VelbusConfigEntry
 from .const import (
     CONF_INTERFACE,
     CONF_MEMO_TEXT,
@@ -36,7 +36,7 @@ def setup_services(hass: HomeAssistant) -> None:
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
-    def get_config_entry(interface: str) -> ConfigEntry | None:
+    def get_config_entry(interface: str) -> VelbusConfigEntry | None:
         for config_entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in config_entry.data and config_entry.data["port"] == interface:
                 return config_entry
