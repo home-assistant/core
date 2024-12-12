@@ -16,10 +16,10 @@ rules:
     comment: |
       Dynamically build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
   dependency-transparency: done
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: todo
   entity-unique-id: done
   has-entity-name: todo
