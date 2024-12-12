@@ -1,8 +1,6 @@
 """Tests for the Backup integration."""
 
-from asyncio import Future
 from collections.abc import Generator
-from datetime import datetime
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
@@ -17,7 +15,6 @@ from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupState,
     NewBackup,
-    WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -87,22 +84,6 @@ def mock_delay_save() -> Generator[None]:
     """Mock the delay save constant."""
     with patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0):
         yield
-
-
-@pytest.fixture(name="create_backup")
-def mock_create_backup() -> Generator[AsyncMock]:
-    """Mock manager create backup."""
-    mock_written_backup = MagicMock(spec_set=WrittenBackup)
-    mock_written_backup.backup.backup_id = "abc123"
-    mock_written_backup.open_stream = AsyncMock()
-    mock_written_backup.release_stream = AsyncMock()
-    fut = Future()
-    fut.set_result(mock_written_backup)
-    with patch(
-        "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
-    ) as mock_create_backup:
-        mock_create_backup.return_value = (MagicMock(), fut)
-        yield mock_create_backup
 
 
 @pytest.fixture(name="delete_backup")
@@ -798,12 +779,8 @@ async def test_agents_info(
                     "password": "test-password",
                 },
                 "retention": {"copies": 3, "days": 7},
-                "last_attempted_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
-                "last_completed_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
+                "last_attempted_strategy_backup": "2024-10-26T04:45:00+01:00",
+                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "daily"},
             },
         },
@@ -838,12 +815,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": 7},
-                "last_attempted_strategy_backup": datetime.fromisoformat(
-                    "2024-10-27T04:45:00+01:00"
-                ),
-                "last_completed_strategy_backup": datetime.fromisoformat(
-                    "2024-10-26T04:45:00+01:00"
-                ),
+                "last_attempted_strategy_backup": "2024-10-27T04:45:00+01:00",
+                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "never"},
             },
         },
@@ -1205,12 +1178,8 @@ async def test_config_schedule_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": datetime.fromisoformat(
-                last_completed_strategy_backup
-            ),
-            "last_completed_strategy_backup": datetime.fromisoformat(
-                last_completed_strategy_backup
-            ),
+            "last_attempted_strategy_backup": last_completed_strategy_backup,
+            "last_completed_strategy_backup": last_completed_strategy_backup,
             "schedule": {"state": "daily"},
         },
     }
@@ -1486,7 +1455,7 @@ async def test_config_retention_copies_logic(
             },
             "retention": {"copies": None, "days": None},
             "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
+            "last_completed_strategy_backup": last_backup_time,
             "schedule": {"state": "daily"},
         },
     }
@@ -1699,7 +1668,7 @@ async def test_config_retention_days_logic(
             },
             "retention": {"copies": None, "days": None},
             "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": datetime.fromisoformat(last_backup_time),
+            "last_completed_strategy_backup": last_backup_time,
             "schedule": {"state": "never"},
         },
     }

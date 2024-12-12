@@ -33,8 +33,8 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
-    last_attempted_strategy_backup: datetime | None
-    last_completed_strategy_backup: datetime | None
+    last_attempted_strategy_backup: str | None
+    last_completed_strategy_backup: str | None
     retention: StoredRetentionConfig
     schedule: StoredBackupSchedule
 
@@ -59,6 +59,16 @@ class BackupConfigData:
             include_folders = None
         retention = data["retention"]
 
+        if last_attempted_str := data["last_attempted_strategy_backup"]:
+            last_attempted = dt_util.parse_datetime(last_attempted_str)
+        else:
+            last_attempted = None
+
+        if last_attempted_str := data["last_completed_strategy_backup"]:
+            last_completed = dt_util.parse_datetime(last_attempted_str)
+        else:
+            last_completed = None
+
         return cls(
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
@@ -69,8 +79,8 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
-            last_attempted_strategy_backup=data["last_attempted_strategy_backup"],
-            last_completed_strategy_backup=data["last_completed_strategy_backup"],
+            last_attempted_strategy_backup=last_attempted,
+            last_completed_strategy_backup=last_completed,
             retention=RetentionConfig(
                 copies=retention["copies"],
                 days=retention["days"],
@@ -80,10 +90,20 @@ class BackupConfigData:
 
     def to_dict(self) -> StoredBackupConfig:
         """Convert backup config data to a dict."""
+        if self.last_attempted_strategy_backup:
+            last_attempted = self.last_attempted_strategy_backup.isoformat()
+        else:
+            last_attempted = None
+
+        if self.last_completed_strategy_backup:
+            last_completed = self.last_completed_strategy_backup.isoformat()
+        else:
+            last_completed = None
+
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
-            last_attempted_strategy_backup=self.last_attempted_strategy_backup,
-            last_completed_strategy_backup=self.last_completed_strategy_backup,
+            last_attempted_strategy_backup=last_attempted,
+            last_completed_strategy_backup=last_completed,
             retention=self.retention.to_dict(),
             schedule=self.schedule.to_dict(),
         )
