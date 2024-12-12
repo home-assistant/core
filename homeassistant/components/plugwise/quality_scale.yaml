@@ -32,9 +32,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The hubs have a hardcoded `Smile ID` printed on the sticker used as password, it can not be changed
-  parallel-updates:
-    status: todo
-    comment: Using coordinator, but required due to mutable platform
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters:
