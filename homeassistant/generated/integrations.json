@@ -1044,6 +1044,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "cookidoo": {
+      "name": "Cookidoo",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "coolmaster": {
       "name": "CoolMasterNet",
       "integration_type": "hub",
