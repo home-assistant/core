@@ -77,14 +77,16 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
 def create_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
+    hass: HomeAssistant,
+    config_entry: MyUplinkConfigEntry,
+    coordinator: MyUplinkDataCoordinator,
 ) -> None:
     """Update all devices."""
     device_registry = dr.async_get(hass)

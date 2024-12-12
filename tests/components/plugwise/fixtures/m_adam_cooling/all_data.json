@@ -177,7 +177,7 @@
         "off"
       ],
       "climate_mode": "cool",
-      "control_state": "auto",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Bathroom",

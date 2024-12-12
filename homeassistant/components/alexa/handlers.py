@@ -527,6 +527,7 @@ async def async_api_unlock(
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }:
         msg = (

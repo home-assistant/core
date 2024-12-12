@@ -389,7 +389,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
-    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -708,7 +707,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "neato",
     "nederlandse_spoorwegen",
     "ness_alarm",
-    "nest",
     "netatmo",
     "netdata",
     "netgear",
@@ -733,7 +731,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "no_ip",
     "noaa_tides",
     "nobo_hub",
-    "nordpool",
     "norway_air",
     "notify_events",
     "notion",
@@ -892,7 +889,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rtorrent",
     "rtsp_to_webrtc",
     "ruckus_unleashed",
-    "russound_rio",
     "russound_rnet",
     "ruuvi_gateway",
     "ruuvitag_ble",
@@ -1107,7 +1103,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velbus",
     "velux",
     "venstar",
     "vera",
@@ -1360,7 +1355,7 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     for rule_name in rules_done:
         if (validator := VALIDATORS.get(rule_name)) and (
-            errors := validator.validate(integration, rules_done=rules_done)
+            errors := validator.validate(config, integration, rules_done=rules_done)
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")
