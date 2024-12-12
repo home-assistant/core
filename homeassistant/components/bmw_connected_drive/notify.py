@@ -53,7 +53,7 @@ def get_service(
     targets = {}
     if (
         config_entry
-        and (coordinator := config_entry.runtime_data.coordinator)
+        and (coordinator := config_entry.runtime_data)
         and not coordinator.read_only
     ):
         targets.update({v.name: v for v in coordinator.account.vehicles})

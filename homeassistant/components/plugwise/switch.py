@@ -21,6 +21,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class PlugwiseSwitchEntityDescription(SwitchEntityDescription):
@@ -48,7 +50,6 @@ SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
     PlugwiseSwitchEntityDescription(
         key="cooling_ena_switch",
         translation_key="cooling_ena_switch",
-        name="Cooling",
         entity_category=EntityCategory.CONFIG,
     ),
 )

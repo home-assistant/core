@@ -516,6 +516,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.addons = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
+    supervisor_client.host = AsyncMock()
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
     supervisor_client.supervisor = AsyncMock()
@@ -530,6 +531,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.backup.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
