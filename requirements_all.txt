@@ -417,7 +417,7 @@ aiowatttime==0.1.1
 aiowebostv==0.4.2
 
 # homeassistant.components.withings
-aiowithings==3.1.3
+aiowithings==3.1.4
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -704,6 +704,9 @@ connect-box==0.3.1
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
+# homeassistant.components.cookidoo
+cookidoo-api==0.10.0
+
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
 cronsim==2.6
@@ -736,7 +739,7 @@ debugpy==1.8.8
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==9.3.0
+deebot-client==9.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -747,7 +750,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.0.0
+demetriek==1.1.0
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
@@ -876,7 +879,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.20
+evohome-async==0.4.21
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -1028,6 +1031,7 @@ google-photos-library-api==0.12.1
 googlemaps==2.5.1
 
 # homeassistant.components.slide
+# homeassistant.components.slide_local
 goslide-api==0.7.0
 
 # homeassistant.components.tailwind
@@ -1128,7 +1132,7 @@ hole==0.8.0
 holidays==0.62
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.7
+home-assistant-frontend==20241127.8
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.9
@@ -1673,7 +1677,7 @@ pushover_complete==1.1.1
 pvo==2.2.0
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.11
+py-aosmith==1.0.12
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -2297,7 +2301,7 @@ pysqueezebox==0.10.0
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==1.3.2
+pysuezV2==1.3.5
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2939,7 +2943,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.0
+velbus-aio==2024.12.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2976,7 +2980,7 @@ wakeonlan==2.1.0
 wallbox==0.7.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.3.1
+watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
