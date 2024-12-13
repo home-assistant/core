@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class OhmeSensorDescription(SensorEntityDescription):

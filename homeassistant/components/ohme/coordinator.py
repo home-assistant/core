@@ -6,7 +6,7 @@ import logging
 from ohme import ApiException, AuthException, OhmeApiClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -41,12 +41,16 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
             await self.client.async_login()
 
             if not await self.client.async_update_device_info():
-                raise ConfigEntryNotReady("Unable to get Ohme device information")
+                raise ConfigEntryNotReady(
+                    translation_key="device_info_failed", translation_domain=DOMAIN
+                )
         except AuthException as e:
-            raise ConfigEntryError("Unable to login to Ohme") from e
+            raise ConfigEntryError(
+                translation_key="auth_failed", translation_domain=DOMAIN
+            ) from e
         except ApiException as e:
             raise ConfigEntryNotReady(
-                "An unexpected response was returned by the API"
+                translation_key="api_failed", translation_domain=DOMAIN
             ) from e
 
     async def _async_update_data(self) -> None:
@@ -58,6 +62,8 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
             if self._alternative_iteration:
                 await self.client.async_get_advanced_settings()
         except ApiException as e:
-            raise UpdateFailed("Error communicating with API") from e
+            raise UpdateFailed(
+                translation_key="api_failed", translation_domain=DOMAIN
+            ) from e
         else:
             self._alternative_iteration = not self._alternative_iteration

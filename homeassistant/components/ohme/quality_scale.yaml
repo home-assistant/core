@@ -42,7 +42,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: done
 
@@ -72,7 +72,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:

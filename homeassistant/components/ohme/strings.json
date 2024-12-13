@@ -36,5 +36,16 @@
         "name": "CT current"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Unable to login to Ohme"
+    },
+    "device_info_failed": {
+      "message": "Unable to get Ohme device information"
+    },
+    "api_failed": {
+      "message": "Error communicating with Ohme API"
+    }
   }
 }
