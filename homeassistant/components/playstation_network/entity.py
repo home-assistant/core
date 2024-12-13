@@ -4,11 +4,13 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PlaystationNetworkCoordinator
+from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 
 
 class PlaystationNetworkEntity(CoordinatorEntity[PlaystationNetworkCoordinator]):
     """Common entity class for all Playstation Network entities."""
+
+    config_entry: PlaystationNetworkConfigEntry
 
     def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
         """Initialize PSN Entity."""

@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlaystationNetworkCoordinator
@@ -27,15 +27,19 @@ async def async_setup_entry(
     """Media Player Entity Setup."""
     coordinator: PlaystationNetworkCoordinator = config_entry.runtime_data
 
-    if coordinator.data.platform is None:
-        username = coordinator.data.username
-        _LOGGER.warning(
-            "No console found associated with account: %s. -- Skipping creation of media player",
-            username,
-        )
-        return
+    @callback
+    def add_entities() -> None:
+        if coordinator.data.platform is None:
+            username = coordinator.data.username
+            _LOGGER.warning(
+                "No console found associated with account: %s. -- Pending creation when available",
+                username,
+            )
+            return
+        async_add_entities([MediaPlayer(coordinator)])
 
-    async_add_entities([MediaPlayer(coordinator)])
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
@@ -44,7 +48,7 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     entity_description = MediaPlayerEntityDescription(
         key="console",
         translation_key="console",
-        device_class=MediaPlayerDeviceClass.TV,
+        device_class=MediaPlayerDeviceClass.RECEIVER,
     )
     _attr_media_image_remotely_accessible = True
     _attr_translation_key = "playstation"

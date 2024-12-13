@@ -8,7 +8,7 @@
         "data_description": {
           "npsso": "Please supply the NPSSO token generated during successful login of your PlayStation Network Account"
         },
-        "description": "To obtain the NPSSO Token, first login to your playstation account at playstation.com. Then navigate to {npsso_link} to retrieve your npsso token."
+        "description": "To obtain the NPSSO Token, first login to your playstation account at playstation.com. Then [click here]({npsso_link}) to retrieve your npsso token."
       }
     },
     "error": {
