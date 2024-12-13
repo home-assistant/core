@@ -180,3 +180,127 @@ async def test_flow_user_init_data_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow."""
+
+    cookidoo_config_entry.add_to_hass(hass)
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert cookidoo_config_entry.data == {
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+        CONF_COUNTRY: COUNTRY,
+        CONF_LANGUAGE: LANGUAGE,
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CookidooRequestException(), "cannot_connect"),
+        (CookidooAuthException(), "invalid_auth"),
+        (CookidooException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reauth_error_and_recover(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+    raise_error,
+    text_error,
+) -> None:
+    """Test reauth flow."""
+
+    cookidoo_config_entry.add_to_hass(hass)
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_cookidoo_client.login.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    mock_cookidoo_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert cookidoo_config_entry.data == {
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+        CONF_COUNTRY: COUNTRY,
+        CONF_LANGUAGE: LANGUAGE,
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("new_email", "saved_email", "result_reason"),
+    [
+        (EMAIL, EMAIL, "reauth_successful"),
+        ("another-email", EMAIL, "already_configured"),
+    ],
+)
+async def test_flow_reauth_init_data_already_configured(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+    new_email: str,
+    saved_email: str,
+    result_reason: str,
+) -> None:
+    """Test we abort user data set when entry is already configured."""
+
+    cookidoo_config_entry.add_to_hass(hass)
+
+    another_cookidoo_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMAIL: "another-email",
+            CONF_PASSWORD: PASSWORD,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
+        },
+    )
+
+    another_cookidoo_config_entry.add_to_hass(hass)
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: new_email, CONF_PASSWORD: PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == result_reason
+    assert cookidoo_config_entry.data[CONF_EMAIL] == saved_email
