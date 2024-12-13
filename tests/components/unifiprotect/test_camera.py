@@ -601,7 +601,7 @@ async def test_camera_enable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.model_fields["set_motion_detection"] = Mock(final=False)
+    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(
@@ -623,7 +623,7 @@ async def test_camera_disable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.model_fields["set_motion_detection"] = Mock(final=False)
+    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(
