@@ -111,15 +111,15 @@
         },
         "tone": {
           "name": "Tone",
-          "description": "Tone before playing audio."
+          "description": "Tone before playing audio (if unset, no tone is played)."
         },
         "volume": {
           "name": "Volume",
-          "description": "Speaker volume during playback."
+          "description": "Speaker volume during playback (if unset, uses the default volume)."
         },
         "repeat": {
           "name": "Repeat",
-          "description": "The amount of times the text will be repeated."
+          "description": "The amount of times the text will be repeated (if unset, will not repeat)."
         }
       }
     }
