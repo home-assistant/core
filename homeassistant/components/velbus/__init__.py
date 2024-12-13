@@ -48,10 +48,10 @@ class VelbusData:
     connect_task: asyncio.Task
 
 
-async def velbus_connect_task(
+async def velbus_scan_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
-    """Task to offload the long running connect."""
+    """Task to offload the long running scan."""
     try:
         await controller.start()
     except ConnectionError as ex:
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     except VelbusConnectionFailed as error:
         raise ConfigEntryNotReady("Cannot connect to Velbus") from error
 
-    task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
+    task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, connect_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
