@@ -1283,7 +1283,7 @@ onvif-zeep-async==3.1.13
 open-garage==0.2.0
 
 # homeassistant.components.open_meteo
-open-meteo==0.3.1
+open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
 openai==1.35.7
