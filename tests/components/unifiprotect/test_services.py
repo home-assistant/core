@@ -12,6 +12,7 @@ from uiprotect.exceptions import BadRequest
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
+    SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
@@ -239,3 +240,44 @@ async def test_remove_privacy_zone(
     )
     ufp.api.update_device.assert_called()
     assert not doorbell.privacy_zones
+
+
+@pytest.mark.asyncio
+async def test_get_doorbell_user(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test get_doorbell_user service."""
+
+    ulp_user = Mock(full_name="Test User", status="active")
+    keyring = Mock(
+        registry_type="nfc",
+        registry_id="123456",
+        ulp_user="user_ulp_id",
+    )
+    ufp.api.bootstrap.ulp_users.by_ulp_id = Mock(return_value=ulp_user)
+    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[keyring])
+
+    await init_entry(hass, ufp, [doorbell])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_USER_KEYRING_INFO,
+        {ATTR_DEVICE_ID: camera_entry.device_id},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {
+        "1": {
+            "full_name": "Test User",
+            "user_status": "active",
+            "key_type": "nfc",
+            "nfc_id": "123456",
+            "user_ulp_id": "user_ulp_id",
+        }
+    }
