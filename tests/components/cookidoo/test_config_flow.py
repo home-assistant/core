@@ -258,3 +258,25 @@ async def test_flow_reauth_error_and_recover(
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_flow_reauth_init_data_already_configured(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort user data set when entry is already configured."""
+
+    cookidoo_config_entry.add_to_hass(hass)
+
+    result = await cookidoo_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: EMAIL, CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

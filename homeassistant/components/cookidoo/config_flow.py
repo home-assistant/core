@@ -31,7 +31,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
-from .coordinator import CookidooConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +57,6 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     LANGUAGE_DATA_SCHEMA: dict
 
     user_input: dict[str, Any]
-    reauth_entry: CookidooConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -108,7 +106,6 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -117,20 +114,21 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
 
+        reauth_entry = self._get_reauth_entry()
+
         if user_input is not None:
             if not (
-                errors := await self.validate_input(
-                    {**self.reauth_entry.data, **user_input}
-                )
+                errors := await self.validate_input({**reauth_entry.data, **user_input})
             ):
+                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
                 return self.async_update_reload_and_abort(
-                    self.reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates=user_input
                 )
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(AUTH_DATA_SCHEMA),
-                suggested_values={CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
+                suggested_values={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             ),
             errors=errors,
         )
