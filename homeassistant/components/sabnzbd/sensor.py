@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import SabnzbdConfigEntry
+from .coordinator import SabnzbdConfigEntry
 from .entity import SabnzbdEntity
 
 

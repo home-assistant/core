@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL, THRESHOLD_HOUR
 
+type EnergyZeroConfigEntry = ConfigEntry[EnergyZeroDataUpdateCoordinator]
+
 
 class EnergyZeroData(NamedTuple):
     """Class for defining data in dict."""
@@ -35,13 +37,14 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EnergyZeroConfigEntry) -> None:
         """Initialize global EnergyZero data updater."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
 
         self.energyzero = EnergyZero(session=async_get_clientsession(hass))

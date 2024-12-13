@@ -26,8 +26,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -153,8 +153,8 @@ async def test_color_light(
         assert attributes[ATTR_COLOR_MODE] == "brightness"
     else:
         assert attributes[ATTR_COLOR_MODE] == "hs"
-        assert attributes[ATTR_MIN_MIREDS] == 111
-        assert attributes[ATTR_MAX_MIREDS] == 250
+        assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
+        assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
         assert attributes[ATTR_HS_COLOR] == (10, 30)
         assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
         assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
@@ -307,8 +307,8 @@ async def test_color_temp_light(
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     else:
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
-    assert attributes[ATTR_MIN_MIREDS] == 111
-    assert attributes[ATTR_MAX_MIREDS] == 250
+    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     await hass.services.async_call(
