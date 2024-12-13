@@ -135,6 +135,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(AUTH_DATA_SCHEMA),
                 suggested_values={CONF_EMAIL: reauth_entry.data[CONF_EMAIL]},
             ),
+            description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
         )
 
