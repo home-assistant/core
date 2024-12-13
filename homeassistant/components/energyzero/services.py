@@ -83,12 +83,12 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
     }
 
 
-def __get_coordinator(
-    hass: HomeAssistant, call: ServiceCall
-) -> EnergyZeroDataUpdateCoordinator:
+def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
     """Get the coordinator from the entry."""
     entry_id: str = call.data[ATTR_CONFIG_ENTRY]
-    entry: EnergyZeroConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
+    entry: EnergyZeroConfigEntry | None = call.hass.config_entries.async_get_entry(
+        entry_id
+    )
 
     if not entry:
         raise ServiceValidationError(
@@ -113,10 +113,9 @@ def __get_coordinator(
 async def __get_prices(
     call: ServiceCall,
     *,
-    hass: HomeAssistant,
     price_type: PriceType,
 ) -> ServiceResponse:
-    coordinator = __get_coordinator(hass, call)
+    coordinator = __get_coordinator(call)
 
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
@@ -151,14 +150,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, hass=hass, price_type=PriceType.GAS),
+        partial(__get_prices, price_type=PriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_SERVICE_NAME,
-        partial(__get_prices, hass=hass, price_type=PriceType.ENERGY),
+        partial(__get_prices, price_type=PriceType.ENERGY),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
