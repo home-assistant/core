@@ -12,9 +12,9 @@ from homeassistant.components.energyid.__init__ import (
 )
 from homeassistant.components.energyid.const import CONF_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 
-from tests.components.energyid.common import (
+from .common import (
     MOCK_CONFIG_ENTRY_DATA,
     MockEnergyIDConfigEntry,
     MockEvent,
@@ -52,7 +52,7 @@ async def test_async_setup_entry_invalid(hass: HomeAssistant) -> None:
         entry = MockEnergyIDConfigEntry()
 
         # Assert that the setup raises ConfigEntryAuthFailed
-        with pytest.raises(ConfigEntryAuthFailed):
+        with pytest.raises(ConfigEntryError):
             assert await async_setup_entry(hass=hass, entry=entry) is True
 
 
