@@ -269,13 +269,26 @@ async def test_flow_reauth_init_data_already_configured(
 
     cookidoo_config_entry.add_to_hass(hass)
 
+    another_cookidoo_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_EMAIL: "another-email",
+            CONF_PASSWORD: PASSWORD,
+            CONF_COUNTRY: COUNTRY,
+            CONF_LANGUAGE: LANGUAGE,
+        },
+        entry_id="02JBVVVJ87F6G6V0QJX6HBC94T",
+    )
+
+    another_cookidoo_config_entry.add_to_hass(hass)
+
     result = await cookidoo_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_EMAIL: EMAIL, CONF_PASSWORD: "new-password"},
+        {CONF_EMAIL: "another-email", CONF_PASSWORD: PASSWORD},
     )
 
     assert result["type"] is FlowResultType.ABORT

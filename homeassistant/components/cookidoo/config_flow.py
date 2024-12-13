@@ -120,7 +120,10 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (
                 errors := await self.validate_input({**reauth_entry.data, **user_input})
             ):
-                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
+                if user_input[CONF_EMAIL] != reauth_entry.data[CONF_EMAIL]:
+                    self._async_abort_entries_match(
+                        {CONF_EMAIL: user_input[CONF_EMAIL]}
+                    )
                 return self.async_update_reload_and_abort(
                     reauth_entry, data_updates=user_input
                 )
