@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -134,6 +135,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -220,6 +222,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -399,6 +402,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -578,6 +582,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -616,6 +621,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -828,6 +834,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1160,6 +1167,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1198,6 +1206,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
