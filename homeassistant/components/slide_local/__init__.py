@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SlideCoordinator
 
-PLATFORMS = [Platform.COVER]
+PLATFORMS = [Platform.BUTTON, Platform.COVER]
 type SlideConfigEntry = ConfigEntry[SlideLocalApi]
 
 

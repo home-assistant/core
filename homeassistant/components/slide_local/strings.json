@@ -27,6 +27,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      }
+    }
+  },
   "exceptions": {
     "update_error": {
       "message": "Error while updating data from the API."
