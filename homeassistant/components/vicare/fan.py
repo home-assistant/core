@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 import enum
 import logging
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -30,7 +31,7 @@ from homeassistant.util.percentage import (
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice
-from .utils import get_device_serial
+from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +75,17 @@ class VentilationMode(enum.StrEnum):
             if HA_TO_VICARE_MODE_VENTILATION.get(VentilationMode(mode)) == vicare_mode:
                 return mode
         return None
+
+
+class VentilationQuickmode(enum.StrEnum):
+    """ViCare ventilation quickmodes."""
+
+    COMFORT = "comfort"
+    ECO = "eco"
+    BOOST = "forcedLevelFour"
+    HOLIDAY = "holiday"
+    STANDBY = "standby"
+    SILENT = "silent"
 
 
 HA_TO_VICARE_MODE_VENTILATION = {
@@ -146,6 +158,19 @@ class ViCareFan(ViCareEntity, FanEntity):
         if len(self._attr_preset_modes) > 0:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
 
+        # evaluate quickmodes
+        quickmodes: list[str] = (
+            device.getVentilationQuickmodes()
+            if is_supported(
+                "getVentilationQuickmodes",
+                lambda api: api.getVentilationQuickmodes(),
+                device,
+            )
+            else []
+        )
+        if VentilationQuickmode.STANDBY in quickmodes:
+            self._attr_supported_features |= FanEntityFeature.TURN_OFF
+
     def update(self) -> None:
         """Update state of fan."""
         try:
@@ -171,6 +196,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Return true if the entity is on."""
         # Viessmann ventilation unit cannot be turned off
         return True
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+
+        self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
     @property
     def icon(self) -> str | None:

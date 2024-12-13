@@ -1,6 +1,8 @@
 """ViCare helpers functions."""
 
+from collections.abc import Callable
 import logging
+from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -17,7 +19,6 @@ import requests
 from homeassistant.config_entries import ConfigEntry
 
 from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
-from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,12 +52,12 @@ def get_device_serial(device: PyViCareDevice) -> str | None:
 
 def is_supported(
     name: str,
-    entity_description: ViCareRequiredKeysMixin,
+    getter: Callable[[PyViCareDevice], Any],
     vicare_device,
 ) -> bool:
     """Check if the PyViCare device supports the requested sensor."""
     try:
-        entity_description.value_getter(vicare_device)
+        getter(vicare_device)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("Feature not supported %s", name)
         return False
