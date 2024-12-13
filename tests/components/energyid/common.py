@@ -28,7 +28,9 @@ MOCK_CONFIG_ENTRY_DATA = {
 class MockEnergyIDConfigEntry(MockConfigEntry):
     """Mock config entry for EnergyID."""
 
-    def __init__(self, *, data: dict = None, options: dict = None) -> None:
+    def __init__(
+        self, *, data: dict | None = None, options: dict | None = None
+    ) -> None:
         """Initialize the config entry."""
         super().__init__(
             domain=DOMAIN,
@@ -40,7 +42,7 @@ class MockEnergyIDConfigEntry(MockConfigEntry):
 class MockMeterCatalog(MeterCatalog):
     """Mock Meter Catalog."""
 
-    def __init__(self, meters: list[dict] = None) -> None:
+    def __init__(self, meters: list[dict] | None = None) -> None:
         """Initialize the Meter Catalog."""
         super().__init__(
             meters or [{"metrics": {"test-metric": {"units": ["test-unit"]}}}]
@@ -50,12 +52,12 @@ class MockMeterCatalog(MeterCatalog):
 class MockWebhookPolicy(WebhookPolicy):
     """Mock Webhook Policy."""
 
-    def __init__(self, policy: dict = None) -> None:
+    def __init__(self, policy: dict | None = None) -> None:
         """Initialize the Webhook Policy."""
         super().__init__(policy or {"allowedInterval": "P1D"})
 
     @classmethod
-    async def async_init(cls, policy: dict = None) -> "MockWebhookPolicy":
+    async def async_init(cls, policy: dict | None = None) -> "MockWebhookPolicy":
         """Mock async_init."""
         return cls(policy=policy)
 
@@ -77,7 +79,10 @@ class MockState:
     """Mock State."""
 
     def __init__(
-        self, state, last_changed: dt.datetime = None, attributes: dict = None
+        self,
+        state,
+        last_changed: dt.datetime | None = None,
+        attributes: dict | None = None,
     ) -> None:
         """Initialize the state."""
         self.state = state
@@ -88,6 +93,6 @@ class MockState:
 class MockEvent:
     """Mock Event."""
 
-    def __init__(self, *, data: dict = None) -> None:
+    def __init__(self, *, data: dict | None = None) -> None:
         """Initialize the event."""
         self.data = data or {"new_state": MockState(1.0)}
