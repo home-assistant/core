@@ -56,7 +56,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations: todo
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
