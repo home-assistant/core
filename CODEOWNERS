@@ -433,6 +433,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/energy/ @home-assistant/core
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyid/ @JrtPec
+/tests/components/energyid/ @JrtPec
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
 /homeassistant/components/enigma2/ @autinerd
