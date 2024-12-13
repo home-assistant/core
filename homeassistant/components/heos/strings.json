@@ -16,6 +16,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
