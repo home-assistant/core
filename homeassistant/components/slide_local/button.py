@@ -1,4 +1,4 @@
-"""Support for Slide covers."""
+"""Support for Slide button."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ async def async_setup_entry(
     entry: SlideConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up cover(s) for Slide platform."""
+    """Set up button for Slide platform."""
 
     coordinator = entry.runtime_data
 
@@ -46,7 +46,7 @@ class SlideButton(SlideEntity, ButtonEntity):
         self,
         coordinator: SlideCoordinator,
     ) -> None:
-        """Initialize the ZHA binary sensor."""
+        """Initialize the slide button."""
         super().__init__(coordinator)
 
         self._attr_device_class = ButtonDeviceClass.IDENTIFY
