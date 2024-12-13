@@ -36,12 +36,16 @@ rules:
   # Silver
   log-when-unavailable: done
   config-entry-unloading: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: Missing a test that reauthenticates with the wrong account
   action-exceptions: todo
   docs-installation-parameters: todo
   integration-owner: done
   parallel-updates: todo
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: Test coverage for __init__.py is not above 95% yet
   docs-configuration-parameters: todo
   entity-unavailable: done
 
