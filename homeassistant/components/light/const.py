@@ -67,5 +67,7 @@ COLOR_MODES_COLOR = {
     ColorMode.XY,
 }
 
-DEFAULT_MIN_KELVIN = 2000
-DEFAULT_MAX_KELVIN = 6535
+# Default to the Philips Hue value that HA has always assumed
+# https://developers.meethue.com/documentation/core-concepts
+DEFAULT_MIN_KELVIN = 2000  # 500 mireds
+DEFAULT_MAX_KELVIN = 6535  # 153 mireds

@@ -870,8 +870,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
-    # Default to the Philips Hue value that HA has always assumed
-    # https://developers.meethue.com/documentation/core-concepts
     _attr_max_color_temp_kelvin: int | None = None
     _attr_min_color_temp_kelvin: int | None = None
     _attr_rgb_color: tuple[int, int, int] | None = None
