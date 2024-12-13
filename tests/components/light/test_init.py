@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
@@ -1839,10 +1840,10 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
 
     entity1 = entities[1]
     entity1.supported_color_modes = {light.ColorMode.RGBWW}
-    assert entity1.min_mireds is None
-    assert entity1.max_mireds is None
+    assert entity1.min_mireds == 153
+    assert entity1.max_mireds == 500
     assert entity1.min_color_temp_kelvin == 2000
-    assert entity1.max_color_temp_kelvin == 6500
+    assert entity1.max_color_temp_kelvin == 6535
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2545,6 +2546,71 @@ def test_report_invalid_color_modes(
     entity._async_calculate_state()
     expected_warning = "sets invalid supported color modes"
     assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("attributes", "expected_warnings", "expected_values"),
+    [
+        (
+            {
+                "_attr_color_temp_kelvin": 4000,
+                "_attr_min_color_temp_kelvin": 3000,
+                "_attr_max_color_temp_kelvin": 5000,
+            },
+            {"current": False, "warmest": False, "coldest": False},
+            # Just highlighting that the attributes match the
+            # converted kelvin values, not the mired properties
+            (3000, 4000, 5000, 200, 250, 333, 153, None, 500),
+        ),
+        (
+            {"_attr_color_temp": 350, "_attr_min_mireds": 300, "_attr_max_mireds": 400},
+            {"current": True, "warmest": True, "coldest": True},
+            (2500, 2857, 3333, 300, 350, 400, 300, 350, 400),
+        ),
+        (
+            {},
+            {"current": False, "warmest": True, "coldest": True},
+            (2000, None, 6535, 153, None, 500, 153, None, 500),
+        ),
+    ],
+    ids=["with_kelvin", "with_mired_values", "with_mired_defaults"],
+)
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+def test_missing_kelvin_property_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    attributes: dict[str, int | None],
+    expected_warnings: dict[str, bool],
+    expected_values: tuple[int, int | None, int],
+) -> None:
+    """Test missing kelvin properties."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = light.ColorMode.COLOR_TEMP
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = {light.ColorMode.COLOR_TEMP}
+        platform = MockEntityPlatform(hass, platform_name="test")
+
+    entity = MockLightEntityEntity()
+    for k, v in attributes.items():
+        setattr(entity, k, v)
+
+    state = entity._async_calculate_state()
+    for warning, expected in expected_warnings.items():
+        assert (
+            f"is using mireds for {warning} light color temperature" in caplog.text
+        ) is expected, f"Expected {expected} for '{warning}'"
+
+    assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
+    assert state.attributes[light.ATTR_COLOR_TEMP_KELVIN] == expected_values[1]
+    assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[2]
+    assert state.attributes[light.ATTR_MIN_MIREDS] == expected_values[3]
+    assert state.attributes[light.ATTR_COLOR_TEMP] == expected_values[4]
+    assert state.attributes[light.ATTR_MAX_MIREDS] == expected_values[5]
+    assert entity.min_mireds == expected_values[6]
+    assert entity.color_temp == expected_values[7]
+    assert entity.max_mireds == expected_values[8]
 
 
 @pytest.mark.parametrize(

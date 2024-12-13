@@ -42,6 +42,8 @@ from .const import (  # noqa: F401
     COLOR_MODES_COLOR,
     DATA_COMPONENT,
     DATA_PROFILES,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN,
     SCAN_INTERVAL,
     VALID_COLOR_MODES,
@@ -881,8 +883,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     # Deprecated, see https://github.com/home-assistant/core/pull/79591
     _attr_color_temp: Final[int | None] = None
-    _attr_max_mireds: Final[int | None] = None
-    _attr_min_mireds: Final[int | None] = None
+    _attr_max_mireds: Final[int] = 500  # = 2000 K
+    _attr_min_mireds: Final[int] = 153  # = 6535.94 K (~ 6500 K)
 
     __color_mode_reported = False
 
@@ -974,7 +976,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._attr_color_temp_kelvin is None and (color_temp := self.color_temp):
             report_usage(
                 "is using mireds for current light color temperature, when "
-                "it should be adjusted to use kelvin (see "
+                "it should be adjusted to use the kelvin attribute "
+                "`_attr_color_temp_kelvin` or override the kelvin property "
+                "`color_temp_kelvin` (see "
                 "https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
                 core_behavior=ReportBehavior.LOG,
@@ -988,7 +992,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @cached_property
-    def min_mireds(self) -> int | None:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports.
 
         Deprecated, see https://github.com/home-assistant/core/pull/79591
@@ -997,7 +1001,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @cached_property
-    def max_mireds(self) -> int | None:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports.
 
         Deprecated, see https://github.com/home-assistant/core/pull/79591
@@ -1007,13 +1011,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-            return min_kelvin
-        if (max_mireds := self.max_mireds) is not None:
+        if self._attr_min_color_temp_kelvin is None:
             report_usage(
-                "is using mireds for warmest color light temperature, when "
-                "it should be adjusted to use kelvin (see "
-                "https://github.com/home-assistant/core/pull/79591)",
+                "is using mireds for warmest light color temperature, when "
+                "it should be adjusted to use the kelvin attribute "
+                "`_attr_min_color_temp_kelvin` or override the kelvin property "
+                "`min_color_temp_kelvin`, possibly with default DEFAULT_MIN_KELVIN "
+                "(see https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
                 core_behavior=ReportBehavior.LOG,
                 integration_domain=self.platform.platform_name
@@ -1021,19 +1025,19 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 else None,
                 exclude_integrations={DOMAIN},
             )
-            return color_util.color_temperature_mired_to_kelvin(max_mireds)
-        return 2000  # 500 mireds
+            return color_util.color_temperature_mired_to_kelvin(self.max_mireds)
+        return self._attr_min_color_temp_kelvin
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-            return max_kelvin
-        if (min_mireds := self.min_mireds) is not None:
+        if self._attr_max_color_temp_kelvin is None:
             report_usage(
                 "is using mireds for coldest light color temperature, when "
-                "it should be adjusted to use kelvin (see "
-                "https://github.com/home-assistant/core/pull/79591)",
+                "it should be adjusted to use the kelvin attribute "
+                "`_attr_max_color_temp_kelvin` or override the kelvin property "
+                "`max_color_temp_kelvin`, possibly with default DEFAULT_MAX_KELVIN "
+                "(see https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
                 core_behavior=ReportBehavior.LOG,
                 integration_domain=self.platform.platform_name
@@ -1041,8 +1045,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 else None,
                 exclude_integrations={DOMAIN},
             )
-            return color_util.color_temperature_mired_to_kelvin(min_mireds)
-        return 6535  # 153 mireds
+            return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
+        return self._attr_max_color_temp_kelvin
 
     @cached_property
     def effect_list(self) -> list[str] | None:
