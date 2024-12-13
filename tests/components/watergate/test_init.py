@@ -40,9 +40,7 @@ async def test_async_setup_entry(
         mock_watergate_client.async_set_webhook_url.assert_called_once_with(
             f"http://hassio.local/api/webhook/{MOCK_WEBHOOK_ID}"
         )
-        # Question, when I've added another platform it looks like HA is calling coordinator many times.
-        # Once is done in __init__.py for first refresh and then _refresh for sensor (and test cannot finish by that time). Is it ok?
-        # mock_watergate_client.async_get_device_state.assert_called_once()
+        mock_watergate_client.async_get_device_state.assert_called_once()
 
 
 async def test_handle_webhook(

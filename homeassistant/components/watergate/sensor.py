@@ -37,7 +37,7 @@ PARALLEL_UPDATES = 0
 
 @dataclass(kw_only=True, frozen=True)
 class WatergateSensorEntityDescription(SensorEntityDescription):
-    """Description for Acaia sensor entities."""
+    """Description for Watergate sensor entities."""
 
     value_fn: Callable[[WatergateAgregatedRequests], str | int | float | None]
 
@@ -61,6 +61,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         key="water_meter_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.networking.ip if data.networking else None,
@@ -98,6 +99,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.networking.wifi_uptime if data.networking else None,
@@ -107,6 +109,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.networking.mqtt_uptime if data.networking else None,
@@ -116,6 +119,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.telemetry.water_temperature
@@ -125,6 +129,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.telemetry.pressure if data.telemetry else None,
@@ -132,6 +137,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         key="water_pressure",
         native_unit_of_measurement=UnitOfPressure.MBAR,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: (data.telemetry.flow / 1000)
@@ -141,6 +147,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.state.uptime if data.state else None,
@@ -150,6 +157,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.state.power_supply if data.state else None,
@@ -176,7 +184,7 @@ async def async_setup_entry(
 
     entities.extend([AutoShutOffEventSensor(coordinator)])
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class SonicSensor(WatergateEntity, SensorEntity):
@@ -243,7 +251,7 @@ class AutoShutOffEventSensor(WatergateEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
-        if self.coordinator.last_update_success:
-            data = self.coordinator.data.auto_shut_off_report
-            if data:
-                self.update(data)
+        if self.coordinator.last_update_success and (
+            data := self.coordinator.data.auto_shut_off_report
+        ):
+            self.update(data)
