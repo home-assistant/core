@@ -1011,7 +1011,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tankerkoenig",
