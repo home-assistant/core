@@ -23,6 +23,7 @@ from .quality_scale_validation import (
     reconfiguration_flow,
     runtime_data,
     strict_typing,
+    test_before_setup,
     unique_config_entry,
 )
 
@@ -56,7 +57,7 @@ ALL_RULES = [
     Rule("has-entity-name", ScaledQualityScaleTiers.BRONZE),
     Rule("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data),
     Rule("test-before-configure", ScaledQualityScaleTiers.BRONZE),
-    Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE),
+    Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE, test_before_setup),
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
@@ -456,7 +457,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_maps",
     "google_pubsub",
     "google_sheets",
-    "google_tasks",
     "google_translate",
     "google_travel_time",
     "google_wifi",
