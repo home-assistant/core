@@ -52,11 +52,11 @@ rules:
   discovery:
     status: exempt
     comment: |
-      All supported devices are cloud connected. Discovery is not possible.
+      All supported devices are cloud connected over mobile data. Discovery is not possible.
   discovery-update-info:
     status: exempt
     comment: |
-      All supported devices are cloud connected. Discovery is not possible.
+      All supported devices are cloud connected over mobile data. Discovery is not possible.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

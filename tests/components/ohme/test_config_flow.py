@@ -32,8 +32,12 @@ async def test_config_flow_success(
         result["flow_id"],
         {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test@example.com"
+    assert result["data"] == {
+        CONF_EMAIL: "test@example.com",
+        CONF_PASSWORD: "hunter2",
+    }
 
 
 @pytest.mark.parametrize(
@@ -64,7 +68,6 @@ async def test_config_flow_fail(
         result["flow_id"],
         {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
@@ -88,7 +91,6 @@ async def test_already_configured(
             CONF_PASSWORD: "hunter3",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

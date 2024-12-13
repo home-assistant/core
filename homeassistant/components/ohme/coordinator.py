@@ -8,7 +8,7 @@ from ohme import ApiException, AuthException, OhmeApiClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -33,7 +33,7 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
             config_entry=entry,
         )
 
-        self.client: OhmeApiClient = OhmeApiClient(
+        self.client = OhmeApiClient(
             self.config_entry.data[CONF_EMAIL], self.config_entry.data[CONF_PASSWORD]
         )
         self._alternative_iteration: bool = True
@@ -43,7 +43,7 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
             await self.client.async_login()
 
             if not await self.client.async_update_device_info():
-                raise ConfigEntryNotReady(
+                raise UpdateFailed(
                     translation_key="device_info_failed", translation_domain=DOMAIN
                 )
         except AuthException as e:
@@ -51,7 +51,7 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
                 translation_key="auth_failed", translation_domain=DOMAIN
             ) from e
         except ApiException as e:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e
 

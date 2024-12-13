@@ -49,3 +49,11 @@ async def test_sensors_unavailable(
 
     state = hass.states.get("sensor.ohme_home_pro_energy")
     assert state.state == STATE_UNAVAILABLE
+
+    mock_client.async_get_charge_session.side_effect = None
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.ohme_home_pro_energy")
+    assert state.state == "1.0"
