@@ -75,7 +75,19 @@ ENTITY_DESCRIPTIONS: tuple[DeconzNumberDescription, ...] = (
         native_min_value=0,                                                                                     
         native_step=1,                                                                                          
         entity_category=EntityCategory.CONFIG,                                                                  
-    ),
+    ),                                                                                                          
+    DeconzNumberDescription[Presence](                                                                          
+        key="triggerdistance",                                                                                  
+        instance_check=Presence,                                                                                
+        name_suffix="Triggerdistance",                                                                          
+        set_fn=lambda api, id, v: api.sensors.presence.set_config(id=id, trigger_distance=v),                   
+        update_key="triggerdistance",                                                                           
+        value_fn=lambda device: device.trigger_distance,                                                        
+        native_max_value=65535,                                                                                 
+        native_min_value=0,                                                                                     
+        native_step=1,                                                                                          
+        entity_category=EntityCategory.CONFIG,                                                                  
+    ), 
 )
 
 
