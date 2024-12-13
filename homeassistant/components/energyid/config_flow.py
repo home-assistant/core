@@ -1,4 +1,8 @@
-"""Config flow for EnergyID integration."""
+"""Config flow for EnergyID integration.
+
+Provides UI configuration flow for setting up webhook URL and entity mapping.
+Validates connections and meter configurations against EnergyID API.
+"""
 
 from __future__ import annotations
 
@@ -32,7 +36,11 @@ def hass_entity_ids(hass: HomeAssistant) -> list[str]:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for EnergyID."""
+    """Handle a config flow for EnergyID.
+
+    Manages user configuration steps with error handling and input validation.
+    Fetches available metrics and units from EnergyID meter catalog.
+    """
 
     VERSION = 1
 

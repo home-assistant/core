@@ -1,13 +1,12 @@
 """Test the EnergyID config flow."""
+
 from unittest.mock import patch
 
 import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.energyid.config_flow import (
-    hass_entity_ids,
-)
+from homeassistant.components.energyid.config_flow import hass_entity_ids
 from homeassistant.components.energyid.const import (
     CONF_ENTITY_ID,
     CONF_WEBHOOK_URL,
@@ -16,11 +15,7 @@ from homeassistant.components.energyid.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.energyid.common import (
-    MOCK_CONFIG_ENTRY_DATA,
-    MockHass,
-    MockMeterCatalog,
-)
+from .common import MOCK_CONFIG_ENTRY_DATA, MockHass, MockMeterCatalog
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -28,12 +23,15 @@ async def test_form(hass: HomeAssistant) -> None:
 
     # Test with a single mocked Entity ID in the registry
     # and a mocked Meter Catalog
-    with patch(
-        "homeassistant.components.energyid.config_flow.hass_entity_ids",
-        return_value=[MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]],
-    ), patch(
-        "homeassistant.components.energyid.config_flow.WebhookClientAsync.get_meter_catalog",
-        return_value=MockMeterCatalog(),
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.hass_entity_ids",
+            return_value=[MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]],
+        ),
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClientAsync.get_meter_catalog",
+            return_value=MockMeterCatalog(),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -61,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
-    (
+    [
         (
             aiohttp.ClientResponseError(
                 aiohttp.RequestInfo(url="", method="GET", headers={}, real_url=""), None
@@ -69,8 +67,8 @@ async def test_form(hass: HomeAssistant) -> None:
             {"base": "cannot_connect"},
         ),
         (aiohttp.InvalidURL("test"), {CONF_WEBHOOK_URL: "invalid_url"}),
-        (Exception, {"base": "unknown"}),
-    ),
+        (aiohttp.ClientError("test"), {"base": "unknown"}),
+    ],
 )
 async def test_form__where_api_returns_error(
     hass: HomeAssistant, exception, expected_error
@@ -79,12 +77,15 @@ async def test_form__where_api_returns_error(
 
     # Test with a single mocked Entity ID in the registry
     # and a mocked Meter Catalog
-    with patch(
-        "homeassistant.components.energyid.config_flow.hass_entity_ids",
-        return_value=[MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]],
-    ), patch(
-        "homeassistant.components.energyid.config_flow.WebhookClientAsync.get_meter_catalog",
-        return_value=MockMeterCatalog(),
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.hass_entity_ids",
+            return_value=[MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]],
+        ),
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClientAsync.get_meter_catalog",
+            return_value=MockMeterCatalog(),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

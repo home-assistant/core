@@ -1,4 +1,8 @@
-"""Constants for the EnergyID integration."""
+"""Constants for the EnergyID integration.
+
+Defines configuration keys, defaults, and valid metric kinds.
+Used across the integration for consistent configuration handling.
+"""
 
 from typing import Final
 
