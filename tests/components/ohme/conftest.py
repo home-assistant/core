@@ -2,9 +2,9 @@
 
 import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from ohme import ChargerStatus, OhmeApiClient
+from ohme import ChargerStatus
 import pytest
 
 from homeassistant.components.ohme.const import DOMAIN
@@ -35,26 +35,37 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_EMAIL: "test@example.com",
             CONF_PASSWORD: "hunter2",
         },
-        unique_id="test@example.com",
     )
 
 
 @pytest.fixture
 def mock_client():
     """Fixture to mock the OhmeApiClient."""
-    client = MagicMock(spec=OhmeApiClient)
-    client.status = ChargerStatus.CHARGING
-    client.serial = "chargerid"
-    client.ct_connected = True
-    client.device_info = {
-        "identifiers": ("ohme", "ohme_charger_chargerid"),
-        "name": "Ohme Home Pro",
-        "manufacturer": "Ohme",
-        "model": "Home Pro",
-        "sw_version": "1.0",
-        "serial_number": "chargerid",
-    }
-    return client
+    with (
+        patch(
+            "homeassistant.components.ohme.config_flow.OhmeApiClient",
+            autospec=True,
+        ) as client,
+        patch(
+            "homeassistant.components.ohme.coordinator.OhmeApiClient",
+            new=client,
+        ),
+    ):
+        client = client.return_value
+
+        client.status = ChargerStatus.CHARGING
+        client.serial = "chargerid"
+        client.ct_connected = True
+        client.energy = 1000
+        client.device_info = {
+            "identifiers": ("ohme", "ohme_charger_chargerid"),
+            "name": "Ohme Home Pro",
+            "manufacturer": "Ohme",
+            "model": "Home Pro",
+            "sw_version": "v2.65",
+            "serial_number": "chargerid",
+        }
+        yield client
 
 
 @pytest.fixture(name="mock_session", autouse=True)

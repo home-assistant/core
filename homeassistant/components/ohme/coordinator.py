@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from ohme import ApiException, OhmeApiClient
+from ohme import ApiException, AuthException, OhmeApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
@@ -37,11 +37,17 @@ class OhmeCoordinator(DataUpdateCoordinator[OhmeApiClient]):
         self._alternative_iteration: bool = True
 
     async def _async_setup(self) -> None:
-        if not await self.client.async_login():
-            raise ConfigEntryError("Unable to login to Ohme")
+        try:
+            await self.client.async_login()
 
-        if not await self.client.async_update_device_info():
-            raise ConfigEntryNotReady("Unable to get Ohme device information")
+            if not await self.client.async_update_device_info():
+                raise ConfigEntryNotReady("Unable to get Ohme device information")
+        except AuthException as e:
+            raise ConfigEntryError("Unable to login to Ohme") from e
+        except ApiException as e:
+            raise ConfigEntryError(
+                "An unexpected response was returned by the API"
+            ) from e
 
     async def _async_update_data(self) -> OhmeApiClient:
         """Fetch data from API endpoint."""

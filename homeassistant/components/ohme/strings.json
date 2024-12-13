@@ -8,13 +8,14 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Enter the email address associated with your Ohme account",
+          "email": "Enter the email address associated with your Ohme account. This should not be a social account (eg. Google).",
           "password": "Enter the password for your Ohme account"
         }
       }
     },
     "error": {
-      "auth_error": "Invalid credentials provided. Please ensure you are using an Ohme account and not a social account (eg. Google)."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

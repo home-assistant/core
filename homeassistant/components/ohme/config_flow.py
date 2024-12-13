@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ohme import OhmeApiClient
+from ohme import ApiException, AuthException, OhmeApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -47,9 +47,14 @@ class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
 
             instance = OhmeApiClient(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
-            if not await instance.async_login():
-                errors["base"] = "auth_error"
-            else:
+            try:
+                await instance.async_login()
+            except AuthException:
+                errors["base"] = "invalid_auth"
+            except ApiException:
+                errors["base"] = "unknown"
+
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL], data=user_input
                 )

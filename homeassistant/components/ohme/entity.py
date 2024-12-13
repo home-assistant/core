@@ -1,7 +1,5 @@
 """Base class for entities."""
 
-from typing import Any
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,14 +26,14 @@ class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
         client = coordinator.client
         self._attr_unique_id = f"{client.serial}_{entity_description.key}"
 
-        device_info: dict[str, Any] = client.device_info
+        device_info = client.device_info
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_info["serial_number"])},
+            identifiers={(DOMAIN, client.serial)},
             name=device_info["name"],
-            manufacturer=device_info["manufacturer"],
+            manufacturer="Ohme",
             model=device_info["model"],
             sw_version=device_info["sw_version"],
-            serial_number=device_info["serial_number"],
+            serial_number=client.serial,
         )
 
     @property

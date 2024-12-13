@@ -1,6 +1,8 @@
 """Tests for the config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
+
+from ohme import AuthException
 
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -12,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
 ) -> None:
     """Test config flow."""
 
@@ -25,17 +27,16 @@ async def test_config_flow_success(
     assert not result["errors"]
 
     # Successful login
-    with patch("ohme.OhmeApiClient.async_login", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter2"},
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_fail(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
 ) -> None:
     """Test config flow."""
 
@@ -48,14 +49,15 @@ async def test_config_flow_fail(
     assert not result["errors"]
 
     # Failed login
-    with patch("ohme.OhmeApiClient.async_login", return_value=False):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
-        )
-        await hass.async_block_till_done()
+    mock_client.async_login.side_effect = AuthException
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "auth_error"}
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_already_configured(
@@ -70,7 +72,7 @@ async def test_already_configured(
     )
     assert result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_EMAIL: "test@example.com",
@@ -79,5 +81,5 @@ async def test_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
