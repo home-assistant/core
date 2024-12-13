@@ -428,14 +428,12 @@
       "ventilation_demand": {
         "name": "Ventilation demand",
         "state": {
-          "unknown": "Unknown",
           "ventilation": "Ventilation"
         }
       },
       "ventilation_level": {
         "name": "Ventilation level",
         "state": {
-          "unknown": "Unknown",
           "standby": "Standby",
           "levelone": "1",
           "leveltwo": "2",
