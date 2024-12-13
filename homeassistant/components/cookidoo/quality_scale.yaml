@@ -38,7 +38,7 @@ rules:
   action-exceptions:
     status: done
     comment: Only providing todo actions
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: done
   test-coverage: done
   integration-owner: done
