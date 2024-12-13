@@ -1,4 +1,4 @@
-"""The ohme integration."""
+"""Set up ohme integration."""
 
 import logging
 

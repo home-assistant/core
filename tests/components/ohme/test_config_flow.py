@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from ohme import AuthException
+from ohme import ApiException, AuthException
+import pytest
 
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -35,8 +36,16 @@ async def test_config_flow_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("test_exception", "expected_error"),
+    [(AuthException, "invalid_auth"), (ApiException, "unknown")],
+)
 async def test_config_flow_fail(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_client: MagicMock,
+    test_exception: Exception,
+    expected_error: str,
 ) -> None:
     """Test config flow."""
 
@@ -49,7 +58,7 @@ async def test_config_flow_fail(
     assert not result["errors"]
 
     # Failed login
-    mock_client.async_login.side_effect = AuthException
+    mock_client.async_login.side_effect = test_exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -57,7 +66,7 @@ async def test_config_flow_fail(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
 
 async def test_already_configured(

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 type OhmeConfigEntry = ConfigEntry[OhmeCoordinator]
 
 
-class OhmeCoordinator(DataUpdateCoordinator[OhmeApiClient]):
+class OhmeCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to pull all updates from the API."""
 
     config_entry: OhmeConfigEntry
@@ -49,7 +49,7 @@ class OhmeCoordinator(DataUpdateCoordinator[OhmeApiClient]):
                 "An unexpected response was returned by the API"
             ) from e
 
-    async def _async_update_data(self) -> OhmeApiClient:
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:
             await self.client.async_get_charge_session()
@@ -61,5 +61,3 @@ class OhmeCoordinator(DataUpdateCoordinator[OhmeApiClient]):
             raise UpdateFailed("Error communicating with API") from e
         else:
             self._alternative_iteration = not self._alternative_iteration
-
-            return self.client

@@ -32,7 +32,7 @@ rules:
   action-exceptions:
     status: exempt
     comment: |
-      This integration has no custom actions.
+      This integration has no custom actions and read-only platform only.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
