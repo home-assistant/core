@@ -101,7 +101,7 @@ async def test_light_turn_on(
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.model_fields["set_light"] = Mock(final=False)
+    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
     light.set_light = AsyncMock()
 
     await hass.services.async_call(
@@ -123,7 +123,7 @@ async def test_light_turn_off(
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.model_fields["set_light"] = Mock(final=False)
+    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
     light.set_light = AsyncMock()
 
     await hass.services.async_call(
