@@ -1,7 +1,5 @@
 """Constants for russound_rio tests."""
 
-from collections import namedtuple
-
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 
 HOST = "127.0.0.1"
@@ -14,9 +12,6 @@ MOCK_CONFIG = {
     "host": HOST,
     "port": PORT,
 }
-
-_CONTROLLER = namedtuple("Controller", ["mac_address", "controller_type"])  # noqa: PYI024
-MOCK_CONTROLLERS = {1: _CONTROLLER(mac_address=HARDWARE_MAC, controller_type=MODEL)}
 
 DEVICE_NAME = "mca_c5"
 NAME_ZONE_1 = "backyard"

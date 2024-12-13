@@ -5,7 +5,19 @@ from unittest.mock import AsyncMock
 from aiorussound.models import PlayStatus
 import pytest
 
+from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MP_DOMAIN,
+    SERVICE_SELECT_SOURCE,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
@@ -50,3 +62,87 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID_ZONE_1)
     assert state.state == media_player_state
+
+
+async def test_media_volume(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test volume service."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test volume up
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1},
+    )
+
+    mock_russound_client.controllers[1].zones[1].volume_up.assert_called_once()
+
+    # Test volume down
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1},
+    )
+
+    mock_russound_client.controllers[1].zones[1].volume_down.assert_called_once()
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+    )
+
+    mock_russound_client.controllers[1].zones[1].set_volume.assert_called_once_with(
+        "15"
+    )
+
+
+@pytest.mark.parametrize(
+    ("source_name", "source_id"),
+    [
+        ("Aux", 1),
+        ("Spotify", 2),
+    ],
+)
+async def test_source_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+    source_name: str,
+    source_id: int,
+) -> None:
+    """Test power service."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_INPUT_SOURCE: source_name},
+    )
+
+    mock_russound_client.controllers[1].zones[1].select_source.assert_called_once_with(
+        source_id
+    )
+
+
+async def test_power_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test source service."""
+    await setup_integration(hass, mock_config_entry)
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1}
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data, True)
+
+    mock_russound_client.controllers[1].zones[1].zone_on.assert_called_once()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, True)
+
+    mock_russound_client.controllers[1].zones[1].zone_off.assert_called_once()
