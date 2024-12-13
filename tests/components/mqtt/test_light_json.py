@@ -2279,7 +2279,7 @@ async def test_invalid_values(
 
     # Unset color and set a valid color temperature
     async_fire_mqtt_message(
-        hass, "test_light_rgb", '{"state":"ON", "color_mode": null, "color_temp": 100}'
+        hass, "test_light_rgb", '{"state":"ON", "color": null, "color_temp": 100}'
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
