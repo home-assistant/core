@@ -246,7 +246,7 @@
       "valve_position": {
         "name": "Valve position"
       },
-      "translation_key": {
+      "bat_replacement_description": {
         "name": "Battery type"
       }
     },
