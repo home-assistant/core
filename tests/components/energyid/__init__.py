@@ -1,1 +1,1 @@
-"""Tests for the EnergyID integration."""
+"""Tests for the energyid integration."""
