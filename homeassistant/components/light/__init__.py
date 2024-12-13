@@ -184,23 +184,25 @@ ATTR_RGBW_COLOR = "rgbw_color"
 ATTR_RGBWW_COLOR = "rgbww_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_HS_COLOR = "hs_color"
-_DEPRECATED_ATTR_COLOR_TEMP: Final = DeprecatedConstant(
-    "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)", "2026.1"
-)  # Deprecated in HA Core 2022.11
-_DEPRECATED_ATTR_KELVIN: Final = DeprecatedConstant(
-    "kelvin", "ATTR_COLOR_TEMP_KELVIN", "2026.1"
-)  # Deprecated in HA Core 2022.11
-_DEPRECATED_ATTR_MIN_MIREDS: Final = DeprecatedConstant(
-    "min_mireds", "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)", "2026.1"
-)  # Deprecated in HA Core 2022.11
-_DEPRECATED_ATTR_MAX_MIREDS: Final = DeprecatedConstant(
-    "max_mireds", "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)", "2026.1"
-)  # Deprecated in HA Core 2022.11
 ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 ATTR_MIN_COLOR_TEMP_KELVIN = "min_color_temp_kelvin"
 ATTR_MAX_COLOR_TEMP_KELVIN = "max_color_temp_kelvin"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE = "white"
+
+# Deprecated in HA Core 2022.11
+_DEPRECATED_ATTR_COLOR_TEMP: Final = DeprecatedConstant(
+    "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)", "2026.1"
+)
+_DEPRECATED_ATTR_KELVIN: Final = DeprecatedConstant(
+    "kelvin", "ATTR_COLOR_TEMP_KELVIN", "2026.1"
+)
+_DEPRECATED_ATTR_MIN_MIREDS: Final = DeprecatedConstant(
+    "min_mireds", "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)", "2026.1"
+)
+_DEPRECATED_ATTR_MAX_MIREDS: Final = DeprecatedConstant(
+    "max_mireds", "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)", "2026.1"
+)
 
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"

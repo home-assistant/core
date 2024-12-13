@@ -2557,17 +2557,34 @@ def test_all(module: ModuleType) -> None:
 
 
 @pytest.mark.parametrize(
-    ("constant_name", "constant_value"),
-    [("SUPPORT_BRIGHTNESS", 1), ("SUPPORT_COLOR_TEMP", 2), ("SUPPORT_COLOR", 16)],
+    ("constant_name", "constant_value", "constant_replacement"),
+    [
+        ("SUPPORT_BRIGHTNESS", 1, "supported_color_modes"),
+        ("SUPPORT_COLOR_TEMP", 2, "supported_color_modes"),
+        ("SUPPORT_COLOR", 16, "supported_color_modes"),
+        ("ATTR_COLOR_TEMP", "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)"),
+        ("ATTR_KELVIN", "kelvin", "ATTR_COLOR_TEMP_KELVIN"),
+        (
+            "ATTR_MIN_MIREDS",
+            "min_mireds",
+            "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)",
+        ),
+        (
+            "ATTR_MAX_MIREDS",
+            "max_mireds",
+            "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)",
+        ),
+    ],
 )
-def test_deprecated_support_light_constants(
+def test_deprecated_light_constants(
     caplog: pytest.LogCaptureFixture,
     constant_name: str,
-    constant_value: int,
+    constant_value: int | str,
+    constant_replacement: str,
 ) -> None:
-    """Test deprecated format constants."""
+    """Test deprecated light constants."""
     import_and_test_deprecated_constant(
-        caplog, light, constant_name, "supported_color_modes", constant_value, "2026.1"
+        caplog, light, constant_name, constant_replacement, constant_value, "2026.1"
     )
 
 
