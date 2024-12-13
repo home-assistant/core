@@ -10,11 +10,11 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
+  config-flow-test-coverage: done
+  config-flow:
     status: todo
     comment: |
-      Missing unique_id check in test_form() and test_import(). Test for adding same device twice missing.
-  config-flow: done
+      The data_description fields in translations are missing.
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -83,4 +83,4 @@ rules:
     status: exempt
     comment: |
       This integration uses telnet exclusively and does not make http calls.
-  strict-typing: todo
+  strict-typing: done

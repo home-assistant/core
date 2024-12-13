@@ -423,7 +423,9 @@ async def test_single_color_mode(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
 
-    await common.async_turn_on(hass, "light.test", brightness=50, color_temp=192)
+    await common.async_turn_on(
+        hass, "light.test", brightness=50, color_temp_kelvin=5208
+    )
 
     async_fire_mqtt_message(
         hass,
@@ -435,7 +437,7 @@ async def test_single_color_mode(
     assert state.state == STATE_ON
 
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 5208
     assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
     assert state.attributes.get(light.ATTR_COLOR_MODE) == color_modes[0]
 
@@ -458,7 +460,9 @@ async def test_turn_on_with_unknown_color_mode_optimistic(
     assert state.state == STATE_ON
 
     # Turn on the light with brightness or color_temp attributes
-    await common.async_turn_on(hass, "light.test", brightness=50, color_temp=192)
+    await common.async_turn_on(
+        hass, "light.test", brightness=50, color_temp_kelvin=5208
+    )
     state = hass.states.get("light.test")
     assert state.attributes.get("color_mode") == light.ColorMode.COLOR_TEMP
     assert state.attributes.get("brightness") == 50
@@ -494,7 +498,7 @@ async def test_controlling_state_with_unknown_color_mode(
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) is None
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) is None
     assert state.attributes.get(light.ATTR_BRIGHTNESS) is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == light.ColorMode.UNKNOWN
 
@@ -507,7 +511,7 @@ async def test_controlling_state_with_unknown_color_mode(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
-    assert state.attributes.get(light.ATTR_COLOR_TEMP) == 192
+    assert state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 5208
     assert state.attributes.get(light.ATTR_BRIGHTNESS) == 50
     assert state.attributes.get(light.ATTR_COLOR_MODE) == light.ColorMode.COLOR_TEMP
 
@@ -1083,7 +1087,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
-    await common.async_turn_on(hass, "light.test", color_temp=90)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=11111)
 
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
@@ -1244,7 +1248,7 @@ async def test_sending_mqtt_commands_and_optimistic2(
     assert state.state == STATE_ON
 
     # Turn the light on with color temperature
-    await common.async_turn_on(hass, "light.test", color_temp=90)
+    await common.async_turn_on(hass, "light.test", color_temp_kelvin=11111)
     mqtt_mock.async_publish.assert_called_once_with(
         "test_light_rgb/set",
         JsonValidator('{"state":"ON","color_temp":90}'),
