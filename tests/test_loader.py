@@ -547,6 +547,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             ],
             "mqtt": ["hue/discovery"],
             "version": "1.0.0",
+            "quality_scale": "gold",
         },
     )
     assert integration.name == "Philips Hue"
@@ -585,6 +586,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.is_built_in is True
     assert integration.overwrites_built_in is False
     assert integration.version == "1.0.0"
+    assert integration.quality_scale == "gold"
 
     integration = loader.Integration(
         hass,
@@ -595,6 +597,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
             "domain": "hue",
             "dependencies": ["test-dep"],
             "requirements": ["test-req==1.0.0"],
+            "quality_scale": "gold",
         },
     )
     assert integration.is_built_in is False
@@ -607,6 +610,7 @@ def test_integration_properties(hass: HomeAssistant) -> None:
     assert integration.ssdp is None
     assert integration.mqtt is None
     assert integration.version is None
+    assert integration.quality_scale == "custom"
 
     integration = loader.Integration(
         hass,
@@ -1327,7 +1331,7 @@ async def test_hass_components_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame'"
-            " accesses hass.components.http. This is deprecated"
+            " accesses hass.components.http, which should be updated"
         ) in caplog.text
         assert reported == expected
 
@@ -2023,7 +2027,7 @@ async def test_hass_helpers_use_reported(
 
         reported = (
             "Detected that custom integration 'test_integration_frame' "
-            "accesses hass.helpers.aiohttp_client. This is deprecated"
+            "accesses hass.helpers.aiohttp_client, which should be updated"
         ) in caplog.text
         assert reported == expected
 

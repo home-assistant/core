@@ -345,7 +345,12 @@
       "daysOfMonth": [],
       "weeksOfMonth": [],
       "checklist": [],
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "1491d640-6b21-4d0c-8940-0b7aa61c8836",
+          "time": "2024-09-22T20:00:00.0000Z"
+        }
+      ],
       "createdAt": "2024-07-07T17:51:53.266Z",
       "updatedAt": "2024-09-21T22:51:41.756Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",

@@ -1,7 +1,9 @@
 {
+  "success": true,
   "data": {
     "api_user": "test-api-user",
     "profile": { "name": "test-user" },
+    "auth": { "local": { "username": "test-username" } },
     "stats": {
       "buffs": {
         "str": 26,
@@ -61,10 +63,12 @@
       "quest": {
         "RSVPNeeded": true,
         "key": "dustbunnies"
-      }
+      },
+      "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
     },
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z",
+    "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
     "items": {
       "gear": {
         "equipped": {
@@ -72,10 +76,10 @@
           "armor": "armor_warrior_5",
           "head": "head_warrior_5",
           "shield": "shield_warrior_5",
-          "back": "heroicAureole",
+          "back": "back_special_heroicAureole",
           "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
-          "eyewear": "plagueDoctorMask",
-          "body": "aetherAmulet"
+          "eyewear": "eyewear_armoire_plagueDoctorMask",
+          "body": "body_special_aetherAmulet"
         }
       }
     }

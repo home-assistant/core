@@ -9,12 +9,12 @@ from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     CameraEntityFeature,
     CameraState,
     CameraWebRTCProvider,
-    RTCIceCandidate,
     StreamType,
     WebRTCSendMessage,
     async_get_image,
@@ -77,7 +77,7 @@ class MockWebRTCProvider(CameraWebRTCProvider):
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle the WebRTC candidate."""
 

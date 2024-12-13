@@ -14,7 +14,8 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
@@ -214,8 +215,12 @@ async def test_unsupported_websocket(
 
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
-
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    await async_setup_component(hass, "homeassistant", {})
+    with pytest.raises(
+        ServiceNotSupported,
+        match="Entity calendar.calendar_1 does not "
+        "support action calendar.create_event",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "create_event",
