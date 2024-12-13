@@ -58,12 +58,9 @@ def mock_client():
         client.ct_connected = True
         client.energy = 1000
         client.device_info = {
-            "identifiers": ("ohme", "ohme_charger_chargerid"),
             "name": "Ohme Home Pro",
-            "manufacturer": "Ohme",
             "model": "Home Pro",
             "sw_version": "v2.65",
-            "serial_number": "chargerid",
         }
         yield client
 

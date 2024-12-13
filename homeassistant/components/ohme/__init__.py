@@ -1,13 +1,9 @@
 """Set up ohme integration."""
 
-import logging
-
 from homeassistant import core
 
 from .const import PLATFORMS
 from .coordinator import OhmeConfigEntry, OhmeCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: core.HomeAssistant, entry: OhmeConfigEntry) -> bool:

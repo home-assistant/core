@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from ohme import ChargerStatus, OhmeApiClient
@@ -21,8 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -80,7 +77,7 @@ async def async_setup_entry(
     config_entry: OhmeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors and configure coordinator."""
+    """Set up sensors."""
     coordinator = config_entry.runtime_data
     client = coordinator.client
 

@@ -47,7 +47,7 @@ async def test_config_flow_fail(
     test_exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test config flow."""
+    """Test config flow errors."""
 
     # Initial form load
     result = await hass.config_entries.flow.async_init(
