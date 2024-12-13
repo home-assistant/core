@@ -246,7 +246,7 @@ class DefaultAgent(ConversationEntity):
         self._unexposed_names_trie: Trie | None = None
 
         # Sentences that will trigger a callback (skipping intent recognition)
-        self._trigger_sentences: list[TriggerData] = []
+        self.trigger_sentences: list[TriggerData] = []
         self._trigger_intents: Intents | None = None
         self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
         self._load_intents_lock = asyncio.Lock()
@@ -1188,7 +1188,7 @@ class DefaultAgent(ConversationEntity):
     ) -> core.CALLBACK_TYPE:
         """Register a list of sentences that will trigger a callback when recognized."""
         trigger_data = TriggerData(sentences=sentences, callback=callback)
-        self._trigger_sentences.append(trigger_data)
+        self.trigger_sentences.append(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -1205,7 +1205,7 @@ class DefaultAgent(ConversationEntity):
                 # This works because the intents are rebuilt on every
                 # register/unregister.
                 str(trigger_id): {"data": [{"sentences": trigger_data.sentences}]}
-                for trigger_id, trigger_data in enumerate(self._trigger_sentences)
+                for trigger_id, trigger_data in enumerate(self.trigger_sentences)
             },
         }
 
@@ -1228,7 +1228,7 @@ class DefaultAgent(ConversationEntity):
     @core.callback
     def _unregister_trigger(self, trigger_data: TriggerData) -> None:
         """Unregister a set of trigger sentences."""
-        self._trigger_sentences.remove(trigger_data)
+        self.trigger_sentences.remove(trigger_data)
 
         # Force rebuild on next use
         self._trigger_intents = None
@@ -1241,7 +1241,7 @@ class DefaultAgent(ConversationEntity):
         Calls the registered callbacks if there's a match and returns a sentence
         trigger result.
         """
-        if not self._trigger_sentences:
+        if not self.trigger_sentences:
             # No triggers registered
             return None
 
@@ -1286,7 +1286,7 @@ class DefaultAgent(ConversationEntity):
 
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self._trigger_sentences[trigger_id].callback(user_input, trigger_result)
+            self.trigger_sentences[trigger_id].callback(user_input, trigger_result)
             for trigger_id, trigger_result in result.matched_triggers.items()
         ]
 
