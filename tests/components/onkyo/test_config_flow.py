@@ -503,6 +503,15 @@ async def test_import_success(
     }
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    [
+        [  # The schema is dynamically created from input sources
+            "component.onkyo.options.step.init.data.TV",
+            "component.onkyo.options.step.init.data_description.TV",
+        ]
+    ],
+)
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test options flow."""
 
