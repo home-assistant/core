@@ -93,3 +93,36 @@ async def test_dispatcher(hass: HomeAssistant) -> None:
     # Since the last event was less than 5 minutes ago, this should return None already
     event = MockEvent()
     assert await dispatcher.async_handle_state_change(event=event) is False
+
+
+async def test_dispatcher_connection_errors(hass: HomeAssistant) -> None:
+    """Test dispatcher handling of connection errors."""
+    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry())
+    event = MockEvent()
+
+    # Test ClientConnectionError
+    with patch(
+        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
+        side_effect=aiohttp.ClientConnectionError("Connection refused"),
+    ):
+        assert await dispatcher.async_handle_state_change(event=event) is False
+
+    # Test general ClientError
+    with patch(
+        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
+        side_effect=aiohttp.ClientError("Generic client error"),
+    ):
+        assert await dispatcher.async_handle_state_change(event=event) is False
+
+
+async def test_dispatcher_payload_validation(hass: HomeAssistant) -> None:
+    """Test dispatcher payload validation."""
+    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry())
+
+    # Test with invalid state attributes
+    event = MockEvent(data={"new_state": MockState("42", attributes={})})
+    with patch(
+        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
+        return_value=True,
+    ):
+        assert await dispatcher.async_handle_state_change(event=event) is True
