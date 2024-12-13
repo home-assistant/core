@@ -89,7 +89,7 @@ async def test_switch_nvr(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     assert_entity_counts(hass, Platform.SWITCH, 2, 2)
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__fields__["set_insights"] = Mock(final=False)
+    nvr.model_fields["set_insights"] = Mock(final=False)
     nvr.set_insights = AsyncMock()
     entity_id = "switch.unifiprotect_insights_enabled"
 
@@ -272,7 +272,7 @@ async def test_switch_light_status(
 
     description = LIGHT_SWITCHES[1]
 
-    light.__fields__["set_status_light"] = Mock(final=False)
+    light.model_fields["set_status_light"] = Mock(final=False)
     light.set_status_light = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, light, description)
@@ -300,7 +300,7 @@ async def test_switch_camera_ssh(
 
     description = CAMERA_SWITCHES[0]
 
-    doorbell.__fields__["set_ssh"] = Mock(final=False)
+    doorbell.model_fields["set_ssh"] = Mock(final=False)
     doorbell.set_ssh = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -333,7 +333,7 @@ async def test_switch_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    doorbell.__fields__[description.ufp_set_method] = Mock(final=False)
+    doorbell.model_fields[description.ufp_set_method] = Mock(final=False)
     setattr(doorbell, description.ufp_set_method, AsyncMock())
     set_method = getattr(doorbell, description.ufp_set_method)
 
@@ -362,7 +362,7 @@ async def test_switch_camera_highfps(
 
     description = CAMERA_SWITCHES[3]
 
-    doorbell.__fields__["set_video_mode"] = Mock(final=False)
+    doorbell.model_fields["set_video_mode"] = Mock(final=False)
     doorbell.set_video_mode = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -393,7 +393,7 @@ async def test_switch_camera_privacy(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__fields__["set_privacy"] = Mock(final=False)
+    doorbell.model_fields["set_privacy"] = Mock(final=False)
     doorbell.set_privacy = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)
@@ -409,7 +409,7 @@ async def test_switch_camera_privacy(
 
     doorbell.set_privacy.assert_called_with(True, 0, RecordingMode.NEVER)
 
-    new_doorbell = doorbell.copy()
+    new_doorbell = doorbell.model_copy()
     new_doorbell.add_privacy_zone()
     new_doorbell.mic_volume = 0
     new_doorbell.recording_settings.mode = RecordingMode.NEVER
@@ -445,7 +445,7 @@ async def test_switch_camera_privacy_already_on(
 
     description = PRIVACY_MODE_SWITCH
 
-    doorbell.__fields__["set_privacy"] = Mock(final=False)
+    doorbell.model_fields["set_privacy"] = Mock(final=False)
     doorbell.set_privacy = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.SWITCH, doorbell, description)

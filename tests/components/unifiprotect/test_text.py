@@ -78,7 +78,7 @@ async def test_text_camera_set(
         Platform.TEXT, doorbell, description
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.model_fields["set_lcd_text"] = Mock(final=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(

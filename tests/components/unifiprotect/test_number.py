@@ -162,7 +162,7 @@ async def test_number_light_sensitivity(
     description = LIGHT_NUMBERS[0]
     assert description.ufp_set_method is not None
 
-    light.__fields__["set_sensitivity"] = Mock(final=False)
+    light.model_fields["set_sensitivity"] = Mock(final=False)
     light.set_sensitivity = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -184,7 +184,7 @@ async def test_number_light_duration(
 
     description = LIGHT_NUMBERS[1]
 
-    light.__fields__["set_duration"] = Mock(final=False)
+    light.model_fields["set_duration"] = Mock(final=False)
     light.set_duration = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, light, description)
@@ -210,7 +210,7 @@ async def test_number_camera_simple(
 
     assert description.ufp_set_method is not None
 
-    camera.__fields__[description.ufp_set_method] = Mock(final=False)
+    camera.model_fields[description.ufp_set_method] = Mock(final=False)
     setattr(camera, description.ufp_set_method, AsyncMock())
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, camera, description)
@@ -230,7 +230,7 @@ async def test_number_lock_auto_close(
 
     description = DOORLOCK_NUMBERS[0]
 
-    doorlock.__fields__["set_auto_close_time"] = Mock(final=False)
+    doorlock.model_fields["set_auto_close_time"] = Mock(final=False)
     doorlock.set_auto_close_time = AsyncMock()
 
     _, entity_id = ids_from_device_description(Platform.NUMBER, doorlock, description)
