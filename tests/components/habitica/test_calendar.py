@@ -55,6 +55,8 @@ async def test_calendar_platform(
     [
         "calendar.test_user_to_do_s",
         "calendar.test_user_dailies",
+        "calendar.test_user_daily_reminders",
+        "calendar.test_user_to_do_reminders",
     ],
 )
 @pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")

@@ -18,6 +18,7 @@ from mozart_api.models import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
+from voluptuous import Invalid, MultipleInvalid
 
 from homeassistant.components.bang_olufsen.const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
@@ -105,6 +106,7 @@ from .const import (
     TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
     TEST_SOUND_MODE_2,
     TEST_SOUND_MODES,
+    TEST_SOURCE,
     TEST_SOURCES,
     TEST_VIDEO_SOURCES,
     TEST_VOLUME,
@@ -231,7 +233,7 @@ async def test_async_update_sources_availability(
 
     # Add a source that is available and playable
     mock_mozart_client.get_available_sources.return_value = SourceArray(
-        items=[BangOlufsenSource.TIDAL]
+        items=[TEST_SOURCE]
     )
 
     # Send playback_source. The source is not actually used, so its attributes don't matter
@@ -239,7 +241,7 @@ async def test_async_update_sources_availability(
 
     assert mock_mozart_client.get_available_sources.call_count == 2
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert states.attributes[ATTR_INPUT_SOURCE_LIST] == [BangOlufsenSource.TIDAL.name]
+    assert states.attributes[ATTR_INPUT_SOURCE_LIST] == [TEST_SOURCE.name]
 
 
 async def test_async_update_playback_metadata(
@@ -357,19 +359,17 @@ async def test_async_update_playback_state(
 
 
 @pytest.mark.parametrize(
-    ("reported_source", "real_source", "content_type", "progress", "metadata"),
+    ("source", "content_type", "progress", "metadata"),
     [
-        # Normal source, music mediatype expected, no progress expected
+        # Normal source, music mediatype expected
         (
-            BangOlufsenSource.TIDAL,
-            BangOlufsenSource.TIDAL,
+            TEST_SOURCE,
             MediaType.MUSIC,
             TEST_PLAYBACK_PROGRESS.progress,
             PlaybackContentMetadata(),
         ),
-        # URI source, url media type expected, no progress expected
+        # URI source, url media type expected
         (
-            BangOlufsenSource.URI_STREAMER,
             BangOlufsenSource.URI_STREAMER,
             MediaType.URL,
             TEST_PLAYBACK_PROGRESS.progress,
@@ -378,35 +378,9 @@ async def test_async_update_playback_state(
         # Line-In source,media type expected, progress 0 expected
         (
             BangOlufsenSource.LINE_IN,
-            BangOlufsenSource.CHROMECAST,
             MediaType.MUSIC,
             0,
             PlaybackContentMetadata(),
-        ),
-        # Chromecast as source, but metadata says Line-In.
-        # Progress is not set to 0 as the source is Chromecast first
-        (
-            BangOlufsenSource.CHROMECAST,
-            BangOlufsenSource.LINE_IN,
-            MediaType.MUSIC,
-            TEST_PLAYBACK_PROGRESS.progress,
-            PlaybackContentMetadata(title=BangOlufsenSource.LINE_IN.name),
-        ),
-        # Chromecast as source, but metadata says Bluetooth
-        (
-            BangOlufsenSource.CHROMECAST,
-            BangOlufsenSource.BLUETOOTH,
-            MediaType.MUSIC,
-            TEST_PLAYBACK_PROGRESS.progress,
-            PlaybackContentMetadata(title=BangOlufsenSource.BLUETOOTH.name),
-        ),
-        # Chromecast as source, but metadata says Bluetooth in another way
-        (
-            BangOlufsenSource.CHROMECAST,
-            BangOlufsenSource.BLUETOOTH,
-            MediaType.MUSIC,
-            TEST_PLAYBACK_PROGRESS.progress,
-            PlaybackContentMetadata(art=[]),
         ),
     ],
 )
@@ -414,8 +388,7 @@ async def test_async_update_source_change(
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    reported_source: Source,
-    real_source: Source,
+    source: Source,
     content_type: MediaType,
     progress: int,
     metadata: PlaybackContentMetadata,
@@ -444,10 +417,10 @@ async def test_async_update_source_change(
 
     # Simulate metadata
     playback_metadata_callback(metadata)
-    source_change_callback(reported_source)
+    source_change_callback(source)
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert states.attributes[ATTR_INPUT_SOURCE] == real_source.name
+    assert states.attributes[ATTR_INPUT_SOURCE] == source.name
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == content_type
     assert states.attributes[ATTR_MEDIA_POSITION] == progress
 
@@ -774,7 +747,7 @@ async def test_async_media_next_track(
     ("source", "expected_result", "seek_called_times"),
     [
         # Seekable source, seek expected
-        (BangOlufsenSource.DEEZER, does_not_raise(), 1),
+        (TEST_SOURCE, does_not_raise(), 1),
         # Non seekable source, seek shouldn't work
         (BangOlufsenSource.LINE_IN, pytest.raises(HomeAssistantError), 0),
         # Malformed source, seek shouldn't work
@@ -862,7 +835,7 @@ async def test_async_clear_playlist(
         # Invalid source
         ("Test source", pytest.raises(ServiceValidationError), 0, 0),
         # Valid audio source
-        (BangOlufsenSource.TIDAL.name, does_not_raise(), 1, 0),
+        (TEST_SOURCE.name, does_not_raise(), 1, 0),
         # Valid video source
         (TEST_VIDEO_SOURCES[0], does_not_raise(), 0, 1),
     ],
@@ -1432,7 +1405,7 @@ async def test_async_join_players(
     await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
 
     # Set the source to a beolink expandable source
-    source_change_callback(BangOlufsenSource.TIDAL)
+    source_change_callback(TEST_SOURCE)
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -1468,7 +1441,7 @@ async def test_async_join_players(
         ),
         # Invalid media_player entity
         (
-            BangOlufsenSource.TIDAL,
+            TEST_SOURCE,
             [TEST_MEDIA_PLAYER_ENTITY_ID_3],
             pytest.raises(ServiceValidationError),
             "invalid_grouping_entity",
@@ -1551,13 +1524,38 @@ async def test_async_unjoin_player(
     assert states == snapshot(exclude=props("media_position_updated_at"))
 
 
+@pytest.mark.parametrize(
+    (
+        "service_parameters",
+        "method_parameters",
+    ),
+    [
+        # Defined JID
+        (
+            {"beolink_jid": TEST_JID_2},
+            {"jid": TEST_JID_2},
+        ),
+        # Defined JID and source
+        (
+            {"beolink_jid": TEST_JID_2, "source_id": TEST_SOURCE.id},
+            {"jid": TEST_JID_2, "source": TEST_SOURCE.id},
+        ),
+        # Defined JID and Beolink Converter NL/ML source
+        (
+            {"beolink_jid": TEST_JID_2, "source_id": "cd"},
+            {"jid": TEST_JID_2, "source": "CD"},
+        ),
+    ],
+)
 async def test_async_beolink_join(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    service_parameters: dict[str, str],
+    method_parameters: dict[str, str],
 ) -> None:
-    """Test async_beolink_join with defined JID."""
+    """Test async_beolink_join with defined JID and JID and source."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -1565,14 +1563,61 @@ async def test_async_beolink_join(
     await hass.services.async_call(
         DOMAIN,
         "beolink_join",
-        {
-            ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
-            "beolink_jid": TEST_JID_2,
-        },
+        {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID, **service_parameters},
         blocking=True,
     )
 
-    mock_mozart_client.join_beolink_peer.assert_called_once_with(jid=TEST_JID_2)
+    mock_mozart_client.join_beolink_peer.assert_called_once_with(**method_parameters)
+
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert states == snapshot(exclude=props("media_position_updated_at"))
+
+
+@pytest.mark.parametrize(
+    (
+        "service_parameters",
+        "expected_result",
+    ),
+    [
+        # Defined invalid JID
+        (
+            {"beolink_jid": "not_a_jid"},
+            pytest.raises(Invalid),
+        ),
+        # Defined invalid source
+        (
+            {"source_id": "invalid_source"},
+            pytest.raises(MultipleInvalid),
+        ),
+        # Defined invalid JID and invalid source
+        (
+            {"beolink_jid": "not_a_jid", "source_id": "invalid_source"},
+            pytest.raises(MultipleInvalid),
+        ),
+    ],
+)
+async def test_async_beolink_join_invalid(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service_parameters: dict[str, str],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test invalid async_beolink_join calls with defined JID or source ID."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with expected_result:
+        await hass.services.async_call(
+            DOMAIN,
+            "beolink_join",
+            {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID, **service_parameters},
+            blocking=True,
+        )
+
+    mock_mozart_client.join_beolink_peer.assert_not_called()
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states == snapshot(exclude=props("media_position_updated_at"))
@@ -1637,7 +1682,7 @@ async def test_async_beolink_expand(
     )
 
     # Set the source to a beolink expandable source
-    source_change_callback(BangOlufsenSource.TIDAL)
+    source_change_callback(TEST_SOURCE)
 
     await hass.services.async_call(
         DOMAIN,

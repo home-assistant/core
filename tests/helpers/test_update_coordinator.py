@@ -628,8 +628,7 @@ async def test_async_config_entry_first_refresh_invalid_state(
         RuntimeError,
         match="Detected code that uses `async_config_entry_first_refresh`, which "
         "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED. This will stop working "
-        "in Home Assistant 2025.11. Please report this issue.",
+        "but it is in state ConfigEntryState.NOT_LOADED. Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -653,8 +652,9 @@ async def test_async_config_entry_first_refresh_invalid_state_in_integration(
     assert (
         "Detected that integration 'hue' uses `async_config_entry_first_refresh`, which "
         "is only supported when entry state is ConfigEntryState.SETUP_IN_PROGRESS, "
-        "but it is in state ConfigEntryState.NOT_LOADED, This will stop working "
-        "in Home Assistant 2025.11"
+        "but it is in state ConfigEntryState.NOT_LOADED at "
+        "homeassistant/components/hue/light.py, line 23: self.light.is_on. "
+        "This will stop working in Home Assistant 2025.11"
     ) in caplog.text
 
 
@@ -665,8 +665,8 @@ async def test_async_config_entry_first_refresh_no_entry(hass: HomeAssistant) ->
     with pytest.raises(
         RuntimeError,
         match="Detected code that uses `async_config_entry_first_refresh`, "
-        "which is only supported for coordinators with a config entry and will "
-        "stop working in Home Assistant 2025.11. Please report this issue.",
+        "which is only supported for coordinators with a config entry. "
+        "Please report this issue",
     ):
         await crd.async_config_entry_first_refresh()
 

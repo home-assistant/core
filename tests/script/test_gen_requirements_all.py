@@ -1,5 +1,7 @@
 """Tests for the gen_requirements_all script."""
 
+from unittest.mock import patch
+
 from script import gen_requirements_all
 
 
@@ -23,3 +25,27 @@ def test_include_overrides_subsets() -> None:
     for overrides in gen_requirements_all.OVERRIDDEN_REQUIREMENTS_ACTIONS.values():
         for req in overrides["include"]:
             assert req in gen_requirements_all.EXCLUDED_REQUIREMENTS_ALL
+
+
+def test_requirement_override_markers() -> None:
+    """Test override markers are applied to the correct requirements."""
+    data = {
+        "pytest": {
+            "exclude": set(),
+            "include": set(),
+            "markers": {"env-canada": "python_version<'3.13'"},
+        }
+    }
+    with patch.dict(
+        gen_requirements_all.OVERRIDDEN_REQUIREMENTS_ACTIONS, data, clear=True
+    ):
+        assert (
+            gen_requirements_all.process_action_requirement(
+                "env-canada==0.7.2", "pytest"
+            )
+            == "env-canada==0.7.2;python_version<'3.13'"
+        )
+        assert (
+            gen_requirements_all.process_action_requirement("other==1.0", "pytest")
+            == "other==1.0"
+        )

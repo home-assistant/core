@@ -123,7 +123,7 @@
     'system': dict({
       'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
-      'serial_number': 123,
+      'serial_number': '123',
     }),
     'work_area_dict': dict({
       '0': 'my_lawn',
@@ -190,6 +190,8 @@
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Husqvarna Automower of Erika Mustermann',
     'unique_id': '123',
     'version': 1,

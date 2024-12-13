@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/neurio_energy",
   "iot_class": "cloud_polling",
   "loggers": ["neurio"],
+  "quality_scale": "legacy",
   "requirements": ["neurio==0.3.1"]
 }

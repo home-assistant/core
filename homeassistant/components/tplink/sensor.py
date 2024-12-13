@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from kasa import Feature
 
@@ -160,6 +160,12 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = round(cast(float, value), self._feature.precision_hint)
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
+
+        if TYPE_CHECKING:
+            # pylint: disable-next=import-outside-toplevel
+            from datetime import date, datetime
+
+            assert isinstance(value, str | int | float | date | datetime | None)
 
         self._attr_native_value = value
         # Map to homeassistant units and fallback to upstream one if none found

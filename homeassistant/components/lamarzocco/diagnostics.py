@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any, TypedDict
 
-from lmcloud.const import FirmwareType
+from pylamarzocco.const import FirmwareType
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
