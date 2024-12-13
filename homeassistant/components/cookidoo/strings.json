@@ -11,7 +11,7 @@
         "data_description": {
           "email": "Email used to access your {cookidoo} account.",
           "password": "Password used to access your {cookidoo} account.",
-          "country": "Pick your language for the {cookidoo} content."
+          "country": "Pick your country for the {cookidoo} content."
         }
       },
       "language": {
@@ -33,6 +33,24 @@
         "data_description": {
           "email": "[%key:component::cookidoo::config::step::user::data_description::email%]",
           "password": "[%key:component::cookidoo::config::step::user::data_description::password%]"
+        }
+      },
+      "reconfigure_country": {
+        "title": "Set country for {cookidoo}",
+        "data": {
+          "country": "[%key:component::cookidoo::config::step::user::data::country%]"
+        },
+        "data_description": {
+          "country": "[%key:component::cookidoo::config::step::user::data_description::country%]"
+        }
+      },
+      "reconfigure_language": {
+        "title": "Set language for {cookidoo}",
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "language": "[%key:component::cookidoo::config::step::language::data_description::language%]"
         }
       }
     },

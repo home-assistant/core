@@ -104,6 +104,69 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reconfigure upon an user action."""
+        return await self.async_step_reconfigure_country()
+
+    async def async_step_reconfigure_country(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow reconfiguration of country."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            if not (
+                errors := await self.validate_input(
+                    {**reconfigure_entry.data, **user_input}
+                )
+            ):
+                self.user_input = user_input
+                return await self.async_step_reconfigure_language()
+        await self.generate_country_schema()
+        return self.async_show_form(
+            step_id="reconfigure_country",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(self.COUNTRY_DATA_SCHEMA),
+                suggested_values=reconfigure_entry.data,
+            ),
+            description_placeholders={"cookidoo": "Cookidoo"},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_language(
+        self,
+        language_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Allow reconfiguration of language."""
+        errors: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if language_input is not None and not (
+            errors := await self.validate_input(
+                {**reconfigure_entry.data, **self.user_input}, language_input
+            )
+        ):
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data={**reconfigure_entry.data, **self.user_input, **language_input},
+            )
+
+        await self.generate_language_schema()
+        return self.async_show_form(
+            step_id="reconfigure_language",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(self.LANGUAGE_DATA_SCHEMA),
+                suggested_values=reconfigure_entry.data,
+            ),
+            description_placeholders={"cookidoo": "Cookidoo"},
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
