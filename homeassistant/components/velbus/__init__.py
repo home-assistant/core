@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from dataclasses import dataclass
 import logging
 import os
 import shutil
@@ -34,13 +36,23 @@ PLATFORMS = [
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type VelbusConfigEntry = ConfigEntry[VelbusData]
+
+
+@dataclass
+class VelbusData:
+    """Runtime data for the Velbus config entry."""
+
+    controller: Velbus
+    connect_task: asyncio.Task
+
 
 async def velbus_connect_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
     """Task to offload the long running connect."""
     try:
-        await controller.connect()
+        await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
@@ -67,19 +79,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Establish connection with velbus."""
-    hass.data.setdefault(DOMAIN, {})
-
     controller = Velbus(
         entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id]["cntrl"] = controller
-    hass.data[DOMAIN][entry.entry_id]["tsk"] = hass.async_create_task(
-        velbus_connect_task(controller, hass, entry.entry_id)
-    )
+    await controller.connect()
+
+    task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
+    entry.runtime_data = VelbusData(controller=controller, connect_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
@@ -88,17 +97,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Unload (close) the velbus connection."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    await hass.data[DOMAIN][entry.entry_id]["cntrl"].stop()
-    hass.data[DOMAIN].pop(entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
+    await entry.runtime_data.controller.stop()
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> None:
     """Remove the velbus entry, so we also have to cleanup the cache dir."""
     await hass.async_add_executor_job(
         shutil.rmtree,
@@ -106,7 +112,9 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: VelbusConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
     cache_path = hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/")
