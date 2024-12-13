@@ -260,10 +260,16 @@ async def test_flow_reauth_error_and_recover(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.parametrize(
+    ("new_email", "result_reason"),
+    [(EMAIL, "reauth_successful"), ("another-email", "already_configured")],
+)
 async def test_flow_reauth_init_data_already_configured(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
+    new_email: str,
+    result_reason: str,
 ) -> None:
     """Test we abort user data set when entry is already configured."""
 
@@ -288,8 +294,8 @@ async def test_flow_reauth_init_data_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_EMAIL: "another-email", CONF_PASSWORD: PASSWORD},
+        {CONF_EMAIL: new_email, CONF_PASSWORD: PASSWORD},
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == result_reason
