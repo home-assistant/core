@@ -1,16 +1,18 @@
 """Coordinator for La Marzocco API."""
 
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
 from time import time
 from typing import Any
 
-from lmcloud.client_bluetooth import LaMarzoccoBluetoothClient
-from lmcloud.client_cloud import LaMarzoccoCloudClient
-from lmcloud.client_local import LaMarzoccoLocalClient
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
+from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
+from pylamarzocco.clients.local import LaMarzoccoLocalClient
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, CONF_NAME, EVENT_HOMEASSISTANT_STOP
@@ -26,21 +28,30 @@ STATISTICS_UPDATE_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
+
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    config_entry: ConfigEntry
+    config_entry: LaMarzoccoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: LaMarzoccoConfigEntry,
         cloud_client: LaMarzoccoCloudClient,
         local_client: LaMarzoccoLocalClient | None,
         bluetooth_client: LaMarzoccoBluetoothClient | None,
     ) -> None:
         """Initialize coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
         self.local_connection_configured = local_client is not None
 
         assert self.config_entry.unique_id
@@ -74,9 +85,8 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
                 if (
                     self._local_client is not None
                     and self._local_client.websocket is not None
-                    and self._local_client.websocket.open
+                    and not self._local_client.websocket.closed
                 ):
-                    self._local_client.terminating = True
                     await self._local_client.websocket.close()
 
             self.config_entry.async_on_unload(
@@ -115,9 +125,12 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await func(*args, **kwargs)
         except AuthFail as ex:
-            msg = "Authentication failed."
-            _LOGGER.debug(msg, exc_info=True)
-            raise ConfigEntryAuthFailed(msg) from ex
+            _LOGGER.debug("Authentication failed", exc_info=True)
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from ex
         except RequestNotSuccessful as ex:
             _LOGGER.debug(ex, exc_info=True)
-            raise UpdateFailed(f"Querying API failed. Error: {ex}") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from ex

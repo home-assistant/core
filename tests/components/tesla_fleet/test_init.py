@@ -1,5 +1,6 @@
 """Test the Tesla Fleet init."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import RequestInfo
@@ -404,3 +405,22 @@ async def test_init_region_issue_failed(
     await setup_platform(hass, normal_config_entry)
     mock_find_server.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_signing(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+) -> None:
+    """Tests when a vehicle requires signing."""
+
+    # Make the vehicle require command signing
+    products = deepcopy(mock_products.return_value)
+    products["response"][0]["command_signing"] = "required"
+    mock_products.return_value = products
+
+    with patch(
+        "homeassistant.components.tesla_fleet.TeslaFleetApi.get_private_key"
+    ) as mock_get_private_key:
+        await setup_platform(hass, normal_config_entry)
+        mock_get_private_key.assert_called_once()

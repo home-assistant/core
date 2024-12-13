@@ -52,7 +52,7 @@ async def async_tts_voices(
 
 
 def tts_options_schema(
-    config_options: dict[str, Any],
+    config_options: Mapping[str, Any],
     voices: dict[str, list[str]],
     from_config_flow: bool = False,
 ) -> vol.Schema:

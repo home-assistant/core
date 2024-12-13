@@ -33,7 +33,10 @@ from homeassistant.components import (
     valve,
     water_heater,
 )
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
+)
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
@@ -51,7 +54,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -63,9 +65,6 @@ from homeassistant.const import (
     EVENT_CALL_SERVICE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
@@ -77,7 +76,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
-from homeassistant.util import color, dt as dt_util
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import BASIC_CONFIG, MockConfig
@@ -431,7 +431,9 @@ async def test_dock_vacuum(hass: HomeAssistant) -> None:
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.DockTrait.supported(vacuum.DOMAIN, 0, None, None)
 
-    trt = trait.DockTrait(hass, State("vacuum.bla", vacuum.STATE_IDLE), BASIC_CONFIG)
+    trt = trait.DockTrait(
+        hass, State("vacuum.bla", vacuum.VacuumActivity.IDLE), BASIC_CONFIG
+    )
 
     assert trt.sync_attributes() == {}
 
@@ -454,7 +456,7 @@ async def test_locate_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_IDLE,
+            vacuum.VacuumActivity.IDLE,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.LOCATE},
         ),
         BASIC_CONFIG,
@@ -485,7 +487,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_DOCKED,
+            vacuum.VacuumActivity.DOCKED,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 100,
@@ -511,7 +513,7 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_CLEANING,
+            vacuum.VacuumActivity.CLEANING,
             {
                 ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.BATTERY,
                 ATTR_BATTERY_LEVEL: 20,
@@ -551,7 +553,7 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         hass,
         State(
             "vacuum.bla",
-            vacuum.STATE_PAUSED,
+            vacuum.VacuumActivity.PAUSED,
             {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
         ),
         BASIC_CONFIG,
@@ -868,10 +870,10 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
                 light.ATTR_COLOR_MODE: "color_temp",
-                light.ATTR_COLOR_TEMP: 300,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_COLOR_TEMP_KELVIN: 3333,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
                 "supported_color_modes": ["color_temp"],
             },
         ),
@@ -904,7 +906,7 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "light.bla",
-        light.ATTR_COLOR_TEMP: color.color_temperature_kelvin_to_mired(2857),
+        light.ATTR_COLOR_TEMP_KELVIN: 2857,
     }
 
 
@@ -922,9 +924,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
-                light.ATTR_COLOR_TEMP: 0,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
+                light.ATTR_COLOR_TEMP_KELVIN: 0,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
             },
         ),
         BASIC_CONFIG,
@@ -1734,7 +1736,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.ARM_HOME
@@ -1765,11 +1767,12 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
 
     assert trt.query_attributes() == {
         "isArmed": True,
-        "currentArmLevel": STATE_ALARM_ARMED_AWAY,
+        "currentArmLevel": AlarmControlPanelState.ARMED_AWAY,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_ARM_DISARM, {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY}
+        trait.COMMAND_ARM_DISARM,
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
     )
 
     calls = async_mock_service(
@@ -1782,7 +1785,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
@@ -1791,7 +1794,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             BASIC_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1801,7 +1804,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1811,7 +1814,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 0
@@ -1823,7 +1826,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {"pin": 9999},
         )
     assert len(calls) == 0
@@ -1834,7 +1837,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     await trt.execute(
         trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {"pin": "1234"},
     )
 
@@ -1845,7 +1848,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -1854,7 +1857,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         await trt.execute(
             trait.COMMAND_ARM_DISARM,
             PIN_DATA,
-            {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+            {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
             {},
         )
     assert len(calls) == 1
@@ -1865,7 +1868,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -1873,7 +1876,7 @@ async def test_arm_disarm_arm_away(hass: HomeAssistant) -> None:
     await trt.execute(
         trait.COMMAND_ARM_DISARM,
         PIN_DATA,
-        {"arm": True, "armLevel": STATE_ALARM_ARMED_AWAY},
+        {"arm": True, "armLevel": AlarmControlPanelState.ARMED_AWAY},
         {},
     )
     assert len(calls) == 2
@@ -1897,7 +1900,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {
                 alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True,
                 ATTR_SUPPORTED_FEATURES: AlarmControlPanelEntityFeature.TRIGGER
@@ -1953,7 +1956,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         BASIC_CONFIG,
@@ -1968,7 +1971,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -2002,7 +2005,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: True},
         ),
         PIN_CONFIG,
@@ -2016,7 +2019,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -2036,7 +2039,7 @@ async def test_arm_disarm_disarm(hass: HomeAssistant) -> None:
         hass,
         State(
             "alarm_control_panel.alarm",
-            STATE_ALARM_PENDING,
+            AlarmControlPanelState.PENDING,
             {alarm_control_panel.ATTR_CODE_ARM_REQUIRED: False},
         ),
         PIN_CONFIG,
@@ -4065,6 +4068,93 @@ async def test_sensorstate(
     assert (
         trait.SensorStateTrait.supported(
             sensor.DOMAIN, None, sensor.SensorDeviceClass.MONETARY, None
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    ("state", "identifier"),
+    [
+        (STATE_ON, 0),
+        (STATE_OFF, 1),
+        (STATE_UNKNOWN, 2),
+    ],
+)
+@pytest.mark.parametrize(
+    ("device_class", "name", "states"),
+    [
+        (
+            binary_sensor.BinarySensorDeviceClass.CO,
+            "CarbonMonoxideLevel",
+            ["carbon monoxide detected", "no carbon monoxide detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.SMOKE,
+            "SmokeLevel",
+            ["smoke detected", "no smoke detected", "unknown"],
+        ),
+        (
+            binary_sensor.BinarySensorDeviceClass.MOISTURE,
+            "WaterLeak",
+            ["leak", "no leak", "unknown"],
+        ),
+    ],
+)
+async def test_binary_sensorstate(
+    hass: HomeAssistant,
+    state: str,
+    identifier: int,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+    name: str,
+    states: list[str],
+) -> None:
+    """Test SensorState trait support for binary sensor domain."""
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert trait.SensorStateTrait.supported(
+        binary_sensor.DOMAIN, None, device_class, None
+    )
+
+    trt = trait.SensorStateTrait(
+        hass,
+        State(
+            "binary_sensor.test",
+            state,
+            {
+                "device_class": device_class,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "sensorStatesSupported": [
+            {
+                "name": name,
+                "descriptiveCapabilities": {
+                    "availableStates": states,
+                },
+            }
+        ]
+    }
+    assert trt.query_attributes() == {
+        "currentSensorStateData": [
+            {
+                "name": name,
+                "currentSensorState": states[identifier],
+                "rawValue": None,
+            },
+        ]
+    }
+
+    assert helpers.get_google_type(binary_sensor.DOMAIN, None) is not None
+    assert (
+        trait.SensorStateTrait.supported(
+            binary_sensor.DOMAIN,
+            None,
+            binary_sensor.BinarySensorDeviceClass.TAMPER,
+            None,
         )
         is False
     )

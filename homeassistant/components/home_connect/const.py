@@ -5,10 +5,23 @@ DOMAIN = "home_connect"
 OAUTH2_AUTHORIZE = "https://api.home-connect.com/security/oauth/authorize"
 OAUTH2_TOKEN = "https://api.home-connect.com/security/oauth/token"
 
+APPLIANCES_WITH_PROGRAMS = (
+    "CleaningRobot",
+    "CoffeeMaker",
+    "Dishwasher",
+    "Dryer",
+    "Hood",
+    "Oven",
+    "WarmingDrawer",
+    "Washer",
+    "WasherDryer",
+)
+
 BSH_POWER_STATE = "BSH.Common.Setting.PowerState"
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"
 BSH_POWER_OFF = "BSH.Common.EnumType.PowerState.Off"
 BSH_POWER_STANDBY = "BSH.Common.EnumType.PowerState.Standby"
+BSH_SELECTED_PROGRAM = "BSH.Common.Root.SelectedProgram"
 BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_REMOTE_CONTROL_ACTIVATION_STATE = "BSH.Common.Status.RemoteControlActive"
 BSH_REMOTE_START_ALLOWANCE_STATE = "BSH.Common.Status.RemoteControlStartAllowed"
@@ -35,6 +48,11 @@ COFFEE_EVENT_BEAN_CONTAINER_EMPTY = (
 )
 COFFEE_EVENT_WATER_TANK_EMPTY = "ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty"
 COFFEE_EVENT_DRIP_TRAY_FULL = "ConsumerProducts.CoffeeMaker.Event.DripTrayFull"
+
+DISHWASHER_EVENT_SALT_NEARLY_EMPTY = "Dishcare.Dishwasher.Event.SaltNearlyEmpty"
+DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY = (
+    "Dishcare.Dishwasher.Event.RinseAidNearlyEmpty"
+)
 
 REFRIGERATION_INTERNAL_LIGHT_POWER = "Refrigeration.Common.Setting.Light.Internal.Power"
 REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS = (
@@ -95,16 +113,27 @@ SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
+ATTR_ALLOWED_VALUES = "allowedvalues"
 ATTR_AMBIENT = "ambient"
 ATTR_BSH_KEY = "bsh_key"
+ATTR_CONSTRAINTS = "constraints"
 ATTR_DESC = "desc"
 ATTR_DEVICE = "device"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
+ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
+
+SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
+
+SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"
+SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
+SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
+SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
+SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
 
 OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
     "ChildLock": BSH_CHILD_LOCK_STATE,

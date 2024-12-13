@@ -49,6 +49,7 @@ INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
 INTENT_START_TIMER = "HassStartTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_CANCEL_ALL_TIMERS = "HassCancelAllTimers"
 INTENT_INCREASE_TIMER = "HassIncreaseTimer"
 INTENT_DECREASE_TIMER = "HassDecreaseTimer"
 INTENT_PAUSE_TIMER = "HassPauseTimer"
@@ -56,6 +57,7 @@ INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
 INTENT_TIMER_STATUS = "HassTimerStatus"
 INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
+INTENT_RESPOND = "HassRespond"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 

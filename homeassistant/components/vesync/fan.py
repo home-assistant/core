@@ -94,7 +94,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
+    _attr_translation_key = "vesync"
 
     def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""

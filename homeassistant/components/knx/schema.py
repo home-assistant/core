@@ -222,9 +222,6 @@ class BinarySensorSchema(KNXPlatformSchema):
     DEFAULT_NAME = "KNX Binary Sensor"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("significant_bit"),
-        cv.deprecated("automation"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -347,6 +344,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_FAN_MAX_STEP = "fan_max_step"
     CONF_FAN_SPEED_MODE = "fan_speed_mode"
     CONF_FAN_ZERO_MODE = "fan_zero_mode"
+    CONF_HUMIDITY_STATE_ADDRESS = "humidity_state_address"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -357,10 +355,6 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_FAN_SPEED_MODE = "percent"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since September 2020
-        cv.deprecated("setpoint_shift_step", replacement_key=CONF_TEMPERATURE_STEP),
-        # deprecated since 2021.6
-        cv.deprecated("create_temperature_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -439,6 +433,7 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
                     FanZeroMode
                 ),
+                vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
             }
         ),
     )
@@ -967,8 +962,6 @@ class WeatherSchema(KNXPlatformSchema):
     DEFAULT_NAME = "KNX Weather Station"
 
     ENTITY_SCHEMA = vol.All(
-        # deprecated since 2021.6
-        cv.deprecated("create_sensors"),
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

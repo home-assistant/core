@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "connection_error": "Could not connect to the controller.",
       "credentials_needed": "The controller needs credentials.",

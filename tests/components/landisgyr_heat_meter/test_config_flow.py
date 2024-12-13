@@ -101,10 +101,6 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
     }
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.landisgyr_heat_meter.config.error.cannot_connect"],
-)
 @patch(API_HEAT_METER_SERVICE)
 async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     """Test manual entry fails."""
@@ -135,10 +131,6 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.landisgyr_heat_meter.config.error.cannot_connect"],
-)
 @patch(API_HEAT_METER_SERVICE)
 @patch("serial.tools.list_ports.comports", return_value=[mock_serial_port()])
 async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) -> None:
