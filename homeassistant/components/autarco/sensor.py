@@ -24,6 +24,8 @@ from . import AutarcoConfigEntry
 from .const import DOMAIN
 from .coordinator import AutarcoDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AutarcoBatterySensorEntityDescription(SensorEntityDescription):
