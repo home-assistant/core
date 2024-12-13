@@ -115,7 +115,7 @@
         },
         "volume": {
           "name": "Volume",
-          "description": "Speaker volume during playback (if unset, uses the default volume)."
+          "description": "Speaker volume during playback (if unset, uses the current global volume)."
         },
         "repeat": {
           "name": "Repeat",
