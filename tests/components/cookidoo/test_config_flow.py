@@ -200,8 +200,6 @@ async def test_flow_reauth(
         {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert cookidoo_config_entry.data == {
@@ -252,23 +250,30 @@ async def test_flow_reauth_error_and_recover(
         {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-
+    assert cookidoo_config_entry.data == {
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+        CONF_COUNTRY: COUNTRY,
+        CONF_LANGUAGE: LANGUAGE,
+    }
     assert len(hass.config_entries.async_entries()) == 1
 
 
 @pytest.mark.parametrize(
-    ("new_email", "result_reason"),
-    [(EMAIL, "reauth_successful"), ("another-email", "already_configured")],
+    ("new_email", "saved_email", "result_reason"),
+    [
+        (EMAIL, EMAIL, "reauth_successful"),
+        ("another-email", EMAIL, "already_configured"),
+    ],
 )
 async def test_flow_reauth_init_data_already_configured(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
     new_email: str,
+    saved_email: str,
     result_reason: str,
 ) -> None:
     """Test we abort user data set when entry is already configured."""
@@ -283,7 +288,6 @@ async def test_flow_reauth_init_data_already_configured(
             CONF_COUNTRY: COUNTRY,
             CONF_LANGUAGE: LANGUAGE,
         },
-        entry_id="02JBVVVJ87F6G6V0QJX6HBC94T",
     )
 
     another_cookidoo_config_entry.add_to_hass(hass)
@@ -299,3 +303,4 @@ async def test_flow_reauth_init_data_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == result_reason
+    assert cookidoo_config_entry.data[CONF_EMAIL] == saved_email
