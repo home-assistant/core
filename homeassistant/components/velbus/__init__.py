@@ -87,8 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
     try:
-        await controller.connect(test_connect=True)
-        await controller.stop()
+        await controller.connect()
     except VelbusConnectionFailed as error:
         raise ConfigEntryNotReady("Cannot connect to Velbus") from error
 
