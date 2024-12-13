@@ -186,15 +186,25 @@ ATTR_RGBW_COLOR = "rgbw_color"
 ATTR_RGBWW_COLOR = "rgbww_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_HS_COLOR = "hs_color"
-ATTR_COLOR_TEMP = "color_temp"  # Deprecated in HA Core 2022.11
-ATTR_KELVIN = "kelvin"  # Deprecated in HA Core 2022.11
-ATTR_MIN_MIREDS = "min_mireds"  # Deprecated in HA Core 2022.11
-ATTR_MAX_MIREDS = "max_mireds"  # Deprecated in HA Core 2022.11
 ATTR_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 ATTR_MIN_COLOR_TEMP_KELVIN = "min_color_temp_kelvin"
 ATTR_MAX_COLOR_TEMP_KELVIN = "max_color_temp_kelvin"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE = "white"
+
+# Deprecated in HA Core 2022.11
+_DEPRECATED_ATTR_COLOR_TEMP: Final = DeprecatedConstant(
+    "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)", "2026.1"
+)
+_DEPRECATED_ATTR_KELVIN: Final = DeprecatedConstant(
+    "kelvin", "ATTR_COLOR_TEMP_KELVIN", "2026.1"
+)
+_DEPRECATED_ATTR_MIN_MIREDS: Final = DeprecatedConstant(
+    "min_mireds", "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)", "2026.1"
+)
+_DEPRECATED_ATTR_MAX_MIREDS: Final = DeprecatedConstant(
+    "max_mireds", "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)", "2026.1"
+)
 
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
@@ -240,11 +250,11 @@ LIGHT_TURN_ON_SCHEMA: VolDictType = {
     vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
     vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
-    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
+    vol.Exclusive(_DEPRECATED_ATTR_COLOR_TEMP.value, COLOR_GROUP): vol.All(
         vol.Coerce(int), vol.Range(min=1)
     ),
     vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): cv.positive_int,
-    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP): cv.positive_int,
+    vol.Exclusive(_DEPRECATED_ATTR_KELVIN.value, COLOR_GROUP): cv.positive_int,
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
         vol.Coerce(tuple),
         vol.ExactSequence(
@@ -307,19 +317,29 @@ def preprocess_turn_on_alternatives(
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
 
-    if (mired := params.pop(ATTR_COLOR_TEMP, None)) is not None:
+    if (mired := params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value, None)) is not None:
+        _LOGGER.warning(
+            "Got `color_temp` argument in `turn_on` service, which is deprecated "
+            "and will break in Home Assistant 2026.1, please use "
+            "`color_temp_kelvin` argument"
+        )
         kelvin = color_util.color_temperature_mired_to_kelvin(mired)
-        params[ATTR_COLOR_TEMP] = int(mired)
+        params[_DEPRECATED_ATTR_COLOR_TEMP.value] = int(mired)
         params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
 
-    if (kelvin := params.pop(ATTR_KELVIN, None)) is not None:
+    if (kelvin := params.pop(_DEPRECATED_ATTR_KELVIN.value, None)) is not None:
+        _LOGGER.warning(
+            "Got `kelvin` argument in `turn_on` service, which is deprecated "
+            "and will break in Home Assistant 2026.1, please use "
+            "`color_temp_kelvin` argument"
+        )
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
-        params[ATTR_COLOR_TEMP] = int(mired)
+        params[_DEPRECATED_ATTR_COLOR_TEMP.value] = int(mired)
         params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
 
     if (kelvin := params.pop(ATTR_COLOR_TEMP_KELVIN, None)) is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
-        params[ATTR_COLOR_TEMP] = int(mired)
+        params[_DEPRECATED_ATTR_COLOR_TEMP.value] = int(mired)
         params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
@@ -361,7 +381,7 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
     if not brightness_supported(supported_color_modes):
         params.pop(ATTR_BRIGHTNESS, None)
     if ColorMode.COLOR_TEMP not in supported_color_modes:
-        params.pop(ATTR_COLOR_TEMP, None)
+        params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value, None)
         params.pop(ATTR_COLOR_TEMP_KELVIN, None)
     if ColorMode.HS not in supported_color_modes:
         params.pop(ATTR_HS_COLOR, None)
@@ -443,7 +463,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 and ColorMode.COLOR_TEMP not in supported_color_modes
                 and ColorMode.RGBWW in supported_color_modes
             ):
-                params.pop(ATTR_COLOR_TEMP)
+                params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
                 params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
@@ -453,7 +473,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     light.max_color_temp_kelvin,
                 )
             elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
-                params.pop(ATTR_COLOR_TEMP)
+                params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 if color_supported(legacy_supported_color_modes):
                     params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
@@ -500,8 +520,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                     *xy_color
                 )
-                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
-                    params[ATTR_COLOR_TEMP_KELVIN]
+                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(
+                        params[ATTR_COLOR_TEMP_KELVIN]
+                    )
                 )
         elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
             rgb_color = params.pop(ATTR_RGB_COLOR)
@@ -523,8 +545,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                     *xy_color
                 )
-                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
-                    params[ATTR_COLOR_TEMP_KELVIN]
+                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(
+                        params[ATTR_COLOR_TEMP_KELVIN]
+                    )
                 )
         elif ATTR_XY_COLOR in params and ColorMode.XY not in supported_color_modes:
             xy_color = params.pop(ATTR_XY_COLOR)
@@ -544,8 +568,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                     *xy_color
                 )
-                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
-                    params[ATTR_COLOR_TEMP_KELVIN]
+                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(
+                        params[ATTR_COLOR_TEMP_KELVIN]
+                    )
                 )
         elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
             rgbw_color = params.pop(ATTR_RGBW_COLOR)
@@ -565,8 +591,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                     *xy_color
                 )
-                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
-                    params[ATTR_COLOR_TEMP_KELVIN]
+                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(
+                        params[ATTR_COLOR_TEMP_KELVIN]
+                    )
                 )
         elif (
             ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
@@ -589,8 +617,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
                     *xy_color
                 )
-                params[ATTR_COLOR_TEMP] = color_util.color_temperature_kelvin_to_mired(
-                    params[ATTR_COLOR_TEMP_KELVIN]
+                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(
+                        params[ATTR_COLOR_TEMP_KELVIN]
+                    )
                 )
 
         # If white is set to True, set it to the light's brightness
@@ -798,7 +828,7 @@ class Profiles:
 
         color_attributes = (
             ATTR_COLOR_NAME,
-            ATTR_COLOR_TEMP,
+            _DEPRECATED_ATTR_COLOR_TEMP.value,
             ATTR_HS_COLOR,
             ATTR_RGB_COLOR,
             ATTR_RGBW_COLOR,
@@ -846,13 +876,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         {
             ATTR_SUPPORTED_COLOR_MODES,
             ATTR_EFFECT_LIST,
-            ATTR_MIN_MIREDS,
-            ATTR_MAX_MIREDS,
+            _DEPRECATED_ATTR_MIN_MIREDS.value,
+            _DEPRECATED_ATTR_MAX_MIREDS.value,
             ATTR_MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN,
             ATTR_BRIGHTNESS,
             ATTR_COLOR_MODE,
-            ATTR_COLOR_TEMP,
+            _DEPRECATED_ATTR_COLOR_TEMP.value,
             ATTR_COLOR_TEMP_KELVIN,
             ATTR_EFFECT,
             ATTR_HS_COLOR,
@@ -1072,16 +1102,16 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_MIN_COLOR_TEMP_KELVIN] = min_color_temp_kelvin
             data[ATTR_MAX_COLOR_TEMP_KELVIN] = max_color_temp_kelvin
             if not max_color_temp_kelvin:
-                data[ATTR_MIN_MIREDS] = None
+                data[_DEPRECATED_ATTR_MIN_MIREDS.value] = None
             else:
-                data[ATTR_MIN_MIREDS] = color_util.color_temperature_kelvin_to_mired(
-                    max_color_temp_kelvin
+                data[_DEPRECATED_ATTR_MIN_MIREDS.value] = (
+                    color_util.color_temperature_kelvin_to_mired(max_color_temp_kelvin)
                 )
             if not min_color_temp_kelvin:
-                data[ATTR_MAX_MIREDS] = None
+                data[_DEPRECATED_ATTR_MAX_MIREDS.value] = None
             else:
-                data[ATTR_MAX_MIREDS] = color_util.color_temperature_kelvin_to_mired(
-                    min_color_temp_kelvin
+                data[_DEPRECATED_ATTR_MAX_MIREDS.value] = (
+                    color_util.color_temperature_kelvin_to_mired(min_color_temp_kelvin)
                 )
         if LightEntityFeature.EFFECT in supported_features:
             data[ATTR_EFFECT_LIST] = self.effect_list
@@ -1254,14 +1284,14 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
                 if color_temp_kelvin:
-                    data[ATTR_COLOR_TEMP] = (
+                    data[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
                         color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
                     )
                 else:
-                    data[ATTR_COLOR_TEMP] = None
+                    data[_DEPRECATED_ATTR_COLOR_TEMP.value] = None
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
-                data[ATTR_COLOR_TEMP] = None
+                data[_DEPRECATED_ATTR_COLOR_TEMP.value] = None
 
         if color_supported(legacy_supported_color_modes) or color_temp_supported(
             legacy_supported_color_modes
