@@ -6,6 +6,7 @@ from eheimdigital.types import EheimDeviceType
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -19,6 +20,7 @@ async def test_remove_device(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a device."""
+    assert await async_setup_component(hass, "config", {})
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
