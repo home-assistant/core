@@ -52,7 +52,7 @@ async def velbus_connect_task(
 ) -> None:
     """Task to offload the long running connect."""
     try:
-        await controller.connect()
+        await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
@@ -85,6 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
+    await controller.connect()
+
     task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, connect_task=task)
 
