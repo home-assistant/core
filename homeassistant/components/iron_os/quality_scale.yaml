@@ -20,7 +20,11 @@ rules:
     comment: Integration does not register events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: exempt
+    comment: |
+      Integration uses runtime_data, but also needs to keep
+      shared information in hass.data
   test-before-configure: todo
   test-before-setup: todo
   unique-config-entry: done

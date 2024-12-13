@@ -102,6 +102,22 @@ def _check_typed_config_entry(integration: Integration) -> list[str]:
     return errors
 
 
+def _accesses_hass_data(integration: Integration) -> str | None:
+    """Check if integration access hass.data."""
+    for module_file in integration.path.rglob("*.py"):
+        module = ast_parse_module(module_file)
+
+        for node in ast.walk(module):
+            if (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "hass"
+                and node.attr == "data"
+            ):
+                return module_file
+    return None
+
+
 def validate(
     config: Config, integration: Integration, *, rules_done: set[str]
 ) -> list[str] | None:
@@ -122,6 +138,10 @@ def validate(
             "Integration does not set entry.runtime_data in async_setup_entry"
             f"({init_file})"
         )
+
+    # Check if integration accesses hass.data
+    if file := _accesses_hass_data(integration):
+        errors.append(f"Integration accesses `hass.data` in {file}")
 
     # Extra checks, if strict-typing is marked as done
     if "strict-typing" in rules_done:

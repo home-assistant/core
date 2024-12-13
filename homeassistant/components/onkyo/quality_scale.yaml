@@ -20,10 +20,15 @@ rules:
   entity-event-setup:
     status: done
     comment: |
-      Currently we store created entities in hass.data. That should be removed in the future.
+      Currently we store created entities in hass.data.
+      That should be removed in the future.
   entity-unique-id: done
   has-entity-name: todo
-  runtime-data: done
+  runtime-data:
+    status: exempt
+    comment: |
+      Currently we store created entities in hass.data.
+      That should be removed in the future.
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
