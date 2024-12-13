@@ -4,17 +4,13 @@ from __future__ import annotations
 
 from psnawp_api.psn import PlaystationNetwork
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_NPSSO
-from .coordinator import PlaystationNetworkCoordinator
+from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
-
-
-type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkCoordinator]
 
 
 async def async_setup_entry(

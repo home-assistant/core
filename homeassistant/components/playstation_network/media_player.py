@@ -77,7 +77,7 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Name getter."""
-        return f"{self.coordinator.data.platform.get('platform')} Console"
+        return f"{self.coordinator.data.platform.get('platform',"").upper()} Console"
 
     @property
     def media_title(self) -> str | None:

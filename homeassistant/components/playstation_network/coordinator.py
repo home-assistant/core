@@ -9,15 +9,17 @@ from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError
 from psnawp_api.models.user import User
 from psnawp_api.psn import PlaystationNetwork, PlaystationNetworkData
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import PlaystationNetworkConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DEVICE_SCAN_INTERVAL = timedelta(seconds=30)
+
+type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkCoordinator]
 
 
 class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData]):
