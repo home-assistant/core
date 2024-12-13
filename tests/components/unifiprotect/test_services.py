@@ -56,7 +56,9 @@ async def test_global_service_bad_device(
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.model_fields["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -75,7 +77,9 @@ async def test_global_service_exception(
     """Test global service, unexpected error."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.model_fields["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
     with pytest.raises(HomeAssistantError):
@@ -94,7 +98,9 @@ async def test_add_doorbell_text(
     """Test add_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.model_fields["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -112,7 +118,9 @@ async def test_remove_doorbell_text(
     """Test remove_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.model_fields["remove_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["remove_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.remove_custom_doorbell_message = AsyncMock()
 
     await hass.services.async_call(
@@ -129,7 +137,9 @@ async def test_add_doorbell_text_disabled_config_entry(
 ) -> None:
     """Test add_doorbell_text service."""
     nvr = ufp.api.bootstrap.nvr
-    nvr.model_fields["add_custom_doorbell_message"] = Mock(final=False)
+    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
+        final=False, frozen=False
+    )
     nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.config_entries.async_set_disabled_by(
