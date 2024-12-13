@@ -45,7 +45,7 @@ class OhmeCoordinator(DataUpdateCoordinator[None]):
         except AuthException as e:
             raise ConfigEntryError("Unable to login to Ohme") from e
         except ApiException as e:
-            raise ConfigEntryError(
+            raise ConfigEntryNotReady(
                 "An unexpected response was returned by the API"
             ) from e
 
