@@ -2623,17 +2623,34 @@ def test_all(module: ModuleType) -> None:
 
 
 @pytest.mark.parametrize(
-    ("constant_name", "constant_value"),
-    [("SUPPORT_BRIGHTNESS", 1), ("SUPPORT_COLOR_TEMP", 2), ("SUPPORT_COLOR", 16)],
+    ("constant_name", "constant_value", "constant_replacement"),
+    [
+        ("SUPPORT_BRIGHTNESS", 1, "supported_color_modes"),
+        ("SUPPORT_COLOR_TEMP", 2, "supported_color_modes"),
+        ("SUPPORT_COLOR", 16, "supported_color_modes"),
+        ("ATTR_COLOR_TEMP", "color_temp", "kelvin equivalent (ATTR_COLOR_TEMP_KELVIN)"),
+        ("ATTR_KELVIN", "kelvin", "ATTR_COLOR_TEMP_KELVIN"),
+        (
+            "ATTR_MIN_MIREDS",
+            "min_mireds",
+            "kelvin equivalent (ATTR_MAX_COLOR_TEMP_KELVIN)",
+        ),
+        (
+            "ATTR_MAX_MIREDS",
+            "max_mireds",
+            "kelvin equivalent (ATTR_MIN_COLOR_TEMP_KELVIN)",
+        ),
+    ],
 )
-def test_deprecated_support_light_constants(
+def test_deprecated_light_constants(
     caplog: pytest.LogCaptureFixture,
     constant_name: str,
-    constant_value: int,
+    constant_value: int | str,
+    constant_replacement: str,
 ) -> None:
-    """Test deprecated format constants."""
+    """Test deprecated light constants."""
     import_and_test_deprecated_constant(
-        caplog, light, constant_name, "supported_color_modes", constant_value, "2026.1"
+        caplog, light, constant_name, constant_replacement, constant_value, "2026.1"
     )
 
 
@@ -2663,3 +2680,61 @@ def test_deprecated_color_mode_constants_enums(
     import_and_test_deprecated_constant_enum(
         caplog, light, entity_feature, "COLOR_MODE_", "2026.1"
     )
+
+
+async def test_deprecated_turn_on_arguments(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test color temp conversion in service calls."""
+    entity = MockLight("Test_ct", STATE_ON, {light.ColorMode.COLOR_TEMP})
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp": 200,
+        },
+        blocking=True,
+    )
+    assert "Got `color_temp` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "kelvin": 5000,
+        },
+        blocking=True,
+    )
+    assert "Got `kelvin` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp_kelvin": 5000,
+        },
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+    assert "argument in `turn_on` service" not in caplog.text
