@@ -7,7 +7,10 @@ rules:
       This integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Split test_flow_usb from the test that tests already_configured, test_flow_usb should also assert the unique_id of the entry
   config-flow:
     status: todo
     comment: |
