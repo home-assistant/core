@@ -15,8 +15,8 @@ from .sensor_entity_description import GrowattSensorEntityDescription
 MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     # Values from 'mix_info' API call
     GrowattSensorEntityDescription(
-        key="mix_statement_of_charge",
-        translation_key="mix_statement_of_charge",
+        key="mix_state_of_charge",
+        translation_key="mix_state_of_charge",
         api_key="capacity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,

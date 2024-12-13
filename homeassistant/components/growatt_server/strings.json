@@ -85,8 +85,8 @@
       "inverter_temperature": {
         "name": "Inverter temperature"
       },
-      "mix_statement_of_charge": {
-        "name": "Statement of charge"
+      "mix_state_of_charge": {
+        "name": "State of charge"
       },
       "mix_battery_charge_today": {
         "name": "Battery charged today"
@@ -457,8 +457,8 @@
       "tlx_solar_production_total": {
         "name": "Lifetime solar production"
       },
-      "tlx_statement_of_charge": {
-        "name": "Statement of charge (SoC)"
+      "tlx_state_of_charge": {
+        "name": "State of charge (SoC)"
       },
       "total_money_today": {
         "name": "Total money today"
