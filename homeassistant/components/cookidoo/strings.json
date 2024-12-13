@@ -24,8 +24,8 @@
         }
       },
       "reauth_confirm": {
-        "title": "Login again to Cookidoo",
-        "description": "Please log in to Cookidoo again to continue using this integration.",
+        "title": "Login again to {cookidoo}",
+        "description": "Please log in to {cookidoo} again to continue using this integration.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
