@@ -1210,7 +1210,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
         "hs_color": None,
         "rgb_color": None,
         "xy_color": None,
-        "max_color_temp_kelvin": 6500,
+        "max_color_temp_kelvin": 6535,
         "max_mireds": 500,
         "min_color_temp_kelvin": 2000,
         "min_mireds": 153,
@@ -1856,7 +1856,7 @@ async def test_light_service_call_color_temp_conversion(hass: HomeAssistant) -> 
     assert state.attributes["min_mireds"] == 153
     assert state.attributes["max_mireds"] == 500
     assert state.attributes["min_color_temp_kelvin"] == 2000
-    assert state.attributes["max_color_temp_kelvin"] == 6500
+    assert state.attributes["max_color_temp_kelvin"] == 6535
 
     state = hass.states.get(entity1.entity_id)
     assert state.attributes["supported_color_modes"] == [light.ColorMode.RGBWW]
