@@ -730,7 +730,7 @@ datapoint==0.9.9
 dbus-fast==2.24.3
 
 # homeassistant.components.debugpy
-debugpy==1.8.8
+debugpy==1.8.11
 
 # homeassistant.components.decora_wifi
 # decora-wifi==1.4
@@ -808,6 +808,9 @@ ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
+
+# homeassistant.components.eheimdigital
+eheimdigital==1.0.3
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
