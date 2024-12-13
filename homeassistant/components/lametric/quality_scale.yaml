@@ -23,7 +23,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
