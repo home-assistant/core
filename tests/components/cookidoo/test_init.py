@@ -35,7 +35,7 @@ async def test_load_unload(
     ("exception", "status"),
     [
         (CookidooRequestException, ConfigEntryState.SETUP_RETRY),
-        (CookidooAuthException, ConfigEntryState.SETUP_RETRY),
+        (CookidooAuthException, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_init_failure(
