@@ -79,6 +79,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 suggested_values=user_input,
             ),
+            description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
         )
 
@@ -99,6 +100,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="language",
             data_schema=vol.Schema(self.LANGUAGE_DATA_SCHEMA),
+            description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
         )
 
