@@ -9,8 +9,8 @@
           "country": "Country"
         },
         "data_description": {
-          "email": "Email used access your Cookidoo account.",
-          "password": "Password used access your Cookidoo account.",
+          "email": "Email used to access your Cookidoo account.",
+          "password": "Password used to access your Cookidoo account.",
           "country": "Pick your language for the Cookidoo content."
         }
       },
