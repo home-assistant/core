@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from energyzero import Electricity, Gas, VatOption
 import voluptuous as vol
@@ -22,11 +22,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
 
-if TYPE_CHECKING:
-    from . import EnergyZeroConfigEntry
-
 from .const import DOMAIN
-from .coordinator import EnergyZeroDataUpdateCoordinator
+from .coordinator import EnergyZeroConfigEntry, EnergyZeroDataUpdateCoordinator
 
 ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
