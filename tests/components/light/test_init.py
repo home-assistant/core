@@ -2614,3 +2614,61 @@ def test_deprecated_color_mode_constants_enums(
     import_and_test_deprecated_constant_enum(
         caplog, light, entity_feature, "COLOR_MODE_", "2026.1"
     )
+
+
+async def test_deprecated_turn_on_arguments(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test color temp conversion in service calls."""
+    entity = MockLight("Test_ct", STATE_ON, {light.ColorMode.COLOR_TEMP})
+    setup_test_component_platform(hass, light.DOMAIN, [entity])
+
+    assert await async_setup_component(
+        hass, light.DOMAIN, {light.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.ColorMode.COLOR_TEMP]
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp": 200,
+        },
+        blocking=True,
+    )
+    assert "Got `color_temp` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "kelvin": 5000,
+        },
+        blocking=True,
+    )
+    assert "Got `kelvin` argument in `turn_on` service" in caplog.text
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+
+    caplog.clear()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": [entity.entity_id],
+            "color_temp_kelvin": 5000,
+        },
+        blocking=True,
+    )
+    _, data = entity.last_call("turn_on")
+    assert data == {"color_temp": 200, "color_temp_kelvin": 5000}
+    assert "argument in `turn_on` service" not in caplog.text

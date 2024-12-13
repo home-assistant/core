@@ -32,7 +32,6 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
@@ -316,20 +315,20 @@ def preprocess_turn_on_alternatives(
             params[ATTR_RGB_COLOR] = (255, 255, 255)
 
     if (mired := params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value, None)) is not None:
-        report_usage(
-            "uses `color_temp` argument in `turn_on` service",
-            breaks_in_ha_version="2026.1",
-            core_behavior=ReportBehavior.LOG,
+        _LOGGER.warning(
+            "Got `color_temp` argument in `turn_on` service, which is deprecated "
+            "and will break in Home Assistant 2026.1, please use "
+            "`color_temp_kelvin` argument"
         )
         kelvin = color_util.color_temperature_mired_to_kelvin(mired)
         params[_DEPRECATED_ATTR_COLOR_TEMP.value] = int(mired)
         params[ATTR_COLOR_TEMP_KELVIN] = int(kelvin)
 
     if (kelvin := params.pop(_DEPRECATED_ATTR_KELVIN.value, None)) is not None:
-        report_usage(
-            "uses `kelvin` argument in `turn_on` service",
-            breaks_in_ha_version="2026.1",
-            core_behavior=ReportBehavior.LOG,
+        _LOGGER.warning(
+            "Got `kelvin` argument in `turn_on` service, which is deprecated "
+            "and will break in Home Assistant 2026.1, please use "
+            "`color_temp_kelvin` argument"
         )
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[_DEPRECATED_ATTR_COLOR_TEMP.value] = int(mired)
