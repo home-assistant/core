@@ -9,22 +9,23 @@ import aiohttp
 import pytest
 import python_otbr_api
 
-from homeassistant.components import hassio, otbr
+from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HASSIO_DATA = hassio.HassioServiceInfo(
+HASSIO_DATA = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},
     name="Silicon Labs Multiprotocol",
     slug="otbr",
     uuid="12345",
 )
-HASSIO_DATA_2 = hassio.HassioServiceInfo(
+HASSIO_DATA_2 = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol_2", "port": 8082},
     name="Silicon Labs Multiprotocol",
     slug="other_addon",

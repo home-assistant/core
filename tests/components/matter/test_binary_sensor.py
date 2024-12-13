@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
+from matter_server.common.models import EventType
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -34,8 +35,6 @@ def binary_sensor_platform() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("matter_devices")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -45,8 +44,6 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
@@ -68,8 +65,6 @@ async def test_occupancy_sensor(
     assert state.state == "off"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
@@ -100,8 +95,6 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
@@ -123,3 +116,34 @@ async def test_battery_sensor(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_optional_sensor_from_featuremap(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test discovery of optional doorsensor in doorlock featuremap."""
+    entity_id = "binary_sensor.mock_door_lock_door"
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # update the feature map to include the optional door sensor feature
+    # and fire a node updated event
+    set_node_attribute(matter_node, 1, 257, 65532, 32)
+    await trigger_subscription_callback(
+        hass, matter_client, event=EventType.NODE_UPDATED, data=matter_node
+    )
+    # this should result in a new binary sensor entity being discovered
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+    # now test the reverse, by removing the feature from the feature map
+    set_node_attribute(matter_node, 1, 257, 65532, 0)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/257/65532", 0)
+    )
+    state = hass.states.get(entity_id)
+    assert state is None

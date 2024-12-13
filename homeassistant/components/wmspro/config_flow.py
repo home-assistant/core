@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import logging
 from typing import Any
 
@@ -38,7 +39,19 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the DHCP discovery step."""
         unique_id = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+
+        entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, unique_id
+        )
+        if entry:
+            try:  # Check if current host is a valid IP address
+                ipaddress.ip_address(entry.data[CONF_HOST])
+            except ValueError:  # Do not touch name-based host
+                return self.async_abort(reason="already_configured")
+            else:  # Update existing host with new IP address
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: discovery_info.ip}
+                )
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if not entry.unique_id and entry.data[CONF_HOST] in (
@@ -71,11 +84,20 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not pong:
                     errors["base"] = "cannot_connect"
                 else:
+                    await hub.refresh()
+                    rooms = set(hub.rooms.keys())
+                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+                        if (
+                            entry.runtime_data
+                            and entry.runtime_data.rooms
+                            and set(entry.runtime_data.rooms.keys()) == rooms
+                        ):
+                            return self.async_abort(reason="already_configured")
                     return self.async_create_entry(title=host, data=user_input)
 
         if self.source == dhcp.DOMAIN:
             discovery_info: DhcpServiceInfo = self.init_data
-            data_values = {CONF_HOST: discovery_info.hostname or discovery_info.ip}
+            data_values = {CONF_HOST: discovery_info.ip}
         else:
             data_values = {CONF_HOST: SUGGESTED_HOST}
 

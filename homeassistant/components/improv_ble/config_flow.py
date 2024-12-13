@@ -120,12 +120,22 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovery_info is not None
 
         service_data = self._discovery_info.service_data
-        improv_service_data = ImprovServiceData.from_bytes(
-            service_data[SERVICE_DATA_UUID]
-        )
+        try:
+            improv_service_data = ImprovServiceData.from_bytes(
+                service_data[SERVICE_DATA_UUID]
+            )
+        except improv_ble_errors.InvalidCommand as err:
+            _LOGGER.warning(
+                "Aborting improv flow, device %s sent invalid improv data: '%s'",
+                self._discovery_info.address,
+                service_data[SERVICE_DATA_UUID].hex(),
+            )
+            raise AbortFlow("invalid_improv_data") from err
+
         if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
             _LOGGER.debug(
-                "Aborting improv flow, device is already provisioned: %s",
+                "Aborting improv flow, device %s is already provisioned: %s",
+                self._discovery_info.address,
                 improv_service_data.state,
             )
             raise AbortFlow("already_provisioned")

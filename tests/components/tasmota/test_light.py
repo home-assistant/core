@@ -1108,7 +1108,7 @@ async def test_sending_mqtt_commands_rgbww(
     )
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=200)
+    await common.async_turn_on(hass, "light.tasmota_test", color_temp_kelvin=5000)
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Power1 ON;NoDelay;CT 200",
@@ -1350,7 +1350,9 @@ async def test_transition(
     assert state.attributes.get("color_temp") == 153
 
     # Set color_temp of the light from 153 to 500 @ 50%: Speed should be 6*2*2=24
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=500, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=2000, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 24;NoDelay;Power1 ON;NoDelay;CT 500",
@@ -1369,7 +1371,9 @@ async def test_transition(
     assert state.attributes.get("color_temp") == 500
 
     # Set color_temp of the light from 500 to 326 @ 50%: Speed should be 6*2*2*2=48->40
-    await common.async_turn_on(hass, "light.tasmota_test", color_temp=326, transition=6)
+    await common.async_turn_on(
+        hass, "light.tasmota_test", color_temp_kelvin=3067, transition=6
+    )
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/Backlog",
         "NoDelay;Fade2 1;NoDelay;Speed2 40;NoDelay;Power1 ON;NoDelay;CT 326",

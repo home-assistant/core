@@ -35,6 +35,9 @@ RUN \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Add go2rtc binary
+COPY --from=ghcr.io/alexxit/go2rtc:latest /usr/local/bin/go2rtc /bin/go2rtc
+
 # Install uv
 RUN pip3 install uv
 

@@ -105,7 +105,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._reauth_entry: ConfigEntry | None = None
         self._host: str = ""
         self._mac: str | None = None
         self._udn: str | None = None
@@ -529,9 +528,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         if entry_data.get(CONF_MODEL) and entry_data.get(CONF_NAME):
             self._title = f"{entry_data[CONF_NAME]} ({entry_data[CONF_MODEL]})"
         else:
@@ -543,22 +539,23 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth."""
         errors = {}
-        assert self._reauth_entry
-        method = self._reauth_entry.data[CONF_METHOD]
+
+        reauth_entry = self._get_reauth_entry()
+        method = reauth_entry.data[CONF_METHOD]
         if user_input is not None:
             if method == METHOD_ENCRYPTED_WEBSOCKET:
                 return await self.async_step_reauth_confirm_encrypted()
             bridge = SamsungTVBridge.get_bridge(
                 self.hass,
                 method,
-                self._reauth_entry.data[CONF_HOST],
+                reauth_entry.data[CONF_HOST],
             )
             result = await bridge.async_try_connect()
             if result == RESULT_SUCCESS:
-                new_data = dict(self._reauth_entry.data)
+                new_data = dict(reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
+                    reauth_entry,
                     data=new_data,
                 )
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
@@ -587,8 +584,9 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth (encrypted method)."""
         errors = {}
-        assert self._reauth_entry
-        await self._async_start_encrypted_pairing(self._reauth_entry.data[CONF_HOST])
+
+        reauth_entry = self._get_reauth_entry()
+        await self._async_start_encrypted_pairing(reauth_entry.data[CONF_HOST])
         assert self._authenticator is not None
 
         if user_input is not None:
@@ -598,9 +596,8 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    data={
-                        **self._reauth_entry.data,
+                    reauth_entry,
+                    data_updates={
                         CONF_TOKEN: token,
                         CONF_SESSION_ID: session_id,
                     },

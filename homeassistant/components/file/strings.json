@@ -18,7 +18,7 @@
         },
         "data_description": {
           "file_path": "The local file path to retrieve the sensor value from",
-          "value_template": "A template to render the the sensors value based on the file content",
+          "value_template": "A template to render the sensor's value based on the file content",
           "unit_of_measurement": "Unit of measurement for the sensor"
         }
       },
