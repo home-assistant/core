@@ -10,7 +10,7 @@ from inelsmqtt.discovery import InelsDiscovery
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import BROKER, BROKER_CONFIG, DEVICES, DOMAIN, LOGGER, OLD_ENTITIES
@@ -70,8 +70,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     mqtt = InelsMqtt(inels_data[BROKER_CONFIG])
     inels_data[BROKER] = mqtt
 
+    # Test connection and check for authentication errors
     conn_result = await hass.async_add_executor_job(inels_data[BROKER].test_connection)
     if isinstance(conn_result, int):  # None -> no error, int -> error code
+        await hass.async_add_executor_job(mqtt.close)
+        if conn_result in (4, 5):
+            raise ConfigEntryAuthFailed("Invalid authentication")
+        if conn_result == 3:
+            raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
         return False
 
     if hass.data.get(DOMAIN) is None:
