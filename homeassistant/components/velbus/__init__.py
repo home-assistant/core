@@ -45,7 +45,7 @@ class VelbusData:
     """Runtime data for the Velbus config entry."""
 
     controller: Velbus
-    connect_task: asyncio.Task
+    scan_task: asyncio.Task
 
 
 async def velbus_scan_task(
@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         raise ConfigEntryNotReady("Cannot connect to Velbus") from error
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
-    entry.runtime_data = VelbusData(controller=controller, connect_task=task)
+    entry.runtime_data = VelbusData(controller=controller, scan_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
 
