@@ -24,10 +24,10 @@ rules:
       (OLD_ENTITIES) in persistent storage rather than runtime_data to handle
       cleanup properly.
   test-before-setup:
-    status: todo
+    status: done
     comment: >
-      async_setup_entry returns False but it can be improved with specific
-      exceptions.
+      Raise "Invalid authentication" and "MQTT Broker is offline or
+      cannot be reached" otherwise, async_setup_entry returns False
   appropriate-polling:
     status: done
     comment: |
