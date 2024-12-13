@@ -870,6 +870,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
+    # We cannot set defaults without causing breaking changes until mireds
+    # are fully removed. Until then, developers can explicitly
+    # use DEFAULT_MIN_KELVIN and DEFAULT_MAX_KELVIN
     _attr_max_color_temp_kelvin: int | None = None
     _attr_min_color_temp_kelvin: int | None = None
     _attr_rgb_color: tuple[int, int, int] | None = None
