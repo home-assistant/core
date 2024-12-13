@@ -3,7 +3,7 @@
 from typing import Any
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
-from eheimdigital.types import LightMode
+from eheimdigital.types import EheimDigitalClientError, LightMode
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
@@ -93,16 +94,22 @@ class EheimDigitalClassicLEDControlLight(
         if ATTR_BRIGHTNESS in kwargs:
             if self._device.light_mode == LightMode.DAYCL_MODE:
                 await self._device.set_light_mode(LightMode.MAN_MODE)
-            await self._device.turn_on(
-                int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
-                self._channel,
-            )
+            try:
+                await self._device.turn_on(
+                    int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
+                    self._channel,
+                )
+            except EheimDigitalClientError as err:
+                raise HomeAssistantError from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if self._device.light_mode == LightMode.DAYCL_MODE:
             await self._device.set_light_mode(LightMode.MAN_MODE)
-        await self._device.turn_off(self._channel)
+        try:
+            await self._device.turn_off(self._channel)
+        except EheimDigitalClientError as err:
+            raise HomeAssistantError from err
 
     def _async_update_attrs(self) -> None:
         light_level = self._device.light_level[self._channel]

@@ -807,7 +807,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.2
+eheimdigital==1.0.3
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
