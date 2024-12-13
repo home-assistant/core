@@ -17,6 +17,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'raum_0',
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': 'http://webcontrol/control',
     'connections': set({
     }),

@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': 'http://1.2.3.4:80',
     'connections': set({
     }),
