@@ -79,7 +79,6 @@ async def test_switch_control_fail(
     mock_bridge,
     mock_api,
     monkeypatch: pytest.MonkeyPatch,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test switch control fail."""
     await init_integration(hass)

@@ -96,7 +96,7 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service_fail(
-    hass: HomeAssistant, mock_bridge, mock_api, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
     """Test set auto off service failed."""
     await init_integration(hass)
