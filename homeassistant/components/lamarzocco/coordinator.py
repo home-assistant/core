@@ -31,7 +31,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Base class for La Marzocco coordinators."""
 
     _default_update_interval = SCAN_INTERVAL
-    device: LaMarzoccoMachine
     config_entry: LaMarzoccoConfigEntry
 
     def __init__(
@@ -39,6 +38,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
+        local_client: LaMarzoccoLocalClient | None = None,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -49,6 +49,8 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=self._default_update_interval,
         )
         self.device = device
+        self.local_connection_configured = local_client is not None
+        self._local_client = local_client
 
     async def _async_update_data(self) -> None:
         """Do the data update."""
@@ -72,18 +74,6 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: LaMarzoccoConfigEntry,
-        device: LaMarzoccoMachine,
-        local_client: LaMarzoccoLocalClient | None = None,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(hass=hass, entry=entry, device=device)
-        self.local_connection_configured = local_client is not None
-        self._local_client = local_client
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
