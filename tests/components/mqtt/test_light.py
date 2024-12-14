@@ -723,14 +723,14 @@ async def test_invalid_state_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 251)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 153
+    assert state.attributes.get("color_temp_kelvin") == 6535
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (54.768, 1.6)
     assert state.attributes.get("xy_color") == (0.325, 0.333)
 
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "")
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 153
+    assert light_state.attributes["color_temp_kelvin"] == 6535
 
 
 @pytest.mark.parametrize(
@@ -939,7 +939,7 @@ async def test_controlling_state_via_topic_with_templates(
         hass, "test_light_rgb/color_temp/status", '{"hello": "300"}'
     )
     state = hass.states.get("light.test")
-    assert state.attributes.get("color_temp") == 300
+    assert state.attributes.get("color_temp_kelvin") == 3333
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
@@ -1160,7 +1160,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 60
-    assert state.attributes.get("color_temp") == 125
+    assert state.attributes.get("color_temp_kelvin") == 8000
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 

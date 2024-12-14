@@ -466,7 +466,7 @@ async def test_turn_on_with_unknown_color_mode_optimistic(
     state = hass.states.get("light.test")
     assert state.attributes.get("color_mode") == light.ColorMode.COLOR_TEMP
     assert state.attributes.get("brightness") == 50
-    assert state.attributes.get("color_temp") == 192
+    assert state.attributes.get("color_temp_kelvin") == 5208
     assert state.state == STATE_ON
 
 
@@ -681,7 +681,7 @@ async def test_controlling_state_via_topic(
         249,
     )  # temp converted to color
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") == 155
+    assert state.attributes.get("color_temp_kelvin") == 6451
     assert state.attributes.get("effect") == "colorloop"
     assert state.attributes.get("xy_color") == (0.328, 0.333)  # temp converted to color
     assert state.attributes.get("hs_color") == (44.098, 2.43)  # temp converted to color
@@ -890,7 +890,7 @@ async def test_controlling_state_via_topic2(
     )
     state = hass.states.get("light.test")
     assert state.attributes.get("color_mode") == "color_temp"
-    assert state.attributes.get("color_temp") == 155
+    assert state.attributes.get("color_temp_kelvin") == 6451
 
     # White
     async_fire_mqtt_message(
@@ -1016,7 +1016,7 @@ async def test_controlling_the_state_with_legacy_color_handling(
         assert state.state == STATE_ON
         assert state.attributes.get("brightness") == 255
         assert state.attributes.get("color_mode") == "color_temp"
-        assert state.attributes.get("color_temp") == 353
+        assert state.attributes.get("color_temp_kelvin") == 2832
         assert state.attributes.get("effect") is None
         assert state.attributes.get("hs_color") == (28.125, 61.661)
         assert state.attributes.get("rgb_color") == (255, 171, 98)
@@ -1099,7 +1099,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("color_mode") == light.ColorMode.COLOR_TEMP
-    assert state.attributes.get("color_temp") == 90
+    assert state.attributes.get("color_temp_kelvin") == 11111
 
     await common.async_turn_off(hass, "light.test")
 
@@ -2281,7 +2281,7 @@ async def test_invalid_values(
     )
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 100
+    assert state.attributes.get("color_temp_kelvin") == 10000
 
     # Bad color temperature
     async_fire_mqtt_message(
@@ -2291,7 +2291,7 @@ async def test_invalid_values(
     # Color temperature should not have changed
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
-    assert state.attributes.get("color_temp") == 100
+    assert state.attributes.get("color_temp_kelvin") == 10000
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
