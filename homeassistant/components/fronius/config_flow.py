@@ -52,14 +52,9 @@ async def validate_host(
     try:
         inverter_info = await fronius.inverter_info()
         first_inverter = next(inverter for inverter in inverter_info["inverters"])
-    except FroniusError as err:
+    except (FroniusError, StopIteration) as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    except StopIteration as err:
-        raise CannotConnect(
-            translation_domain=DOMAIN,
-            translation_key="no_supported_device_found",
-        ) from err
     first_inverter_uid: str = first_inverter["unique_id"]["value"]
     return first_inverter_uid, FroniusConfigEntryData(
         host=host,
