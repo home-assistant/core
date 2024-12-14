@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "description": "Configure your Ohme account.",
+        "description": "Configure your Ohme account. If you signed up to Ohme with a third party account like Google, please reset your password via Ohme before configuring this integration.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Enter the email address associated with your Ohme account. This should not be a social account (eg. Google).",
+          "email": "Enter the email address associated with your Ohme account.",
           "password": "Enter the password for your Ohme account"
         }
       }

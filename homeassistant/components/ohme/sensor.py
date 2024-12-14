@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from ohme import ChargerStatus, OhmeApiClient
 
@@ -18,8 +17,7 @@ from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OhmeConfigEntry, OhmeRuntimeData
-from .coordinator import OhmeBaseCoordinator
+from . import OhmeConfigEntry
 from .entity import OhmeEntity
 
 PARALLEL_UPDATES = 0
@@ -29,14 +27,11 @@ PARALLEL_UPDATES = 0
 class OhmeSensorDescription(SensorEntityDescription):
     """Class describing Ohme sensor entities."""
 
-    value_fn: Callable[[OhmeApiClient], Any]
+    value_fn: Callable[[OhmeApiClient], str | int | float]
     is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
-    coordinator_fn: Callable[[OhmeRuntimeData], OhmeBaseCoordinator] = (
-        lambda data: data.charge_session_coordinator
-    )
 
 
-SENSOR_DESCRIPTIONS = [
+SENSOR_CHARGE_SESSION = [
     OhmeSensorDescription(
         key="status",
         translation_key="status",
@@ -49,15 +44,6 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda client: client.power.amps,
-    ),
-    OhmeSensorDescription(
-        key="ct_current",
-        translation_key="ct_current",
-        device_class=SensorDeviceClass.CURRENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda client: client.power.ct_amps,
-        is_supported_fn=lambda client: client.ct_connected,
-        coordinator_fn=lambda data: data.advanced_settings_coordinator,
     ),
     OhmeSensorDescription(
         key="power",
@@ -78,6 +64,17 @@ SENSOR_DESCRIPTIONS = [
     ),
 ]
 
+SENSOR_ADVANCED_SETTINGS = [
+    OhmeSensorDescription(
+        key="ct_current",
+        translation_key="ct_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda client: client.power.ct_amps,
+        is_supported_fn=lambda client: client.ct_connected,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -86,18 +83,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     coordinators = config_entry.runtime_data
+    coordinator_map = [
+        (SENSOR_CHARGE_SESSION, coordinators.charge_session_coordinator),
+        (SENSOR_ADVANCED_SETTINGS, coordinators.advanced_settings_coordinator),
+    ]
 
-    async_add_entities(
-        OhmeSensor(description.coordinator_fn(coordinators), description)
-        for description in SENSOR_DESCRIPTIONS
-        if description.is_supported_fn(description.coordinator_fn(coordinators).client)
-    )
+    for entities, coordinator in coordinator_map:
+        async_add_entities(
+            OhmeSensor(coordinator, description)
+            for description in entities
+            if description.is_supported_fn(coordinator.client)
+        )
 
 
 class OhmeSensor(OhmeEntity, SensorEntity):
     """Generic sensor for Ohme."""
 
+    entity_description: OhmeSensorDescription
+
     @property
-    def native_value(self):
+    def native_value(self) -> str | int | float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)
