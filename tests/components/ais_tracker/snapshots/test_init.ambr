@@ -1,0 +1,148 @@
+# serializer version: 1
+# name: test_init[device_tracker.211517950]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '211517950',
+      'gps_accuracy': 0,
+      'latitude': 51.010438,
+      'longitude': 13.862315,
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.211517950',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---
+# name: test_init[sensor.211517950_course]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '211517950 Course',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_course',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36.4',
+  })
+# ---
+# name: test_init[sensor.211517950_heading]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '211517950 Heading',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_heading',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_init[sensor.211517950_maneuver]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '211517950 Maneuver',
+      'options': list([
+        'NotAvailable',
+        'NoSpecialManeuver',
+        'SpecialManeuver',
+        'UNDEFINED',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_maneuver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'NotAvailable',
+  })
+# ---
+# name: test_init[sensor.211517950_speed]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speed',
+      'friendly_name': '211517950 Speed',
+      'unit_of_measurement': <UnitOfSpeed.KNOTS: 'kn'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.19',
+  })
+# ---
+# name: test_init[sensor.211517950_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': '211517950 Status',
+      'options': list([
+        'UnderWayUsingEngine',
+        'AtAnchor',
+        'NotUnderCommand',
+        'RestrictedManoeuverability',
+        'ConstrainedByHerDraught',
+        'Moored',
+        'Aground',
+        'EngagedInFishing',
+        'UnderWaySailing',
+        'ReservedFutureAmendmentHSC',
+        'ReservedFutureAmendmentWIG',
+        'PowerDrivenVesselTowingAstern',
+        'PowerDrivenVesselPushingAhead',
+        'ReservedFutureUse',
+        'AISSARTActive',
+        'Undefined',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'UnderWayUsingEngine',
+  })
+# ---
+# name: test_init[sensor.211517950_turn]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '211517950 Turn',
+      'unit_of_measurement': '°/min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.211517950_turn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_init[zone.home]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'editable': True,
+      'friendly_name': 'test home',
+      'icon': 'mdi:home',
+      'latitude': 32.87336,
+      'longitude': -117.22743,
+      'passive': False,
+      'persons': list([
+      ]),
+      'radius': 100,
+    }),
+    'context': <ANY>,
+    'entity_id': 'zone.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
