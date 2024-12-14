@@ -4,7 +4,13 @@ rules:
     status: todo
     comment: Some fields missing data_description in the option flow.
   brands: done
-  dependency-transparency: todo
+  dependency-transparency:
+    status: todo
+    comment: |
+      This depends on the legacy (deprecated) oauth libraries for device
+      auth (no longer recommended auth). Google publishes to pypi using
+      an internal build system. We need to either revisit approach or
+      revisit our stance on this.
   common-modules: done
   has-entity-name: done
   action-setup:
