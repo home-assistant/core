@@ -252,7 +252,6 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.github
-# homeassistant.components.iron_os
 aiogithubapi==24.6.0
 
 # homeassistant.components.guardian
