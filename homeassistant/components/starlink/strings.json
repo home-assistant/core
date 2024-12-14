@@ -42,9 +42,6 @@
       },
       "unexpected_location": {
         "name": "Unexpected location"
-      },
-      "connected": {
-        "name": "Connected"
       }
     },
     "device_tracker": {
