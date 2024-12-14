@@ -9,6 +9,12 @@
           'hostname': 'WifiDevice0',
           'type': 'laptop',
         }),
+        dict({
+          'connected': True,
+          'connection_type': 'lan',
+          'hostname': 'WifiDevice0',
+          'type': 'desktop',
+        }),
       ]),
       'last_exception': None,
       'last_update success': True,
