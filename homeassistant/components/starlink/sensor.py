@@ -158,6 +158,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="status",
         translation_key="status",
+        icon="mdi:satellite-uplink",
         value_fn=lambda data: data.status["state"],
     ),
 )
