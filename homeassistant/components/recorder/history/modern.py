@@ -15,6 +15,7 @@ from sqlalchemy import (
     and_,
     func,
     lambda_stmt,
+    lateral,
     literal,
     select,
     union_all,
@@ -559,6 +560,7 @@ def _get_start_time_state_for_entities_stmt(
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
+    nested_metadata_ids = func.unnest(metadata_ids).alias("metadata_id").table_valued()
     stmt = (
         _stmt_and_join_attributes_for_start_state(
             no_attributes, include_last_changed, False
@@ -570,12 +572,23 @@ def _get_start_time_state_for_entities_stmt(
                         States.metadata_id.label("max_metadata_id"),
                         func.max(States.last_updated_ts).label("max_last_updated"),
                     )
-                    .filter(
-                        (States.last_updated_ts >= run_start_ts)
-                        & (States.last_updated_ts < epoch_time)
-                        & States.metadata_id.in_(metadata_ids)
+                    .where(nested_metadata_ids)
+                    .join(
+                        lateral(
+                            select(
+                                func.max(States.last_updated_ts).label(
+                                    "last_updated_ts"
+                                ),
+                            ).where(
+                                (
+                                    States.metadata_id
+                                    == nested_metadata_ids.c.metadata_id
+                                )
+                                & (States.last_updated_ts >= run_start_ts)
+                                & (States.last_updated_ts < epoch_time)
+                            )
+                        )
                     )
-                    .group_by(States.metadata_id)
                     .subquery()
                 )
             ),
