@@ -114,4 +114,10 @@ BINARY_SENSORS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
     ),
+    StarlinkBinarySensorEntityDescription(
+        key="connected",
+        translation_key="connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: (data.status["state"] == "CONNECTED"),
+    ),
 ]
