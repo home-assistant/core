@@ -88,12 +88,12 @@ async def async_setup_entry(
         (SENSOR_ADVANCED_SETTINGS, coordinators.advanced_settings_coordinator),
     ]
 
-    for entities, coordinator in coordinator_map:
-        async_add_entities(
-            OhmeSensor(coordinator, description)
-            for description in entities
-            if description.is_supported_fn(coordinator.client)
-        )
+    async_add_entities(
+        OhmeSensor(coordinator, description)
+        for entities, coordinator in coordinator_map
+        for description in entities
+        if description.is_supported_fn(coordinator.client)
+    )
 
 
 class OhmeSensor(OhmeEntity, SensorEntity):
