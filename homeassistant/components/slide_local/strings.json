@@ -15,15 +15,6 @@
       "zeroconf_confirm": {
         "title": "Confirm setup for Slide",
         "description": "Do you want to setup {host}?"
-      },
-      "reconfigure": {
-        "description": "Reconfigure the Slide device",
-        "data": {
-          "invert_position": "Invert position"
-        },
-        "data_description": {
-          "invert_position": "Invert the position of your slide cover."
-        }
       }
     },
     "abort": {
@@ -34,6 +25,20 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Slide",
+        "description": "Reconfigure the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Invert the position of your slide cover."
+        }
+      }
     }
   },
   "exceptions": {
