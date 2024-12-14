@@ -19,10 +19,7 @@ from .helpers import async_connect_to_controller
 _LOGGER = logging.getLogger(__name__)
 
 
-class ZimiConfigEntry(ConfigEntry):
-    """Zimi ConfigEntry with correct runtime_data type."""
-
-    runtime_data: ControlPoint
+type ZimiConfigEntry = ConfigEntry[ControlPoint]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool:
