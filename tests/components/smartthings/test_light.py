@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -101,8 +101,8 @@ async def test_entity_state(hass: HomeAssistant, light_devices) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert ATTR_HS_COLOR not in state.attributes[ATTR_HS_COLOR]
-    assert isinstance(state.attributes[ATTR_COLOR_TEMP], int)
-    assert state.attributes[ATTR_COLOR_TEMP] == 222
+    assert isinstance(state.attributes[ATTR_COLOR_TEMP_KELVIN], int)
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4500
 
 
 async def test_entity_and_device_attributes(
@@ -273,7 +273,7 @@ async def test_turn_on_with_color_temp(hass: HomeAssistant, light_devices) -> No
     await hass.services.async_call(
         "light",
         "turn_on",
-        {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_COLOR_TEMP: 300},
+        {ATTR_ENTITY_ID: "light.color_dimmer_2", ATTR_COLOR_TEMP_KELVIN: 3333},
         blocking=True,
     )
     # This test schedules and update right after the call
@@ -282,7 +282,7 @@ async def test_turn_on_with_color_temp(hass: HomeAssistant, light_devices) -> No
     state = hass.states.get("light.color_dimmer_2")
     assert state is not None
     assert state.state == "on"
-    assert state.attributes[ATTR_COLOR_TEMP] == 300
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3333
 
 
 async def test_update_from_signal(hass: HomeAssistant, device_factory) -> None:
