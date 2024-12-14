@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.35.0
+PyViCare==2.38.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -730,7 +730,7 @@ datapoint==0.9.9
 dbus-fast==2.24.3
 
 # homeassistant.components.debugpy
-debugpy==1.8.8
+debugpy==1.8.11
 
 # homeassistant.components.decora_wifi
 # decora-wifi==1.4
@@ -808,6 +808,9 @@ ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
+
+# homeassistant.components.eheimdigital
+eheimdigital==1.0.3
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
@@ -2902,7 +2905,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.8.0
+uiprotect==7.0.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3052,7 +3055,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.2
+yalexs-ble==2.5.4
 
 # homeassistant.components.august
 # homeassistant.components.yale

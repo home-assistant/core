@@ -47,7 +47,7 @@ class SlideCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_version = entry.data[CONF_API_VERSION]
         self.mac = entry.data[CONF_MAC]
         self.host = entry.data[CONF_HOST]
-        self.password = entry.data[CONF_PASSWORD]
+        self.password = entry.data[CONF_PASSWORD] if self.api_version == 1 else ""
 
     async def _async_setup(self) -> None:
         """Do initialization logic for Slide coordinator."""
