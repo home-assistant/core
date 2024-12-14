@@ -2,21 +2,46 @@
 
 import logging
 
-from qbusmqttapi.factory import QbusMqttTopicFactory
-
-from homeassistant.components.mqtt import async_wait_for_mqtt_client, client as mqtt
+from homeassistant.components.mqtt import async_wait_for_mqtt_client
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
-from .coordinator import QbusConfigEntry, QbusDataCoordinator, QbusRuntimeData
-from .qbus import QbusConfigContainer
+from .const import DOMAIN, PLATFORMS
+from .coordinator import (
+    QBUS_KEY,
+    QbusConfigCoordinator,
+    QbusConfigEntry,
+    QbusDataCoordinator,
+    QbusRuntimeData,
+)
 
 _LOGGER = logging.getLogger(__name__)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Qbus integration.
+
+    We set up a single coordinator for managing Qbus config updates. The
+    config update contains the configuration for all controllers (and
+    config entries). This avoids having each device requesting and managing
+    the config on its own.
+    """
+    _LOGGER.debug("Loading integration")
+
+    if not await async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration not available")
+        return False
+
+    config_coordinator = QbusConfigCoordinator.get_or_create(hass)
+    await config_coordinator.async_subscribe_to_config()
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
     """Set up Qbus from a config entry."""
-    _LOGGER.debug("Loading entry %s", entry.entry_id)
+    _LOGGER.debug("%s - Loading entry", entry.unique_id)
 
     if not await async_wait_for_mqtt_client(hass):
         _LOGGER.error("MQTT integration not available")
@@ -27,16 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Subscribe to Qbus config topic
-    config_topic = QbusMqttTopicFactory().get_config_topic()
-    _LOGGER.debug("Subscribing to %s", config_topic)
-    entry.async_on_unload(
-        await mqtt.async_subscribe(hass, config_topic, coordinator.config_received)
-    )
+    # Get current config
+    config = await QbusConfigCoordinator.get_or_create(
+        hass
+    ).async_get_or_request_config()
 
-    # Request Qbus config
-    config = await QbusConfigContainer.async_get_or_request_config(hass)
-
+    # Update the device
     if config:
         await coordinator.async_update_device_config(config)
 
@@ -45,15 +66,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading entry %s", entry.entry_id)
+    _LOGGER.debug("%s - Unloading entry", entry.unique_id)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry.runtime_data.coordinator.shutdown()
+        cleanup(hass, entry)
 
     return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Remove a config entry."""
-    _LOGGER.debug("Removing entry %s", entry.entry_id)
-    entry.runtime_data.coordinator.shutdown()
+    _LOGGER.debug("%s - Removing entry", entry.unique_id)
+    cleanup(hass, entry)
+
+
+def cleanup(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
+    """Shutdown if no more entries are loaded."""
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    count = len(entries)
+
+    # During unloading of the (last) entry, it is not marked as unloaded yet. So
+    # we check if the last one left is the same as the entry being passed (i.e. the
+    # one that is being unloaded).
+    if (count == 0 or (count == 1 and entries[0].entry_id == entry.entry_id)) and (
+        config_coordinator := hass.data.get(QBUS_KEY)
+    ):
+        config_coordinator.shutdown()

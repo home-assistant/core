@@ -7,7 +7,7 @@ from qbusmqttapi.state import QbusMqttGatewayState
 
 from homeassistant.components.qbus.config_flow import QbusFlowHandler
 from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL_NUMBER
-from homeassistant.components.qbus.qbus import QbusConfigContainer
+from homeassistant.components.qbus.coordinator import QbusConfigCoordinator
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -183,7 +183,7 @@ async def test_handle_config_topic(
             return_value=QbusDiscovery({"devices": [], "app": "UbieLite"}),
         ),
         patch.object(
-            QbusConfigContainer, "store_config", return_value=None, autospec=True
+            QbusConfigCoordinator, "store_config", return_value=None, autospec=True
         ) as mock_store,
         patch("homeassistant.components.mqtt.client.async_publish") as mock_publish,
     ):
@@ -209,7 +209,7 @@ async def test_handle_device_topic_success(
 
     with (
         patch.object(
-            QbusConfigContainer,
+            QbusConfigCoordinator,
             "async_get_or_request_config",
             return_value=mock_qbus_config,
             autospec=True,
@@ -235,7 +235,7 @@ async def test_handle_device_topic_missing_config(
     """Test handling of device topic when config is missing."""
     with (
         patch.object(
-            QbusConfigContainer,
+            QbusConfigCoordinator,
             "async_get_or_request_config",
             return_value=None,
         ) as mock_get_config,
@@ -257,8 +257,9 @@ async def test_handle_device_topic_device_not_found(
     mock_qbus_config = MagicMock(spec=QbusDiscovery)
     mock_qbus_config.get_device_by_id.return_value = None
 
-    with patch(
-        "homeassistant.components.qbus.config_flow.QbusConfigContainer.async_get_or_request_config",
+    with patch.object(
+        QbusConfigCoordinator,
+        "async_get_or_request_config",
         return_value=mock_qbus_config,
     ):
         result = await qbus_config_flow._async_handle_device_topic(

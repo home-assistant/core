@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import CONF_ID, CONF_SERIAL_NUMBER, DOMAIN
-from .qbus import QbusConfigContainer
+from .coordinator import QbusConfigCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         qbus_config = self._message_factory.parse_discovery(discovery_info.payload)
 
         if qbus_config is not None:
-            QbusConfigContainer.store_config(self.hass, qbus_config)
+            QbusConfigCoordinator.get_or_create(self.hass).store_config(qbus_config)
 
             _LOGGER.debug("Requesting device states")
             device_ids = [x.id for x in qbus_config.devices]
@@ -125,7 +125,9 @@ class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         _LOGGER.debug("Discovering device")
-        qbus_config = await QbusConfigContainer.async_get_or_request_config(self.hass)
+        qbus_config = await QbusConfigCoordinator.get_or_create(
+            self.hass
+        ).async_get_or_request_config()
 
         if qbus_config is None:
             _LOGGER.error("Qbus config not ready")
