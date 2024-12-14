@@ -25,8 +25,7 @@ from .const import DOMAIN
 from .helpers import entities_may_have_state_changes_after, has_states_before
 
 CONF_ORDER = "use_include_order"
-
-_ONE_DAY = timedelta(days=1)
+ONE_DAY = timedelta(days=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -44,7 +43,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the history hooks."""
+    """Set up the history integration.
+
+    This registers HTTP endpoints and websocket APIs for retrieving
+    and managing historical state data from the recorder component.
+    """
     hass.http.register_view(HistoryPeriodView())
     frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
     websocket_api.async_setup(hass)
@@ -52,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class HistoryPeriodView(HomeAssistantView):
-    """Handle history period requests."""
+    """Handle requests for historical state data."""
 
     url = "/api/history/period"
     name = "api:history:view-period"
@@ -61,15 +64,26 @@ class HistoryPeriodView(HomeAssistantView):
     async def get(
         self, request: web.Request, datetime: str | None = None
     ) -> web.Response:
-        """Return history over a period of time."""
-        datetime_ = None
+        """Fetch historical state data for specified entities.
+
+        Args:
+            request (web.Request): The HTTP request with query parameters.
+            datetime (str | None): Optional datetime string from the URL.
+
+        Returns:
+            web.Response: JSON response containing historical state data or error messages.
+
+        """
+        datetime_parsed = None
         query = request.query
 
-        if datetime and (datetime_ := dt_util.parse_datetime(datetime)) is None:
+        # Parse datetime from the URL
+        if datetime and (datetime_parsed := dt_util.parse_datetime(datetime)) is None:
             return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
 
-        if not (entity_ids_str := query.get("filter_entity_id")) or not (
-            entity_ids := entity_ids_str.strip().lower().split(",")
+        # Extract and validate entity IDs from query parameters
+        if not (entity_ids_raw := query.get("filter_entity_id")) or not (
+            entity_ids := entity_ids_raw.strip().lower().split(",")
         ):
             return self.json_message(
                 "filter_entity_id is missing", HTTPStatus.BAD_REQUEST
@@ -83,83 +97,95 @@ class HistoryPeriodView(HomeAssistantView):
                     "Invalid filter_entity_id", HTTPStatus.BAD_REQUEST
                 )
 
+        # Determine start and end times for fetching history
         now = dt_util.utcnow()
-        if datetime_:
-            start_time = dt_util.as_utc(datetime_)
+        if datetime_parsed:
+            start_time = dt_util.as_utc(datetime_parsed)
         else:
-            start_time = now - _ONE_DAY
+            start_time = now - ONE_DAY
 
         if start_time > now:
             return self.json([])
 
-        if end_time_str := query.get("end_time"):
-            if end_time := dt_util.parse_datetime(end_time_str):
+        if end_time_raw := query.get("end_time"):
+            if end_time := dt_util.parse_datetime(end_time_raw):
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
         else:
-            end_time = start_time + _ONE_DAY
+            end_time = start_time + ONE_DAY
 
-        include_start_time_state = "skip_initial_state" not in query
+        # Determine additional query options
+        include_initial_state = "skip_initial_state" not in query
         significant_changes_only = query.get("significant_changes_only", "1") != "0"
+        minimal_response = "minimal_response" in query
+        exclude_attributes = "no_attributes" in query
 
-        minimal_response = "minimal_response" in request.query
-        no_attributes = "no_attributes" in request.query
-
+        # If there are no states before end_time or no significant changes, return an empty response
         if (
-            # has_states_before will return True if there are states older than
-            # end_time. If it's false, we know there are no states in the
-            # database up until end_time.
             (end_time and not has_states_before(hass, end_time))
-            or not include_start_time_state
+            or not include_initial_state
             and entity_ids
             and not entities_may_have_state_changes_after(
-                hass, entity_ids, start_time, no_attributes
+                hass, entity_ids, start_time, exclude_attributes
             )
         ):
             return self.json([])
 
+        # Fetch and return significant states from the database
         return cast(
             web.Response,
             await get_instance(hass).async_add_executor_job(
-                self._sorted_significant_states_json,
+                self._fetch_significant_states,
                 hass,
                 start_time,
                 end_time,
                 entity_ids,
-                include_start_time_state,
+                include_initial_state,
                 significant_changes_only,
                 minimal_response,
-                no_attributes,
+                exclude_attributes,
             ),
         )
 
-    def _sorted_significant_states_json(
+    def _fetch_significant_states(
         self,
         hass: HomeAssistant,
         start_time: dt,
         end_time: dt,
         entity_ids: list[str],
-        include_start_time_state: bool,
+        include_initial_state: bool,
         significant_changes_only: bool,
         minimal_response: bool,
-        no_attributes: bool,
+        exclude_attributes: bool,
     ) -> web.Response:
-        """Fetch significant stats from the database as json."""
+        """Retrieve significant state changes from the database.
+
+        Args:
+            hass (HomeAssistant): The Home Assistant instance.
+            start_time (dt): The start time for the query.
+            end_time (dt): The end time for the query.
+            entity_ids (list[str]): List of entity IDs to query.
+            include_initial_state (bool): Whether to include the initial state.
+            significant_changes_only (bool): Whether to include only significant changes.
+            minimal_response (bool): Whether to return minimal response data.
+            exclude_attributes (bool): Whether to exclude attributes.
+
+        Returns:
+            web.Response: JSON response containing significant state changes.
+
+        """
         with session_scope(hass=hass, read_only=True) as session:
-            return self.json(
-                list(
-                    history.get_significant_states_with_session(
-                        hass,
-                        session,
-                        start_time,
-                        end_time,
-                        entity_ids,
-                        None,
-                        include_start_time_state,
-                        significant_changes_only,
-                        minimal_response,
-                        no_attributes,
-                    ).values()
-                )
+            significant_states = history.get_significant_states_with_session(
+                hass,
+                session,
+                start_time,
+                end_time,
+                entity_ids,
+                None,
+                include_initial_state,
+                significant_changes_only,
+                minimal_response,
+                exclude_attributes,
             )
+            return self.json(list(significant_states.values()))
