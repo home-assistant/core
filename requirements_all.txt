@@ -1468,7 +1468,7 @@ nextdns==4.0.0
 nibe==2.14.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.10
+nice-go==1.0.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -2905,7 +2905,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.8.0
+uiprotect==7.0.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
