@@ -22,7 +22,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: HOST,
             CONF_API_VERSION: 2,
-            "mac": "12:34:56:78:90:ab",
             CONF_MAC: "12:34:56:78:90:ab",
         },
         options={
