@@ -2,25 +2,37 @@
   "config": {
     "step": {
       "user": {
-        "title": "Login to Cookidoo",
+        "title": "Login to {cookidoo}",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
           "country": "Country"
         },
         "data_description": {
-          "email": "Email used access your Cookidoo account.",
-          "password": "Password used access your Cookidoo account.",
-          "country": "Pick your language for the Cookidoo content."
+          "email": "Email used to access your {cookidoo} account.",
+          "password": "Password used to access your {cookidoo} account.",
+          "country": "Pick your language for the {cookidoo} content."
         }
       },
       "language": {
-        "title": "Login to Cookidoo",
+        "title": "Set language for {cookidoo}",
         "data": {
           "language": "[%key:common::config_flow::data::language%]"
         },
         "data_description": {
-          "language": "Pick your language for the Cookidoo content."
+          "language": "Pick your language for the {cookidoo} content."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Login again to {cookidoo}",
+        "description": "Please log in to {cookidoo} again to continue using this integration.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::cookidoo::config::step::user::data_description::email%]",
+          "password": "[%key:component::cookidoo::config::step::user::data_description::password%]"
         }
       }
     },

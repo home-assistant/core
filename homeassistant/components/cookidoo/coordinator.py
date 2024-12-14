@@ -63,7 +63,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 translation_key="setup_request_exception",
             ) from e
         except CookidooAuthException as e:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
                 translation_placeholders={
