@@ -268,7 +268,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.1.1
+aiolifx==1.1.2
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
