@@ -15,6 +15,15 @@
       "zeroconf_confirm": {
         "title": "Confirm setup for Slide",
         "description": "Do you want to setup {host}?"
+      },
+      "reconfigure": {
+        "description": "Reconfigure the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Invert the position of your slide cover."
+        }
       }
     },
     "abort": {
