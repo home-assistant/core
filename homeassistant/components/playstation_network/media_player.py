@@ -36,9 +36,14 @@ async def async_setup_entry(
                 username,
             )
             return
-        async_add_entities([MediaPlayer(coordinator)])
 
-    coordinator.async_add_listener(add_entities)
+        async_add_entities(
+            MediaPlayer(coordinator, platform)
+            for platform in coordinator.data.registered_platforms
+        )
+        remove_listener()
+
+    remove_listener = coordinator.async_add_listener(add_entities)
     add_entities()
 
 
@@ -54,46 +59,56 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     _attr_translation_key = "playstation"
     _attr_media_content_type = MediaType.GAME
 
-    def __init__(self, coordinator: PlaystationNetworkCoordinator) -> None:
+    def __init__(
+        self, coordinator: PlaystationNetworkCoordinator, platform: str
+    ) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform}_{self.entity_description.key}"
+        self._active_platform = self.coordinator.data.platform.get("platform", "")
+        self._media_player_platform = platform
 
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
-        match self.coordinator.data.platform.get("onlineStatus", ""):
-            case "online":
-                if (
-                    self.coordinator.data.available is True
-                    and self.coordinator.data.title_metadata.get("npTitleId")
-                    is not None
-                ):
-                    return MediaPlayerState.PLAYING
-                return MediaPlayerState.ON
-            case "offline":
-                return MediaPlayerState.OFF
-            case _:
-                return MediaPlayerState.OFF
+        if self._active_platform == self._media_player_platform:
+            match self.coordinator.data.platform.get("onlineStatus", ""):
+                case "online":
+                    if (
+                        self.coordinator.data.available is True
+                        and self.coordinator.data.title_metadata.get("npTitleId")
+                        is not None
+                    ):
+                        return MediaPlayerState.PLAYING
+                    return MediaPlayerState.ON
+                case "offline":
+                    return MediaPlayerState.OFF
+                case _:
+                    return MediaPlayerState.OFF
+        return MediaPlayerState.OFF
 
     @property
     def name(self) -> str:
         """Name getter."""
-        return f"{self.coordinator.data.platform.get('platform',"").upper()} Console"
+        return f"{self._media_player_platform.upper()} Console"
 
     @property
     def media_title(self) -> str | None:
         """Media title getter."""
-        if self.coordinator.data.title_metadata.get("npTitleId"):
+        if (
+            self.coordinator.data.title_metadata.get("npTitleId")
+            and self._active_platform == self._media_player_platform
+        ):
             return self.coordinator.data.title_metadata.get("titleName")
         return None
 
     @property
     def media_image_url(self) -> str | None:
         """Media image url getter."""
-        if self.coordinator.data.title_metadata.get("npTitleId"):
+        if (
+            self.coordinator.data.title_metadata.get("npTitleId")
+            and self._active_platform == self._media_player_platform
+        ):
             title = self.coordinator.data.title_metadata
             if title.get("format", "").casefold() == "ps5":
                 return title.get("conceptIconUrl")
@@ -105,4 +120,7 @@ class MediaPlayer(PlaystationNetworkEntity, MediaPlayerEntity):
     @property
     def is_on(self) -> bool:
         """Is user available on the Playstation Network."""
-        return self.coordinator.data.available is True
+        return (
+            self.coordinator.data.available is True
+            and self._active_platform == self._media_player_platform
+        )
