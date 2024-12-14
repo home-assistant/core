@@ -64,7 +64,7 @@ async def test_user(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 2
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -97,7 +97,7 @@ async def test_user_api_1(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 1
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -144,7 +144,7 @@ async def test_user_api_error(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 1
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -260,7 +260,7 @@ async def test_abort_if_already_setup(
 ) -> None:
     """Test we abort if the device is already setup."""
 
-    MockConfigEntry(domain=DOMAIN, unique_id="30:00:00:00:00:00").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="12:34:56:78:90:ab").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
