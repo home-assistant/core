@@ -13,10 +13,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type OhmeConfigEntry = ConfigEntry[list[DataUpdateCoordinator]]
+type OhmeConfigEntry = ConfigEntry[list[OhmeBaseCoordinator]]
 
 
-class OhmeChargeSessionCoordinator(DataUpdateCoordinator[None]):
+class OhmeBaseCoordinator(DataUpdateCoordinator[None]):
+    """Base for all Ohme coordinators."""
+
+    client: OhmeApiClient
+
+
+class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
     """Coordinator to pull all updates from the API."""
 
     config_entry: OhmeConfigEntry
@@ -45,7 +51,7 @@ class OhmeChargeSessionCoordinator(DataUpdateCoordinator[None]):
             ) from e
 
 
-class OhmeAdvancedSettingsCoordinator(DataUpdateCoordinator[None]):
+class OhmeAdvancedSettingsCoordinator(OhmeBaseCoordinator):
     """Coordinator to pull settings and charger state from the API."""
 
     config_entry: OhmeConfigEntry

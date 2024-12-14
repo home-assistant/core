@@ -17,7 +17,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .coordinator import (
     OhmeAdvancedSettingsCoordinator,
@@ -35,7 +34,7 @@ class OhmeSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[OhmeApiClient], Any]
     is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
-    coordinator: DataUpdateCoordinator
+    coordinator: type
 
 
 SENSOR_DESCRIPTIONS = [
