@@ -137,6 +137,7 @@ homeassistant.components.co2signal.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
+homeassistant.components.cookidoo.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
@@ -169,6 +170,7 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
+homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elevenlabs.*

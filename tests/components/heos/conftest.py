@@ -164,6 +164,25 @@ def discovery_data_fixture() -> dict:
     )
 
 
+@pytest.fixture(name="discovery_data_bedroom")
+def discovery_data_fixture_bedroom() -> dict:
+    """Return mock discovery data for testing."""
+    return ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://127.0.0.2:60006/upnp/desc/aios_device/aios_device.xml",
+        upnp={
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
+            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ssdp.ATTR_UPNP_SERIAL: None,
+            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        },
+    )
+
+
 @pytest.fixture(name="quick_selects")
 def quick_selects_fixture() -> dict[int, str]:
     """Create a dict of quick selects for testing."""
