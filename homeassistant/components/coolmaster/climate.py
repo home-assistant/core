@@ -11,6 +11,11 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
+
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
+    FAN_AUTO,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -31,7 +36,16 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-FAN_MODES = ["low", "med", "high", "auto"]
+CM_TO_HA_FAN = {
+    "low": FAN_LOW,
+    "med": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "auto": FAN_AUTO,
+}
+
+HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
+
+FAN_MODES = [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +119,9 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._unit.fan_speed
+        # In principle, there might be a fan speed that isn't in our list.
+        # If so, report it verbatim instead of raising an exception.
+        return CM_TO_HA_FAN.get(self._unit.fan_speed, self._unit.fan_speed)
 
     @property
     def fan_modes(self):
@@ -132,7 +148,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._unit = await self._unit.set_fan_speed(fan_mode)
+        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
