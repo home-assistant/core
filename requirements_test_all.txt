@@ -687,6 +687,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.1.2
 
+# homeassistant.components.eheimdigital
+eheimdigital==1.0.3
+
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
 
@@ -2447,7 +2450,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.2
+yalexs-ble==2.5.4
 
 # homeassistant.components.august
 # homeassistant.components.yale
