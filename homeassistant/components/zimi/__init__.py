@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
         model_id="Zimi Cloud Connect",
         hw_version=f"{api.firmware_version}",
         sw_version=f"{api.api_version}",
-        serial_number=format_mac(api.mac),
+        connections={(CONNECTION_NETWORK_MAC, api.mac)}
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
