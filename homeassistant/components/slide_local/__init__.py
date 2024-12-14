@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from goslideapi.goslideapi import GoSlideLocal as SlideLocalApi
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import SlideCoordinator
 
-PLATFORMS = [Platform.COVER]
-type SlideConfigEntry = ConfigEntry[SlideLocalApi]
+PLATFORMS = [Platform.BUTTON, Platform.COVER]
+type SlideConfigEntry = ConfigEntry[SlideCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SlideConfigEntry) -> bool:
