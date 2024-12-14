@@ -116,7 +116,6 @@ BINARY_SENSORS = [
     ),
     StarlinkBinarySensorEntityDescription(
         key="connected",
-        translation_key="connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda data: (data.status["state"] == "CONNECTED"),
     ),
