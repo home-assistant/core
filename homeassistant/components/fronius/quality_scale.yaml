@@ -17,10 +17,7 @@ rules:
       - Remove duplicated patch of `async_setup_entry`.
       - Assert unique_id in test_form_with_logger and test_dhcp.
       - All tests should end in either a CREATE_ENTRY or ABORT.
-  config-flow:
-    status: todo
-    comment: |
-      - Missing data_description for host.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -91,12 +88,8 @@ rules:
   entity-translations:
     status: todo
     comment: |
-      - Remove name translations that are handled by device class translations.
       - `Unknown` should not be a valid state of status_message.
-  exception-translations:
-    status: todo
-    comment: |
-      CannotConnect in config_flow.py shall not be translated - errors dict is used.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
