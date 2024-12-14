@@ -20,8 +20,6 @@ from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
-# coordinator is used to get all data centralized.
-# Set parallel updates default to 1 for all platform action updates.
 PARALLEL_UPDATES = 1
 
 

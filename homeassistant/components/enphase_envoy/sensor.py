@@ -59,8 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
-# coordinator is used to get all data centralized.
-# Set parallel updates default to 1 for all platform action updates.
 PARALLEL_UPDATES = 1
 
 
