@@ -33,7 +33,7 @@ rules:
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: todo
