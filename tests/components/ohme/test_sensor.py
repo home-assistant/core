@@ -21,6 +21,7 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
 ) -> None:
     """Test the Ohme sensors."""
     with patch("homeassistant.components.ohme.PLATFORMS", [Platform.SENSOR]):
@@ -36,8 +37,7 @@ async def test_sensors_unavailable(
     mock_client: MagicMock,
 ) -> None:
     """Test that sensors show as unavailable after a coordinator failure."""
-    with patch("homeassistant.components.ohme.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.ohme_home_pro_energy")
     assert state.state == "1.0"

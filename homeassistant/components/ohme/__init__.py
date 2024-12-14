@@ -1,18 +1,49 @@
 """Set up ohme integration."""
 
-from homeassistant.core import HomeAssistant
+from ohme import ApiException, AuthException, OhmeApiClient
 
-from .const import PLATFORMS
-from .coordinator import OhmeConfigEntry, OhmeCoordinator
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+
+from .const import DOMAIN, PLATFORMS
+from .coordinator import (
+    OhmeAdvancedSettingsCoordinator,
+    OhmeChargeSessionCoordinator,
+    OhmeConfigEntry,
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
-    coordinator = OhmeCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    client = OhmeApiClient(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
-    entry.runtime_data = coordinator
+    try:
+        await client.async_login()
+
+        if not await client.async_update_device_info():
+            raise ConfigEntryNotReady(
+                translation_key="device_info_failed", translation_domain=DOMAIN
+            )
+    except AuthException as e:
+        raise ConfigEntryError(
+            translation_key="auth_failed", translation_domain=DOMAIN
+        ) from e
+    except ApiException as e:
+        raise ConfigEntryNotReady(
+            translation_key="api_failed", translation_domain=DOMAIN
+        ) from e
+
+    coordinators = [
+        OhmeChargeSessionCoordinator(hass, entry, client),
+        OhmeAdvancedSettingsCoordinator(hass, entry, client),
+    ]
+
+    for coordinator in coordinators:
+        await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

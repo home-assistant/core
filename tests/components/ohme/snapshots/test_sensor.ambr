@@ -44,7 +44,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.1',
+    'state': '0',
   })
 # ---
 # name: test_sensors[sensor.ohme_home_pro_current-entry]
@@ -149,7 +149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': '1.0',
   })
 # ---
 # name: test_sensors[sensor.ohme_home_pro_power-entry]
@@ -263,6 +263,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unplugged',
+    'state': 'charging',
   })
 # ---

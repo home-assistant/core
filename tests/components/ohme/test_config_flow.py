@@ -71,6 +71,20 @@ async def test_config_flow_fail(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    # End with CREATE_ENTRY
+    mock_client.async_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "test@example.com", CONF_PASSWORD: "hunter1"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test@example.com"
+    assert result["data"] == {
+        CONF_EMAIL: "test@example.com",
+        CONF_PASSWORD: "hunter1",
+    }
+
 
 async def test_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry

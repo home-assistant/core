@@ -2,20 +2,22 @@
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
-from .coordinator import OhmeCoordinator
 
 
-class OhmeEntity(CoordinatorEntity[OhmeCoordinator]):
+class OhmeEntity(CoordinatorEntity[DataUpdateCoordinator]):
     """Base class for all Ohme entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: OhmeCoordinator,
+        coordinator: DataUpdateCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize the entity."""

@@ -64,10 +64,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration only provides one device per config entry.
+  dynamic-devices: todo
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -79,11 +76,7 @@ rules:
     status: exempt
     comment: |
       This integration currently has no repairs.
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration only provides one device per config entry.
-
+  stale-devices: todo
   # Platinum
   async-dependency: todo
   inject-websession: todo
