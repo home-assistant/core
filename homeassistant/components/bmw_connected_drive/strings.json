@@ -94,6 +94,9 @@
       "activate_air_conditioning": {
         "name": "Activate air conditioning"
       },
+      "deactivate_air_conditioning": {
+        "name": "Deactivate air conditioning"
+      },
       "find_vehicle": {
         "name": "Find vehicle"
       }

@@ -55,7 +55,6 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
         translation_key="deactivate_air_conditioning",
-        name="Deactivate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
         is_available=lambda vehicle: vehicle.is_remote_climate_stop_enabled,
     ),
