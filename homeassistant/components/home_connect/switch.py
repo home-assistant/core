@@ -8,7 +8,7 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
@@ -30,7 +30,7 @@ from .const import (
     REFRIGERATION_SUPERMODEREFRIGERATOR,
     SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
@@ -134,13 +134,13 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -158,13 +158,13 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off: %s", err)
             self._attr_available = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -209,7 +209,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.appliance.start_program, self.program_name
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="start_program",
                 translation_placeholders={
@@ -225,12 +225,11 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         try:
             await self.hass.async_add_executor_job(self.device.appliance.stop_program)
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "program": self.program_name,
                 },
             ) from err
         self.async_entity_update()
@@ -278,7 +277,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_on",
                 translation_placeholders={
@@ -291,7 +290,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         if not hasattr(self, "power_off_state"):
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_retrieve_turn_off",
                 translation_placeholders={
@@ -300,7 +299,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
 
         if self.power_off_state is None:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_not_supported",
                 translation_placeholders={
@@ -316,7 +315,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = True
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_off",
                 translation_placeholders={

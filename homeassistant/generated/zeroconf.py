@@ -525,6 +525,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "eheimdigital",
+            "name": "eheimdigital._http._tcp.local.",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -543,6 +547,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },
@@ -557,6 +565,10 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*",
+        },
+        {
+            "domain": "slide_local",
+            "name": "slide*",
         },
         {
             "domain": "synology_dsm",
