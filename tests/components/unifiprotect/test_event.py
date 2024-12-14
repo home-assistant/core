@@ -75,7 +75,7 @@ async def test_doorbell_ring(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.last_ring_event_id = "test_event_id"
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
@@ -107,7 +107,7 @@ async def test_doorbell_ring(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
 
@@ -137,7 +137,7 @@ async def test_doorbell_ring(
         api=ufp.api,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
 
@@ -411,7 +411,7 @@ async def test_doorbell_nfc_scanned_no_keyring(
         metadata={"nfc": {"nfc_id": test_nfc_id, "user_id": "test_user_id"}},
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.last_nfc_card_scanned_event_id = "test_event_id"
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
@@ -609,7 +609,7 @@ async def test_doorbell_fingerprint_identified_no_user(
         metadata={"fingerprint": {"ulp_id": ulp_id}},
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.last_fingerprint_identified_event_id = "test_event_id"
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}
@@ -668,7 +668,7 @@ async def test_doorbell_fingerprint_not_identified(
         metadata={"fingerprint": {}},
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.last_fingerprint_identified_event_id = "test_event_id"
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
     ufp.api.bootstrap.events = {event.id: event}

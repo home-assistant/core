@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -49,6 +49,8 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
     """Representation of a Twitch channel."""
 
     _attr_translation_key = "channel"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [STATE_OFFLINE, STATE_STREAMING]
 
     def __init__(self, coordinator: TwitchCoordinator, channel_id: str) -> None:
         """Initialize the sensor."""
@@ -82,8 +84,8 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
             ATTR_TITLE: channel.title,
             ATTR_STARTED_AT: channel.started_at,
             ATTR_VIEWERS: channel.viewers,
+            ATTR_SUBSCRIPTION: False,
         }
-        resp[ATTR_SUBSCRIPTION] = False
         if channel.subscribed is not None:
             resp[ATTR_SUBSCRIPTION] = channel.subscribed
             resp[ATTR_SUBSCRIPTION_GIFTED] = channel.subscription_gifted

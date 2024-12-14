@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator
+from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
 import string
@@ -37,6 +38,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util import yaml
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -534,6 +536,10 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
+            "homeassistant.components.hassio.backup.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
             "homeassistant.components.hassio.discovery.get_supervisor_client",
             return_value=supervisor_client,
         ),
@@ -615,6 +621,26 @@ def ignore_translations() -> str | list[str]:
     return []
 
 
+@lru_cache
+def _get_integration_quality_scale(integration: str) -> dict[str, Any]:
+    """Get the quality scale for an integration."""
+    try:
+        return yaml.load_yaml_dict(
+            f"homeassistant/components/{integration}/quality_scale.yaml"
+        ).get("rules", {})
+    except FileNotFoundError:
+        return {}
+
+
+def _get_integration_quality_scale_rule(integration: str, rule: str) -> str:
+    """Get the quality scale for an integration."""
+    quality_scale = _get_integration_quality_scale(integration)
+    if not quality_scale or rule not in quality_scale:
+        return "todo"
+    status = quality_scale[rule]
+    return status if isinstance(status, str) else status["status"]
+
+
 async def _check_config_flow_result_translations(
     manager: FlowManager,
     flow: FlowHandler,
@@ -646,6 +672,9 @@ async def _check_config_flow_result_translations(
     setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
     if result["type"] is FlowResultType.FORM:
+        iqs_config_flow = _get_integration_quality_scale_rule(
+            integration, "config-flow"
+        )
         if step_id := result.get("step_id"):
             # neither title nor description are required
             # - title defaults to integration name
@@ -660,6 +689,19 @@ async def _check_config_flow_result_translations(
                     result["description_placeholders"],
                     translation_required=False,
                 )
+            if iqs_config_flow == "done" and (data_schema := result["data_schema"]):
+                # data and data_description are compulsory
+                for data_key in data_schema.schema:
+                    for header in ("data", "data_description"):
+                        await _validate_translation(
+                            flow.hass,
+                            translation_errors,
+                            category,
+                            integration,
+                            f"{key_prefix}step.{step_id}.{header}.{data_key}",
+                            result["description_placeholders"],
+                        )
+
         if errors := result.get("errors"):
             for error in errors.values():
                 await _validate_translation(

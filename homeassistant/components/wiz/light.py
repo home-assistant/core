@@ -10,7 +10,7 @@ from pywizlight.scenes import get_id_from_scene_name
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -21,10 +21,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from . import WizConfigEntry
 from .entity import WizToggleEntity
@@ -43,10 +39,10 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     if ATTR_RGBW_COLOR in kwargs:
         return PilotBuilder(brightness=brightness, rgbw=kwargs[ATTR_RGBW_COLOR])
 
-    if ATTR_COLOR_TEMP in kwargs:
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
         return PilotBuilder(
             brightness=brightness,
-            colortemp=color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]),
+            colortemp=kwargs[ATTR_COLOR_TEMP_KELVIN],
         )
 
     if ATTR_EFFECT in kwargs:
@@ -93,8 +89,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_effect_list = wiz_data.scenes
         if bulb_type.bulb_type != BulbClass.DW:
             kelvin = bulb_type.kelvin_range
-            self._attr_min_mireds = color_temperature_kelvin_to_mired(kelvin.max)
-            self._attr_max_mireds = color_temperature_kelvin_to_mired(kelvin.min)
+            self._attr_max_color_temp_kelvin = kelvin.max
+            self._attr_min_color_temp_kelvin = kelvin.min
         if bulb_type.features.effect:
             self._attr_supported_features = LightEntityFeature.EFFECT
         self._async_update_attrs()
@@ -111,7 +107,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             color_temp := state.get_colortemp()
         ):
             self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
+            self._attr_color_temp_kelvin = color_temp
         elif (
             ColorMode.RGBWW in color_modes and (rgbww := state.get_rgbww()) is not None
         ):
