@@ -81,4 +81,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Device doesn't make http requests.
-  strict-typing: todo
+  strict-typing: done
