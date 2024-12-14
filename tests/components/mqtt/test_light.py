@@ -270,7 +270,7 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("rgbw_color") is None
@@ -285,7 +285,7 @@ async def test_no_color_brightness_color_temp_hs_white_xy_if_no_topics(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("rgbw_color") is None
@@ -350,7 +350,7 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -366,7 +366,7 @@ async def test_controlling_state_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -649,7 +649,7 @@ async def test_invalid_state_via_topic(
     assert state.attributes.get("rgbw_color") is None
     assert state.attributes.get("rgbww_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("xy_color") is None
@@ -665,7 +665,7 @@ async def test_invalid_state_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") == "none"
     assert state.attributes.get("hs_color") == (0, 0)
     assert state.attributes.get("xy_color") == (0.323, 0.329)
@@ -2103,7 +2103,7 @@ async def test_explicit_color_mode(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -2119,7 +2119,7 @@ async def test_explicit_color_mode(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get("rgb_color") is None
@@ -2248,7 +2248,7 @@ async def test_explicit_color_mode_templated(
     state = hass.states.get("light.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) is None
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
@@ -2258,7 +2258,7 @@ async def test_explicit_color_mode_templated(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("hs_color") is None
     assert state.attributes.get(light.ATTR_COLOR_MODE) == "unknown"
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes

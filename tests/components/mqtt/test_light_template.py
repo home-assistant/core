@@ -252,7 +252,7 @@ async def test_state_change_via_topic(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "test_light_rgb", "on")
@@ -261,7 +261,7 @@ async def test_state_change_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
 
     async_fire_mqtt_message(hass, "test_light_rgb", "off")
 
@@ -316,7 +316,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
     assert state.attributes.get("effect") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # turn on the light
@@ -326,7 +326,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == (255, 128, 64)
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") is None  # rgb color has priority
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
     assert state.attributes.get("effect") is None
 
     # turn on the light
@@ -848,7 +848,7 @@ async def test_invalid_values(
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("brightness") is None
-    assert state.attributes.get("color_temp") is None
+    assert state.attributes.get("color_temp_kelvin") is None
     assert state.attributes.get("effect") is None
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
@@ -858,7 +858,7 @@ async def test_invalid_values(
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
     assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("color_temp") is None  # hs_color has priority
+    assert state.attributes.get("color_temp_kelvin") is None  # hs_color has priority
     assert state.attributes.get("rgb_color") == (255, 255, 255)
     assert state.attributes.get("effect") == "rainbow"
 
