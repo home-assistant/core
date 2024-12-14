@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from geocachingapi.exceptions import GeocachingApiError, GeocachingInvalidSettingsError
+from geocachingapi.exceptions import (
+    GeocachingApiError,
+    GeocachingInvalidSettingsError,
+    GeocachingTooManyCodesError,
+)
 from geocachingapi.geocachingapi import GeocachingApi
 from geocachingapi.models import (
     GeocachingCoordinate,
@@ -79,7 +83,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             else self.entry.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]
         )
 
-        settings.set_tracked_trackables(trackable_codes)
+        settings.set_tracked_trackables(set(trackable_codes))
 
         # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
         geocache_codes: list[str] = (
@@ -88,7 +92,7 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
             else self.entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]
         )
 
-        settings.set_tracked_caches(geocache_codes)
+        settings.set_tracked_caches(set(geocache_codes))
 
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,
@@ -111,6 +115,8 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                 self.verified = True
             return await self.geocaching.update()
         except GeocachingInvalidSettingsError as error:
+            raise UpdateFailed(error) from error
+        except GeocachingTooManyCodesError as error:
             raise UpdateFailed(error) from error
         except GeocachingApiError as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
