@@ -1522,6 +1522,9 @@ odp-amsterdam==6.0.2
 # homeassistant.components.oem
 oemthermostat==1.1.1
 
+# homeassistant.components.ohme
+ohme==1.1.1
+
 # homeassistant.components.ollama
 ollama==0.3.3
 
@@ -1556,7 +1559,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.7
+openwebifpy==4.3.0
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.17

@@ -27,6 +27,27 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Slide",
+        "description": "Reconfigure the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Invert the position of your slide cover."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      }
+    }
+  },
   "exceptions": {
     "update_error": {
       "message": "Error while updating data from the API."
