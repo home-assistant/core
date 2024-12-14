@@ -33,11 +33,21 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     current_work_areas: dict[str, set[int]] = {}
     current_stay_out_zones: dict[str, set[str]] = {}
+    known_devices: set[str] = set()
 
-    async_add_entities(
-        AutomowerScheduleSwitchEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
-    )
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+
+            async_add_entities(
+                AutomowerScheduleSwitchEntity(mower_id, coordinator)
+                for mower_id in coordinator.data
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add switch entities if they did not exist.

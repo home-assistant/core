@@ -57,9 +57,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices:
-    status: todo
-    comment: Add devices dynamically
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

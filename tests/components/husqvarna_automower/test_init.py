@@ -227,6 +227,7 @@ async def test_coordinator_automatic_registry_cleanup(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     values: dict[str, MowerAttributes],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test automatic registry cleanup."""
     await setup_integration(hass, mock_config_entry)
@@ -240,7 +241,7 @@ async def test_coordinator_automatic_registry_cleanup(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
 
-    values.pop(TEST_MOWER_ID)
+    removed_device = values.pop(TEST_MOWER_ID)
     mock_automower_client.get_status.return_value = values
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -252,6 +253,19 @@ async def test_coordinator_automatic_registry_cleanup(
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices - 1
+    )
+
+    values[TEST_MOWER_ID] = removed_device
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices
     )
 
 

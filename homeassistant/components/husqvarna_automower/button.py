@@ -58,12 +58,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up button platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerButtonEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in MOWER_BUTTON_TYPES
-        if description.exists_fn(coordinator.data[mower_id])
-    )
+
+    known_devices: set[str] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AutomowerButtonEntity(mower_id, coordinator, description)
+                for mower_id in coordinator.data
+                for description in MOWER_BUTTON_TYPES
+                if description.exists_fn(coordinator.data[mower_id])
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
