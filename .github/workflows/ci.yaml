@@ -1256,7 +1256,7 @@ jobs:
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
-    if: needs.info.outputs.skip_coverage != 'true'
+    if: needs.info.outputs.test_full_suite == 'true' && needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-24.04
     needs:
       - info
@@ -1272,7 +1272,7 @@ jobs:
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
-        if: needs.info.outputs.test_full_suite == 'true'
+        # if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v5.1.1
         with:
           fail_ci_if_error: true
@@ -1396,7 +1396,7 @@ jobs:
 
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
-    if: needs.info.outputs.skip_coverage != 'true'
+    if: needs.info.outputs.test_full_suite == 'false' && needs.info.outputs.skip_coverage != 'true'
     runs-on: ubuntu-24.04
     needs:
       - info
@@ -1410,7 +1410,7 @@ jobs:
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
-        if: needs.info.outputs.test_full_suite == 'false'
+        # if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v5.1.1
         with:
           fail_ci_if_error: true
