@@ -19,20 +19,32 @@ MOCK_CONFIG = {
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 
-
-DEVICE_DATA_QUERY = {
-    "xx:xx:xx:xx:xx:xx": VodafoneStationDevice(
+DEVICE_1_MAC = "xx:xx:xx:xx:xx:xx"
+DEVICE_1 = {
+    DEVICE_1_MAC: VodafoneStationDevice(
         connected=True,
         connection_type="wifi",
         ip_address="192.168.1.10",
         name="WifiDevice0",
-        mac="xx:xx:xx:xx:xx:xx",
+        mac=DEVICE_1_MAC,
         type="laptop",
         wifi="2.4G",
     ),
 }
 
-SERIAL = "m123456789"
+DEVICE_2 = {
+    "yy:yy:yy:yy:yy:yy": VodafoneStationDevice(
+        connected=True,
+        connection_type="lan",
+        ip_address="192.168.1.11",
+        name="WifiDevice0",
+        mac="yy:yy:yy:yy:yy:yy",
+        type="desktop",
+        wifi="",
+    ),
+}
+DEVICE_DATA_QUERY = DEVICE_1 | DEVICE_2
+
 
 SENSOR_DATA_QUERY = {
     "sys_serial_number": SERIAL,
