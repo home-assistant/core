@@ -1270,6 +1270,9 @@ objgraph==3.5.0
 # homeassistant.components.garages_amsterdam
 odp-amsterdam==6.0.2
 
+# homeassistant.components.ohme
+ohme==1.1.1
+
 # homeassistant.components.ollama
 ollama==0.3.3
 
