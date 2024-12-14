@@ -18,11 +18,8 @@ from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import (
-    OhmeAdvancedSettingsCoordinator,
-    OhmeChargeSessionCoordinator,
-    OhmeConfigEntry,
-)
+from . import OhmeConfigEntry, OhmeRuntimeData
+from .coordinator import OhmeBaseCoordinator
 from .entity import OhmeEntity
 
 PARALLEL_UPDATES = 0
@@ -34,7 +31,9 @@ class OhmeSensorDescription(SensorEntityDescription):
 
     value_fn: Callable[[OhmeApiClient], Any]
     is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
-    coordinator: type
+    coordinator_fn: Callable[[OhmeRuntimeData], OhmeBaseCoordinator] = (
+        lambda data: data.charge_session_coordinator
+    )
 
 
 SENSOR_DESCRIPTIONS = [
@@ -44,14 +43,12 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=[e.value for e in ChargerStatus],
         value_fn=lambda client: client.status.value,
-        coordinator=OhmeChargeSessionCoordinator,
     ),
     OhmeSensorDescription(
         key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda client: client.power.amps,
-        coordinator=OhmeChargeSessionCoordinator,
     ),
     OhmeSensorDescription(
         key="ct_current",
@@ -60,7 +57,7 @@ SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda client: client.power.ct_amps,
         is_supported_fn=lambda client: client.ct_connected,
-        coordinator=OhmeAdvancedSettingsCoordinator,
+        coordinator_fn=lambda data: data.advanced_settings_coordinator,
     ),
     OhmeSensorDescription(
         key="power",
@@ -69,7 +66,6 @@ SENSOR_DESCRIPTIONS = [
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=1,
         value_fn=lambda client: client.power.watts,
-        coordinator=OhmeChargeSessionCoordinator,
     ),
     OhmeSensorDescription(
         key="energy",
@@ -79,7 +75,6 @@ SENSOR_DESCRIPTIONS = [
         suggested_display_precision=1,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda client: client.energy,
-        coordinator=OhmeChargeSessionCoordinator,
     ),
 ]
 
@@ -93,11 +88,9 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data
 
     async_add_entities(
-        OhmeSensor(coordinator, description)
+        OhmeSensor(description.coordinator_fn(coordinators), description)
         for description in SENSOR_DESCRIPTIONS
-        for coordinator in coordinators
-        if isinstance(coordinator, description.coordinator)
-        and description.is_supported_fn(coordinator.client)
+        if description.is_supported_fn(description.coordinator_fn(coordinators).client)
     )
 
 
