@@ -20,6 +20,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tip_connected": {
+        "name": "Soldering tip"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "name": "Setpoint temperature"
