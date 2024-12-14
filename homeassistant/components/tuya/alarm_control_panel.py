@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from base64 import b64decode
+from enum import StrEnum
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -131,7 +130,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         state = self.device.status.get(DPCode.MASTER_STATE)
-        if state == State.ALARM:            
+        if state == State.ALARM:
             encoded_msg = self.device.status.get(DPCode.ALARM_MSG)
             if encoded_msg:
                 return b64decode(encoded_msg).decode('utf-16be')
