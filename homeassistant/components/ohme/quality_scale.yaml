@@ -29,10 +29,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration has no custom actions and read-only platform only.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

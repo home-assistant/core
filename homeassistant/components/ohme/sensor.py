@@ -18,17 +18,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OhmeConfigEntry
-from .entity import OhmeEntity
+from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class OhmeSensorDescription(SensorEntityDescription):
+class OhmeSensorDescription(OhmeEntityDescription, SensorEntityDescription):
     """Class describing Ohme sensor entities."""
 
     value_fn: Callable[[OhmeApiClient], str | int | float]
-    is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
 
 
 SENSOR_CHARGE_SESSION = [
