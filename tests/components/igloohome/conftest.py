@@ -53,7 +53,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def api_mock() -> Generator[AsyncMock]:
+def api_mock_single_lock() -> Generator[AsyncMock]:
     """Set up Api module to always return a single lock type device."""
     with (
         patch(

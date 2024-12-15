@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 async def test_sensors(
     hass: HomeAssistant,
-    api_mock,
+    api_mock_single_lock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
