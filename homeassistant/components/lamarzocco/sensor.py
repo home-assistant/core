@@ -39,24 +39,6 @@ class LaMarzoccoSensorEntityDescription(
 
 ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
-        key="drink_stats_coffee",
-        translation_key="drink_stats_coffee",
-        native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    LaMarzoccoSensorEntityDescription(
-        key="drink_stats_flushing",
-        translation_key="drink_stats_flushing",
-        native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.total_flushes,
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    LaMarzoccoSensorEntityDescription(
         key="shot_timer",
         translation_key="shot_timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -93,6 +75,27 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     ),
 )
 
+STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_coffee",
+        translation_key="drink_stats_coffee",
+        native_unit_of_measurement="drinks",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
+        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_flushing",
+        translation_key="drink_stats_flushing",
+        native_unit_of_measurement="drinks",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.statistics.total_flushes,
+        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
 SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="scale_battery",
@@ -105,7 +108,7 @@ SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
         supported_fn=lambda coordinator: coordinator.device.model
         == MachineModel.LINEA_MINI,
-    ),
+    )
 )
 
 
@@ -115,20 +118,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = entry.runtime_data
+    config_coordinator = entry.runtime_data.config_coordinator
 
     entities = [
-        LaMarzoccoSensorEntity(coordinator, description)
+        LaMarzoccoSensorEntity(config_coordinator, description)
         for description in ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(config_coordinator)
     ]
 
     if (
-        coordinator.device.model == MachineModel.LINEA_MINI
-        and coordinator.device.config.scale
+        config_coordinator.device.model == MachineModel.LINEA_MINI
+        and config_coordinator.device.config.scale
     ):
         entities.extend(
-            LaMarzoccoScaleSensor(coordinator, description)
+            LaMarzoccoScaleSensor(config_coordinator, description)
             for description in SCALE_ENTITIES
         )
 
@@ -136,11 +139,20 @@ async def async_setup_entry(
 
     def _async_add_new_scale() -> None:
         async_add_entities(
-            LaMarzoccoScaleSensor(coordinator, description)
+            LaMarzoccoScaleSensor(config_coordinator, description)
             for description in SCALE_ENTITIES
         )
 
-    coordinator.new_scale_callback.append(_async_add_new_scale)
+    config_coordinator.new_scale_callback.append(_async_add_new_scale)
+
+    statistics_coordinator = entry.runtime_data.statistics_coordinator
+    entities.extend(
+        LaMarzoccoSensorEntity(statistics_coordinator, description)
+        for description in STATISTIC_ENTITIES
+        if description.supported_fn(statistics_coordinator)
+    )
+
+    async_add_entities(entities)
 
 
 class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
