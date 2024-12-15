@@ -121,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
+    # API does not like concurrent requests, so no asyncio.gather here
     for coordinator in coordinators:
         await coordinator.async_config_entry_first_refresh()
 
