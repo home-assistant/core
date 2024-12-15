@@ -11,12 +11,7 @@ rules:
     comment: |
       Single platform only, so no entity.py file.
       CoordinatorEntity is used.
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - Remove duplicated patch of `async_setup_entry`.
-      - Assert unique_id in test_form_with_logger and test_dhcp.
-      - All tests should end in either a CREATE_ENTRY or ABORT.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -63,12 +58,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't require authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      - Use fixture `enable_all_entities` instead of custom code.
-      - Use freezer.
-      - Use snapshots.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
