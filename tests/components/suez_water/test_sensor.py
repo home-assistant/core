@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
 from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,21 +46,20 @@ async def test_sensors_failed_update(
     hass: HomeAssistant,
     suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
     method: str,
 ) -> None:
     """Test that suez_water sensor reflect failure when api fails."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.suez_water.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
-    assert len(entity_ids) == 2
-
-    for entity in entity_ids:
-        state = hass.states.get(entity)
-        assert entity
-        assert state.state != STATE_UNAVAILABLE
+    await snapshot_platform_with_given_assertion(
+        hass, entity_registry, snapshot, "valid", mock_config_entry.entry_id
+    )
 
     getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
 
@@ -68,7 +67,31 @@ async def test_sensors_failed_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
 
-    for entity in entity_ids:
-        state = hass.states.get(entity)
-        assert entity
-        assert state.state == STATE_UNAVAILABLE
+    await snapshot_platform_with_given_assertion(
+        hass, entity_registry, snapshot, "error", mock_config_entry.entry_id
+    )
+
+
+async def snapshot_platform_with_given_assertion(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    snapshot_assertion_suffix_name: str,
+    config_entry_id: str,
+) -> None:
+    """Snapshot a platform."""
+    entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert entity_entries
+    assert (
+        len({entity_entry.domain for entity_entry in entity_entries}) == 1
+    ), "Please limit the loaded platforms to 1 platform."
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}_{snapshot_assertion_suffix_name}-entry"
+        )
+        assert entity_entry.disabled_by is None, "Please enable all entities."
+        state = hass.states.get(entity_entry.entity_id)
+        assert state, f"State not found for {entity_entry.entity_id}"
+        assert state == snapshot(
+            name=f"{entity_entry.entity_id}_{snapshot_assertion_suffix_name}-state"
+        )

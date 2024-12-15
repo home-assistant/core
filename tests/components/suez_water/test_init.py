@@ -28,19 +28,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_initialization_invalid_credentials(
-    hass: HomeAssistant,
-    suez_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that suez_water can't be loaded with invalid credentials."""
-
-    suez_client.check_credentials.return_value = False
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_initialization_setup_api_error(
     hass: HomeAssistant,
     suez_client: AsyncMock,
@@ -52,6 +39,76 @@ async def test_initialization_setup_api_error(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_auth_failed(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that suez_water reflect authentication failure."""
+    suez_client.check_credentials.return_value = False
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_init_refresh_failed(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that suez_water reflect authentication failure."""
+    suez_client.fetch_aggregated_data.side_effect = PySuezError("Update failed")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_statistics_failed(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that suez_water reflect authentication failure."""
+    suez_client.fetch_all_daily_data.side_effect = PySuezError("Update failed")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_statistics_no_price(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that suez_water statistics does not register when no price."""
+    # New data retrieved but no price
+    suez_client.get_price.side_effect = PySuezError("will fail")
+    suez_client.fetch_all_daily_data.return_value = [
+        DayDataResult(datetime.now().date(), 500, 500)
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    statistic_id = (
+        f"{DOMAIN}:{mock_config_entry.data[CONF_COUNTER_ID]}_water_cost_statistics"
+    )
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        datetime.now() - timedelta(days=1),
+        None,
+        [statistic_id],
+        "hour",
+        None,
+        {"start", "state", "mean", "min", "max", "last_reset", "sum"},
+    )
+
+    assert stats.get(statistic_id) is None
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -70,7 +127,7 @@ async def test_statistics(
     snapshot: SnapshotAssertion,
     statistic: str,
 ) -> None:
-    """Test that suez_water statisticts are working."""
+    """Test that suez_water statistics are working."""
     nb_samples = 120
 
     start = datetime.fromisoformat("2024-12-04T02:00:00.0")
