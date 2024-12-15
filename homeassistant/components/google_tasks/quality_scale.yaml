@@ -20,12 +20,7 @@ rules:
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration refreshes the access token, but does not poll the API. The
-      setup can be changed to request the list of todo lists in setup instead
-      of during platform setup.
+  test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions:
