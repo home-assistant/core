@@ -87,7 +87,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(unique_id, raise_on_progress=False)
-                self._abort_if_unique_id_configured(updates=dict(info))
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=create_title(info), data=info)
 
