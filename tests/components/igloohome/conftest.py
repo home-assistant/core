@@ -33,21 +33,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_auth() -> Generator[MagicMock]:
-    """Mock the auth class."""
-    with (
-            patch(
-            "igloohome_api.Auth.",
-            autospec=True
-        ) as mock_auth,
-        patch(
-            "igloohome_api.config_flow.Auth",
-            new=mock_auth,
-        )
-    ):
-        auth = mock_auth.return_value
-        auth.async_get_access_token.return_value = True
-        yield auth
+async def auth_successful():
+    """Set up the Auth module to always successfully operate."""
+    return patch(
+        "igloohome_api.Auth.async_get_access_token",
+        return_value="mock_access_token",
+    )
 
 
 @pytest.fixture
