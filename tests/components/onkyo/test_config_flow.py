@@ -315,7 +315,9 @@ async def test_ssdp_discovery_no_host(hass: HomeAssistant) -> None:
     assert result["reason"] == "unknown"
 
 
-async def test_configure_empty_source_list(hass: HomeAssistant) -> None:
+async def test_configure_empty_source_list(
+    hass: HomeAssistant, default_mock_discovery
+) -> None:
     """Test receiver configuration with no sources set."""
 
     init_result = await hass.config_entries.flow.async_init(
