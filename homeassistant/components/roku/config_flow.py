@@ -60,8 +60,8 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _show_form(
         self,
+        user_input: dict[str, Any] | None
         errors: dict[str, Any] | None = None,
-        user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the form to the user."""
         suggested_values = user_input
@@ -89,7 +89,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
-            return self._show_form(None, user_input)
+            return self._show_form()
 
         errors = {}
 
@@ -98,7 +98,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             errors["base"] = ERROR_CANNOT_CONNECT
-            return self._show_form(errors, user_input)
+            return self._show_form(user_input, errors)
         except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
