@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
+from enum import Enum
 import logging
 import string
 from typing import Any, cast
@@ -43,8 +44,10 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
+    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -62,7 +65,13 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
-from homeassistant.helpers import entityfilter, state as state_helper
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    entityfilter,
+    state as state_helper,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
@@ -136,11 +145,18 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
         climate_units,
         component_config,
+        area_registry,
+        device_registry,
+        entity_registry,
         override_metric,
         default_metric,
     )
@@ -158,6 +174,63 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class PrometheusLabelsException(Exception):
+    """Exceptions when dealing with shared PrometheusLabels functionality."""
+
+
+class PrometheusLabels(Enum):
+    """Model shared Prometheus labels."""
+
+    ENTITY = "entity"
+    FRIENDLY_NAME = "friendly_name"
+    OBJECT_ID = "object_id"
+    DOMAIN = "domain"
+    DEVICE = "device"
+    AREA = "area"
+    PLATFORM = "platform"
+    UNKNOWN = "unknown"  # mostly just for testing
+
+    @classmethod
+    def get_shared_common_labels(cls) -> list[PrometheusLabels]:
+        """Return all shared prometheus labels that are always expected."""
+        return [
+            cls.ENTITY,
+            cls.OBJECT_ID,
+            cls.DOMAIN,
+            cls.FRIENDLY_NAME,
+        ]
+
+    @classmethod
+    def get_all_common_label_strings(cls) -> list[str]:
+        """Return all possible common prometheus label strings."""
+        return [p.value for p in cls if p != cls.UNKNOWN]
+
+    @classmethod
+    def label_value_from_state(cls, label: PrometheusLabels, state: State) -> str:
+        """Return a label value for a metric from a hass state."""
+        if label == cls.ENTITY:
+            return state.entity_id
+        if label == cls.OBJECT_ID:
+            return state.object_id
+        if label == cls.DOMAIN:
+            return state.domain
+        if label == cls.FRIENDLY_NAME:
+            return state.attributes.get(ATTR_FRIENDLY_NAME) or ""
+        raise PrometheusLabelsException(f"Unexpected label: {label}")
+
+    def label_value(self, state: State) -> str:
+        """Return a label value as an instance shortcut to `cls.label_value_from_state`."""
+        return self.label_value_from_state(self, state)
+
+    @classmethod
+    def get_shared_common_label_dict(cls, state: State) -> dict[str, str]:
+        """Return a dict of label and values for all shared expected metrics for a state."""
+        final_labels = {}
+        for label in cls.get_shared_common_labels():
+            final_labels[label.value] = label.label_value(state)
+        return dict(final_labels)
+
+
 class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
@@ -167,11 +240,17 @@ class PrometheusMetrics:
         namespace: str,
         climate_units: UnitOfTemperature,
         component_config: EntityValues,
+        area_registry: ar.AreaRegistry,
+        device_registry: dr.DeviceRegistry,
+        entity_registry: er.EntityRegistry,
         override_metric: str | None,
         default_metric: str | None,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
+        self._area_registry = area_registry
+        self._device_registry = device_registry
+        self._entity_registry = entity_registry
         self._override_metric = override_metric
         self._default_metric = default_metric
         self._filter = entity_filter
@@ -198,14 +277,28 @@ class PrometheusMetrics:
         if (state := event.data.get("new_state")) is None:
             return
 
+        # Need to handle state changes for area and device here
         if not self._filter(state.entity_id):
             _LOGGER.debug("Filtered out entity %s", state.entity_id)
             return
 
-        if (old_state := event.data.get("old_state")) is not None and (
-            old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
-        ) != state.attributes.get(ATTR_FRIENDLY_NAME):
-            self._remove_labelsets(old_state.entity_id, old_friendly_name)
+        if (old_state := event.data.get("old_state")) is not None:
+            removal_kwargs = {}
+            if (
+                old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
+            ) != state.attributes.get(ATTR_FRIENDLY_NAME):
+                removal_kwargs["friendly_name"] = old_friendly_name
+            if (
+                old_area_id := old_state.attributes.get(ATTR_AREA_ID)
+            ) != state.attributes.get(ATTR_AREA_ID):
+                old_area = self._area_registry.async_get_area(str(old_area_id))
+                if old_area and (old_area_name := old_area.name):
+                    removal_kwargs["area"] = old_area_name
+                else:
+                    removal_kwargs["area"] = old_area_id
+
+            if removal_kwargs:
+                self._remove_labelsets(old_state.entity_id, **removal_kwargs)
 
         self.handle_state(state)
 
@@ -237,8 +330,12 @@ class PrometheusMetrics:
         if state.state in IGNORED_STATES:
             self._remove_labelsets(
                 entity_id,
-                None,
-                {state_change, entity_available, last_updated_time_seconds},
+                friendly_name=None,
+                ignored_metrics={
+                    state_change,
+                    entity_available,
+                    last_updated_time_seconds,
+                },
             )
         else:
             domain, _ = hacore.split_entity_id(entity_id)
@@ -275,6 +372,7 @@ class PrometheusMetrics:
         self,
         entity_id: str,
         friendly_name: str | None = None,
+        area: str | None = None,
         ignored_metrics: set[MetricWrapperBase] | None = None,
     ) -> None:
         """Remove labelsets matching the given entity id from all non-ignored metrics."""
@@ -286,16 +384,30 @@ class PrometheusMetrics:
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:
-                if sample.labels["entity"] == entity_id and (
-                    not friendly_name or sample.labels["friendly_name"] == friendly_name
-                ):
-                    _LOGGER.debug(
-                        "Removing labelset from %s for entity_id: %s",
-                        sample.name,
-                        entity_id,
-                    )
-                    with suppress(KeyError):
-                        metric.remove(*sample.labels.values())
+                if sample.labels["entity"] == entity_id:
+                    if (
+                        not friendly_name
+                        or sample.labels["friendly_name"] == friendly_name
+                    ):
+                        _LOGGER.debug(
+                            "!!!!!!! friendly_name Removing labelset (%s, %s) from %s for entity_id: %s",
+                            friendly_name,
+                            area,
+                            sample.name,
+                            entity_id,
+                        )
+                        with suppress(KeyError):
+                            metric.remove(*sample.labels.values())
+                    if not area or sample.labels["area"] == area:
+                        _LOGGER.debug(
+                            "!!!!!!! area Removing labelset (%s, %s) from %s for entity_id: %s",
+                            friendly_name,
+                            area,
+                            sample.name,
+                            entity_id,
+                        )
+                        with suppress(KeyError):
+                            metric.remove(*sample.labels.values())
 
     def _handle_attributes(self, state: State) -> None:
         for key, value in state.attributes.items():
@@ -318,7 +430,7 @@ class PrometheusMetrics:
         documentation: str,
         extra_labels: list[str] | None = None,
     ) -> _MetricBaseT:
-        labels = ["entity", "friendly_name", "domain"]
+        labels = PrometheusLabels.get_all_common_label_strings()
         if extra_labels is not None:
             labels.extend(extra_labels)
 
@@ -355,13 +467,38 @@ class PrometheusMetrics:
             value = None
         return value
 
-    @staticmethod
-    def _labels(state: State) -> dict[str, Any]:
+    def _get_extra_labels(self, state: State) -> dict[str, Any]:
+        """Return a dict of extra labels, or None if no extra labels necessary."""
+        final_area = ""
+        final_device = ""
+        final_platform = ""
+        if entity := self._entity_registry.async_get(state.entity_id):
+            final_platform = entity.platform
+            if device_id := state.attributes.get(ATTR_DEVICE_ID):
+                if device := self._device_registry.async_get(device_id):
+                    if device_name := device.name:
+                        final_device = device_name
+                    else:
+                        final_device = device_id
+            if area_id := state.attributes.get(ATTR_AREA_ID):
+                if area := self._area_registry.async_get_area(area_id):
+                    if area_name := area.name:
+                        final_area = area_name
+                    else:
+                        final_area = area_id
         return {
-            "entity": state.entity_id,
-            "domain": state.domain,
-            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            "platform": final_platform,
+            "area": final_area,
+            "device": final_device,
         }
+
+    def _labels(self, state: State) -> dict[str, Any]:
+        final_labels = PrometheusLabels.get_shared_common_label_dict(state)
+
+        if extra_labels := self._get_extra_labels(state):
+            final_labels.update(extra_labels)
+
+        return dict(final_labels)
 
     def _battery(self, state: State) -> None:
         if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is not None:
@@ -632,7 +769,6 @@ class PrometheusMetrics:
             documentation = "State of the sensor"
             if unit:
                 documentation = f"Sensor data measured in {unit}"
-
             _metric = self._metric(metric, prometheus_client.Gauge, documentation)
 
             if (value := self.state_as_number(state)) is not None:
