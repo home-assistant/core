@@ -12,16 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OhmeConfigEntry
-from .entity import OhmeEntity
+from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class OhmeButtonDescription(ButtonEntityDescription):
+class OhmeButtonDescription(OhmeEntityDescription, ButtonEntityDescription):
     """Class describing Ohme button entities."""
 
-    is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
     press_fn: Callable[[OhmeApiClient], Awaitable[None]]
     available_fn: Callable[[OhmeApiClient], bool]
 
