@@ -589,8 +589,8 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         precision=1,
     ),
     GrowattSensorEntityDescription(
-        key="tlx_state_of_charge",
-        translation_key="tlx_state_of_charge",
+        key="tlx_statement_of_charge",
+        translation_key="tlx_statement_of_charge",
         api_key="bmsSoc",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
