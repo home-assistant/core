@@ -313,8 +313,8 @@ class DeviceEntry:
             "configuration_url": self.configuration_url,
             "config_entries": list(self.config_entries),
             "config_subentries": {
-                entry: list(subentries)
-                for entry, subentries in self.config_subentries.items()
+                config_entry_id: list(subentries)
+                for config_entry_id, subentries in self.config_subentries.items()
             },
             "connections": list(self.connections),
             "created_at": self.created_at.timestamp(),
@@ -363,8 +363,8 @@ class DeviceEntry:
                     # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
                     "config_subentries": {
-                        entry: list(subentries)
-                        for entry, subentries in self.config_subentries.items()
+                        config_entry_id: list(subentries)
+                        for config_entry_id, subentries in self.config_subentries.items()
                     },
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
@@ -433,8 +433,8 @@ class DeletedDeviceEntry:
                     # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
                     "config_subentries": {
-                        entry: list(subentries)
-                        for entry, subentries in self.config_subentries.items()
+                        config_entry_id: list(subentries)
+                        for config_entry_id, subentries in self.config_subentries.items()
                     },
                     "connections": list(self.connections),
                     "created_at": self.created_at,
@@ -532,11 +532,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2025.1
                 for device in old_data["devices"]:
                     device["config_subentries"] = {
-                        entry: {None} for entry in device["config_entries"]
+                        config_entry_id: {None}
+                        for config_entry_id in device["config_entries"]
                     }
                 for device in old_data["deleted_devices"]:
                     device["config_subentries"] = {
-                        entry: {None} for entry in device["config_entries"]
+                        config_entry_id: {None}
+                        for config_entry_id in device["config_entries"]
                     }
 
         if old_major_version > 2:
@@ -911,7 +913,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,  # MÖÖÖÖ
+        remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -920,7 +922,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param add_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
+        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
         """
         old = self.devices[device_id]
 
@@ -1253,8 +1255,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     area_id=device["area_id"],
                     config_entries=set(device["config_subentries"]),
                     config_subentries={
-                        entry: set(subentries)
-                        for entry, subentries in device["config_subentries"].items()
+                        config_entry_id: set(subentries)
+                        for config_entry_id, subentries in device[
+                            "config_subentries"
+                        ].items()
                     },
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
@@ -1296,8 +1300,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
                     config_subentries={
-                        entry: set(subentries)
-                        for entry, subentries in device["config_subentries"].items()
+                        config_entry_id: set(subentries)
+                        for config_entry_id, subentries in device[
+                            "config_subentries"
+                        ].items()
                     },
                     connections={tuple(conn) for conn in device["connections"]},
                     created_at=datetime.fromisoformat(device["created_at"]),
