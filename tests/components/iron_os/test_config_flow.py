@@ -38,10 +38,10 @@ async def test_async_step_user(
 
 
 @pytest.mark.usefixtures("discovery")
-async def test_async_step_user_devices_already_setup(
+async def test_async_step_user_device_added_between_steps(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test we can't start a flow if there is already a config entry."""
+    """Test the device gets added via another flow between steps."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
