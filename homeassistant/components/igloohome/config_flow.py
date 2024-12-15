@@ -38,7 +38,6 @@ class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {
                     CONF_CLIENT_ID: user_input[CONF_CLIENT_ID],
-                    CONF_CLIENT_SECRET: user_input[CONF_CLIENT_SECRET],
                 }
             )
             auth = IgloohomeAuth(
