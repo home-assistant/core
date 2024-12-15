@@ -116,7 +116,7 @@ async def _async_migrate_entries(
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
 
     _async_migrate_options_from_data_if_missing(hass, entry)
@@ -164,7 +164,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(
