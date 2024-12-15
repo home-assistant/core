@@ -271,6 +271,7 @@ homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
+homeassistant.components.iron_os.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*

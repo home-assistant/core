@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.10.3
+aioautomower==2024.12.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -252,7 +252,6 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.github
-# homeassistant.components.iron_os
 aiogithubapi==24.6.0
 
 # homeassistant.components.guardian
@@ -286,7 +285,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.1.1
+aiolifx==1.1.2
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
@@ -816,7 +815,7 @@ eheimdigital==1.0.3
 electrickiwi-api==0.8.5
 
 # homeassistant.components.elevenlabs
-elevenlabs==1.6.1
+elevenlabs==1.9.0
 
 # homeassistant.components.elgato
 elgato==5.1.2
@@ -1197,7 +1196,7 @@ ihcsdk==2.8.5
 imgw_pib==1.0.6
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.3-1
+incomfort-client==0.6.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -1522,6 +1521,9 @@ odp-amsterdam==6.0.2
 # homeassistant.components.oem
 oemthermostat==1.1.1
 
+# homeassistant.components.ohme
+ohme==1.1.1
+
 # homeassistant.components.ollama
 ollama==0.3.3
 
@@ -1630,7 +1632,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.3
+plugwise==1.6.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2089,7 +2091,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.9
+pymodbus==3.7.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2101,7 +2103,7 @@ pymsteams==0.1.12
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==2.0.2
+pynecil==2.1.0
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -2113,7 +2115,7 @@ pynetio==0.1.9.1
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.2
+pynordpool==0.2.3
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2745,7 +2747,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.0
+starlink-grpc-core==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3055,7 +3057,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.4
+yalexs-ble==2.5.5
 
 # homeassistant.components.august
 # homeassistant.components.yale
