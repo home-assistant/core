@@ -33,13 +33,14 @@ DEVICE_1 = {
 }
 DEVICE_DATA_QUERY = DEVICE_1
 
+DEVICE_2_MAC = "yy:yy:yy:yy:yy:yy"
 DEVICE_2 = {
-    "yy:yy:yy:yy:yy:yy": VodafoneStationDevice(
+    DEVICE_2_MAC: VodafoneStationDevice(
         connected=True,
         connection_type="lan",
         ip_address="192.168.1.11",
-        name="WifiDevice0",
-        mac="yy:yy:yy:yy:yy:yy",
+        name="LanDevice1",
+        mac=DEVICE_2_MAC,
         type="desktop",
         wifi="",
     ),

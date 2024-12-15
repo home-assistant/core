@@ -12,7 +12,7 @@
         dict({
           'connected': True,
           'connection_type': 'lan',
-          'hostname': 'WifiDevice0',
+          'hostname': 'LanDevice1',
           'type': 'desktop',
         }),
       ]),

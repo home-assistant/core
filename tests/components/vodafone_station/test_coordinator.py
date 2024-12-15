@@ -9,10 +9,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.vodafone_station.coordinator import CONSIDER_HOME_SECONDS
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    DEVICE_1,
     DEVICE_1_MAC,
     DEVICE_2,
     DEVICE_DATA_QUERY,
@@ -115,7 +117,9 @@ async def test_coordinator_uptime_shift(
         assert state.state == uptime
 
         mock_sensor_data.reset_mock()
-        mock_sensor_data.return_value = SENSOR_DATA_QUERY["sys_uptime"] = "12:17:23"
+
+        SENSOR_DATA_QUERY["sys_uptime"] = "12:17:23"
+        mock_sensor_data.return_value = SENSOR_DATA_QUERY
 
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -156,3 +160,57 @@ async def test_coordinator_device_cleanup(
 
         state = hass.states.get(f"device_tracker.vodafone_station_{DEVICE_1_MAC}")
         assert state is None
+
+
+async def test_coordinator_consider_home(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if device is considered not_home when disconnected."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    with (
+        patch("aiovodafone.api.VodafoneStationSercommApi.login") as mock_login,
+        patch(
+            "aiovodafone.api.VodafoneStationSercommApi.get_devices_data",
+            return_value=DEVICE_DATA_QUERY,
+        ) as mock_devices_data,
+        patch(
+            "aiovodafone.api.VodafoneStationSercommApi.get_sensor_data",
+            return_value=SENSOR_DATA_QUERY,
+        ) as mock_sensor_data,
+        patch(
+            "homeassistant.components.vodafone_station.device_tracker.VodafoneStationTracker.entity_registry_enabled_default",
+            return_value=True,
+        ),
+    ):
+        device_tracker = (
+            f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(":", "_")}"
+        )
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_login.assert_called_once()
+        mock_devices_data.assert_called_once()
+        mock_sensor_data.assert_called_once()
+
+        state = hass.states.get(device_tracker)
+        assert state
+        assert state.state == "home"
+
+        mock_devices_data.reset_mock()
+
+        DEVICE_1[DEVICE_1_MAC].connected = False
+        DEVICE_DATA_QUERY.update(DEVICE_1)
+        mock_devices_data.return_value = DEVICE_DATA_QUERY
+
+        freezer.tick(SCAN_INTERVAL + CONSIDER_HOME_SECONDS)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get(device_tracker)
+        assert state
+        assert state.state == "not_home"
