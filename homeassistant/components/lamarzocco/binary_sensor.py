@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         LaMarzoccoBinarySensorEntity(coordinator, description)

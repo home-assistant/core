@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any
@@ -24,7 +25,17 @@ FIRMWARE_UPDATE_INTERVAL = timedelta(hours=1)
 STATISTICS_UPDATE_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
-type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoUpdateCoordinator]
+
+@dataclass
+class LaMarzoccoRuntimeData:
+    """Runtime data for La Marzocco."""
+
+    config_coordinator: LaMarzoccoConfigUpdateCoordinator
+    firmware_coordinator: LaMarzoccoFirmwareUpdateCoordinator
+    statistics_coordinator: LaMarzoccoStatisticsUpdateCoordinator
+
+
+type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
 
 
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):

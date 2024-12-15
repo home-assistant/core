@@ -30,6 +30,7 @@ from .coordinator import (
     LaMarzoccoConfigEntry,
     LaMarzoccoConfigUpdateCoordinator,
     LaMarzoccoFirmwareUpdateCoordinator,
+    LaMarzoccoRuntimeData,
     LaMarzoccoStatisticsUpdateCoordinator,
 )
 
@@ -119,10 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         LaMarzoccoFirmwareUpdateCoordinator(hass, entry, device),
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
+
     for coordinator in coordinators:
         await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinators[0]
+    entry.runtime_data = LaMarzoccoRuntimeData(*coordinators)
 
     gateway_version = device.firmware[FirmwareType.GATEWAY].current_version
     if version.parse(gateway_version) < version.parse("v3.4-rc5"):
