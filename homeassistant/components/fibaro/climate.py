@@ -272,15 +272,15 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         if isinstance(fibaro_operation_mode, str):
             with suppress(ValueError):
                 return HVACMode(fibaro_operation_mode.lower())
-        elif fibaro_operation_mode in OPMODES_HVAC:
+            # when the mode cannot be instantiated a preset_mode is selected
+            return HVACMode.AUTO
+        if fibaro_operation_mode in OPMODES_HVAC:
             return OPMODES_HVAC[fibaro_operation_mode]
         return None
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if not self._op_mode_device:
-            return
-        if self.preset_mode:
             return
 
         if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
