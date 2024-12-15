@@ -63,7 +63,10 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No issues requiring a repair at the moment.
   stale-devices: todo
   # Platinum
   async-dependency: done
