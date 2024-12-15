@@ -70,7 +70,7 @@ async def test_hvac_mode_heat(
     mock_thermostat: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test that the climate state is auto when a preset is selected."""
+    """Test that the preset mode is None if a hvac mode is active."""
 
     # Arrange
     mock_thermostat.thermostat_mode = "Heat"
@@ -93,7 +93,7 @@ async def test_set_hvac_mode(
     mock_thermostat: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test that the climate state is auto when a preset is selected."""
+    """Test that set_hvac_mode() works."""
 
     # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
