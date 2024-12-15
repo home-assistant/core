@@ -92,8 +92,6 @@ async def async_setup_entry(
             for description in SCALE_ENTITIES
         )
 
-    async_add_entities(entities)
-
     def _async_add_new_scale() -> None:
         async_add_entities(
             LaMarzoccoScaleBinarySensorEntity(coordinator, description)
@@ -101,6 +99,8 @@ async def async_setup_entry(
         )
 
     coordinator.new_scale_callback.append(_async_add_new_scale)
+
+    async_add_entities(entities)
 
 
 class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):

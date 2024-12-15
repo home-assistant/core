@@ -108,7 +108,7 @@ SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         ),
         supported_fn=lambda coordinator: coordinator.device.model
         == MachineModel.LINEA_MINI,
-    )
+    ),
 )
 
 
@@ -135,7 +135,12 @@ async def async_setup_entry(
             for description in SCALE_ENTITIES
         )
 
-    async_add_entities(entities)
+    statistics_coordinator = entry.runtime_data.statistics_coordinator
+    entities.extend(
+        LaMarzoccoSensorEntity(statistics_coordinator, description)
+        for description in STATISTIC_ENTITIES
+        if description.supported_fn(statistics_coordinator)
+    )
 
     def _async_add_new_scale() -> None:
         async_add_entities(
@@ -144,13 +149,6 @@ async def async_setup_entry(
         )
 
     config_coordinator.new_scale_callback.append(_async_add_new_scale)
-
-    statistics_coordinator = entry.runtime_data.statistics_coordinator
-    entities.extend(
-        LaMarzoccoSensorEntity(statistics_coordinator, description)
-        for description in STATISTIC_ENTITIES
-        if description.supported_fn(statistics_coordinator)
-    )
 
     async_add_entities(entities)
 

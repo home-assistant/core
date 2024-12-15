@@ -254,7 +254,6 @@ async def async_setup_entry(
                     LaMarzoccoScaleTargetNumber(coordinator, description, int(key))
                     for key in bbw_settings.doses
                 )
-    async_add_entities(entities)
 
     def _async_add_new_scale() -> None:
         if bbw_settings := coordinator.device.config.bbw_settings:
@@ -265,6 +264,8 @@ async def async_setup_entry(
             )
 
     coordinator.new_scale_callback.append(_async_add_new_scale)
+
+    async_add_entities(entities)
 
 
 class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
