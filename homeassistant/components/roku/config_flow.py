@@ -89,7 +89,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
-            return self._show_form()
+            return self._show_form(user_input)
 
         errors = {}
 
