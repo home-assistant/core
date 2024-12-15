@@ -60,7 +60,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _show_form(
         self,
-        user_input: dict[str, Any] | None
+        user_input: dict[str, Any] | None,
         errors: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the form to the user."""
