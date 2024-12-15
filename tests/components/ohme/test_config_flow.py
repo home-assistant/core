@@ -108,27 +108,3 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_reauth_form(hass: HomeAssistant, mock_client: MagicMock) -> None:
-    """Test reauth form."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_EMAIL: "test@example.com",
-            CONF_PASSWORD: "hunter1",
-        },
-    )
-    entry.add_to_hass(hass)
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_PASSWORD: "hunter2"},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"

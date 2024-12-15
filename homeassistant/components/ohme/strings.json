@@ -11,16 +11,6 @@
           "email": "Enter the email address associated with your Ohme account.",
           "password": "Enter the password for your Ohme account"
         }
-      },
-      "reauth_confirm": {
-        "description": "Please update your password for {email}",
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "Enter the password for your Ohme account"
-        }
       }
     },
     "error": {
@@ -28,8 +18,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {
