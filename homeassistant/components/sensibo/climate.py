@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -231,10 +231,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        if TYPE_CHECKING:
-            assert self.device_data.hvac_modes
-        hvac_modes = [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
-        return hvac_modes if hvac_modes else [HVACMode.OFF]
+        if not self.device_data.hvac_modes:
+            return [HVACMode.OFF]
+        return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
 
     @property
     def current_temperature(self) -> float | None:
@@ -259,52 +258,42 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temp: int | None = self.device_data.target_temp
-        return target_temp
+        return self.device_data.target_temp
 
     @property
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
-        target_temp_step: int = self.device_data.temp_step
-        return target_temp_step
+        return self.device_data.temp_step
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        fan_mode: str | None = self.device_data.fan_mode
-        return fan_mode
+        return self.device_data.fan_mode
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        if self.device_data.fan_modes:
-            return self.device_data.fan_modes
-        return None
+        return self.device_data.fan_modes
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        swing_mode: str | None = self.device_data.swing_mode
-        return swing_mode
+        return self.device_data.swing_mode
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        if self.device_data.swing_modes:
-            return self.device_data.swing_modes
-        return None
+        return self.device_data.swing_modes
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        min_temp: int = self.device_data.temp_list[0]
-        return min_temp
+        return self.device_data.temp_list[0]
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_temp: int = self.device_data.temp_list[-1]
-        return max_temp
+        return self.device_data.temp_list[-1]
 
     @property
     def available(self) -> bool:
