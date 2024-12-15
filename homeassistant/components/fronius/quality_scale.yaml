@@ -37,9 +37,12 @@ rules:
     comment: |
       `async_remove_config_entry_device` does not use typed ConfigEntry.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: todo
+    comment: |
+      ConfigEntryNotReady not raised in async_setup_entry but in helper function.
+      Hassfest test fails for this.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
