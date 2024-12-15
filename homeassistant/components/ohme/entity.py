@@ -1,11 +1,23 @@
 """Base class for entities."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from ohme import OhmeApiClient
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OhmeBaseCoordinator
+
+
+@dataclass(frozen=True)
+class OhmeEntityDescription(EntityDescription):
+    """Class describing Ohme entities."""
+
+    is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
 
 
 class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
