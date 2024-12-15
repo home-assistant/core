@@ -53,8 +53,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def api_mock_single_lock() -> Generator[AsyncMock]:
-    """Set up Api module to always return a single lock type device."""
+def mock_api() -> Generator[AsyncMock]:
+    """Set up the Api module. Defaults to always returning a single lock."""
     with (
         patch(
             "homeassistant.components.igloohome.IgloohomeApi",
