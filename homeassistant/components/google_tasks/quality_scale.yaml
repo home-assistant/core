@@ -39,7 +39,7 @@ rules:
   reauthentication-flow:
     status: todo
     comment: Missing a test that reauthenticates with the wrong account
-  action-exceptions: todo
+  action-exceptions: done
   docs-installation-parameters: todo
   integration-owner: done
   parallel-updates: todo
