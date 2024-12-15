@@ -65,13 +65,9 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: Issue in button
-  exception-translations: todo
-  icon-translations:
-    status: todo
-    comment: Issue in device_tracker
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
