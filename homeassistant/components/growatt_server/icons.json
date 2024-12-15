@@ -1,0 +1,7 @@
+{
+  "services": {
+    "update_tlx_inverter_time_segment": {
+      "service": "mdi:update"
+    }
+  }
+}
