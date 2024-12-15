@@ -47,7 +47,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> b
     host = entry.data[CONF_HOST]
     fronius = Fronius(async_get_clientsession(hass), host)
     solar_net = FroniusSolarNet(hass, entry, fronius)
-    await solar_net.init_devices()
+    try:
+        await solar_net.init_devices()
+    except FroniusError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="entry_cannot_connect",
+            translation_placeholders={
+                "host": host,
+                "fronius_error": str(err),
+            },
+        ) from err
 
     entry.runtime_data = solar_net
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -220,20 +230,12 @@ class FroniusSolarNet:
 
         try:
             _inverter_info = await self.fronius.inverter_info()
-        except FroniusError as err:
+        except FroniusError:
             if self.config_entry.state == ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
                 _LOGGER.debug("Re-scan failed for %s", self.host)
                 return inverter_infos
-
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="entry_cannot_connect",
-                translation_placeholders={
-                    "host": self.host,
-                    "fronius_error": str(err),
-                },
-            ) from err
+            raise  # handled in async_setup_entry when not LOADED
 
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]
