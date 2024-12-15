@@ -3,19 +3,20 @@
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from time import time
 from typing import Any
 
 from aiohttp import ClientResponseError
 from tesla_fleet_api import EnergySpecific
 from tesla_fleet_api.exceptions import InvalidToken, MissingToken, TeslaFleetError
-from tessie_api import get_state, get_status
+from tessie_api import get_state
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import TessieStatus
+from .const import TessieState
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -57,21 +58,17 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_key = api_key
         self.vin = vin
         self.session = async_get_clientsession(hass)
+
+        # Tessie always returns cached data with a status of "online"
+        # We need to check the timestamp to determine if the vehicle is actually asleep
+        if data["vehicle_state"]["timestamp"] < (time() - 60) * 1000:
+            data["state"] = TessieState.ASLEEP
+
         self.data = flatten(data)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
-            status = await get_status(
-                session=self.session,
-                api_key=self.api_key,
-                vin=self.vin,
-            )
-            if status["status"] == TessieStatus.ASLEEP:
-                # Vehicle is asleep, no need to poll for data
-                self.data["state"] = status["status"]
-                return self.data
-
             vehicle = await get_state(
                 session=self.session,
                 api_key=self.api_key,
@@ -83,6 +80,11 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # Auth Token is no longer valid
                 raise ConfigEntryAuthFailed from e
             raise
+
+        # Tessie always returns cached data with a status of "online"
+        # We need to check the timestamp to determine if the vehicle is actually asleep
+        if vehicle["vehicle_state"]["timestamp"] < (time() - 60) * 1000:
+            vehicle["state"] = TessieState.ASLEEP
 
         return flatten(vehicle)
 
