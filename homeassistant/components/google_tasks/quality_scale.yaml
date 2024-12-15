@@ -42,7 +42,7 @@ rules:
   action-exceptions: done
   docs-installation-parameters: todo
   integration-owner: done
-  parallel-updates: todo
+  parallel-updates: done
   test-coverage:
     status: todo
     comment: Test coverage for __init__.py is not above 95% yet
