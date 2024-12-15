@@ -28,6 +28,8 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+RECONFIGURE_HOST = "192.168.1.190"
+
 
 async def test_duplicate_error(
     hass: HomeAssistant,
@@ -297,7 +299,7 @@ async def _start_reconfigure_flow(
 
     return await hass.config_entries.flow.async_configure(
         reconfigure_result["flow_id"],
-        {CONF_HOST: "192.168.1.190"},
+        {CONF_HOST: RECONFIGURE_HOST},
     )
 
 
@@ -316,7 +318,7 @@ async def test_reconfigure_flow(
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry
     assert entry.data == {
-        CONF_HOST: "192.168.1.190",
+        CONF_HOST: RECONFIGURE_HOST,
     }
 
 
