@@ -59,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
