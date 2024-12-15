@@ -25,7 +25,15 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_API_USER, DEFAULT_URL, DOMAIN
+from .const import (
+    CONF_API_USER,
+    DEFAULT_URL,
+    DOMAIN,
+    FORGOT_PASSWORD_URL,
+    HABITICANS_URL,
+    SIGN_UP_URL,
+    SITE_DATA_URL,
+)
 
 STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
     {
@@ -69,6 +77,10 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_menu(
             step_id="user",
             menu_options=["login", "advanced"],
+            description_placeholders={
+                "signup": SIGN_UP_URL,
+                "habiticans": HABITICANS_URL,
+            },
         )
 
     async def async_step_login(
@@ -125,6 +137,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_LOGIN_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+            description_placeholders={"forgot_password": FORGOT_PASSWORD_URL},
         )
 
     async def async_step_advanced(
@@ -175,4 +188,8 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_ADVANCED_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+            description_placeholders={
+                "site_data": SITE_DATA_URL,
+                "default_url": DEFAULT_URL,
+            },
         )

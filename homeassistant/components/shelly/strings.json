@@ -45,7 +45,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "custom_port_not_supported": "Gen1 device does not support custom port."
+      "custom_port_not_supported": "Gen1 device does not support custom port.",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -53,7 +54,8 @@
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
-      "ipv6_not_supported": "IPv6 is not supported."
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
     }
   },
   "device_automation": {

@@ -101,10 +101,6 @@ async def test_discovery(hass: HomeAssistant) -> None:
     assert result2["reason"] == "no_devices_found"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.lifx.config.abort.cannot_connect"],
-)
 async def test_discovery_but_cannot_connect(hass: HomeAssistant) -> None:
     """Test we can discover the device but we cannot connect."""
     with _patch_discovery(), _patch_config_flow_try_connect(no_device=True):

@@ -1,0 +1,715 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'api_user': 'test-api-user',
+      'url': 'https://habitica.com',
+    }),
+    'habitica_data': dict({
+      'tasks': list([
+        dict({
+          '_id': 'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'counterDown': 0,
+          'counterUp': 0,
+          'createdAt': '2024-07-07T17:51:53.268Z',
+          'down': True,
+          'frequency': 'daily',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+          ]),
+          'id': 'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a',
+          'notes': '',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Gesundes Essen/Junkfood',
+          'type': 'habit',
+          'up': True,
+          'updatedAt': '2024-07-07T17:51:53.268Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '1d147de6-5c02-4740-8e2f-71d3015a37f4',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'counterDown': 0,
+          'counterUp': 0,
+          'createdAt': '2024-07-07T17:51:53.266Z',
+          'down': False,
+          'frequency': 'daily',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+            dict({
+              'date': 1720376763324,
+              'scoredDown': 0,
+              'scoredUp': 1,
+              'value': 1,
+            }),
+          ]),
+          'id': '1d147de6-5c02-4740-8e2f-71d3015a37f4',
+          'notes': '',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Eine kurze Pause machen',
+          'type': 'habit',
+          'up': True,
+          'updatedAt': '2024-07-12T09:58:45.438Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': 'bc1d1855-b2b8-4663-98ff-62e7b763dfc4',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'counterDown': 0,
+          'counterUp': 0,
+          'createdAt': '2024-07-07T17:51:53.265Z',
+          'down': True,
+          'frequency': 'daily',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+          ]),
+          'id': 'bc1d1855-b2b8-4663-98ff-62e7b763dfc4',
+          'notes': 'Oder lösche es über die Bearbeitungs-Ansicht',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
+          'type': 'habit',
+          'up': False,
+          'updatedAt': '2024-07-07T17:51:53.265Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+          'alias': 'create_a_task',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'counterDown': 0,
+          'counterUp': 0,
+          'createdAt': '2024-07-07T17:51:53.264Z',
+          'down': False,
+          'frequency': 'daily',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+            dict({
+              'date': 1720376763140,
+              'scoredDown': 0,
+              'scoredUp': 1,
+              'value': 1,
+            }),
+          ]),
+          'id': 'e97659e0-2c42-4599-a7bb-00282adc410d',
+          'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Füge eine Aufgabe zu Habitica hinzu',
+          'type': 'habit',
+          'up': True,
+          'updatedAt': '2024-07-12T09:58:45.438Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': True,
+          'createdAt': '2024-07-07T17:51:53.268Z',
+          'daysOfMonth': list([
+          ]),
+          'everyX': 1,
+          'frequency': 'weekly',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+            dict({
+              'completed': True,
+              'date': 1720376766749,
+              'isDue': True,
+              'value': 1,
+            }),
+            dict({
+              'completed': False,
+              'date': 1720545311292,
+              'isDue': True,
+              'value': 0.02529999999999999,
+            }),
+            dict({
+              'completed': False,
+              'date': 1720564306719,
+              'isDue': True,
+              'value': -0.9740518837628547,
+            }),
+            dict({
+              'completed': True,
+              'date': 1720691096907,
+              'isDue': True,
+              'value': 0.051222853419153,
+            }),
+            dict({
+              'completed': True,
+              'date': 1720778325243,
+              'isDue': True,
+              'value': 1.0499115128458676,
+            }),
+            dict({
+              'completed': False,
+              'date': 1724185196447,
+              'isDue': True,
+              'value': 0.07645736684721605,
+            }),
+            dict({
+              'completed': False,
+              'date': 1724255707692,
+              'isDue': True,
+              'value': -0.921585289356988,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726846163640,
+              'isDue': True,
+              'value': -1.9454824860630637,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726953787542,
+              'isDue': True,
+              'value': -2.9966001649571803,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726956115608,
+              'isDue': True,
+              'value': -4.07641493832036,
+            }),
+            dict({
+              'completed': True,
+              'date': 1726957460150,
+              'isDue': True,
+              'value': -2.9663035443712333,
+            }),
+          ]),
+          'id': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+          'isDue': True,
+          'nextDue': list([
+            'Mon Sep 23 2024 00:00:00 GMT+0200',
+            'Tue Sep 24 2024 00:00:00 GMT+0200',
+            'Wed Sep 25 2024 00:00:00 GMT+0200',
+            'Thu Sep 26 2024 00:00:00 GMT+0200',
+            'Fri Sep 27 2024 00:00:00 GMT+0200',
+            'Sat Sep 28 2024 00:00:00 GMT+0200',
+          ]),
+          'notes': 'Klicke um Änderungen zu machen!',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'repeat': dict({
+            'f': True,
+            'm': True,
+            's': True,
+            'su': True,
+            't': True,
+            'th': True,
+            'w': True,
+          }),
+          'startDate': '2024-07-06T22:00:00.000Z',
+          'streak': 1,
+          'tags': list([
+          ]),
+          'text': 'Zahnseide benutzen',
+          'type': 'daily',
+          'updatedAt': '2024-09-21T22:24:20.154Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': -2.9663035443712333,
+          'weeksOfMonth': list([
+          ]),
+          'yesterDaily': True,
+        }),
+        dict({
+          '_id': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-07-07T17:51:53.266Z',
+          'daysOfMonth': list([
+          ]),
+          'everyX': 1,
+          'frequency': 'weekly',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+            dict({
+              'completed': True,
+              'date': 1720374903074,
+              'isDue': True,
+              'value': 1,
+            }),
+            dict({
+              'completed': False,
+              'date': 1720545311291,
+              'isDue': True,
+              'value': 0.02529999999999999,
+            }),
+            dict({
+              'completed': False,
+              'date': 1720564306717,
+              'isDue': True,
+              'value': -0.9740518837628547,
+            }),
+            dict({
+              'completed': True,
+              'date': 1720682459722,
+              'isDue': True,
+              'value': 0.051222853419153,
+            }),
+            dict({
+              'completed': True,
+              'date': 1720778325246,
+              'isDue': True,
+              'value': 1.0499115128458676,
+            }),
+            dict({
+              'completed': True,
+              'date': 1720778492219,
+              'isDue': True,
+              'value': 2.023365658844519,
+            }),
+            dict({
+              'completed': False,
+              'date': 1724255707691,
+              'isDue': True,
+              'value': 1.0738942424964806,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726846163638,
+              'isDue': True,
+              'value': 0.10103816898038132,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726953787540,
+              'isDue': True,
+              'value': -0.8963760215867302,
+            }),
+            dict({
+              'completed': False,
+              'date': 1726956115607,
+              'isDue': True,
+              'value': -1.919611992979862,
+            }),
+          ]),
+          'id': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+          'isDue': True,
+          'nextDue': list([
+            '2024-09-22T22:00:00.000Z',
+            '2024-09-23T22:00:00.000Z',
+            '2024-09-24T22:00:00.000Z',
+            '2024-09-25T22:00:00.000Z',
+            '2024-09-26T22:00:00.000Z',
+            '2024-09-27T22:00:00.000Z',
+          ]),
+          'notes': 'Klicke um Deinen Terminplan festzulegen!',
+          'priority': 1,
+          'reminders': list([
+            dict({
+              'id': '1491d640-6b21-4d0c-8940-0b7aa61c8836',
+              'time': '2024-09-22T20:00:00.0000Z',
+            }),
+          ]),
+          'repeat': dict({
+            'f': True,
+            'm': True,
+            's': True,
+            'su': True,
+            't': True,
+            'th': True,
+            'w': True,
+          }),
+          'startDate': '2024-07-06T22:00:00.000Z',
+          'streak': 0,
+          'tags': list([
+          ]),
+          'text': '5 Minuten ruhig durchatmen',
+          'type': 'daily',
+          'updatedAt': '2024-09-21T22:51:41.756Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': -1.919611992979862,
+          'weeksOfMonth': list([
+          ]),
+          'yesterDaily': True,
+        }),
+        dict({
+          '_id': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-09-22T11:44:43.774Z',
+          'daysOfMonth': list([
+          ]),
+          'everyX': 1,
+          'frequency': 'weekly',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+          ]),
+          'id': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+          'isDue': True,
+          'nextDue': list([
+            '2024-09-24T22:00:00.000Z',
+            '2024-09-27T22:00:00.000Z',
+            '2024-09-28T22:00:00.000Z',
+            '2024-10-01T22:00:00.000Z',
+            '2024-10-04T22:00:00.000Z',
+            '2024-10-08T22:00:00.000Z',
+          ]),
+          'notes': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+          'priority': 2,
+          'reminders': list([
+          ]),
+          'repeat': dict({
+            'f': False,
+            'm': False,
+            's': True,
+            'su': True,
+            't': False,
+            'th': False,
+            'w': True,
+          }),
+          'startDate': '2024-09-21T22:00:00.000Z',
+          'streak': 0,
+          'tags': list([
+            '51076966-2970-4b40-b6ba-d58c6a756dd7',
+          ]),
+          'text': 'Fitnessstudio besuchen',
+          'type': 'daily',
+          'updatedAt': '2024-09-22T11:44:43.774Z',
+          'userId': '1343a9af-d891-4027-841a-956d105ca408',
+          'value': 0,
+          'weeksOfMonth': list([
+          ]),
+          'yesterDaily': True,
+        }),
+        dict({
+          '_id': '88de7cd9-af2b-49ce-9afd-bf941d87336b',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-09-21T22:17:57.816Z',
+          'date': '2024-09-27T22:17:00.000Z',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'id': '88de7cd9-af2b-49ce-9afd-bf941d87336b',
+          'notes': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Buch zu Ende lesen',
+          'type': 'todo',
+          'updatedAt': '2024-09-21T22:17:57.816Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '2f6fcabc-f670-4ec3-ba65-817e8deea490',
+          'alias': 'pay_bills',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-09-21T22:17:19.513Z',
+          'date': '2024-08-31T22:16:00.000Z',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'id': '2f6fcabc-f670-4ec3-ba65-817e8deea490',
+          'notes': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+          'priority': 1,
+          'reminders': list([
+            dict({
+              'id': '91c09432-10ac-4a49-bd20-823081ec29ed',
+              'time': '2024-09-22T02:00:00.0000Z',
+            }),
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Rechnungen bezahlen',
+          'type': 'todo',
+          'updatedAt': '2024-09-21T22:19:35.576Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '1aa3137e-ef72-4d1f-91ee-41933602f438',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-09-21T22:16:38.153Z',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'id': '1aa3137e-ef72-4d1f-91ee-41933602f438',
+          'notes': 'Rasen mähen und die Pflanzen gießen.',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Garten pflegen',
+          'type': 'todo',
+          'updatedAt': '2024-09-21T22:16:38.153Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '86ea2475-d1b5-4020-bdcc-c188c7996afa',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-09-21T22:16:16.756Z',
+          'date': '2024-09-21T22:00:00.000Z',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'id': '86ea2475-d1b5-4020-bdcc-c188c7996afa',
+          'notes': 'Den Ausflug für das kommende Wochenende organisieren.',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+            '51076966-2970-4b40-b6ba-d58c6a756dd7',
+          ]),
+          'text': 'Wochenendausflug planen',
+          'type': 'todo',
+          'updatedAt': '2024-09-21T22:16:16.756Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 0,
+        }),
+        dict({
+          '_id': '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'createdAt': '2024-07-07T17:51:53.266Z',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'id': '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b',
+          'notes': 'Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'tags': list([
+          ]),
+          'text': 'Belohne Dich selbst',
+          'type': 'reward',
+          'updatedAt': '2024-07-07T17:51:53.266Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': 10,
+        }),
+      ]),
+      'user': dict({
+        'api_user': 'test-api-user',
+        'auth': dict({
+          'local': dict({
+            'username': 'test-username',
+          }),
+        }),
+        'flags': dict({
+          'classSelected': True,
+        }),
+        'id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303',
+        'items': dict({
+          'gear': dict({
+            'equipped': dict({
+              'armor': 'armor_warrior_5',
+              'back': 'back_special_heroicAureole',
+              'body': 'body_special_aetherAmulet',
+              'eyewear': 'eyewear_armoire_plagueDoctorMask',
+              'head': 'head_warrior_5',
+              'headAccessory': 'headAccessory_armoire_gogglesOfBookbinding',
+              'shield': 'shield_warrior_5',
+              'weapon': 'weapon_warrior_5',
+            }),
+          }),
+        }),
+        'lastCron': '2024-09-21T22:01:55.586Z',
+        'needsCron': True,
+        'party': dict({
+          '_id': '94cd398c-2240-4320-956e-6d345cf2c0de',
+          'quest': dict({
+            'RSVPNeeded': True,
+            'key': 'dustbunnies',
+          }),
+        }),
+        'preferences': dict({
+          'automaticAllocation': True,
+          'disableClasses': False,
+          'language': 'en',
+          'sleep': False,
+        }),
+        'profile': dict({
+          'name': 'test-user',
+        }),
+        'stats': dict({
+          'buffs': dict({
+            'con': 26,
+            'int': 26,
+            'per': 26,
+            'seafoam': False,
+            'shinySeed': False,
+            'snowball': False,
+            'spookySparkles': False,
+            'stealth': 0,
+            'str': 26,
+            'streaks': False,
+          }),
+          'class': 'wizard',
+          'con': 15,
+          'exp': 737,
+          'gp': 137.62587214609795,
+          'hp': 0,
+          'int': 15,
+          'lvl': 38,
+          'maxHealth': 50,
+          'maxMP': 166,
+          'mp': 50.89999999999998,
+          'per': 15,
+          'points': 5,
+          'str': 15,
+          'toNextLevel': 880,
+        }),
+        'tasksOrder': dict({
+          'dailys': list([
+            'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a',
+            'bc1d1855-b2b8-4663-98ff-62e7b763dfc4',
+            'e97659e0-2c42-4599-a7bb-00282adc410d',
+            '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+            'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+            '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+          ]),
+          'habits': list([
+            '1d147de6-5c02-4740-8e2f-71d3015a37f4',
+          ]),
+          'rewards': list([
+            '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b',
+          ]),
+          'todos': list([
+            '88de7cd9-af2b-49ce-9afd-bf941d87336b',
+            '2f6fcabc-f670-4ec3-ba65-817e8deea490',
+            '1aa3137e-ef72-4d1f-91ee-41933602f438',
+            '86ea2475-d1b5-4020-bdcc-c188c7996afa',
+          ]),
+        }),
+      }),
+    }),
+  })
+# ---

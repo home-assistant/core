@@ -18,10 +18,6 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Reolink integration needs to re-authenticate your connection details"
       }
     },
     "error": {
@@ -31,12 +27,14 @@
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The mac address of the device does not match the previous mac address"
     }
   },
   "options": {
@@ -489,7 +487,7 @@
         "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -528,7 +526,7 @@
         "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
           "alwayson": "Always on"
         }
@@ -538,7 +536,15 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "Auto"
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+        }
+      },
+      "binning_mode": {
+        "name": "Binning mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
         }
       },
       "hub_alarm_ringtone": {
@@ -605,6 +611,22 @@
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       },
+      "vehicle_tone": {
+        "name": "Vehicle ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
       "visitor_tone": {
         "name": "Visitor ringtone",
         "state": {
@@ -636,6 +658,18 @@
           "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "main_frame_rate": {
+        "name": "Clear frame rate"
+      },
+      "sub_frame_rate": {
+        "name": "Fluent frame rate"
+      },
+      "main_bit_rate": {
+        "name": "Clear bit rate"
+      },
+      "sub_bit_rate": {
+        "name": "Fluent bit rate"
       }
     },
     "sensor": {
@@ -647,6 +681,9 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "ptz_tilt_position": {
+        "name": "PTZ tilt position"
       },
       "battery_temperature": {
         "name": "Battery temperature"

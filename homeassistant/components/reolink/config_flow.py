@@ -7,7 +7,12 @@ import logging
 from typing import Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    LoginFirmwareError,
+    ReolinkError,
+)
 import voluptuous as vol
 
 from homeassistant.components import dhcp
@@ -48,10 +53,6 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 
 class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
-
-    def __init__(self, config_entry: ReolinkConfigEntry) -> None:
-        """Initialize ReolinkOptionsFlowHandler."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -107,7 +108,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
-        return ReolinkOptionsFlowHandler(config_entry)
+        return ReolinkOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -127,13 +128,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is not None:
-            return await self.async_step_user()
-        placeholders = {"name": self.context["title_placeholders"]["name"]}
-        return self.async_show_form(
-            step_id="reauth_confirm", description_placeholders=placeholders
-        )
+        """Perform a reauthentication."""
+        return await self.async_step_user()
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -233,6 +229,15 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginFirmwareError:
+                errors["base"] = "update_needed"
+                placeholders["current_firmware"] = host.api.sw_version
+                placeholders["needed_firmware"] = (
+                    host.api.sw_version_required.version_string
+                )
+                placeholders["download_center_url"] = (
+                    "https://reolink.com/download-center"
+                )
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"
@@ -268,7 +273,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     return self.async_update_reload_and_abort(
                         entry=self._get_reconfigure_entry(), data=user_input
                     )
-                self._abort_if_unique_id_configured(updates=user_input)
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
                     title=str(host.api.nvr_name),

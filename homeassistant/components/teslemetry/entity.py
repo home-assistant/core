@@ -175,6 +175,8 @@ class TeslemetryEnergyHistoryEntity(TeslemetryEntity):
     ) -> None:
         """Initialize common aspects of a Teslemetry Energy Site Info entity."""
 
+        assert data.history_coordinator
+
         self.api = data.api
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
