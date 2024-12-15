@@ -5,13 +5,15 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from ohme import ChargerStatus, OhmeApiClient
+from ohme import ApiException, ChargerStatus, OhmeApiClient
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OhmeConfigEntry
+from .const import DOMAIN
 from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 1
@@ -58,7 +60,12 @@ class OhmeButton(OhmeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_fn(self.coordinator.client)
+        try:
+            await self.entity_description.press_fn(self.coordinator.client)
+        except ApiException as e:
+            raise HomeAssistantError(
+                translation_key="api_failed", translation_domain=DOMAIN
+            ) from e
         await self.coordinator.async_request_refresh()
 
     @property
