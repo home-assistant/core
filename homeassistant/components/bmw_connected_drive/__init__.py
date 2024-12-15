@@ -6,7 +6,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -50,7 +49,7 @@ SERVICE_UPDATE_STATE = "update_state"
 
 @callback
 def _async_migrate_options_from_data_if_missing(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: BMWConfigEntry
 ) -> None:
     data = dict(entry.data)
     options = dict(entry.options)
