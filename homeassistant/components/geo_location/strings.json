@@ -5,10 +5,10 @@
       "name": "[%key:component::geo_location::title%]",
       "state_attributes": {
         "latitude": {
-          "name": "Latitude"
+          "name": "[%key:common::config_flow::data::latitude%]"
         },
         "longitude": {
-          "name": "Longitude"
+          "name": "[%key:common::config_flow::data::longitude%]"
         },
         "source": {
           "name": "Source"
