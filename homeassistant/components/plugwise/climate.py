@@ -188,18 +188,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current running hvac operation if supported."""
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
-
-        # Adam provides the hvac_action for each thermostat
         if (action := self.device.get("control_state")) is not None:
             return HVACAction(action)
-
-        # Anna
-        heater: str = self._gateway["heater_id"]
-        heater_data = self._devices[heater]
-        if heater_data["binary_sensors"]["heating_state"]:
-            return HVACAction.HEATING
-        if heater_data["binary_sensors"].get("cooling_state", False):
-            return HVACAction.COOLING
 
         return HVACAction.IDLE
 
