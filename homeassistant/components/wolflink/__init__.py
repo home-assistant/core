@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 import logging
+import voluptuous as vol
 
 from httpx import RequestError
+from wolf_comm import VALUE_ID, STATE
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
@@ -113,6 +115,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id][PARAMETERS] = parameters
     hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
     hass.data[DOMAIN][entry.entry_id][DEVICE_ID] = device_id
+
+    async def async_set_value(call):
+        """Handle the service call to write a value to the Wolf SmartSet system."""
+        value_id = call.data["value_id"]  # the id of the specific parameter to change
+        state = call.data["state"]  # the new value to set
+        gateway_id_ = call.data["gateway_id"]
+        system_id = call.data["system_id"]
+
+        try:
+            value_id = str(value_id)
+            state = str(state)
+            value_data = {VALUE_ID: value_id, STATE: state}
+            await wolf_client.write_value(gateway_id_, system_id, value_data)
+            _LOGGER.info(
+                "Successfully wrote value %s to device %s", value_data, system_id
+            )
+        except RequestError as e:
+            _LOGGER.error("Network error when writing value: %s", e)
+            raise
+        except InvalidAuth as e:
+            _LOGGER.error("Authentication failed while writing value: %s", e)
+            raise
+        except Exception as e:
+            _LOGGER.error("Unexpected error occurred when writing value: %s", e)
+            raise
+
+    # register the service # changes here require changes in services.yaml
+    hass.services.async_register(
+        domain=DOMAIN,
+        service="set_value",
+        service_func=async_set_value,
+        schema=vol.Schema(
+            {
+                vol.Required("value_id"): vol.Any(str, int),
+                vol.Required("state"): vol.Any(str, int, float),
+                vol.Optional("gateway_id", default=gateway_id): vol.Coerce(int),
+                vol.Optional("system_id", default=device_id): vol.Coerce(int),
+            }
+        ),
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
