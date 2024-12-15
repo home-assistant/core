@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import _LOGGER, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +47,7 @@ class SuezWaterData:
 
     aggregated_value: float
     aggregated_attr: Mapping[str, Any]
-    price: float
+    price: float | None
 
 
 type SuezWaterConfigEntry = ConfigEntry[SuezWaterCoordinator]
@@ -82,34 +82,44 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             counter_id=self.config_entry.data[CONF_COUNTER_ID],
         )
         if not await self._suez_client.check_credentials():
-            raise ConfigEntryError("Invalid credentials for suez water")
+            raise ConfigEntryAuthFailed("Invalid credentials for suez water")
 
     async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
+
         try:
             aggregated = await self._suez_client.fetch_aggregated_data()
-            data = SuezWaterData(
-                aggregated_value=aggregated.value,
-                aggregated_attr={
-                    "this_month_consumption": aggregated.current_month,
-                    "previous_month_consumption": aggregated.previous_month,
-                    "highest_monthly_consumption": aggregated.highest_monthly_consumption,
-                    "last_year_overall": aggregated.previous_year,
-                    "this_year_overall": aggregated.current_year,
-                    "history": aggregated.history,
-                },
-                price=(await self._suez_client.get_price()).price,
-            )
-            await self._update_statistics(data.price)
         except PySuezError as err:
-            _LOGGER.exception(err)
-            raise UpdateFailed(
-                f"Suez coordinator error communicating with API: {err}"
-            ) from err
-        _LOGGER.debug("Successfully fetched suez data")
-        return data
+            raise UpdateFailed("Suez coordinator error communicating with API") from err
 
-    async def _update_statistics(self, current_price: float) -> None:
+        price = None
+        try:
+            price_result = await self._suez_client.get_price()
+            if price_result:
+                price = price_result.price
+        except PySuezError:
+            _LOGGER.warning("Failed to fecth water price", stack_info=True)
+
+        try:
+            await self._update_statistics(price)
+        except PySuezError as err:
+            raise UpdateFailed("Failed to update suez water statistics") from err
+
+        _LOGGER.debug("Successfully fetched suez data")
+        return SuezWaterData(
+            aggregated_value=aggregated.value,
+            aggregated_attr={
+                "this_month_consumption": aggregated.current_month,
+                "previous_month_consumption": aggregated.previous_month,
+                "highest_monthly_consumption": aggregated.highest_monthly_consumption,
+                "last_year_overall": aggregated.previous_year,
+                "this_year_overall": aggregated.current_year,
+                "history": aggregated.history,
+            },
+            price=price,
+        )
+
+    async def _update_statistics(self, current_price: float | None) -> None:
         """Update daily statistics."""
         _LOGGER.debug("Updating statistics for %s", self._water_statistic_id)
 
@@ -152,7 +162,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
 
     def _build_statistics(
         self,
-        current_price: float,
+        current_price: float | None,
         consumption_sum: float,
         cost_sum: float,
         last_stats: date | None,
@@ -175,15 +185,16 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
                     sum=consumption_sum,
                 )
             )
-            day_cost = (data.day_consumption / 1000) * current_price
-            cost_sum += day_cost
-            cost_statistics.append(
-                StatisticData(
-                    start=consumption_date,
-                    state=day_cost,
-                    sum=cost_sum,
+            if current_price is not None:
+                day_cost = (data.day_consumption / 1000) * current_price
+                cost_sum += day_cost
+                cost_statistics.append(
+                    StatisticData(
+                        start=consumption_date,
+                        state=day_cost,
+                        sum=cost_sum,
+                    )
                 )
-            )
 
         return consumption_statistics, cost_statistics
 
@@ -208,7 +219,8 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         async_add_external_statistics(
             self.hass, consumption_metadata, consumption_statistics
         )
-        async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
+        if len(cost_statistics) > 0:
+            async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
 
         _LOGGER.debug("Updated statistics for %s", self._water_statistic_id)
 
