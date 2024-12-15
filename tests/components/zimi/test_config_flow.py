@@ -7,8 +7,8 @@ import pytest
 from zcc import ControlPointError
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zimi.const import DOMAIN, MAC
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.zimi.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
@@ -42,10 +42,12 @@ async def test_user_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] is None
+    assert result["errors"] == {}
 
 
-async def test_successful_config_manual(hass: HomeAssistant, socket_mock) -> None:
+async def test_successful_config_manual(
+    hass: HomeAssistant, socket_mock: MagicMock
+) -> None:
     """Test successful configuration with manual host entry."""
     test_mac = "AA:BB:CC:DD:EE:FF"
     test_host = "192.168.1.100"
@@ -63,7 +65,7 @@ async def test_successful_config_manual(hass: HomeAssistant, socket_mock) -> Non
         {
             CONF_HOST: test_host,
             CONF_PORT: test_port,
-            MAC: test_mac,
+            CONF_MAC: test_mac,
         },
     )
 
@@ -102,7 +104,7 @@ async def test_successful_config_discovery(
         {
             CONF_HOST: "",  # Empty host triggers discovery
             CONF_PORT: 5003,
-            MAC: test_mac,
+            CONF_MAC: test_mac,
         },
     )
 
@@ -124,7 +126,7 @@ async def test_discovery_failure(hass: HomeAssistant, discovery_service) -> None
         {
             CONF_HOST: "",
             CONF_PORT: 5003,
-            MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         },
     )
 
@@ -145,7 +147,7 @@ async def test_invalid_host(hass: HomeAssistant, socket_mock) -> None:
         {
             CONF_HOST: "invalid_host",
             CONF_PORT: 5003,
-            MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         },
     )
 
@@ -167,7 +169,7 @@ async def test_connection_refused(hass: HomeAssistant, socket_mock) -> None:
         {
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 5003,
-            MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         },
     )
 
@@ -189,7 +191,7 @@ async def test_connection_timeout(hass: HomeAssistant, socket_mock) -> None:
         {
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 5003,
-            MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         },
     )
 
@@ -211,7 +213,7 @@ async def test_unexpected_error(hass: HomeAssistant, socket_mock) -> None:
         {
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 5003,
-            MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
         },
     )
 
