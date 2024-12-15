@@ -53,7 +53,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(autouse=True)
-def api_single_lock():
+def api_mock() -> Generator[AsyncMock]:
     """Set up Api module to always return a single lock type device."""
     with (
         patch(
@@ -66,5 +66,5 @@ def api_single_lock():
             nextCursor="",
             payload=[GET_DEVICE_INFO_RESPONSE_LOCK],
         )
-        api.get_device_info = AsyncMock(return_value=GET_DEVICE_INFO_RESPONSE_LOCK)
+        api.get_device_info.return_value = GET_DEVICE_INFO_RESPONSE_LOCK
         yield api
