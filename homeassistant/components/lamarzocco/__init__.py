@@ -115,17 +115,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         bluetooth_client=bluetooth_client,
     )
 
-    coordinators = (
+    coordinators = LaMarzoccoRuntimeData(
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device, local_client),
         LaMarzoccoFirmwareUpdateCoordinator(hass, entry, device),
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
     # API does not like concurrent requests, so no asyncio.gather here
-    for coordinator in coordinators:
-        await coordinator.async_config_entry_first_refresh()
+    await coordinators.config_coordinator.async_config_entry_first_refresh()
+    await coordinators.firmware_coordinator.async_config_entry_first_refresh()
+    await coordinators.statistics_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = LaMarzoccoRuntimeData(*coordinators)
+    entry.runtime_data = coordinators
 
     gateway_version = device.firmware[FirmwareType.GATEWAY].current_version
     if version.parse(gateway_version) < version.parse("v3.4-rc5"):
