@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Configure your Ohme account. If you signed up to Ohme with a third party account like Google, please reset your password via Ohme before configuring this integration.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Enter the email address associated with your Ohme account.",
+          "password": "Enter the password for your Ohme account"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "approve": {
+        "name": "Approve charge"
+      }
+    },
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged_in": "Plugged in",
+          "charging": "Charging",
+          "pending_approval": "Pending approval"
+        }
+      },
+      "ct_current": {
+        "name": "CT current"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Unable to login to Ohme"
+    },
+    "device_info_failed": {
+      "message": "Unable to get Ohme device information"
+    },
+    "api_failed": {
+      "message": "Error communicating with Ohme API"
+    }
+  }
+}

@@ -71,7 +71,10 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     try:
         info_object["user"] = cached_get_user()
-    except KeyError:
+    except (KeyError, OSError):
+        # OSError on python >= 3.13, KeyError on python < 3.13
+        # KeyError can be removed when 3.12 support is dropped
+        # see https://docs.python.org/3/whatsnew/3.13.html
         info_object["user"] = None
 
     if platform.system() == "Darwin":
