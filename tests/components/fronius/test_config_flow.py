@@ -118,8 +118,18 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "inverter_side_effect",
+    [
+        FroniusError,
+        None,  # raises StopIteration through INVERTER_INFO_NONE
+    ],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant, inverter_side_effect: type[FroniusError] | None
+) -> None:
     """Test we handle cannot connect error."""
+    INVERTER_INFO_NONE: dict[str, list] = {"inverters": []}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,34 +141,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyfronius.Fronius.inverter_info",
-            side_effect=FroniusError,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_no_device(hass: HomeAssistant) -> None:
-    """Test we handle no device found error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch(
-            "pyfronius.Fronius.current_logger_info",
-            side_effect=FroniusError,
-        ),
-        patch(
-            "pyfronius.Fronius.inverter_info",
-            return_value={"inverters": []},
+            side_effect=inverter_side_effect,
+            return_value=INVERTER_INFO_NONE,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -221,10 +205,10 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_updates_host(
+async def test_config_flow_already_configured(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test existing entry gets updated."""
+    """Test existing entry doesn't get updated by config flow."""
     old_host = "http://10.1.0.1"
     new_host = "http://10.1.0.2"
     entry = MockConfigEntry(
@@ -247,26 +231,20 @@ async def test_form_updates_host(
     )
 
     mock_responses(aioclient_mock, host=new_host)
-    with patch(
-        "homeassistant.components.fronius.async_unload_entry",
-        return_value=True,
-    ) as mock_unload_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": new_host,
-            },
-        )
-        await hass.async_block_till_done()
-
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": new_host,
+        },
+    )
+    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
-    mock_unload_entry.assert_called_with(hass, entry)
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == {
-        "host": new_host,
+        "host": old_host,  # not updated from config flow - only from reconfigure flow
         "is_logger": True,
     }
 
@@ -342,11 +320,13 @@ async def test_dhcp_invalid(
 
 async def test_reconfigure(hass: HomeAssistant) -> None:
     """Test reconfiguring an entry."""
+    old_host = "http://10.1.0.1"
+    new_host = "http://10.1.0.2"
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1234567",
         data={
-            CONF_HOST: "10.1.2.3",
+            CONF_HOST: old_host,
             "is_logger": True,
         },
     )
@@ -373,7 +353,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                "host": "10.9.1.1",
+                "host": new_host,
             },
         )
         await hass.async_block_till_done()
@@ -381,7 +361,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == {
-        "host": "10.9.1.1",
+        "host": new_host,
         "is_logger": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
