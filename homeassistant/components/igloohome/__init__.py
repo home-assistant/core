@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IgloohomeConfigEntry) ->
     try:
         devices = (await api.get_devices()).payload
     except AuthException as e:
-        raise ConfigEntryAuthFailed from e
+        raise ConfigEntryError from e
     except (ApiException, ClientError) as e:
         raise ConfigEntryNotReady from e
 
