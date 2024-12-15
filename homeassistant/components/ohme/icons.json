@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "approve": {
+        "default": "mdi:check-decagram"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:car",
