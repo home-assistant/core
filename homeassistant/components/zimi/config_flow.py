@@ -80,18 +80,18 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data[CONF_HOST], data[CONF_PORT], fast=True
                     )
 
-                    if api:
-                        if data[CONF_MAC] != format_mac(api.mac):
-                            msg = f"{data[CONF_MAC]} != {format_mac(api.mac)}"
-                            _LOGGER.error("Configured mac mismatch: %s", msg)
-                            errors["base"] = "mismatched_mac"
-                            description_placeholders["error_detail"] = msg
-
-                        api.disconnect()
-                    else:
-                        errors["base"] = "cannot_connect"
-
                 except ConfigEntryNotReady:
+                    errors["base"] = "cannot_connect"
+
+                if api:
+                    if data[CONF_MAC] != format_mac(api.mac):
+                        msg = f"{data[CONF_MAC]} != {format_mac(api.mac)}"
+                        _LOGGER.error("Configured mac mismatch: %s", msg)
+                        errors["base"] = "mismatched_mac"
+                        description_placeholders["error_detail"] = msg
+
+                    api.disconnect()
+                else:
                     errors["base"] = "cannot_connect"
 
             except Exception:  # pylint: disable=broad-except
