@@ -49,7 +49,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         version=1,
         data={"client_id": "client_id", "client_secret": "client_secret"},
-        unique_id="aa:bb:cc:dd:ee:ff",
     )
 
 
