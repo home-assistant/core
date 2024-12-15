@@ -42,11 +42,11 @@ async def test_form(
 
 
 @pytest.mark.parametrize(
-    ("auth_exception", "result_error"),
+    ("exception", "result_error"),
     [(AuthException(), "invalid_auth"), (ClientError(), "cannot_connect")],
 )
 async def test_form_invalid_input(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, auth_exception, result_error
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, exception, result_error
 ) -> None:
     """Tests where we handle errors in the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -55,7 +55,7 @@ async def test_form_invalid_input(
 
     with patch(
         "igloohome_api.Auth.async_get_access_token",
-        side_effect=auth_exception,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
