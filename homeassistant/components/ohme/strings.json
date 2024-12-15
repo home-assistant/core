@@ -22,6 +22,11 @@
     }
   },
   "entity": {
+    "button": {
+      "approve": {
+        "name": "Approve charge"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
