@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from elevenlabs import Model
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
 
 from homeassistant.config_entries import ConfigEntry
