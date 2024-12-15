@@ -63,11 +63,9 @@ def api_single_lock():
         ) as api_mock,
     ):
         api = api_mock.return_value
-        api.get_devices = AsyncMock(
-            return_value=GetDevicesResponse(
-                nextCursor="",
-                payload=[GET_DEVICE_INFO_RESPONSE_LOCK],
-            )
+        api.get_devices.return_value = GetDevicesResponse(
+            nextCursor="",
+            payload=[GET_DEVICE_INFO_RESPONSE_LOCK],
         )
         api.get_device_info = AsyncMock(return_value=GET_DEVICE_INFO_RESPONSE_LOCK)
         yield api
