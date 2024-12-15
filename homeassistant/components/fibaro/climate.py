@@ -282,8 +282,6 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         """Set new target operation mode."""
         if not self._op_mode_device:
             return
-        if self.preset_mode:
-            return
 
         if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
             self._op_mode_device.action("setOperatingMode", HA_OPMODES_HVAC[hvac_mode])
