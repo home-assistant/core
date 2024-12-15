@@ -217,8 +217,15 @@ async def test_ssdp_discovery_success(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_receiver"
+
+    select_result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"volume_resolution": 200, "input_sources": ["TV"]},
+    )
+
+    assert select_result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
@@ -240,7 +247,7 @@ async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
             data=discovery_info,
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -261,7 +268,7 @@ async def test_ssdp_discovery_host_none_info(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -282,7 +289,7 @@ async def test_ssdp_discovery_no_location(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -303,7 +310,7 @@ async def test_ssdp_discovery_no_host(
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 

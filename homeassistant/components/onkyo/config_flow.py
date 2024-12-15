@@ -2,9 +2,9 @@
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import (
@@ -173,8 +173,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle flow initialized by SSDP discovery."""
         _LOGGER.debug("Config flow start ssdp: %s", discovery_info)
 
-        udn = discovery_info.ssdp_udn
-        if udn:
+        if udn := discovery_info.ssdp_udn:
             udn_parts = udn.split(":")
             if len(udn_parts) == 2:
                 uuid = udn_parts[1]
@@ -186,7 +185,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("SSDP location is None")
             return self.async_abort(reason="unknown")
 
-        host = urlparse(discovery_info.ssdp_location).hostname
+        host = URL(discovery_info.ssdp_location).host
 
         if host is None:
             _LOGGER.error("SSDP host is None")
