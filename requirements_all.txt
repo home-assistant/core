@@ -2115,7 +2115,7 @@ pynetio==0.1.9.1
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.2
+pynordpool==0.2.3
 
 # homeassistant.components.nuki
 pynuki==1.6.3
