@@ -77,7 +77,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.util import color, dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import BASIC_CONFIG, MockConfig
@@ -870,10 +870,10 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
                 light.ATTR_COLOR_MODE: "color_temp",
-                light.ATTR_COLOR_TEMP: 300,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_COLOR_TEMP_KELVIN: 3333,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
                 "supported_color_modes": ["color_temp"],
             },
         ),
@@ -906,7 +906,7 @@ async def test_color_setting_temperature_light(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "light.bla",
-        light.ATTR_COLOR_TEMP: color.color_temperature_kelvin_to_mired(2857),
+        light.ATTR_COLOR_TEMP_KELVIN: 2857,
     }
 
 
@@ -924,9 +924,9 @@ async def test_color_light_temperature_light_bad_temp(hass: HomeAssistant) -> No
             "light.bla",
             STATE_ON,
             {
-                light.ATTR_MIN_MIREDS: 200,
-                light.ATTR_COLOR_TEMP: 0,
-                light.ATTR_MAX_MIREDS: 500,
+                light.ATTR_MAX_COLOR_TEMP_KELVIN: 5000,
+                light.ATTR_COLOR_TEMP_KELVIN: 0,
+                light.ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
             },
         ),
         BASIC_CONFIG,

@@ -118,8 +118,18 @@ async def test_form_with_inverter(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "inverter_side_effect",
+    [
+        FroniusError,
+        None,  # raises StopIteration through INVERTER_INFO_NONE
+    ],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant, inverter_side_effect: type[FroniusError] | None
+) -> None:
     """Test we handle cannot connect error."""
+    INVERTER_INFO_NONE: dict[str, list] = {"inverters": []}
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -131,34 +141,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "pyfronius.Fronius.inverter_info",
-            side_effect=FroniusError,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-            },
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_no_device(hass: HomeAssistant) -> None:
-    """Test we handle no device found error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with (
-        patch(
-            "pyfronius.Fronius.current_logger_info",
-            side_effect=FroniusError,
-        ),
-        patch(
-            "pyfronius.Fronius.inverter_info",
-            return_value={"inverters": []},
+            side_effect=inverter_side_effect,
+            return_value=INVERTER_INFO_NONE,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
