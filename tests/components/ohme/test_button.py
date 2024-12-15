@@ -42,7 +42,7 @@ async def test_button_available(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test that button shows as unavailable after a coordinator failure."""
+    """Test that button shows as unavailable when a charge is not pending approval."""
     mock_client.status = ChargerStatus.PENDING_APPROVAL
     await setup_integration(hass, mock_config_entry)
 
