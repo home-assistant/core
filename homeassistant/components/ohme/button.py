@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from ohme import ChargerStatus, OhmeApiClient
@@ -22,7 +22,7 @@ class OhmeButtonDescription(ButtonEntityDescription):
     """Class describing Ohme button entities."""
 
     is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
-    press_fn: Callable[[OhmeApiClient], None]
+    press_fn: Callable[[OhmeApiClient], Awaitable[None]]
     available_fn: Callable[[OhmeApiClient], bool]
 
 

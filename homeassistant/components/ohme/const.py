@@ -3,4 +3,4 @@
 from homeassistant.const import Platform
 
 DOMAIN = "ohme"
-PLATFORMS = [Platform.SENSOR, Platform.BUTTON]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
