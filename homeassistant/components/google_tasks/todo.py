@@ -19,6 +19,8 @@ from homeassistant.util import dt as dt_util
 from .coordinator import TaskUpdateCoordinator
 from .types import GoogleTasksConfigEntry
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(minutes=15)
 
 TODO_STATUS_MAP = {
