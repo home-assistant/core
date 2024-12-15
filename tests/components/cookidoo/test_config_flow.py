@@ -43,7 +43,7 @@ async def test_flow_user_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "auth_and_country"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
@@ -199,7 +199,7 @@ async def test_flow_reconfigure_success(
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_country"
+    assert result["step_id"] == "auth_and_country"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
@@ -208,7 +208,7 @@ async def test_flow_reconfigure_success(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_language"
+    assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -249,7 +249,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
 
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_country"
+    assert result["step_id"] == "auth_and_country"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
@@ -268,7 +268,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_language"
+    assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -309,7 +309,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
 
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_country"
+    assert result["step_id"] == "auth_and_country"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
@@ -318,7 +318,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_language"
+    assert result["step_id"] == "language"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
