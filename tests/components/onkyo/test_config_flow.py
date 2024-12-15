@@ -411,12 +411,9 @@ async def test_import_fail(
 ) -> None:
     """Test import flow failed."""
 
-    async def mock_discover(host, discovery_callback, timeout):
-        raise exception
-
     with patch(
         "homeassistant.components.onkyo.receiver.pyeiscp.Connection.discover",
-        new=mock_discover,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=user_input
