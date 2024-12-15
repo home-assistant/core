@@ -32,10 +32,7 @@ rules:
       This integration does not subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: |
-      `async_remove_config_entry_device` does not use typed ConfigEntry.
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: todo
