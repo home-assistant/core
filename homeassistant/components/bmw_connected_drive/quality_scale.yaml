@@ -61,7 +61,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: todo
-    comment: Discussion going on if needed as cars are not added regularly.
+    comment: Ongoing discussion, we cannot regularly get new devices/vehicles due to API quota limitations.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -73,7 +73,9 @@ rules:
     status: exempt
     comment: |
       Other than reauthentication, this integration doesn't have any cases where raising an issue is needed.
-  stale-devices: done
+  stale-devices:
+    status: todo
+    comment: Ongoing discussion, we cannot regularly check for stale devices/vehicles due to API quota limitations.
   # Platinum
   async-dependency: done
   inject-websession:
