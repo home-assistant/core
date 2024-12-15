@@ -1,7 +1,7 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
-  "codeowners": ["@arturpragacz"],
+  "codeowners": ["@arturpragacz", "@eclair4151"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
   "integration_type": "device",
