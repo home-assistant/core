@@ -263,7 +263,7 @@ async def async_setup_entry(
                 for key in bbw_settings.doses
             )
 
-    coordinator.new_scale_callback.append(_async_add_new_scale)
+    coordinator.new_device_callback.append(_async_add_new_scale)
 
     async_add_entities(entities)
 

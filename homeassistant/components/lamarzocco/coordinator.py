@@ -15,7 +15,7 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -64,6 +64,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self.local_connection_configured = local_client is not None
         self._local_client = local_client
+        self.new_device_callback: list[Callable] = []
 
     async def _async_update_data(self) -> None:
         """Do the data update."""
@@ -89,7 +90,6 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
     _scale_address: str | None = None
-    new_scale_callback: list[Callable] = []
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -125,12 +125,13 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         _LOGGER.debug("Current status: %s", str(self.device.config))
         self._async_add_remove_scale()
 
+    @callback
     def _async_add_remove_scale(self) -> None:
         """Add or remove a scale when added or removed."""
         if self.device.config.scale and not self._scale_address:
             self._scale_address = self.device.config.scale.address
-            for callback in self.new_scale_callback:
-                callback()
+            for scale_callback in self.new_device_callback:
+                scale_callback()
         elif not self.device.config.scale and self._scale_address:
             device_registry = dr.async_get(self.hass)
             if device := device_registry.async_get_device(

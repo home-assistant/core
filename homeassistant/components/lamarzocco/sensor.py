@@ -148,7 +148,7 @@ async def async_setup_entry(
             for description in SCALE_ENTITIES
         )
 
-    config_coordinator.new_scale_callback.append(_async_add_new_scale)
+    config_coordinator.new_device_callback.append(_async_add_new_scale)
 
     async_add_entities(entities)
 
