@@ -1,6 +1,6 @@
 rules:
   # Bronze
-  config-flow: todo
+  config-flow: done
   brands: done
   dependency-transparency: todo
   common-modules: todo

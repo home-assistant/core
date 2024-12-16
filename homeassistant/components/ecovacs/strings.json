@@ -22,8 +22,10 @@
           "verify_mqtt_certificate": "Verify MQTT SSL certificate"
         },
         "data_description": {
+          "country": "Select the country where your Ecovacs account is registered.",
           "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https).",
-          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts)."
+          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts).",
+          "verify_mqtt_certificate": "Should SSL certificartes be verified? Uncheck this checkbox only if you are using a self-signed certificate."
         }
       },
       "user": {
