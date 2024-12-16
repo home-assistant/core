@@ -225,7 +225,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Schedule turn-off',
     'platform': 'lg_thinq',
@@ -233,15 +233,13 @@
     'supported_features': 0,
     'translation_key': <TimerProperty.RELATIVE_TO_STOP: 'relative_to_stop'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_stop',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.test_air_conditioner_schedule_turn_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
       'friendly_name': 'Test air conditioner Schedule turn-off',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_schedule_turn_off',
@@ -273,7 +271,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Schedule turn-on',
     'platform': 'lg_thinq',
@@ -281,15 +279,13 @@
     'supported_features': 0,
     'translation_key': <TimerProperty.RELATIVE_TO_START: 'relative_to_start'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_relative_to_start',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
       'friendly_name': 'Test air conditioner Schedule turn-on',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_schedule_turn_on',
