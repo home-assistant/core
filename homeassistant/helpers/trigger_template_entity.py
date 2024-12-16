@@ -176,7 +176,7 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
-    def _render_availability_template(self, variables: dict[str, Any]) -> None:
+    def _render_availability_template(self, variables: dict[str, Any]) -> bool:
         """Render availability template."""
         rendered = dict(self._static_rendered)
         key = CONF_AVAILABILITY
@@ -191,11 +191,13 @@ class TriggerBaseEntity(Entity):
                     self._config[key],
                     variables,
                 )
+                return False
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
         self._rendered = rendered
+        return True
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
@@ -265,8 +267,8 @@ class ManualTriggerEntity(TriggerBaseEntity):
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
             **(run_variables or {}),
         }
-        self._render_availability_template(variables)
-        self._render_templates(variables)
+        if self._render_availability_template(variables):
+            self._render_templates(variables)
 
 
 class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
