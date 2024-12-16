@@ -80,9 +80,7 @@ rules:
       It is not feasible to use the API names as translation keys as they can change between
       firmware and API upgrades and the number of appliance models and firmware releases are huge.
       Entity names translations are therefore not implemented for the time being.
-  exception-translations:
-    status: todo
-    comment: PR pending review \#191937
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
