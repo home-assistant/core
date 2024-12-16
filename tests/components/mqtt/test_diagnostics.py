@@ -140,14 +140,18 @@ async def test_entry_diagnostics(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {},
-            CONF_PASSWORD: "hunter2",
-            CONF_USERNAME: "my_user",
-        }
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                CONF_PASSWORD: "hunter2",
+                CONF_USERNAME: "my_user",
+            },
+            {
+                mqtt.CONF_BIRTH_MESSAGE: {},
+            },
+        )
     ],
 )
 async def test_redact_diagnostics(

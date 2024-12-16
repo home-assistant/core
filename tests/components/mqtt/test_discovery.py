@@ -195,8 +195,8 @@ async def mock_mqtt_flow(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_subscribing_config_topic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -2437,12 +2437,14 @@ async def test_no_implicit_state_topic_switch(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
-        }
+        (
+            {mqtt.CONF_BROKER: "mock-broker"},
+            {
+                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+            },
+        )
     ],
 )
 async def test_complex_discovery_topic_prefix(

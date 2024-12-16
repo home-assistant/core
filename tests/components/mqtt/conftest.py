@@ -77,6 +77,7 @@ def mock_debouncer(hass: HomeAssistant) -> Generator[asyncio.Event]:
 async def setup_with_birth_msg_client_mock(
     hass: HomeAssistant,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_client_mock: MqttMockPahoClient,
 ) -> AsyncGenerator[MqttMockPahoClient]:
     """Test sending birth message."""
@@ -89,6 +90,7 @@ async def setup_with_birth_msg_client_mock(
         entry = MockConfigEntry(
             domain=mqtt.DOMAIN,
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
+            options=mqtt_config_entry_options or {},
         )
         entry.add_to_hass(hass)
         hass.config.components.add(mqtt.DOMAIN)
