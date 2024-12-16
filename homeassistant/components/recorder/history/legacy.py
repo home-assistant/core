@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ..db_schema import StateAttributes, States
+from ..db_schema import RecorderRuns, StateAttributes, States
 from ..filters import Filters
-from ..models import process_timestamp_to_utc_isoformat
+from ..models import process_timestamp, process_timestamp_to_utc_isoformat
 from ..models.legacy import LegacyLazyState, legacy_row_to_compressed_state
 from ..util import execute_stmt_lambda_element, session_scope
 from .const import (
@@ -436,7 +436,7 @@ def get_last_state_changes(
 
 
 def _get_states_for_entities_stmt(
-    run_start_ts: float,
+    run_start: datetime,
     utc_point_in_time: datetime,
     entity_ids: list[str],
     no_attributes: bool,
@@ -447,6 +447,7 @@ def _get_states_for_entities_stmt(
     )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
+    run_start_ts = process_timestamp(run_start).timestamp()
     utc_point_in_time_ts = utc_point_in_time.timestamp()
     stmt += lambda q: q.join(
         (
@@ -482,7 +483,7 @@ def _get_rows_with_session(
     session: Session,
     utc_point_in_time: datetime,
     entity_ids: list[str],
-    *,
+    run: RecorderRuns | None = None,
     no_attributes: bool = False,
 ) -> Iterable[Row]:
     """Return the states at a specific point in time."""
@@ -494,16 +495,17 @@ def _get_rows_with_session(
             ),
         )
 
-    oldest_ts = get_instance(hass).states_manager.oldest_ts
+    if run is None:
+        run = get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
 
-    if oldest_ts is None or oldest_ts > utc_point_in_time.timestamp():
-        # We don't have any states for the requested time
+    if run is None or process_timestamp(run.start) > utc_point_in_time:
+        # History did not run before utc_point_in_time
         return []
 
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     stmt = _get_states_for_entities_stmt(
-        oldest_ts, utc_point_in_time, entity_ids, no_attributes
+        run.start, utc_point_in_time, entity_ids, no_attributes
     )
     return execute_stmt_lambda_element(session, stmt)
 
