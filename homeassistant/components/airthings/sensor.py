@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from airthings import AirthingsDevice
 
 from homeassistant.components.sensor import (
@@ -39,37 +41,44 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "voc": SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "light": SensorEntityDescription(
         key="light",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
         key="virusRisk",
@@ -85,16 +94,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -160,7 +172,12 @@ class AirthingsHeaterEnergySensor(
     @property
     def available(self) -> bool:
         """Check if device and sensor is available in data."""
+        current_epoch_time = int(time.time())
         return (
             super().available
             and self.entity_description.key in self.coordinator.data[self._id].sensors
+            # Most AirThings sensors collect data at interval of max 10 minutes.
+            # If we don't hear from them for 60 minutes they're offline.
+            and current_epoch_time - self.coordinator.data[self._id].sensors.get("time")
+            < 3600
         )
