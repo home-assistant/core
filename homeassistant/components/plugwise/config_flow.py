@@ -49,7 +49,7 @@ SMILE_RECONF_SCHEMA = vol.Schema(
 )
 
 
-def SMILE_USER_SCHEMA(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
+def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
     """Generate base schema for gateways."""
     schema = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -163,7 +163,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _verify_connection(
         self, user_input: dict[str, Any]
-    ) -> Smile | dict[str, str]]:
+    ) -> Smile | dict[str, str]:
         """Verify and return the gateway connection or an error."""
         errors: dict[str, str] = {}
 
@@ -182,8 +182,8 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             errors[CONF_BASE] = "unknown"
         else:
-            return (api, errors)
-        return (None, errors)
+            return api
+        return errors
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -197,17 +197,20 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = self.discovery_info.port
                 user_input[CONF_USERNAME] = self._username
 
-            api, errors = await self._verify_connection(user_input)
-            if not errors and api:
+            con_res = await self._verify_connection(user_input)
+            if not isinstance(con_res, dict):
+                api: Smile = con_res
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                    api.smile_hostname or api.gateway_id,
+                    raise_on_progress=False,
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=api.smile_name, data=user_input)
+            errors = con_res
 
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=SMILE_USER_SCHEMA(self.discovery_info),
+            data_schema=smile_user_schema(self.discovery_info),
             errors=errors,
         )
 
@@ -228,16 +231,19 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
             }
 
-            api, errors = await self._verify_connection(full_input)
-            if not errors and api:
+            con_res = await self._verify_connection(full_input)
+            if not isinstance(con_res, dict):
+                api: Smile = con_res
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id, raise_on_progress=False
+                    api.smile_hostname or api.gateway_id,
+                    raise_on_progress=False,
                 )
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates=full_input,
                 )
+            errors = con_res
 
         return self.async_show_form(
             step_id="reconfigure",

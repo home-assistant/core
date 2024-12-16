@@ -504,7 +504,7 @@ async def test_reconfigure_flow_connect_errors(
     side_effect: Exception,
     reason: str,
 ) -> None:
-    """Test we handle each reconfigure exception error."""
+    """Test we handle each reconfigure exception error and recover."""
 
     mock_smile_adam.connect.side_effect = side_effect
 
@@ -513,3 +513,14 @@ async def test_reconfigure_flow_connect_errors(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": reason}
     assert result.get("step_id") == "reconfigure"
+
+    mock_smile_adam.connect.side_effect = None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.data.get(CONF_HOST) == TEST_HOST
