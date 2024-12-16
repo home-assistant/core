@@ -141,7 +141,6 @@ def get_significant_states(
 
 
 def _significant_states_stmt(
-    dialect_name: SupportedDialect | None,
     start_time_ts: float,
     end_time_ts: float | None,
     single_metadata_id: int | None,
@@ -151,6 +150,7 @@ def _significant_states_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     run_start_ts: float | None,
+    lateral_join_for_start_time_state: bool,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
@@ -184,13 +184,13 @@ def _significant_states_stmt(
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
-                dialect_name,
                 run_start_ts,
                 start_time_ts,
                 single_metadata_id,
                 metadata_ids,
                 no_attributes,
                 include_last_changed,
+                lateral_join_for_start_time_state,
             ).subquery(),
             no_attributes,
             include_last_changed,
@@ -261,10 +261,11 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    dialect_name = get_instance(hass).dialect_name
+    lateral_join_for_start_time_state = (
+        get_instance(hass).dialect_name == SupportedDialect.POSTGRESQL
+    )
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
-            dialect_name,
             start_time_ts,
             end_time_ts,
             single_metadata_id,
@@ -274,6 +275,7 @@ def get_significant_states_with_session(
             no_attributes,
             include_start_time_state,
             run_start_ts,
+            lateral_join_for_start_time_state,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -560,17 +562,17 @@ def get_last_state_changes(
 
 
 def _get_start_time_state_for_entities_stmt(
-    dialect_name: SupportedDialect | None,
     run_start_ts: float,
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
+    lateral_join_for_start_time_state: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
-    if dialect_name == SupportedDialect.POSTGRESQL:
+    if lateral_join_for_start_time_state:
         # PostgreSQL does not support index skip scan/loose index scan
         # https://wiki.postgresql.org/wiki/Loose_indexscan
         # so we need to do a lateral join to get the max last_updated_ts
@@ -655,13 +657,13 @@ def _get_run_start_ts_for_utc_point_in_time(
 
 
 def _get_start_time_state_stmt(
-    dialect_name: SupportedDialect | None,
     run_start_ts: float,
     epoch_time: float,
     single_metadata_id: int | None,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
+    lateral_join_for_start_time_state: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
@@ -677,12 +679,12 @@ def _get_start_time_state_stmt(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_start_time_state_for_entities_stmt(
-        dialect_name,
         run_start_ts,
         epoch_time,
         metadata_ids,
         no_attributes,
         include_last_changed,
+        lateral_join_for_start_time_state,
     )
 
 
