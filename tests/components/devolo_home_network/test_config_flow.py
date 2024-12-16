@@ -85,7 +85,7 @@ async def test_form_error(hass: HomeAssistant, exception_type, expected_error) -
     assert result2["errors"] == {CONF_BASE: expected_error}
 
 
-async def test_zeroconf(hass: HomeAssistant, info: dict[str, Any]) -> None:
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test that the zeroconf form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -123,7 +123,8 @@ async def test_zeroconf(hass: HomeAssistant, info: dict[str, Any]) -> None:
         CONF_IP_ADDRESS: IP,
         CONF_PASSWORD: "",
     }
-    assert result2["result"].unique_id == info["serial_number"]
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
