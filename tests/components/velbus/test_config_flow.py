@@ -167,6 +167,7 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_PORT: PORT_SERIAL},
+        unique_id="0B1B:10CF_1234_Velleman_Velbus VMB1USB",
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
