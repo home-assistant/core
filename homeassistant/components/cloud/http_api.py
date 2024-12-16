@@ -32,6 +32,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.location import async_detect_location_info
 
@@ -232,17 +233,12 @@ class CloudLoginView(HomeAssistantView):
     @RequestDataValidator(
         vol.Schema(
             vol.All(
-                # Ensure either password or code is provided, but not both
                 {
                     vol.Required("email"): str,
                     vol.Exclusive("password", "login"): str,
                     vol.Exclusive("code", "login"): str,
                 },
-                # Ensure that at least one of password or code is provided
-                {
-                    vol.Required("email"): str,
-                    vol.Required(vol.Any("password", "code")): str,
-                },
+                cv.has_at_least_one_key("password", "code"),
             )
         )
     )
