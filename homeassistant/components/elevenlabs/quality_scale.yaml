@@ -7,7 +7,11 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: >
+      We should have every test end in either ABORT or CREATE_ENTRY.
+      test_invalid_api_key should assert the kind of error that is raised.
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -16,7 +20,7 @@ rules:
   docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
-    comment: |
+    comment: >
       Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: todo
@@ -25,13 +29,16 @@ rules:
   test-before-setup: done
   unique-config-entry: todo
   # Silver
-  config-entry-unloading: todo
+  config-entry-unloading: done
   log-when-unavailable: todo
-  entity-unavailable: todo
+  entity-unavailable:
+    status: exempt
+    comment: >
+      There is no state in the TTS platform and we can't check poll if the TTS service is available.
   action-exceptions: done
   reauthentication-flow: todo
   parallel-updates: done
-  test-coverage: done
+  test-coverage: todo
   integration-owner: done
   docs-installation-parameters: todo
   docs-configuration-parameters: todo
