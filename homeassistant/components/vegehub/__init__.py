@@ -44,10 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     assert entry.unique_id
 
-    if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
-        _LOGGER.error("Device %s is already registered", entry.entry_id)
-        return False
-
     # Register the device
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
