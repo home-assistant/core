@@ -1474,7 +1474,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
@@ -1848,7 +1848,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara Hub-1563 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,

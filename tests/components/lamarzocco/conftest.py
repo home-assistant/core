@@ -143,7 +143,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine",
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
             autospec=True,
         ) as lamarzocco_mock,
     ):
