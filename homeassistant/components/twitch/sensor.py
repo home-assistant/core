@@ -5,14 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TwitchCoordinator
-from .const import DOMAIN
+from . import TwitchConfigEntry, TwitchCoordinator
 from .coordinator import TwitchUpdate
 
 ATTR_GAME = "game"
@@ -34,11 +32,11 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TwitchConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize entries."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         TwitchSensor(coordinator, channel_id) for channel_id in coordinator.data
