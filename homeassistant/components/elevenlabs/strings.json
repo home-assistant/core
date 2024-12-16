@@ -45,5 +45,21 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_characters": {
+        "name": "Total characters"
+      },
+      "characters_today": {
+        "name": "Characters today"
+      },
+      "characters_7_days": {
+        "name": "Characters last 7 days"
+      },
+      "characters_this_month": {
+        "name": "Characters this month"
+      }
+    }
   }
 }
