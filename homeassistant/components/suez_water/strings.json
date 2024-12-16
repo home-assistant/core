@@ -13,6 +13,15 @@
           "counter_id": "Enter your meter id (ex: 12345678). Should be found automatically during setup, if not see integration documentation for more information"
         },
         "description": "Connect your suez water {tout_sur_mon_eau} account to retrieve your water consumption"
+      },
+      "reconfigure": {
+        "data": {
+          "refresh_interval": "Data refresh interval in hours"
+        },
+        "data_description": {
+          "refresh_interval": "Enter the requested refresh interval (in hours between {refresh_min} and {refresh_max}). Remember that the data is updated once a day by suez water"
+        },
+        "description": "Update configuration for suez water."
       }
     },
     "error": {
@@ -22,7 +31,8 @@
       "counter_not_found": "Could not find meter id automatically"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {

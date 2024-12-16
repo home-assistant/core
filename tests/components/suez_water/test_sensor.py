@@ -6,7 +6,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
 from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import MOCK_REFRESH_INTERVAL
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -57,7 +57,7 @@ async def test_sensors_failed_update(
 
     getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
 
-    freezer.tick(DATA_REFRESH_INTERVAL)
+    freezer.tick(MOCK_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
 

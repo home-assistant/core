@@ -6,16 +6,21 @@ from pysuez.exception import PySuezError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
+from homeassistant.components.suez_water.const import (
+    CONF_COUNTER_ID,
+    CONF_REFRESH_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
-from .conftest import MOCK_DATA
+from . import setup_integration
+from .conftest import MOCK_DATA, MOCK_RECONFIGURE_DATA
 
 from tests.common import MockConfigEntry
 
 
-async def test_form(
+async def test_user_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
     """Test we get the form."""
@@ -38,7 +43,7 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(
+async def test_user_form_invalid_auth(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
     """Test we handle invalid auth."""
@@ -69,7 +74,7 @@ async def test_form_invalid_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+async def test_user_form_already_configured(hass: HomeAssistant) -> None:
     """Test we abort when entry is already configured."""
 
     entry = MockConfigEntry(
@@ -95,7 +100,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "error"), [(PySuezError, "cannot_connect"), (Exception, "unknown")]
 )
-async def test_form_error(
+async def test_user_form_error(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     exception: Exception,
@@ -129,7 +134,7 @@ async def test_form_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_auto_counter(
+async def test_user_form_auto_counter(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, suez_client: AsyncMock
 ) -> None:
     """Test form set counter if not set by user."""
@@ -164,3 +169,49 @@ async def test_form_auto_counter(
     assert result["result"].unique_id == "test-username"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_form(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    suez_client: AsyncMock,
+) -> None:
+    """Test we get the reconfigure form and successfully save result."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_RECONFIGURE_DATA,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_REFRESH_INTERVAL] == 5
+
+
+@pytest.mark.parametrize(("invalid_value"), [0, -1, 24, 45])
+async def test_reconfigure_form_invalid(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    suez_client: AsyncMock,
+    invalid_value: int,
+) -> None:
+    """Test we try creating reconfigure flow with invalid value."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"refresh_interval": invalid_value},
+        )

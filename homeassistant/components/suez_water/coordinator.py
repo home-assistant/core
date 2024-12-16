@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from pysuez import PySuezError, SuezClient
@@ -13,7 +13,7 @@ from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
+from .const import CONF_COUNTER_ID, CONF_REFRESH_INTERVAL, DATA_REFRESH_INTERVAL, DOMAIN
 
 
 @dataclass
@@ -52,7 +52,11 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=DATA_REFRESH_INTERVAL,
+            update_interval=timedelta(
+                hours=config_entry.data.get(
+                    CONF_REFRESH_INTERVAL, DATA_REFRESH_INTERVAL
+                )
+            ),
             always_update=True,
             config_entry=config_entry,
         )

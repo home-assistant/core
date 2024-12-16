@@ -1,13 +1,14 @@
 """Common fixtures for the Suez Water tests."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
 
-from homeassistant.components.suez_water.const import DOMAIN
+from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -16,6 +17,9 @@ MOCK_DATA = {
     "password": "test-password",
     "counter_id": "test-counter",
 }
+MOCK_RECONFIGURE_DATA = {"refresh_interval": 5}
+
+MOCK_REFRESH_INTERVAL = timedelta(hours=DATA_REFRESH_INTERVAL)
 
 
 @pytest.fixture

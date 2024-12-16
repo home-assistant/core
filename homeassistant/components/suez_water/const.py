@@ -1,9 +1,10 @@
 """Constants for the Suez Water integration."""
 
-from datetime import timedelta
+from typing import Final
 
 DOMAIN = "suez_water"
 
-CONF_COUNTER_ID = "counter_id"
+CONF_COUNTER_ID: Final = "counter_id"
+CONF_REFRESH_INTERVAL: Final = "refresh_interval"
 
-DATA_REFRESH_INTERVAL = timedelta(hours=12)
+DATA_REFRESH_INTERVAL: Final = 12

@@ -41,9 +41,7 @@ rules:
   docs-installation-parameters:
     status: todo
     comment: missing user/password
-  docs-configuration-parameters:
-    status: exempt
-    comment: no configuration option
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: done
@@ -60,7 +58,7 @@ rules:
   diagnostics: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices:
     status: exempt
     comment: one device only
@@ -73,9 +71,7 @@ rules:
   docs-use-cases: done
   docs-supported-devices: todo
   docs-supported-functions: done
-  docs-data-update:
-    status: todo
-    comment: make it clearer
+  docs-data-update: done
   docs-known-limitations: todo
   docs-troubleshooting: todo
   docs-examples: done
