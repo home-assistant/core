@@ -1914,15 +1914,26 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
     assert cache_key_1 != cache_key_3
 
 
-def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
+@pytest.mark.parametrize("lateral_join_for_start_time_state", [True, False])
+def test_cache_key_for_generate_statistics_at_time_stmt(
+    lateral_join_for_start_time_state: bool,
+) -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt = _generate_statistics_at_time_stmt(
+        StatisticsShortTerm, {0}, 0.0, set(), lateral_join_for_start_time_state
+    )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
+    stmt2 = _generate_statistics_at_time_stmt(
+        StatisticsShortTerm, {0}, 0.0, set(), lateral_join_for_start_time_state
+    )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
     stmt3 = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
+        StatisticsShortTerm,
+        {0},
+        0.0,
+        {"sum", "mean"},
+        lateral_join_for_start_time_state,
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
