@@ -47,7 +47,7 @@ async def test_services(
     mock_slide_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing button."""
+    """Test switch."""
     await setup_platform(hass, mock_config_entry, [Platform.SWITCH])
 
     await hass.services.async_call(

@@ -1,4 +1,4 @@
-"""Support for Slide button."""
+"""Support for Slide switch."""
 
 from __future__ import annotations
 
