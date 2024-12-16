@@ -233,8 +233,7 @@ class CloudLoginView(HomeAssistantView):
         vol.Schema(
             {
                 vol.Required("email"): str,
-                vol.Exclusive("password", "login"): str,
-                vol.Exclusive("code", "login"): str,
+                vol.Required(vol.Any("password", "code")): str,
             }
         )
     )
@@ -244,7 +243,7 @@ class CloudLoginView(HomeAssistantView):
         cloud = hass.data[DATA_CLOUD]
 
         try:
-            email = data.get("email")
+            email = data["email"]
             password = data.get("password")
             code = data.get("code")
 
@@ -258,8 +257,8 @@ class CloudLoginView(HomeAssistantView):
                 ):
                     raise MFAExpiredOrNotStarted
 
-                # Voluptuous should ensure that both are set
-                assert email is not None and code is not None
+                # Voluptuous should ensure that code is not None because password is
+                assert code is not None
 
                 await cloud.login_verify_totp(email, code, self._mfa_tokens)
                 self._mfa_tokens = {}
