@@ -4,7 +4,9 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco.const import MachineModel
 from pylamarzocco.exceptions import RequestNotSuccessful
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -98,3 +100,24 @@ async def test_sensor_going_unavailable(
     state = hass.states.get(brewing_active_sensor)
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_scale_connectivity(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the scale binary sensors."""
+    await async_init_integration(hass, mock_config_entry)
+
+    state = hass.states.get("binary_sensor.lmz_123a45_connectivity")
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry == snapshot

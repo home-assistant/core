@@ -444,3 +444,43 @@ async def test_number_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "number_exception_key"
+
+
+@pytest.mark.parametrize("physical_key", [PhysicalKey.A, PhysicalKey.B])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_set_target(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    physical_key: PhysicalKey,
+) -> None:
+    """Test the La Marzocco prebrew/-infusion sensors."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    entity_name = f"number.lmz_123a45_brew_by_weight_target_{int(physical_key)}"
+
+    state = hass.states.get(entity_name)
+
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry == snapshot
+
+    # service call
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_name,
+            ATTR_VALUE: 42,
+        },
+        blocking=True,
+    )
+
+    mock_lamarzocco.set_scale_target.assert_called_once_with(physical_key, 42)
