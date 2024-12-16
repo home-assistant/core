@@ -37,6 +37,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/airgradient/icon.png',
       'friendly_name': 'Airgradient Firmware',
       'in_progress': False,
@@ -47,6 +48,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.airgradient_firmware',

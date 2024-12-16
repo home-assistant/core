@@ -14,16 +14,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .api import ConfigEntryAuth
+from . import HomeConnectConfigEntry
 from .const import (
     ATTR_VALUE,
+    BSH_DOOR_STATE,
     BSH_OPERATION_STATE,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
@@ -31,7 +31,8 @@ from .const import (
     COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
     COFFEE_EVENT_DRIP_TRAY_FULL,
     COFFEE_EVENT_WATER_TANK_EMPTY,
-    DOMAIN,
+    DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+    DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
     REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
     REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
@@ -90,6 +91,16 @@ SENSORS = (
             "aborting",
         ],
         translation_key="operation_state",
+    ),
+    HomeConnectSensorEntityDescription(
+        key=BSH_DOOR_STATE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "closed",
+            "locked",
+            "open",
+        ],
+        translation_key="door",
     ),
     HomeConnectSensorEntityDescription(
         key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
@@ -219,12 +230,28 @@ EVENT_SENSORS = (
         translation_key="drip_tray_full",
         appliance_types=("CoffeeMaker",),
     ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="salt_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
+    HomeConnectSensorEntityDescription(
+        key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        options=EVENT_OPTIONS,
+        default_value="off",
+        translation_key="rinse_aid_nearly_empty",
+        appliance_types=("Dishwasher",),
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
@@ -232,8 +259,7 @@ async def async_setup_entry(
     def get_entities() -> list[SensorEntity]:
         """Get a list of entities."""
         entities: list[SensorEntity] = []
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
-        for device in hc_api.devices:
+        for device in entry.runtime_data.devices:
             entities.extend(
                 HomeConnectSensor(
                     device,

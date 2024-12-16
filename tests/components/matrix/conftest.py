@@ -267,7 +267,9 @@ def mock_load_json():
 @pytest.fixture
 def mock_allowed_path():
     """Allow using NamedTemporaryFile for mock image."""
-    with patch("homeassistant.core.Config.is_allowed_path", return_value=True) as mock:
+    with patch(
+        "homeassistant.core_config.Config.is_allowed_path", return_value=True
+    ) as mock:
         yield mock
 
 

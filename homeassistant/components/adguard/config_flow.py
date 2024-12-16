@@ -7,7 +7,6 @@ from typing import Any
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DOMAIN
 

@@ -25,8 +25,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import F_SERIES
 from .entity import MyUplinkEntity
-from .helpers import find_matching_platform, skip_entity
+from .helpers import find_matching_platform, skip_entity, transform_model_series
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -139,6 +140,32 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
+    F_SERIES: {
+        "43108": SensorEntityDescription(
+            key="fan_mode",
+            translation_key="fan_mode",
+        ),
+        "43427": SensorEntityDescription(
+            key="status_compressor",
+            translation_key="status_compressor",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49993": SensorEntityDescription(
+            key="elect_add",
+            translation_key="elect_add",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "49994": SensorEntityDescription(
+            key="priority",
+            translation_key="priority",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        "50095": SensorEntityDescription(
+            key="status",
+            translation_key="status",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+    },
     "NIBEF": {
         "43108": SensorEntityDescription(
             key="fan_mode",
@@ -174,6 +201,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     """
     description = None
     prefix, _, _ = device_point.category.partition(" ")
+    prefix = transform_model_series(prefix)
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )

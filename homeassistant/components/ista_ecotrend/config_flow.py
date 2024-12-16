@@ -17,7 +17,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import IstaConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +41,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ista EcoTrend."""
-
-    reauth_entry: IstaConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -88,9 +85,6 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -98,9 +92,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        if TYPE_CHECKING:
-            assert self.reauth_entry
 
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
@@ -117,9 +110,7 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
-                    self.reauth_entry, data=user_input
-                )
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -128,12 +119,12 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values={
                     CONF_EMAIL: user_input[CONF_EMAIL]
                     if user_input is not None
-                    else self.reauth_entry.data[CONF_EMAIL]
+                    else reauth_entry.data[CONF_EMAIL]
                 },
             ),
             description_placeholders={
-                CONF_NAME: self.reauth_entry.title,
-                CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL],
+                CONF_NAME: reauth_entry.title,
+                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
             },
             errors=errors,
         )

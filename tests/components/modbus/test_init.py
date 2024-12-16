@@ -19,7 +19,7 @@ from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
+from pymodbus.pdu import ExceptionResponse
 import pytest
 import voluptuous as vol
 
@@ -52,7 +52,6 @@ from homeassistant.components.modbus.const import (
     CONF_INPUT_TYPE,
     CONF_MSG_WAIT,
     CONF_PARITY,
-    CONF_RETRIES,
     CONF_SLAVE_COUNT,
     CONF_STOPBITS,
     CONF_SWAP,
@@ -576,18 +575,6 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             CONF_TYPE: TCP,
             CONF_HOST: TEST_MODBUS_HOST,
             CONF_PORT: TEST_PORT_TCP,
-            CONF_RETRIES: 3,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy",
-                    CONF_ADDRESS: 9999,
-                }
-            ],
-        },
-        {
-            CONF_TYPE: TCP,
-            CONF_HOST: TEST_MODBUS_HOST,
-            CONF_PORT: TEST_PORT_TCP,
             CONF_NAME: TEST_MODBUS_NAME,
             CONF_TIMEOUT: 30,
             CONF_DELAY: 10,
@@ -833,7 +820,6 @@ SERVICE = "service"
     [
         {VALUE: ReadResult([0x0001]), DATA: ""},
         {VALUE: ExceptionResponse(0x06), DATA: "Pymodbus:"},
-        {VALUE: IllegalFunctionRequest(0x06), DATA: "Pymodbus:"},
         {VALUE: ModbusException("fail write_"), DATA: "Pymodbus:"},
     ],
 )
@@ -941,7 +927,6 @@ async def mock_modbus_read_pymodbus_fixture(
     ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         (ReadResult([1]), None, STATE_ON, "1"),
-        (IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (
             ReadResult([1]),

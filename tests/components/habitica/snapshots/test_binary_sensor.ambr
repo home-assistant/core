@@ -1,0 +1,48 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.test_user_pending_quest_invitation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_user_pending_quest_invitation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pending quest invitation',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaBinarySensor.PENDING_QUEST: 'pending_quest'>,
+    'unique_id': '00000000-0000-0000-0000-000000000000_pending_quest',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_user_pending_quest_invitation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
+      'friendly_name': 'test-user Pending quest invitation',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_user_pending_quest_invitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -570,7 +570,11 @@ def _async_setup_device_registry(
     configuration_url = None
     if device_info.webserver_port > 0:
         configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
-    elif dashboard := async_get_dashboard(hass):
+    elif (
+        (dashboard := async_get_dashboard(hass))
+        and dashboard.data
+        and dashboard.data.get(device_info.name)
+    ):
         configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
 
     manufacturer = "espressif"

@@ -7,7 +7,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
-from enum import Enum, IntFlag, auto
+from enum import Enum, auto
 import functools as ft
 import logging
 import math
@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, f
 from propcache import cached_property
 import voluptuous as vol
 
-from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
@@ -49,6 +48,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     get_release_channel,
 )
+from homeassistant.core_config import DATA_CUSTOMIZE
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidStateError,
@@ -337,7 +337,9 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
-                if getattr(o, private_attr_name, _SENTINEL) == val:
+                if (
+                    old_val := getattr(o, private_attr_name, _SENTINEL)
+                ) == val and type(old_val) is type(val):
                     return
                 setattr(o, private_attr_name, val)
                 # Invalidate the cache of the cached property
@@ -643,6 +645,22 @@ class Entity(
         return (
             f"component.{platform.platform_name}.entity.{platform.domain}"
             f".{self.translation_key}.name"
+        )
+
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
         )
 
     def _substitute_name_placeholders(self, name: str) -> str:
@@ -1619,31 +1637,6 @@ class Entity(
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
-        )
-
-    @callback
-    def _report_deprecated_supported_features_values(
-        self, replacement: IntFlag
-    ) -> None:
-        """Report deprecated supported features values."""
-        if self._deprecated_supported_features_reported is True:
-            return
-        self._deprecated_supported_features_reported = True
-        report_issue = self._suggest_report_issue()
-        report_issue += (
-            " and reference "
-            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
-        )
-        _LOGGER.warning(
-            (
-                "Entity %s (%s) is using deprecated supported features"
-                " values which will be removed in HA Core 2025.1. Instead it should use"
-                " %s, please %s"
-            ),
-            self.entity_id,
-            type(self),
-            repr(replacement),
-            report_issue,
         )
 
 

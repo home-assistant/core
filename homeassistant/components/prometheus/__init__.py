@@ -14,6 +14,7 @@ from prometheus_client.metrics import MetricWrapperBase
 import voluptuous as vol
 
 from homeassistant import core as hacore
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -51,16 +52,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_ON,
@@ -85,6 +76,8 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 _LOGGER = logging.getLogger(__name__)
 
 API_ENDPOINT = "/api/prometheus"
+IGNORED_STATES = frozenset({STATE_UNAVAILABLE, STATE_UNKNOWN})
+
 
 DOMAIN = "prometheus"
 CONF_FILTER = "filter"
@@ -98,6 +91,7 @@ CONF_OVERRIDE_METRIC = "override_metric"
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema(
     {vol.Optional(CONF_OVERRIDE_METRIC): cv.string}
 )
+ALLOWED_METRIC_CHARS = set(string.ascii_letters + string.digits + "_:")
 
 DEFAULT_NAMESPACE = "homeassistant"
 
@@ -219,14 +213,6 @@ class PrometheusMetrics:
         """Add/update a state in Prometheus."""
         entity_id = state.entity_id
         _LOGGER.debug("Handling state update for %s", entity_id)
-        domain, _ = hacore.split_entity_id(entity_id)
-
-        ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
-
-        handler = f"_handle_{domain}"
-
-        if hasattr(self, handler) and state.state not in ignored_states:
-            getattr(self, handler)(state)
 
         labels = self._labels(state)
         state_change = self._metric(
@@ -239,7 +225,7 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "Entity is available (not in the unavailable or unknown state)",
         )
-        entity_available.labels(**labels).set(float(state.state not in ignored_states))
+        entity_available.labels(**labels).set(float(state.state not in IGNORED_STATES))
 
         last_updated_time_seconds = self._metric(
             "last_updated_time_seconds",
@@ -247,6 +233,18 @@ class PrometheusMetrics:
             "The last_updated timestamp",
         )
         last_updated_time_seconds.labels(**labels).set(state.last_updated.timestamp())
+
+        if state.state in IGNORED_STATES:
+            self._remove_labelsets(
+                entity_id,
+                None,
+                {state_change, entity_available, last_updated_time_seconds},
+            )
+        else:
+            domain, _ = hacore.split_entity_id(entity_id)
+            handler = f"_handle_{domain}"
+            if hasattr(self, handler) and state.state:
+                getattr(self, handler)(state)
 
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
@@ -274,10 +272,17 @@ class PrometheusMetrics:
             self._remove_labelsets(metrics_entity_id)
 
     def _remove_labelsets(
-        self, entity_id: str, friendly_name: str | None = None
+        self,
+        entity_id: str,
+        friendly_name: str | None = None,
+        ignored_metrics: set[MetricWrapperBase] | None = None,
     ) -> None:
-        """Remove labelsets matching the given entity id from all metrics."""
+        """Remove labelsets matching the given entity id from all non-ignored metrics."""
+        if ignored_metrics is None:
+            ignored_metrics = set()
         for metric in list(self._metrics.values()):
+            if metric in ignored_metrics:
+                continue
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:
@@ -334,17 +339,12 @@ class PrometheusMetrics:
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
         return "".join(
-            [
-                c
-                if c in string.ascii_letters + string.digits + "_:"
-                else f"u{hex(ord(c))}"
-                for c in metric
-            ]
+            [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
 
     @staticmethod
-    def state_as_number(state: State) -> float:
-        """Return a state casted to a float."""
+    def state_as_number(state: State) -> float | None:
+        """Return state as a float, or None if state cannot be converted."""
         try:
             if state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP:
                 value = as_timestamp(state.state)
@@ -352,7 +352,7 @@ class PrometheusMetrics:
                 value = state_helper.state_as_number(state)
         except ValueError:
             _LOGGER.debug("Could not convert %s to float", state)
-            value = 0
+            value = None
         return value
 
     @staticmethod
@@ -382,8 +382,8 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "State of the binary sensor (0/1)",
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_input_boolean(self, state: State) -> None:
         metric = self._metric(
@@ -391,8 +391,8 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "State of the input boolean (0/1)",
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _numeric_handler(self, state: State, domain: str, title: str) -> None:
         if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
@@ -408,8 +408,7 @@ class PrometheusMetrics:
                 f"State of the {title}",
             )
 
-        with suppress(ValueError):
-            value = self.state_as_number(state)
+        if (value := self.state_as_number(state)) is not None:
             if (
                 state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 == UnitOfTemperature.FAHRENHEIT
@@ -431,15 +430,15 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "State of the device tracker (0/1)",
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_person(self, state: State) -> None:
         metric = self._metric(
             "person_state", prometheus_client.Gauge, "State of the person (0/1)"
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_cover(self, state: State) -> None:
         metric = self._metric(
@@ -480,23 +479,19 @@ class PrometheusMetrics:
             "Light brightness percentage (0..100)",
         )
 
-        try:
+        if (value := self.state_as_number(state)) is not None:
             brightness = state.attributes.get(ATTR_BRIGHTNESS)
             if state.state == STATE_ON and brightness is not None:
-                value = brightness / 255.0
-            else:
-                value = self.state_as_number(state)
+                value = float(brightness) / 255.0
             value = value * 100
             metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
     def _handle_lock(self, state: State) -> None:
         metric = self._metric(
             "lock_state", prometheus_client.Gauge, "State of the lock (0/1)"
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_climate_temp(
         self, state: State, attr: str, metric_name: str, metric_description: str
@@ -608,11 +603,8 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "State of the humidifier (0/1)",
         )
-        try:
-            value = self.state_as_number(state)
+        if (value := self.state_as_number(state)) is not None:
             metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
         current_mode = state.attributes.get(ATTR_MODE)
         available_modes = state.attributes.get(ATTR_AVAILABLE_MODES)
@@ -643,8 +635,7 @@ class PrometheusMetrics:
 
             _metric = self._metric(metric, prometheus_client.Gauge, documentation)
 
-            try:
-                value = self.state_as_number(state)
+            if (value := self.state_as_number(state)) is not None:
                 if (
                     state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                     == UnitOfTemperature.FAHRENHEIT
@@ -653,8 +644,6 @@ class PrometheusMetrics:
                         value, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
                     )
                 _metric.labels(**self._labels(state)).set(value)
-            except ValueError:
-                pass
 
         self._battery(state)
 
@@ -687,20 +676,15 @@ class PrometheusMetrics:
     def _sensor_override_component_metric(
         self, state: State, unit: str | None
     ) -> str | None:
-        """Get metric from override in component confioguration."""
+        """Get metric from override in component configuration."""
         return self._component_config.get(state.entity_id).get(CONF_OVERRIDE_METRIC)
 
     @staticmethod
     def _sensor_fallback_metric(state: State, unit: str | None) -> str | None:
         """Get metric from fallback logic for compatibility."""
-        if unit in (None, ""):
-            try:
-                state_helper.state_as_number(state)
-            except ValueError:
-                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
-                return None
-            return "sensor_state"
-        return f"sensor_unit_{unit}"
+        if unit not in (None, ""):
+            return f"sensor_unit_{unit}"
+        return "sensor_state"
 
     @staticmethod
     def _unit_string(unit: str | None) -> str | None:
@@ -722,11 +706,8 @@ class PrometheusMetrics:
             "switch_state", prometheus_client.Gauge, "State of the switch (0/1)"
         )
 
-        try:
-            value = self.state_as_number(state)
+        if (value := self.state_as_number(state)) is not None:
             metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
         self._handle_attributes(state)
 
@@ -735,11 +716,8 @@ class PrometheusMetrics:
             "fan_state", prometheus_client.Gauge, "State of the fan (0/1)"
         )
 
-        try:
-            value = self.state_as_number(state)
+        if (value := self.state_as_number(state)) is not None:
             metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
         fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
         if fan_speed_percent is not None:
@@ -805,8 +783,8 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "Value of counter entities",
         )
-
-        metric.labels(**self._labels(state)).set(self.state_as_number(state))
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_update(self, state: State) -> None:
         metric = self._metric(
@@ -814,8 +792,8 @@ class PrometheusMetrics:
             prometheus_client.Gauge,
             "Update state, indicating if an update is available (0/1)",
         )
-        value = self.state_as_number(state)
-        metric.labels(**self._labels(state)).set(value)
+        if (value := self.state_as_number(state)) is not None:
+            metric.labels(**self._labels(state)).set(value)
 
     def _handle_alarm_control_panel(self, state: State) -> None:
         current_state = state.state
@@ -828,22 +806,9 @@ class PrometheusMetrics:
                 ["state"],
             )
 
-            alarm_states = [
-                STATE_ALARM_ARMED_AWAY,
-                STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                STATE_ALARM_ARMED_HOME,
-                STATE_ALARM_ARMED_NIGHT,
-                STATE_ALARM_ARMED_VACATION,
-                STATE_ALARM_DISARMED,
-                STATE_ALARM_TRIGGERED,
-                STATE_ALARM_PENDING,
-                STATE_ALARM_ARMING,
-                STATE_ALARM_DISARMING,
-            ]
-
-            for alarm_state in alarm_states:
-                metric.labels(**dict(self._labels(state), state=alarm_state)).set(
-                    float(alarm_state == current_state)
+            for alarm_state in AlarmControlPanelState:
+                metric.labels(**dict(self._labels(state), state=alarm_state.value)).set(
+                    float(alarm_state.value == current_state)
                 )
 
 

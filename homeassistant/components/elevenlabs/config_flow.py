@@ -5,17 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -25,6 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
+from . import EleventLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
@@ -97,19 +92,18 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EleventLabsConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ElevenLabsOptionsFlow(config_entry)
 
 
-class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
+class ElevenLabsOptionsFlow(OptionsFlow):
     """ElevenLabs options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: EleventLabsConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-        self.api_key: str = self.config_entry.data[CONF_API_KEY]
+        self.api_key: str = config_entry.data[CONF_API_KEY]
         # id -> name
         self.voices: dict[str, str] = {}
         self.models: dict[str, str] = {}
@@ -170,7 +164,7 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
                     vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
-            self.options,
+            self.config_entry.options,
         )
 
     async def async_step_voice_settings(

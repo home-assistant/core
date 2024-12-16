@@ -1,16 +1,25 @@
 """Cambridge Audio tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from aiostreammagic.models import Info, NowPlaying, PlayState, Source, State
+from aiostreammagic.models import (
+    AudioOutput,
+    Display,
+    Info,
+    NowPlaying,
+    PlayState,
+    PresetList,
+    Source,
+    State,
+    Update,
+)
 import pytest
 
 from homeassistant.components.cambridge_audio.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
@@ -50,9 +59,17 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client.now_playing = NowPlaying.from_json(
             load_fixture("get_now_playing.json", DOMAIN)
         )
+        client.display = Display.from_json(load_fixture("get_display.json", DOMAIN))
+        client.update = Update.from_json(load_fixture("get_update.json", DOMAIN))
+        client.preset_list = PresetList.from_json(
+            load_fixture("get_presets_list.json", DOMAIN)
+        )
+        client.audio_output = AudioOutput.from_json(
+            load_fixture("get_audio_output.json", DOMAIN)
+        )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position
-        client.unregister_state_update_callbacks = AsyncMock(return_value=True)
+        client.unregister_state_update_callbacks.return_value = True
 
         yield client
 
