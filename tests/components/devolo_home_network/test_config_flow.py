@@ -139,7 +139,7 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("info")
-async def test_abort_if_configued(hass: HomeAssistant) -> None:
+async def test_abort_if_configured(hass: HomeAssistant) -> None:
     """Test we abort config flow if already configured."""
     serial_number = DISCOVERY_INFO.properties["SN"]
     entry = MockConfigEntry(

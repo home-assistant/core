@@ -628,7 +628,6 @@ def _get_hassfest_config() -> Config:
         specific_integrations=None,
         action="validate",
         requirements=True,
-        core_integrations_path=Path("homeassistant/components"),
     )
 
 

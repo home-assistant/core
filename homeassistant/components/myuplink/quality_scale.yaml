@@ -7,7 +7,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -47,9 +47,7 @@ rules:
     status: exempt
     comment: Handled by coordinator
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: PR is pending review
+  test-coverage: done
 
   # Gold
   devices: done
@@ -84,7 +82,7 @@ rules:
     status: todo
     comment: PR pending review \#191937
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
@@ -97,4 +95,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

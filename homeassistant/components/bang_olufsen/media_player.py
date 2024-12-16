@@ -210,9 +210,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Misc. variables.
         self._audio_sources: dict[str, str] = {}
         self._media_image: Art = Art()
-        self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(  # type: ignore[call-arg]
+        self._software_status: SoftwareUpdateStatus = SoftwareUpdateStatus(
             software_version="",
-            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),  # type: ignore[call-arg]
+            state=SoftwareUpdateState(seconds_remaining=0, value="idle"),
         )
         self._sources: dict[str, str] = {}
         self._state: str = MediaPlayerState.IDLE
@@ -896,9 +896,9 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
 
         elif media_type == BangOlufsenMediaType.RADIO:
             await self._client.run_provided_scene(
-                scene_properties=SceneProperties(  # type: ignore[call-arg]
+                scene_properties=SceneProperties(
                     action_list=[
-                        Action(  # type: ignore[call-arg]
+                        Action(
                             type="radio",
                             radio_station_id=media_id,
                         )
@@ -919,7 +919,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         deezer_id = kwargs[ATTR_MEDIA_EXTRA]["id"]
 
                     await self._client.start_deezer_flow(
-                        user_flow=UserFlow(user_id=deezer_id)  # type: ignore[call-arg]
+                        user_flow=UserFlow(user_id=deezer_id)
                     )
 
                 # Play a playlist or album.
@@ -929,7 +929,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                         start_from = kwargs[ATTR_MEDIA_EXTRA]["start_from"]
 
                     await self._client.add_to_queue(
-                        play_queue_item=PlayQueueItem(  # type: ignore[call-arg]
+                        play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=start_from,
                             type="playlist",
@@ -940,7 +940,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
                 # Play a track.
                 else:
                     await self._client.add_to_queue(
-                        play_queue_item=PlayQueueItem(  # type: ignore[call-arg]
+                        play_queue_item=PlayQueueItem(
                             provider=PlayQueueItemType(value=media_type),
                             start_now_from_position=0,
                             type="track",
