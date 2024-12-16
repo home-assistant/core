@@ -71,10 +71,7 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: |
-      - `Unknown` should not be a valid state of status_message.
+  entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
