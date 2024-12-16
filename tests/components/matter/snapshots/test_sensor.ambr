@@ -1173,7 +1173,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
@@ -1219,7 +1219,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
@@ -1316,7 +1316,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
@@ -1899,7 +1899,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-0-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
@@ -2145,7 +2145,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-0-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
@@ -2993,7 +2993,7 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'bat_replacement_description',
+    'translation_key': 'battery_replacement_description',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PowerSourceBatReplacementDescription-47-19',
     'unit_of_measurement': None,
   })
