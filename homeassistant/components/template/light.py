@@ -78,6 +78,9 @@ CONF_TEMPERATURE_TEMPLATE = "temperature_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
+DEFAULT_MIN_MIREDS = 153
+DEFAULT_MAX_MIREDS = 500
+
 LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
@@ -764,7 +767,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = None
                 return
             temperature = int(render)
-            if self.min_mireds <= temperature <= self.max_mireds:
+            min_mireds = self._min_mireds or DEFAULT_MIN_MIREDS
+            max_mireds = self._max_mireds or DEFAULT_MAX_MIREDS
+            if min_mireds <= temperature <= max_mireds:
                 self._temperature = temperature
             else:
                 _LOGGER.error(
@@ -774,8 +779,8 @@ class LightTemplate(TemplateEntity, LightEntity):
                     ),
                     temperature,
                     self.entity_id,
-                    self.min_mireds,
-                    self.max_mireds,
+                    min_mireds,
+                    max_mireds,
                 )
                 self._temperature = None
         except ValueError:

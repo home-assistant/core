@@ -16,6 +16,8 @@ from . import RokuConfigEntry
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 def _get_application_name(device: RokuDevice) -> str | None:
     if device.app is None or device.app.name is None:

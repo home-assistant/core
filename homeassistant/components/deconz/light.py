@@ -18,6 +18,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
@@ -191,6 +193,8 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
 
     TYPE = LIGHT_DOMAIN
     _attr_color_mode = ColorMode.UNKNOWN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
         """Set up light."""
