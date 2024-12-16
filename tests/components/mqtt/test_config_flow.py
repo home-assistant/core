@@ -1041,7 +1041,7 @@ async def test_bad_certificate(
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
     mqtt_mock = await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1058,14 +1058,7 @@ async def test_bad_certificate(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1125,7 +1118,7 @@ async def test_keepalive_validation(
 
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1138,14 +1131,7 @@ async def test_keepalive_validation(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
@@ -1439,16 +1425,11 @@ async def test_skipping_advanced_options(
 
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "show_advanced_options": advanced_options,
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
+    result = await config_entry.start_reconfigure_flow(
+        hass, show_advanced_options=advanced_options
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
@@ -1702,14 +1683,7 @@ async def test_reconfigure_user_connection_fails(
             CONF_PORT: 1234,
         },
     )
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
 
     mock_try_connection_time_out.reset_mock()
@@ -1837,14 +1811,7 @@ async def test_try_connection_with_advanced_parameters(
     )
 
     # Test default/suggested values from config
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
@@ -1933,14 +1900,7 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]
