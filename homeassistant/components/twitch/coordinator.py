@@ -58,13 +58,13 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         entry: TwitchConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
-        self.config_entry = entry
         self.twitch = twitch
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
+            config_entry=entry,
         )
         self.session = session
 
