@@ -46,7 +46,9 @@ def camera_only() -> Generator[None]:
 @pytest.fixture(name="mock_camera")
 async def mock_camera_fixture(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
-    assert await async_setup_component(hass, "demo", {"demo": {}})
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
     with patch(
