@@ -31,7 +31,7 @@ from homeassistant.util.percentage import (
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice
-from .utils import get_device_serial, is_supported
+from .utils import filter_states, get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,10 +178,19 @@ class ViCareFan(ViCareEntity, FanEntity):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
                     self._api.getActiveMode()
                 )
+
+            level: str | None = None
             with suppress(PyViCareNotSupportedFeatureError):
+                level = filter_states(self._api.getVentilationLevel())
+            if level is None:
+                self._attr_percentage = 0
+            elif level in ORDERED_NAMED_FAN_SPEEDS:
                 self._attr_percentage = ordered_list_item_to_percentage(
-                    ORDERED_NAMED_FAN_SPEEDS, self._api.getActiveProgram()
+                    list[str](ORDERED_NAMED_FAN_SPEEDS), str(level)
                 )
+            else:  # e.g. "standby"
+                self._attr_percentage = 0
+
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
