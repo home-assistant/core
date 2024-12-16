@@ -117,7 +117,6 @@ class Sun(Entity):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the sun."""
         self.hass = hass
-        self.unique_id = ENTITY_ID
         self.phase: str | None = None
 
         self._config_listener: CALLBACK_TYPE | None = None
