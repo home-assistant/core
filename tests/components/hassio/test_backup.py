@@ -282,7 +282,8 @@ async def test_agents_notify_on_mount_added_removed(
 ) -> None:
     """Test the listener is called when mounts are added or removed."""
     client = await hass_ws_client(hass)
-    supervisor_client.mounts.info.assert_called_once_with()
+    assert supervisor_client.mounts.info.call_count == 1
+    assert supervisor_client.mounts.info.call_args[0] == ()
     supervisor_client.mounts.info.reset_mock()
 
     await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
