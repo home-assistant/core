@@ -13,7 +13,14 @@ from homeassistant.components.webhook import (
     async_generate_url as webhook_generate_url,
 )
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_WEBHOOK_ID,
+)
 
 from .const import DOMAIN
 
@@ -94,12 +101,11 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 info_data = self._hub.info
 
-                info_data["mac_address"] = self._hub.mac_address
-                info_data["ip_addr"] = self._hub.ip_address
-                info_data["hostname"] = self._hostname
-                info_data["sw_ver"] = self._properties.get("version")
-                info_data["config_url"] = self._config_url
-                info_data["webhook_url"] = webhook_url
+                info_data[CONF_MAC] = self._hub.mac_address
+                info_data[CONF_IP_ADDRESS] = self._hub.ip_address
+                info_data[CONF_HOST] = self._hostname
+                info_data[ATTR_SW_VERSION] = self._properties.get("version")
+                info_data[ATTR_CONFIGURATION_URL] = self._config_url
                 info_data[CONF_WEBHOOK_ID] = webhook_id
 
                 # Create a task to ask the hub for an update when it can,
