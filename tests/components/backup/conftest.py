@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from asyncio import Future
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.backup.manager import WrittenBackup
 from homeassistant.core import HomeAssistant
 
 from .common import TEST_BACKUP_PATH_ABC123
@@ -60,6 +62,22 @@ CONFIG_DIR = {
     ],
 }
 CONFIG_DIR_DIRS = {Path(".storage"), Path("backups"), Path("tmp_backups")}
+
+
+@pytest.fixture(name="create_backup")
+def mock_create_backup() -> Generator[AsyncMock]:
+    """Mock manager create backup."""
+    mock_written_backup = MagicMock(spec_set=WrittenBackup)
+    mock_written_backup.backup.backup_id = "abc123"
+    mock_written_backup.open_stream = AsyncMock()
+    mock_written_backup.release_stream = AsyncMock()
+    fut = Future()
+    fut.set_result(mock_written_backup)
+    with patch(
+        "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
+    ) as mock_create_backup:
+        mock_create_backup.return_value = (MagicMock(), fut)
+        yield mock_create_backup
 
 
 @pytest.fixture(name="mock_backup_generation")
