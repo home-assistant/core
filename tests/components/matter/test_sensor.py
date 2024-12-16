@@ -182,14 +182,14 @@ async def test_battery_sensor_description(
     matter_node: MatterNode,
 ) -> None:
     """Test battery replacement description sensor."""
-    state = hass.states.get("sensor.smoke_sensor_none")
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
     assert state
     assert state.state == "CR123A"
 
     set_node_attribute(matter_node, 1, 47, 19, "CR2032")
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.smoke_sensor_none")
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
     assert state
     assert state.state == "CR2032"
 
