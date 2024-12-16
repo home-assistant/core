@@ -84,6 +84,31 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Smile:
     return api
 
 
+async def verify_connection(
+    hass: HomeAssistant, user_input: dict[str, Any]
+) -> Smile | dict[str, str]:
+    """Verify and return the gateway connection or an error."""
+    errors: dict[str, str] = {}
+
+    try:
+        api = await validate_input(hass, user_input)
+    except ConnectionFailedError:
+        errors[CONF_BASE] = "cannot_connect"
+    except InvalidAuthentication:
+        errors[CONF_BASE] = "invalid_auth"
+    except InvalidSetupError:
+        errors[CONF_BASE] = "invalid_setup"
+    except (InvalidXMLError, ResponseError):
+        errors[CONF_BASE] = "response_error"
+    except UnsupportedDeviceError:
+        errors[CONF_BASE] = "unsupported"
+    except Exception:  # noqa: BLE001
+        errors[CONF_BASE] = "unknown"
+    else:
+        return api
+    return errors
+
+
 class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Plugwise Smile."""
 
@@ -161,30 +186,6 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return False
 
-    async def _verify_connection(
-        self, user_input: dict[str, Any]
-    ) -> Smile | dict[str, str]:
-        """Verify and return the gateway connection or an error."""
-        errors: dict[str, str] = {}
-
-        try:
-            api = await validate_input(self.hass, user_input)
-        except ConnectionFailedError:
-            errors[CONF_BASE] = "cannot_connect"
-        except InvalidAuthentication:
-            errors[CONF_BASE] = "invalid_auth"
-        except InvalidSetupError:
-            errors[CONF_BASE] = "invalid_setup"
-        except (InvalidXMLError, ResponseError):
-            errors[CONF_BASE] = "response_error"
-        except UnsupportedDeviceError:
-            errors[CONF_BASE] = "unsupported"
-        except Exception:  # noqa: BLE001
-            errors[CONF_BASE] = "unknown"
-        else:
-            return api
-        return errors
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -197,7 +198,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT] = self.discovery_info.port
                 user_input[CONF_USERNAME] = self._username
 
-            con_res = await self._verify_connection(user_input)
+            con_res = await verify_connection(self.hass, user_input)
             if not isinstance(con_res, dict):
                 api: Smile = con_res
                 await self.async_set_unique_id(
@@ -231,7 +232,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
             }
 
-            con_res = await self._verify_connection(full_input)
+            con_res = await verify_connection(self.hass, full_input)
             if not isinstance(con_res, dict):
                 api: Smile = con_res
                 await self.async_set_unique_id(
