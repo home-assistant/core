@@ -7,7 +7,6 @@ from typing import cast
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from twitchAPI.twitch import Twitch
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -18,9 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import OAUTH_SCOPES, PLATFORMS
-from .coordinator import TwitchCoordinator
-
-type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
+from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
@@ -49,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
-    coordinator = TwitchCoordinator(hass, client, session)
+    coordinator = TwitchCoordinator(hass, client, session, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

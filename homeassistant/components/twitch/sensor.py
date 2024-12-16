@@ -10,8 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TwitchConfigEntry, TwitchCoordinator
-from .coordinator import TwitchUpdate
+from .coordinator import TwitchConfigEntry, TwitchCoordinator, TwitchUpdate
 
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
