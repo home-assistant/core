@@ -36,7 +36,11 @@ rules:
     status: done
     comment: |
       {MAC}_{DEVICE_ID} is used, for example, 0e97f8b7d30_02E8.
-  has-entity-name: todo
+  has-entity-name:
+    status: done
+    comment: >
+      Almost all devices are multi-functional, which means that all functions
+      are equally important -> keep the descriptive name (not setting _attr_name to None).
   entity-event-setup:
     status: done
     comment: |
