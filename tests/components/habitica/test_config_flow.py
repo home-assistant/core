@@ -7,7 +7,13 @@ from aiohttp import ClientResponseError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.habitica.const import CONF_API_USER, DEFAULT_URL, DOMAIN
+from homeassistant.components.habitica.const import (
+    CONF_API_USER,
+    DEFAULT_URL,
+    DOMAIN,
+    SECTION_REAUTH_API_KEY,
+    SECTION_REAUTH_LOGIN,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_PASSWORD,
@@ -32,15 +38,15 @@ MOCK_DATA_ADVANCED_STEP = {
 }
 
 USER_INPUT_REAUTH_LOGIN = {
-    "reauth_login": {
+    SECTION_REAUTH_LOGIN: {
         CONF_USERNAME: "new-email",
         CONF_PASSWORD: "new-password",
     },
-    "reauth_api_key": {},
+    SECTION_REAUTH_API_KEY: {},
 }
 USER_INPUT_REAUTH_API_KEY = {
-    "reauth_login": {},
-    "reauth_api_key": {CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382"},
+    SECTION_REAUTH_LOGIN: {},
+    SECTION_REAUTH_API_KEY: {CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382"},
 }
 
 
@@ -277,8 +283,8 @@ async def test_flow_reauth_invalid_credentials(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "reauth_login": {},
-            "reauth_api_key": {},
+            SECTION_REAUTH_LOGIN: {},
+            SECTION_REAUTH_API_KEY: {},
         },
     )
 
@@ -315,7 +321,11 @@ async def test_flow_reauth_invalid_credentials(
             "invalid_auth",
         ),
         (IndexError(), USER_INPUT_REAUTH_API_KEY, "unknown"),
-        (None, {"reauth_login": {}, "reauth_api_key": {}}, "invalid_credentials"),
+        (
+            None,
+            {SECTION_REAUTH_LOGIN: {}, SECTION_REAUTH_API_KEY: {}},
+            "invalid_credentials",
+        ),
     ],
     ids=[
         "login cannot_connect",
