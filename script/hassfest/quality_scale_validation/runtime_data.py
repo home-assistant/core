@@ -102,6 +102,23 @@ def _check_typed_config_entry(integration: Integration) -> list[str]:
     return errors
 
 
+def _uses_async_load_platform(async_setup_entry: str) -> bool:
+    """Check if integration uses async_load_platform inside async_setup_entry.
+
+    Special case because notify platform does not support config entries yet.
+    """
+    for node in ast.walk(async_setup_entry):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(attr := node.func, ast.Attribute)
+            and attr.attr == "async_load_platform"
+            and isinstance(name := attr.value, ast.Name)
+            and name.id == "discovery"
+        ):
+            return True
+    return False
+
+
 def _accesses_hass_data(integration: Integration) -> str | None:
     """Check if integration access hass.data."""
     for module_file in integration.path.rglob("*.py"):
@@ -140,7 +157,9 @@ def validate(
         )
 
     # Check if integration accesses hass.data
-    if file := _accesses_hass_data(integration):
+    if not (_uses_async_load_platform(async_setup_entry)) and (
+        file := _accesses_hass_data(integration)
+    ):
         errors.append(f"Integration accesses `hass.data` in {file}")
 
     # Extra checks, if strict-typing is marked as done
