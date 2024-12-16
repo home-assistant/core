@@ -569,7 +569,7 @@ def _get_start_time_state_for_entities_stmt(
         select(func.max(States.last_updated_ts))
         .where(
             (States.metadata_id == max_metadata_id)
-            & (States.last_updated_ts >= max_metadata_id)
+            & (States.last_updated_ts >= run_start_ts)
             & (States.last_updated_ts < epoch_time)
         )
         .subquery()
