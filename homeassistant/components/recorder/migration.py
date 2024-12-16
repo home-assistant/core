@@ -2738,14 +2738,13 @@ class EventIDPostMigration(BaseRunTimeMigration):
         return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EntityIDPostMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to remove old entity_id strings from states.
 
     Introduced in HA Core 2023.4 by PR #89557.
     """
 
     migration_id = "entity_id_post_migration"
-    task = MigrationTask
     index_to_drop = (TABLE_STATES, LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
@@ -2758,16 +2757,16 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
         return has_used_states_entity_ids()
 
 
-NON_LIVE_DATA_MIGRATORS = (
+NON_LIVE_DATA_MIGRATORS: tuple[type[BaseOffLineMigration], ...] = (
     StatesContextIDMigration,  # Introduced in HA Core 2023.4
     EventsContextIDMigration,  # Introduced in HA Core 2023.4
     EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
     EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
+    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
-LIVE_DATA_MIGRATORS = (
+LIVE_DATA_MIGRATORS: tuple[type[BaseRunTimeMigration], ...] = (
     EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
-    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
 )
 
 
