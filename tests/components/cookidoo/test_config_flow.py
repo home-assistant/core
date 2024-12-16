@@ -20,14 +20,10 @@ from .test_init import setup_integration
 
 from tests.common import MockConfigEntry
 
-MOCK_DATA_COUNTRY_STEP = {
-    CONF_COUNTRY: COUNTRY,
-}
-
 MOCK_DATA_USER_STEP = {
     CONF_EMAIL: EMAIL,
     CONF_PASSWORD: PASSWORD,
-    **MOCK_DATA_COUNTRY_STEP,
+    CONF_COUNTRY: COUNTRY,
 }
 
 MOCK_DATA_LANGUAGE_STEP = {
@@ -43,7 +39,7 @@ async def test_flow_user_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth_and_country"
+    assert result["step_id"] == "user"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
@@ -199,12 +195,12 @@ async def test_flow_reconfigure_success(
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth_and_country"
+    assert result["step_id"] == "user"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_COUNTRY: "DE"},
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -218,8 +214,7 @@ async def test_flow_reconfigure_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert cookidoo_config_entry.data == {
-        CONF_EMAIL: EMAIL,
-        CONF_PASSWORD: PASSWORD,
+        **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
     }
@@ -249,12 +244,12 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
 
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth_and_country"
+    assert result["step_id"] == "user"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_COUNTRY: "DE"},
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -264,7 +259,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     mock_cookidoo_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_COUNTRY: "DE"},
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -278,8 +273,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert cookidoo_config_entry.data == {
-        CONF_EMAIL: EMAIL,
-        CONF_PASSWORD: PASSWORD,
+        **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
     }
@@ -309,12 +303,12 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
 
     result = await cookidoo_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth_and_country"
+    assert result["step_id"] == "user"
     assert result["handler"] == "cookidoo"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_COUNTRY: "DE"},
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -339,8 +333,7 @@ async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert cookidoo_config_entry.data == {
-        CONF_EMAIL: EMAIL,
-        CONF_PASSWORD: PASSWORD,
+        **MOCK_DATA_USER_STEP,
         CONF_COUNTRY: "DE",
         CONF_LANGUAGE: "de-DE",
     }

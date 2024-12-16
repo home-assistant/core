@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "auth_and_country": {
+      "user": {
         "title": "Setup {cookidoo}",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
@@ -31,8 +31,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "[%key:component::cookidoo::config::step::auth_and_country::data_description::email%]",
-          "password": "[%key:component::cookidoo::config::step::auth_and_country::data_description::password%]"
+          "email": "[%key:component::cookidoo::config::step::user::data_description::email%]",
+          "password": "[%key:component::cookidoo::config::step::user::data_description::password%]"
         }
       }
     },

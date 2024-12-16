@@ -63,42 +63,43 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     user_input: dict[str, Any]
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the user step."""
-        return await self.async_step_auth_and_country(user_input)
-
     async def async_step_reconfigure(
-        self, entry_data: dict[str, Any]
+        self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Perform reconfigure upon an user action."""
-        return await self.async_step_auth_and_country(entry_data)
+        return await self.async_step_user(user_input)
 
-    async def async_step_auth_and_country(
+    async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Handle the auth and country step."""
+        """Handle the user step as well as serve for reconfiguration."""
         errors: dict[str, str] = {}
 
         if user_input is not None and not (
             errors := await self.validate_input(user_input)
         ):
-            if self.source is SOURCE_USER:
+            if self.source == SOURCE_USER:
                 self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
             self.user_input = user_input
             return await self.async_step_language()
         await self.generate_country_schema()
-        schema: dict = {}
-        if self.source is SOURCE_USER:
-            schema = {**schema, **AUTH_DATA_SCHEMA}
-        schema = {**schema, **self.COUNTRY_DATA_SCHEMA}
+        suggested_values: dict = {}
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_entry = self._get_reconfigure_entry()
+            suggested_values = {
+                **suggested_values,
+                **reconfigure_entry.data,
+            }
+        if user_input is not None:
+            suggested_values = {**suggested_values, **user_input}
         return self.async_show_form(
-            step_id="auth_and_country",
+            step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=vol.Schema(schema),
-                suggested_values=user_input,
+                data_schema=vol.Schema(
+                    {**AUTH_DATA_SCHEMA, **self.COUNTRY_DATA_SCHEMA}
+                ),
+                suggested_values=suggested_values,
             ),
             description_placeholders={"cookidoo": "Cookidoo"},
             errors=errors,
@@ -113,7 +114,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         if language_input is not None and not (
             errors := await self.validate_input(self.user_input, language_input)
         ):
-            if self.source is SOURCE_USER:
+            if self.source == SOURCE_USER:
                 return self.async_create_entry(
                     title="Cookidoo", data={**self.user_input, **language_input}
                 )
@@ -209,7 +210,7 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_input: dict[str, Any] = {}
 
-        if self.source is SOURCE_RECONFIGURE:
+        if self.source == SOURCE_RECONFIGURE:
             reconfigure_entry = self._get_reconfigure_entry()
             data_input = {**data_input, **reconfigure_entry.data}
         data_input = {**data_input, **user_input}
