@@ -47,12 +47,6 @@ class IottySwitchEntityDescription(
     set_is_on_fn: Callable[[T, T], Any]
 
 
-def _control_lightswitch(
-    cloud: IottyProxy, lightswitch: LightSwitch, command_code: str
-) -> Coroutine[Any, Any, Any]:
-    return cloud.command(lightswitch.device_id, command_code)
-
-
 def _is_on_lightswitch(lightswitch: LightSwitch) -> bool:
     return lightswitch.is_on
 
@@ -63,12 +57,6 @@ def _set_is_on_lightswitch(
     lightswitch.is_on = updated_lightswitch.is_on
 
 
-def _control_outlet(
-    cloud: IottyProxy, outlet: Outlet, command_code: str
-) -> Coroutine[Any, Any, bool]:
-    return cloud.command(outlet.device_id, command_code)
-
-
 def _is_on_outlet(outlet: Outlet) -> bool:
     return outlet.is_on
 
@@ -77,24 +65,28 @@ def _set_is_on_outlet(outlet: Outlet, updated_outlet: Outlet) -> Any:
     outlet.is_on = updated_outlet.is_on
 
 
-ENTITIES: tuple[IottySwitchEntityDescription, ...] = (
-    IottySwitchEntityDescription(
+ENTITIES: dict[str, IottySwitchEntityDescription] = {
+    LS_DEVICE_TYPE_UID: IottySwitchEntityDescription(
         key="light",
         name=None,
-        control_fn=_control_lightswitch,
+        control_fn=lambda cloud, lightswitch, command_code: cloud.command(
+            lightswitch.device_id, command_code
+        ),
         is_on_fn=_is_on_lightswitch,
         set_is_on_fn=_set_is_on_lightswitch,
         device_class=SwitchDeviceClass.SWITCH,
     ),
-    IottySwitchEntityDescription(
+    OU_DEVICE_TYPE_UID: IottySwitchEntityDescription(
         key="outlet",
         name=None,
-        control_fn=_control_outlet,
+        control_fn=lambda cloud, outlet, command_code: cloud.command(
+            outlet.device_id, command_code
+        ),
         is_on_fn=_is_on_outlet,
         set_is_on_fn=_set_is_on_outlet,
         device_class=SwitchDeviceClass.OUTLET,
     ),
-)
+}
 
 
 async def async_setup_entry(
@@ -111,7 +103,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             iotty_cloud=coordinator.iotty,
             iotty_device=d,
-            entity_description=ENTITIES[0],
+            entity_description=ENTITIES[LS_DEVICE_TYPE_UID],
         )
         for d in coordinator.data.devices
         if d.device_type == LS_DEVICE_TYPE_UID
@@ -124,7 +116,7 @@ async def async_setup_entry(
             coordinator=coordinator,
             iotty_cloud=coordinator.iotty,
             iotty_device=d,
-            entity_description=ENTITIES[1],
+            entity_description=ENTITIES[OU_DEVICE_TYPE_UID],
         )
         for d in coordinator.data.devices
         if d.device_type == OU_DEVICE_TYPE_UID
@@ -159,30 +151,28 @@ async def async_setup_entry(
                 continue
 
             iotty_entity: SwitchEntity
+            iotty_device: Device
             if device.device_type == LS_DEVICE_TYPE_UID:
-                iotty_entity = IottySwitch(
-                    coordinator=coordinator,
-                    iotty_cloud=coordinator.iotty,
-                    iotty_device=LightSwitch(
-                        device.device_id,
-                        device.serial_number,
-                        device.device_type,
-                        device.device_name,
-                    ),
-                    entity_description=ENTITIES[0],
+                iotty_device = LightSwitch(
+                    device.device_id,
+                    device.serial_number,
+                    device.device_type,
+                    device.device_name,
                 )
             else:
-                iotty_entity = IottySwitch(
-                    coordinator=coordinator,
-                    iotty_cloud=coordinator.iotty,
-                    iotty_device=Outlet(
-                        device.device_id,
-                        device.serial_number,
-                        device.device_type,
-                        device.device_name,
-                    ),
-                    entity_description=ENTITIES[1],
+                iotty_device = Outlet(
+                    device.device_id,
+                    device.serial_number,
+                    device.device_type,
+                    device.device_name,
                 )
+
+            iotty_entity = IottySwitch(
+                coordinator=coordinator,
+                iotty_cloud=coordinator.iotty,
+                iotty_device=iotty_device,
+                entity_description=ENTITIES[device.device_type],
+            )
 
             entities.extend([iotty_entity])
             known_devices.add(device)
