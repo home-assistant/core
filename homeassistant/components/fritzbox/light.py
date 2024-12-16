@@ -10,6 +10,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
 )
@@ -49,6 +51,9 @@ async def async_setup_entry(
 
 class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     """The light class for FRITZ!SmartHome lightbulbs."""
+
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     def __init__(
         self,
