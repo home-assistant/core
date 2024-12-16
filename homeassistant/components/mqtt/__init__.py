@@ -110,6 +110,15 @@ from .util import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+# Split mqtt entry data and options
+# Can be removed with HA Core 2026.1.0
+ENTRY_OPTION_FIELDS = (
+    CONF_DISCOVERY,
+    CONF_DISCOVERY_PREFIX,
+    "birth_message",
+    "will_message",
+)
+
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
 
@@ -355,9 +364,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+# Can be removed with HA Core 2026.1.0
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the options from config entry data."""
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    for key in ENTRY_OPTION_FIELDS:
+        if key not in data:
+            continue
+        options[key] = data.pop(key)
+    hass.config_entries.async_update_entry(entry, data=data, options=options, version=2)
+    _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf: dict[str, Any]
     mqtt_data: MqttData
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
@@ -367,7 +389,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
-        client = MQTT(hass, entry, conf)
+        client = MQTT(hass, entry)
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
@@ -468,9 +490,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
     # Setup discovery
-    if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
+    if entry.options.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(
-            hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
+            hass, entry.options.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
 
     return True

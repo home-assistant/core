@@ -1044,7 +1044,6 @@ async def _mqtt_mock_entry(
 
         # Assert that MQTT is setup
         assert real_mqtt_instance is not None, "MQTT was not setup correctly"
-        mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
         mock_mqtt_instance._mqttc = mqtt_client_mock
 
         # connected set to True to get a more realistic behavior when subscribing

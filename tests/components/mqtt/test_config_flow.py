@@ -243,7 +243,6 @@ async def test_user_connection_works(
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -283,7 +282,6 @@ async def test_user_connection_works_with_supervisor(
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
@@ -324,7 +322,6 @@ async def test_user_v5_connection_works(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "broker": "another-broker",
-        "discovery": True,
         "port": 2345,
         "protocol": "5",
     }
@@ -383,14 +380,12 @@ async def test_manual_config_set(
     assert result["result"].data == {
         "broker": "127.0.0.1",
         "port": 1883,
-        "discovery": True,
     }
     # Check we tried the connection, with precedence for config entry settings
     mock_try_connection.assert_called_once_with(
         {
             "broker": "127.0.0.1",
             "port": 1883,
-            "discovery": True,
         },
     )
     # Check config entry got setup
@@ -934,43 +929,19 @@ async def test_addon_not_installed_failures(
 async def test_option_flow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mock_try_connection: MagicMock,
 ) -> None:
     """Test config flow options."""
     with patch(
         "homeassistant.config.async_hass_config_yaml", AsyncMock(return_value={})
     ) as yaml_mock:
-        mqtt_mock = await mqtt_mock_entry()
-        mock_try_connection.return_value = True
+        await mqtt_mock_entry()
         config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={
-                mqtt.CONF_BROKER: "test-broker",
-                CONF_PORT: 1234,
-            },
-        )
-
-        mqtt_mock.async_connect.reset_mock()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "broker"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                mqtt.CONF_BROKER: "another-broker",
-                CONF_PORT: 2345,
-                CONF_USERNAME: "user",
-                CONF_PASSWORD: "pass",
-            },
-        )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "options"
 
         await hass.async_block_till_done()
-        assert mqtt_mock.async_connect.call_count == 0
 
         yaml_mock.reset_mock()
 
@@ -992,12 +963,10 @@ async def test_option_flow(
             },
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {}
-        assert config_entry.data == {
-            mqtt.CONF_BROKER: "another-broker",
-            CONF_PORT: 2345,
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
+        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert config_entry.data == {mqtt.CONF_BROKER: "mock-broker"}
+        assert config_entry.options == {
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
             mqtt.CONF_BIRTH_MESSAGE: {
@@ -1015,8 +984,7 @@ async def test_option_flow(
         }
 
         await hass.async_block_till_done()
-        assert config_entry.title == "another-broker"
-    # assert that the entry was reloaded with the new config
+        # assert that the entry was reloaded with the new config
     assert yaml_mock.await_count
 
 
@@ -1088,11 +1056,18 @@ async def test_bad_certificate(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+            "show_advanced_options": True,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "another-broker",
@@ -1109,14 +1084,14 @@ async def test_bad_certificate(
     test_input["set_ca_cert"] = set_ca_cert
     test_input["tls_insecure"] = tls_insecure
 
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=test_input,
     )
     if test_error is not None:
         assert result["errors"]["base"] == test_error
         return
-    assert result["errors"] == {}
+    assert "errors" not in result
 
 
 @pytest.mark.parametrize(
@@ -1161,22 +1136,30 @@ async def test_keepalive_validation(
 
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+            "show_advanced_options": True,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
     if error:
         with pytest.raises(vol.Invalid):
-            result = await hass.config_entries.options.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input=test_input,
             )
         return
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=test_input,
     )
-    assert not result["errors"]
+    assert "errors" not in result
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_disable_birth_will(
@@ -1186,7 +1169,7 @@ async def test_disable_birth_will(
     mock_reload_after_entry_update: MagicMock,
 ) -> None:
     """Test disabling birth and will."""
-    mqtt_mock = await mqtt_mock_entry()
+    await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     hass.config_entries.async_update_entry(
@@ -1199,26 +1182,10 @@ async def test_disable_birth_will(
     await hass.async_block_till_done()
     mock_reload_after_entry_update.reset_mock()
 
-    mqtt_mock.async_connect.reset_mock()
-
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_BROKER: "another-broker",
-            CONF_PORT: 2345,
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "pass",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
-
     await hass.async_block_till_done()
-    assert mqtt_mock.async_connect.call_count == 0
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -1238,12 +1205,14 @@ async def test_disable_birth_will(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
-    assert config_entry.data == {
-        mqtt.CONF_BROKER: "another-broker",
-        CONF_PORT: 2345,
-        CONF_USERNAME: "user",
-        CONF_PASSWORD: "pass",
+    assert result["data"] == {
+        "birth_message": {},
+        "discovery": True,
+        "discovery_prefix": "homeassistant",
+        "will_message": {},
+    }
+    assert config_entry.data == {mqtt.CONF_BROKER: "test-broker", CONF_PORT: 1234}
+    assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         mqtt.CONF_BIRTH_MESSAGE: {},
@@ -1270,6 +1239,8 @@ async def test_invalid_discovery_prefix(
         data={
             mqtt.CONF_BROKER: "test-broker",
             CONF_PORT: 1234,
+        },
+        options={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
         },
@@ -1279,16 +1250,6 @@ async def test_invalid_discovery_prefix(
     mqtt_mock.async_connect.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_BROKER: "another-broker",
-            CONF_PORT: 2345,
-        },
-    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
 
@@ -1308,6 +1269,8 @@ async def test_invalid_discovery_prefix(
     assert config_entry.data == {
         mqtt.CONF_BROKER: "test-broker",
         CONF_PORT: 1234,
+    }
+    assert config_entry.options == {
         mqtt.CONF_DISCOVERY: True,
         mqtt.CONF_DISCOVERY_PREFIX: "homeassistant",
     }
@@ -1356,6 +1319,8 @@ async def test_option_flow_default_suggested_values(
             CONF_PORT: 1234,
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
+        },
+        options={
             mqtt.CONF_DISCOVERY: True,
             mqtt.CONF_BIRTH_MESSAGE: {
                 mqtt.ATTR_TOPIC: "ha_state/online",
@@ -1371,37 +1336,13 @@ async def test_option_flow_default_suggested_values(
             },
         },
     )
+    await hass.async_block_till_done()
 
     # Test default/suggested values from config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-    defaults = {
-        mqtt.CONF_BROKER: "test-broker",
-        CONF_PORT: 1234,
-    }
-    suggested = {
-        CONF_USERNAME: "user",
-        CONF_PASSWORD: PWD_NOT_CHANGED,
-    }
-    for key, value in defaults.items():
-        assert get_default(result["data_schema"].schema, key) == value
-    for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_BROKER: "another-broker",
-            CONF_PORT: 2345,
-            CONF_USERNAME: "us3r",
-            CONF_PASSWORD: "p4ss",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
-        mqtt.CONF_DISCOVERY: True,
         "birth_qos": 1,
         "birth_retain": True,
         "will_qos": 2,
@@ -1421,7 +1362,6 @@ async def test_option_flow_default_suggested_values(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            mqtt.CONF_DISCOVERY: False,
             "birth_topic": "ha_state/onl1ne",
             "birth_payload": "onl1ne",
             "birth_qos": 2,
@@ -1437,28 +1377,8 @@ async def test_option_flow_default_suggested_values(
     # Test updated default/suggested values from config
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-    defaults = {
-        mqtt.CONF_BROKER: "another-broker",
-        CONF_PORT: 2345,
-    }
-    suggested = {
-        CONF_USERNAME: "us3r",
-        CONF_PASSWORD: PWD_NOT_CHANGED,
-    }
-    for key, value in defaults.items():
-        assert get_default(result["data_schema"].schema, key) == value
-    for key, value in suggested.items():
-        assert get_suggested(result["data_schema"].schema, key) == value
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={mqtt.CONF_BROKER: "another-broker", CONF_PORT: 2345},
-    )
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     defaults = {
-        mqtt.CONF_DISCOVERY: False,
         "birth_qos": 2,
         "birth_retain": False,
         "will_qos": 1,
@@ -1478,7 +1398,6 @@ async def test_option_flow_default_suggested_values(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            mqtt.CONF_DISCOVERY: True,
             "birth_topic": "ha_state/onl1ne",
             "birth_payload": "onl1ne",
             "birth_qos": 2,
@@ -1496,7 +1415,8 @@ async def test_option_flow_default_suggested_values(
 
 
 @pytest.mark.parametrize(
-    ("advanced_options", "step_id"), [(False, "options"), (True, "broker")]
+    ("advanced_options", "flow_result"),
+    [(False, FlowResultType.ABORT), (True, FlowResultType.FORM)],
 )
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_skipping_advanced_options(
@@ -1504,41 +1424,40 @@ async def test_skipping_advanced_options(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     mock_try_connection: MagicMock,
     advanced_options: bool,
-    step_id: str,
+    flow_result: FlowResultType,
 ) -> None:
     """Test advanced options option."""
 
     test_input = {
         mqtt.CONF_BROKER: "another-broker",
         CONF_PORT: 2345,
-        "advanced_options": advanced_options,
     }
+    if advanced_options:
+        test_input["advanced_options"] = True
 
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    # Initiate with a basic setup
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data={
-            mqtt.CONF_BROKER: "test-broker",
-            CONF_PORT: 1234,
-        },
-    )
-
     mqtt_mock.async_connect.reset_mock()
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "show_advanced_options": advanced_options,
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
-    result = await hass.config_entries.options.async_configure(
+    assert ("advanced_options" in result["data_schema"].schema) == advanced_options
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=test_input,
     )
-    assert result["step_id"] == step_id
+    assert result["type"] is flow_result
 
 
 @pytest.mark.parametrize(
@@ -1762,7 +1681,7 @@ async def test_step_hassio_reauth_no_discovery_info(
     mock_try_connection.assert_not_called()
 
 
-async def test_options_user_connection_fails(
+async def test_reconfigure_user_connection_fails(
     hass: HomeAssistant, mock_try_connection_time_out: MagicMock
 ) -> None:
     """Test if connection cannot be made."""
@@ -1775,11 +1694,18 @@ async def test_options_user_connection_fails(
             CONF_PORT: 1234,
         },
     )
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+            "show_advanced_options": True,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
 
     mock_try_connection_time_out.reset_mock()
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={mqtt.CONF_BROKER: "bad-broker", CONF_PORT: 2345},
     )
@@ -1813,13 +1739,6 @@ async def test_options_bad_birth_message_fails(
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={mqtt.CONF_BROKER: "another-broker", CONF_PORT: 2345},
-    )
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
 
@@ -1855,13 +1774,6 @@ async def test_options_bad_will_message_fails(
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={mqtt.CONF_BROKER: "another-broker", CONF_PORT: 2345},
-    )
-
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
 
     result = await hass.config_entries.options.async_configure(
@@ -1878,9 +1790,6 @@ async def test_options_bad_will_message_fails(
     }
 
 
-@pytest.mark.parametrize(
-    "hass_config", [{"mqtt": {"sensor": [{"state_topic": "some-topic"}]}}]
-)
 @pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
 async def test_try_connection_with_advanced_parameters(
     hass: HomeAssistant, mock_try_connection_success: MqttMockPahoClient
@@ -1920,7 +1829,14 @@ async def test_try_connection_with_advanced_parameters(
     )
 
     # Test default/suggested values from config
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+            "show_advanced_options": True,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     defaults = {
@@ -1944,9 +1860,8 @@ async def test_try_connection_with_advanced_parameters(
         assert get_suggested(result["data_schema"].schema, k) == v
 
     # test we can change username and password
-    # as it was configured as auto in configuration.yaml is is migrated now
     mock_try_connection_success.reset_mock()
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "another-broker",
@@ -1961,9 +1876,8 @@ async def test_try_connection_with_advanced_parameters(
             mqtt.CONF_WS_HEADERS: '{"h3": "v3"}',
         },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == "options"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
     # check if the username and password was set from config flow and not from configuration.yaml
@@ -1987,12 +1901,6 @@ async def test_try_connection_with_advanced_parameters(
         "/new/path",
         {"h3": "v3"},
     )
-    # Accept default option
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
 
@@ -2017,15 +1925,20 @@ async def test_setup_with_advanced_settings(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
+    result = await hass.config_entries.flow.async_init(
+        mqtt.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+            "show_advanced_options": True,
+        },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["advanced_options"]
 
     # first iteration, basic settings
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2049,7 +1962,7 @@ async def test_setup_with_advanced_settings(
     assert mqtt.CONF_CLIENT_KEY not in result["data_schema"].schema
 
     # second iteration, advanced settings with request for client cert
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2080,7 +1993,7 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_WS_HEADERS]
 
     # third iteration, advanced settings with client cert and key set and bad json payload
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2105,7 +2018,7 @@ async def test_setup_with_advanced_settings(
 
     # fourth iteration, advanced settings with client cert and key set
     # and correct json payload for ws_headers
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2124,17 +2037,8 @@ async def test_setup_with_advanced_settings(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     # Check config entry result
     assert config_entry.data == {
@@ -2153,8 +2057,6 @@ async def test_setup_with_advanced_settings(
             "header_2": "content_header_2",
         },
         mqtt.CONF_CERTIFICATE: "auto",
-        mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }
 
 

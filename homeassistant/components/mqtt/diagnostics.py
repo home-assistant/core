@@ -49,7 +49,7 @@ def _async_get_diagnostics(
     if TYPE_CHECKING:
         assert mqtt_instance is not None
 
-    redacted_config = async_redact_data(mqtt_instance.conf, REDACT_CONFIG)
+    redacted_config = async_redact_data(mqtt_instance.entry_data, REDACT_CONFIG)
 
     data = {
         "connected": is_connected(hass),

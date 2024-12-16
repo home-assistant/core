@@ -41,7 +41,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.collection import chunked_or_all
@@ -278,7 +277,7 @@ class MqttClientSetup:
 
     _client: AsyncMQTTClient
 
-    def __init__(self, config: ConfigType) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """Initialize the MQTT client setup helper.
 
         self.setup must be run in an executor job.
@@ -364,14 +363,13 @@ class MQTT:
     _last_subscribe: float
     _mqtt_data: MqttData
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, conf: ConfigType
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize Home Assistant MQTT client."""
         self.hass = hass
         self.loop = hass.loop
         self.config_entry = config_entry
-        self.conf = conf
+        self.entry_data = config_entry.data
+        self.entry_options = config_entry.options
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
@@ -465,7 +463,7 @@ class MQTT:
                 self.hass, "homeassistant.components.mqtt.async_client"
             )
 
-        mqttc_setup = MqttClientSetup(self.conf)
+        mqttc_setup = MqttClientSetup(dict(self.entry_data))
         await self.hass.async_add_executor_job(mqttc_setup.setup)
         mqttc = mqttc_setup.client
         # on_socket_unregister_write and _async_on_socket_close
@@ -484,7 +482,7 @@ class MQTT:
         # suppress exceptions at callback
         mqttc.suppress_exceptions = True
 
-        if will := self.conf.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
+        if will := self.entry_options.get(CONF_WILL_MESSAGE, DEFAULT_WILL):
             will_message = PublishMessage(**will)
             mqttc.will_set(
                 topic=will_message.topic,
@@ -657,9 +655,9 @@ class MQTT:
             async with self._connection_lock, self._async_connect_in_executor():
                 result = await self.hass.async_add_executor_job(
                     self._mqttc.connect,
-                    self.conf[CONF_BROKER],
-                    self.conf.get(CONF_PORT, DEFAULT_PORT),
-                    self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+                    self.entry_data[CONF_BROKER],
+                    self.entry_data.get(CONF_PORT, DEFAULT_PORT),
+                    self.entry_data.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
                 )
         except OSError as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
@@ -1012,13 +1010,13 @@ class MQTT:
         async_dispatcher_send(self.hass, MQTT_CONNECTION_STATE, True)
         _LOGGER.debug(
             "Connected to MQTT server %s:%s (%s)",
-            self.conf[CONF_BROKER],
-            self.conf.get(CONF_PORT, DEFAULT_PORT),
+            self.entry_data[CONF_BROKER],
+            self.entry_data.get(CONF_PORT, DEFAULT_PORT),
             result_code,
         )
 
         birth: dict[str, Any]
-        if birth := self.conf.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
+        if birth := self.entry_options.get(CONF_BIRTH_MESSAGE, DEFAULT_BIRTH):
             birth_message = PublishMessage(**birth)
             self.config_entry.async_create_background_task(
                 self.hass,
@@ -1203,8 +1201,8 @@ class MQTT:
         _LOGGER.log(
             logging.INFO if result_code == 0 else logging.DEBUG,
             "Disconnected from MQTT server %s:%s (%s)",
-            self.conf[CONF_BROKER],
-            self.conf.get(CONF_PORT, DEFAULT_PORT),
+            self.entry_data[CONF_BROKER],
+            self.entry_data.get(CONF_PORT, DEFAULT_PORT),
             result_code,
         )
 
