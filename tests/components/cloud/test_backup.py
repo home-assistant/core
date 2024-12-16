@@ -372,6 +372,7 @@ async def test_agents_upload(
     assert f"Uploading backup {backup_id}" in caplog.text
 
 
+@pytest.mark.parametrize("put_mock_kwargs", [{"status": 500}, {"exc": TimeoutError}])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_upload_fail_put(
     hass: HomeAssistant,
@@ -379,6 +380,7 @@ async def test_agents_upload_fail_put(
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
+    put_mock_kwargs: dict[str, Any],
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
@@ -395,7 +397,7 @@ async def test_agents_upload_fail_put(
         protected=True,
         size=0.0,
     )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"], status=500)
+    aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
 
     with (
         patch(
@@ -408,52 +410,6 @@ async def test_agents_upload_fail_put(
         patch("pathlib.Path.open") as mocked_open,
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        fetch_backup.return_value = test_backup
-        resp = await client.post(
-            "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO("test")},
-        )
-
-    assert resp.status == 201
-    assert "Error during backup upload - Failed to upload backup" in caplog.text
-
-
-@pytest.mark.parametrize("side_effect", [TimeoutError])
-@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
-async def test_agents_upload_fail_put_exception(
-    hass: HomeAssistant,
-    side_effect: Exception,
-    hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
-    aioclient_mock: AiohttpClientMocker,
-    mock_get_upload_details: Mock,
-) -> None:
-    """Test agent upload backup fails."""
-    client = await hass_client()
-    backup_id = "test-backup"
-    test_backup = AgentBackup(
-        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
-        backup_id=backup_id,
-        database_included=True,
-        date="1970-01-01T00:00:00.000Z",
-        folders=[Folder.MEDIA, Folder.SHARE],
-        homeassistant_included=True,
-        homeassistant_version="2024.12.0",
-        name="Test",
-        protected=True,
-        size=0.0,
-    )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"], exc=side_effect)
-
-    with (
-        patch(
-            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
-        ) as fetch_backup,
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
-        ),
-    ):
         fetch_backup.return_value = test_backup
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
