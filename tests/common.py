@@ -1835,7 +1835,7 @@ def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
 
 
 @lru_cache
-def get_quality_scale(integration: str) -> dict[str, str]:
+def get_quality_scale(integration: str) -> dict[str, Literal["done", "exempt", "todo"]]:
     """Load quality scale for integration."""
     quality_scale_file = pathlib.Path(
         f"homeassistant/components/{integration}/quality_scale.yaml"

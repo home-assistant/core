@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from pathlib import Path
 import re
 import string
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
@@ -804,7 +804,9 @@ async def _check_create_issue_translations(
         )
 
 
-def _get_request_quality_scale(request: pytest.FixtureRequest, rule: str) -> str:
+def _get_request_quality_scale(
+    request: pytest.FixtureRequest, rule: str
+) -> Literal["done", "exempt", "todo"]:
     if not (match := RE_REQUEST_DOMAIN.match(str(request.path))):
         return "todo"
     integration = match.groups(1)[0]
