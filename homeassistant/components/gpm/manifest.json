@@ -8,6 +8,7 @@
   "homekit": {},
   "iot_class": "cloud_polling",
   "loggers": ["git"],
+  "quality_scale": "bronze",
   "requirements": ["GitPython==3.1.43"],
   "ssdp": [],
   "zeroconf": []
