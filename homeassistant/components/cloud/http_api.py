@@ -231,10 +231,19 @@ class CloudLoginView(HomeAssistantView):
     @_handle_cloud_errors
     @RequestDataValidator(
         vol.Schema(
-            {
-                vol.Required("email"): str,
-                vol.Required(vol.Any("password", "code")): str,
-            }
+            vol.All(
+                # Ensure either password or code is provided, but not both
+                {
+                    vol.Required("email"): str,
+                    vol.Exclusive("password", "login"): str,
+                    vol.Exclusive("code", "login"): str,
+                },
+                # Ensure that at least one of password or code is provided
+                {
+                    vol.Required("email"): str,
+                    vol.Required(vol.Any("password", "code")): str,
+                },
+            )
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
