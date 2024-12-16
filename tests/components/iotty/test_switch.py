@@ -25,6 +25,46 @@ from .conftest import test_ls_one_added, test_ls_one_removed, test_ou_one_added
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+async def check_command_ok(
+    entity_id: str,
+    initial_status: str,
+    final_status: str,
+    command: str,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    local_oauth_impl: ClientSession,
+    mock_get_status,
+    mock_command_fn,
+) -> None:
+    """Issue a command."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, DOMAIN, local_oauth_impl
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == initial_status
+
+    mock_get_status.return_value = {RESULT: {STATUS: final_status}}
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        command,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    mock_command_fn.assert_called_once()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == final_status
+
+
 async def test_turn_on_light_ok(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -37,31 +77,17 @@ async def test_turn_on_light_ok(
 
     entity_id = "switch.test_light_switch_0_test_serial_0"
 
-    mock_config_entry.add_to_hass(hass)
-
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, local_oauth_impl
+    await check_command_ok(
+        entity_id=entity_id,
+        initial_status=STATUS_OFF,
+        final_status=STATUS_ON,
+        command=SERVICE_TURN_ON,
+        hass=hass,
+        mock_config_entry=mock_config_entry,
+        local_oauth_impl=local_oauth_impl,
+        mock_get_status=mock_get_status_filled_off,
+        mock_command_fn=mock_command_fn,
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_OFF
-
-    mock_get_status_filled_off.return_value = {RESULT: {STATUS: STATUS_ON}}
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    await hass.async_block_till_done()
-    mock_command_fn.assert_called_once()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_ON
 
 
 async def test_turn_on_outlet_ok(
@@ -76,30 +102,17 @@ async def test_turn_on_outlet_ok(
 
     entity_id = "switch.test_outlet_0_test_serial_ou_0"
 
-    mock_config_entry.add_to_hass(hass)
-
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, local_oauth_impl
+    await check_command_ok(
+        entity_id=entity_id,
+        initial_status=STATUS_OFF,
+        final_status=STATUS_ON,
+        command=SERVICE_TURN_ON,
+        hass=hass,
+        mock_config_entry=mock_config_entry,
+        local_oauth_impl=local_oauth_impl,
+        mock_get_status=mock_get_status_filled_off,
+        mock_command_fn=mock_command_fn,
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_OFF
-
-    mock_get_status_filled_off.return_value = {RESULT: {STATUS: STATUS_ON}}
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    await hass.async_block_till_done()
-    mock_command_fn.assert_called_once()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_ON
 
 
 async def test_turn_off_light_ok(
@@ -114,31 +127,17 @@ async def test_turn_off_light_ok(
 
     entity_id = "switch.test_light_switch_0_test_serial_0"
 
-    mock_config_entry.add_to_hass(hass)
-
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, local_oauth_impl
+    await check_command_ok(
+        entity_id=entity_id,
+        initial_status=STATUS_ON,
+        final_status=STATUS_OFF,
+        command=SERVICE_TURN_OFF,
+        hass=hass,
+        mock_config_entry=mock_config_entry,
+        local_oauth_impl=local_oauth_impl,
+        mock_get_status=mock_get_status_filled,
+        mock_command_fn=mock_command_fn,
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_ON
-
-    mock_get_status_filled.return_value = {RESULT: {STATUS: STATUS_OFF}}
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    await hass.async_block_till_done()
-    mock_command_fn.assert_called_once()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_OFF
 
 
 async def test_turn_off_outlet_ok(
@@ -153,31 +152,17 @@ async def test_turn_off_outlet_ok(
 
     entity_id = "switch.test_outlet_0_test_serial_ou_0"
 
-    mock_config_entry.add_to_hass(hass)
-
-    config_entry_oauth2_flow.async_register_implementation(
-        hass, DOMAIN, local_oauth_impl
+    await check_command_ok(
+        entity_id=entity_id,
+        initial_status=STATUS_ON,
+        final_status=STATUS_OFF,
+        command=SERVICE_TURN_OFF,
+        hass=hass,
+        mock_config_entry=mock_config_entry,
+        local_oauth_impl=local_oauth_impl,
+        mock_get_status=mock_get_status_filled,
+        mock_command_fn=mock_command_fn,
     )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_ON
-
-    mock_get_status_filled.return_value = {RESULT: {STATUS: STATUS_OFF}}
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    await hass.async_block_till_done()
-    mock_command_fn.assert_called_once()
-
-    assert (state := hass.states.get(entity_id))
-    assert state.state == STATUS_OFF
 
 
 async def test_setup_entry_ok_nodevices(
