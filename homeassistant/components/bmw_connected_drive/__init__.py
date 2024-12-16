@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -18,7 +16,7 @@ from homeassistant.helpers import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
-from .coordinator import BMWDataUpdateCoordinator
+from .coordinator import BMWConfigEntry, BMWDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,19 +47,9 @@ PLATFORMS = [
 SERVICE_UPDATE_STATE = "update_state"
 
 
-type BMWConfigEntry = ConfigEntry[BMWData]
-
-
-@dataclass
-class BMWData:
-    """Class to store BMW runtime data."""
-
-    coordinator: BMWDataUpdateCoordinator
-
-
 @callback
 def _async_migrate_options_from_data_if_missing(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: BMWConfigEntry
 ) -> None:
     data = dict(entry.data)
     options = dict(entry.options)
@@ -127,7 +115,7 @@ async def _async_migrate_entries(
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
 
     _async_migrate_options_from_data_if_missing(hass, entry)
@@ -137,11 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up one data coordinator per account/config entry
     coordinator = BMWDataUpdateCoordinator(
         hass,
-        entry=entry,
+        config_entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = BMWData(coordinator)
+    entry.runtime_data = coordinator
 
     # Set up all platforms except notify
     await hass.config_entries.async_forward_entry_setups(
@@ -175,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BMWConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(

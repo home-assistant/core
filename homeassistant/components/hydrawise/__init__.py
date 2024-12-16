@@ -7,7 +7,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DOMAIN
+from .const import APP_ID, DOMAIN
 from .coordinator import (
     HydrawiseMainDataUpdateCoordinator,
     HydrawiseUpdateCoordinators,
@@ -30,7 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed
 
     hydrawise = client.Hydrawise(
-        auth.Auth(config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD])
+        auth.Auth(config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD]),
+        app_id=APP_ID,
     )
 
     main_coordinator = HydrawiseMainDataUpdateCoordinator(hass, hydrawise)

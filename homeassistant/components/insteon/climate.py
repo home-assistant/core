@@ -94,7 +94,6 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     _attr_hvac_modes = list(HVAC_MODES.values())
     _attr_fan_modes = list(FAN_MODES.values())
     _attr_min_humidity = 1
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def temperature_unit(self) -> str:

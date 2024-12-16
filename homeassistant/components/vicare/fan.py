@@ -125,7 +125,6 @@ class ViCareFan(ViCareEntity, FanEntity):
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED
     _attr_translation_key = "ventilation"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

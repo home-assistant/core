@@ -16,8 +16,8 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TwenteMilieuConfigEntry
 from .const import DOMAIN
+from .coordinator import TwenteMilieuConfigEntry
 from .entity import TwenteMilieuEntity
 
 

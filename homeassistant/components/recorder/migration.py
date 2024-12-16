@@ -2508,15 +2508,11 @@ class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate event_type to event_type_ids, return True if completed."""
@@ -2576,25 +2572,16 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
         _LOGGER.debug("Migrating event_types done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        _LOGGER.debug("Activating event_types manager as all data is migrated")
-        instance.event_type_manager.active = True
-
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate entity_ids to states_meta, return True if completed.
@@ -2663,18 +2650,6 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
 
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
         return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
-
-    def migration_done(self, instance: Recorder, session: Session) -> None:
-        """Will be called after migrate returns True."""
-        # The migration has finished, now we start the post migration
-        # to remove the old entity_id data from the states table
-        # at this point we can also start using the StatesMeta table
-        # so we set active to True
-        _LOGGER.debug("Activating states_meta manager as all data is migrated")
-        instance.states_meta_manager.active = True
-        with contextlib.suppress(SQLAlchemyError):
-            migrate = EntityIDPostMigration(self.schema_version, self.migration_changes)
-            migrate.queue_migration(instance, session)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2763,14 +2738,13 @@ class EventIDPostMigration(BaseRunTimeMigration):
         return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
+class EntityIDPostMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to remove old entity_id strings from states.
 
     Introduced in HA Core 2023.4 by PR #89557.
     """
 
     migration_id = "entity_id_post_migration"
-    task = MigrationTask
     index_to_drop = (TABLE_STATES, LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
@@ -2783,14 +2757,15 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseRunTimeMigration):
         return has_used_states_entity_ids()
 
 
-NON_LIVE_DATA_MIGRATORS = (
+NON_LIVE_DATA_MIGRATORS: tuple[type[BaseOffLineMigration], ...] = (
     StatesContextIDMigration,  # Introduced in HA Core 2023.4
     EventsContextIDMigration,  # Introduced in HA Core 2023.4
-)
-
-LIVE_DATA_MIGRATORS = (
     EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
     EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
+    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
+)
+
+LIVE_DATA_MIGRATORS: tuple[type[BaseRunTimeMigration], ...] = (
     EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
 )
 

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -107,7 +107,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         LaMarzoccoSelectEntity(coordinator, description)

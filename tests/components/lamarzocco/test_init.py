@@ -6,7 +6,6 @@ from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
-from websockets.protocol import State
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -175,9 +174,7 @@ async def test_bluetooth_is_set_from_discovery(
             "homeassistant.components.lamarzocco.async_discovered_service_info",
             return_value=[service_info],
         ) as discovery,
-        patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine"
-        ) as init_device,
+        patch("homeassistant.components.lamarzocco.LaMarzoccoMachine") as init_device,
     ):
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
@@ -200,7 +197,7 @@ async def test_websocket_closed_on_unload(
     ) as local_client:
         client = local_client.return_value
         client.websocket = AsyncMock()
-        client.websocket.state = State.OPEN
+        client.websocket.closed = False
         await async_init_integration(hass, mock_config_entry)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()

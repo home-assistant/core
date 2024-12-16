@@ -140,7 +140,6 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
     _current_action: bool | None = None
     _current_mode: str | None = None
     _current_program: str | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

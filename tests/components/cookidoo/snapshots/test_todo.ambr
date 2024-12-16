@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_todo[todo.cookidoo_additional_purchases-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.cookidoo_additional_purchases',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Additional purchases',
+    'platform': 'cookidoo',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 7>,
+    'translation_key': 'additional_item_list',
+    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_additional_items',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.cookidoo_additional_purchases-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cookidoo Additional purchases',
+      'supported_features': <TodoListEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.cookidoo_additional_purchases',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_todo[todo.cookidoo_shopping_list-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.cookidoo_shopping_list',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shopping list',
+    'platform': 'cookidoo',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 4>,
+    'translation_key': 'ingredient_list',
+    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_ingredients',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.cookidoo_shopping_list-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cookidoo Shopping list',
+      'supported_features': <TodoListEntityFeature: 4>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.cookidoo_shopping_list',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---

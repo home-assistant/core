@@ -188,3 +188,29 @@ async def test_flow_reauth_error_and_recover(
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_flow_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+) -> None:
+    """Test we abort reauth if unique id mismatch."""
+
+    mock_bring_client.uuid = "11111111-11111111-11111111-11111111"
+
+    bring_config_entry.add_to_hass(hass)
+
+    result = await bring_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: "new-password"},
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"

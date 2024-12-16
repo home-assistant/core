@@ -30,6 +30,9 @@
     "invalid_target_temperature": {
       "message": "Target temperature {value} is invalid."
     },
+    "invalid_combustion_power": {
+      "message": "Combustion power {value} is invalid."
+    },
     "cannot_connect": {
       "message": "Could not connect to the device."
     }
@@ -46,6 +49,11 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "combustion_power": {
+        "name": "Combustion power"
       }
     },
     "sensor": {
