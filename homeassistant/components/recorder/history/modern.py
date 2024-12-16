@@ -261,9 +261,7 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    lateral_join_for_start_time = (
-        get_instance(hass).dialect_name == SupportedDialect.POSTGRESQL
-    )
+    lateral_join_for_start_time = instance.dialect_name == SupportedDialect.POSTGRESQL
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,

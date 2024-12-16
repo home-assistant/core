@@ -2096,9 +2096,8 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    lateral_join_for_start_time = (
-        get_instance(hass).dialect_name == SupportedDialect.POSTGRESQL
-    )
+    dialect_name = get_instance(hass).dialect_name
+    lateral_join_for_start_time = dialect_name == SupportedDialect.POSTGRESQL
     stmt = _generate_statistics_at_time_stmt(
         table, metadata_ids, start_time_ts, types, lateral_join_for_start_time
     )
