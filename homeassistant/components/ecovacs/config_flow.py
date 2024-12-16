@@ -172,7 +172,13 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            self._async_abort_entries_match(
+                {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_OVERRIDE_REST_URL: user_input.get(CONF_OVERRIDE_REST_URL),
+                    CONF_OVERRIDE_MQTT_URL: user_input.get(CONF_OVERRIDE_MQTT_URL),
+                }
+            )
 
             errors = await _validate_input(self.hass, user_input)
 

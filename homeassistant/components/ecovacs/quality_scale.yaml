@@ -1,60 +1,95 @@
 rules:
   # Bronze
   config-flow: done
-  brands: done
-  dependency-transparency: todo
-  common-modules: todo
-  has-entity-name: todo
-  action-setup: todo
-  appropriate-polling: todo
-  test-before-configure: todo
-  entity-event-setup: todo
-  unique-config-entry: todo
-  entity-unique-id: todo
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup:
+    status: todo
+    comment: Legacy code will not raise on setup currently
+  appropriate-polling:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client pulls only once at beginning and afterwards is pushed based
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency:
+    status: todo
+    comment: Currently unsure if all dependencies need to validated or only direct ones.
+  action-setup:
+    status: done
+    comment: "`raw_get_positions` is a entity service"
+  common-modules: done
+  docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  test-before-setup: todo
-  docs-high-level-description: todo
-  config-flow-test-coverage: todo
   docs-actions: todo
-  runtime-data: todo
+  brands: done
 
   # Silver
+  config-entry-unloading: done
   log-when-unavailable: todo
-  config-entry-unloading: todo
-  reauthentication-flow: todo
+  entity-unavailable: done
   action-exceptions: todo
-  docs-installation-parameters: todo
-  integration-owner: todo
-  parallel-updates: todo
+  reauthentication-flow: todo
+  parallel-updates:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client uses internally semaphores to prevent to many parallel requests
   test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: todo
   docs-configuration-parameters: todo
-  entity-unavailable: todo
 
   # Gold
-  docs-examples: todo
-  discovery-update-info: todo
-  entity-device-class: todo
-  entity-translations: todo
-  docs-data-update: todo
-  entity-disabled-by-default: todo
-  discovery: todo
-  exception-translations: todo
-  devices: todo
-  docs-supported-devices: todo
-  icon-translations: todo
-  docs-known-limitations: todo
+  entity-translations:
+    status: todo
+    comment: |
+      @mib1185 Legacy entities are not translated
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: exempt
+    comment: Not supported as we don't talk directly to the devices
   stale-devices: todo
-  docs-supported-functions: todo
-  repair-issues: todo
+  diagnostics: done
+  exception-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
-  entity-category: todo
-  dynamic-devices: todo
-  docs-troubleshooting: todo
-  diagnostics: todo
+  dynamic-devices:
+    status: todo
+    comment: New devices are discovered only on boot currently
+  discovery-update-info:
+    status: exempt
+    comment: Not supported as we don't talk directly to the devices
+  repair-issues: todo
   docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
 
   # Platinum
-  async-dependency: todo
-  strict-typing: todo
-  inject-websession: todo
+  async-dependency:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client is async
+  inject-websession:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client uses the passed websession
+  strict-typing:
+    status: todo
+    comment: |
+      @mib1185 Please check legacy code.
+      deebot-client is typed
