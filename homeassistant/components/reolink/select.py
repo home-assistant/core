@@ -352,7 +352,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
-@raise_translated_error
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
