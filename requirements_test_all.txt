@@ -1000,7 +1000,7 @@ idasen-ha==2.6.2
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.6
+imgw_pib==1.0.7
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4
