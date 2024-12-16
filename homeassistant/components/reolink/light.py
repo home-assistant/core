@@ -155,7 +155,9 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, False
+        )
         self.async_write_ha_state()
 
     @raise_translated_error
@@ -169,7 +171,9 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
                 self._host.api, self._channel, brightness_pct
             )
 
-        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
+        await self.entity_description.turn_on_off_fn(
+            self._host.api, self._channel, True
+        )
         self.async_write_ha_state()
 
 
