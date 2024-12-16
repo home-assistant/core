@@ -19,6 +19,9 @@
         "description": "Frontend resources require URL from where to download compiled JS / CSS files when changes are detected within the repository.\n\nVariable `version` will be replaced with the corresponding GIT repository tag / commit hash (as configured in previous step).",
         "data": {
           "download_url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "download_url": "E.g.: `https://raw.githubusercontent.com/user/awesome-resource/refs/tags/{{version}}/dist/bundle.min.js`"
         }
       }
     },
