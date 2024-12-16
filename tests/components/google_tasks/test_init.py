@@ -6,6 +6,7 @@ from http import HTTPStatus
 import time
 from unittest.mock import Mock
 
+from aiohttp import ClientError
 from httplib2 import Response
 import pytest
 
@@ -72,20 +73,28 @@ async def test_expired_token_refresh_success(
 
 
 @pytest.mark.parametrize(
-    ("expires_at", "status", "expected_state"),
+    ("expires_at", "status", "exc", "expected_state"),
     [
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
+            None,
             ConfigEntryState.SETUP_ERROR,
         ),
         (
             time.time() - 3600,
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
+            None,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            time.time() - 3600,
+            None,
+            ClientError("error"),
             ConfigEntryState.SETUP_RETRY,
         ),
     ],
-    ids=["unauthorized", "internal_server_error"],
+    ids=["unauthorized", "internal_server_error", "client_error"],
 )
 async def test_expired_token_refresh_failure(
     hass: HomeAssistant,
@@ -93,7 +102,8 @@ async def test_expired_token_refresh_failure(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    status: http.HTTPStatus,
+    status: http.HTTPStatus | None,
+    exc: Exception | None,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test failure while refreshing token with a transient error."""
@@ -102,6 +112,7 @@ async def test_expired_token_refresh_failure(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         status=status,
+        exc=exc,
     )
 
     await integration_setup()
