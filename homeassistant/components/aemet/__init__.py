@@ -1,6 +1,7 @@
 """The AEMET OpenData component."""
 
 import logging
+import shutil
 
 from aemet_opendata.exceptions import AemetError, TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
@@ -60,3 +61,11 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, "aemet"),
+    )
