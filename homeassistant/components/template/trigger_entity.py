@@ -48,8 +48,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             **(run_variables or {}),
         }
 
-        if self._render_availability_template(variables):
-            self._render_templates(variables)
+        self._render_availability_template(variables)
+        self._render_templates(variables)
 
         self.async_set_context(self.coordinator.data["context"])
 
