@@ -25,5 +25,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aioacaia"],
-  "requirements": ["aioacaia==0.1.6"]
+  "requirements": ["aioacaia==0.1.11"]
 }

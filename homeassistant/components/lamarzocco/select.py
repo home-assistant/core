@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -18,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 STEAM_LEVEL_HA_TO_LM = {
     "1": SteamLevel.LEVEL_1,
@@ -105,7 +107,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         LaMarzoccoSelectEntity(coordinator, description)

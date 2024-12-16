@@ -20,7 +20,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, BMWConfigEntry
+from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
+
+PARALLEL_UPDATES = 1
 
 ATTR_LOCATION_ATTRIBUTES = ["street", "city", "postal_code", "country"]
 
@@ -51,7 +53,7 @@ def get_service(
     targets = {}
     if (
         config_entry
-        and (coordinator := config_entry.runtime_data.coordinator)
+        and (coordinator := config_entry.runtime_data)
         and not coordinator.read_only
     ):
         targets.update({v.name: v for v in coordinator.account.vehicles})
@@ -90,7 +92,7 @@ class BMWNotificationService(BaseNotificationService):
 
         except (vol.Invalid, TypeError, ValueError) as ex:
             raise ServiceValidationError(
-                translation_domain=DOMAIN,
+                translation_domain=BMW_DOMAIN,
                 translation_key="invalid_poi",
                 translation_placeholders={
                     "poi_exception": str(ex),
@@ -104,4 +106,8 @@ class BMWNotificationService(BaseNotificationService):
             try:
                 await vehicle.remote_services.trigger_send_poi(poi)
             except MyBMWAPIError as ex:
-                raise HomeAssistantError(ex) from ex
+                raise HomeAssistantError(
+                    translation_domain=BMW_DOMAIN,
+                    translation_key="remote_service_error",
+                    translation_placeholders={"exception": str(ex)},
+                ) from ex

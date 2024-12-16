@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/aws",
   "iot_class": "cloud_push",
   "loggers": ["aiobotocore", "botocore"],
+  "quality_scale": "legacy",
   "requirements": ["aiobotocore==2.13.1", "botocore==1.34.131"]
 }

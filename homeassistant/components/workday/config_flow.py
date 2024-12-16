@@ -67,12 +67,14 @@ def add_province_and_language_to_schema(
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
         selectable_languages = _country.supported_languages
-        new_selectable_languages = [lang[:2] for lang in selectable_languages]
+        new_selectable_languages = list(selectable_languages)
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
             ): LanguageSelector(
-                LanguageSelectorConfig(languages=new_selectable_languages)
+                LanguageSelectorConfig(
+                    languages=new_selectable_languages, native_name=True
+                )
             )
         }
 
