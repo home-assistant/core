@@ -150,7 +150,7 @@ def _significant_states_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     run_start_ts: float | None,
-    lateral_join_for_start_time_state: bool,
+    lateral_join_for_start_time: bool,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
@@ -190,7 +190,7 @@ def _significant_states_stmt(
                 metadata_ids,
                 no_attributes,
                 include_last_changed,
-                lateral_join_for_start_time_state,
+                lateral_join_for_start_time,
             ).subquery(),
             no_attributes,
             include_last_changed,
@@ -261,7 +261,7 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    lateral_join_for_start_time_state = (
+    lateral_join_for_start_time = (
         get_instance(hass).dialect_name == SupportedDialect.POSTGRESQL
     )
     stmt = lambda_stmt(
@@ -275,7 +275,7 @@ def get_significant_states_with_session(
             no_attributes,
             include_start_time_state,
             run_start_ts,
-            lateral_join_for_start_time_state,
+            lateral_join_for_start_time,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -567,12 +567,12 @@ def _get_start_time_state_for_entities_stmt(
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    lateral_join_for_start_time_state: bool,
+    lateral_join_for_start_time: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
-    if lateral_join_for_start_time_state:
+    if lateral_join_for_start_time:
         # PostgreSQL does not support index skip scan/loose index scan
         # https://wiki.postgresql.org/wiki/Loose_indexscan
         # so we need to do a lateral join to get the max last_updated_ts
@@ -663,7 +663,7 @@ def _get_start_time_state_stmt(
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    lateral_join_for_start_time_state: bool,
+    lateral_join_for_start_time: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
@@ -684,7 +684,7 @@ def _get_start_time_state_stmt(
         metadata_ids,
         no_attributes,
         include_last_changed,
-        lateral_join_for_start_time_state,
+        lateral_join_for_start_time,
     )
 
 

@@ -2034,11 +2034,11 @@ def _generate_statistics_at_time_stmt(
     metadata_ids: set[int],
     start_time_ts: float,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    lateral_join_for_start_time_state: bool,
+    lateral_join_for_start_time: bool,
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    if lateral_join_for_start_time_state:
+    if lateral_join_for_start_time:
         # PostgreSQL does not support index skip scan/loose index scan
         # https://wiki.postgresql.org/wiki/Loose_indexscan
         # so we need to do a lateral join to get the max max_start_ts
@@ -2096,11 +2096,11 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    lateral_join_for_start_time_state = (
+    lateral_join_for_start_time = (
         get_instance(hass).dialect_name == SupportedDialect.POSTGRESQL
     )
     stmt = _generate_statistics_at_time_stmt(
-        table, metadata_ids, start_time_ts, types, lateral_join_for_start_time_state
+        table, metadata_ids, start_time_ts, types, lateral_join_for_start_time
     )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
