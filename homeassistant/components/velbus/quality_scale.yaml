@@ -36,7 +36,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
