@@ -10,7 +10,14 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      test_config_flow_user_initiated_success is not asserting the unique id of the created config entry
+      Instead of calling functions unknown_failure_1, let's parametrize them. I think then you can also inline the _recovery_after_failure_works again
+      missing test where we try to add the mock config entry and then try to initialize a flow which should abort because the serial number is already used
+      test_reauth_connect_failure and test_reauth_auth_failure can also be parametrized
+      Can we test test_normalize_url via the config flow? This way we don't touch internals
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -20,9 +27,14 @@ rules:
   docs-high-level-description: todo
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  entity-event-setup: todo
+  entity-event-setup:
+    status: todo
+    comment: |
+      callbacks are registered, but we don't deregister them when the entity is unloaded. So if you would disable an entity on runtime, it would still get state updates
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name:
+    status: todo
+    comment: Ideally we don't set self.entity_id ourselves
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -44,7 +56,15 @@ rules:
   log-when-unavailable: todo
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: |
+      mock_config_entry is missing an unique_id
+      I would also recommend only patching the PLATFORMS when needed
+      In a lot of cases, the added
+        mock_fibaro_client.read_rooms.return_value = [mock_room]
+        mock_fibaro_client.read_devices.return_value = [mock_thermostat]
+      serves no purpose as it is the default
 
   # Gold
   devices: done
@@ -60,7 +80,10 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: todo
+    comment: |
+      So in the binary sensor we check if the type or base_type are part of the list of SENSOR_TYPES. But apparently it can also be not in there, so no device class is set
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
