@@ -23,6 +23,7 @@ ATTR_RINGTONE = "ringtone"
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up Reolink services."""
 
+    @raise_translated_error
     async def async_play_chime(service_call: ServiceCall) -> None:
         """Play a ringtone."""
         service_data = service_call.data
@@ -57,7 +58,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 )
 
             ringtone = service_data[ATTR_RINGTONE]
-            await raise_translated_error(chime.play(ChimeToneEnum[ringtone].value))
+            await chime.play(ChimeToneEnum[ringtone].value)
 
     hass.services.async_register(
         DOMAIN,
