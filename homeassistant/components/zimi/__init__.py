@@ -72,10 +72,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> boo
     if api:
         api.disconnect()
 
-    device_registry = dr.async_get(hass)
-
-    zimi_device = device_registry.async_get_device(identifiers={(DOMAIN, api.mac)})
-
-    assert zimi_device is not None
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
