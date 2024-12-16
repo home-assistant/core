@@ -8,4 +8,4 @@ from typing import Final
 
 DOMAIN: Final = "powerfox"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=1)

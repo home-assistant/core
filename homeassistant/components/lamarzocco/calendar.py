@@ -13,6 +13,9 @@ from homeassistant.util import dt as dt_util
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoBaseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 CALENDAR_KEY = "auto_on_off_schedule"
 
 DAY_OF_WEEK = [
@@ -33,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     async_add_entities(
         LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, wake_up_sleep_entry)
         for wake_up_sleep_entry in coordinator.device.config.wake_up_sleep_entries.values()
