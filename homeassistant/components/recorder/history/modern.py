@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ..const import LAST_REPORTED_SCHEMA_VERSION
+from ..const import LAST_REPORTED_SCHEMA_VERSION, SupportedDialect
 from ..db_schema import (
     SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     StateAttributes,
@@ -140,6 +140,7 @@ def get_significant_states(
 
 
 def _significant_states_stmt(
+    dialect_name: SupportedDialect | None,
     start_time_ts: float,
     end_time_ts: float | None,
     single_metadata_id: int | None,
@@ -182,6 +183,7 @@ def _significant_states_stmt(
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
+                dialect_name,
                 run_start_ts,
                 start_time_ts,
                 single_metadata_id,
@@ -258,8 +260,10 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
+    dialect_name = get_instance(hass).dialect_name
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
+            dialect_name,
             start_time_ts,
             end_time_ts,
             single_metadata_id,
@@ -555,6 +559,7 @@ def get_last_state_changes(
 
 
 def _get_start_time_state_for_entities_stmt(
+    dialect_name: SupportedDialect | None,
     run_start_ts: float,
     epoch_time: float,
     metadata_ids: list[int],
@@ -564,26 +569,49 @@ def _get_start_time_state_for_entities_stmt(
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
-    max_metadata_id = StatesMeta.metadata_id.label("max_metadata_id")
-    max_last_updated = (
-        select(func.max(States.last_updated_ts))
-        .where(
-            (States.metadata_id == max_metadata_id)
-            & (States.last_updated_ts >= run_start_ts)
-            & (States.last_updated_ts < epoch_time)
+    if dialect_name == SupportedDialect.POSTGRESQL:
+        # Postgresql does not support index skip scan, so we need to do a
+        # lateral join to get the max last_updated_ts for each metadata_id
+        # as a group-by is too slow.
+        # https://github.com/home-assistant/core/issues/132865
+        max_metadata_id = StatesMeta.metadata_id.label("max_metadata_id")
+        max_last_updated = (
+            select(func.max(States.last_updated_ts))
+            .where(
+                (States.metadata_id == max_metadata_id)
+                & (States.last_updated_ts >= run_start_ts)
+                & (States.last_updated_ts < epoch_time)
+            )
+            .subquery()
+            .lateral()
         )
-        .subquery()
-        .lateral()
-    )
-    most_recent_states_for_entities_by_date = (
-        select(max_metadata_id, max_last_updated.c[0].label("max_last_updated"))
-        .select_from(StatesMeta)
-        .join(
-            max_last_updated,
-            StatesMeta.metadata_id == max_metadata_id,
+        most_recent_states_for_entities_by_date = (
+            select(max_metadata_id, max_last_updated.c[0].label("max_last_updated"))
+            .select_from(StatesMeta)
+            .join(
+                max_last_updated,
+                StatesMeta.metadata_id == max_metadata_id,
+            )
+            .where(StatesMeta.metadata_id.in_(metadata_ids))
+        ).subquery()
+    else:
+        # Simple group-by for MySQL and SQLite, must use less
+        # than 1000 metadata_ids in the IN clause for MySQL
+        # or it will optimize poorly.
+        most_recent_states_for_entities_by_date = (
+            select(
+                States.metadata_id.label("max_metadata_id"),
+                func.max(States.last_updated_ts).label("max_last_updated"),
+            )
+            .filter(
+                (States.last_updated_ts >= run_start_ts)
+                & (States.last_updated_ts < epoch_time)
+                & States.metadata_id.in_(metadata_ids)
+            )
+            .group_by(States.metadata_id)
+            .subquery()
         )
-        .where(StatesMeta.metadata_id.in_(metadata_ids))
-    ).subquery()
+
     stmt = (
         _stmt_and_join_attributes_for_start_state(
             no_attributes, include_last_changed, False
@@ -625,6 +653,7 @@ def _get_oldest_possible_ts(
 
 
 def _get_start_time_state_stmt(
+    dialect_name: SupportedDialect | None,
     run_start_ts: float,
     epoch_time: float,
     single_metadata_id: int | None,
@@ -646,6 +675,7 @@ def _get_start_time_state_stmt(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_start_time_state_for_entities_stmt(
+        dialect_name,
         run_start_ts,
         epoch_time,
         metadata_ids,
