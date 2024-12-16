@@ -10,7 +10,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   entity-event-setup: todo
-  dependency-transparency: todo
+  dependency-transparency: done
   action-setup: todo
   common-modules: done
   docs-high-level-description: done

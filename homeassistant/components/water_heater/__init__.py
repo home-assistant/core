@@ -56,7 +56,7 @@ STATE_GAS = "gas"
 
 
 class WaterHeaterEntityFeature(IntFlag):
-    """Supported features of the fan entity."""
+    """Supported features of the water heater entity."""
 
     TARGET_TEMPERATURE = 1
     OPERATION_MODE = 2
@@ -129,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
+class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
@@ -152,7 +152,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
     )
 
-    entity_description: WaterHeaterEntityEntityDescription
+    entity_description: WaterHeaterEntityDescription
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None
     _attr_is_away_mode_on: bool | None = None
@@ -194,7 +194,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features_compat:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -230,7 +230,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        supported_features = self.supported_features_compat
+        supported_features = self.supported_features
 
         if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -378,19 +378,6 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> WaterHeaterEntityFeature:
-        """Return the supported features as WaterHeaterEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = WaterHeaterEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
 
 async def async_service_away_mode(

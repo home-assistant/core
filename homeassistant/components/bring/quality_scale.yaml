@@ -7,9 +7,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: Check uuid match in reauth
+  config-flow: todo
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: todo
@@ -35,7 +33,7 @@ rules:
   log-when-unavailable:
     status: done
     comment: handled by coordinator
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 

@@ -12,9 +12,9 @@ rules:
   docs-actions:
     status: done
     comment: Integration does register actions aside from entity actions
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Integration does not register events.
@@ -52,13 +52,13 @@ rules:
     status: exempt
     comment: Device is not connected to an ip network. Other information from discovery is immutable and does not require updating.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Only one device per config entry. New devices are set up as new entries.
@@ -81,4 +81,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Device doesn't make http requests.
-  strict-typing: todo
+  strict-typing: done
