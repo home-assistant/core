@@ -428,18 +428,16 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await raise_translated_error(
-            self.entity_description.method(self._host.api, self._channel, True)
-        )
+        await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await raise_translated_error(
-            self.entity_description.method(self._host.api, self._channel, False)
-        )
+        await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
 
 
@@ -462,14 +460,16 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await raise_translated_error(self.entity_description.method(self._host.api, True))
+        await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await raise_translated_error(self.entity_description.method(self._host.api, False))
+        await self.entity_description.method(self._host.api, False)
         self.async_write_ha_state()
 
 
@@ -493,12 +493,14 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await raise_translated_error(self.entity_description.method(self._chime, True))
+        await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await raise_translated_error(self.entity_description.method(self._chime, False))
+        await self.entity_description.method(self._chime, False)
         self.async_write_ha_state()

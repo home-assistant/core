@@ -73,75 +73,80 @@ def get_device_uid_and_ch(
     return (device_uid, ch, is_chime)
 
 
-async def raise_translated_error[T](func: Coroutine[Any, Any, T]) -> T:
-    """Try a reolink-aio function and translate any potential errors."""
-    try:
-        return await func
-    except InvalidParameterError as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_parameter",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except ApiError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="api_error",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except InvalidContentTypeError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_content_type",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except CredentialsInvalidError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_credentials",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except LoginError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="login_error",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except NoDataError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="no_data",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except UnexpectedDataError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="unexpected_data",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except NotSupportedError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="not_supported",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except SubscriptionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="subscription_error",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except ReolinkConnectionError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="connection_error",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except ReolinkTimeoutError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="timeout",
-            translation_placeholders={"err": str(err)},
-        ) from err
-    except ReolinkError as err:
-        raise HomeAssistantError(err) from err
+# Decorators
+def raise_translated_error[T](func: Coroutine[Any, Any, T]) -> T:
+    """Decorator which tries a reolink-aio function and translates any potential errors."""
+    async def decorator_raise_translated_error(*args, **kwargs) -> T:
+        """Try a reolink-aio function and translate any potential errors."""
+        try:
+            return await func(*args, **kwargs)
+        except InvalidParameterError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_parameter",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except InvalidContentTypeError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_content_type",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except CredentialsInvalidError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except LoginError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="login_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except NoDataError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except UnexpectedDataError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_data",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except NotSupportedError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_supported",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except SubscriptionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="subscription_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+                translation_placeholders={"err": str(err)},
+            ) from err
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+
+    return decorator_raise_translated_error

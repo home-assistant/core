@@ -140,10 +140,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
             self._channel, self.entity_description.stream
         )
 
+    @raise_translated_error
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return await raise_translated_error(
-            self._host.api.get_snapshot(self._channel, self.entity_description.stream)
-        )
+        return await self._host.api.get_snapshot(self._channel, self.entity_description.stream)

@@ -587,11 +587,10 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await raise_translated_error(
-            self.entity_description.method(self._host.api, self._channel, value)
-        )
+        await self.entity_description.method(self._host.api, self._channel, value)
         self.async_write_ha_state()
 
 
@@ -616,9 +615,10 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._host.api)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await raise_translated_error(self.entity_description.method(self._host.api, value))
+        await self.entity_description.method(self._host.api, value)
         self.async_write_ha_state()
 
 
@@ -644,7 +644,8 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._chime)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await raise_translated_error(self.entity_description.method(self._chime, value))
+        await self.entity_description.method(self._chime, value)
         self.async_write_ha_state()

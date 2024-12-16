@@ -152,28 +152,24 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
 
         return round(255 * bright_pct / 100.0)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await raise_translated_error(
-            self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
-        )
+        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, False)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if (
             brightness := kwargs.get(ATTR_BRIGHTNESS)
         ) is not None and self.entity_description.set_brightness_fn is not None:
             brightness_pct = int(brightness / 255.0 * 100)
-            await raise_translated_error(
-                self.entity_description.set_brightness_fn(
-                    self._host.api, self._channel, brightness_pct
-                )
+            await self.entity_description.set_brightness_fn(
+                self._host.api, self._channel, brightness_pct
             )
 
-        await raise_translated_error(
-            self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
-        )
+        await self.entity_description.turn_on_off_fn(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
 
@@ -198,14 +194,14 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
         """Return true if light is on."""
         return self.entity_description.is_on_fn(self._host.api)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await raise_translated_error(
-            self.entity_description.turn_on_off_fn(self._host.api, False)
-        )
+        await self.entity_description.turn_on_off_fn(self._host.api, False)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        await raise_translated_error(self.entity_description.turn_on_off_fn(self._host.api, True))
+        await self.entity_description.turn_on_off_fn(self._host.api, True)
         self.async_write_ha_state()

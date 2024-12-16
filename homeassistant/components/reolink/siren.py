@@ -74,15 +74,15 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            await raise_translated_error(
-                self._host.api.set_volume(self._channel, int(volume * 100))
-            )
+            await self._host.api.set_volume(self._channel, int(volume * 100))
         duration = kwargs.get(ATTR_DURATION)
-        await raise_translated_error(self._host.api.set_siren(self._channel, True, duration))
+        await self._host.api.set_siren(self._channel, True, duration)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
-        await raise_translated_error(self._host.api.set_siren(self._channel, False, None))
+        await self._host.api.set_siren(self._channel, False, None)
