@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Get the meter catalog
         http_session = async_get_clientsession(self.hass)
         # Temporary client without webhook URL (not yet known, but not needed for catalog)
-        _client = WebhookClientAsync(webhook_url=None, session=http_session)
+        _client = WebhookClientAsync(webhook_url="", session=http_session)
         meter_catalog = await _client.get_meter_catalog()
 
         # Handle the user input
