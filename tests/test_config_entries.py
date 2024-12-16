@@ -1968,7 +1968,7 @@ async def test_create_entry_subentries(
 
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
-        assert entries[0].supported_subentries == ()
+        assert entries[0].supported_subentry_flows == {}
         assert entries[0].data == {"example": "data"}
         assert len(entries[0].subentries) == 1
         subentry_id = list(entries[0].subentries)[0]
@@ -1994,22 +1994,15 @@ async def test_entry_subentry(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow):
         flow = await manager.subentries.async_create_flow(
@@ -2040,7 +2033,9 @@ async def test_entry_subentry(
                 unique_id="test",
             )
         }
-        assert entry.supported_subentries == ("test",)
+        assert entry.supported_subentry_flows == {
+            "test": {"supports_reconfigure": False}
+        }
 
 
 async def test_entry_subentry_non_string(
@@ -2055,22 +2050,15 @@ async def test_entry_subentry_non_string(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow):
         flow = await manager.subentries.async_create_flow(
@@ -2104,22 +2092,15 @@ async def test_entry_subentry_no_context(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow), pytest.raises(KeyError):
         await manager.subentries.async_create_flow(
@@ -2158,22 +2139,15 @@ async def test_entry_subentry_duplicate(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow):
         flow = await manager.subentries.async_create_flow(
@@ -2206,22 +2180,15 @@ async def test_entry_subentry_abort(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow):
         flow = await manager.subentries.async_create_flow(
@@ -2260,22 +2227,15 @@ async def test_entry_subentry_deleted_config_entry(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with mock_config_flow("test", TestFlow):
         flow = await manager.subentries.async_create_flow(
@@ -2298,7 +2258,7 @@ async def test_entry_subentry_deleted_config_entry(
             )
 
 
-async def test_entry_subentry_unsupported(
+async def test_entry_subentry_unsupported_subentry_type(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test attempting to start a subentry flow for a config entry without support."""
@@ -2310,22 +2270,15 @@ async def test_entry_subentry_unsupported(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            """Test subentry flow."""
-
-            class SubentryFlowHandler(data_entry_flow.FlowHandler):
-                """Test subentry flow handler."""
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+            """Test subentry flow handler."""
 
         @classmethod
         @callback
-        def async_supported_subentries(
+        def async_get_supported_subentry_flows(
             cls, config_entry: ConfigEntry
-        ) -> tuple[str, ...]:
-            return ("test",)
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     with (
         mock_config_flow("test", TestFlow),
@@ -2341,7 +2294,7 @@ async def test_entry_subentry_unsupported(
         )
 
 
-async def test_entry_subentry_unsupported_subentry_type(
+async def test_entry_subentry_unsupported(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test attempting to start a subentry flow for a config entry without support."""
