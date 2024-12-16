@@ -30,14 +30,19 @@ async def async_setup_entry(
 
     api: ControlPoint = config_entry.runtime_data
 
-    async_add_entities(
+    lights: list[ZimiLight | ZimiDimmer] = [
         ZimiLight(device, api)
         for device in filter(lambda light: light.type != "dimmer", api.lights)
+    ]
+
+    lights.extend(
+        [
+            ZimiDimmer(device, api)
+            for device in filter(lambda light: light.type == "dimmer", api.lights)
+        ]
     )
-    async_add_entities(
-        ZimiDimmer(device, api)
-        for device in filter(lambda light: light.type == "dimmer", api.lights)
-    )
+
+    async_add_entities(lights)
 
 
 class ZimiLight(LightEntity):
@@ -113,12 +118,11 @@ class ZimiLight(LightEntity):
 class ZimiDimmer(ZimiLight):
     """Zimi Light supporting dimming."""
 
-    _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
     def __init__(self, light: ControlPointDevice, api: ControlPoint) -> None:
         """Initialize a ZimiDimmer."""
         super().__init__(light, api)
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         if self._light.type != "dimmer":
             raise ValueError("ZimiDimmer needs a dimmable light")
 
