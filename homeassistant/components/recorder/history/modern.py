@@ -571,9 +571,10 @@ def _get_start_time_state_for_entities_stmt(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
     if dialect_name == SupportedDialect.POSTGRESQL:
-        # Postgresql does not support index skip scan, so we need to do a
-        # lateral join to get the max last_updated_ts for each metadata_id
-        # as a group-by is too slow.
+        # PostgreSQL does not support index skip scan/loose index scan
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # so we need to do a lateral join to get the max last_updated_ts
+        # for each metadata_id as a group-by is too slow.
         # https://github.com/home-assistant/core/issues/132865
         max_metadata_id = StatesMeta.metadata_id.label("max_metadata_id")
         max_last_updated = (
