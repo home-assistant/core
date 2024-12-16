@@ -19,6 +19,7 @@ from . import (
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -34,6 +35,7 @@ SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
@@ -70,6 +72,7 @@ def async_check_significant_change(
             ATTR_HVAC_ACTION,
             ATTR_PRESET_MODE,
             ATTR_SWING_MODE,
+            ATTR_SWING_HORIZONTAL_MODE,
         ]:
             return True
 
