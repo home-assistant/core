@@ -13,7 +13,11 @@ rules:
     status: todo
     comment: |
       The cover and sensor entities could move common initialization to a base entity class.
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - use mock_desk_api
+      - merge test_user_step_auth_failed, test_user_step_cannot_connect and test_user_step_unknown_exception.
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -50,7 +54,13 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: |
+      - remove the await hass.async_block_till_done() after service calls with blocking=True
+      - use constants (like SERVICE_PRESS and ATTR_ENTITY_ID) in the tests calling services
+      - rename test_buttons.py -> test_button.py
+      - rename test_sensors.py -> test_sensor.py
   # Gold
   devices: done
   diagnostics: todo
