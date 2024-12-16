@@ -272,7 +272,7 @@ class DeviceEntry:
 
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
-    config_subentries: dict[str, set[str | None]] = attr.ib(factory=dict)
+    config_subentries: dict[str, str | None] = attr.ib(factory=dict)
     configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
     created_at: datetime = attr.ib(factory=utcnow)
@@ -312,10 +312,7 @@ class DeviceEntry:
             "area_id": self.area_id,
             "configuration_url": self.configuration_url,
             "config_entries": list(self.config_entries),
-            "config_subentries": {
-                config_entry_id: list(subentries)
-                for config_entry_id, subentries in self.config_subentries.items()
-            },
+            "config_subentries": self.config_subentries,
             "connections": list(self.connections),
             "created_at": self.created_at.timestamp(),
             "disabled_by": self.disabled_by,
@@ -362,10 +359,7 @@ class DeviceEntry:
                     # The config_entries list can be removed from the storage
                     # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
-                    "config_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_subentries.items()
-                    },
+                    "config_subentries": self.config_subentries,
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
                     "created_at": self.created_at,
@@ -395,7 +389,7 @@ class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
     config_entries: set[str] = attr.ib()
-    config_subentries: dict[str, set[str | None]] = attr.ib()
+    config_subentries: dict[str, str | None] = attr.ib()
     connections: set[tuple[str, str]] = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
@@ -415,7 +409,7 @@ class DeletedDeviceEntry:
         return DeviceEntry(
             # type ignores: likely https://github.com/python/mypy/issues/8625
             config_entries={config_entry_id},  # type: ignore[arg-type]
-            config_subentries={config_entry_id: {config_subentry_id}},
+            config_subentries={config_entry_id: config_subentry_id},
             connections=self.connections & connections,  # type: ignore[arg-type]
             created_at=self.created_at,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
@@ -432,10 +426,7 @@ class DeletedDeviceEntry:
                     # The config_entries list can be removed from the storage
                     # representation in HA Core 2026.1
                     "config_entries": list(self.config_entries),
-                    "config_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in self.config_subentries.items()
-                    },
+                    "config_subentries": self.config_subentries,
                     "connections": list(self.connections),
                     "created_at": self.created_at,
                     "identifiers": list(self.identifiers),
@@ -532,12 +523,12 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2025.1
                 for device in old_data["devices"]:
                     device["config_subentries"] = {
-                        config_entry_id: {None}
+                        config_entry_id: None
                         for config_entry_id in device["config_entries"]
                     }
                 for device in old_data["deleted_devices"]:
                     device["config_subentries"] = {
-                        config_entry_id: {None}
+                        config_entry_id: None
                         for config_entry_id in device["config_entries"]
                     }
 
@@ -913,7 +904,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
-        remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -922,7 +912,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
         """
         old = self.devices[device_id]
 
@@ -956,14 +945,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 raise HomeAssistantError(
                     f"Config entry {add_config_entry_id} has no subentry {add_config_subentry_id}"
                 )
-
-        if (
-            remove_config_subentry_id is not UNDEFINED
-            and remove_config_entry_id is UNDEFINED
-        ):
-            raise HomeAssistantError(
-                "Can't remove config subentry without specifying config entry"
-            )
 
         if not new_connections and not new_identifiers:
             raise HomeAssistantError(
@@ -999,6 +980,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # Interpret not specifying a subentry as None (the main entry)
                 add_config_subentry_id = None
 
+            if (
+                add_config_entry_id in config_subentries
+                and config_subentries[add_config_entry_id] != add_config_subentry_id
+            ):
+                raise HomeAssistantError(
+                    f"Device is already linked to config entry {add_config_entry_id} "
+                    "with subentry {config_subentries[add_config_entry_id]}"
+                )
+
             primary_entry_id = old.primary_config_entry
             if (
                 device_info_type == "primary"
@@ -1019,46 +1009,25 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if add_config_entry_id not in old.config_entries:
                 config_entries = old.config_entries | {add_config_entry_id}
                 config_subentries = old.config_subentries | {
-                    add_config_entry_id: {add_config_subentry_id}
-                }
-            elif (
-                add_config_subentry_id not in old.config_subentries[add_config_entry_id]
-            ):
-                config_subentries = old.config_subentries | {
-                    add_config_entry_id: old.config_subentries[add_config_entry_id]
-                    | {add_config_subentry_id}
+                    add_config_entry_id: add_config_subentry_id
                 }
 
         if (
             remove_config_entry_id is not UNDEFINED
             and remove_config_entry_id in config_entries
         ):
-            if remove_config_subentry_id is UNDEFINED:
-                config_subentries = dict(old.config_subentries)
-                del config_subentries[remove_config_entry_id]
-            elif (
-                remove_config_subentry_id
-                in old.config_subentries[remove_config_entry_id]
-            ):
-                config_subentries = old.config_subentries | {
-                    remove_config_entry_id: old.config_subentries[
-                        remove_config_entry_id
-                    ]
-                    - {remove_config_subentry_id}
-                }
-                if not config_subentries[remove_config_entry_id]:
-                    del config_subentries[remove_config_entry_id]
+            config_subentries = dict(config_subentries)
+            del config_subentries[remove_config_entry_id]
 
-            if remove_config_entry_id not in config_subentries:
-                if config_entries == {remove_config_entry_id}:
-                    self.async_remove_device(device_id)
-                    return None
+            if config_entries == {remove_config_entry_id}:
+                self.async_remove_device(device_id)
+                return None
 
-                if remove_config_entry_id == old.primary_config_entry:
-                    new_values["primary_config_entry"] = None
-                    old_values["primary_config_entry"] = old.primary_config_entry
+            if remove_config_entry_id == old.primary_config_entry:
+                new_values["primary_config_entry"] = None
+                old_values["primary_config_entry"] = old.primary_config_entry
 
-                config_entries = config_entries - {remove_config_entry_id}
+            config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries != old.config_entries:
             new_values["config_entries"] = config_entries
@@ -1254,12 +1223,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 devices[device["id"]] = DeviceEntry(
                     area_id=device["area_id"],
                     config_entries=set(device["config_subentries"]),
-                    config_subentries={
-                        config_entry_id: set(subentries)
-                        for config_entry_id, subentries in device[
-                            "config_subentries"
-                        ].items()
-                    },
+                    config_subentries=device["config_subentries"],
                     configuration_url=device["configuration_url"],
                     # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
                     connections={
@@ -1299,12 +1263,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    config_subentries={
-                        config_entry_id: set(subentries)
-                        for config_entry_id, subentries in device[
-                            "config_subentries"
-                        ].items()
-                    },
+                    config_subentries=device["config_subentries"],
                     connections={tuple(conn) for conn in device["connections"]},
                     created_at=datetime.fromisoformat(device["created_at"]),
                     identifiers={tuple(iden) for iden in device["identifiers"]},
@@ -1359,22 +1318,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         now_time = time.time()
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
+            if device.config_subentries[config_entry_id] != config_subentry_id:
+                continue
             self.async_update_device(
                 device.id,
                 remove_config_entry_id=config_entry_id,
-                remove_config_subentry_id=config_subentry_id,
             )
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
             config_subentries = deleted_device.config_subentries
             if (
                 config_entry_id not in config_subentries
-                or config_subentry_id not in config_subentries[config_entry_id]
+                or config_subentries[config_entry_id] != config_subentry_id
             ):
                 continue
-            if config_subentries == {config_entry_id: {config_subentry_id}}:
-                # We're removing the last config subentry from the last config
-                # entry, add a time stamp when the deleted device became orphaned
+            if config_subentries == {config_entry_id: config_subentry_id}:
+                # We're removing the last config entry, add a time stamp
+                # when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
                     deleted_device,
                     orphaned_timestamp=now_time,
@@ -1382,13 +1342,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     config_subentries={},
                 )
             else:
-                config_subentries = config_subentries | {
-                    config_entry_id: config_subentries[config_entry_id]
-                    - {config_subentry_id}
-                }
-                if not config_subentries[config_entry_id]:
-                    del config_subentries[config_entry_id]
-                    config_entries = config_entries - {config_entry_id}
+                config_subentries = dict(config_subentries)
+                del config_subentries[config_entry_id]
+                config_entries = config_entries - {config_entry_id}
                 # No need to reindex here since we currently
                 # do not have a lookup by config entry
                 self.deleted_devices[deleted_device.id] = attr.evolve(

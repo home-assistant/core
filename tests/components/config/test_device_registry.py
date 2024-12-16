@@ -65,7 +65,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
-            "config_subentries": {entry.entry_id: [None]},
+            "config_subentries": {entry.entry_id: None},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
@@ -88,7 +88,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
-            "config_subentries": {entry.entry_id: [None]},
+            "config_subentries": {entry.entry_id: None},
             "configuration_url": None,
             "connections": [],
             "created_at": utcnow().timestamp(),
@@ -123,7 +123,7 @@ async def test_list_devices(
         {
             "area_id": None,
             "config_entries": [entry.entry_id],
-            "config_subentries": {entry.entry_id: [None]},
+            "config_subentries": {entry.entry_id: None},
             "configuration_url": None,
             "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
             "created_at": utcnow().timestamp(),
