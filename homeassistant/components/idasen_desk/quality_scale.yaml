@@ -18,7 +18,10 @@ rules:
     comment: |
       - use mock_desk_api
       - merge test_user_step_auth_failed, test_user_step_cannot_connect and test_user_step_unknown_exception.
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      Missing data description for user step.
   dependency-transparency: done
   docs-actions:
     status: exempt
