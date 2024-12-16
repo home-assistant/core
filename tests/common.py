@@ -1090,6 +1090,28 @@ class MockConfigEntry(config_entries.ConfigEntry):
             },
         )
 
+    async def start_subentry_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        subentry_flow_type: str,
+        subentry_id: str,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a subnetry reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
+        return await hass.config_entries.subentries.async_init(
+            (self.entry_id, subentry_flow_type),
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "subentry_id": subentry_id,
+                "show_advanced_options": show_advanced_options,
+            },
+        )
+
 
 async def start_reauth_flow(
     hass: HomeAssistant,

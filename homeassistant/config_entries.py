@@ -339,7 +339,14 @@ class ConfigSubentryDataWithId(ConfigSubentryData):
     subentry_id: str
 
 
-class SubentryFlowResult(FlowResult[FlowContext, tuple[str, str]], total=False):
+class SubentryFlowContext(FlowContext, total=False):
+    """Typed context dict for config flow."""
+
+    entry_id: str
+    subentry_id: str
+
+
+class SubentryFlowResult(FlowResult[SubentryFlowContext, tuple[str, str]], total=False):
     """Typed result dict for subentry flow."""
 
     unique_id: str | None
@@ -389,7 +396,7 @@ class ConfigEntry(Generic[_DataT]):
     supports_remove_device: bool | None
     _supports_options: bool | None
     _supports_reconfigure: bool | None
-    _supported_subentries: tuple[str, ...] | None
+    _supported_subentry_flows: dict[str, dict[str, bool]] | None
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
@@ -500,7 +507,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_supports_reconfigure", None)
 
         # Supports subentries
-        _setter(self, "_supported_subentries", None)
+        _setter(self, "_supported_subentry_flows", None)
 
         # Listeners to call on update
         _setter(self, "update_listeners", [])
@@ -575,16 +582,26 @@ class ConfigEntry(Generic[_DataT]):
         return self._supports_reconfigure or False
 
     @property
-    def supported_subentries(self) -> tuple[str, ...]:
+    def supported_subentry_flows(self) -> dict[str, dict[str, bool]]:
         """Return supported subentries."""
-        if self._supported_subentries is None and (
+        if self._supported_subentry_flows is None and (
             handler := HANDLERS.get(self.domain)
         ):
             # work out sub entries supported by the handler
+            supported_flows = handler.async_get_supported_subentry_flows(self)
             object.__setattr__(
-                self, "_supported_subentries", handler.async_supported_subentries(self)
+                self,
+                "_supported_subentry_flows",
+                {
+                    subentry_flow_type: {
+                        "supports_reconfigure": hasattr(
+                            subentry_flow_handler, "async_step_reconfigure"
+                        )
+                    }
+                    for subentry_flow_type, subentry_flow_handler in supported_flows.items()
+                },
             )
-        return self._supported_subentries or ()
+        return self._supported_subentry_flows or {}
 
     def clear_state_cache(self) -> None:
         """Clear cached properties that are included in as_json_fragment."""
@@ -605,7 +622,7 @@ class ConfigEntry(Generic[_DataT]):
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
             "supports_reconfigure": self.supports_reconfigure,
-            "supported_subentries": self.supported_subentries,
+            "supported_subentry_flows": self.supported_subentry_flows,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -2378,6 +2395,11 @@ class ConfigEntries:
 
         _setter(entry, "modified_at", utcnow())
 
+        self._async_save_and_notify(entry)
+        return True
+
+    @callback
+    def _async_save_and_notify(self, entry: ConfigEntry) -> None:
         for listener in entry.update_listeners:
             self.hass.async_create_task(
                 listener(self.hass, entry),
@@ -2388,7 +2410,6 @@ class ConfigEntries:
         entry.clear_state_cache()
         entry.clear_storage_cache()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
-        return True
 
     @callback
     def async_add_subentry(self, entry: ConfigEntry, subentry: ConfigSubentry) -> bool:
@@ -2416,6 +2437,54 @@ class ConfigEntries:
         dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
         ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
         return result
+
+    @callback
+    def async_update_subentry(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+    ) -> bool:
+        """Update a config entry.
+
+        If the entry was changed, the update_listeners are
+        fired and this function returns True
+
+        If the entry was not changed, the update_listeners are
+        not fired and this function returns False
+        """
+        if entry.entry_id not in self._entries:
+            raise UnknownEntry(entry.entry_id)
+        if subentry.subentry_id not in entry.subentries:
+            raise UnknownSubEntry(subentry.subentry_id)
+
+        self.hass.verify_event_loop_thread("hass.config_entries.async_update_subentry")
+        changed = False
+        _setter = object.__setattr__
+
+        if unique_id is not UNDEFINED and subentry.unique_id != unique_id:
+            self._raise_if_subentry_unique_id_exists(entry, unique_id)
+            changed = True
+            _setter(subentry, "unique_id", unique_id)
+
+        if title is not UNDEFINED and subentry.title != title:
+            changed = True
+            _setter(subentry, "title", title)
+
+        if data is not UNDEFINED and subentry.data != data:
+            changed = True
+            _setter(subentry, "data", MappingProxyType(data))
+
+        if not changed:
+            return False
+
+        _setter(entry, "modified_at", utcnow())
+
+        self._async_save_and_notify(entry)
+        return True
 
     def _raise_if_subentry_unique_id_exists(
         self, entry: ConfigEntry, unique_id: str | None
@@ -2763,19 +2832,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Return options flow support for this handler."""
         return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
 
-    @staticmethod
-    @callback
-    def async_get_subentry_flow(
-        config_entry: ConfigEntry, subentry_type: str
-    ) -> ConfigSubentryFlow:
-        """Get the subentry flow for this handler."""
-        raise NotImplementedError
-
     @classmethod
     @callback
-    def async_supported_subentries(cls, config_entry: ConfigEntry) -> tuple[str, ...]:
+    def async_get_supported_subentry_flows(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return ()
+        return {}
 
     @callback
     def _async_abort_entries_match(
@@ -3231,7 +3294,9 @@ class _ConfigSubFlowManager:
 
 
 class ConfigSubentryFlowManager(
-    data_entry_flow.FlowManager[FlowContext, SubentryFlowResult, tuple[str, str]],
+    data_entry_flow.FlowManager[
+        SubentryFlowContext, SubentryFlowResult, tuple[str, str]
+    ],
     _ConfigSubFlowManager,
 ):
     """Manage all the config subentry flows that are in progress."""
@@ -3255,18 +3320,19 @@ class ConfigSubentryFlowManager(
         entry_id, subentry_type = handler_key
         entry = self._async_get_config_entry(entry_id)
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
-        if subentry_type not in handler.async_supported_subentries(entry):
+        subentry_flows = handler.async_get_supported_subentry_flows(entry)
+        if subentry_type not in subentry_flows:
             raise data_entry_flow.UnknownHandler(
                 f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
             )
-        subentry_flow = handler.async_get_subentry_flow(entry, subentry_type)
+        subentry_flow = subentry_flows[subentry_type]()
         subentry_flow.init_step = context["source"]
         return subentry_flow
 
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[
-            FlowContext, SubentryFlowResult, tuple[str, str]
+            SubentryFlowContext, SubentryFlowResult, tuple[str, str]
         ],
         result: SubentryFlowResult,
     ) -> SubentryFlowResult:
@@ -3302,7 +3368,9 @@ class ConfigSubentryFlowManager(
 
 
 class ConfigSubentryFlow(
-    data_entry_flow.FlowHandler[FlowContext, SubentryFlowResult, tuple[str, str]]
+    data_entry_flow.FlowHandler[
+        SubentryFlowContext, SubentryFlowResult, tuple[str, str]
+    ]
 ):
     """Base class for config subentry flows."""
 
@@ -3320,6 +3388,9 @@ class ConfigSubentryFlow(
         unique_id: str | None = None,
     ) -> SubentryFlowResult:
         """Finish config flow and create a config entry."""
+        if self.source != SOURCE_USER:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_USER}")
+
         result = super().async_create_entry(
             title=title,
             data=data,
@@ -3330,6 +3401,70 @@ class ConfigSubentryFlow(
         result["unique_id"] = unique_id
 
         return result
+
+    @callback
+    def async_update_and_abort(
+        self,
+        entry: ConfigEntry,
+        subentry: ConfigSubentry,
+        *,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
+    ) -> SubentryFlowResult:
+        """Update config subentry and finish subentry flow.
+
+        :param data: replace the subentry data with new data
+        :param data_updates: add items from data_updates to subentry data - existing
+        keys are overridden
+        :param title: replace the title of the subentry
+        :param unique_id: replace the unique_id of the subentry
+        """
+        if data_updates is not UNDEFINED:
+            if data is not UNDEFINED:
+                raise ValueError("Cannot set both data and data_updates")
+            data = entry.data | data_updates
+        self.hass.config_entries.async_update_subentry(
+            entry=entry,
+            subentry=subentry,
+            unique_id=unique_id,
+            title=title,
+            data=data,
+        )
+        return self.async_abort(reason="reconfigure_successful")
+
+    @property
+    def _reconfigure_entry_id(self) -> str:
+        """Return reconfigure entry id."""
+        if self.source != SOURCE_RECONFIGURE:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+        return self.handler[0]
+
+    @callback
+    def _get_reconfigure_entry(self) -> ConfigEntry:
+        """Return the reconfigure config entry linked to the current context."""
+        return self.hass.config_entries.async_get_known_entry(
+            self._reconfigure_entry_id
+        )
+
+    @property
+    def _reconfigure_subentry_id(self) -> str:
+        """Return reconfigure subentry id."""
+        if self.source != SOURCE_RECONFIGURE:
+            raise ValueError(f"Source is {self.source}, expected {SOURCE_RECONFIGURE}")
+        return self.context["subentry_id"]
+
+    @callback
+    def _get_reconfigure_subentry(self) -> ConfigSubentry:
+        """Return the reconfigure config subentry linked to the current context."""
+        entry = self.hass.config_entries.async_get_known_entry(
+            self._reconfigure_entry_id
+        )
+        subentry_id = self._reconfigure_subentry_id
+        if subentry_id not in entry.subentries:
+            raise UnknownEntry
+        return entry.subentries[subentry_id]
 
 
 class OptionsFlowManager(
