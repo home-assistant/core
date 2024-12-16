@@ -15,11 +15,19 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_SW_VERSION,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_WEBHOOK_ID,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, NAME, PLATFORMS
+from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,22 +39,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register the device in the device registry
     device_registry = dr.async_get(hass)
 
-    device_mac = str(entry.data.get("mac_address"))
-    device_ip = str(entry.data.get("ip_addr"))
+    device_mac = entry.data[CONF_MAC]
+    device_ip = entry.data[CONF_IP_ADDRESS]
 
     assert entry.unique_id
 
+    if device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}):
+        _LOGGER.error("Device %s is already registered", entry.entry_id)
+        return False
 
     # Register the device
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, device_mac)},
         identifiers={(DOMAIN, device_mac)},
-        manufacturer="Vegetronix",
-        model="VegeHub",
-        name=entry.data.get("hostname"),
-        sw_version=entry.data.get("sw_ver"),
-        configuration_url=entry.data.get("config_url"),
+        manufacturer=MANUFACTURER,
+        model=MODEL,
+        name=entry.data[CONF_HOST],
+        sw_version=entry.data[ATTR_SW_VERSION],
+        configuration_url=entry.data[ATTR_CONFIGURATION_URL],
     )
 
     # Initialize runtime data
@@ -65,9 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(device_mac, entry.entry_id),
             allowed_methods=[METH_POST],
-        )
-        _LOGGER.debug(
-            "Registered VegeHub webhook at hass: %s", entry.data.get("webhook_url")
         )
 
         entry.async_on_unload(
