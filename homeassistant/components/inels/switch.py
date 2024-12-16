@@ -111,6 +111,7 @@ async def async_setup_entry(
 class InelsSwitchEntityDescription(SwitchEntityDescription):
     """Class for description inels entities."""
 
+    name: str | None
     alerts: list[InelsSwitchAlert] | None = None
 
 
@@ -133,6 +134,7 @@ class InelsBusSwitch(InelsBaseEntity, SwitchEntity):
 
         self._attr_unique_id = slugify(f"{self._attr_unique_id}_{description.key}")
         self.entity_id = f"{Platform.SWITCH}.{self._attr_unique_id}"
+        self._attr_name = description.name
 
     @property
     def available(self) -> bool:
