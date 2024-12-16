@@ -107,7 +107,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         LaMarzoccoSelectEntity(coordinator, description)

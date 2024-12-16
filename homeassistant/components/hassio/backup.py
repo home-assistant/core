@@ -79,6 +79,8 @@ def _backup_details_to_agent_backup(
 class SupervisorBackupAgent(BackupAgent):
     """Backup agent for supervised installations."""
 
+    domain = DOMAIN
+
     def __init__(self, hass: HomeAssistant, name: str, location: str | None) -> None:
         """Initialize the backup agent."""
         super().__init__()

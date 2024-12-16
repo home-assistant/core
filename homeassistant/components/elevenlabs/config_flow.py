@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 import voluptuous as vol
 
