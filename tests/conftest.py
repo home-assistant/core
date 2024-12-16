@@ -1026,10 +1026,9 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # pylint: disable=import-outside-toplevel
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {},
-        }
+        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+    if mqtt_config_entry_options is None:
+        mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
     await hass.async_block_till_done()
 
@@ -1038,6 +1037,7 @@ async def _mqtt_mock_entry(
         options=mqtt_config_entry_options,
         domain=mqtt.DOMAIN,
         title="MQTT",
+        version=2,
     )
     entry.add_to_hass(hass)
 

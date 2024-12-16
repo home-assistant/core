@@ -110,6 +110,8 @@ from .util import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTRY_VERSION = 2
+
 # Split mqtt entry data and options
 # Can be removed with HA Core 2026.1.0
 ENTRY_OPTION_FIELDS = (
@@ -373,7 +375,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if key not in data:
             continue
         options[key] = data.pop(key)
-    hass.config_entries.async_update_entry(entry, data=data, options=options, version=2)
+    hass.config_entries.async_update_entry(
+        entry, data=data, options=options, version=ENTRY_VERSION
+    )
     _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
 

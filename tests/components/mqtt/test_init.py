@@ -877,7 +877,11 @@ async def test_reload_entry_with_restored_subscriptions(
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
     # Setup the MQTT entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.ENTRY_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
@@ -982,7 +986,9 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={"broker": "test-broker", "port": 1234}
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker", "port": 1234},
+        version=mqtt.ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1849,6 +1855,7 @@ async def test_unload_config_entry(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
 

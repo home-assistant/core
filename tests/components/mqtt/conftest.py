@@ -18,7 +18,6 @@ from tests.common import MockConfigEntry
 from tests.typing import MqttMockPahoClient
 
 ENTRY_DEFAULT_BIRTH_MESSAGE = {
-    mqtt.CONF_BROKER: "mock-broker",
     mqtt.CONF_BIRTH_MESSAGE: {
         mqtt.ATTR_TOPIC: "homeassistant/status",
         mqtt.ATTR_PAYLOAD: "online",
@@ -91,6 +90,7 @@ async def setup_with_birth_msg_client_mock(
             domain=mqtt.DOMAIN,
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
             options=mqtt_config_entry_options or {},
+            version=mqtt.ENTRY_VERSION,
         )
         entry.add_to_hass(hass)
         hass.config.components.add(mqtt.DOMAIN)
