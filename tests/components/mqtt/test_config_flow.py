@@ -2178,14 +2178,7 @@ async def test_change_websockets_transport_to_tcp(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["transport"]
@@ -2234,15 +2227,8 @@ async def test_reconfigure_flow_form(
 ) -> None:
     """Test reconfigure flow."""
     await mqtt_mock_entry()
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-            "show_advanced_options": True,
-        },
-    )
+    entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    result = await entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["errors"] == {}
