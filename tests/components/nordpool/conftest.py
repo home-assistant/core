@@ -80,4 +80,4 @@ def load_json_from_fixture(load_data: str) -> dict[str, Any]:
 @pytest.fixture(name="load_data", scope="package")
 def load_data_from_fixture() -> str:
     """Load fixture with fixture data and return."""
-    return load_fixture("delivery_period.json", DOMAIN)
+    return load_fixture("delivery_period_today.json", DOMAIN)

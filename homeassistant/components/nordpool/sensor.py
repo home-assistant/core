@@ -5,8 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
-from pynordpool import DeliveryPeriodData
+from pynordpool import DeliveryPeriodData, DeliveryPeriodEntry
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -42,7 +43,7 @@ def validate_prices(
 
 
 def get_prices(
-    data: DeliveryPeriodData,
+    data: list[DeliveryPeriodEntry],
 ) -> dict[str, tuple[float | None, float, float | None]]:
     """Return previous, current and next prices.
 
@@ -54,9 +55,8 @@ def get_prices(
     current_time = dt_util.utcnow()
     previous_time = current_time - timedelta(hours=1)
     next_time = current_time + timedelta(hours=1)
-    price_data = data.entries
-    LOGGER.debug("Price data: %s", price_data)
-    for entry in price_data:
+    LOGGER.debug("Price data: %s", data)
+    for entry in data:
         if entry.start <= current_time <= entry.end:
             current_price_entries = entry.entry
         if entry.start <= previous_time <= entry.end:
@@ -276,11 +276,14 @@ async def async_setup_entry(
     """Set up Nord Pool sensor platform."""
 
     coordinator = entry.runtime_data
+    current_day_data = entry.runtime_data.get_data_current_day()
+    if TYPE_CHECKING:
+        assert current_day_data is not None
 
     entities: list[NordpoolBaseEntity] = []
-    currency = entry.runtime_data.data.currency
+    currency = current_day_data.currency
 
-    for area in get_prices(entry.runtime_data.data):
+    for area in get_prices(coordinator.merge_price_entries()):
         LOGGER.debug("Setting up base sensors for area %s", area)
         entities.extend(
             NordpoolSensor(coordinator, description, area)
@@ -297,7 +300,7 @@ async def async_setup_entry(
             NordpoolDailyAveragePriceSensor(coordinator, description, area, currency)
             for description in DAILY_AVERAGE_PRICES_SENSOR_TYPES
         )
-        for block_name in get_blockprices(coordinator.data)[area]:
+        for block_name in get_blockprices(current_day_data)[area]:
             LOGGER.debug(
                 "Setting up block price sensors for area %s with currency %s in block %s",
                 area,
@@ -321,7 +324,10 @@ class NordpoolSensor(NordpoolBaseEntity, SensorEntity):
     @property
     def native_value(self) -> str | float | datetime | None:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        data = self.coordinator.get_data_current_day()
+        if TYPE_CHECKING:
+            assert data is not None
+        return self.entity_description.value_fn(data)
 
 
 class NordpoolPriceSensor(NordpoolBaseEntity, SensorEntity):
@@ -343,7 +349,9 @@ class NordpoolPriceSensor(NordpoolBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data, self.area)
+        return self.entity_description.value_fn(
+            self.coordinator.merge_price_entries(), self.area
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -375,8 +383,11 @@ class NordpoolBlockPriceSensor(NordpoolBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | datetime | None:
         """Return value of sensor."""
+        data = self.coordinator.get_data_current_day()
+        if TYPE_CHECKING:
+            assert data is not None
         return self.entity_description.value_fn(
-            get_blockprices(self.coordinator.data)[self.area][self.block_name]
+            get_blockprices(data)[self.area][self.block_name]
         )
 
 
@@ -399,4 +410,7 @@ class NordpoolDailyAveragePriceSensor(NordpoolBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of sensor."""
-        return self.coordinator.data.area_average[self.area] / 1000
+        data = self.coordinator.get_data_current_day()
+        if TYPE_CHECKING:
+            assert data is not None
+        return data.area_average[self.area] / 1000
