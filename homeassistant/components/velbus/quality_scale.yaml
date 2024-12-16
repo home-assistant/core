@@ -25,7 +25,7 @@ rules:
   has-entity-name: todo
   runtime-data: done
   test-before-configure: done
-  test-before-setup: todo
+  test-before-setup: done
   unique-config-entry:
     status: todo
     comment: |
