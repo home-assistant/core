@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 import logging
 
-from watergate_local_api.models import AutoShutOffReport
-
 from homeassistant.components.sensor import (
     HomeAssistant,
     SensorDeviceClass,
@@ -210,11 +208,6 @@ class SonicSensor(WatergateEntity, SensorEntity):
         self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
-    def update(self, value: str | None) -> None:
-        """Update the sensor."""
-        self._attr_native_value = value
-        self.async_write_ha_state()
-
 
 class AutoShutOffEventSensor(WatergateEntity, SensorEntity):
     """Representation of a sensor showing the latest long flow event."""
@@ -231,16 +224,6 @@ class AutoShutOffEventSensor(WatergateEntity, SensorEntity):
             device_class=SensorDeviceClass.TIMESTAMP,
         )
 
-    def update(self, report: AutoShutOffReport) -> None:
-        """Update the sensor."""
-        self._attr_native_value = datetime.fromtimestamp(report.timestamp, UTC)
-        self._attr_extra_state_attributes = {
-            "type": report.type,
-            "duration": report.duration,
-            "volume": report.volume,
-        }
-        self.async_write_ha_state()
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -254,4 +237,10 @@ class AutoShutOffEventSensor(WatergateEntity, SensorEntity):
         if self.coordinator.last_update_success and (
             data := self.coordinator.data.auto_shut_off_report
         ):
-            self.update(data)
+            self._attr_native_value = datetime.fromtimestamp(data.timestamp, UTC)
+            self._attr_extra_state_attributes = {
+                "type": data.type,
+                "duration": data.duration,
+                "volume": data.volume,
+            }
+            self.async_write_ha_state()
