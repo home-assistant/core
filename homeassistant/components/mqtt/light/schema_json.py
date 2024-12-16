@@ -490,7 +490,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     )
             except KeyError:
                 pass
-            except ValueError:
+            except (TypeError, ValueError):
                 _LOGGER.warning(
                     "Invalid color temp value '%s' received for entity %s",
                     values["color_temp"],

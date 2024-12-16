@@ -9,17 +9,17 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    _DEPRECATED_ATTR_COLOR_TEMP,
+    _DEPRECATED_ATTR_MAX_MIREDS,
+    _DEPRECATED_ATTR_MIN_MIREDS,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -115,15 +115,15 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
         ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP,
+        _DEPRECATED_ATTR_COLOR_TEMP.value,
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_EFFECT_LIST,
         ATTR_HS_COLOR,
         ATTR_MAX_COLOR_TEMP_KELVIN,
-        ATTR_MAX_MIREDS,
+        _DEPRECATED_ATTR_MAX_MIREDS.value,
         ATTR_MIN_COLOR_TEMP_KELVIN,
-        ATTR_MIN_MIREDS,
+        _DEPRECATED_ATTR_MIN_MIREDS.value,
         ATTR_RGB_COLOR,
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
@@ -486,10 +486,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         def _converter(
             r: int, g: int, b: int, cw: int, ww: int
         ) -> tuple[int, int, int]:
-            min_kelvin = color_util.color_temperature_mired_to_kelvin(self.max_mireds)
-            max_kelvin = color_util.color_temperature_mired_to_kelvin(self.min_mireds)
             return color_util.color_rgbww_to_rgb(
-                r, g, b, cw, ww, min_kelvin, max_kelvin
+                r, g, b, cw, ww, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
 
         rgbww = self._rgbx_received(

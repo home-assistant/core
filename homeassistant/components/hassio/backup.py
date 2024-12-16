@@ -175,7 +175,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             for agent_id in agent_ids
-            if agent_id.startswith(DOMAIN)
+            if manager.backup_agents[agent_id].domain == DOMAIN
         ]
         locations = {agent.location for agent in hassio_agents}
 
@@ -254,7 +254,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             for agent_id in agent_ids
-            if agent_id.startswith(DOMAIN)
+            if manager.backup_agents[agent_id].domain == DOMAIN
         ]
         locations = {agent.location for agent in hassio_agents}
 
@@ -305,7 +305,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        if not agent_id.startswith(DOMAIN):
+        manager = self._hass.data[DATA_MANAGER]
+        if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
             await self.async_receive_backup(
