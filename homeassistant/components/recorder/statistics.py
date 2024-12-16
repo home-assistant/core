@@ -2041,7 +2041,7 @@ def _generate_statistics_at_time_stmt(
     if lateral_join_for_start_time_state:
         # PostgreSQL does not support index skip scan/loose index scan
         # https://wiki.postgresql.org/wiki/Loose_indexscan
-        # so we need to do a lateral join to get the max last_updated_ts
+        # so we need to do a lateral join to get the max max_start_ts
         # for each metadata_id as a group-by is too slow.
         # https://github.com/home-assistant/core/issues/132865
         max_metadata_id = StatisticsMeta.id.label("max_metadata_id")
