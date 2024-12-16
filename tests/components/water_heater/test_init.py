@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
@@ -204,3 +205,16 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
+
+
+async def test_deprecated_entity_description(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated WaterHeaterEntityEntityDescription."""
+    expected_log = "is a deprecated class"
+
+    caplog.clear()
+    water_heater.WaterHeaterEntityDescription(key="test")
+    assert expected_log not in caplog.text
+
+    caplog.clear()
+    water_heater.WaterHeaterEntityEntityDescription(key="test")
+    assert expected_log in caplog.text
