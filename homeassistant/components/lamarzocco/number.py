@@ -210,7 +210,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     entities: list[NumberEntity] = [
         LaMarzoccoNumberEntity(coordinator, description)
         for description in ENTITIES

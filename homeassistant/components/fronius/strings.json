@@ -18,6 +18,9 @@
         "description": "Update your configuration information for {device}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::fronius::config::step::user::data_description::host%]"
         }
       }
     },
@@ -83,9 +86,7 @@
           "error": "Error",
           "idle": "Idle",
           "ready": "Ready",
-          "sleeping": "Sleeping",
-          "unknown": "Unknown",
-          "invalid": "Invalid"
+          "sleeping": "Sleeping"
         }
       },
       "led_state": {

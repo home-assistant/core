@@ -20,12 +20,7 @@ rules:
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration refreshes the access token, but does not poll the API. The
-      setup can be changed to request the list of todo lists in setup instead
-      of during platform setup.
+  test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions:
@@ -36,16 +31,12 @@ rules:
   # Silver
   log-when-unavailable: done
   config-entry-unloading: done
-  reauthentication-flow:
-    status: todo
-    comment: Missing a test that reauthenticates with the wrong account
+  reauthentication-flow: done
   action-exceptions: done
   docs-installation-parameters: todo
   integration-owner: done
-  parallel-updates: todo
-  test-coverage:
-    status: todo
-    comment: Test coverage for __init__.py is not above 95% yet
+  parallel-updates: done
+  test-coverage: done
   docs-configuration-parameters: todo
   entity-unavailable: done
 

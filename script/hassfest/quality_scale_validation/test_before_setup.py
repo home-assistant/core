@@ -15,13 +15,31 @@ _VALID_EXCEPTIONS = {
 }
 
 
-def _raises_exception(async_setup_entry_function: ast.AsyncFunctionDef) -> bool:
-    """Check that a valid exception is raised within `async_setup_entry`."""
-    for node in ast.walk(async_setup_entry_function):
-        if isinstance(node, ast.Raise):
-            if isinstance(node.exc, ast.Name) and node.exc.id in _VALID_EXCEPTIONS:
-                return True
-            if isinstance(node.exc, ast.Call) and node.exc.func.id in _VALID_EXCEPTIONS:
+def _get_exception_name(expression: ast.expr) -> str:
+    """Get the name of the exception being raised."""
+    if isinstance(expression, ast.Name):
+        return expression.id
+
+    if isinstance(expression, ast.Call):
+        return _get_exception_name(expression.func)
+
+    if isinstance(expression, ast.Attribute):
+        return _get_exception_name(expression.value)
+
+    raise AssertionError(
+        f"Raise is neither Attribute nor Call nor Name: {type(expression)}"
+    )
+
+
+def _raises_exception(integration: Integration) -> bool:
+    """Check that a valid exception is raised."""
+    for module_file in integration.path.rglob("*.py"):
+        module = ast_parse_module(module_file)
+        for node in ast.walk(module):
+            if (
+                isinstance(node, ast.Raise)
+                and _get_exception_name(node.exc) in _VALID_EXCEPTIONS
+            ):
                 return True
 
     return False
@@ -59,11 +77,6 @@ def validate(
     if not (async_setup_entry := _get_setup_entry_function(init)):
         return [f"Could not find `async_setup_entry` in {init_file}"]
 
-    if not (
-        _raises_exception(async_setup_entry) or _calls_first_refresh(async_setup_entry)
-    ):
-        return [
-            f"Integration does not raise one of {_VALID_EXCEPTIONS} "
-            f"in async_setup_entry ({init_file})"
-        ]
+    if not (_calls_first_refresh(async_setup_entry) or _raises_exception(integration)):
+        return [f"Integration does not raise one of {_VALID_EXCEPTIONS}"]
     return None

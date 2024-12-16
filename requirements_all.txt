@@ -1196,7 +1196,7 @@ igloohome-api==0.0.6
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.6
+imgw_pib==1.0.7
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4
@@ -1635,7 +1635,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.3
+plugwise==1.6.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2118,7 +2118,7 @@ pynetio==0.1.9.1
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.2
+pynordpool==0.2.3
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -2750,7 +2750,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.0
+starlink-grpc-core==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
