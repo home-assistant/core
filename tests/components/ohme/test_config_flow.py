@@ -122,6 +122,8 @@ async def test_reauth_form(hass: HomeAssistant, mock_client: MagicMock) -> None:
     entry.add_to_hass(hass)
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     assert not result["errors"]
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

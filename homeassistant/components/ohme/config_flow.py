@@ -33,17 +33,6 @@ USER_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD,
-                autocomplete="current-password",
-            ),
-        ),
-    }
-)
-
 
 class OhmeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow."""
