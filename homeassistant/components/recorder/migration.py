@@ -23,6 +23,7 @@ from sqlalchemy.exc import (
     ProgrammingError,
     SQLAlchemyError,
 )
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
 from sqlalchemy.sql.expression import true
@@ -59,7 +60,7 @@ from .db_schema import (
     BIG_INTEGER_SQL,
     CONTEXT_ID_BIN_MAX_LENGTH,
     DOUBLE_PRECISION_TYPE_SQL,
-    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
+    LEGACY_STATES_ENTITY_ID_LAST_UPDATED_TS_INDEX,
     LEGACY_STATES_EVENT_ID_INDEX,
     MYSQL_COLLATE,
     MYSQL_DEFAULT_CHARSET,
@@ -471,14 +472,18 @@ def migrate_data_live(
 
 
 def _create_index(
-    session_maker: Callable[[], Session], table_name: str, index_name: str
+    session_maker: Callable[[], Session],
+    table_name: str,
+    index_name: str,
+    *,
+    base: type[DeclarativeBase] = Base,
 ) -> None:
     """Create an index for the specified table.
 
     The index name should match the name given for the index
     within the table definition described in the models
     """
-    table = Table(table_name, Base.metadata)
+    table = Table(table_name, base.metadata)
     _LOGGER.debug("Looking up index %s for table %s", index_name, table_name)
     # Look up the index object by name from the table is the models
     index_list = [idx for idx in table.indexes if idx.name == index_name]
@@ -2319,7 +2324,7 @@ class DataMigrationStatus:
 class BaseMigration(ABC):
     """Base class for migrations."""
 
-    index_to_drop: tuple[str, str] | None = None
+    index_to_drop: tuple[str, str, type[DeclarativeBase]] | None = None
     required_schema_version = 0  # Schema version required to run migration queries
     max_initial_schema_version: int  # Skip migration if db created after this version
     migration_version = 1
@@ -2349,12 +2354,12 @@ class BaseMigration(ABC):
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
         if status.migration_done:
-            if self.index_to_drop is not None:
-                table, index = self.index_to_drop
-                _drop_index(instance.get_session, table, index)
             with session_scope(session=instance.get_session()) as session:
                 self.migration_done(instance, session)
                 _mark_migration_done(session, self.__class__)
+            if self.index_to_drop is not None:
+                table, index, _ = self.index_to_drop
+                _drop_index(instance.get_session, table, index)
         return not status.needs_migrate
 
     @abstractmethod
@@ -2393,25 +2398,31 @@ class BaseMigration(ABC):
                 "Data migration '%s' needed, schema too old", self.migration_id
             )
             return True
+        has_needed_index = self._has_needed_index(session)
+        if has_needed_index is True:
+            # The index to be removed by the migration still exists
+            _LOGGER.info(
+                "Data migration '%s' needed, index to drop still exists",
+                self.migration_id,
+            )
+            return True
         if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
             # The migration changes table indicates that the migration has been done
             _LOGGER.debug(
                 "Data migration '%s' not needed, already completed", self.migration_id
             )
             return False
-        # We do not know if the migration is done from the
-        # migration changes table so we must check the index and data
-        # This is the slow path
-        if (
-            self.index_to_drop is not None
-            and get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
-            is not None
-        ):
+        if has_needed_index is False:
+            # The index to be removed by the migration does not exist, but the migration
+            # changes table indicates that the migration has not been done
             _LOGGER.info(
-                "Data migration '%s' needed, index to drop still exists",
+                "Data migration '%s' needed, index to drop does not exist",
                 self.migration_id,
             )
             return True
+        # We do not know if the migration is done from the
+        # migration changes table or the index so we must check the data
+        # This is the slow path
         needs_migrate = self.needs_migrate_impl(instance, session)
         if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
@@ -2421,6 +2432,15 @@ class BaseMigration(ABC):
             needs_migrate.needs_migrate,
         )
         return needs_migrate.needs_migrate
+
+    def _has_needed_index(self, session: Session) -> bool | None:
+        """Check if the index needed by the migration exists."""
+        if self.index_to_drop is None:
+            return None
+        return (
+            get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
+            is not None
+        )
 
 
 class BaseOffLineMigration(BaseMigration):
@@ -2435,6 +2455,7 @@ class BaseOffLineMigration(BaseMigration):
                 _LOGGER.debug("Migration not needed for '%s'", self.migration_id)
                 self.migration_done(instance, session)
                 return
+        self._ensure_index_exists(instance)
         _LOGGER.warning(
             "The database is about to do data migration step '%s', %s",
             self.migration_id,
@@ -2448,6 +2469,25 @@ class BaseOffLineMigration(BaseMigration):
     def migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         return self._migrate_data(instance)
+
+    def _ensure_index_exists(self, instance: Recorder) -> None:
+        """Ensure the index needed by the migration exists."""
+        if not self.index_to_drop:
+            return
+        table_name, index_name, base = self.index_to_drop
+        with session_scope(session=instance.get_session()) as session:
+            if get_index_by_name(session, table_name, index_name) is not None:
+                return
+        _LOGGER.warning(
+            (
+                "Data migration step '%s' needs index `%s` on table `%s`, but "
+                "it does not exist and will be added now"
+            ),
+            self.migration_id,
+            index_name,
+            table_name,
+        )
+        _create_index(instance.get_session, table_name, index_name, base=base)
 
 
 class BaseRunTimeMigration(BaseMigration):
@@ -2492,7 +2532,7 @@ class StatesContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     max_initial_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION - 1
     migration_id = "state_context_id_as_binary"
     migration_version = 2
-    index_to_drop = ("states", "ix_states_context_id")
+    index_to_drop = ("states", "ix_states_context_id", LegacyBase)
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate states context_ids to use binary format, return True if completed."""
@@ -2536,7 +2576,7 @@ class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     max_initial_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION - 1
     migration_id = "event_context_id_as_binary"
     migration_version = 2
-    index_to_drop = ("events", "ix_events_context_id")
+    index_to_drop = ("events", "ix_events_context_id", LegacyBase)
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate events context_ids to use binary format, return True if completed."""
@@ -2814,7 +2854,11 @@ class EntityIDPostMigration(BaseMigrationWithQuery, BaseOffLineMigration):
 
     migration_id = "entity_id_post_migration"
     max_initial_schema_version = STATES_META_SCHEMA_VERSION - 1
-    index_to_drop = (TABLE_STATES, LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
+    index_to_drop = (
+        TABLE_STATES,
+        LEGACY_STATES_ENTITY_ID_LAST_UPDATED_TS_INDEX,
+        LegacyBase,
+    )
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate some data, returns True if migration is completed."""
