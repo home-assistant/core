@@ -7,7 +7,7 @@ import logging
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -22,7 +22,7 @@ from .const import (  # noqa: F401  # noqa: F401
     STATE_ABOVE_HORIZON,
     STATE_BELOW_HORIZON,
 )
-from .entity import ENTITY_ID, Sun, SunConfigEntry
+from .entity import Sun, SunConfigEntry
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -61,8 +61,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: SunConfigEntry) -> bool
     if unload_ok := await hass.config_entries.async_unload_platforms(
         entry, [Platform.SENSOR]
     ):
-        entity_registry = er.async_get(hass)
-        entity_id = entity_registry.async_get_entity_id(DOMAIN, DOMAIN, ENTITY_ID)
-        if entity_id:
-            entity_registry.async_remove(entity_id)
+        await entry.runtime_data.async_remove()
     return unload_ok
