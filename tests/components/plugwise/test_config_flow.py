@@ -468,12 +468,10 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert entry
-    assert entry.data.get(CONF_HOST) == TEST_HOST
+    assert mock_config_entry.data.get(CONF_HOST) == TEST_HOST
 
 
-async def test_reconfigure_flow_other_smile(
+async def test_reconfigure_flow_smile_mismatch(
     hass: HomeAssistant,
     mock_smile_adam: AsyncMock,
     mock_setup_entry: AsyncMock,
@@ -499,7 +497,7 @@ async def test_reconfigure_flow_other_smile(
         (UnsupportedDeviceError, "unsupported"),
     ],
 )
-async def test_reconfigure_flow_errors(
+async def test_reconfigure_flow_connect_errors(
     hass: HomeAssistant,
     mock_smile_adam: AsyncMock,
     mock_config_entry: MockConfigEntry,
