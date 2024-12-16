@@ -152,10 +152,10 @@ async def test_reconfigure_validates_and_updates_config(
     assert result["type"] is FlowResultType.ABORT
 
 
-async def test_reconfigure_cannot_connect_shows_form(
+async def test_reconfigure_cannot_connect_recovers(
     hass: HomeAssistant, config_entry, controller
 ) -> None:
-    """Test reconfigure cannot connect and shows error form with previous user input."""
+    """Test reconfigure cannot connect and recovers."""
     controller.connect.side_effect = HeosError()
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
