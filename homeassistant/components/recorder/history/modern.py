@@ -17,7 +17,6 @@ from sqlalchemy import (
     lambda_stmt,
     literal,
     select,
-    true,
     union_all,
 )
 from sqlalchemy.engine.row import Row
@@ -29,7 +28,12 @@ from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
 from ..const import LAST_REPORTED_SCHEMA_VERSION
-from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
+from ..db_schema import (
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
+    StateAttributes,
+    States,
+    StatesMeta,
+)
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -560,23 +564,25 @@ def _get_start_time_state_for_entities_stmt(
     """Baked query to get states for specific entities."""
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner and the outer query.
-    max_metadata_id = func.unnest(metadata_ids)
-    max_metadata_id_alias = max_metadata_id.alias("max_metadata_id")
-    max_metadata_id_alias_column = max_metadata_id_alias.column
+    max_metadata_id = StatesMeta.metadata_id.label("max_metadata_id")
     max_last_updated = (
         select(func.max(States.last_updated_ts))
         .where(
-            (States.metadata_id == max_metadata_id_alias_column)
-            & (States.last_updated_ts >= run_start_ts)
+            (States.metadata_id == max_metadata_id)
+            & (States.last_updated_ts >= max_metadata_id)
             & (States.last_updated_ts < epoch_time)
         )
         .subquery()
         .lateral()
     )
     most_recent_states_for_entities_by_date = (
-        select(max_metadata_id_alias_column, max_last_updated.c[0])
-        .select_from(max_metadata_id_alias)
-        .join(max_last_updated, true())
+        select(max_metadata_id, max_last_updated.c[0].label("max_last_updated"))
+        .select_from(StatesMeta)
+        .join(
+            max_last_updated,
+            StatesMeta.metadata_id == max_metadata_id,
+        )
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
     ).subquery()
     stmt = (
         _stmt_and_join_attributes_for_start_state(
