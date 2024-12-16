@@ -116,7 +116,8 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "add_entity")
+        (config_entry.entry_id, "add_entity"),
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_sensor"
@@ -132,6 +133,51 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
             data={"state": 15},
             subentry_id=subentry_id,
             title="Sensor 1",
+            unique_id=None,
+        )
+    }
+
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("no_platforms")
+async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+    subentry_id = "mock_id"
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"state": 15},
+                subentry_id="mock_id",
+                title="Sensor 1",
+                unique_id=None,
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "add_entity", subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_sensor"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Renamed sensor 1", "state": 5},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data={"state": 5},
+            subentry_id=subentry_id,
+            title="Renamed sensor 1",
             unique_id=None,
         )
     }
