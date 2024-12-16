@@ -214,6 +214,9 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(schema), suggested_values=user_input
             ),
+            description_placeholders={
+                "account_name": "Ecovacs",
+            },
             errors=errors,
             last_step=True,
         )
