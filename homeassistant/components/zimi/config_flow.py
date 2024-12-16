@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
 from . import async_connect_to_controller
-from .const import DOMAIN
+from .const import DOMAIN, TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            data: dict[str, Any] = {"title": "ZIMI Controller"}
+            data: dict[str, Any] = {}
 
             try:
                 if not user_input[CONF_HOST]:
@@ -102,7 +102,7 @@ class ZimiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             if not errors:
-                return self.async_create_entry(title=data["title"], data=data)
+                return self.async_create_entry(title=TITLE, data=data)
 
         return self.async_show_form(
             step_id="user",
