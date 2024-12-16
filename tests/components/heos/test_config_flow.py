@@ -153,6 +153,7 @@ async def test_reconfigure_validates_and_updates_config(
     assert controller.connect.call_count == 2  # Also called when entry reloaded
     assert controller.disconnect.call_count == 1
     assert config_entry.data == {CONF_HOST: "127.0.0.2"}
+    assert config_entry.unique_id == DOMAIN
     assert result["reason"] == "reconfigure_successful"
     assert result["type"] is FlowResultType.ABORT
 
@@ -160,7 +161,7 @@ async def test_reconfigure_validates_and_updates_config(
 async def test_reconfigure_cannot_connect_shows_form(
     hass: HomeAssistant, config_entry, controller
 ) -> None:
-    """Test reconfigure cannot connect and shows error form."""
+    """Test reconfigure cannot connect and shows error form with previous user input."""
     controller.connect.side_effect = HeosError()
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -173,6 +174,10 @@ async def test_reconfigure_cannot_connect_shows_form(
 
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
+    host = next(
+        key.default() for key in result["data_schema"].schema if key == CONF_HOST
+    )
+    assert host == "127.0.0.2"
     assert result["errors"][CONF_HOST] == "cannot_connect"
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM

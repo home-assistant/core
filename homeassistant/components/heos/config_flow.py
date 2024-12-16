@@ -86,8 +86,6 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Allow reconfiguration of entry."""
-        await self.async_set_unique_id(DOMAIN)
-
         entry = self._get_reconfigure_entry()
         host = entry.data[CONF_HOST]  # Get current host value
         errors: dict[str, str] = {}

@@ -13,7 +13,7 @@
       },
       "reconfigure": {
         "title": "Reconfigure HEOS",
-        "description": "Complete this form to change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
+        "description": "Change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
