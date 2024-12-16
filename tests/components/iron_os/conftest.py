@@ -7,6 +7,7 @@ from bleak.backends.device import BLEDevice
 from habluetooth import BluetoothServiceInfoBleak
 from pynecil import (
     DeviceInfoResponse,
+    LatestRelease,
     LiveDataResponse,
     OperatingMode,
     PowerSource,
@@ -114,24 +115,20 @@ def mock_ble_device() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_githubapi() -> Generator[AsyncMock]:
-    """Mock aiogithubapi."""
+def mock_ironosupdate() -> Generator[AsyncMock]:
+    """Mock IronOSUpdate."""
 
     with patch(
-        "homeassistant.components.iron_os.GitHubAPI",
+        "homeassistant.components.iron_os.IronOSUpdate",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.repos.releases.latest = AsyncMock()
-
-        client.repos.releases.latest.return_value.data.html_url = (
-            "https://github.com/Ralim/IronOS/releases/tag/v2.22"
+        client.latest_release.return_value = LatestRelease(
+            html_url="https://github.com/Ralim/IronOS/releases/tag/v2.22",
+            name="V2.22 | TS101 & S60 Added | PinecilV2 improved",
+            tag_name="v2.22",
+            body="**RELEASE_NOTES**",
         )
-        client.repos.releases.latest.return_value.data.name = (
-            "V2.22 | TS101 & S60 Added | PinecilV2 improved"
-        )
-        client.repos.releases.latest.return_value.data.tag_name = "v2.22"
-        client.repos.releases.latest.return_value.data.body = "**RELEASE_NOTES**"
 
         yield client
 

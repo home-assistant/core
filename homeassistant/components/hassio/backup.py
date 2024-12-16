@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
+import logging
 from pathlib import Path
 from typing import Any, cast
 
@@ -32,6 +33,8 @@ from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 LOCATION_CLOUD_BACKUP = ".cloud_backup"
+MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_backup_agents(
@@ -47,6 +50,37 @@ async def async_get_backup_agents(
             continue
         agents.append(SupervisorBackupAgent(hass, mount.name, mount.name))
     return agents
+
+
+@callback
+def async_register_backup_agents_listener(
+    hass: HomeAssistant,
+    *,
+    listener: Callable[[], None],
+    **kwargs: Any,
+) -> Callable[[], None]:
+    """Register a listener to be called when agents are added or removed."""
+
+    @callback
+    def unsub() -> None:
+        """Unsubscribe from job events."""
+        unsub_signal()
+
+    @callback
+    def handle_signal(data: Mapping[str, Any]) -> None:
+        """Handle a job signal."""
+        if (
+            data.get("event") != "job"
+            or not (event_data := data.get("data"))
+            or event_data.get("name") not in MOUNT_JOBS
+            or event_data.get("done") is not True
+        ):
+            return
+        _LOGGER.debug("Mount added or removed %s, calling listener", data)
+        listener()
+
+    unsub_signal = async_dispatcher_connect(hass, EVENT_SUPERVISOR_EVENT, handle_signal)
+    return unsub
 
 
 def _backup_details_to_agent_backup(
@@ -175,7 +209,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             for agent_id in agent_ids
-            if agent_id.startswith(DOMAIN)
+            if manager.backup_agents[agent_id].domain == DOMAIN
         ]
         locations = {agent.location for agent in hassio_agents}
 
@@ -254,7 +288,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             for agent_id in agent_ids
-            if agent_id.startswith(DOMAIN)
+            if manager.backup_agents[agent_id].domain == DOMAIN
         ]
         locations = {agent.location for agent in hassio_agents}
 
@@ -305,7 +339,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        if not agent_id.startswith(DOMAIN):
+        manager = self._hass.data[DATA_MANAGER]
+        if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
             await self.async_receive_backup(

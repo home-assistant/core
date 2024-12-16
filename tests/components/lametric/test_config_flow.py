@@ -55,25 +55,24 @@ async def test_full_cloud_import_flow_multiple_devices(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
-    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
 
-    assert result2.get("type") is FlowResultType.EXTERNAL_STEP
-    assert result2.get("url") == (
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
         "https://developer.lametric.com/api/v2/oauth2/authorize"
         "?response_type=code&client_id=client"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -96,24 +95,26 @@ async def test_full_cloud_import_flow_multiple_devices(
         },
     )
 
-    result3 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result3.get("type") is FlowResultType.FORM
-    assert result3.get("step_id") == "cloud_select_device"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_select_device"
 
-    result4 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_DEVICE: "SA110405124500W00BS9"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_DEVICE: "SA110405124500W00BS9"}
     )
 
-    assert result4.get("type") is FlowResultType.CREATE_ENTRY
-    assert result4.get("title") == "Frenck's LaMetric"
-    assert result4.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result4
-    assert result4["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
@@ -135,25 +136,24 @@ async def test_full_cloud_import_flow_single_device(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
-    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
 
-    assert result2.get("type") is FlowResultType.EXTERNAL_STEP
-    assert result2.get("url") == (
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
         "https://developer.lametric.com/api/v2/oauth2/authorize"
         "?response_type=code&client_id=client"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -181,17 +181,19 @@ async def test_full_cloud_import_flow_single_device(
     mock_lametric_cloud.devices.return_value = [
         mock_lametric_cloud.devices.return_value[0]
     ]
-    result3 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
@@ -209,31 +211,34 @@ async def test_full_manual(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
-    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "manual_entry"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_entry"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"},
     )
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
@@ -258,25 +263,24 @@ async def test_full_ssdp_with_cloud_import(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
-    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
 
-    assert result2.get("type") is FlowResultType.EXTERNAL_STEP
-    assert result2.get("url") == (
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
         "https://developer.lametric.com/api/v2/oauth2/authorize"
         "?response_type=code&client_id=client"
         "&redirect_uri=https://example.com/auth/external/callback"
@@ -299,17 +303,18 @@ async def test_full_ssdp_with_cloud_import(
         },
     )
 
-    result3 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
@@ -327,31 +332,32 @@ async def test_full_ssdp_manual_entry(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
-    assert result.get("type") is FlowResultType.MENU
-    assert result.get("step_id") == "choice_enter_manual_or_fetch_cloud"
-    assert result.get("menu_options") == ["pick_implementation", "manual_entry"]
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choice_enter_manual_or_fetch_cloud"
+    assert result["menu_options"] == ["pick_implementation", "manual_entry"]
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "manual_entry"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_entry"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "mock-api-key"}
     )
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
@@ -385,8 +391,8 @@ async def test_ssdp_abort_invalid_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=data
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -404,16 +410,15 @@ async def test_cloud_import_updates_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -428,14 +433,14 @@ async def test_cloud_import_updates_existing_entry(
             "expires_in": 60,
         },
     )
-    await hass.config_entries.flow.async_configure(flow_id)
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_DEVICE: "SA110405124500W00BS9"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_DEVICE: "SA110405124500W00BS9"}
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
@@ -458,18 +463,18 @@ async def test_manual_updates_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"},
     )
 
-    assert result3.get("type") is FlowResultType.ABORT
-    assert result3.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
@@ -490,8 +495,8 @@ async def test_discovery_updates_existing_entry(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-from-fixture",
@@ -510,16 +515,15 @@ async def test_cloud_abort_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -537,10 +541,10 @@ async def test_cloud_abort_no_devices(
 
     # Stage there are no devices
     mock_lametric_cloud.devices.return_value = []
-    result2 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "no_devices"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices"
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
 
@@ -565,39 +569,42 @@ async def test_manual_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
     mock_lametric.device.side_effect = side_effect
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"},
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "manual_entry"
-    assert result2.get("errors") == {"base": reason}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual_entry"
+    assert result["errors"] == {"base": reason}
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0
 
     mock_lametric.device.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_API_KEY: "mock-api-key"},
     )
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric.device.mock_calls) == 2
     assert len(mock_lametric.notify.mock_calls) == 1
@@ -628,16 +635,15 @@ async def test_cloud_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
 
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -652,16 +658,16 @@ async def test_cloud_errors(
             "expires_in": 60,
         },
     )
-    await hass.config_entries.flow.async_configure(flow_id)
+    await hass.config_entries.flow.async_configure(result["flow_id"])
 
     mock_lametric.device.side_effect = side_effect
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_DEVICE: "SA110405124500W00BS9"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_DEVICE: "SA110405124500W00BS9"}
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "cloud_select_device"
-    assert result2.get("errors") == {"base": reason}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cloud_select_device"
+    assert result["errors"] == {"base": reason}
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
@@ -669,19 +675,21 @@ async def test_cloud_errors(
     assert len(mock_setup_entry.mock_calls) == 0
 
     mock_lametric.device.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_DEVICE: "SA110405124500W00BS9"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_DEVICE: "SA110405124500W00BS9"}
     )
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Frenck's LaMetric"
-    assert result3.get("data") == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.title == "Frenck's LaMetric"
+    assert config_entry.unique_id == "SA110405124500W00BS9"
+    assert config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
         CONF_MAC: "AA:BB:CC:DD:EE:FF",
     }
-    assert "result" in result3
-    assert result3["result"].unique_id == "SA110405124500W00BS9"
+    assert not config_entry.options
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 2
@@ -706,8 +714,8 @@ async def test_dhcp_discovery_updates_entry(
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data == {
         CONF_API_KEY: "mock-from-fixture",
         CONF_HOST: "127.0.0.42",
@@ -732,8 +740,8 @@ async def test_dhcp_unknown_device(
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "unknown"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -750,16 +758,14 @@ async def test_reauth_cloud_import(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    flow_id = result["flow_id"]
-
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -776,10 +782,10 @@ async def test_reauth_cloud_import(
         },
     )
 
-    result2 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
@@ -806,16 +812,14 @@ async def test_reauth_cloud_abort_device_not_found(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    flow_id = result["flow_id"]
-
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "pick_implementation"}
+        result["flow_id"], user_input={"next_step_id": "pick_implementation"}
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
-            "flow_id": flow_id,
+            "flow_id": result["flow_id"],
             "redirect_uri": "https://example.com/auth/external/callback",
         },
     )
@@ -832,10 +836,10 @@ async def test_reauth_cloud_abort_device_not_found(
         },
     )
 
-    result2 = await hass.config_entries.flow.async_configure(flow_id)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_device_not_found"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_device_not_found"
 
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 0
@@ -853,18 +857,16 @@ async def test_reauth_manual(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    flow_id = result["flow_id"]
-
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "mock-api-key"}
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
@@ -887,18 +889,16 @@ async def test_reauth_manual_sky(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    flow_id = result["flow_id"]
-
     await hass.config_entries.flow.async_configure(
-        flow_id, user_input={"next_step_id": "manual_entry"}
+        result["flow_id"], user_input={"next_step_id": "manual_entry"}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_API_KEY: "mock-api-key"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "mock-api-key"}
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_HOST: "127.0.0.1",
         CONF_API_KEY: "mock-api-key",
