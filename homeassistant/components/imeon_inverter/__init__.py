@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
 from .const import PLATFORMS
@@ -27,8 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InverterConfigEntry) -> bool:
     """Handle entry unloading."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

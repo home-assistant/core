@@ -10,11 +10,13 @@ from typing import Any
 from imeon_inverter_api.inverter import Inverter
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import HUBNAME, TIMEOUT
+from .const import TIMEOUT
 
+HUBNAME = "imeon_inverter_hub"
 _LOGGER = logging.getLogger(__name__)
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
@@ -51,37 +53,14 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
-        self.api = Inverter(entry.data["address"])  # API calls
-        self.username = entry.data["username"]
-        self.password = entry.data["password"]
-
-        # unique ID
-        self.__id = entry.entry_id
-        InverterCoordinator._HUBs[str(self.__id)] = self
+        self.api = Inverter(entry.data[CONF_ADDRESS])  # API calls
 
         # Store request data
         self.data = {}
-        self.first_call = True
 
     def update(self, entry: InverterConfigEntry) -> None:
         """Update HUB data based on user input."""
-        self.api = Inverter(entry.data["address"])
-        self.username = entry.data["username"]
-        self.password = entry.data["password"]
-        self.first_call = True
-
-    @property
-    def id(self):
-        """Getter for id."""
-        return self.__id
-
-    @staticmethod
-    def get_from_id(id) -> InverterCoordinator:
-        """Getter for InverterCoordinator."""
-        try:
-            return InverterCoordinator._HUBs[str(id)]
-        except IndexError:
-            raise IndexError(f"Incorrect HUB ID ({id!s}) .") from None
+        self.api = Inverter(entry.data[CONF_ADDRESS])
 
     def store_data(self, entity_dict):
         """Store in data for entities to use."""
@@ -99,6 +78,24 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.store_data(self.api.storage)
         return self.data
 
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        try:
+            async with timeout(TIMEOUT):
+                if self.config_entry is not None:
+                    # Am I logged in ? If not log in
+                    await self.api.login(
+                        self.config_entry.data[CONF_USERNAME],
+                        self.config_entry.data[CONF_PASSWORD],
+                    )
+
+                    self.hass.async_create_task(self.init_and_store())
+
+        except TimeoutError:
+            _LOGGER.error(
+                "Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection"
+            )
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and store newest data from API.
 
@@ -107,25 +104,23 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
 
         try:
-            async with timeout(TIMEOUT * 4):
-                # Am I logged in ? If not log in
-                await self.api.login(self.username, self.password)
+            if self.config_entry is not None:
+                async with timeout(TIMEOUT * 4):
+                    # Am I logged in ? If not log in
+                    await self.api.login(
+                        self.config_entry.data[CONF_USERNAME],
+                        self.config_entry.data[CONF_PASSWORD],
+                    )
 
-                if self.first_call:
-                    # First call shouldn't slow down home assistant
-                    self.first_call = False
-                    self.hass.async_create_task(self.init_and_store())
-                    return self.data  # Send empty data on init, avoids timeout
-
-                # Fetch data using distant API
-                await self.api.update()
-
-                # Store in data for entities to use
-                self.store_data(self.api.storage)
+                    # Fetch data using distant API
+                    await self.api.update()
 
         except TimeoutError:
             _LOGGER.error(
-                "%s | Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection",
+                "Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection"
             )
+
+        # Store in data for entities to use
+        self.store_data(self.api.storage)
 
         return self.data  # send stored data so entities can poll it
