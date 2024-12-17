@@ -86,7 +86,7 @@ rules:
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-examples: done
 
   # Platinum

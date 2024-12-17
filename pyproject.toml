@@ -28,7 +28,7 @@ dependencies    = [
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
-    "aiohasupervisor==0.2.2b0",
+    "aiohasupervisor==0.2.2b2",
     "aiohttp==3.11.10",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
@@ -75,7 +75,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.4",
+    "uv==0.5.8",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
