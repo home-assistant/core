@@ -1602,6 +1602,9 @@ pyialarm==2.2.0
 # homeassistant.components.icloud
 pyicloud==1.0.0
 
+# homeassistant.components.imou_life
+pyimouapi==1.0.4
+
 # homeassistant.components.insteon
 pyinsteon==1.6.3
 
@@ -2490,6 +2493,3 @@ zwave-js-server-python==0.60.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
-
-# homeassistant.components.imou_life
-pyimouapi==1.0.4
