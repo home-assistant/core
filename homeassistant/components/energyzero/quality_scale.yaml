@@ -3,11 +3,7 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: exempt
-    comment: |
-      It uses a coordinator.py file, but an entity.py file
-      is not used since it only has a sensor platform.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -21,7 +17,7 @@ rules:
       Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: todo
   test-before-setup: done
   unique-config-entry: done
@@ -34,14 +30,14 @@ rules:
     comment: |
       This integration does not have an options flow.
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
-      There is no authentication in the integration.
+      There is no authentication needed in the integration.
   test-coverage: done
   # Gold
   devices: done
@@ -64,15 +60,12 @@ rules:
     comment: |
       This is an service, which doesn't integrate with any devices.
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: exempt
-    comment: |
-      Not applicable for this integration.
+  docs-troubleshooting: todo
   docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
-      Not applicable for this integration.
+      The integration provides services and not devices that can be added at a later stage.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -93,7 +86,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      Not applicable for this integration.
+      The integration provides services and has no devices that can become stale.
   # Platinum
   async-dependency: done
   inject-websession: done
