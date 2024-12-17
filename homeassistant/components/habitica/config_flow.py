@@ -198,40 +198,29 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         reauth_entry = self._get_reauth_entry()
-        entry_data = reauth_entry.data
 
         if user_input is not None:
             if user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME) and user_input[
                 SECTION_REAUTH_LOGIN
             ].get(CONF_PASSWORD):
                 errors, response = await self.validate_login(
-                    {**entry_data, **user_input[SECTION_REAUTH_LOGIN]}
+                    {**reauth_entry.data, **user_input[SECTION_REAUTH_LOGIN]}
                 )
                 if not errors and response is not None:
                     self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data={
-                            **entry_data,
-                            CONF_API_KEY: response["apiToken"],
-                        },
+                        reauth_entry, data_updates={CONF_API_KEY: response["apiToken"]}
                     )
             elif user_input[SECTION_REAUTH_API_KEY].get(CONF_API_KEY):
                 errors, response = await self.validate_api_key(
                     {
-                        **entry_data,
-                        CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][CONF_API_KEY],
+                        **reauth_entry.data,
+                        **user_input[SECTION_REAUTH_API_KEY],
                     }
                 )
                 if not errors and response is not None:
                     return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data={
-                            **entry_data,
-                            CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][
-                                CONF_API_KEY
-                            ],
-                        },
+                        reauth_entry, data_updates=user_input[SECTION_REAUTH_API_KEY]
                     )
             else:
                 errors["base"] = "invalid_credentials"
