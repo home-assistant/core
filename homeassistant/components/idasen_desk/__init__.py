@@ -20,10 +20,10 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type IdasenDeskConfigEntry = ConfigEntry[IdasenDeskCoordinator]
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
-) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
@@ -68,15 +68,13 @@ async def async_setup_entry(
 
 
 async def _async_update_listener(
-    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
+    hass: HomeAssistant, entry: IdasenDeskConfigEntry
 ) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: ConfigEntry[IdasenDeskCoordinator]
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator = entry.runtime_data

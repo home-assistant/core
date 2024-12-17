@@ -23,7 +23,7 @@ class IdasenDeskEntity(CoordinatorEntity[IdasenDeskCoordinator]):
 
         self._attr_unique_id = unique_id
         self._attr_device_info = dr.DeviceInfo(
-            name=coordinator.name,
+            manufacturer="LINAK",
             connections={(dr.CONNECTION_BLUETOOTH, coordinator.address)},
         )
         self._desk = coordinator.desk

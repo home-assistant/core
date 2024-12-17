@@ -12,18 +12,17 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IdasenDeskCoordinator
+from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[IdasenDeskCoordinator],
+    entry: IdasenDeskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the cover platform for Idasen Desk."""

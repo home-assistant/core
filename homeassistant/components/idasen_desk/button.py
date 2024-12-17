@@ -6,12 +6,11 @@ import logging
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IdasenDeskCoordinator
+from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ BUTTONS: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[IdasenDeskCoordinator],
+    entry: IdasenDeskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
