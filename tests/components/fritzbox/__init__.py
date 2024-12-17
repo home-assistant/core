@@ -35,6 +35,9 @@ async def setup_config_entry(
     entry.add_to_hass(hass)
     if device is not None and fritz is not None:
         fritz().get_devices.return_value = [device]
+        if device.has_lightbulb:
+            device.supported_colors = device.get_colors()
+            device.supported_color_temps = device.get_color_temps()
 
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
