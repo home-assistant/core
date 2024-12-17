@@ -20,11 +20,11 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import CambridgeAudioConfigEntry
 from .const import (
     CAMBRIDGE_MEDIA_TYPE_AIRABLE,
     CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
@@ -57,10 +57,12 @@ TRANSPORT_FEATURES: dict[TransportControl, MediaPlayerEntityFeature] = {
     TransportControl.STOP: MediaPlayerEntityFeature.STOP,
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CambridgeAudioConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio device based on a config entry."""
@@ -177,12 +179,9 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         return volume / 100
 
     @property
-    def shuffle(self) -> bool | None:
+    def shuffle(self) -> bool:
         """Current shuffle configuration."""
-        mode_shuffle = self.client.play_state.mode_shuffle
-        if not mode_shuffle:
-            return False
-        return mode_shuffle != ShuffleMode.OFF
+        return self.client.play_state.mode_shuffle != ShuffleMode.OFF
 
     @property
     def repeat(self) -> RepeatMode | None:

@@ -20,7 +20,7 @@ ACTIVE_TYPE = "active"
 
 ATTRIBUTION = "Data provided by Sense.com"
 
-CONSUMPTION_NAME = "Usage"
+CONSUMPTION_NAME = "Energy"
 CONSUMPTION_ID = "usage"
 PRODUCTION_NAME = "Production"
 PRODUCTION_ID = "production"

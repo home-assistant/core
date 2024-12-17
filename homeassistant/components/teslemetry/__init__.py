@@ -135,11 +135,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
         elif "energy_site_id" in product and Scope.ENERGY_DEVICE_DATA in scopes:
             site_id = product["energy_site_id"]
-            if not (
-                product["components"]["battery"]
-                or product["components"]["solar"]
-                or "wall_connectors" in product["components"]
-            ):
+            powerwall = (
+                product["components"]["battery"] or product["components"]["solar"]
+            )
+            wall_connector = "wall_connectors" in product["components"]
+            if not powerwall and not wall_connector:
                 LOGGER.debug(
                     "Skipping Energy Site %s as it has no components",
                     site_id,
@@ -162,7 +162,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
                         hass, api, product
                     ),
-                    history_coordinator=TeslemetryEnergyHistoryCoordinator(hass, api),
+                    history_coordinator=(
+                        TeslemetryEnergyHistoryCoordinator(hass, api)
+                        if powerwall
+                        else None
+                    ),
                     id=site_id,
                     device=device,
                 )
@@ -185,6 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         *(
             energysite.history_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
+            if energysite.history_coordinator
         ),
     )
 
@@ -248,7 +253,6 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
         """Handle vehicle data from the stream."""
         if "vehicle_data" in data:
             LOGGER.debug("Streaming received vehicle data from %s", vin)
-            coordinator.updated_once = True
             coordinator.async_set_updated_data(flatten(data["vehicle_data"]))
         elif "state" in data:
             LOGGER.debug("Streaming received state from %s", vin)

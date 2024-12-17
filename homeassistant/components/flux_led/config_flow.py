@@ -71,9 +71,11 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> FluxLedOptionsFlow:
         """Get the options flow for the Flux LED component."""
-        return FluxLedOptionsFlow(config_entry)
+        return FluxLedOptionsFlow()
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -320,10 +322,6 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 class FluxLedOptionsFlow(OptionsFlow):
     """Handle flux_led options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the flux_led options flow."""
-        self._config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -332,7 +330,7 @@ class FluxLedOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        options = self._config_entry.options
+        options = self.config_entry.options
         options_schema = vol.Schema(
             {
                 vol.Optional(

@@ -504,9 +504,6 @@
     "command_no_reason": {
       "message": "Command was unsuccessful but did not return a reason why."
     },
-    "command_signing": {
-      "message": "Vehicle requires command signing. Please see documentation for more details."
-    },
     "invalid_cop_temp": {
       "message": "Cabin overheat protection does not support that temperature."
     },

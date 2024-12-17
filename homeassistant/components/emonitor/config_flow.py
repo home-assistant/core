@@ -92,6 +92,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Attempt to confirm."""
+        assert self.discovered_ip is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self.discovered_info["title"],
