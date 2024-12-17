@@ -1,0 +1,7 @@
+reload:
+  description: "Ask synapse application to re-send the entity list. Sent to all connected by default"
+  fields:
+    app:
+      description: "The name of the app to target for the reload. If omitted, targets all apps."
+      example: "home_automation"
+      required: false
