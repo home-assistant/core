@@ -11,6 +11,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
 )
@@ -40,6 +42,8 @@ class AbodeLight(AbodeDevice, LightEntity):
 
     _device: Light
     _attr_name = None
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

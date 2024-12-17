@@ -232,6 +232,68 @@ async def test_agent_delete_backup(
 
 
 @pytest.mark.usefixtures("hassio_client")
+@pytest.mark.parametrize(
+    ("event_data", "mount_info_calls"),
+    [
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_create_mount", "done": True},
+            },
+            1,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_create_mount", "done": False},
+            },
+            0,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_remove_mount", "done": True},
+            },
+            1,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_remove_mount", "done": False},
+            },
+            0,
+        ),
+        ({"event": "job", "data": {"name": "other_job", "done": True}}, 0),
+        (
+            {
+                "event": "other_event",
+                "data": {"name": "mount_manager_remove_mount", "done": True},
+            },
+            0,
+        ),
+    ],
+)
+async def test_agents_notify_on_mount_added_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    event_data: dict[str, Any],
+    mount_info_calls: int,
+) -> None:
+    """Test the listener is called when mounts are added or removed."""
+    client = await hass_ws_client(hass)
+    assert supervisor_client.mounts.info.call_count == 1
+    assert supervisor_client.mounts.info.call_args[0] == ()
+    supervisor_client.mounts.info.reset_mock()
+
+    await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert supervisor_client.mounts.info.call_count == mount_info_calls
+
+
+@pytest.mark.usefixtures("hassio_client")
 async def test_reader_writer_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
