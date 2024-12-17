@@ -7,19 +7,24 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_NAMES
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
@@ -352,10 +357,26 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        }
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
+
+        if key.startswith(BLU_TRV_IDENTIFIER):
+            device_id = coordinator.device.config[key]["addr"]
+            device_name = coordinator.device.config[key]["name"]
+            model_id = coordinator.device.config[key].get("local_name")
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_BLUETOOTH, device_id)},
+                identifiers={(DOMAIN, device_id)},
+                via_device=(DOMAIN, coordinator.mac),
+                manufacturer="Shelly",
+                model=MODEL_NAMES.get(model_id),
+                model_id=model_id,
+                name=device_name,
+            )
+            self._attr_unique_id = f"{coordinator.mac}-{device_id}-{key}"
+        else:
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, coordinator.mac)},
+            )
+            self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
