@@ -740,7 +740,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
+        required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -752,8 +752,6 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=EVSE_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.State,
-        ),
+        required_attributes=(clusters.EnergyEvse.Attributes.State,),
     ),
 ]
