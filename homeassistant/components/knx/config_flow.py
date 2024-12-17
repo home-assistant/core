@@ -342,11 +342,12 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 value=CONF_KNX_AUTOMATIC, label=CONF_KNX_AUTOMATIC.capitalize()
             )
         ]
+        _current_ia = self._xknx.current_address
         tunnel_endpoint_options.extend(
             selector.SelectOptionDict(
                 value=str(slot),
                 label=(
-                    f"{slot} - {'current connection' if slot == self._xknx.current_address else 'occupied' if not slot_status.free else 'free'}"
+                    f"{slot} - {'current connection' if slot == _current_ia else 'occupied' if not slot_status.free else 'free'}"
                 ),
             )
             for slot, slot_status in self._selected_tunnel.tunnelling_slots.items()
