@@ -158,4 +158,15 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="EnergyEvseDisableChargingButton",
+            translation_key="disable_charging",
+            command=clusters.EnergyEvse.Commands.Disable,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
+        allow_multi=True,
+    ),
 ]
