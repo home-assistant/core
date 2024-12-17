@@ -98,4 +98,4 @@ rules:
   strict-typing:
     status: todo
     comment: |
-      Requirement 'xmltodict==0.13.0' appears untyped
+      Requirements 'fritzconnection==1.14.0' and 'xmltodict==0.13.0' appear untyped

@@ -30,6 +30,8 @@ def _check_requirements_are_typed(integration: Integration) -> list[str]:
     invalid_requirements = []
     for requirement in integration.requirements:
         requirement_name, requirement_version = requirement.split("==")
+        # Remove any extras
+        requirement_name = requirement_name.split("[")[0]
         try:
             distribution = metadata.distribution(requirement_name)
         except metadata.PackageNotFoundError:
