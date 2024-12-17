@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
