@@ -1,0 +1,165 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: Needs initial assessment
+  appropriate-polling:
+    status: todo
+    comment: Needs initial assessment
+  brands:
+    status: todo
+    comment: Needs initial assessment
+  common-modules:
+    status: todo
+    comment: Needs initial assessment
+  config-flow-test-coverage:
+    status: todo
+    comment: Needs initial assessment
+  config-flow:
+    status: todo
+    comment: Needs initial assessment
+  dependency-transparency:
+    status: todo
+    comment: Needs initial assessment
+  docs-actions:
+    status: todo
+    comment: Needs initial assessment
+  docs-high-level-description:
+    status: todo
+    comment: Needs initial assessment
+  docs-installation-instructions:
+    status: todo
+    comment: Needs initial assessment
+  docs-removal-instructions:
+    status: todo
+    comment: Needs initial assessment
+  entity-event-setup:
+    status: todo
+    comment: Needs initial assessment
+  entity-unique-id:
+    status: todo
+    comment: Needs initial assessment
+  has-entity-name:
+    status: todo
+    comment: Needs initial assessment
+  runtime-data:
+    status: todo
+    comment: Needs initial assessment
+  test-before-configure:
+    status: todo
+    comment: Needs initial assessment
+  test-before-setup:
+    status: todo
+    comment: Needs initial assessment
+  unique-config-entry:
+    status: todo
+    comment: Needs initial assessment
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Needs initial assessment
+  config-entry-unloading:
+    status: todo
+    comment: Needs initial assessment
+  docs-configuration-parameters:
+    status: todo
+    comment: Needs initial assessment
+  docs-installation-parameters:
+    status: todo
+    comment: Needs initial assessment
+  entity-unavailable:
+    status: todo
+    comment: Needs initial assessment
+  integration-owner:
+    status: todo
+    comment: Needs initial assessment
+  log-when-unavailable:
+    status: todo
+    comment: Needs initial assessment
+  parallel-updates:
+    status: todo
+    comment: Needs initial assessment
+  reauthentication-flow:
+    status: todo
+    comment: Needs initial assessment
+  test-coverage:
+    status: todo
+    comment: Needs initial assessment
+
+  # Gold
+  devices:
+    status: todo
+    comment: Needs initial assessment
+  diagnostics:
+    status: todo
+    comment: Needs initial assessment
+  discovery-update-info:
+    status: todo
+    comment: Needs initial assessment
+  discovery:
+    status: todo
+    comment: Needs initial assessment
+  docs-data-update:
+    status: todo
+    comment: Needs initial assessment
+  docs-examples:
+    status: todo
+    comment: Needs initial assessment
+  docs-known-limitations:
+    status: todo
+    comment: Needs initial assessment
+  docs-supported-devices:
+    status: todo
+    comment: Needs initial assessment
+  docs-supported-functions:
+    status: todo
+    comment: Needs initial assessment
+  docs-troubleshooting:
+    status: todo
+    comment: Needs initial assessment
+  docs-use-cases:
+    status: todo
+    comment: Needs initial assessment
+  dynamic-devices:
+    status: todo
+    comment: Needs initial assessment
+  entity-category:
+    status: todo
+    comment: Needs initial assessment
+  entity-device-class:
+    status: todo
+    comment: Needs initial assessment
+  entity-disabled-by-default:
+    status: todo
+    comment: Needs initial assessment
+  entity-translations:
+    status: todo
+    comment: Needs initial assessment
+  exception-translations:
+    status: todo
+    comment: Needs initial assessment
+  icon-translations:
+    status: todo
+    comment: Needs initial assessment
+  reconfiguration-flow:
+    status: todo
+    comment: Needs initial assessment
+  repair-issues:
+    status: todo
+    comment: Needs initial assessment
+  stale-devices:
+    status: todo
+    comment: Needs initial assessment
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: Needs initial assessment
+  inject-websession:
+    status: todo
+    comment: Needs initial assessment
+  strict-typing:
+    status: todo
+    comment: |
+      Dependency is not typed
