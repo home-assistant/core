@@ -14,7 +14,10 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohasupervisor.exceptions import SupervisorBadRequestError
+from aiohasupervisor.exceptions import (
+    SupervisorBadRequestError,
+    SupervisorNotFoundError,
+)
 from aiohasupervisor.models import (
     backups as supervisor_backups,
     mounts as supervisor_mounts,
@@ -403,6 +406,10 @@ async def test_agent_download(
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
 
+    supervisor_client.backups.download_backup.assert_called_once_with(
+        "abc123", options=supervisor_backups.DownloadBackupOptions(location=None)
+    )
+
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_agent_download_unavailable_backup(
@@ -491,7 +498,9 @@ async def test_agent_delete_backup(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
+    supervisor_client.backups.remove_backup.assert_called_once_with(
+        backup_id, options=supervisor_backups.RemoveBackupOptions(location={None})
+    )
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
@@ -507,6 +516,13 @@ async def test_agent_delete_backup(
         ),
         (
             SupervisorBadRequestError("Backup does not exist"),
+            {
+                "success": True,
+                "result": {"agent_errors": {}},
+            },
+        ),
+        (
+            SupervisorNotFoundError(),
             {
                 "success": True,
                 "result": {"agent_errors": {}},
@@ -535,7 +551,9 @@ async def test_agent_delete_with_error(
     response = await client.receive_json()
 
     assert response == {"id": 1, "type": "result"} | expected_response
-    supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
+    supervisor_client.backups.remove_backup.assert_called_once_with(
+        backup_id, options=supervisor_backups.RemoveBackupOptions(location={None})
+    )
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
@@ -627,7 +645,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_all_addons": True},
-            DEFAULT_BACKUP_OPTIONS,
+            replace(DEFAULT_BACKUP_OPTIONS, addons="all"),
         ),
         (
             {"include_database": False},
@@ -782,7 +800,10 @@ async def test_reader_writer_create_remote_backup(
     }
 
     supervisor_client.backups.download_backup.assert_called_once_with("test_slug")
-    supervisor_client.backups.remove_backup.assert_called_once_with("test_slug")
+    supervisor_client.backups.remove_backup.assert_called_once_with(
+        "test_slug",
+        options=supervisor_backups.RemoveBackupOptions({LOCATION_CLOUD_BACKUP}),
+    )
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
@@ -895,7 +916,10 @@ async def test_agent_receive_remote_backup(
     assert resp.status == 201
 
     supervisor_client.backups.download_backup.assert_called_once_with("test_slug")
-    supervisor_client.backups.remove_backup.assert_called_once_with("test_slug")
+    supervisor_client.backups.remove_backup.assert_called_once_with(
+        "test_slug",
+        options=supervisor_backups.RemoveBackupOptions({LOCATION_CLOUD_BACKUP}),
+    )
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
@@ -933,6 +957,7 @@ async def test_reader_writer_restore(
             background=True,
             folders=None,
             homeassistant=True,
+            location=None,
             password=None,
         ),
     )
