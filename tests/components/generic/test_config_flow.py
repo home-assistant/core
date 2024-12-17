@@ -637,10 +637,6 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.generic.config.error.Some message"],
-)
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_stream_worker_error(
@@ -656,7 +652,8 @@ async def test_form_stream_worker_error(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "Some message"}
+    assert result2["errors"] == {"stream_source": "unknown_with_details"}
+    assert result2["description_placeholders"] == {"error": "Some message"}
 
 
 @respx.mock

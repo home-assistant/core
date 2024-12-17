@@ -1,5 +1,7 @@
 """Test Suez_water integration initialization."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -11,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_initialization_invalid_credentials(
     hass: HomeAssistant,
-    suez_client,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that suez_water can't be loaded with invalid credentials."""
@@ -24,7 +26,7 @@ async def test_initialization_invalid_credentials(
 
 async def test_initialization_setup_api_error(
     hass: HomeAssistant,
-    suez_client,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that suez_water needs to retry loading if api failed to connect."""

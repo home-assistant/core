@@ -45,6 +45,7 @@ from . import (
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
     DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_DICT_KLAP,
     DEVICE_CONFIG_KLAP,
     DEVICE_CONFIG_LEGACY,
     DEVICE_ID,
@@ -538,9 +539,8 @@ async def test_move_credentials_hash(
     from the device.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -586,9 +586,8 @@ async def test_move_credentials_hash_auth_error(
     in async_setup_entry.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -630,9 +629,8 @@ async def test_move_credentials_hash_other_error(
     at the end of the test.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -729,7 +727,7 @@ async def test_credentials_hash_auth_error(
         await hass.async_block_till_done()
 
     expected_config = DeviceConfig.from_dict(
-        DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True, credentials_hash="theHash")
+        {**DEVICE_CONFIG_DICT_KLAP, "credentials_hash": "theHash"}
     )
     expected_config.uses_http = False
     expected_config.http_client = "Foo"
@@ -767,7 +765,9 @@ async def test_migrate_remove_device_config(
         CONF_HOST: expected_entry_data[CONF_HOST],
         CONF_ALIAS: ALIAS,
         CONF_MODEL: MODEL,
-        CONF_DEVICE_CONFIG: device_config.to_dict(exclude_credentials=True),
+        CONF_DEVICE_CONFIG: {
+            k: v for k, v in device_config.to_dict().items() if k != "credentials"
+        },
     }
 
     entry = MockConfigEntry(

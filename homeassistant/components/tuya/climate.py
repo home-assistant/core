@@ -120,7 +120,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

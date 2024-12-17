@@ -1474,7 +1474,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
@@ -1848,7 +1848,7 @@
           'state': dict({
             'attributes': dict({
               'changed_by': None,
-              'code_arm_required': True,
+              'code_arm_required': False,
               'code_format': None,
               'friendly_name': 'Aqara Hub-1563 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
@@ -11400,15 +11400,15 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                167,
-                89,
+                168,
+                90,
               ),
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.524,
+                0.522,
                 0.387,
               ),
             }),
@@ -11548,15 +11548,15 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                167,
-                89,
+                168,
+                90,
               ),
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.524,
+                0.522,
                 0.387,
               ),
             }),
@@ -14883,7 +14883,7 @@
               'min_mireds': 153,
               'rgb_color': tuple(
                 255,
-                141,
+                142,
                 28,
               ),
               'supported_color_modes': list([
@@ -14892,8 +14892,8 @@
               ]),
               'supported_features': <LightEntityFeature: 0>,
               'xy_color': tuple(
-                0.589,
-                0.385,
+                0.588,
+                0.386,
               ),
             }),
             'entity_id': 'light.nanoleaf_strip_3b32_nanoleaf_light_strip',

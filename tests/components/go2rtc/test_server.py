@@ -105,12 +105,13 @@ async def test_server_run_success(
 
     # Verify that the config file was written
     mock_tempfile.write.assert_called_once_with(
-        f"""
+        f"""# This file is managed by Home Assistant
+# Do not edit it manually
+
 api:
   listen: "{api_ip}:11984"
 
 rtsp:
-  # ffmpeg needs rtsp for opus audio transcoding
   listen: "127.0.0.1:18554"
 
 webrtc:

@@ -54,12 +54,14 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 async def test_climate_find_valid_targets() -> None:
@@ -77,26 +79,22 @@ async def test_climate_find_valid_targets() -> None:
     assert _find_valid_target_temp(25, valid_targets) == 20
 
 
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.CLIMATE]],
+)
 async def test_climate(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     get_data: SensiboData,
     load_int: ConfigEntry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo climate."""
 
-    state1 = hass.states.get("climate.hallway")
-    state2 = hass.states.get("climate.kitchen")
-    state3 = hass.states.get("climate.bedroom")
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    assert state1.state == "heat"
-    assert state1.attributes == snapshot
-
-    assert state2.state == "off"
-
-    assert state3
-    assert state3.state == "off"
     found_log = False
     logs = caplog.get_records("setup")
     for log in logs:
@@ -348,6 +346,17 @@ async def test_climate_temperatures(
 
     state2 = hass.states.get("climate.hallway")
     assert state2.attributes["temperature"] == 20
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_set_ac_state_property",
+    ) as mock_call:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 20},
+            blocking=True,
+        )
+        assert not mock_call.called
 
     with (
         patch(

@@ -337,12 +337,12 @@ def mock_from_stats():
     counter = 0
     real_from_stats = StatisticsShortTerm.from_stats
 
-    def from_stats(metadata_id, stats):
+    def from_stats(metadata_id, stats, now_timestamp):
         nonlocal counter
         if counter == 0 and metadata_id == 2:
             counter += 1
             return None
-        return real_from_stats(metadata_id, stats)
+        return real_from_stats(metadata_id, stats, now_timestamp)
 
     with patch(
         "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",

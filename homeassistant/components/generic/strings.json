@@ -3,6 +3,7 @@
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_with_details": "An unknown error occurred: {error}",
       "already_exists": "A camera with these URL settings already exists.",
       "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
       "unable_still_load_auth": "Unable to load valid image from still image URL: The camera may require a user name and password, or they are not correct.",

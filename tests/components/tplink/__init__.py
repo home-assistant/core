@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
+    BaseProtocol,
     Device,
     DeviceConfig,
     DeviceConnectionParameters,
@@ -17,7 +18,6 @@ from kasa import (
     Module,
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
-from kasa.protocol import BaseProtocol
 from kasa.smart.modules.alarm import Alarm
 from syrupy import SnapshotAssertion
 
@@ -62,7 +62,9 @@ CONN_PARAMS_LEGACY = DeviceConnectionParameters(
     DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
 )
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_LEGACY = {
+    k: v for k, v in DEVICE_CONFIG_LEGACY.to_dict().items() if k != "credentials"
+}
 CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
 CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
@@ -86,8 +88,12 @@ DEVICE_CONFIG_AES = DeviceConfig(
     uses_http=True,
     aes_keys=AES_KEYS,
 )
-DEVICE_CONFIG_DICT_KLAP = DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)
-DEVICE_CONFIG_DICT_AES = DEVICE_CONFIG_AES.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_KLAP = {
+    k: v for k, v in DEVICE_CONFIG_KLAP.to_dict().items() if k != "credentials"
+}
+DEVICE_CONFIG_DICT_AES = {
+    k: v for k, v in DEVICE_CONFIG_AES.to_dict().items() if k != "credentials"
+}
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,

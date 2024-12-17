@@ -31,7 +31,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -82,11 +81,6 @@ def stub_reconnect():
                 "installed_version": "1.0.0",
                 "supported_features": 0,
             },
-        ),
-        (
-            [],
-            STATE_UNKNOWN,  # dashboard is available but device is unknown
-            {"supported_features": 0},
         ),
     ],
 )
@@ -408,11 +402,7 @@ async def test_update_becomes_available_at_runtime(
     )
     await hass.async_block_till_done()
     state = hass.states.get("update.test_firmware")
-    assert state is not None
-    features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    # There are no devices on the dashboard so no
-    # way to tell the version so install is disabled
-    assert features is UpdateEntityFeature(0)
+    assert state is None
 
     # A device gets added to the dashboard
     mock_dashboard["configured"] = [
@@ -431,6 +421,41 @@ async def test_update_becomes_available_at_runtime(
     # We now know the version so install is enabled
     features = state.attributes[ATTR_SUPPORTED_FEATURES]
     assert features is UpdateEntityFeature.INSTALL
+
+
+async def test_update_entity_not_present_with_dashboard_but_unknown_device(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test ESPHome update entity does not get created if the device is unknown to the dashboard."""
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+
+    mock_dashboard["configured"] = [
+        {
+            "name": "other-test",
+            "current_version": "2023.2.0-dev",
+            "configuration": "other-test.yaml",
+        }
+    ]
+
+    state = hass.states.get("update.test_firmware")
+    assert state is None
+
+    await async_get_dashboard(hass).async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("update.none_firmware")
+    assert state is None
 
 
 async def test_generic_device_update_entity(

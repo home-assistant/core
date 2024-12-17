@@ -77,9 +77,13 @@ async def test_press_signing_error(
     new_product["response"][0]["command_signing"] = "required"
     mock_products.return_value = new_product
 
-    await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
+    with (
+        patch("homeassistant.components.tesla_fleet.TeslaFleetApi.get_private_key"),
+    ):
+        await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
 
     with (
+        patch("homeassistant.components.tesla_fleet.TeslaFleetApi.get_private_key"),
         patch(
             "homeassistant.components.tesla_fleet.VehicleSigned.flash_lights",
             side_effect=NotOnWhitelistFault,

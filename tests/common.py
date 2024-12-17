@@ -491,7 +491,7 @@ _MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = dt_util.utc_to_timestamp(utc_datetime)
+    timestamp = utc_datetime.timestamp()
     for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -1000,6 +1000,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         reason=None,
         source=config_entries.SOURCE_USER,
         state=None,
+        subentries_data=None,
         title="Mock Title",
         unique_id=None,
         version=1,
@@ -1016,6 +1017,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
+            "subentries_data": subentries_data or (),
             "title": title,
             "unique_id": unique_id,
             "version": version,
@@ -1815,3 +1817,20 @@ async def snapshot_platform(
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
+    """Reset translation cache for specified components.
+
+    Use this if you are mocking a core component (for example via
+    mock_integration), to ensure that the mocked translations are not
+    persisted in the shared session cache.
+    """
+    translations_cache = translation._async_get_translations_cache(hass)
+    for loaded_components in translations_cache.cache_data.loaded.values():
+        for component_to_unload in components:
+            loaded_components.discard(component_to_unload)
+    for loaded_categories in translations_cache.cache_data.cache.values():
+        for loaded_components in loaded_categories.values():
+            for component_to_unload in components:
+                loaded_components.pop(component_to_unload, None)

@@ -814,6 +814,8 @@ def _get_log_message_and_stack_print_pref(
         "domain": domain,
         "error": str(exception),
         "p_name": platform_path,
+        "config_file": "?",
+        "line": "?",
     }
 
     show_stack_trace: bool | None = _CONFIG_LOG_SHOW_STACK_TRACE.get(

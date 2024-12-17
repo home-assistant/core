@@ -61,11 +61,12 @@
     "3cb70739631c4d17a86b8b12e8a5161b": {
       "active_preset": "home",
       "available_schedules": ["standaard", "off"],
+      "climate_mode": "auto",
+      "control_state": "idle",
       "dev_class": "thermostat",
       "firmware": "2018-02-08T11:15:53+01:00",
       "hardware": "6539-1301-5002",
       "location": "c784ee9fdab44e1395b8dee7d7a497d5",
-      "mode": "auto",
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],

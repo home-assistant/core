@@ -79,7 +79,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     name: str | None = None
-    blid: str | None = None
+    blid: str
     host: str | None = None
 
     def __init__(self) -> None:

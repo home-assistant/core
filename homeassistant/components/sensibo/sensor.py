@@ -178,6 +178,7 @@ AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         value_fn=lambda data: data.co2,
         extra_fn=None,
     ),
+    *DEVICE_SENSOR_TYPES,
 )
 
 ELEMENT_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (

@@ -137,17 +137,3 @@ class SupervisorEntityModel(StrEnum):
     CORE = "Home Assistant Core"
     SUPERVIOSR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
-
-
-class SupervisorIssueContext(StrEnum):
-    """Context for supervisor issues."""
-
-    ADDON = "addon"
-    CORE = "core"
-    DNS_SERVER = "dns_server"
-    MOUNT = "mount"
-    OS = "os"
-    PLUGIN = "plugin"
-    SUPERVISOR = "supervisor"
-    STORE = "store"
-    SYSTEM = "system"

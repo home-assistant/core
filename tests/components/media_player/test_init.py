@@ -97,6 +97,46 @@ def test_deprecated_constants_const(
     )
 
 
+@pytest.mark.parametrize(
+    "property_suffix",
+    [
+        "play",
+        "pause",
+        "stop",
+        "seek",
+        "volume_set",
+        "volume_mute",
+        "previous_track",
+        "next_track",
+        "play_media",
+        "select_source",
+        "select_sound_mode",
+        "clear_playlist",
+        "shuffle_set",
+        "grouping",
+    ],
+)
+def test_support_properties(property_suffix: str) -> None:
+    """Test support_*** properties explicitly."""
+
+    all_features = media_player.MediaPlayerEntityFeature(653887)
+    feature = media_player.MediaPlayerEntityFeature[property_suffix.upper()]
+
+    entity1 = MediaPlayerEntity()
+    entity1._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
+    entity2 = MediaPlayerEntity()
+    entity2._attr_supported_features = all_features
+    entity3 = MediaPlayerEntity()
+    entity3._attr_supported_features = feature
+    entity4 = MediaPlayerEntity()
+    entity4._attr_supported_features = all_features & ~feature
+
+    assert getattr(entity1, f"support_{property_suffix}") is False
+    assert getattr(entity2, f"support_{property_suffix}") is True
+    assert getattr(entity3, f"support_{property_suffix}") is True
+    assert getattr(entity4, f"support_{property_suffix}") is False
+
+
 async def test_get_image_http(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
@@ -407,23 +447,3 @@ async def test_get_async_get_browse_image_quoting(
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockMediaPlayerEntity(MediaPlayerEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
-
-    entity = MockMediaPlayerEntity()
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "MockMediaPlayerEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "MediaPlayerEntityFeature.PAUSE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text

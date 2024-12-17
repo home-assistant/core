@@ -1,0 +1,343 @@
+# serializer version: 1
+# name: test_number[load_platforms0][number.bedroom_humidity_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bedroom_humidity_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_humidity',
+    'unique_id': 'BBZZBBZZ-calibration_hum',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[load_platforms0][number.bedroom_humidity_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Bedroom Humidity calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bedroom_humidity_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_number[load_platforms0][number.bedroom_temperature_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.bedroom_temperature_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_temperature',
+    'unique_id': 'BBZZBBZZ-calibration_temp',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number[load_platforms0][number.bedroom_temperature_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Bedroom Temperature calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.bedroom_temperature_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_number[load_platforms0][number.hallway_humidity_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.hallway_humidity_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_humidity',
+    'unique_id': 'ABC999111-calibration_hum',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[load_platforms0][number.hallway_humidity_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Hallway Humidity calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hallway_humidity_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_number[load_platforms0][number.hallway_temperature_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.hallway_temperature_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_temperature',
+    'unique_id': 'ABC999111-calibration_temp',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number[load_platforms0][number.hallway_temperature_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Hallway Temperature calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.hallway_temperature_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1',
+  })
+# ---
+# name: test_number[load_platforms0][number.kitchen_humidity_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.kitchen_humidity_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_humidity',
+    'unique_id': 'AAZZAAZZ-calibration_hum',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number[load_platforms0][number.kitchen_humidity_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Kitchen Humidity calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kitchen_humidity_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_number[load_platforms0][number.kitchen_temperature_calibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.kitchen_temperature_calibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature calibration',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_temperature',
+    'unique_id': 'AAZZAAZZ-calibration_temp',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_number[load_platforms0][number.kitchen_temperature_calibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Kitchen Temperature calibration',
+      'max': 10,
+      'min': -10,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kitchen_temperature_calibration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---

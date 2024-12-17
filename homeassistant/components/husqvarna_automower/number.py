@@ -24,6 +24,8 @@ from .entity import (
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 @callback
 def _async_get_cutting_height(data: MowerAttributes) -> int:

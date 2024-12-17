@@ -10,14 +10,6 @@ from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
 )
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_DEVICE_CLASS,
-    CONF_EXCLUDE,
-    CONF_HOST,
-    CONF_INCLUDE,
-    CONF_NAME,
-)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
@@ -83,44 +75,4 @@ VIZIO_MUTE = "mute"
 VIZIO_DEVICE_CLASSES = {
     MediaPlayerDeviceClass.SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
     MediaPlayerDeviceClass.TV: VIZIO_DEVICE_CLASS_TV,
-}
-
-VIZIO_SCHEMA = {
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.All(
-        cv.string,
-        vol.Lower,
-        vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
-    ),
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=10)
-    ),
-    vol.Optional(CONF_APPS): vol.All(
-        {
-            vol.Exclusive(CONF_INCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Exclusive(CONF_EXCLUDE, "apps_filter"): vol.All(
-                cv.ensure_list, [cv.string]
-            ),
-            vol.Optional(CONF_ADDITIONAL_CONFIGS): vol.All(
-                cv.ensure_list,
-                [
-                    {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_CONFIG): {
-                            vol.Required(CONF_APP_ID): cv.string,
-                            vol.Required(CONF_NAME_SPACE): vol.Coerce(int),
-                            vol.Optional(CONF_MESSAGE, default=None): vol.Or(
-                                cv.string, None
-                            ),
-                        },
-                    },
-                ],
-            ),
-        },
-        cv.has_at_least_one_key(CONF_INCLUDE, CONF_EXCLUDE, CONF_ADDITIONAL_CONFIGS),
-    ),
 }

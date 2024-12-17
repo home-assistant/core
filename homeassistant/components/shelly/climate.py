@@ -172,7 +172,6 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -456,7 +455,6 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""

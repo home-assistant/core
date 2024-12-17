@@ -81,8 +81,6 @@ class FGLairDevice(CoordinatorEntity[FGLairCoordinator], ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    _enable_turn_on_off_backwards_compatibility: bool = False
-
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
         """Store the representation of the device and set the static attributes."""
         super().__init__(coordinator, context=device.device_serial_number)

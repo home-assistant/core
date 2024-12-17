@@ -88,7 +88,6 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     )
     _attr_target_temperature_step = 1.0
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, node: Node, device_info: DeviceInfo | None = None) -> None:
         """Initialize the ISY Thermostat entity."""

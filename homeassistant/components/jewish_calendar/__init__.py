@@ -5,25 +5,17 @@ from __future__ import annotations
 from functools import partial
 
 from hdate import Location
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant
 
-from .binary_sensor import BINARY_SENSORS
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -32,92 +24,10 @@ from .const import (
     DEFAULT_DIASPORA,
     DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_LANGUAGE,
-    DEFAULT_NAME,
-    DOMAIN,
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
-from .sensor import INFO_SENSORS, TIME_SENSORS
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.deprecated(DOMAIN),
-            {
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_DIASPORA, default=DEFAULT_DIASPORA): cv.boolean,
-                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
-                    ["hebrew", "english"]
-                ),
-                vol.Optional(
-                    CONF_CANDLE_LIGHT_MINUTES, default=DEFAULT_CANDLE_LIGHT
-                ): int,
-                # Default of 0 means use 8.5 degrees / 'three_stars' time.
-                vol.Optional(
-                    CONF_HAVDALAH_OFFSET_MINUTES,
-                    default=DEFAULT_HAVDALAH_OFFSET_MINUTES,
-                ): int,
-            },
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-def get_unique_prefix(
-    location: Location,
-    language: str,
-    candle_lighting_offset: int | None,
-    havdalah_offset: int | None,
-) -> str:
-    """Create a prefix for unique ids."""
-    # location.altitude was unset before 2024.6 when this method
-    # was used to create the unique id. As such it would always
-    # use the default altitude of 754.
-    config_properties = [
-        location.latitude,
-        location.longitude,
-        location.timezone,
-        754,
-        location.diaspora,
-        language,
-        candle_lighting_offset,
-        havdalah_offset,
-    ]
-    prefix = "_".join(map(str, config_properties))
-    return f"{prefix}"
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Jewish Calendar component."""
-    if DOMAIN not in config:
-        return True
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        breaks_in_ha_version="2024.12.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": DEFAULT_NAME,
-        },
-    )
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-        )
-    )
-
-    return True
 
 
 async def async_setup_entry(
@@ -153,16 +63,6 @@ async def async_setup_entry(
         havdalah_offset,
     )
 
-    # Update unique ID to be unrelated to user defined options
-    old_prefix = get_unique_prefix(
-        location, language, candle_lighting_offset, havdalah_offset
-    )
-
-    ent_reg = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
-    if not entries or any(entry.unique_id.startswith(old_prefix) for entry in entries):
-        async_update_unique_ids(ent_reg, config_entry.entry_id, old_prefix)
-
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def update_listener(
@@ -180,25 +80,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-@callback
-def async_update_unique_ids(
-    ent_reg: er.EntityRegistry, new_prefix: str, old_prefix: str
-) -> None:
-    """Update unique ID to be unrelated to user defined options.
-
-    Introduced with release 2024.6
-    """
-    platform_descriptions = {
-        Platform.BINARY_SENSOR: BINARY_SENSORS,
-        Platform.SENSOR: (*INFO_SENSORS, *TIME_SENSORS),
-    }
-    for platform, descriptions in platform_descriptions.items():
-        for description in descriptions:
-            new_unique_id = f"{new_prefix}-{description.key}"
-            old_unique_id = f"{old_prefix}_{description.key}"
-            if entity_id := ent_reg.async_get_entity_id(
-                platform, DOMAIN, old_unique_id
-            ):
-                ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)

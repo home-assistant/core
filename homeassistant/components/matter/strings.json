@@ -245,6 +245,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      },
+      "battery_replacement_description": {
+        "name": "Battery type"
       }
     },
     "switch": {

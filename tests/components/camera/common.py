@@ -6,7 +6,7 @@ components. Instead call the service directly.
 
 from unittest.mock import Mock
 
-from webrtc_models import RTCIceCandidate
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
@@ -66,7 +66,7 @@ class SomeTestProvider(CameraWebRTCProvider):
         send_message(WebRTCAnswer(answer="answer"))
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle the WebRTC candidate."""
 

@@ -11,6 +11,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/idasen_desk",
   "iot_class": "local_push",
-  "quality_scale": "silver",
   "requirements": ["idasen-ha==2.6.2"]
 }

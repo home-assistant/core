@@ -251,7 +251,7 @@ def get_significant_states_with_session(
         run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
     ):
         include_start_time_state = False
-    start_time_ts = dt_util.utc_to_timestamp(start_time)
+    start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
     stmt = lambda_stmt(
@@ -416,7 +416,7 @@ def state_changes_during_period(
             run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
         ):
             include_start_time_state = False
-        start_time_ts = dt_util.utc_to_timestamp(start_time)
+        start_time_ts = start_time.timestamp()
         end_time_ts = datetime_to_timestamp_or_none(end_time)
         stmt = lambda_stmt(
             lambda: _state_changed_during_period_stmt(

@@ -377,7 +377,7 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> tuple[int, int, int]:
     Val is scaled 0-100
     """
     fRGB = colorsys.hsv_to_rgb(iH / 360, iS / 100, iV / 100)
-    return (int(fRGB[0] * 255), int(fRGB[1] * 255), int(fRGB[2] * 255))
+    return (round(fRGB[0] * 255), round(fRGB[1] * 255), round(fRGB[2] * 255))
 
 
 def color_hs_to_RGB(iH: float, iS: float) -> tuple[int, int, int]:

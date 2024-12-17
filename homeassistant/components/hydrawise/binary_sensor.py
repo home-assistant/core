@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .coordinator import HydrawiseUpdateCoordinators
 from .entity import HydrawiseEntity
 
 
@@ -81,18 +81,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise binary_sensor platform."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[HydrawiseBinarySensor] = []
-    for controller in coordinator.data.controllers.values():
+    for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller)
+            HydrawiseBinarySensor(coordinators.main, description, controller)
             for description in CONTROLLER_BINARY_SENSORS
         )
         entities.extend(
             HydrawiseBinarySensor(
-                coordinator,
+                coordinators.main,
                 description,
                 controller,
                 sensor_id=sensor.id,
@@ -103,7 +101,7 @@ async def async_setup_entry(
         )
         entities.extend(
             HydrawiseZoneBinarySensor(
-                coordinator, description, controller, zone_id=zone.id
+                coordinators.main, description, controller, zone_id=zone.id
             )
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS

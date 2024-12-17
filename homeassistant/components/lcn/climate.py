@@ -81,8 +81,6 @@ async def async_setup_entry(
 class LcnClimate(LcnEntity, ClimateEntity):
     """Representation of a LCN climate device."""
 
-    _enable_turn_on_off_backwards_compatibility = False
-
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize of a LCN climate device."""
         super().__init__(config, config_entry)

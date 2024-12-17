@@ -37,6 +37,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Select"
 
 MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(

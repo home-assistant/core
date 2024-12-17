@@ -16,6 +16,13 @@
       'alert_thermal_throttle': False,
       'alert_unexpected_location': False,
     }),
+    'consumption': dict({
+      'latest_power': 27.54502296447754,
+      'max_power': 41.71160888671875,
+      'mean_power': 31.449254739549424,
+      'min_power': 21.826229095458984,
+      'total_energy': 0.007862313684887356,
+    }),
     'location': dict({
       'altitude': '**REDACTED**',
       'latitude': '**REDACTED**',
@@ -78,6 +85,10 @@
       'state': 'CONNECTED',
       'uplink_throughput_bps': 11802.771484375,
       'uptime': 804138,
+    }),
+    'usage': dict({
+      'download_usage': 72504227,
+      'upload_usage': 5719755,
     }),
   })
 # ---

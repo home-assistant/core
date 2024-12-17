@@ -7,8 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["nettigo_air_monitor"],
-  "quality_scale": "platinum",
-  "requirements": ["nettigo-air-monitor==3.3.0"],
+  "requirements": ["nettigo-air-monitor==4.0.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

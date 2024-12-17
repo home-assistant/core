@@ -6,7 +6,7 @@ import logging
 from typing import Any
 import uuid
 
-from thinqconnect import ThinQApi, ThinQAPIException
+from thinqconnect import ThinQApi, ThinQAPIErrorCodes, ThinQAPIException
 from thinqconnect.country import Country
 import voluptuous as vol
 
@@ -26,6 +26,13 @@ from .const import (
 )
 
 SUPPORTED_COUNTRIES = [country.value for country in Country]
+THINQ_ERRORS = {
+    ThinQAPIErrorCodes.INVALID_TOKEN: "invalid_token",
+    ThinQAPIErrorCodes.NOT_ACCEPTABLE_TERMS: "not_acceptable_terms",
+    ThinQAPIErrorCodes.NOT_ALLOWED_API_AGAIN: "not_allowed_api_again",
+    ThinQAPIErrorCodes.NOT_SUPPORTED_COUNTRY: "not_supported_country",
+    ThinQAPIErrorCodes.EXCEEDED_API_CALLS: "exceeded_api_calls",
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,8 +90,9 @@ class ThinQFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 return await self._validate_and_create_entry(access_token, country_code)
-            except ThinQAPIException:
-                errors["base"] = "token_unauthorized"
+            except ThinQAPIException as exc:
+                errors["base"] = THINQ_ERRORS.get(exc.code, "token_unauthorized")
+                _LOGGER.error("Failed to validate access_token %s", exc)
 
         return self.async_show_form(
             step_id="user",

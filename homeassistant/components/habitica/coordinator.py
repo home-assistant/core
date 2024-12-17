@@ -51,12 +51,17 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             ),
         )
         self.api = habitipy
+        self.content: dict[str, Any] = {}
 
     async def _async_update_data(self) -> HabiticaData:
         try:
             user_response = await self.api.user.get()
             tasks_response = await self.api.tasks.user.get()
             tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
+            if not self.content:
+                self.content = await self.api.content.get(
+                    language=user_response["preferences"]["language"]
+                )
         except ClientResponseError as error:
             if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.debug("Rate limit exceeded, will try again later")

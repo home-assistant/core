@@ -11,13 +11,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import RokuConfigEntry
 from .entity import RokuEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -56,15 +58,13 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RokuConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Roku binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         RokuBinarySensorEntity(
-            coordinator=coordinator,
+            coordinator=entry.runtime_data,
             description=description,
         )
         for description in BINARY_SENSORS

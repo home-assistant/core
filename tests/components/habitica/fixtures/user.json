@@ -1,13 +1,15 @@
 {
+  "success": true,
   "data": {
     "api_user": "test-api-user",
     "profile": { "name": "test-user" },
+    "auth": { "local": { "username": "test-username" } },
     "stats": {
       "buffs": {
-        "str": 0,
-        "int": 0,
-        "per": 0,
-        "con": 0,
+        "str": 26,
+        "int": 26,
+        "per": 26,
+        "con": 26,
         "stealth": 0,
         "streaks": false,
         "seafoam": false,
@@ -24,12 +26,17 @@
       "maxHealth": 50,
       "maxMP": 166,
       "toNextLevel": 880,
-      "points": 5
+      "points": 5,
+      "str": 15,
+      "con": 15,
+      "int": 15,
+      "per": 15
     },
     "preferences": {
       "sleep": false,
       "automaticAllocation": true,
-      "disableClasses": false
+      "disableClasses": false,
+      "language": "en"
     },
     "flags": {
       "classSelected": true
@@ -48,7 +55,8 @@
         "e97659e0-2c42-4599-a7bb-00282adc410d",
         "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
         "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
-        "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1"
+        "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
+        "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
       ],
       "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
     },
@@ -56,9 +64,25 @@
       "quest": {
         "RSVPNeeded": true,
         "key": "dustbunnies"
-      }
+      },
+      "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
     },
     "needsCron": true,
-    "lastCron": "2024-09-21T22:01:55.586Z"
+    "lastCron": "2024-09-21T22:01:55.586Z",
+    "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+    "items": {
+      "gear": {
+        "equipped": {
+          "weapon": "weapon_warrior_5",
+          "armor": "armor_warrior_5",
+          "head": "head_warrior_5",
+          "shield": "shield_warrior_5",
+          "back": "back_special_heroicAureole",
+          "headAccessory": "headAccessory_armoire_gogglesOfBookbinding",
+          "eyewear": "eyewear_armoire_plagueDoctorMask",
+          "body": "body_special_aetherAmulet"
+        }
+      }
+    }
   }
 }

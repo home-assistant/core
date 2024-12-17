@@ -19,11 +19,7 @@ from homeassistant.components.recorder.util import (
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    MockMigrationTask,
-    async_recorder_block_till_done,
-    async_wait_recording_done,
-)
+from .common import async_recorder_block_till_done, async_wait_recording_done
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
@@ -102,7 +98,6 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (

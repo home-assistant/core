@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from kasa import TimeoutError
 import pytest
@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -665,6 +666,93 @@ async def test_manual_auth_errors(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("host_str", "host", "port"),
+    [
+        (f"{IP_ADDRESS}:1234", IP_ADDRESS, 1234),
+        ("[2001:db8:0::1]:4321", "2001:db8:0::1", 4321),
+    ],
+)
+async def test_manual_port_override(
+    hass: HomeAssistant,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    host_str,
+    host,
+    port,
+) -> None:
+    """Test manually setup."""
+    mock_discovery["mock_device"].config.port_override = port
+    mock_discovery["mock_device"].host = host
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    # side_effects to cause auth confirm as the port override usually only
+    # works with direct connections.
+    mock_discovery["discover_single"].side_effect = TimeoutError
+    mock_connect["connect"].side_effect = AuthenticationError
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: host_str}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user_auth_confirm"
+    assert not result2["errors"]
+
+    creds = Credentials("fake_username", "fake_password")
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    mock_discovery["try_connect_all"].assert_called_once_with(
+        host, credentials=creds, port=port, http_client=ANY
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == DEFAULT_ENTRY_TITLE
+    assert result3["data"] == {
+        **CREATE_ENTRY_DATA_KLAP,
+        CONF_PORT: port,
+        CONF_HOST: host,
+    }
+    assert result3["context"]["unique_id"] == MAC_ADDRESS
+
+
+async def test_manual_port_override_invalid(
+    hass: HomeAssistant, mock_connect: AsyncMock, mock_discovery: AsyncMock
+) -> None:
+    """Test manually setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: f"{IP_ADDRESS}:foo"}
+    )
+    await hass.async_block_till_done()
+
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=None, port=None
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == DEFAULT_ENTRY_TITLE
+    assert result2["data"] == CREATE_ENTRY_DATA_KLAP
+    assert result2["context"]["unique_id"] == MAC_ADDRESS
+
+
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
@@ -1072,7 +1160,7 @@ async def test_reauth(
     )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT
@@ -1107,7 +1195,7 @@ async def test_reauth_try_connect_all(
         )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
     assert result2["type"] is FlowResultType.ABORT
@@ -1145,7 +1233,7 @@ async def test_reauth_try_connect_all_fail(
         )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
     assert result2["errors"] == {"base": "cannot_connect"}
@@ -1214,7 +1302,7 @@ async def test_reauth_update_with_encryption_change(
     assert "Connection type changed for 127.0.0.2" in caplog.text
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.2", credentials=credentials
+        "127.0.0.2", credentials=credentials, port=None
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT
@@ -1416,7 +1504,7 @@ async def test_reauth_errors(
     credentials = Credentials("fake_username", "fake_password")
 
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
@@ -1434,7 +1522,7 @@ async def test_reauth_errors(
     )
 
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
 
@@ -1643,7 +1731,7 @@ async def test_reauth_update_other_flows(
     )
     credentials = Credentials("fake_username", "fake_password")
     mock_discovery["discover_single"].assert_called_once_with(
-        "127.0.0.1", credentials=credentials
+        "127.0.0.1", credentials=credentials, port=None
     )
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.ABORT

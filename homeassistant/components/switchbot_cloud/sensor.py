@@ -9,7 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,6 +25,7 @@ from .entity import SwitchBotCloudEntity
 SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_BATTERY = "battery"
+SENSOR_TYPE_CO2 = "CO2"
 
 METER_PLUS_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -43,6 +48,16 @@ METER_PLUS_SENSOR_DESCRIPTIONS = (
     ),
 )
 
+METER_PRO_CO2_SENSOR_DESCRIPTIONS = (
+    *METER_PLUS_SENSOR_DESCRIPTIONS,
+    SensorEntityDescription(
+        key=SENSOR_TYPE_CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CO2,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -55,7 +70,11 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBotCloudSensor(data.api, device, coordinator, description)
         for device, coordinator in data.devices.sensors
-        for description in METER_PLUS_SENSOR_DESCRIPTIONS
+        for description in (
+            METER_PRO_CO2_SENSOR_DESCRIPTIONS
+            if device.device_type == "MeterPro(CO2)"
+            else METER_PLUS_SENSOR_DESCRIPTIONS
+        )
     )
 
 

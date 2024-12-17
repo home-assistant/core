@@ -10,6 +10,10 @@
       "title": "The country has not been configured",
       "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below."
     },
+    "imperial_unit_system": {
+      "title": "The imperial unit system is deprecated",
+      "description": "The imperial unit system is deprecated and your system is currently using us customary. Please update your configuration to use the us customary unit system and reload the core configuration to fix this issue."
+    },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
@@ -134,7 +138,7 @@
         },
         "elevation": {
           "name": "[%key:common::config_flow::data::elevation%]",
-          "description": "Elevation of your location."
+          "description": "Elevation of your location above sea level."
         }
       }
     },
@@ -223,6 +227,9 @@
     },
     "service_not_found": {
       "message": "Action {domain}.{service} not found."
+    },
+    "service_not_supported": {
+      "message": "Entity {entity_id} does not support action {domain}.{service}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
