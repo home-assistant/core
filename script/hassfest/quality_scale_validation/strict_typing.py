@@ -59,6 +59,7 @@ def validate(
         ]
     if untyped_requirements := _check_requirements_are_typed(integration):
         return [
-            f"Requirements {untyped_requirements} appears untyped (missing py.typed)"
+            f"Requirements {untyped_requirements} do not conform PEP 561 (https://peps.python.org/pep-0561/)",
+            "They should be typed and have a 'py.typed' file",
         ]
     return None
