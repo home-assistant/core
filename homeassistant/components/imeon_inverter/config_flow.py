@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from imeon_inverter_api.inverter import Inverter
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,6 +21,7 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the user step for creating a new configuration entry."""
+
         schema = vol.Schema(
             {
                 vol.Required(CONF_ADDRESS): str,
@@ -28,17 +30,51 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=schema)
+        errors: dict[str, str] = {}
 
-        # Check if entry already exists
-        await self.async_set_unique_id(user_input[CONF_ADDRESS])
-        self._abort_if_unique_id_configured()
+        if user_input is not None:
+            # Check if entry already exists
+            await self.async_set_unique_id(user_input[CONF_ADDRESS])
+            self._abort_if_unique_id_configured()
 
-        data = {
-            "address": user_input[CONF_ADDRESS],
-            "username": user_input[CONF_USERNAME],
-            "password": user_input[CONF_PASSWORD],
-        }
+            async with Inverter(user_input[CONF_ADDRESS]) as client:
+                try:
+                    # Check connection
+                    if (
+                        await client.login(
+                            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                        )
+                        is True
+                    ):
+                        # Create a new configuration entry if login succeeds
+                        return self.async_create_entry(
+                            title=user_input[CONF_ADDRESS], data=user_input
+                        )
+                    errors["base"] = "invalid_auth"
+                    return self.async_show_form(
+                        step_id="user", data_schema=schema, errors=errors
+                    )
 
-        return self.async_create_entry(title=user_input[CONF_ADDRESS], data=data)
+                except TimeoutError:
+                    errors["base"] = "cannot_connect"
+                    return self.async_show_form(
+                        step_id="user", data_schema=schema, errors=errors
+                    )
+
+                except ValueError as e:
+                    if "Host invalid" in str(e):
+                        errors["base"] = "invalid_host"
+                        return self.async_show_form(
+                            step_id="user", data_schema=schema, errors=errors
+                        )
+                    if "Route invalid" in str(e):
+                        errors["base"] = "invalid_route"
+                        return self.async_show_form(
+                            step_id="user", data_schema=schema, errors=errors
+                        )
+                    errors["base"] = "unknown"
+                    return self.async_show_form(
+                        step_id="user", data_schema=schema, errors=errors
+                    )
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
