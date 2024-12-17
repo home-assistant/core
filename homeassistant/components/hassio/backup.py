@@ -211,7 +211,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             for agent_id in agent_ids
             if manager.backup_agents[agent_id].domain == DOMAIN
         ]
-        locations = {agent.location for agent in hassio_agents}
+        locations = [agent.location for agent in hassio_agents]
 
         backup = await self._client.backups.partial_backup(
             supervisor_backups.PartialBackupOptions(
