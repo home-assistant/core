@@ -25,8 +25,9 @@ def _strict_typing_components(strict_typing_file: Path) -> set[str]:
     )
 
 
-def _check_requirements_are_typed(integration: Integration) -> str | None:
+def _check_requirements_are_typed(integration: Integration) -> list[str]:
     """Check if all requirements are typed."""
+    invalid_requirements = []
     for requirement in integration.requirements:
         requirement_name, requirement_version = requirement.split("==")
         try:
@@ -40,8 +41,9 @@ def _check_requirements_are_typed(integration: Integration) -> str | None:
 
         if not any(file for file in distribution.files if file.name == "py.typed"):
             # no py.typed file
-            return requirement
-    return None
+            invalid_requirements.append(requirement)
+
+    return invalid_requirements
 
 
 def validate(
@@ -55,8 +57,8 @@ def validate(
             "Integration does not have strict typing enabled "
             "(is missing from .strict-typing)"
         ]
-    if untyped_requirement := _check_requirements_are_typed(integration):
+    if untyped_requirements := _check_requirements_are_typed(integration):
         return [
-            f"Requirement '{untyped_requirement}' appears untyped (missing py.typed)"
+            f"Requirements {untyped_requirements} appears untyped (missing py.typed)"
         ]
     return None
