@@ -74,16 +74,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         asked_date: date = call.data[ATTR_DATE]
         client = entry.runtime_data.client
-        areas: list[str] | None = call.data.get(ATTR_AREAS)
-        if not areas:
-            areas = entry.data[ATTR_AREAS]
-        currency: str | None = call.data.get(ATTR_CURRENCY)
-        if not currency:
-            currency = entry.data[ATTR_CURRENCY]
 
-        if TYPE_CHECKING:
-            assert isinstance(areas, list)
-            assert isinstance(currency, str)
+        areas: list[str] = entry.data[ATTR_AREAS]
+        if _areas := call.data.get(ATTR_AREAS):
+            areas = _areas
+
+        currency: str = entry.data[ATTR_CURRENCY]
+        if _currency := call.data.get(ATTR_CURRENCY):
+            currency = _currency
+
         areas = [area.upper() for area in areas]
         currency = currency.upper()
 
