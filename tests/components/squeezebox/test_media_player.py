@@ -10,6 +10,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
@@ -428,6 +429,24 @@ async def test_squeezebox_play(
         blocking=True,
     )
     configured_player.async_play.assert_called_once()
+
+
+async def test_squeezebox_play_media_with_announce(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test play service call with announce."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    configured_player.async_play_announcement.assert_called_once()
 
 
 async def test_squeezebox_play_pause(
