@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
 
@@ -47,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register the device
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, device_mac)},
+        connections={(CONNECTION_NETWORK_MAC, device_mac)},
         identifiers={(DOMAIN, device_mac)},
         manufacturer=MANUFACTURER,
         model=MODEL,
