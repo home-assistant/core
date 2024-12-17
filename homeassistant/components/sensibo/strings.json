@@ -388,21 +388,19 @@
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
           },
-          "horizontal_swing_mode": {
+          "swing_horizontal_mode": {
             "state": {
-              "stopped": "",
-              "fixedleft": "",
-              "fixedcenterleft": "",
-              "fixedcenter": "",
-              "fixedcenterright": "",
-              "fixedright": "",
-              "fixedleftright": "",
-              "rangecenter": "",
-              "rangefull": "",
-              "rangeleft": "",
-              "rangeright": "",
-              "horizontal": "",
-              "both": ""
+              "stopped": "[%key:common::state::off%]",
+              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
+              "rangeleft": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeleft%]",
+              "rangeright": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeright%]"
             }
           }
         }

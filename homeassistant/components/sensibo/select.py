@@ -39,6 +39,7 @@ DEVICE_SELECT_TYPES = (
         options_fn=lambda data: data.horizontal_swing_modes,
         translation_key="horizontalswing",
         transformation=lambda data: data.horizontal_swing_modes_translated,
+        entity_registry_enabled_default=False,
     ),
     SensiboSelectEntityDescription(
         key="light",
