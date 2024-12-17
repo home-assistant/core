@@ -969,7 +969,7 @@ async def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
     recorder_helper.async_initialize_recorder(hass)
     with (
         patch(
-            "homeassistant.components.recorder.migration._get_schema_version"
+            "homeassistant.components.recorder.migration._get_current_schema_version"
         ) as inspect_schema_version,
         patch("homeassistant.components.recorder.core.time.sleep"),
     ):
