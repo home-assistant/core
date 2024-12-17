@@ -1,0 +1,9 @@
+{
+    "entity": {
+      "sensor": {
+        "citybus": {
+          "default": "mdi:bus"
+        }
+      }
+    }
+}
