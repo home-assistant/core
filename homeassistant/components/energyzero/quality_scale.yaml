@@ -4,7 +4,10 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Remove snapshot from config flow tests.
   config-flow: done
   dependency-transparency: done
   docs-actions: done
@@ -15,7 +18,10 @@ rules:
     status: exempt
     comment: |
       Entities of this integration does not explicitly subscribe to events.
-  entity-unique-id: done
+  entity-unique-id:
+    status: todo
+    comment: |
+      Migrate entities and devices to a unique ID without entry id.
   has-entity-name: done
   runtime-data: done
   test-before-configure: todo
@@ -38,7 +44,10 @@ rules:
     status: exempt
     comment: |
       There is no authentication needed in the integration.
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      Set real world value for unique_id in mock_config_entry fixture.
   # Gold
   devices: done
   diagnostics: done
@@ -70,7 +79,10 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations: todo
+  exception-translations:
+    status: todo
+    comment: |
+      Change translations string for already_configured error.
   icon-translations:
     status: todo
     comment: |
