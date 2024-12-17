@@ -4,6 +4,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/s
 """
 
 from functools import lru_cache
+from importlib import metadata
 from pathlib import Path
 import re
 
@@ -24,6 +25,26 @@ def _strict_typing_components(strict_typing_file: Path) -> set[str]:
     )
 
 
+def _check_requirements_are_typed(integration: Integration) -> str | None:
+    """Check if all requirements are typed."""
+    for requirement in integration.requirements:
+        requirement_name, requirement_version = requirement.split("==")
+        try:
+            distribution = metadata.distribution(requirement_name)
+        except metadata.PackageNotFoundError:
+            # Package not installed locally
+            continue
+        if distribution.version != requirement_version:
+            # Version out of date locally
+            continue
+
+        if not any(file for file in distribution.files if file.name == "py.typed"):
+            # no py.typed file
+            return requirement
+        return None
+    return None
+
+
 def validate(
     config: Config, integration: Integration, *, rules_done: set[str]
 ) -> list[str] | None:
@@ -34,5 +55,9 @@ def validate(
         return [
             "Integration does not have strict typing enabled "
             "(is missing from .strict-typing)"
+        ]
+    if untyped_requirement := _check_requirements_are_typed(integration):
+        return [
+            f"Requirement '{untyped_requirement}' appears untyped (missing py.typed)"
         ]
     return None
