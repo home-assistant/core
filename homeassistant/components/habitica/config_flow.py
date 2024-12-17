@@ -28,7 +28,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import HabiticaConfigEntry
 from .const import (
     CONF_API_USER,
     DEFAULT_URL,
@@ -104,9 +103,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
-
-    VERSION = 1
-    reauth_entry: HabiticaConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -193,8 +189,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self._get_reauth_entry()
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -203,34 +197,37 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
 
+        reauth_entry = self._get_reauth_entry()
+        entry_data = reauth_entry.data
+
         if user_input is not None:
             if user_input[SECTION_REAUTH_LOGIN].get(CONF_USERNAME) and user_input[
                 SECTION_REAUTH_LOGIN
             ].get(CONF_PASSWORD):
                 errors, response = await self.validate_login(
-                    {**self.reauth_entry.data, **user_input[SECTION_REAUTH_LOGIN]}
+                    {**entry_data, **user_input[SECTION_REAUTH_LOGIN]}
                 )
                 if not errors and response is not None:
                     self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        self.reauth_entry,
+                        reauth_entry,
                         data={
-                            **self.reauth_entry.data,
+                            **entry_data,
                             CONF_API_KEY: response["apiToken"],
                         },
                     )
             elif user_input[SECTION_REAUTH_API_KEY].get(CONF_API_KEY):
                 errors, response = await self.validate_api_key(
                     {
-                        **self.reauth_entry.data,
+                        **entry_data,
                         CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][CONF_API_KEY],
                     }
                 )
                 if not errors and response is not None:
                     return self.async_update_reload_and_abort(
-                        self.reauth_entry,
+                        reauth_entry,
                         data={
-                            **self.reauth_entry.data,
+                            **entry_data,
                             CONF_API_KEY: user_input[SECTION_REAUTH_API_KEY][
                                 CONF_API_KEY
                             ],
@@ -252,7 +249,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             ),
             description_placeholders={
-                CONF_NAME: self.reauth_entry.title,
+                CONF_NAME: reauth_entry.title,
                 "habiticans": HABITICANS_URL,
             },
             errors=errors,
