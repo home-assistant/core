@@ -22,7 +22,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str | None = None
+    host: str
     mac: str | None = None
     name: str
 
@@ -30,7 +30,13 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle setup by user for Modern Forms integration."""
-        return await self._handle_config_flow(user_input)
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_SCHEMA,
+            )
+        self.host = user_input[CONF_HOST]
+        return await self._handle_config_flow()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -44,40 +50,26 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.mac = discovery_info.properties.get(CONF_MAC)
         self.name = name
 
-        # Prepare configuration flow
-        return await self._handle_config_flow({}, True)
+        # Loop through self._handle_config_flow to ensure we load the
+        # MAC if it is missing, and abort if already configured
+        return await self._handle_config_flow(True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
-        return await self._handle_config_flow(user_input)
+        return await self._handle_config_flow()
 
     async def _handle_config_flow(
-        self, user_input: dict[str, Any] | None = None, prepare: bool = False
+        self, initial_zeroconf: bool = False
     ) -> ConfigFlowResult:
         """Config flow handler for ModernForms."""
-        # Request user input, unless we are preparing discovery flow
-        if user_input is None:
-            user_input = {}
-            if not prepare:
-                if self.source == SOURCE_ZEROCONF:
-                    return self.async_show_form(
-                        step_id="zeroconf_confirm",
-                        description_placeholders={"name": self.name},
-                    )
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=USER_SCHEMA,
-                )
-
-        if self.source == SOURCE_ZEROCONF:
-            user_input[CONF_HOST] = self.host
-            user_input[CONF_MAC] = self.mac
-
-        if user_input.get(CONF_MAC) is None or not prepare:
+        if self.mac is None or not initial_zeroconf:
+            # User flow
+            # Or zeroconf without MAC
+            # Or zeroconf with MAC, but need to ensure device is still available
             session = async_get_clientsession(self.hass)
-            device = ModernFormsDevice(user_input[CONF_HOST], session=session)
+            device = ModernFormsDevice(self.host, session=session)
             try:
                 device = await device.update()
             except ModernFormsConnectionError:
@@ -88,20 +80,21 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
                     data_schema=USER_SCHEMA,
                     errors={"base": "cannot_connect"},
                 )
-            user_input[CONF_MAC] = device.info.mac_address
+            self.mac = device.info.mac_address
+            if self.source != SOURCE_ZEROCONF:
+                self.name = device.info.device_name
 
         # Check if already configured
-        await self.async_set_unique_id(user_input[CONF_MAC])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
+        await self.async_set_unique_id(self.mac)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
-        title = device.info.device_name
-        if self.source == SOURCE_ZEROCONF:
-            title = self.name
-
-        if prepare:
-            return await self.async_step_zeroconf_confirm()
+        if initial_zeroconf:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self.name},
+            )
 
         return self.async_create_entry(
-            title=title,
-            data={CONF_HOST: user_input[CONF_HOST], CONF_MAC: user_input[CONF_MAC]},
+            title=self.name,
+            data={CONF_HOST: self.host, CONF_MAC: self.mac},
         )
