@@ -11,8 +11,31 @@ get_prices_for_date:
         date:
     areas:
       selector:
-        text:
-          multiple: true
+        select:
+          options:
+            - "EE"
+            - "LT"
+            - "LV"
+            - "AT"
+            - "BE"
+            - "FR"
+            - "GER"
+            - "NL"
+            - "PL"
+            - "DK1"
+            - "DK2"
+            - "FI"
+            - "NO1"
+            - "NO2"
+            - "NO3"
+            - "NO4"
+            - "NO5"
+            - "SE1"
+            - "SE2"
+            - "SE3"
+            - "SE4"
+            - "SYS"
+          mode: dropdown
     currency:
       selector:
         select:
@@ -23,4 +46,3 @@ get_prices_for_date:
             - "PLN"
             - "SEK"
           mode: dropdown
-          translation_key: "currency"

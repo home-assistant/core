@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from pynordpool import (
+    AREAS,
     Currency,
     NordPoolAuthenticationError,
     NordPoolEmptyResponseError,
@@ -42,8 +43,10 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_DATE): cv.date,
-        vol.Optional(ATTR_AREAS, default=[]): cv.ensure_list,
-        vol.Optional(ATTR_CURRENCY): cv.string,
+        vol.Optional(ATTR_AREAS): vol.All(vol.In(list(AREAS)), cv.ensure_list, [str]),
+        vol.Optional(ATTR_CURRENCY): vol.All(
+            cv.string, vol.In([currency.value for currency in Currency])
+        ),
     }
 )
 

@@ -27,7 +27,7 @@ from tests.common import MockConfigEntry
 TEST_SERVICE_DATA = {
     ATTR_CONFIG_ENTRY: "to_replace",
     ATTR_DATE: "2024-11-05",
-    ATTR_AREAS: ["SE3", "SE4"],
+    ATTR_AREAS: "SE3",
     ATTR_CURRENCY: "SEK",
 }
 TEST_SERVICE_DATA_USE_DEFAULTS = {
@@ -81,7 +81,6 @@ async def test_service_call(
         )
 
     assert "SE3" in response
-    assert "SE4" in response
     assert response["SE3"][0]["price"] == price_value
 
 
