@@ -203,8 +203,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._bluesound_device_name = sync_status.name
         self._player = player
         self._last_status_update = dt_util.utcnow()
-        self._is_leader = False
-        self._leader: BluesoundPlayer | None = None
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
