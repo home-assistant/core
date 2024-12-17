@@ -1642,7 +1642,7 @@ async def test_config_retention_copies_logic(
     [
         (
             {"type": "backup/generate_with_strategy_settings"},
-            "2024-11-12T04:45:00+01:00",
+            "2024-11-11T12:00:00+01:00",
         ),
         (
             {"type": "backup/generate", "agent_ids": ["test.test-agent"]},
@@ -1656,8 +1656,6 @@ async def test_config_retention_copies_logic(
         "backups",
         "get_backups_agent_errors",
         "delete_backup_agent_errors",
-        "last_backup_time",
-        "next_time",
         "backup_calls",
         "get_backups_calls",
         "delete_calls",
@@ -1695,8 +1693,6 @@ async def test_config_retention_copies_logic(
             },
             {},
             {},
-            "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
             1,
             1,  # we get backups even if backup retention copies is None
             0,
@@ -1733,8 +1729,6 @@ async def test_config_retention_copies_logic(
             },
             {},
             {},
-            "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
             1,
             1,
             0,
@@ -1776,8 +1770,6 @@ async def test_config_retention_copies_logic(
             },
             {},
             {},
-            "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
             1,
             1,
             1,
@@ -1819,8 +1811,6 @@ async def test_config_retention_copies_logic(
             },
             {},
             {},
-            "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
             1,
             1,
             2,
@@ -1841,15 +1831,13 @@ async def test_config_retention_copies_logic_manual_backup(
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
     delete_backup_agent_errors: dict[str, Exception],
-    last_backup_time: str,
-    next_time: str,
     backup_time: str,
     backup_calls: int,
     get_backups_calls: int,
     delete_calls: int,
     delete_args_list: Any,
 ) -> None:
-    """Test config backup retention copies logic."""
+    """Test config backup retention copies logic for manual backup."""
     client = await hass_ws_client(hass)
     storage_data = {
         "backups": {},
@@ -1886,17 +1874,12 @@ async def test_config_retention_copies_logic_manual_backup(
     result = await client.receive_json()
     assert result["success"]
 
-    freezer.move_to(next_time)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # Create a manual backup
     await client.send_json_auto_id(backup_command)
     result = await client.receive_json()
     assert result["success"]
 
     # Wait for backup creation to complete
-    await create_backup.return_value[1]
     await hass.async_block_till_done()
 
     assert create_backup.call_count == backup_calls
