@@ -23,7 +23,7 @@
         },
         "subdir": {
           "name": "Subdirectory",
-          "description": "Relative path to download to."
+          "description": "Relative download path."
         },
         "filename": {
           "name": "Filename",
