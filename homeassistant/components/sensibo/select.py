@@ -8,9 +8,14 @@ from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import SensiboDevice
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SensiboConfigEntry
@@ -31,16 +36,17 @@ class SensiboSelectEntityDescription(SelectEntityDescription):
     transformation: Callable[[SensiboDevice], dict | None]
 
 
+HORIZONTAL_SWING_MODE_TYPE = SensiboSelectEntityDescription(
+    key="horizontalSwing",
+    data_key="horizontal_swing_mode",
+    value_fn=lambda data: data.horizontal_swing_mode,
+    options_fn=lambda data: data.horizontal_swing_modes,
+    translation_key="horizontalswing",
+    transformation=lambda data: data.horizontal_swing_modes_translated,
+    entity_registry_enabled_default=False,
+)
+
 DEVICE_SELECT_TYPES = (
-    SensiboSelectEntityDescription(
-        key="horizontalSwing",
-        data_key="horizontal_swing_mode",
-        value_fn=lambda data: data.horizontal_swing_mode,
-        options_fn=lambda data: data.horizontal_swing_modes,
-        translation_key="horizontalswing",
-        transformation=lambda data: data.horizontal_swing_modes_translated,
-        entity_registry_enabled_default=False,
-    ),
     SensiboSelectEntityDescription(
         key="light",
         data_key="light_mode",
@@ -60,6 +66,21 @@ async def async_setup_entry(
     """Set up Sensibo number platform."""
 
     coordinator = entry.runtime_data
+
+    entities: list[SensiboSelect] = []
+
+    entity_registry = er.async_get(hass)
+    for device_id, device_data in coordinator.data.parsed.items():
+        if entity_id := entity_registry.async_get_entity_id(
+            SELECT_DOMAIN, DOMAIN, f"{device_id}-horizontalSwing"
+        ):
+            entity = entity_registry.async_get(entity_id)
+            if entity and entity.disabled:
+                entity_registry.async_remove(entity_id)
+            elif entity and HORIZONTAL_SWING_MODE_TYPE.key in device_data.full_features:
+                entities.append(
+                    SensiboSelect(coordinator, device_id, HORIZONTAL_SWING_MODE_TYPE)
+                )
 
     async_add_entities(
         SensiboSelect(coordinator, device_id, description)
