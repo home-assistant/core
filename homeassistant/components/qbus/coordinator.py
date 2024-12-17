@@ -114,7 +114,7 @@ class QbusControllerCoordinator:
             config_entry_id=self._entry.entry_id,
             identifiers={(DOMAIN, format_mac(controller.mac))},
             manufacturer=MANUFACTURER,
-            model=f"{controller.type} {controller.name}",
+            model="CTD3.x",
             name=f"CTD {controller.serial_number}",
             serial_number=controller.serial_number,
             sw_version=controller.version,
@@ -176,31 +176,28 @@ class QbusControllerCoordinator:
         )
         items: dict[str, list[QbusEntity]] = {}
 
-        if controller.id not in self._registered_entity_ids:
-            self._registered_entity_ids.append(controller.id)
-
         # Build list of HA entities based on Qbus configuration
         for output in controller.outputs:
             if output.id in self._registered_entity_ids:
                 continue
 
-            qbusType = output.type.lower()
+            qbus_type = output.type.lower()
 
-            if qbusType not in self._platform_register:
+            if qbus_type not in self._platform_register:
                 continue
 
             self._registered_entity_ids.append(output.id)
 
-            entity_class = self._platform_register[qbusType][0]
+            entity_class = self._platform_register[qbus_type][0]
             entity = entity_class.create(output)
-            items.setdefault(qbusType, []).append(entity)
+            items.setdefault(qbus_type, []).append(entity)
 
         # Add entities to HA
         _LOGGER.debug(
             "%s - Adding %s entities to HA", self._entry.unique_id, len(items)
         )
-        for qbusType, entities in items.items():
-            add_entities = self._platform_register[qbusType][1]
+        for qbus_type, entities in items.items():
+            add_entities = self._platform_register[qbus_type][1]
             add_entities(entities)
 
         self._request_entity_states()
