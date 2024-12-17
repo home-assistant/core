@@ -4,7 +4,14 @@ from vegehub import therm200_transform, vh400_transform
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTemperature
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    PERCENTAGE,
+    UnitOfElectricPotential,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,8 +33,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
     sensors = []
-    mac_address = str(config_entry.data.get("mac_address"))
-    ip_addr = str(config_entry.data.get("ip_addr"))
+    mac_address = config_entry.data[CONF_MAC]
+    ip_addr = config_entry.data[CONF_IP_ADDRESS]
     num_sensors = int(config_entry.data.get("hub", {}).get("num_channels") or 0)
     is_ac = int(config_entry.data.get("hub", {}).get("is_ac") or 0)
 
@@ -49,7 +56,7 @@ async def async_setup_entry(
             mac_address=mac_address,
             slot=i + 1,
             ip_addr=ip_addr,
-            dev_name=str(config_entry.data.get("hostname")),
+            dev_name=config_entry.data[CONF_HOST],
             data_type=str(config_entry.options.get(f"data_type_{i + 1}", None)),
             chan_type=chan_type,
         )
