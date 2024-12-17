@@ -213,6 +213,10 @@ async def test_update_plugins_install_ok(
             "homeassistant.components.squeezebox.Server.async_status",
             return_value=resp,
         ),
+        patch(
+            "homeassistant.components.squeezebox.Server.async_query",
+            return_value=copy.deepcopy(FAKE_QUERY_RESPONSE),
+        ),
     ):
         async_fire_time_changed(
             hass,
