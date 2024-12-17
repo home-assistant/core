@@ -31,7 +31,7 @@
         },
         "overwrite": {
           "name": "Overwrite",
-          "description": "Whether to overwrite an existing file or not."
+          "description": "Overwrite file if it exists."
         }
       }
     }
