@@ -44,7 +44,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial confirmation step with no inputs."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if CONF_IP_ADDRESS in user_input and self._hub is None:
