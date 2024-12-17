@@ -1,13 +1,18 @@
 """Test supervisor backup functionality."""
 
 from collections.abc import AsyncGenerator, Generator
+from dataclasses import replace
 from datetime import datetime
 from io import StringIO
 import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohasupervisor.models import backups as supervisor_backups
+from aiohasupervisor.models import (
+    backups as supervisor_backups,
+    mounts as supervisor_mounts,
+)
+from aiohasupervisor.models.mounts import MountsInfo
 import pytest
 
 from homeassistant.components.backup import (
@@ -67,6 +72,94 @@ TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
     type=TEST_BACKUP.type,
 )
 
+TEST_BACKUP_2 = supervisor_backups.Backup(
+    compressed=False,
+    content=supervisor_backups.BackupContent(
+        addons=["ssl"],
+        folders=["share"],
+        homeassistant=False,
+    ),
+    date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
+    location=None,
+    locations={None},
+    name="Test",
+    protected=False,
+    size=1.0,
+    size_bytes=1048576,
+    slug="abc123",
+    type=supervisor_backups.BackupType.PARTIAL,
+)
+TEST_BACKUP_DETAILS_2 = supervisor_backups.BackupComplete(
+    addons=[
+        supervisor_backups.BackupAddon(
+            name="Terminal & SSH",
+            size=0.0,
+            slug="core_ssh",
+            version="9.14.0",
+        )
+    ],
+    compressed=TEST_BACKUP_2.compressed,
+    date=TEST_BACKUP_2.date,
+    extra=None,
+    folders=["share"],
+    homeassistant_exclude_database=False,
+    homeassistant=None,
+    location=TEST_BACKUP_2.location,
+    locations=TEST_BACKUP_2.locations,
+    name=TEST_BACKUP_2.name,
+    protected=TEST_BACKUP_2.protected,
+    repositories=[],
+    size=TEST_BACKUP_2.size,
+    size_bytes=TEST_BACKUP_2.size_bytes,
+    slug=TEST_BACKUP_2.slug,
+    supervisor_version="2024.11.2",
+    type=TEST_BACKUP_2.type,
+)
+
+TEST_BACKUP_3 = supervisor_backups.Backup(
+    compressed=False,
+    content=supervisor_backups.BackupContent(
+        addons=["ssl"],
+        folders=["share"],
+        homeassistant=True,
+    ),
+    date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
+    location="share",
+    locations={"share"},
+    name="Test",
+    protected=False,
+    size=1.0,
+    size_bytes=1048576,
+    slug="abc123",
+    type=supervisor_backups.BackupType.PARTIAL,
+)
+TEST_BACKUP_DETAILS_3 = supervisor_backups.BackupComplete(
+    addons=[
+        supervisor_backups.BackupAddon(
+            name="Terminal & SSH",
+            size=0.0,
+            slug="core_ssh",
+            version="9.14.0",
+        )
+    ],
+    compressed=TEST_BACKUP_3.compressed,
+    date=TEST_BACKUP_3.date,
+    extra=None,
+    folders=["share"],
+    homeassistant_exclude_database=False,
+    homeassistant=None,
+    location=TEST_BACKUP_3.location,
+    locations=TEST_BACKUP_3.locations,
+    name=TEST_BACKUP_3.name,
+    protected=TEST_BACKUP_3.protected,
+    repositories=[],
+    size=TEST_BACKUP_3.size,
+    size_bytes=TEST_BACKUP_3.size_bytes,
+    slug=TEST_BACKUP_3.slug,
+    supervisor_version="2024.11.2",
+    type=TEST_BACKUP_3.type,
+)
+
 
 @pytest.fixture(autouse=True)
 def fixture_supervisor_environ() -> Generator[None]:
@@ -76,73 +169,160 @@ def fixture_supervisor_environ() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(
+async def hassio_enabled(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> AsyncGenerator[None]:
-    """Set up Backup integration."""
+    """Enable hassio."""
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=True),
         patch("homeassistant.components.backup.backup.is_hassio", return_value=True),
     ):
-        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
-        await hass.async_block_till_done()
         yield
 
 
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant, hassio_enabled: None, supervisor_client: AsyncMock
+) -> AsyncGenerator[None]:
+    """Set up Backup integration."""
+    assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+
 @pytest.mark.usefixtures("hassio_client")
+@pytest.mark.parametrize(
+    ("mounts", "expected_agents"),
+    [
+        (MountsInfo(default_backup_mount=None, mounts=[]), ["hassio.local"]),
+        (
+            MountsInfo(
+                default_backup_mount=None,
+                mounts=[
+                    supervisor_mounts.CIFSMountResponse(
+                        share="test",
+                        name="test",
+                        read_only=False,
+                        state=supervisor_mounts.MountState.ACTIVE,
+                        user_path="test",
+                        usage=supervisor_mounts.MountUsage.BACKUP,
+                        server="test",
+                        type=supervisor_mounts.MountType.CIFS,
+                    )
+                ],
+            ),
+            ["hassio.local", "hassio.test"],
+        ),
+        (
+            MountsInfo(
+                default_backup_mount=None,
+                mounts=[
+                    supervisor_mounts.CIFSMountResponse(
+                        share="test",
+                        name="test",
+                        read_only=False,
+                        state=supervisor_mounts.MountState.ACTIVE,
+                        user_path="test",
+                        usage=supervisor_mounts.MountUsage.MEDIA,
+                        server="test",
+                        type=supervisor_mounts.MountType.CIFS,
+                    )
+                ],
+            ),
+            ["hassio.local"],
+        ),
+    ],
+)
 async def test_agent_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    mounts: MountsInfo,
+    expected_agents: list[str],
 ) -> None:
     """Test backup agent info."""
     client = await hass_ws_client(hass)
+    supervisor_client.mounts.info.return_value = mounts
+
+    assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "hassio.local"}],
+        "agents": [{"agent_id": agent_id} for agent_id in expected_agents],
     }
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("backup", "backup_details", "expected_response"),
+    [
+        (
+            TEST_BACKUP,
+            TEST_BACKUP_DETAILS,
+            {
+                "addons": [
+                    {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
+                ],
+                "agent_ids": ["hassio.local"],
+                "backup_id": "abc123",
+                "database_included": True,
+                "date": "1970-01-01T00:00:00+00:00",
+                "failed_agent_ids": [],
+                "folders": ["share"],
+                "homeassistant_included": True,
+                "homeassistant_version": "2024.12.0",
+                "name": "Test",
+                "protected": False,
+                "size": 1048576,
+                "with_strategy_settings": False,
+            },
+        ),
+        (
+            TEST_BACKUP_2,
+            TEST_BACKUP_DETAILS_2,
+            {
+                "addons": [
+                    {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
+                ],
+                "agent_ids": ["hassio.local"],
+                "backup_id": "abc123",
+                "database_included": False,
+                "date": "1970-01-01T00:00:00+00:00",
+                "failed_agent_ids": [],
+                "folders": ["share"],
+                "homeassistant_included": False,
+                "homeassistant_version": None,
+                "name": "Test",
+                "protected": False,
+                "size": 1048576,
+                "with_strategy_settings": False,
+            },
+        ),
+    ],
+)
 async def test_agent_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    backup: supervisor_backups.Backup,
+    backup_details: supervisor_backups.BackupComplete,
+    expected_response: dict[str, Any],
 ) -> None:
     """Test agent list backups."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.list.return_value = [TEST_BACKUP]
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.backups.list.return_value = [backup, TEST_BACKUP_3]
+    supervisor_client.backups.backup_info.return_value = backup_details
 
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"]["backups"] == [
-        {
-            "addons": [
-                {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
-            ],
-            "agent_ids": ["hassio.local"],
-            "backup_id": "abc123",
-            "database_included": True,
-            "date": "1970-01-01T00:00:00+00:00",
-            "failed_agent_ids": [],
-            "folders": ["share"],
-            "homeassistant_included": True,
-            "homeassistant_version": "2024.12.0",
-            "name": "Test",
-            "protected": False,
-            "size": 1048576,
-            "with_strategy_settings": False,
-        }
-    ]
+    assert response["result"]["backups"] == [expected_response]
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_agent_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -162,7 +342,26 @@ async def test_agent_download(
     assert await resp.content.read() == b"backup data"
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_agent_download_unavailable_backup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test agent download backup, when cloud user is logged in."""
+    client = await hass_client()
+    backup_id = "abc123"
+    supervisor_client.backups.list.return_value = [TEST_BACKUP_3]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_3
+    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
+        iter((b"backup data",))
+    )
+
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=hassio.local")
+    assert resp.status == 404
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_agent_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -208,7 +407,7 @@ async def test_agent_upload(
     supervisor_client.backups.reload.assert_not_called()
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -231,11 +430,117 @@ async def test_agent_delete_backup(
     supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("event_data", "mount_info_calls"),
+    [
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_create_mount", "done": True},
+            },
+            1,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_create_mount", "done": False},
+            },
+            0,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_remove_mount", "done": True},
+            },
+            1,
+        ),
+        (
+            {
+                "event": "job",
+                "data": {"name": "mount_manager_remove_mount", "done": False},
+            },
+            0,
+        ),
+        ({"event": "job", "data": {"name": "other_job", "done": True}}, 0),
+        (
+            {
+                "event": "other_event",
+                "data": {"name": "mount_manager_remove_mount", "done": True},
+            },
+            0,
+        ),
+    ],
+)
+async def test_agents_notify_on_mount_added_removed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    event_data: dict[str, Any],
+    mount_info_calls: int,
+) -> None:
+    """Test the listener is called when mounts are added or removed."""
+    client = await hass_ws_client(hass)
+    assert supervisor_client.mounts.info.call_count == 1
+    assert supervisor_client.mounts.info.call_args[0] == ()
+    supervisor_client.mounts.info.reset_mock()
+
+    await client.send_json_auto_id({"type": "supervisor/event", "data": event_data})
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+    assert supervisor_client.mounts.info.call_count == mount_info_calls
+
+
+DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
+    addons=None,
+    background=True,
+    compressed=True,
+    folders=None,
+    homeassistant_exclude_database=False,
+    homeassistant=True,
+    location=[None],
+    name="Test",
+    password=None,
+)
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("extra_generate_options", "expected_supervisor_options"),
+    [
+        (
+            {},
+            DEFAULT_BACKUP_OPTIONS,
+        ),
+        (
+            {"include_addons": ["addon_1", "addon_2"]},
+            replace(DEFAULT_BACKUP_OPTIONS, addons={"addon_1", "addon_2"}),
+        ),
+        (
+            {"include_all_addons": True},
+            DEFAULT_BACKUP_OPTIONS,
+        ),
+        (
+            {"include_database": False},
+            replace(DEFAULT_BACKUP_OPTIONS, homeassistant_exclude_database=True),
+        ),
+        (
+            {"include_folders": ["media", "share"]},
+            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share"}),
+        ),
+        (
+            {"include_folders": ["media"], "include_homeassistant": False},
+            replace(DEFAULT_BACKUP_OPTIONS, folders={"media"}, homeassistant=False),
+        ),
+    ],
+)
 async def test_reader_writer_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    extra_generate_options: dict[str, Any],
+    expected_supervisor_options: supervisor_backups.PartialBackupOptions,
 ) -> None:
     """Test generating a backup."""
     client = await hass_ws_client(hass)
@@ -250,6 +555,7 @@ async def test_reader_writer_create(
 
     await client.send_json_auto_id(
         {"type": "backup/generate", "agent_ids": ["hassio.local"], "name": "Test"}
+        | extra_generate_options
     )
     response = await client.receive_json()
     assert response["event"] == {
@@ -263,17 +569,7 @@ async def test_reader_writer_create(
     assert response["result"] == {"backup_job_id": "abc123"}
 
     supervisor_client.backups.partial_backup.assert_called_once_with(
-        supervisor_backups.PartialBackupOptions(
-            addons=None,
-            background=True,
-            compressed=True,
-            folders=None,
-            homeassistant_exclude_database=False,
-            homeassistant=True,
-            location={None},
-            name="Test",
-            password=None,
-        )
+        expected_supervisor_options
     )
 
     await client.send_json_auto_id(
@@ -303,7 +599,61 @@ async def test_reader_writer_create(
     }
 
 
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("extra_generate_options"),
+    [
+        {"include_homeassistant": False},
+    ],
+)
+async def test_reader_writer_create_wrong_parameters(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    extra_generate_options: dict[str, Any],
+) -> None:
+    """Test generating a backup."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.partial_backup.return_value.job_id = "abc123"
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": ["hassio.local"], "name": "Test"}
+        | extra_generate_options
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "failed",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "idle",
+    }
+
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {"code": "unknown_error", "message": "Unknown error"}
+
+    supervisor_client.backups.partial_backup.assert_not_called()
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_reader_writer_restore(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -375,7 +725,7 @@ async def test_reader_writer_restore(
         ),
     ],
 )
-@pytest.mark.usefixtures("hassio_client")
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_reader_writer_restore_wrong_parameters(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
