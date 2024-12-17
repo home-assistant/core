@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.components.mqtt import async_wait_for_mqtt_client
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -44,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
 
     if not await async_wait_for_mqtt_client(hass):
         _LOGGER.error("MQTT integration not available")
-        return False
+        raise ConfigEntryNotReady("MQTT integration not available")
 
     coordinator = QbusControllerCoordinator(hass, entry)
     entry.runtime_data = coordinator
