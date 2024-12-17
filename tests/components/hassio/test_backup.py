@@ -332,7 +332,7 @@ async def test_reader_writer_create(
             folders=None,
             homeassistant_exclude_database=False,
             homeassistant=True,
-            location={None},
+            location=[None],
             name="Test",
             password=None,
         )
