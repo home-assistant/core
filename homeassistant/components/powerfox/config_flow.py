@@ -100,3 +100,36 @@ class PowerfoxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure Powerfox configuration."""
+        errors = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            client = Powerfox(
+                username=user_input[CONF_EMAIL],
+                password=user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                await client.all_devices()
+            except PowerfoxAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except PowerfoxConnectionError:
+                errors["base"] = "cannot_connect"
+            else:
+                if reconfigure_entry.data[CONF_EMAIL] != user_input[CONF_EMAIL]:
+                    self._async_abort_entries_match(
+                        {CONF_EMAIL: user_input[CONF_EMAIL]}
+                    )
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
