@@ -55,7 +55,6 @@ class IdasenDeskButton(IdasenDeskEntity, ButtonEntity):
     """Defines a IdasenDesk button."""
 
     entity_description: IdasenDeskButtonDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
