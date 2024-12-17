@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -18,9 +18,9 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property
+from propcache import cached_property, under_cached_property
 import voluptuous as vol
-from webrtc_models import RTCIceServer
+from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -55,19 +55,19 @@ from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
+    deprecated_function,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STREAM_TYPE_HLS,
-    _DEPRECATED_STREAM_TYPE_WEB_RTC,
+from .const import (
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -86,12 +86,20 @@ from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
     DATA_ICE_SERVERS,
+    CameraWebRTCLegacyProvider,
     CameraWebRTCProvider,
+    WebRTCAnswer,
+    WebRTCCandidate,  # noqa: F401
     WebRTCClientConfiguration,
-    async_get_supported_providers,
+    WebRTCError,
+    WebRTCMessage,  # noqa: F401
+    WebRTCSendMessage,
+    async_get_supported_legacy_provider,
+    async_get_supported_provider,
     async_register_ice_servers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
-    ws_get_client_config,
+    async_register_webrtc_provider,  # noqa: F401
+    async_register_ws,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,16 +131,6 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Pleease use the CameraEntityFeature enum instead.
-_DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.ON_OFF, "2025.1"
-)
-_DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.STREAM, "2025.1"
-)
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -167,6 +165,13 @@ class Image:
 
     content_type: str = attr.ib()
     content: bytes = attr.ib()
+
+
+@dataclass(frozen=True)
+class CameraCapabilities:
+    """Camera capabilities."""
+
+    frontend_stream_types: set[StreamType]
 
 
 @bind_hass
@@ -342,10 +347,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(CameraMjpegStream(component))
 
     websocket_api.async_register_command(hass, ws_camera_stream)
-    websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
-    websocket_api.async_register_command(hass, ws_get_client_config)
+    websocket_api.async_register_command(hass, ws_camera_capabilities)
+    async_register_ws(hass)
 
     await component.async_setup(config)
 
@@ -405,7 +410,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def get_ice_servers() -> list[RTCIceServer]:
         if hass.config.webrtc.ice_servers:
             return hass.config.webrtc.ice_servers
-        return [RTCIceServer(urls="stun:stun.home-assistant.io:80")]
+        return [
+            RTCIceServer(
+                urls=[
+                    "stun:stun.home-assistant.io:80",
+                    "stun:stun.home-assistant.io:3478",
+                ]
+            ),
+        ]
 
     async_register_ice_servers(hass, get_ice_servers)
     return True
@@ -444,6 +456,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Entity Properties
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
+    # Deprecated in 2024.12. Remove in 2025.6
     _attr_frontend_stream_type: StreamType | None
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
@@ -454,8 +467,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
 
+    __supports_stream: CameraEntityFeature | None = None
+
     def __init__(self) -> None:
         """Initialize a camera."""
+        self._cache: dict[str, Any] = {}
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -463,7 +479,25 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
-        self._webrtc_providers: list[CameraWebRTCProvider] = []
+        self._webrtc_provider: CameraWebRTCProvider | None = None
+        self._legacy_webrtc_provider: CameraWebRTCLegacyProvider | None = None
+        self._supports_native_sync_webrtc = (
+            type(self).async_handle_web_rtc_offer != Camera.async_handle_web_rtc_offer
+        )
+        self._supports_native_async_webrtc = (
+            type(self).async_handle_async_webrtc_offer
+            != Camera.async_handle_async_webrtc_offer
+        )
+        self._deprecate_attr_frontend_stream_type_logged = False
+        if type(self).frontend_stream_type != Camera.frontend_stream_type:
+            report_usage(
+                (
+                    f"is overwriting the 'frontend_stream_type' property in the {type(self).__name__} class,"
+                    " which is deprecated and will be removed in Home Assistant 2025.6, "
+                ),
+                core_integration_behavior=ReportBehavior.ERROR,
+                exclude_integrations={DOMAIN},
+            )
 
     @cached_property
     def entity_picture(self) -> str:
@@ -481,19 +515,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
-
-    @property
-    def supported_features_compat(self) -> CameraEntityFeature:
-        """Return the supported features as CameraEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = CameraEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
     @cached_property
     def is_recording(self) -> bool:
@@ -533,11 +554,29 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         frontend which camera attributes and player to use. The default type
         is to use HLS, and components can override to change the type.
         """
+        # Deprecated in 2024.12. Remove in 2025.6
+        # Use the camera_capabilities instead
         if hasattr(self, "_attr_frontend_stream_type"):
+            if not self._deprecate_attr_frontend_stream_type_logged:
+                report_usage(
+                    (
+                        f"is setting the '_attr_frontend_stream_type' attribute in the {type(self).__name__} class,"
+                        " which is deprecated and will be removed in Home Assistant 2025.6, "
+                    ),
+                    core_integration_behavior=ReportBehavior.ERROR,
+                    exclude_integrations={DOMAIN},
+                )
+
+                self._deprecate_attr_frontend_stream_type_logged = True
             return self._attr_frontend_stream_type
-        if CameraEntityFeature.STREAM not in self.supported_features_compat:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
-        if self._webrtc_providers:
+        if (
+            self._webrtc_provider
+            or self._legacy_webrtc_provider
+            or self._supports_native_sync_webrtc
+            or self._supports_native_async_webrtc
+        ):
             return StreamType.WEB_RTC
         return StreamType.HLS
 
@@ -587,12 +626,69 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Integrations can override with a native WebRTC implementation.
         """
-        for provider in self._webrtc_providers:
-            if answer := await provider.async_handle_web_rtc_offer(self, offer_sdp):
-                return answer
-        raise HomeAssistantError(
-            "WebRTC offer was not accepted by the supported providers"
-        )
+
+    async def async_handle_async_webrtc_offer(
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
+        """Handle the async WebRTC offer.
+
+        Async means that it could take some time to process the offer and responses/message
+        will be sent with the send_message callback.
+        This method is used by cameras with CameraEntityFeature.STREAM.
+        An integration overriding this method must also implement async_on_webrtc_candidate.
+
+        Integrations can override with a native WebRTC implementation.
+        """
+        if self._supports_native_sync_webrtc:
+            try:
+                answer = await deprecated_function(
+                    "async_handle_async_webrtc_offer",
+                    breaks_in_ha_version="2025.6",
+                )(self.async_handle_web_rtc_offer)(offer_sdp)
+            except ValueError as ex:
+                _LOGGER.error("Error handling WebRTC offer: %s", ex)
+                send_message(
+                    WebRTCError(
+                        "webrtc_offer_failed",
+                        str(ex),
+                    )
+                )
+            except TimeoutError:
+                # This catch was already here and should stay through the deprecation
+                _LOGGER.error("Timeout handling WebRTC offer")
+                send_message(
+                    WebRTCError(
+                        "webrtc_offer_failed",
+                        "Timeout handling WebRTC offer",
+                    )
+                )
+            else:
+                if answer:
+                    send_message(WebRTCAnswer(answer))
+                else:
+                    _LOGGER.error("Error handling WebRTC offer: No answer")
+                    send_message(
+                        WebRTCError(
+                            "webrtc_offer_failed",
+                            "No answer on WebRTC offer",
+                        )
+                    )
+                return
+
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_handle_async_webrtc_offer(
+                self, offer_sdp, session_id, send_message
+            )
+            return
+
+        if self._legacy_webrtc_provider and (
+            answer := await self._legacy_webrtc_provider.async_handle_web_rtc_offer(
+                self, offer_sdp
+            )
+        ):
+            send_message(WebRTCAnswer(answer))
+        else:
+            raise HomeAssistantError("Camera does not support WebRTC")
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -702,56 +798,129 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        # Avoid calling async_refresh_providers() in here because it
-        # it will write state a second time since state is always
-        # written when an entity is added to hass.
-        self._webrtc_providers = await self._async_get_supported_webrtc_providers()
+        self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
+        await self.async_refresh_providers(write_state=False)
 
-    async def async_refresh_providers(self) -> None:
+    async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
         This affects state attributes, so it should be invoked any time the registered
         providers or inputs to the state attributes change.
-
-        Returns True if any state was updated (and needs to be written)
         """
-        old_providers = self._webrtc_providers
-        new_providers = await self._async_get_supported_webrtc_providers()
-        self._webrtc_providers = new_providers
-        if old_providers != new_providers:
-            self.async_write_ha_state()
+        old_provider = self._webrtc_provider
+        old_legacy_provider = self._legacy_webrtc_provider
+        new_provider = None
+        new_legacy_provider = None
 
-    async def _async_get_supported_webrtc_providers(
-        self,
-    ) -> list[CameraWebRTCProvider]:
-        """Get the all providers that supports this camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features_compat:
-            return []
+        # Skip all providers if the camera has a native WebRTC implementation
+        if not (
+            self._supports_native_sync_webrtc or self._supports_native_async_webrtc
+        ):
+            # Camera doesn't have a native WebRTC implementation
+            new_provider = await self._async_get_supported_webrtc_provider(
+                async_get_supported_provider
+            )
 
-        return await async_get_supported_providers(self.hass, self)
+            if new_provider is None:
+                # Only add the legacy provider if the new provider is not available
+                new_legacy_provider = await self._async_get_supported_webrtc_provider(
+                    async_get_supported_legacy_provider
+                )
 
-    @property
-    def webrtc_providers(self) -> list[CameraWebRTCProvider]:
-        """Return the WebRTC providers."""
-        return self._webrtc_providers
+        if old_provider != new_provider or old_legacy_provider != new_legacy_provider:
+            self._webrtc_provider = new_provider
+            self._legacy_webrtc_provider = new_legacy_provider
+            self._invalidate_camera_capabilities_cache()
+            if write_state:
+                self.async_write_ha_state()
 
-    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    async def _async_get_supported_webrtc_provider[_T](
+        self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
+    ) -> _T | None:
+        """Get first provider that supports this camera."""
+        if CameraEntityFeature.STREAM not in self.supported_features:
+            return None
+
+        return await fn(self.hass, self)
+
+    @callback
+    def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration()
 
     @final
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+    @callback
+    def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration and extend it with the registered ice servers."""
-        config = await self._async_get_webrtc_client_configuration()
+        config = self._async_get_webrtc_client_configuration()
 
-        ice_servers = [
-            server
-            for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
-            for server in servers()
-        ]
-        config.configuration.ice_servers.extend(ice_servers)
+        if not self._supports_native_sync_webrtc:
+            # Until 2024.11, the frontend was not resolving any ice servers
+            # The async approach was added 2024.11 and new integrations need to use it
+            ice_servers = [
+                server
+                for servers in self.hass.data.get(DATA_ICE_SERVERS, [])
+                for server in servers()
+            ]
+            config.configuration.ice_servers.extend(ice_servers)
+
+        config.get_candidates_upfront = (
+            self._supports_native_sync_webrtc
+            or self._legacy_webrtc_provider is not None
+        )
 
         return config
+
+    async def async_on_webrtc_candidate(
+        self, session_id: str, candidate: RTCIceCandidateInit
+    ) -> None:
+        """Handle a WebRTC candidate."""
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_on_webrtc_candidate(session_id, candidate)
+        else:
+            raise HomeAssistantError("Cannot handle WebRTC candidate")
+
+    @callback
+    def close_webrtc_session(self, session_id: str) -> None:
+        """Close a WebRTC session."""
+        if self._webrtc_provider:
+            self._webrtc_provider.async_close_session(session_id)
+
+    @callback
+    def _invalidate_camera_capabilities_cache(self) -> None:
+        """Invalidate the camera capabilities cache."""
+        self._cache.pop("camera_capabilities", None)
+
+    @final
+    @under_cached_property
+    def camera_capabilities(self) -> CameraCapabilities:
+        """Return the camera capabilities."""
+        frontend_stream_types = set()
+        if CameraEntityFeature.STREAM in self.supported_features:
+            if self._supports_native_sync_webrtc or self._supports_native_async_webrtc:
+                # The camera has a native WebRTC implementation
+                frontend_stream_types.add(StreamType.WEB_RTC)
+            else:
+                frontend_stream_types.add(StreamType.HLS)
+
+                if self._webrtc_provider or self._legacy_webrtc_provider:
+                    frontend_stream_types.add(StreamType.WEB_RTC)
+
+        return CameraCapabilities(frontend_stream_types)
+
+    @callback
+    def async_write_ha_state(self) -> None:
+        """Write the state to the state machine.
+
+        Schedules async_refresh_providers if support of streams have changed.
+        """
+        super().async_write_ha_state()
+        if self.__supports_stream != (
+            supports_stream := self.supported_features & CameraEntityFeature.STREAM
+        ):
+            self.__supports_stream = supports_stream
+            self._invalidate_camera_capabilities_cache()
+            self.hass.async_create_task(self.async_refresh_providers())
 
 
 class CameraView(HomeAssistantView):
@@ -845,6 +1014,24 @@ class CameraMjpegStream(CameraView):
 
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "camera/capabilities",
+        vol.Required("entity_id"): cv.entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_capabilities(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get camera capabilities websocket command.
+
+    Async friendly.
+    """
+    camera = get_camera_from_entity_id(hass, msg["entity_id"])
+    connection.send_result(msg["id"], asdict(camera.camera_capabilities))
+
+
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "camera/stream",
         vol.Required("entity_id"): cv.entity_id,
         vol.Optional("format", default="hls"): vol.In(OUTPUT_FORMATS),
@@ -871,53 +1058,6 @@ async def ws_camera_stream(
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
         )
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "camera/web_rtc_offer",
-        vol.Required("entity_id"): cv.entity_id,
-        vol.Required("offer"): str,
-    }
-)
-@websocket_api.async_response
-async def ws_camera_web_rtc_offer(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Handle the signal path for a WebRTC stream.
-
-    This signal path is used to route the offer created by the client to the
-    camera device through the integration for negotiation on initial setup,
-    which returns an answer. The actual streaming is handled entirely between
-    the client and camera device.
-
-    Async friendly.
-    """
-    entity_id = msg["entity_id"]
-    offer = msg["offer"]
-    camera = get_camera_from_entity_id(hass, entity_id)
-    if camera.frontend_stream_type != StreamType.WEB_RTC:
-        connection.send_error(
-            msg["id"],
-            "web_rtc_offer_failed",
-            (
-                "Camera does not support WebRTC,"
-                f" frontend_stream_type={camera.frontend_stream_type}"
-            ),
-        )
-        return
-    try:
-        answer = await camera.async_handle_web_rtc_offer(offer)
-    except (HomeAssistantError, ValueError) as ex:
-        _LOGGER.error("Error handling WebRTC offer: %s", ex)
-        connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
-    except TimeoutError:
-        _LOGGER.error("Timeout handling WebRTC offer")
-        connection.send_error(
-            msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
-        )
-    else:
-        connection.send_result(msg["id"], {"answer": answer})
 
 
 @websocket_api.websocket_command(

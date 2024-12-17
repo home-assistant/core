@@ -15,12 +15,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .api import ConfigEntryAuth, HomeConnectDevice
+from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
+from .api import HomeConnectDevice
 from .const import (
     ATTR_VALUE,
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
@@ -35,6 +36,7 @@ from .const import (
     REFRIGERATION_EXTERNAL_LIGHT_POWER,
     REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
     REFRIGERATION_INTERNAL_LIGHT_POWER,
+    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
 )
 from .entity import HomeConnectEntity
 
@@ -85,18 +87,17 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect light."""
 
     def get_entities() -> list[LightEntity]:
         """Get a list of entities."""
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         return [
             HomeConnectLight(device, description)
             for description in LIGHTS
-            for device in hc_api.devices
+            for device in entry.runtime_data.devices
             if description.key in device.appliance.status
         ]
 
@@ -149,8 +150,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, True
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn on light: %s", err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_on_light",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                },
+            ) from err
         if self._custom_color_key:
             if (
                 ATTR_RGB_COLOR in kwargs or ATTR_HS_COLOR in kwargs
@@ -162,8 +169,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    _LOGGER.error("Error while trying selecting custom color: %s", err)
-                    return
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="select_light_custom_color",
+                        translation_placeholders={
+                            **get_dict_from_home_connect_error(err),
+                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                        },
+                    ) from err
 
             if ATTR_RGB_COLOR in kwargs:
                 hex_val = color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])
@@ -174,7 +187,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         f"#{hex_val}",
                     )
                 except HomeConnectError as err:
-                    _LOGGER.error("Error while trying setting the color: %s", err)
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="set_light_color",
+                        translation_placeholders={
+                            **get_dict_from_home_connect_error(err),
+                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                        },
+                    ) from err
             elif (ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs) and (
                 self._attr_brightness is not None or ATTR_BRIGHTNESS in kwargs
             ):
@@ -199,7 +219,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             f"#{hex_val}",
                         )
                     except HomeConnectError as err:
-                        _LOGGER.error("Error while trying setting the color: %s", err)
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="set_light_color",
+                            translation_placeholders={
+                                **get_dict_from_home_connect_error(err),
+                                SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            },
+                        ) from err
 
         elif self._brightness_key and ATTR_BRIGHTNESS in kwargs:
             _LOGGER.debug(
@@ -217,7 +244,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     self.device.appliance.set_setting, self._brightness_key, brightness
                 )
             except HomeConnectError as err:
-                _LOGGER.error("Error while trying set the brightness: %s", err)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_light_brightness",
+                    translation_placeholders={
+                        **get_dict_from_home_connect_error(err),
+                        SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    },
+                ) from err
 
         self.async_entity_update()
 
@@ -229,7 +263,14 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self.device.appliance.set_setting, self.bsh_key, False
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off light: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="turn_off_light",
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                },
+            ) from err
         self.async_entity_update()
 
     async def async_update(self) -> None:

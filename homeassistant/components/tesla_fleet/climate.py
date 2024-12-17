@@ -74,7 +74,6 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -84,7 +83,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
 
-        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         if self.read_only:
             self._attr_supported_features = ClimateEntityFeature(0)
@@ -220,7 +219,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -231,7 +230,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         """Initialize the cabin overheat climate entity."""
 
         # Scopes
-        self.read_only = Scope.VEHICLE_CMDS not in scopes or data.signing
+        self.read_only = Scope.VEHICLE_CMDS not in scopes
 
         # Supported Features
         if self.read_only:

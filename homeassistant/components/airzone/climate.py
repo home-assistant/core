@@ -136,7 +136,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

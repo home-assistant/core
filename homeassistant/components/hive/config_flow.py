@@ -104,7 +104,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                if self.context["source"] == SOURCE_REAUTH:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
                 self.device_registration = True
                 return await self.async_step_configuration()
@@ -144,7 +144,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
-        if self.context["source"] == SOURCE_REAUTH:
+        if self.source == SOURCE_REAUTH:
             assert self.entry
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data
@@ -163,10 +163,6 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user(data)
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import user."""
-        return await self.async_step_user(import_data)
-
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -182,7 +178,6 @@ class HiveOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
-        self.config_entry = config_entry
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
 
     async def async_step_init(

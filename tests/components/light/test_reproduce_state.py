@@ -10,7 +10,7 @@ from tests.common import async_mock_service
 
 VALID_BRIGHTNESS = {"brightness": 180}
 VALID_EFFECT = {"effect": "random"}
-VALID_COLOR_TEMP = {"color_temp": 240}
+VALID_COLOR_TEMP_KELVIN = {"color_temp_kelvin": 4200}
 VALID_HS_COLOR = {"hs_color": (345, 75)}
 VALID_RGB_COLOR = {"rgb_color": (255, 63, 111)}
 VALID_RGBW_COLOR = {"rgbw_color": (255, 63, 111, 10)}
@@ -19,7 +19,7 @@ VALID_XY_COLOR = {"xy_color": (0.59, 0.274)}
 
 NONE_BRIGHTNESS = {"brightness": None}
 NONE_EFFECT = {"effect": None}
-NONE_COLOR_TEMP = {"color_temp": None}
+NONE_COLOR_TEMP_KELVIN = {"color_temp_kelvin": None}
 NONE_HS_COLOR = {"hs_color": None}
 NONE_RGB_COLOR = {"rgb_color": None}
 NONE_RGBW_COLOR = {"rgbw_color": None}
@@ -34,7 +34,7 @@ async def test_reproducing_states(
     hass.states.async_set("light.entity_off", "off", {})
     hass.states.async_set("light.entity_bright", "on", VALID_BRIGHTNESS)
     hass.states.async_set("light.entity_effect", "on", VALID_EFFECT)
-    hass.states.async_set("light.entity_temp", "on", VALID_COLOR_TEMP)
+    hass.states.async_set("light.entity_temp", "on", VALID_COLOR_TEMP_KELVIN)
     hass.states.async_set("light.entity_hs", "on", VALID_HS_COLOR)
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
     hass.states.async_set("light.entity_xy", "on", VALID_XY_COLOR)
@@ -49,7 +49,7 @@ async def test_reproducing_states(
             State("light.entity_off", "off"),
             State("light.entity_bright", "on", VALID_BRIGHTNESS),
             State("light.entity_effect", "on", VALID_EFFECT),
-            State("light.entity_temp", "on", VALID_COLOR_TEMP),
+            State("light.entity_temp", "on", VALID_COLOR_TEMP_KELVIN),
             State("light.entity_hs", "on", VALID_HS_COLOR),
             State("light.entity_rgb", "on", VALID_RGB_COLOR),
             State("light.entity_xy", "on", VALID_XY_COLOR),
@@ -73,7 +73,7 @@ async def test_reproducing_states(
             State("light.entity_xy", "off"),
             State("light.entity_off", "on", VALID_BRIGHTNESS),
             State("light.entity_bright", "on", VALID_EFFECT),
-            State("light.entity_effect", "on", VALID_COLOR_TEMP),
+            State("light.entity_effect", "on", VALID_COLOR_TEMP_KELVIN),
             State("light.entity_temp", "on", VALID_HS_COLOR),
             State("light.entity_hs", "on", VALID_RGB_COLOR),
             State("light.entity_rgb", "on", VALID_XY_COLOR),
@@ -92,7 +92,7 @@ async def test_reproducing_states(
     expected_bright["entity_id"] = "light.entity_bright"
     expected_calls.append(expected_bright)
 
-    expected_effect = dict(VALID_COLOR_TEMP)
+    expected_effect = dict(VALID_COLOR_TEMP_KELVIN)
     expected_effect["entity_id"] = "light.entity_effect"
     expected_calls.append(expected_effect)
 
@@ -146,7 +146,7 @@ async def test_filter_color_modes(
     """Test filtering of parameters according to color mode."""
     hass.states.async_set("light.entity", "off", {})
     all_colors = {
-        **VALID_COLOR_TEMP,
+        **VALID_COLOR_TEMP_KELVIN,
         **VALID_HS_COLOR,
         **VALID_RGB_COLOR,
         **VALID_RGBW_COLOR,
@@ -162,7 +162,7 @@ async def test_filter_color_modes(
     )
 
     expected_map = {
-        light.ColorMode.COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP},
+        light.ColorMode.COLOR_TEMP: {**VALID_BRIGHTNESS, **VALID_COLOR_TEMP_KELVIN},
         light.ColorMode.BRIGHTNESS: VALID_BRIGHTNESS,
         light.ColorMode.HS: {**VALID_BRIGHTNESS, **VALID_HS_COLOR},
         light.ColorMode.ONOFF: {**VALID_BRIGHTNESS},
@@ -193,12 +193,76 @@ async def test_filter_color_modes(
     assert len(turn_on_calls) == 1
 
 
+async def test_filter_color_modes_missing_attributes(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test warning on missing attribute when filtering for color mode."""
+    color_mode = light.ColorMode.COLOR_TEMP
+    hass.states.async_set("light.entity", "off", {})
+    expected_log = (
+        "Color mode color_temp specified "
+        "but attribute color_temp_kelvin missing for: light.entity"
+    )
+    expected_fallback_log = "using color_temp (mireds) as fallback"
+
+    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+
+    all_colors = {
+        **VALID_COLOR_TEMP_KELVIN,
+        **VALID_HS_COLOR,
+        **VALID_RGB_COLOR,
+        **VALID_RGBW_COLOR,
+        **VALID_RGBWW_COLOR,
+        **VALID_XY_COLOR,
+        **VALID_BRIGHTNESS,
+    }
+
+    # Test missing `color_temp_kelvin` attribute
+    stored_attributes = {**all_colors}
+    stored_attributes.pop("color_temp_kelvin")
+    caplog.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
+    )
+    assert len(turn_on_calls) == 0
+    assert expected_log in caplog.text
+    assert expected_fallback_log not in caplog.text
+
+    # Test with deprecated `color_temp` attribute
+    stored_attributes["color_temp"] = 250
+    expected = {"brightness": 180, "color_temp_kelvin": 4000}
+    caplog.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**stored_attributes, "color_mode": color_mode})],
+    )
+
+    assert len(turn_on_calls) == 1
+    assert expected_log in caplog.text
+    assert expected_fallback_log in caplog.text
+
+    # Test with correct `color_temp_kelvin` attribute
+    expected = {"brightness": 180, "color_temp_kelvin": 4200}
+    caplog.clear()
+    turn_on_calls.clear()
+    await async_reproduce_state(
+        hass,
+        [State("light.entity", "on", {**all_colors, "color_mode": color_mode})],
+    )
+    assert len(turn_on_calls) == 1
+    assert turn_on_calls[0].domain == "light"
+    assert dict(turn_on_calls[0].data) == {"entity_id": "light.entity", **expected}
+    assert expected_log not in caplog.text
+    assert expected_fallback_log not in caplog.text
+
+
 @pytest.mark.parametrize(
     "saved_state",
     [
         NONE_BRIGHTNESS,
         NONE_EFFECT,
-        NONE_COLOR_TEMP,
+        NONE_COLOR_TEMP_KELVIN,
         NONE_HS_COLOR,
         NONE_RGB_COLOR,
         NONE_RGBW_COLOR,

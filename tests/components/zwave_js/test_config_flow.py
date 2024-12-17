@@ -6,9 +6,10 @@ from copy import copy
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
+from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions
+from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
@@ -16,12 +17,12 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.hassio import HassioAPIError, HassioServiceInfo
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import ADDON_SLUG, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -555,7 +556,19 @@ async def test_abort_hassio_discovery_for_other_addon(
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_usb_discovery(
     hass: HomeAssistant,
     supervisor,
@@ -653,7 +666,19 @@ async def test_usb_discovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_usb_discovery_addon_not_running(
     hass: HomeAssistant,
     supervisor,
@@ -1090,7 +1115,19 @@ async def test_not_addon(hass: HomeAssistant, supervisor) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_running(
     hass: HomeAssistant,
     supervisor,
@@ -1156,28 +1193,49 @@ async def test_addon_running(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
+            SupervisorError(),
             None,
             None,
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             None,
             TimeoutError,
             None,
             "cannot_connect",
         ),
         (
-            None,
+            [],
             None,
             None,
             None,
             "addon_get_discovery_info_failed",
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             None,
             None,
             SupervisorError(),
@@ -1212,7 +1270,19 @@ async def test_addon_running_failures(
     assert result["reason"] == abort_reason
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_running_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1271,7 +1341,19 @@ async def test_addon_running_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1363,7 +1445,17 @@ async def test_addon_installed(
 
 @pytest.mark.parametrize(
     ("discovery_info", "start_addon_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, SupervisorError())],
+    [
+        (
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            ),
+            SupervisorError(),
+        )
+    ],
 )
 async def test_addon_installed_start_failure(
     hass: HomeAssistant,
@@ -1434,11 +1526,18 @@ async def test_addon_installed_start_failure(
     ("discovery_info", "server_version_side_effect"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             TimeoutError,
         ),
         (
-            None,
+            [],
             None,
         ),
     ],
@@ -1510,7 +1609,19 @@ async def test_addon_installed_failures(
 
 @pytest.mark.parametrize(
     ("set_addon_options_side_effect", "discovery_info"),
-    [(SupervisorError(), {"config": ADDON_DISCOVERY_INFO})],
+    [
+        (
+            SupervisorError(),
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
+        )
+    ],
 )
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
@@ -1571,7 +1682,19 @@ async def test_addon_installed_set_options_failure(
     assert start_addon.call_count == 0
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_installed_already_configured(
     hass: HomeAssistant,
     supervisor,
@@ -1662,7 +1785,19 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_zwave_js",
+                service="zwave_js",
+                uuid=uuid4(),
+                config=ADDON_DISCOVERY_INFO,
+            )
+        ]
+    ],
+)
 async def test_addon_not_installed(
     hass: HomeAssistant,
     supervisor,
@@ -1887,7 +2022,14 @@ async def test_options_not_addon(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -1913,7 +2055,14 @@ async def test_options_not_addon(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {"use_addon": True},
             {
                 "device": "/test",
@@ -2033,7 +2182,14 @@ async def test_options_addon_running(
     ("discovery_info", "entry_data", "old_addon_options", "new_addon_options"),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2160,7 +2316,14 @@ async def different_device_server_version(*args):
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2189,7 +2352,14 @@ async def different_device_server_version(*args):
             different_device_server_version,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2318,7 +2488,14 @@ async def test_options_different_device(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2347,7 +2524,14 @@ async def test_options_different_device(
             [SupervisorError(), None],
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2477,7 +2661,14 @@ async def test_options_addon_restart_failed(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2570,7 +2761,14 @@ async def test_options_addon_running_server_info_failure(
     ),
     [
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {},
             {
                 "device": "/test",
@@ -2596,7 +2794,14 @@ async def test_options_addon_running_server_info_failure(
             0,
         ),
         (
-            {"config": ADDON_DISCOVERY_INFO},
+            [
+                Discovery(
+                    addon="core_zwave_js",
+                    service="zwave_js",
+                    uuid=uuid4(),
+                    config=ADDON_DISCOVERY_INFO,
+                )
+            ],
             {"use_addon": True},
             {
                 "device": "/test",

@@ -20,28 +20,32 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VelbusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    await entry.runtime_data.scan_task
     entities: list[Entity] = [
-        VelbusLight(channel) for channel in cntrl.get_all("light")
+        VelbusLight(channel)
+        for channel in entry.runtime_data.controller.get_all_light()
     ]
-    entities.extend(VelbusButtonLight(channel) for channel in cntrl.get_all("led"))
+    entities.extend(
+        VelbusButtonLight(channel)
+        for channel in entry.runtime_data.controller.get_all_led()
+    )
     async_add_entities(entities)
 
 

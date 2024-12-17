@@ -308,6 +308,7 @@ async def async_create_miio_device_and_coordinator(
         "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
@@ -387,6 +388,7 @@ async def async_create_miio_device_and_coordinator(
     coordinator = coordinator_class(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
@@ -452,6 +454,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_data_factory(sub_device),
             # Polling interval. Will only be polled if there are subscribers.
