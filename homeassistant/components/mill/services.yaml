@@ -23,20 +23,3 @@ set_room_temperature:
           min: 0
           max: 100
           unit_of_measurement: "°"
-
-max_heating_power:
-  fields:
-    entity_id:
-      required: true
-      example: "climate.house"
-      selector:
-        entity:
-          integration: mill
-          domain: climate
-    max_heating_power:
-      required: true
-      selector:
-        number:
-          min: 0
-          max: 2000
-          unit_of_measurement: "W"

@@ -2,9 +2,6 @@
   "services": {
     "set_room_temperature": {
       "service": "mdi:thermometer"
-    },
-    "max_heating_power": {
-      "service": "mdi:power"
     }
   }
 }

@@ -53,20 +53,6 @@
     }
   },
   "services": {
-    "max_heating_power": {
-      "description": "Sets max power heater can use.",
-      "fields": {
-        "entity_id": {
-          "description": "Entity id of heater to change.",
-          "name": "Entity id"
-        },
-        "max_heating_power": {
-          "description": "Max heating power.",
-          "name": "Max heating power"
-        }
-      },
-      "name": "Set max heating power"
-    },
     "set_room_temperature": {
       "name": "Set room temperature",
       "description": "Sets Mill room temperatures.",

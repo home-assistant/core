@@ -18,6 +18,5 @@ MANUFACTURER = "Mill"
 MAX_TEMP = 35
 MIN_TEMP = 5
 SERVICE_SET_ROOM_TEMP = "set_room_temperature"
-SERVICE_MAX_HEATING_POWER = "max_heating_power"
 TEMPERATURE = "current_temp"
 TVOC = "tvoc"
