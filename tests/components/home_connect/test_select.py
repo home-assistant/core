@@ -14,7 +14,7 @@ from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import get_all_appliances
 
@@ -151,7 +151,7 @@ async def test_select_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

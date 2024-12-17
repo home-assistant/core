@@ -3,10 +3,10 @@
 from fyta_cli.fyta_models import Plant
 
 from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import FytaConfigEntry
 from .const import DOMAIN
 from .coordinator import FytaCoordinator
 
@@ -19,7 +19,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
     def __init__(
         self,
         coordinator: FytaCoordinator,
-        entry: ConfigEntry,
+        entry: FytaConfigEntry,
         description: SensorEntityDescription,
         plant_id: int,
     ) -> None:
