@@ -6,10 +6,7 @@ rules:
       Do not remove services when all config entries are removed.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      const.py has unused variables.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
