@@ -873,7 +873,7 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
         state = hass.states.get("sensor.integration")
 
         # approx 100*1/3600 (right method after 1 second since last integration)
-        assert float(state.state) > 0.027
+        assert 0.027 < float(state.state) < 0.029
         assert float(state.state) < 0.029
 
 
