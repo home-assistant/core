@@ -100,6 +100,7 @@ PARALLEL_UPDATES = 0
 FIELD_TO_FLAG = {
     "fanLevel": ClimateEntityFeature.FAN_MODE,
     "swing": ClimateEntityFeature.SWING_MODE,
+    "horizontalSwing": ClimateEntityFeature.SWING_HORIZONTAL_MODE,
     "targetTemperature": ClimateEntityFeature.TARGET_TEMPERATURE,
 }
 
