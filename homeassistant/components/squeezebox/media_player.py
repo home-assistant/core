@@ -477,6 +477,7 @@ class SqueezeBoxMediaPlayerEntity(
                 "search_id": media_id,
                 "search_type": media_type,
             }
+
             playlist = await generate_playlist(self._player, payload)
 
             _LOGGER.debug("Generated playlist: %s", playlist)
