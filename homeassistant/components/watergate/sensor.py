@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 
 from homeassistant.components.sensor import (
@@ -34,12 +35,21 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+class PowerSupplyMode(StrEnum):
+    """LED bar mode."""
+
+    BATTERY = "battery"
+    EXTERNAL = "external"
+    BATTERY_EXTERNAL = "battery+external"
+
+
 @dataclass(kw_only=True, frozen=True)
 class WatergateSensorEntityDescription(SensorEntityDescription):
     """Description for Watergate sensor entities."""
 
     value_fn: Callable[
-        [WatergateAgregatedRequests], str | int | float | datetime | None
+        [WatergateAgregatedRequests],
+        str | int | float | datetime | PowerSupplyMode | None,
     ]
 
 
@@ -167,11 +177,14 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.state.power_supply if data.state else None,
+        value_fn=lambda data: PowerSupplyMode(data.state.power_supply)
+        if data.state
+        else None,
         translation_key="power_supply",
         key="power_supply",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
     ),
 ]
 

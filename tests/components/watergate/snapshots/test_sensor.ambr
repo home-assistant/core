@@ -160,7 +160,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Power supply',
     'platform': 'watergate',
@@ -174,6 +174,7 @@
 # name: test_sensor[sensor.sonic_power_supply-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Sonic Power supply',
     }),
     'context': <ANY>,
