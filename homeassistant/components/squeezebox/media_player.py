@@ -690,7 +690,7 @@ class SqueezeBoxMediaPlayerEntity(
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "tags:laay",
-                    "search:" + search_string or "",
+                     "search:" + search_string if search_string is not None else "",
                 ]
             case "favorites":
                 _param = [
