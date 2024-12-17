@@ -17,6 +17,7 @@ from habiticalib import (
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.habitica import HabiticaConfigEntry
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
@@ -235,8 +236,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if not errors and user is not None:
                     return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data_updates=user_input[SECTION_REAUTH_API_KEY],
+                        reauth_entry, data_updates=user_input[SECTION_REAUTH_API_KEY]
                     )
             else:
                 errors["base"] = "invalid_credentials"
