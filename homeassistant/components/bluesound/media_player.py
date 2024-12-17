@@ -150,7 +150,6 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
 
-    hass.data[DATA_BLUESOUND].append(bluesound_player)
     async_add_entities([bluesound_player], update_before_add=True)
 
 
@@ -264,7 +263,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
         await super().async_will_remove_from_hass()
-        self.hass.data[DATA_BLUESOUND].remove(self)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -551,16 +549,21 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self.sync_status.leader is None and self.sync_status.followers is None:
             return []
 
-        player_entities: list[BluesoundPlayer] = self.hass.data[DATA_BLUESOUND]
+        config_entries: list[BluesoundConfigEntry] = (
+            self.hass.config_entries.async_entries(DOMAIN)
+        )
+        sync_status_list = [
+            x.runtime_data.coordinator.data.sync_status for x in config_entries
+        ]
 
         leader_sync_status: SyncStatus | None = None
         if self.sync_status.leader is None:
             leader_sync_status = self.sync_status
         else:
             required_id = f"{self.sync_status.leader.ip}:{self.sync_status.leader.port}"
-            for x in player_entities:
-                if x.sync_status.id == required_id:
-                    leader_sync_status = x.sync_status
+            for sync_status in sync_status_list:
+                if sync_status.id == required_id:
+                    leader_sync_status = sync_status
                     break
 
         if leader_sync_status is None or leader_sync_status.followers is None:
@@ -568,9 +571,9 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.followers]
         follower_names = [
-            x.sync_status.name
-            for x in player_entities
-            if x.sync_status.id in follower_ids
+            sync_status.name
+            for sync_status in sync_status_list
+            if sync_status.id in follower_ids
         ]
         follower_names.insert(0, leader_sync_status.name)
         return follower_names
