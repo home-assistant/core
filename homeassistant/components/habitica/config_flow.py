@@ -33,7 +33,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import HabiticaConfigEntry
 from .const import (
     CONF_API_USER,
     DEFAULT_URL,
@@ -110,8 +109,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for habitica."""
-
-    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -206,7 +203,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

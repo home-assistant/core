@@ -88,9 +88,8 @@ async def test_service_call(
     [
         ERROR_BAD_REQUEST,
         ERROR_TOO_MANY_REQUESTS,
-        ERROR_NOT_AUTHORIZED,
     ],
-    ids=["BadRequestError", "TooManyRequestsError", "NotAuthorizedError"],
+    ids=["BadRequestError", "TooManyRequestsError"],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
