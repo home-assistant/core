@@ -93,10 +93,9 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
         assert info["installation_type"] == "Unsupported Third Party Container"
 
 
-async def test_getuser_keyerror(hass: HomeAssistant) -> None:
-    """Test getuser keyerror."""
-    with patch(
-        "homeassistant.helpers.system_info.cached_get_user", side_effect=KeyError
-    ):
+@pytest.mark.parametrize("error", [KeyError, OSError])
+async def test_getuser_oserror(hass: HomeAssistant, error: Exception) -> None:
+    """Test getuser oserror."""
+    with patch("homeassistant.helpers.system_info.cached_get_user", side_effect=error):
         info = await async_get_system_info(hass)
         assert info["user"] is None
