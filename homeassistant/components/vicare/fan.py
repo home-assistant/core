@@ -203,8 +203,10 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
-        # Viessmann ventilation unit cannot be turned off
-        return True
+        return (
+            self.percentage is not None and self.percentage > 0
+            # ) or self.preset_mode is not None
+        )
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -239,6 +241,8 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if self._attr_preset_mode != str(VentilationMode.PERMANENT):
             self.set_preset_mode(VentilationMode.PERMANENT)
+        elif self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+            self._api.deactivateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
         level = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         _LOGGER.debug("changing ventilation level to %s", level)
