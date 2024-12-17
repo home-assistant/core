@@ -1,5 +1,6 @@
 """The tests for sensor recorder platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
 from unittest.mock import ANY, Mock, patch
@@ -55,6 +56,18 @@ from .common import (
 
 from tests.common import MockPlatform, mock_platform
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+
+
+@pytest.fixture
+def multiple_start_time_chunk_sizes(
+    ids_for_start_time_chunk_sizes: int,
+) -> Generator[None]:
+    """Fixture to test different chunk sizes for start time query."""
+    with patch(
+        "homeassistant.components.recorder.statistics.MAX_IDS_FOR_START_TIME_QUERY",
+        ids_for_start_time_chunk_sizes,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -1113,6 +1126,7 @@ async def test_import_statistics_errors(
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_daily_statistics_sum(
@@ -1428,6 +1442,7 @@ async def test_weekly_statistics_mean(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_weekly_statistics_sum(
@@ -1608,6 +1623,7 @@ async def test_weekly_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
 async def test_monthly_statistics_sum(
@@ -1928,6 +1944,7 @@ def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     assert cache_key_1 != cache_key_3
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change(
@@ -2263,6 +2280,7 @@ async def test_change(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
 @pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
 async def test_change_with_none(
