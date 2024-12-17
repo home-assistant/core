@@ -754,4 +754,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.State,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseSupplyState",
+            translation_key="evse_supply_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_SUPPLY_STATE_MAP.values()),
+            measurement_to_ha=EVSE_SUPPLY_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.SupplyState,),
+    ),
 ]
