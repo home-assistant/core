@@ -854,7 +854,7 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
         await _update_source_sensor(hass, 0)
         await hass.async_block_till_done()
 
-        # wait one minute
+        # wait one minute and one second
         freezer.tick(61)
         async_fire_time_changed(hass, dt_util.now())
         await hass.async_block_till_done()
@@ -864,7 +864,7 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
         assert condition.async_numeric_state(hass, state) is True
         assert float(state.state) == 0  # integral is 0 after integration of 0
 
-        # wait 1 second and update state
+        # wait one second and update state
         freezer.tick(1)
         async_fire_time_changed(hass, dt_util.now())
         await _update_source_sensor(hass, 100)
@@ -874,7 +874,6 @@ async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
 
         # approx 100*1/3600 (right method after 1 second since last integration)
         assert 0.027 < float(state.state) < 0.029
-        assert float(state.state) < 0.029
 
 
 async def test_on_unvailable_source_expect_no_update_on_time(
