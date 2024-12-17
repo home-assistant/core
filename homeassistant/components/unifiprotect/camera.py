@@ -90,7 +90,7 @@ def _get_camera_channels(
                 is_default = False
 
         # no RTSP enabled use first channel with no stream
-        if is_default:
+        if is_default and not camera.is_third_party_camera:
             _create_rtsp_repair(hass, entry, data, camera)
             yield camera, camera.channels[0], True
         else:

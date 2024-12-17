@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 import json
 from typing import Any
@@ -21,6 +22,13 @@ from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture(autouse=True)
+async def no_sleep() -> AsyncGenerator[None]:
+    """No sleeping."""
+    with patch("homeassistant.components.nordpool.coordinator.asyncio.sleep"):
+        yield
 
 
 @pytest.fixture

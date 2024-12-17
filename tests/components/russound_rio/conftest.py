@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components.russound_rio.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import HARDWARE_MAC, HOST, MOCK_CONFIG, MODEL, PORT
+from .const import API_VERSION, HARDWARE_MAC, HOST, MOCK_CONFIG, MODEL, PORT
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -54,6 +54,7 @@ def mock_russound_client() -> Generator[AsyncMock]:
             int(k): Source.from_dict(v)
             for k, v in load_json_object_fixture("get_sources.json", DOMAIN).items()
         }
+        client.state = load_json_object_fixture("get_state.json", DOMAIN)
         for k, v in zones.items():
             v.device_str = zone_device_str(1, k)
             v.fetch_current_source = Mock(
@@ -70,4 +71,6 @@ def mock_russound_client() -> Generator[AsyncMock]:
         client.connection_handler = RussoundTcpConnectionHandler(HOST, PORT)
         client.is_connected = Mock(return_value=True)
         client.unregister_state_update_callbacks.return_value = True
+        client.rio_version = API_VERSION
+
         yield client

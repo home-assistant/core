@@ -8,9 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .bridge import DynaliteBridge
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
@@ -25,38 +23,6 @@ class DynaliteFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Dynalite flow."""
         self.host = None
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a new bridge as a config entry."""
-        LOGGER.debug("Starting async_step_import (deprecated) - %s", import_data)
-        # Raise an issue that this is deprecated and has been imported
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Dynalite",
-            },
-        )
-
-        host = import_data[CONF_HOST]
-        # Check if host already exists
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == host:
-                self.hass.config_entries.async_update_entry(
-                    entry, data=dict(import_data)
-                )
-                return self.async_abort(reason="already_configured")
-
-        # New entry
-        return await self._try_create(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

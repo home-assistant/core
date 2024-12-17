@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.12.0.dev0"
+version     = "2025.1.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,8 +28,8 @@ dependencies    = [
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
-    "aiohasupervisor==0.2.1",
-    "aiohttp==3.11.2",
+    "aiohasupervisor==0.2.2b0",
+    "aiohttp==3.11.10",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
     "aiozoneinfo==0.2.1",
@@ -41,11 +41,11 @@ dependencies    = [
     "awesomeversion==24.6.0",
     "bcrypt==4.2.0",
     "certifi>=2021.5.30",
-    "ciso8601==2.3.1",
+    "ciso8601==2.3.2",
     "fnv-hash-fast==1.0.2",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.84.0",
+    "hass-nabucasa==0.87.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.27.2",
@@ -53,20 +53,20 @@ dependencies    = [
     "ifaddr==0.2.0",
     "Jinja2==3.1.4",
     "lru-dict==1.3.0",
-    "PyJWT==2.9.0",
+    "PyJWT==2.10.1",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==43.0.1",
+    "cryptography==44.0.0",
     "Pillow==11.0.0",
-    "propcache==0.2.0",
-    "pyOpenSSL==24.2.1",
-    "orjson==3.10.11",
+    "propcache==0.2.1",
+    "pyOpenSSL==24.3.0",
+    "orjson==3.10.12",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "securetar==2024.2.1",
-    "SQLAlchemy==2.0.31",
+    "securetar==2024.11.0",
+    "SQLAlchemy==2.0.36",
     "standard-aifc==3.13.0;python_version>='3.13'",
     "standard-telnetlib==3.13.0;python_version>='3.13'",
     "typing-extensions>=4.12.2,<5.0",
@@ -75,11 +75,11 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.0",
+    "uv==0.5.8",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.17.2",
+    "yarl==1.18.3",
     "webrtc-models==0.3.0",
 ]
 
@@ -527,8 +527,6 @@ filterwarnings = [
     # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
-    # https://github.com/hunterjm/python-onvif-zeep-async/pull/51 - >3.1.12
-    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
     "ignore:invalid escape sequence:SyntaxWarning:.*stringcase",
 
@@ -700,7 +698,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.6.8"
+required-version = ">=0.8.0"
 
 [tool.ruff.lint]
 select = [
@@ -783,7 +781,7 @@ select = [
     "SLOT", # flake8-slots
     "T100", # Trace found: {name} used
     "T20", # flake8-print
-    "TCH", # flake8-type-checking
+    "TC", # flake8-type-checking
     "TID", # Tidy imports
     "TRY", # tryceratops
     "UP", # pyupgrade
@@ -807,7 +805,6 @@ ignore = [
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
-    "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PT018", # Assertion should be broken down into multiple parts
     "RUF001", # String contains ambiguous unicode character.
@@ -820,9 +817,9 @@ ignore = [
     "SIM115", # Use context handler for opening files
 
     # Moving imports into type-checking blocks can mess with pytest.patch()
-    "TCH001", # Move application import {} into a type-checking block
-    "TCH002", # Move third-party import {} into a type-checking block
-    "TCH003", # Move standard library import {} into a type-checking block
+    "TC001", # Move application import {} into a type-checking block
+    "TC002", # Move third-party import {} into a type-checking block
+    "TC003", # Move standard library import {} into a type-checking block
 
     "TRY003", # Avoid specifying long messages outside the exception class
     "TRY400", # Use `logging.exception` instead of `logging.error`

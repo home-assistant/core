@@ -2,7 +2,11 @@
   "common": {
     "todos": "To-Do's",
     "dailies": "Dailies",
-    "config_entry_name": "Select character"
+    "config_entry_name": "Select character",
+    "unit_tasks": "tasks",
+    "unit_health_points": "HP",
+    "unit_mana_points": "MP",
+    "unit_experience_points": "XP"
   },
   "config": {
     "abort": {
@@ -15,26 +19,39 @@
     },
     "step": {
       "user": {
+        "title": "Habitica - Gamify your life",
         "menu_options": {
           "login": "Login to Habitica",
           "advanced": "Login to other instances"
         },
-        "description": "Connect your Habitica profile to allow monitoring of your user's profile and tasks."
+        "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
       "login": {
+        "title": "[%key:component::habitica::config::step::user::menu_options::login%]",
         "data": {
           "username": "Email or username (case-sensitive)",
           "password": "[%key:common::config_flow::data::password%]"
-        }
+        },
+        "data_description": {
+          "username": "Email or username (case-sensitive) to connect Home Assistant to your Habitica account",
+          "password": "Password for the account to connect Home Assistant to Habitica"
+        },
+        "description": "Enter your login details to start using Habitica with Home Assistant\n\n[Forgot your password?]({forgot_password})"
       },
       "advanced": {
+        "title": "[%key:component::habitica::config::step::user::menu_options::advanced%]",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_user": "User ID",
           "api_key": "API Token",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
-        "description": "You can retrieve your `User ID` and `API Token` from **Settings -> Site Data** on Habitica or the instance you want to connect to"
+        "data_description": {
+          "url": "URL of the Habitica installation to connect to. Defaults to `{default_url}`",
+          "api_user": "User ID of your Habitica account",
+          "api_key": "API Token of the Habitica account"
+        },
+        "description": "You can retrieve your `User ID` and `API Token` from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to"
       }
     }
   },
@@ -109,6 +126,12 @@
             }
           }
         }
+      },
+      "todo_reminders": {
+        "name": "To-do reminders"
+      },
+      "daily_reminders": {
+        "name": "Daily reminders"
       }
     },
     "sensor": {
@@ -116,31 +139,39 @@
         "name": "Display name"
       },
       "health": {
-        "name": "Health"
+        "name": "Health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "health_max": {
-        "name": "Max. health"
+        "name": "Max. health",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
       },
       "mana": {
-        "name": "Mana"
+        "name": "Mana",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "mana_max": {
-        "name": "Max. mana"
+        "name": "Max. mana",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_mana_points%]"
       },
       "experience": {
-        "name": "Experience"
+        "name": "Experience",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "experience_max": {
-        "name": "Next level"
+        "name": "Next level",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_experience_points%]"
       },
       "level": {
         "name": "Level"
       },
       "gold": {
-        "name": "Gold"
+        "name": "Gold",
+        "unit_of_measurement": "GP"
       },
       "gems": {
-        "name": "Gems"
+        "name": "Gems",
+        "unit_of_measurement": "gems"
       },
       "trinkets": {
         "name": "Mystic hourglasses"
@@ -155,16 +186,20 @@
         }
       },
       "todos": {
-        "name": "[%key:component::habitica::common::todos%]"
+        "name": "[%key:component::habitica::common::todos%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "dailys": {
-        "name": "[%key:component::habitica::common::dailies%]"
+        "name": "[%key:component::habitica::common::dailies%]",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "habits": {
-        "name": "Habits"
+        "name": "Habits",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "rewards": {
-        "name": "Rewards"
+        "name": "Rewards",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "strength": {
         "name": "Strength",
