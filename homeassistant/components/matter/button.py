@@ -147,4 +147,15 @@ DISCOVERY_SCHEMAS = [
         value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="EnergyEvseEnableChargingButton",
+            translation_key="enable_charging",
+            command=clusters.EnergyEvse.Commands.EnableCharging,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
+        allow_multi=True,
+    ),
 ]
