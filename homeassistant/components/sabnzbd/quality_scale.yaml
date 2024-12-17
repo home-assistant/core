@@ -1,9 +1,15 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: todo
+    comment: |
+      Do not remove services when all config entries are removed.
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: todo
+    comment: |
+      const.py has unused variables.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -26,7 +32,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: |
+      Raise ServiceValidationError in async_get_entry_for_service_call.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -38,7 +47,10 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      Coverage for loading and unloading config entries is missing.
 
   # Gold
   devices: done
@@ -50,12 +62,15 @@ rules:
   discovery:
     status: exempt
     comment: |
-      This integration cannot be discovered,.
+      This integration cannot be discovered.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: todo
-  docs-supported-functions: done
+  docs-supported-functions:
+    status: todo
+    comment: |
+      Describe the state of the sensor and make it a enum sensor.
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
