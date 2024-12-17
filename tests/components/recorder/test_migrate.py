@@ -600,7 +600,7 @@ async def test_schema_migrate(
             start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
-    def _sometimes_failing_create_index(*args):
+    def _sometimes_failing_create_index(*args, **kwargs):
         """Make the first index create raise a retryable error to ensure we retry."""
         if recorder_db_url.startswith("mysql://"):
             nonlocal create_calls
@@ -609,7 +609,7 @@ async def test_schema_migrate(
                 mysql_exception = OperationalError("statement", {}, [])
                 mysql_exception.orig = Exception(1205, "retryable")
                 raise mysql_exception
-        real_create_index(*args)
+        real_create_index(*args, **kwargs)
 
     with (
         patch(
