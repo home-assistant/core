@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the EnergyZero integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from energyzero import EnergyZeroNoDataError
 import pytest
@@ -11,6 +11,8 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
@@ -18,17 +20,21 @@ from tests.typing import ClientSessionGenerator
 pytestmark = pytest.mark.freeze_time("2022-12-07 15:00:00")
 
 
-async def test_diagnostics(
+async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    init_integration: MockConfigEntry,
+    mock_energyzero: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-        == snapshot
+    """Test the EnergyZero entry diagnostics."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await get_diagnostics_for_config_entry(
+        hass, hass_client, mock_config_entry
     )
+
+    assert result == snapshot
 
 
 async def test_diagnostics_no_gas_today(
