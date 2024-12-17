@@ -42,6 +42,15 @@ SQLITE_MAX_BIND_VARS = 998
 # capped at 4000 to avoid performance issues
 SQLITE_MODERN_MAX_BIND_VARS = 4000
 
+# As soon as we have more than 999 ids, split the query as the
+# MariaDB/MySQL optimizers handle it poorly and will no longer
+# do an index only scan
+# https://github.com/home-assistant/core/issues/132865
+# We do this for all engines to keep the code simple and
+# ensure we do not hit any future limits since all engines
+# have a limit on the number of bind vars
+MAX_IDS_FOR_START_TIME_QUERY = 999
+
 DEFAULT_MAX_BIND_VARS = 4000
 
 DB_WORKER_PREFIX = "DbWorker"

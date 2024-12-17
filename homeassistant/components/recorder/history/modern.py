@@ -11,6 +11,7 @@ from typing import Any, cast
 from sqlalchemy import (
     CompoundSelect,
     Select,
+    StatementLambdaElement,
     Subquery,
     and_,
     func,
@@ -25,9 +26,10 @@ from sqlalchemy.orm.session import Session
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
+from homeassistant.util.collection import chunked_or_all
 import homeassistant.util.dt as dt_util
 
-from ..const import LAST_REPORTED_SCHEMA_VERSION
+from ..const import LAST_REPORTED_SCHEMA_VERSION, MAX_IDS_FOR_START_TIME_QUERY
 from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
 from ..filters import Filters
 from ..models import (
@@ -254,7 +256,58 @@ def get_significant_states_with_session(
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    stmt = lambda_stmt(
+
+    rows: list[Row] = []
+    if include_start_time_state:
+        # https://github.com/home-assistant/core/issues/132865
+        # If we include the start time state we need to limit the
+        # number of metadata_ids we query for at a time to avoid
+        # hitting limits in the MySQL/MariaDB optimizer that prevent
+        # the start time state query from using an index-only optimization
+        # to find the start time state.
+        iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_START_TIME_QUERY)
+    else:
+        iter_metadata_ids = (metadata_ids,)
+    for metadata_ids_chunk in iter_metadata_ids:
+        stmt = _generate_significant_states_with_session_stmt(
+            start_time_ts,
+            end_time_ts,
+            single_metadata_id,
+            metadata_ids_chunk,
+            metadata_ids_in_significant_domains,
+            significant_changes_only,
+            no_attributes,
+            include_start_time_state,
+            run_start_ts,
+        )
+        row_chunk = cast(
+            list[Row],
+            execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
+        )
+        rows = row_chunk if not rows else rows + row_chunk
+    return _sorted_states_to_dict(
+        rows,
+        start_time_ts if include_start_time_state else None,
+        entity_ids,
+        entity_id_to_metadata_id,
+        minimal_response,
+        compressed_state_format,
+        no_attributes=no_attributes,
+    )
+
+
+def _generate_significant_states_with_session_stmt(
+    start_time_ts: float,
+    end_time_ts: float | None,
+    single_metadata_id: int | None,
+    metadata_ids: list[int],
+    metadata_ids_in_significant_domains: list[int],
+    significant_changes_only: bool,
+    no_attributes: bool,
+    include_start_time_state: bool,
+    run_start_ts: float | None,
+) -> StatementLambdaElement:
+    return lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,
             end_time_ts,
@@ -274,15 +327,6 @@ def get_significant_states_with_session(
             no_attributes,
             include_start_time_state,
         ],
-    )
-    return _sorted_states_to_dict(
-        execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
-        start_time_ts if include_start_time_state else None,
-        entity_ids,
-        entity_id_to_metadata_id,
-        minimal_response,
-        compressed_state_format,
-        no_attributes=no_attributes,
     )
 
 

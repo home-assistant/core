@@ -27,6 +27,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
@@ -57,6 +58,7 @@ from .const import (
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
     INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
+    MAX_IDS_FOR_START_TIME_QUERY,
     SupportedDialect,
 )
 from .db_schema import (
@@ -2065,8 +2067,19 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    stmt = _generate_statistics_at_time_stmt(table, metadata_ids, start_time_ts, types)
-    return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
+    rows: list[Row] = []
+    # https://github.com/home-assistant/core/issues/132865
+    # If we have a lot of metadata_ids, we need to split them into chunks
+    # to ensure the query optimizer still does an index only scan
+    for metadata_ids_chunk in chunked_or_all(
+        metadata_ids, MAX_IDS_FOR_START_TIME_QUERY
+    ):
+        stmt = _generate_statistics_at_time_stmt(
+            table, metadata_ids_chunk, start_time_ts, types
+        )
+        row_chunk = cast(list[Row], execute_stmt_lambda_element(session, stmt))
+        rows = row_chunk if not rows else rows + row_chunk
+    return rows
 
 
 def _build_sum_converted_stats(
