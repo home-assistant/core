@@ -32,9 +32,11 @@ from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+type VegeHubConfigEntry = ConfigEntry[VegeHub]
+
 
 # The integration is only set up through the UI (config flow)
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
     """Set up VegeHub from a config entry."""
 
     # Register the device in the device registry
