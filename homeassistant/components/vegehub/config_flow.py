@@ -50,7 +50,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_IP_ADDRESS in user_input and self._hub is None:
                 # When the user has input the IP manually, we need to gather more information
                 # from the Hub before we can continue setup.
-                self._hub = VegeHub(str(user_input.get(CONF_IP_ADDRESS)))
+                self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
 
                 await self._hub.retrieve_mac_address()
 
