@@ -52,7 +52,12 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # from the Hub before we can continue setup.
                 self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
 
-                await self._hub.retrieve_mac_address()
+                try:
+                    await self._hub.retrieve_mac_address()
+                except ConnectionError:
+                    _LOGGER.error(
+                        "Failed to get MAC address for %s", self._hub.ip_address
+                    )
 
                 if len(self._hub.mac_address) <= 0:
                     _LOGGER.error(
