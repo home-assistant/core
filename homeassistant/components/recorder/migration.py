@@ -170,6 +170,22 @@ _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect]
 }
 
 
+def _unindexable_legacy_column(
+    instance: Recorder, base: type[DeclarativeBase], err: Exception
+) -> bool:
+    """Ignore index errors on char(0) columns."""
+    # 1167: The used storage engine can't index column '%s'
+    return bool(
+        base == LegacyBase
+        and isinstance(err, OperationalError)
+        and instance.engine
+        and instance.engine.dialect.name == SupportedDialect.MYSQL
+        and isinstance(err.orig, BaseException)
+        and err.orig.args
+        and err.orig.args[0] == 1167
+    )
+
+
 def raise_if_exception_missing_str(ex: Exception, match_substrs: Iterable[str]) -> None:
     """Raise if the exception and cause do not contain the match substrs."""
     lower_ex_strs = [str(ex).lower(), str(ex.__cause__).lower()]
@@ -472,6 +488,7 @@ def migrate_data_live(
 
 
 def _create_index(
+    instance: Recorder,
     session_maker: Callable[[], Session],
     table_name: str,
     index_name: str,
@@ -503,10 +520,18 @@ def _create_index(
             connection = session.connection()
             index.create(connection)
         except (InternalError, OperationalError, ProgrammingError) as err:
+            if _unindexable_legacy_column(instance, base, err):
+                _LOGGER.info(
+                    "Can't add legacy index %s to column %s, continuing",
+                    index_name,
+                    table_name,
+                )
+                return
             raise_if_exception_missing_str(err, ["already exists", "duplicate"])
             _LOGGER.warning(
                 "Index %s already exists on %s, continuing", index_name, table_name
             )
+            return
 
     _LOGGER.warning("Finished adding index `%s` to table `%s`", index_name, table_name)
 
@@ -1045,7 +1070,12 @@ class _SchemaVersion2Migrator(_SchemaVersionMigrator, target_version=2):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Create compound start/end index for recorder_runs
-        _create_index(self.session_maker, "recorder_runs", "ix_recorder_runs_start_end")
+        _create_index(
+            self.instance,
+            self.session_maker,
+            "recorder_runs",
+            "ix_recorder_runs_start_end",
+        )
         # This used to create ix_states_last_updated bit it was removed in version 32
 
 
@@ -1080,7 +1110,9 @@ class _SchemaVersion5Migrator(_SchemaVersionMigrator, target_version=5):
     def _apply_update(self) -> None:
         """Version specific update method."""
         # Create supporting index for States.event_id foreign key
-        _create_index(self.session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+        _create_index(
+            self.instance, self.session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX
+        )
 
 
 class _SchemaVersion6Migrator(_SchemaVersionMigrator, target_version=6):
@@ -1091,7 +1123,9 @@ class _SchemaVersion6Migrator(_SchemaVersionMigrator, target_version=6):
             "events",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(self.session_maker, "events", "ix_events_context_id")
+        _create_index(
+            self.instance, self.session_maker, "events", "ix_events_context_id"
+        )
         # This used to create ix_events_context_user_id,
         # but it was removed in version 28
         _add_columns(
@@ -1099,7 +1133,9 @@ class _SchemaVersion6Migrator(_SchemaVersionMigrator, target_version=6):
             "states",
             ["context_id CHARACTER(36)", "context_user_id CHARACTER(36)"],
         )
-        _create_index(self.session_maker, "states", "ix_states_context_id")
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_context_id"
+        )
         # This used to create ix_states_context_user_id,
         # but it was removed in version 28
 
@@ -1153,7 +1189,9 @@ class _SchemaVersion10Migrator(_SchemaVersionMigrator, target_version=10):
 class _SchemaVersion11Migrator(_SchemaVersionMigrator, target_version=11):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        _create_index(self.session_maker, "states", "ix_states_old_state_id")
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_old_state_id"
+        )
 
         # _update_states_table_with_foreign_key_options first drops foreign
         # key constraints, and then re-adds them with the correct settings.
@@ -1395,13 +1433,20 @@ class _SchemaVersion25Migrator(_SchemaVersionMigrator, target_version=25):
             "states",
             [f"attributes_id {self.column_types.big_int_type}"],
         )
-        _create_index(self.session_maker, "states", "ix_states_attributes_id")
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_attributes_id"
+        )
 
 
 class _SchemaVersion26Migrator(_SchemaVersionMigrator, target_version=26):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        _create_index(self.session_maker, "statistics_runs", "ix_statistics_runs_start")
+        _create_index(
+            self.instance,
+            self.session_maker,
+            "statistics_runs",
+            "ix_statistics_runs_start",
+        )
 
 
 class _SchemaVersion27Migrator(_SchemaVersionMigrator, target_version=27):
@@ -1410,7 +1455,7 @@ class _SchemaVersion27Migrator(_SchemaVersionMigrator, target_version=27):
         _add_columns(
             self.session_maker, "events", [f"data_id {self.column_types.big_int_type}"]
         )
-        _create_index(self.session_maker, "events", "ix_events_data_id")
+        _create_index(self.instance, self.session_maker, "events", "ix_events_data_id")
 
 
 class _SchemaVersion28Migrator(_SchemaVersionMigrator, target_version=28):
@@ -1430,7 +1475,9 @@ class _SchemaVersion28Migrator(_SchemaVersionMigrator, target_version=28):
                 "context_parent_id VARCHAR(36)",
             ],
         )
-        _create_index(self.session_maker, "states", "ix_states_context_id")
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_context_id"
+        )
         # Once there are no longer any state_changed events
         # in the events table we can drop the index on states.event_id
 
@@ -1457,7 +1504,10 @@ class _SchemaVersion29Migrator(_SchemaVersionMigrator, target_version=29):
                 )
         try:
             _create_index(
-                self.session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
+                self.instance,
+                self.session_maker,
+                "statistics_meta",
+                "ix_statistics_meta_statistic_id",
             )
         except DatabaseError:
             # There may be duplicated statistics_meta entries, delete duplicates
@@ -1465,7 +1515,10 @@ class _SchemaVersion29Migrator(_SchemaVersionMigrator, target_version=29):
             with session_scope(session=self.session_maker()) as session:
                 delete_statistics_meta_duplicates(self.instance, session)
             _create_index(
-                self.session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"
+                self.instance,
+                self.session_maker,
+                "statistics_meta",
+                "ix_statistics_meta_statistic_id",
             )
 
 
@@ -1499,14 +1552,24 @@ class _SchemaVersion31Migrator(_SchemaVersionMigrator, target_version=31):
                 f"last_changed_ts {self.column_types.timestamp_type}",
             ],
         )
-        _create_index(self.session_maker, "events", "ix_events_time_fired_ts")
         _create_index(
-            self.session_maker, "events", "ix_events_event_type_time_fired_ts"
+            self.instance, self.session_maker, "events", "ix_events_time_fired_ts"
         )
         _create_index(
-            self.session_maker, "states", "ix_states_entity_id_last_updated_ts"
+            self.instance,
+            self.session_maker,
+            "events",
+            "ix_events_event_type_time_fired_ts",
         )
-        _create_index(self.session_maker, "states", "ix_states_last_updated_ts")
+        _create_index(
+            self.instance,
+            self.session_maker,
+            "states",
+            "ix_states_entity_id_last_updated_ts",
+        )
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_last_updated_ts"
+        )
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
 
 
@@ -1564,16 +1627,23 @@ class _SchemaVersion34Migrator(_SchemaVersionMigrator, target_version=34):
                 f"last_reset_ts {self.column_types.timestamp_type}",
             ],
         )
-        _create_index(self.session_maker, "statistics", "ix_statistics_start_ts")
         _create_index(
-            self.session_maker, "statistics", "ix_statistics_statistic_id_start_ts"
+            self.instance, self.session_maker, "statistics", "ix_statistics_start_ts"
         )
         _create_index(
+            self.instance,
+            self.session_maker,
+            "statistics",
+            "ix_statistics_statistic_id_start_ts",
+        )
+        _create_index(
+            self.instance,
             self.session_maker,
             "statistics_short_term",
             "ix_statistics_short_term_start_ts",
         )
         _create_index(
+            self.instance,
             self.session_maker,
             "statistics_short_term",
             "ix_statistics_short_term_statistic_id_start_ts",
@@ -1623,8 +1693,12 @@ class _SchemaVersion36Migrator(_SchemaVersionMigrator, target_version=36):
                     f"context_parent_id_bin {self.column_types.context_bin_type}",
                 ],
             )
-        _create_index(self.session_maker, "events", "ix_events_context_id_bin")
-        _create_index(self.session_maker, "states", "ix_states_context_id_bin")
+        _create_index(
+            self.instance, self.session_maker, "events", "ix_events_context_id_bin"
+        )
+        _create_index(
+            self.instance, self.session_maker, "states", "ix_states_context_id_bin"
+        )
 
 
 class _SchemaVersion37Migrator(_SchemaVersionMigrator, target_version=37):
@@ -1635,10 +1709,15 @@ class _SchemaVersion37Migrator(_SchemaVersionMigrator, target_version=37):
             "events",
             [f"event_type_id {self.column_types.big_int_type}"],
         )
-        _create_index(self.session_maker, "events", "ix_events_event_type_id")
+        _create_index(
+            self.instance, self.session_maker, "events", "ix_events_event_type_id"
+        )
         _drop_index(self.session_maker, "events", "ix_events_event_type_time_fired_ts")
         _create_index(
-            self.session_maker, "events", "ix_events_event_type_id_time_fired_ts"
+            self.instance,
+            self.session_maker,
+            "events",
+            "ix_events_event_type_id_time_fired_ts",
         )
 
 
@@ -1650,9 +1729,14 @@ class _SchemaVersion38Migrator(_SchemaVersionMigrator, target_version=38):
             "states",
             [f"metadata_id {self.column_types.big_int_type}"],
         )
-        _create_index(self.session_maker, "states", "ix_states_metadata_id")
         _create_index(
-            self.session_maker, "states", "ix_states_metadata_id_last_updated_ts"
+            self.instance, self.session_maker, "states", "ix_states_metadata_id"
+        )
+        _create_index(
+            self.instance,
+            self.session_maker,
+            "states",
+            "ix_states_metadata_id_last_updated_ts",
         )
 
 
@@ -1736,8 +1820,15 @@ class _SchemaVersion40Migrator(_SchemaVersionMigrator, target_version=40):
 class _SchemaVersion41Migrator(_SchemaVersionMigrator, target_version=41):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        _create_index(self.session_maker, "event_types", "ix_event_types_event_type")
-        _create_index(self.session_maker, "states_meta", "ix_states_meta_entity_id")
+        _create_index(
+            self.instance,
+            self.session_maker,
+            "event_types",
+            "ix_event_types_event_type",
+        )
+        _create_index(
+            self.instance, self.session_maker, "states_meta", "ix_states_meta_entity_id"
+        )
 
 
 class _SchemaVersion42Migrator(_SchemaVersionMigrator, target_version=42):
@@ -2487,7 +2578,7 @@ class BaseOffLineMigration(BaseMigration):
             index_name,
             table_name,
         )
-        _create_index(instance.get_session, table_name, index_name, base=base)
+        _create_index(instance, instance.get_session, table_name, index_name, base=base)
 
 
 class BaseRunTimeMigration(BaseMigration):
