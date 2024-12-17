@@ -244,22 +244,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             )
         )
 
-        assert self._sync_status.id is not None
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                dispatcher_join_signal(self.entity_id),
-                self.async_add_follower,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                dispatcher_unjoin_signal(self._sync_status.id),
-                self.async_remove_follower,
-            )
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
         await super().async_will_remove_from_hass()
