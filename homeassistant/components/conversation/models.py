@@ -23,11 +23,33 @@ class ConversationInput:
     """User input to be processed."""
 
     text: str
+    """User spoken text."""
+
     context: Context
+    """Context of the request."""
+
     conversation_id: str | None
+    """Unique identifier for the conversation."""
+
     device_id: str | None
+    """Unique identifier for the device."""
+
     language: str
+    """Language of the request."""
+
     agent_id: str | None = None
+    """Agent to use for processing."""
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return input as a dict."""
+        return {
+            "text": self.text,
+            "context": self.context.as_dict(),
+            "conversation_id": self.conversation_id,
+            "device_id": self.device_id,
+            "language": self.language,
+            "agent_id": self.agent_id,
+        }
 
 
 @dataclass(slots=True)

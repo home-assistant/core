@@ -37,7 +37,7 @@ async def update_variables_for_config_entry(
     try:
         return await _update_variables_for_config_entry(hass, entry, variable_names)
     except BadToken:
-        _LOGGER.info("Updating Control4 director token")
+        _LOGGER.debug("Updating Control4 director token")
         await refresh_tokens(hass, entry)
         return await _update_variables_for_config_entry(hass, entry, variable_names)
 

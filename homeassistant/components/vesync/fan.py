@@ -17,8 +17,8 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .common import VeSyncDevice
 from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
+    _attr_translation_key = "vesync"
 
     def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""

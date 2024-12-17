@@ -20,6 +20,8 @@ from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class EnvoyRelaySelectEntityDescription(SelectEntityDescription):
@@ -143,7 +145,6 @@ async def async_setup_entry(
         envoy_data.tariff
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
-        and coordinator.envoy.supported_features & SupportedFeatures.ENPOWER
     ):
         entities.append(
             EnvoyStorageSettingsSelectEntity(coordinator, STORAGE_MODE_ENTITY)
@@ -209,18 +210,29 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         super().__init__(coordinator, description)
         self.envoy = coordinator.envoy
         assert coordinator.envoy.data is not None
-        assert coordinator.envoy.data.enpower is not None
-        enpower = coordinator.envoy.data.enpower
-        self._serial_number = enpower.serial_number
-        self._attr_unique_id = f"{self._serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._serial_number)},
-            manufacturer="Enphase",
-            model="Enpower",
-            name=f"Enpower {self._serial_number}",
-            sw_version=str(enpower.firmware_version),
-            via_device=(DOMAIN, self.envoy_serial_num),
-        )
+        if enpower := coordinator.envoy.data.enpower:
+            self._serial_number = enpower.serial_number
+            self._attr_unique_id = f"{self._serial_number}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._serial_number)},
+                manufacturer="Enphase",
+                model="Enpower",
+                name=f"Enpower {self._serial_number}",
+                sw_version=str(enpower.firmware_version),
+                via_device=(DOMAIN, self.envoy_serial_num),
+            )
+        else:
+            # If no enpower device assign selects to Envoy itself
+            self._attr_unique_id = f"{self.envoy_serial_num}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self.envoy_serial_num)},
+                manufacturer="Enphase",
+                model=coordinator.envoy.envoy_model,
+                name=coordinator.name,
+                sw_version=str(coordinator.envoy.firmware),
+                hw_version=coordinator.envoy.part_number,
+                serial_number=self.envoy_serial_num,
+            )
 
     @property
     def current_option(self) -> str:

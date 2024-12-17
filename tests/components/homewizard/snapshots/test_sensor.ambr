@@ -1,37 +1,4 @@
 # serializer version: 1
-# name: test_gas_meter_migrated[sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'homewizard',
-    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'homewizard_gas_meter_01FFEEDDCCBBAA99887766554433221100',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -40,7 +7,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -50,7 +17,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -99,7 +66,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -127,7 +94,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -137,7 +104,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -186,7 +153,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -214,7 +181,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -224,7 +191,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -273,7 +240,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -301,7 +268,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -311,7 +278,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -360,7 +327,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -388,7 +355,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -398,7 +365,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -447,7 +414,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -475,7 +442,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -485,7 +452,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -537,7 +504,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -565,7 +532,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -575,7 +542,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -624,7 +591,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -652,7 +619,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -662,7 +629,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -711,7 +678,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -739,7 +706,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -749,7 +716,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -798,7 +765,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -826,7 +793,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -836,7 +803,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -883,7 +850,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -908,7 +875,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -918,7 +885,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -967,7 +934,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -994,7 +961,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1004,7 +971,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1053,7 +1020,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1081,7 +1048,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1091,7 +1058,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1140,7 +1107,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l1_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1168,7 +1135,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1178,7 +1145,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1227,7 +1194,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l2_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1255,7 +1222,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1265,7 +1232,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1314,7 +1281,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l3_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -1342,7 +1309,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1352,7 +1319,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1401,7 +1368,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1429,7 +1396,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1439,7 +1406,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1488,7 +1455,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1516,7 +1483,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1526,7 +1493,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1575,7 +1542,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1603,7 +1570,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1613,7 +1580,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1662,7 +1629,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1690,7 +1657,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1700,7 +1667,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1749,7 +1716,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1777,7 +1744,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1787,7 +1754,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1836,7 +1803,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -1864,7 +1831,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1874,7 +1841,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -1923,7 +1890,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -1951,7 +1918,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -1961,7 +1928,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2013,7 +1980,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2041,7 +2008,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2051,7 +2018,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2100,7 +2067,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l1',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2128,7 +2095,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2138,7 +2105,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2187,7 +2154,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l2',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2215,7 +2182,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2225,7 +2192,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2274,7 +2241,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2302,7 +2269,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2312,7 +2279,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2364,7 +2331,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2392,7 +2359,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2402,7 +2369,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2454,7 +2421,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2482,7 +2449,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2492,7 +2459,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2544,7 +2511,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2572,7 +2539,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2582,7 +2549,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2631,7 +2598,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2659,7 +2626,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2669,7 +2636,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2718,7 +2685,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l1_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2746,7 +2713,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2756,7 +2723,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2805,7 +2772,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l2_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2833,7 +2800,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2843,7 +2810,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2892,7 +2859,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l3_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -2920,7 +2887,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -2930,7 +2897,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -2979,7 +2946,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3007,7 +2974,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3017,7 +2984,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3066,7 +3033,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3094,7 +3061,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3104,7 +3071,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3153,7 +3120,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3181,7 +3148,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3191,7 +3158,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3238,7 +3205,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -3263,7 +3230,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3273,7 +3240,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3322,7 +3289,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3349,7 +3316,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3359,7 +3326,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3406,7 +3373,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': 'aabbccddeeff_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -3433,7 +3400,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3443,7 +3410,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3492,7 +3459,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3520,7 +3487,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3530,7 +3497,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3579,7 +3546,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3607,7 +3574,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3617,7 +3584,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3666,7 +3633,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3694,7 +3661,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3704,7 +3671,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3751,7 +3718,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
-    'unique_id': 'aabbccddeeff_smr_version',
+    'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -3776,7 +3743,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3786,7 +3753,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3835,7 +3802,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3863,7 +3830,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3873,7 +3840,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -3922,7 +3889,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -3950,7 +3917,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -3960,7 +3927,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4009,7 +3976,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4037,7 +4004,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4047,7 +4014,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4096,7 +4063,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4124,7 +4091,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4134,7 +4101,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4183,7 +4150,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4211,7 +4178,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4221,7 +4188,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4270,7 +4237,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4298,7 +4265,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4308,7 +4275,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4357,7 +4324,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4385,7 +4352,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4395,7 +4362,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4444,7 +4411,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4472,7 +4439,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4482,7 +4449,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4531,7 +4498,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4559,7 +4526,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4569,7 +4536,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4618,7 +4585,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -4646,7 +4613,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4656,7 +4623,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4705,7 +4672,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -4733,7 +4700,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4743,7 +4710,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4790,7 +4757,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': 'aabbccddeeff_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -4815,7 +4782,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4825,7 +4792,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4872,7 +4839,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
-    'unique_id': 'aabbccddeeff_monthly_power_peak_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -4899,7 +4866,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4909,7 +4876,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -4961,7 +4928,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -4989,7 +4956,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -4999,7 +4966,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5046,7 +5013,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': 'aabbccddeeff_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -5071,7 +5038,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5081,7 +5048,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5133,7 +5100,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5161,7 +5128,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5171,7 +5138,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5223,7 +5190,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5251,7 +5218,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5261,7 +5228,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5313,7 +5280,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -5341,7 +5308,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5351,7 +5318,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5398,7 +5365,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
-    'unique_id': 'aabbccddeeff_unique_meter_id',
+    'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -5423,7 +5390,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5433,7 +5400,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5480,7 +5447,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
-    'unique_id': 'aabbccddeeff_meter_model',
+    'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
     'unit_of_measurement': None,
   })
 # ---
@@ -5505,7 +5472,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5515,7 +5482,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5569,7 +5536,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
-    'unique_id': 'aabbccddeeff_active_tariff',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
     'unit_of_measurement': None,
   })
 # ---
@@ -5601,7 +5568,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5611,7 +5578,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5660,7 +5627,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': 'aabbccddeeff_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -5688,7 +5655,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5698,7 +5665,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5747,7 +5714,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5775,7 +5742,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5785,7 +5752,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5834,7 +5801,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5862,7 +5829,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5872,7 +5839,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -5921,7 +5888,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5949,7 +5916,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -5959,7 +5926,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6006,7 +5973,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6031,7 +5998,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6041,7 +6008,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6088,7 +6055,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6113,7 +6080,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6123,7 +6090,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6170,7 +6137,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6195,7 +6162,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6205,7 +6172,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6252,7 +6219,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6277,7 +6244,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6287,7 +6254,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6334,7 +6301,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6359,7 +6326,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6369,7 +6336,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6416,7 +6383,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -6441,7 +6408,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6451,7 +6418,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6500,8 +6467,8 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': 'aabbccddeeff_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_water_usage:state]
@@ -6509,7 +6476,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -6527,7 +6494,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6537,7 +6504,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6584,7 +6551,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -6609,7 +6576,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -6619,7 +6586,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -6668,7 +6635,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -7109,7 +7076,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7119,7 +7086,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7166,7 +7133,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': 'aabbccddeeff_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -7193,7 +7160,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7203,7 +7170,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7252,7 +7219,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7280,7 +7247,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7290,7 +7257,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7339,7 +7306,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7367,7 +7334,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7377,7 +7344,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7426,7 +7393,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -7454,7 +7421,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7464,7 +7431,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7511,7 +7478,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
-    'unique_id': 'aabbccddeeff_smr_version',
+    'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -7536,7 +7503,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7546,7 +7513,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7595,7 +7562,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7623,7 +7590,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7633,7 +7600,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7682,7 +7649,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7710,7 +7677,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7720,7 +7687,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7769,7 +7736,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7797,7 +7764,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7807,7 +7774,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7856,7 +7823,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7884,7 +7851,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7894,7 +7861,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -7943,7 +7910,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -7971,7 +7938,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -7981,7 +7948,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8030,7 +7997,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8058,7 +8025,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8068,7 +8035,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8117,7 +8084,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8145,7 +8112,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8155,7 +8122,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8204,7 +8171,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8232,7 +8199,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8242,7 +8209,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8291,7 +8258,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8319,7 +8286,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8329,7 +8296,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8378,7 +8345,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -8406,7 +8373,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8416,7 +8383,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8465,7 +8432,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -8493,7 +8460,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8503,7 +8470,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8550,7 +8517,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': 'aabbccddeeff_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -8575,7 +8542,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8585,7 +8552,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8632,7 +8599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
-    'unique_id': 'aabbccddeeff_monthly_power_peak_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8659,7 +8626,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8669,7 +8636,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8721,7 +8688,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8749,7 +8716,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8759,7 +8726,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8806,7 +8773,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': 'aabbccddeeff_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -8831,7 +8798,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8841,7 +8808,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8893,7 +8860,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -8921,7 +8888,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -8931,7 +8898,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -8983,7 +8950,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -9011,7 +8978,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9021,7 +8988,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9073,7 +9040,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -9101,7 +9068,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9111,7 +9078,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9158,7 +9125,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
-    'unique_id': 'aabbccddeeff_unique_meter_id',
+    'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
     'unit_of_measurement': None,
   })
 # ---
@@ -9183,7 +9150,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9193,7 +9160,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9240,7 +9207,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
-    'unique_id': 'aabbccddeeff_meter_model',
+    'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
     'unit_of_measurement': None,
   })
 # ---
@@ -9265,7 +9232,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9275,7 +9242,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9329,7 +9296,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
-    'unique_id': 'aabbccddeeff_active_tariff',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
     'unit_of_measurement': None,
   })
 # ---
@@ -9361,7 +9328,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9371,7 +9338,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9420,7 +9387,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': 'aabbccddeeff_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -9448,7 +9415,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9458,7 +9425,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9507,7 +9474,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9535,7 +9502,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9545,7 +9512,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9594,7 +9561,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9622,7 +9589,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9632,7 +9599,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9681,7 +9648,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -9709,7 +9676,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9719,7 +9686,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9766,7 +9733,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9791,7 +9758,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9801,7 +9768,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9848,7 +9815,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9873,7 +9840,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9883,7 +9850,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -9930,7 +9897,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -9955,7 +9922,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -9965,7 +9932,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10012,7 +9979,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10037,7 +10004,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10047,7 +10014,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10094,7 +10061,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10119,7 +10086,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10129,7 +10096,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10176,7 +10143,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -10201,7 +10168,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10211,7 +10178,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10260,8 +10227,8 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': 'aabbccddeeff_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_water_usage:state]
@@ -10269,7 +10236,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -10287,7 +10254,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10297,7 +10264,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10344,7 +10311,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -10369,7 +10336,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10379,7 +10346,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10428,7 +10395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -10869,7 +10836,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10879,7 +10846,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -10926,7 +10893,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
-    'unique_id': 'aabbccddeeff_active_power_average_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -10953,7 +10920,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -10963,7 +10930,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11012,7 +10979,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11040,7 +11007,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11050,7 +11017,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11099,7 +11066,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11127,7 +11094,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11137,7 +11104,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11186,7 +11153,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -11214,7 +11181,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11224,7 +11191,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11273,7 +11240,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11301,7 +11268,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11311,7 +11278,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11360,7 +11327,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11388,7 +11355,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11398,7 +11365,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11447,7 +11414,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11475,7 +11442,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11485,7 +11452,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11534,7 +11501,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11562,7 +11529,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11572,7 +11539,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11621,7 +11588,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11649,7 +11616,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11659,7 +11626,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11708,7 +11675,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11736,7 +11703,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11746,7 +11713,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11795,7 +11762,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t1_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11823,7 +11790,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11833,7 +11800,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11882,7 +11849,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t2_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11910,7 +11877,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -11920,7 +11887,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -11969,7 +11936,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t3_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -11997,7 +11964,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12007,7 +11974,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12056,7 +12023,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_t4_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -12084,7 +12051,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12094,7 +12061,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12143,7 +12110,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -12171,7 +12138,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12181,7 +12148,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12228,7 +12195,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
-    'unique_id': 'aabbccddeeff_long_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -12253,7 +12220,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12263,7 +12230,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12315,7 +12282,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12343,7 +12310,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12353,7 +12320,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12400,7 +12367,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
-    'unique_id': 'aabbccddeeff_any_power_fail_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -12425,7 +12392,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12435,7 +12402,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12487,7 +12454,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12515,7 +12482,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12525,7 +12492,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12577,7 +12544,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12605,7 +12572,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12615,7 +12582,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12667,7 +12634,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -12695,7 +12662,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12705,7 +12672,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12754,7 +12721,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': 'aabbccddeeff_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -12782,7 +12749,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12792,7 +12759,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12841,7 +12808,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12869,7 +12836,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12879,7 +12846,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -12928,7 +12895,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -12956,7 +12923,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -12966,7 +12933,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13015,7 +12982,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -13043,7 +13010,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13053,7 +13020,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13100,7 +13067,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13125,7 +13092,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13135,7 +13102,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13182,7 +13149,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13207,7 +13174,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13217,7 +13184,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13264,7 +13231,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_sag_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13289,7 +13256,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13299,7 +13266,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13346,7 +13313,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l1_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13371,7 +13338,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13381,7 +13348,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13428,7 +13395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l2_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13453,7 +13420,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13463,7 +13430,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13510,7 +13477,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
-    'unique_id': 'aabbccddeeff_voltage_swell_l3_count',
+    'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
     'unit_of_measurement': None,
   })
 # ---
@@ -13535,7 +13502,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13545,7 +13512,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13594,8 +13561,8 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': 'aabbccddeeff_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_water_usage:state]
@@ -13603,7 +13570,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -13621,7 +13588,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13631,7 +13598,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13680,7 +13647,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -13708,7 +13675,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13718,7 +13685,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13767,7 +13734,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -13795,7 +13762,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13805,7 +13772,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13857,7 +13824,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -13885,7 +13852,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13895,7 +13862,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -13947,7 +13914,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -13975,7 +13942,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -13985,7 +13952,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14032,7 +13999,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -14057,7 +14024,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14067,7 +14034,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14116,7 +14083,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -14143,7 +14110,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14153,7 +14120,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14202,7 +14169,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -14230,7 +14197,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14240,7 +14207,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14289,7 +14256,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -14317,7 +14284,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14327,7 +14294,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14376,7 +14343,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -14404,7 +14371,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14414,7 +14381,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14463,7 +14430,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -14491,7 +14458,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14501,7 +14468,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14550,7 +14517,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -14578,7 +14545,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14588,7 +14555,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14640,7 +14607,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -14668,7 +14635,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14678,7 +14645,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14727,7 +14694,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -14755,7 +14722,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14765,7 +14732,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14817,7 +14784,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -14845,7 +14812,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14855,7 +14822,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14904,7 +14871,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -14932,7 +14899,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -14942,7 +14909,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -14991,7 +14958,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -15019,7 +14986,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15029,7 +14996,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15076,7 +15043,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -15101,7 +15068,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15111,7 +15078,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15160,7 +15127,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -15187,7 +15154,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15197,7 +15164,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15246,7 +15213,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
-    'unique_id': 'aabbccddeeff_total_liter_m3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -15274,7 +15241,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15284,7 +15251,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15333,8 +15300,8 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
-    'unique_id': 'aabbccddeeff_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-WTR-entity_ids4][sensor.device_water_usage:state]
@@ -15342,7 +15309,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -15360,7 +15327,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15370,7 +15337,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15417,7 +15384,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -15442,7 +15409,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15452,7 +15419,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15501,7 +15468,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -15528,7 +15495,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15538,7 +15505,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15587,7 +15554,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -15615,7 +15582,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15625,7 +15592,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15674,7 +15641,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -15702,7 +15669,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15712,7 +15679,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15761,7 +15728,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -15789,7 +15756,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15799,7 +15766,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15848,7 +15815,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -15876,7 +15843,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15886,7 +15853,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -15935,7 +15902,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -15963,7 +15930,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -15973,7 +15940,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16025,7 +15992,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -16053,7 +16020,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16063,7 +16030,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16112,7 +16079,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_factor',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -16140,7 +16107,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16150,7 +16117,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16199,7 +16166,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -16227,7 +16194,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16237,7 +16204,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16286,7 +16253,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_voltage_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -16314,7 +16281,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16324,7 +16291,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16371,7 +16338,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -16396,7 +16363,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16406,7 +16373,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16455,7 +16422,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---
@@ -16482,7 +16449,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16492,7 +16459,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16541,7 +16508,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_apparent_power_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16569,7 +16536,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16579,7 +16546,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16628,7 +16595,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l1_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16656,7 +16623,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16666,7 +16633,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16715,7 +16682,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l2_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16743,7 +16710,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16753,7 +16720,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16802,7 +16769,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
-    'unique_id': 'aabbccddeeff_active_apparent_power_l3_va',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
@@ -16830,7 +16797,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16840,7 +16807,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16889,7 +16856,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_current_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -16917,7 +16884,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -16927,7 +16894,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -16976,7 +16943,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l1_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17004,7 +16971,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17014,7 +16981,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17063,7 +17030,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l2_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17091,7 +17058,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17101,7 +17068,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17150,7 +17117,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
-    'unique_id': 'aabbccddeeff_active_current_l3_a',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -17178,7 +17145,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17188,7 +17155,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17237,7 +17204,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
-    'unique_id': 'aabbccddeeff_total_power_export_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -17265,7 +17232,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17275,7 +17242,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17324,7 +17291,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
-    'unique_id': 'aabbccddeeff_total_power_import_kwh',
+    'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -17352,7 +17319,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17362,7 +17329,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17411,7 +17378,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_frequency_hz',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -17439,7 +17406,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17449,7 +17416,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17501,7 +17468,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17529,7 +17496,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17539,7 +17506,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17588,7 +17555,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l1',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17616,7 +17583,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17626,7 +17593,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17675,7 +17642,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l2',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17703,7 +17670,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17713,7 +17680,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17762,7 +17729,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
-    'unique_id': 'aabbccddeeff_active_power_factor_l3',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
     'unit_of_measurement': '%',
   })
 # ---
@@ -17790,7 +17757,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17800,7 +17767,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17852,7 +17819,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l1_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17880,7 +17847,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17890,7 +17857,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -17942,7 +17909,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l2_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -17970,7 +17937,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -17980,7 +17947,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18032,7 +17999,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
-    'unique_id': 'aabbccddeeff_active_power_l3_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -18060,7 +18027,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18070,7 +18037,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18119,7 +18086,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_active_reactive_power_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18147,7 +18114,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18157,7 +18124,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18206,7 +18173,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l1_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18234,7 +18201,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18244,7 +18211,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18293,7 +18260,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l2_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18321,7 +18288,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18331,7 +18298,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18380,7 +18347,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
-    'unique_id': 'aabbccddeeff_active_reactive_power_l3_var',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
     'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
@@ -18408,7 +18375,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18418,7 +18385,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18467,7 +18434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l1_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18495,7 +18462,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18505,7 +18472,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18554,7 +18521,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l2_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18582,7 +18549,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18592,7 +18559,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18641,7 +18608,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
-    'unique_id': 'aabbccddeeff_active_voltage_l3_v',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -18669,7 +18636,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18679,7 +18646,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18726,7 +18693,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
-    'unique_id': 'aabbccddeeff_wifi_ssid',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
     'unit_of_measurement': None,
   })
 # ---
@@ -18751,7 +18718,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -18761,7 +18728,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -18810,7 +18777,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
-    'unique_id': 'aabbccddeeff_wifi_strength',
+    'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
     'unit_of_measurement': '%',
   })
 # ---

@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
@@ -67,12 +67,14 @@ def add_province_and_language_to_schema(
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
         selectable_languages = _country.supported_languages
-        new_selectable_languages = [lang[:2] for lang in selectable_languages]
+        new_selectable_languages = list(selectable_languages)
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
             ): LanguageSelector(
-                LanguageSelectorConfig(languages=new_selectable_languages)
+                LanguageSelectorConfig(
+                    languages=new_selectable_languages, native_name=True
+                )
             )
         }
 
@@ -219,7 +221,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> WorkdayOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return WorkdayOptionsFlowHandler(config_entry)
+        return WorkdayOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -305,12 +307,12 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "name": self.data[CONF_NAME],
-                "country": self.data.get(CONF_COUNTRY),
+                "country": self.data.get(CONF_COUNTRY, "-"),
             },
         )
 
 
-class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class WorkdayOptionsFlowHandler(OptionsFlow):
     """Handle Workday options."""
 
     async def async_step_init(
@@ -320,7 +322,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            combined_input: dict[str, Any] = {**self.options, **user_input}
+            combined_input: dict[str, Any] = {**self.config_entry.options, **user_input}
             if CONF_PROVINCE not in user_input:
                 # Province not present, delete old value (if present) too
                 combined_input.pop(CONF_PROVINCE, None)
@@ -340,7 +342,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
             else:
                 LOGGER.debug("abort_check in options with %s", combined_input)
                 abort_match = {
-                    CONF_COUNTRY: self._config_entry.options.get(CONF_COUNTRY),
+                    CONF_COUNTRY: self.config_entry.options.get(CONF_COUNTRY),
                     CONF_EXCLUDES: combined_input[CONF_EXCLUDES],
                     CONF_OFFSET: combined_input[CONF_OFFSET],
                     CONF_WORKDAYS: combined_input[CONF_WORKDAYS],
@@ -357,23 +359,22 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 else:
                     return self.async_create_entry(data=combined_input)
 
+        options = self.config_entry.options
         schema: vol.Schema = await self.hass.async_add_executor_job(
             add_province_and_language_to_schema,
             DATA_SCHEMA_OPT,
-            self.options.get(CONF_COUNTRY),
+            options.get(CONF_COUNTRY),
         )
 
-        new_schema = self.add_suggested_values_to_schema(
-            schema, user_input or self.options
-        )
+        new_schema = self.add_suggested_values_to_schema(schema, user_input or options)
         LOGGER.debug("Errors have occurred in options %s", errors)
         return self.async_show_form(
             step_id="init",
             data_schema=new_schema,
             errors=errors,
             description_placeholders={
-                "name": self.options[CONF_NAME],
-                "country": self.options.get(CONF_COUNTRY),
+                "name": options[CONF_NAME],
+                "country": options.get(CONF_COUNTRY, "-"),
             },
         )
 

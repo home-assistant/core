@@ -10,6 +10,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'enphase_envoy',
       'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
@@ -18,6 +20,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
@@ -441,6 +445,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'enphase_envoy',
       'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
@@ -450,6 +456,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,
@@ -913,6 +921,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'enphase_envoy',
       'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
       'minor_version': 1,
@@ -922,6 +932,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': '**REDACTED**',
       'unique_id': '**REDACTED**',
       'version': 1,

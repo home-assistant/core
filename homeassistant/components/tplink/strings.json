@@ -35,10 +35,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
-      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
@@ -55,7 +51,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -162,6 +159,9 @@
       "device_time": {
         "name": "Device time"
       },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      },
       "auto_off_at": {
         "name": "Auto off at"
       },
@@ -190,6 +190,12 @@
       },
       "fan_sleep_mode": {
         "name": "Fan sleep mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "pir_enabled": {
+        "name": "Motion sensor"
       }
     },
     "number": {
@@ -310,6 +316,12 @@
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "Detected deprecated {platform} entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }
 }

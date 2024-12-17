@@ -15,8 +15,8 @@ import pytest
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
 from homeassistant.components.dlna_dms.dms import get_domain_data
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 
 from .conftest import (

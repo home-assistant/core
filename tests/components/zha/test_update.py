@@ -1,16 +1,20 @@
 """Test ZHA firmware updates."""
 
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, PropertyMock, call, patch
 
 import pytest
+from zha.application.platforms.update import (
+    FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
+)
 from zigpy.exceptions import DeliveryError
-from zigpy.ota import OtaImageWithMetadata
+from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
 from zigpy.ota.providers import BaseOtaImageMetadata
 from zigpy.profiles import zha
 import zigpy.types as t
 from zigpy.zcl import foundation
 from zigpy.zcl.clusters import general
+import zigpy.zdo.types as zdo_t
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -20,6 +24,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
 )
@@ -28,6 +33,10 @@ from homeassistant.components.zha.helpers import (
     ZHAGatewayProxy,
     get_zha_gateway,
     get_zha_gateway_proxy,
+)
+from homeassistant.components.zha.update import (
+    OTA_MESSAGE_BATTERY_POWERED,
+    OTA_MESSAGE_RELIABILITY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -42,6 +51,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
@@ -78,7 +89,26 @@ async def setup_test_data(
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
         },
-        node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
+        node_descriptor=zdo_t.NodeDescriptor(
+            logical_type=zdo_t.LogicalType.Router,
+            complex_descriptor_available=0,
+            user_descriptor_available=0,
+            reserved=0,
+            aps_flags=0,
+            frequency_band=zdo_t.NodeDescriptor.FrequencyBand.Freq2400MHz,
+            mac_capability_flags=(
+                zdo_t.NodeDescriptor.MACCapabilityFlags.FullFunctionDevice
+                | zdo_t.NodeDescriptor.MACCapabilityFlags.MainsPowered
+                | zdo_t.NodeDescriptor.MACCapabilityFlags.RxOnWhenIdle
+                | zdo_t.NodeDescriptor.MACCapabilityFlags.AllocateAddress
+            ),
+            manufacturer_code=4107,
+            maximum_buffer_size=82,
+            maximum_incoming_transfer_size=128,
+            server_mask=11264,
+            maximum_outgoing_transfer_size=128,
+            descriptor_capability_field=zdo_t.NodeDescriptor.DescriptorCapability.NONE,
+        ).serialize(),
     )
 
     gateway.get_or_create_device(zigpy_device)
@@ -119,8 +149,11 @@ async def setup_test_data(
         ),
     )
 
-    cluster.endpoint.device.application.ota.get_ota_image = AsyncMock(
-        return_value=None if file_not_found else fw_image
+    cluster.endpoint.device.application.ota.get_ota_images = AsyncMock(
+        return_value=OtaImagesResult(
+            upgrades=() if file_not_found else (fw_image,),
+            downgrades=(),
+        )
     )
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
     zha_device_proxy.device.async_update_sw_build_id(installed_fw_version)
@@ -164,7 +197,8 @@ async def test_firmware_update_notification_from_zigpy(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
@@ -223,7 +257,8 @@ async def test_firmware_update_notification_from_service_call(
         assert state.state == STATE_ON
         attrs = state.attributes
         assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-        assert not attrs[ATTR_IN_PROGRESS]
+        assert attrs[ATTR_IN_PROGRESS] is False
+        assert attrs[ATTR_UPDATE_PERCENTAGE] is None
         assert (
             attrs[ATTR_LATEST_VERSION]
             == f"0x{fw_image.firmware.header.file_version:08x}"
@@ -264,7 +299,7 @@ async def test_firmware_update_success(
 ) -> None:
     """Test ZHA update platform - firmware update success."""
     await setup_zha()
-    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+    zha_device, ota_cluster, fw_image, installed_fw_version = await setup_test_data(
         hass, zigpy_device_mock
     )
 
@@ -276,7 +311,7 @@ async def test_firmware_update_success(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # simulate an image available notification
-    await cluster._handle_query_next_image(
+    await ota_cluster._handle_query_next_image(
         foundation.ZCLHeader.cluster(
             tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
         ),
@@ -293,19 +328,20 @@ async def test_firmware_update_success(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
 
-    async def endpoint_reply(cluster_id, tsn, data, command_id):
-        if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
+    async def endpoint_reply(cluster, sequence, data, **kwargs):
+        if cluster == general.Ota.cluster_id:
+            hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(
                         zha_device.device.device,
-                        cluster,
+                        ota_cluster,
                         general.Ota.ServerCommandDefs.query_next_image.name,
                         field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
                         manufacturer_code=fw_image.firmware.header.manufacturer_id,
@@ -325,7 +361,7 @@ async def test_firmware_update_success(
                 zha_device.device.device.packet_received(
                     make_packet(
                         zha_device.device.device,
-                        cluster,
+                        ota_cluster,
                         general.Ota.ServerCommandDefs.image_block.name,
                         field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
                         manufacturer_code=fw_image.firmware.header.manufacturer_id,
@@ -352,7 +388,7 @@ async def test_firmware_update_success(
                     zha_device.device.device.packet_received(
                         make_packet(
                             zha_device.device.device,
-                            cluster,
+                            ota_cluster,
                             general.Ota.ServerCommandDefs.image_block.name,
                             field_control=general.Ota.ImageBlockCommand.FieldControl.RequestNodeAddr,
                             manufacturer_code=fw_image.firmware.header.manufacturer_id,
@@ -381,7 +417,8 @@ async def test_firmware_update_success(
                     assert (
                         attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
                     )
-                    assert attrs[ATTR_IN_PROGRESS] == 58
+                    assert attrs[ATTR_IN_PROGRESS] is True
+                    assert attrs[ATTR_UPDATE_PERCENTAGE] == pytest.approx(100 * 40 / 70)
                     assert (
                         attrs[ATTR_LATEST_VERSION]
                         == f"0x{fw_image.firmware.header.file_version:08x}"
@@ -390,7 +427,7 @@ async def test_firmware_update_success(
                     zha_device.device.device.packet_received(
                         make_packet(
                             zha_device.device.device,
-                            cluster,
+                            ota_cluster,
                             general.Ota.ServerCommandDefs.upgrade_end.name,
                             status=foundation.Status.SUCCESS,
                             manufacturer_code=fw_image.firmware.header.manufacturer_id,
@@ -409,7 +446,7 @@ async def test_firmware_update_success(
                 assert cmd.upgrade_time == 0
 
                 def read_new_fw_version(*args, **kwargs):
-                    cluster.update_attribute(
+                    ota_cluster.update_attribute(
                         attrid=general.Ota.AttributeDefs.current_file_version.id,
                         value=fw_image.firmware.header.file_version,
                     )
@@ -419,9 +456,9 @@ async def test_firmware_update_success(
                         )
                     }, {}
 
-                cluster.read_attributes.side_effect = read_new_fw_version
+                ota_cluster.read_attributes.side_effect = read_new_fw_version
 
-    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
+    ota_cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
@@ -438,7 +475,8 @@ async def test_firmware_update_success(
         attrs[ATTR_INSTALLED_VERSION]
         == f"0x{fw_image.firmware.header.file_version:08x}"
     )
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert attrs[ATTR_LATEST_VERSION] == attrs[ATTR_INSTALLED_VERSION]
 
     # If we send a progress notification incorrectly, it won't be handled
@@ -446,7 +484,8 @@ async def test_firmware_update_success(
     entity.entity_data.entity._update_progress(50, 100, 0.50)
 
     state = hass.states.get(entity_id)
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert state.state == STATE_OFF
 
 
@@ -457,7 +496,7 @@ async def test_firmware_update_raises(
 ) -> None:
     """Test ZHA update platform - firmware update raises."""
     await setup_zha()
-    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+    zha_device, ota_cluster, fw_image, installed_fw_version = await setup_test_data(
         hass, zigpy_device_mock
     )
 
@@ -467,7 +506,7 @@ async def test_firmware_update_raises(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     # simulate an image available notification
-    await cluster._handle_query_next_image(
+    await ota_cluster._handle_query_next_image(
         foundation.ZCLHeader.cluster(
             tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
         ),
@@ -485,19 +524,20 @@ async def test_firmware_update_raises(
     assert state.state == STATE_ON
     attrs = state.attributes
     assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_IN_PROGRESS] is False
+    assert attrs[ATTR_UPDATE_PERCENTAGE] is None
     assert (
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
 
-    async def endpoint_reply(cluster_id, tsn, data, command_id):
-        if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
+    async def endpoint_reply(cluster, sequence, data, **kwargs):
+        if cluster == general.Ota.cluster_id:
+            hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(
                         zha_device.device.device,
-                        cluster,
+                        ota_cluster,
                         general.Ota.ServerCommandDefs.query_next_image.name,
                         field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
                         manufacturer_code=fw_image.firmware.header.manufacturer_id,
@@ -516,7 +556,7 @@ async def test_firmware_update_raises(
                 assert cmd.image_size == fw_image.firmware.header.image_size
                 raise DeliveryError("failed to deliver")
 
-    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
+    ota_cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -544,81 +584,62 @@ async def test_firmware_update_raises(
         )
 
 
-async def test_firmware_update_no_longer_compatible(
+async def test_update_release_notes(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     setup_zha,
     zigpy_device_mock,
 ) -> None:
-    """Test ZHA update platform - firmware update is no longer valid."""
+    """Test ZHA update platform release notes."""
     await setup_zha()
-    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
-        hass, zigpy_device_mock
+    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+
+    zha_lib_entity = next(
+        e
+        for e in zha_device.device.platform_entities.values()
+        if isinstance(e, ZhaFirmwareUpdateEntity)
     )
+    zha_lib_entity._attr_release_notes = "Some lengthy release notes"
+    zha_lib_entity.maybe_emit_state_changed_event()
+    await hass.async_block_till_done()
 
     entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
     assert entity_id is not None
 
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    ws_client = await hass_ws_client(hass)
 
-    # simulate an image available notification
-    await cluster._handle_query_next_image(
-        foundation.ZCLHeader.cluster(
-            tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
-        ),
-        general.QueryNextImageCommand(
-            fw_image.firmware.header.field_control,
-            zha_device.device.manufacturer_code,
-            fw_image.firmware.header.image_type,
-            installed_fw_version,
-            fw_image.firmware.header.header_version,
-        ),
-    )
-
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    attrs = state.attributes
-    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
-    assert (
-        attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
-    )
-
-    new_version = 0x99999999
-
-    async def endpoint_reply(cluster_id, tsn, data, command_id):
-        if cluster_id == general.Ota.cluster_id:
-            hdr, cmd = cluster.deserialize(data)
-            if isinstance(cmd, general.Ota.ImageNotifyCommand):
-                zha_device.device.device.packet_received(
-                    make_packet(
-                        zha_device.device.device,
-                        cluster,
-                        general.Ota.ServerCommandDefs.query_next_image.name,
-                        field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
-                        manufacturer_code=fw_image.firmware.header.manufacturer_id,
-                        image_type=fw_image.firmware.header.image_type,
-                        # The device reports that it is no longer compatible!
-                        current_file_version=new_version,
-                        hardware_version=1,
-                    )
-                )
-
-    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            UPDATE_DOMAIN,
-            SERVICE_INSTALL,
+    # Mains-powered devices
+    with patch(
+        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=True)
+    ):
+        await ws_client.send_json(
             {
-                ATTR_ENTITY_ID: entity_id,
-            },
-            blocking=True,
+                "id": 1,
+                "type": "update/release_notes",
+                "entity_id": entity_id,
+            }
         )
 
-    # We updated the currently installed firmware version, as it is no longer valid
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-    attrs = state.attributes
-    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{new_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
-    assert attrs[ATTR_LATEST_VERSION] == f"0x{new_version:08x}"
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        assert "Some lengthy release notes" in result["result"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]
+        assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
+
+    # Battery-powered devices
+    with patch(
+        "zha.zigbee.device.Device.is_mains_powered", PropertyMock(return_value=False)
+    ):
+        await ws_client.send_json(
+            {
+                "id": 2,
+                "type": "update/release_notes",
+                "entity_id": entity_id,
+            }
+        )
+
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+        assert "Some lengthy release notes" in result["result"]
+        assert OTA_MESSAGE_RELIABILITY in result["result"]
+        assert OTA_MESSAGE_BATTERY_POWERED in result["result"]

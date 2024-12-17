@@ -91,6 +91,8 @@
         'password': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'airvisual_pro',
       'entry_id': '6a2b3770e53c28dc1eeb2515e906b0ce',
       'minor_version': 1,
@@ -99,6 +101,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': 'XXXXXXX',
       'version': 1,

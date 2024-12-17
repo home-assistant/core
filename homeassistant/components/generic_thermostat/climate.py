@@ -63,7 +63,9 @@ from .const import (
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
     DEFAULT_TOLERANCE,
@@ -77,8 +79,6 @@ DEFAULT_NAME = "Generic Thermostat"
 
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_KEEP_ALIVE = "keep_alive"
-CONF_MIN_TEMP = "min_temp"
-CONF_MAX_TEMP = "max_temp"
 CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
@@ -205,7 +205,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     _attr_should_poll = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -500,7 +499,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 self._target_temp,
             ):
                 self._active = True
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Obtained current and target temperature. "
                         "Generic thermostat active. %s, %s"
@@ -539,21 +538,21 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
-                    _LOGGER.info("Turning off heater %s", self.heater_entity_id)
+                    _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Keep-alive - Turning on heater heater %s",
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
             elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
-                _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+                _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                 await self._async_heater_turn_on()
             elif time is not None:
                 # The time argument is passed only in keep-alive case
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Keep-alive - Turning off heater %s", self.heater_entity_id
                 )
                 await self._async_heater_turn_off()

@@ -16,13 +16,9 @@ from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
-from homeassistant.components.hassio.addon_manager import (
-    AddonError,
-    AddonManager,
-    AddonState,
-)
+from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -38,9 +34,10 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -57,6 +54,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .addon import get_addon_manager
@@ -209,7 +207,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    entry: ConfigEntry | None
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
 
@@ -224,7 +221,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return MQTTOptionsFlowHandler(config_entry)
+        return MQTTOptionsFlowHandler()
 
     async def _async_install_addon(self) -> None:
         """Install the Mosquitto Mqtt broker add-on."""
@@ -335,16 +332,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 break
         else:
             raise AddonError(
-                f"Failed to correctly start {addon_manager.addon_name} add-on"
+                translation_domain=DOMAIN,
+                translation_key="addon_start_failed",
+                translation_placeholders={"addon": addon_manager.addon_name},
             )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if is_hassio(self.hass):
             # Offer to set up broker add-on if supervisor is available
             self._addon_manager = get_addon_manager(self.hass)
@@ -400,7 +396,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-authentication with MQTT broker."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if is_hassio(self.hass):
             # Check if entry setup matches the add-on discovery config
             addon_manager = get_addon_manager(self.hass)
@@ -439,18 +434,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication with MQTT broker."""
         errors: dict[str, str] = {}
 
-        assert self.entry is not None
+        reauth_entry = self._get_reauth_entry()
         if user_input:
             substituted_used_data = update_password_from_user_input(
-                self.entry.data.get(CONF_PASSWORD), user_input
+                reauth_entry.data.get(CONF_PASSWORD), user_input
             )
-            new_entry_data = {**self.entry.data, **substituted_used_data}
+            new_entry_data = {**reauth_entry.data, **substituted_used_data}
             if await self.hass.async_add_executor_job(
                 try_connection,
                 new_entry_data,
             ):
                 return self.async_update_reload_and_abort(
-                    self.entry, data=new_entry_data
+                    reauth_entry, data=new_entry_data
                 )
 
             errors["base"] = "invalid_auth"
@@ -458,7 +453,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         schema = self.add_suggested_values_to_schema(
             REAUTH_SCHEMA,
             {
-                CONF_USERNAME: self.entry.data.get(CONF_USERNAME),
+                CONF_USERNAME: reauth_entry.data.get(CONF_USERNAME),
                 CONF_PASSWORD: PWD_NOT_CHANGED,
             },
         )
@@ -475,20 +470,32 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
+        if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
+            reconfigure_entry = self._get_reconfigure_entry()
         if await async_get_broker_settings(
             self,
             fields,
-            None,
+            reconfigure_entry.data if is_reconfigure else None,
             user_input,
             validated_user_input,
             errors,
         ):
+            if is_reconfigure:
+                update_password_from_user_input(
+                    reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
+                )
+
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
                 validated_user_input,
             )
 
             if can_connect:
+                if is_reconfigure:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data=validated_user_input,
+                    )
                 validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
                     title=validated_user_input[CONF_BROKER],
@@ -500,6 +507,12 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="broker", data_schema=vol.Schema(fields), errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        return await self.async_step_broker()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -551,11 +564,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize MQTT options flow."""
-        self.config_entry = config_entry
-        self.broker_config: dict[str, str | int] = {}
-        self.options = config_entry.options
+        self.broker_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
@@ -745,6 +756,16 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
+async def _get_uploaded_file(hass: HomeAssistant, id: str) -> str:
+    """Get file content from uploaded file."""
+
+    def _proces_uploaded_file() -> str:
+        with process_uploaded_file(hass, id) as file_path:
+            return file_path.read_text(encoding=DEFAULT_ENCODING)
+
+    return await hass.async_add_executor_job(_proces_uploaded_file)
+
+
 async def async_get_broker_settings(
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
@@ -803,8 +824,7 @@ async def async_get_broker_settings(
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            with process_uploaded_file(hass, certificate_id) as certificate_file:
-                certificate = certificate_file.read_text(encoding=DEFAULT_ENCODING)
+            certificate = await _get_uploaded_file(hass, certificate_id)
 
         # Return to form for file upload CA cert or client cert and key
         if (
@@ -820,15 +840,9 @@ async def async_get_broker_settings(
             return False
 
         if client_certificate_id:
-            with process_uploaded_file(
-                hass, client_certificate_id
-            ) as client_certificate_file:
-                client_certificate = client_certificate_file.read_text(
-                    encoding=DEFAULT_ENCODING
-                )
+            client_certificate = await _get_uploaded_file(hass, client_certificate_id)
         if client_key_id:
-            with process_uploaded_file(hass, client_key_id) as key_file:
-                client_key = key_file.read_text(encoding=DEFAULT_ENCODING)
+            client_key = await _get_uploaded_file(hass, client_key_id)
 
         certificate_data: dict[str, Any] = {}
         if certificate:

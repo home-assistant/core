@@ -18,7 +18,7 @@ from homeassistant.components.icloud.const import (
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -386,12 +386,7 @@ async def test_password_update(
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
-        data={**MOCK_CONFIG},
-    )
-
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -410,12 +405,7 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": config_entry.unique_id},
-        data={**MOCK_CONFIG},
-    )
-
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
     with patch(

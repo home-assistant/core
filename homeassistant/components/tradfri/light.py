@@ -9,7 +9,7 @@ from pytradfri.command import Command
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ColorMode,
@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(
@@ -87,8 +87,16 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
 
         if self._device_control:
-            self._attr_min_mireds = self._device_control.min_mireds
-            self._attr_max_mireds = self._device_control.max_mireds
+            self._attr_max_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(
+                    self._device_control.min_mireds
+                )
+            )
+            self._attr_min_color_temp_kelvin = (
+                color_util.color_temperature_mired_to_kelvin(
+                    self._device_control.max_mireds
+                )
+            )
 
     def _refresh(self) -> None:
         """Refresh the device."""
@@ -118,11 +126,11 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(int, self._device_data.dimmer)
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temp value in mireds."""
-        if not self._device_data:
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        if not self._device_data or not (color_temp := self._device_data.color_temp):
             return None
-        return cast(int, self._device_data.color_temp)
+        return color_util.color_temperature_mired_to_kelvin(color_temp)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -191,18 +199,19 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             transition_time = None
 
         temp_command = None
-        if ATTR_COLOR_TEMP in kwargs and (
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and (
             self._device_control.can_set_temp or self._device_control.can_set_color
         ):
-            temp = kwargs[ATTR_COLOR_TEMP]
+            temp_k = kwargs[ATTR_COLOR_TEMP_KELVIN]
             # White Spectrum bulb
             if self._device_control.can_set_temp:
-                if temp > self.max_mireds:
-                    temp = self.max_mireds
-                elif temp < self.min_mireds:
-                    temp = self.min_mireds
+                temp = color_util.color_temperature_kelvin_to_mired(temp_k)
+                if temp < (min_mireds := self._device_control.min_mireds):
+                    temp = min_mireds
+                elif temp > (max_mireds := self._device_control.max_mireds):
+                    temp = max_mireds
                 temp_data = {
-                    ATTR_COLOR_TEMP: temp,
+                    "color_temp": temp,
                     "transition_time": transition_time,
                 }
                 temp_command = self._device_control.set_color_temp(**temp_data)
@@ -210,7 +219,6 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
             # Color bulb (CWS)
             # color_temp needs to be set with hue/saturation
             elif self._device_control.can_set_color:
-                temp_k = color_util.color_temperature_mired_to_kelvin(temp)
                 hs_color = color_util.color_temperature_to_hs(temp_k)
                 hue = int(hs_color[0] * (self._device_control.max_hue / 360))
                 sat = int(hs_color[1] * (self._device_control.max_saturation / 100))

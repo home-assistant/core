@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'workday',
+      'entry_id': '1',
+      'minor_version': 1,
+      'options': dict({
+        'add_holidays': list([
+          '2022-12-01',
+          '2022-12-05,2022-12-15',
+        ]),
+        'country': 'DE',
+        'days_offset': 0,
+        'excludes': list([
+          'sat',
+          'sun',
+          'holiday',
+        ]),
+        'language': 'de',
+        'name': 'Workday Sensor',
+        'province': 'BW',
+        'remove_holidays': list([
+          '2022-12-04',
+          '2022-12-24,2022-12-26',
+        ]),
+        'workdays': list([
+          'mon',
+          'tue',
+          'wed',
+          'thu',
+          'fri',
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

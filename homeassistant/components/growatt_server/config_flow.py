@@ -23,9 +23,10 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    api: growattServer.GrowattApi
+
     def __init__(self) -> None:
         """Initialise growatt server flow."""
-        self.api: growattServer.GrowattApi | None = None
         self.user_id = None
         self.data: dict[str, Any] = {}
 
@@ -70,7 +71,9 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data = user_input
         return await self.async_step_plant()
 
-    async def async_step_plant(self, user_input=None):
+    async def async_step_plant(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
         plant_info = await self.hass.async_add_executor_job(
             self.api.plant_list, self.user_id
@@ -86,7 +89,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(step_id="plant", data_schema=data_schema)
 
-        if user_input is None and len(plant_info["data"]) == 1:
+        if user_input is None:
+            # single plant => mark it as selected
             user_input = {CONF_PLANT_ID: plant_info["data"][0]["plantId"]}
 
         user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]

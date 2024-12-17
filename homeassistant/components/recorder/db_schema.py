@@ -162,14 +162,14 @@ class Unused(CHAR):
     """An unused column type that behaves like a string."""
 
 
-@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
-@compiles(Unused, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")
+@compiles(Unused, "mysql", "mariadb", "sqlite")
 def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile UnusedDateTime and Unused as CHAR(0) on mysql, mariadb, and sqlite."""
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "postgresql")
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile Unused as CHAR(1) on postgresql."""
     return "CHAR(1)"  # Uses 1 byte
@@ -375,9 +375,8 @@ class EventData(Base):
         event: Event, dialect: SupportedDialect | None
     ) -> bytes:
         """Create shared_data from an event."""
-        if dialect == SupportedDialect.POSTGRESQL:
-            bytes_result = json_bytes_strip_null(event.data)
-        bytes_result = json_bytes(event.data)
+        encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
+        bytes_result = encoder(event.data)
         if len(bytes_result) > MAX_EVENT_DATA_BYTES:
             _LOGGER.warning(
                 "Event data for %s exceed maximum size of %s bytes. "
@@ -692,14 +691,16 @@ class StatisticsBase:
     duration: timedelta
 
     @classmethod
-    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics with datatime objects."""
+    def from_stats(
+        cls, metadata_id: int, stats: StatisticData, now_timestamp: float | None = None
+    ) -> Self:
+        """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),
@@ -710,12 +711,17 @@ class StatisticsBase:
         )
 
     @classmethod
-    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
+    def from_stats_ts(
+        cls,
+        metadata_id: int,
+        stats: StatisticDataTimestamp,
+        now_timestamp: float | None = None,
+    ) -> Self:
         """Create object from a statistics with timestamps."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),

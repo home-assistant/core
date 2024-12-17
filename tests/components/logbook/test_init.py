@@ -11,6 +11,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import logbook, recorder
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
@@ -328,7 +330,7 @@ def create_state_changed_event_from_old_new(
         row_id=1,
         event_type=PSEUDO_EVENT_STATE_CHANGED,
         event_data="{}",
-        time_fired_ts=dt_util.utc_to_timestamp(event_time_fired),
+        time_fired_ts=event_time_fired.timestamp(),
         context_id_bin=None,
         context_user_id_bin=None,
         context_parent_id_bin=None,

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,6 +15,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2024-08-27")
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -26,4 +28,6 @@ async def test_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(
         hass, hass_client, mock_config_entry
     )
-    assert result == snapshot(exclude=props("created_at", "modified_at"))
+    assert result == snapshot(
+        exclude=props("created_at", "modified_at", "refresh_token_creation_time")
+    )

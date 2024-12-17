@@ -54,6 +54,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.Choice,
@@ -92,4 +93,4 @@ class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_current_option = self._feature.value
+        self._attr_current_option = cast(str | None, self._feature.value)

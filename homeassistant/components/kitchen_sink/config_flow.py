@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -11,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.core import callback
 
@@ -32,27 +33,28 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        return self.async_create_entry(title="Kitchen Sink", data=import_data)
 
-        return self.async_create_entry(title="Kitchen Sink", data=import_info)
-
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauth step."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Reauth confirm step."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(OptionsFlowWithConfigEntry):
+class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(
@@ -66,8 +68,7 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            self.options.update(user_input)
-            return await self._update_options()
+            return self.async_create_entry(data=self.config_entry.options | user_input)
 
         return self.async_show_form(
             step_id="options_1",
@@ -93,7 +94,3 @@ class OptionsFlowHandler(OptionsFlowWithConfigEntry):
                 }
             ),
         )
-
-    async def _update_options(self) -> ConfigFlowResult:
-        """Update config entry options."""
-        return self.async_create_entry(title="", data=self.options)

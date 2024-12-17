@@ -7,7 +7,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -74,7 +74,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Define the config flow to handle options."""
-        return DlnaDmrOptionsFlowHandler(config_entry)
+        return DlnaDmrOptionsFlowHandler()
 
     async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user.
@@ -138,6 +138,9 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
+        if TYPE_CHECKING:
+            # _async_set_info_from_discovery unconditionally sets self._name
+            assert self._name is not None
 
         if _is_ignored_device(discovery_info):
             return self.async_abort(reason="alternative_integration")
@@ -194,31 +197,6 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_MAC: self._mac,
             },
         )
-
-    async def async_step_unignore(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Rediscover previously ignored devices by their unique_id."""
-        LOGGER.debug("async_step_unignore: user_input: %s", user_input)
-        self._udn = user_input["unique_id"]
-        assert self._udn
-        await self.async_set_unique_id(self._udn)
-
-        # Find a discovery matching the unignored unique_id for a DMR device
-        for dev_type in DmrDevice.DEVICE_TYPES:
-            discovery = await ssdp.async_get_discovery_info_by_udn_st(
-                self.hass, self._udn, dev_type
-            )
-            if discovery:
-                break
-        else:
-            return self.async_abort(reason="discovery_error")
-
-        await self._async_set_info_from_discovery(discovery, abort_if_configured=False)
-
-        self.context["title_placeholders"] = {"name": self._name}
-
-        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: FlowInput = None
@@ -348,10 +326,6 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
 
     Configures the single instance and updates the existing config entry.
     """
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

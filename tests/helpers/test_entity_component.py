@@ -23,7 +23,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -189,13 +189,14 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
         ]
     )
 
-    call_1 = ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
+    call_1 = ServiceCall(hass, "test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
     assert sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_1))
     ) == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
+        hass,
         "test",
         "service",
         data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
@@ -256,17 +257,18 @@ async def test_extract_from_service_fails_if_no_entity_id(hass: HomeAssistant) -
     )
 
     assert (
-        await component.async_extract_from_service(ServiceCall("test", "service")) == []
+        await component.async_extract_from_service(ServiceCall(hass, "test", "service"))
+        == []
     )
     assert (
         await component.async_extract_from_service(
-            ServiceCall("test", "service", {"entity_id": ENTITY_MATCH_NONE})
+            ServiceCall(hass, "test", "service", {"entity_id": ENTITY_MATCH_NONE})
         )
         == []
     )
     assert (
         await component.async_extract_from_service(
-            ServiceCall("test", "service", {"area_id": ENTITY_MATCH_NONE})
+            ServiceCall(hass, "test", "service", {"area_id": ENTITY_MATCH_NONE})
         )
         == []
     )
@@ -283,6 +285,7 @@ async def test_extract_from_service_filter_out_non_existing_entities(
     )
 
     call = ServiceCall(
+        hass,
         "test",
         "service",
         {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
@@ -299,7 +302,7 @@ async def test_extract_from_service_no_group_expand(hass: HomeAssistant) -> None
     await component.async_setup({})
     await component.async_add_entities([MockEntity(entity_id="group.test_group")])
 
-    call = ServiceCall("test", "service", {"entity_id": ["group.test_group"]})
+    call = ServiceCall(hass, "test", "service", {"entity_id": ["group.test_group"]})
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
     assert len(extracted) == 1
@@ -465,7 +468,7 @@ async def test_extract_all_omit_entity_id(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
 
-    call = ServiceCall("test", "service")
+    call = ServiceCall(hass, "test", "service")
 
     assert (
         sorted(
@@ -485,7 +488,7 @@ async def test_extract_all_use_match_all(
         [MockEntity(name="test_1"), MockEntity(name="test_2")]
     )
 
-    call = ServiceCall("test", "service", {"entity_id": "all"})
+    call = ServiceCall(hass, "test", "service", {"entity_id": "all"})
 
     assert sorted(
         ent.entity_id for ent in await component.async_extract_from_service(call)
@@ -557,30 +560,32 @@ async def test_register_entity_service(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test attempting to register a service with an incomplete schema."""
+    """Test attempting to register a service with a non entity service schema."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    expected_message = "registers an entity service with a non entity service schema"
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=(
-            "The schema does not include all required keys: entity_id, device_id, area_id, "
-            "floor_id, label_id"
-        ),
-    ):
-        component.async_register_entity_service(
-            "hello", vol.Schema({"some": str}), Mock()
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
         )
+    ):
+        component.async_register_entity_service(f"hello_{idx}", schema, Mock())
+        assert expected_message in caplog.text
+        caplog.clear()
 
-    # The check currently does not recurse into vol.All or vol.Any allowing these
-    # non-compliant schemas to pass
-    component.async_register_entity_service(
-        "hello", vol.All(vol.Schema({"some": str})), Mock()
-    )
-    component.async_register_entity_service(
-        "hello", vol.Any(vol.Schema({"some": str})), Mock()
-    )
+    for idx, schema in enumerate(
+        (
+            cv.make_entity_service_schema({"some": str}),
+            vol.Schema(cv.make_entity_service_schema({"some": str})),
+            vol.All(cv.make_entity_service_schema({"some": str})),
+        )
+    ):
+        component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
+        assert expected_message not in caplog.text
 
 
 async def test_register_entity_service_response_data(hass: HomeAssistant) -> None:

@@ -4,15 +4,16 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import (
+from pylamarzocco.const import (
     KEYS_PER_MODEL,
     BoilerType,
     MachineModel,
     PhysicalKey,
     PrebrewMode,
 )
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoMachineConfig
+from pylamarzocco.devices.machine import LaMarzoccoMachine
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -27,11 +28,14 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
-from .coordinator import LaMarzoccoUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,6 +109,22 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             MachineModel.GS3_AV,
             MachineModel.GS3_MP,
         ),
+    ),
+    LaMarzoccoNumberEntityDescription(
+        key="smart_standby_time",
+        translation_key="smart_standby_time",
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=10,
+        native_min_value=10,
+        native_max_value=240,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda machine, value: machine.set_smart_standby(
+            enabled=machine.config.smart_standby.enabled,
+            mode=machine.config.smart_standby.mode,
+            minutes=int(value),
+        ),
+        native_value_fn=lambda config: config.smart_standby.minutes,
     ),
 )
 
@@ -190,7 +210,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     entities: list[NumberEntity] = [
         LaMarzoccoNumberEntity(coordinator, description)
         for description in ENTITIES
@@ -220,7 +240,19 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         if value != self.native_value:
-            await self.entity_description.set_value_fn(self.coordinator.device, value)
+            try:
+                await self.entity_description.set_value_fn(
+                    self.coordinator.device, value
+                )
+            except RequestNotSuccessful as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="number_exception",
+                    translation_placeholders={
+                        "key": self.entity_description.key,
+                        "value": str(value),
+                    },
+                ) from exc
             self.async_write_ha_state()
 
 
@@ -258,7 +290,18 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         if value != self.native_value:
-            await self.entity_description.set_value_fn(
-                self.coordinator.device, value, PhysicalKey(self.pyhsical_key)
-            )
+            try:
+                await self.entity_description.set_value_fn(
+                    self.coordinator.device, value, PhysicalKey(self.pyhsical_key)
+                )
+            except RequestNotSuccessful as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="number_exception_key",
+                    translation_placeholders={
+                        "key": self.entity_description.key,
+                        "value": str(value),
+                        "physical_key": str(self.pyhsical_key),
+                    },
+                ) from exc
             self.async_write_ha_state()

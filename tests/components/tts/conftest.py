@@ -10,16 +10,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 from .common import (
     DEFAULT_LANG,
     TEST_DOMAIN,
-    MockProvider,
     MockTTS,
     MockTTSEntity,
+    MockTTSProvider,
     mock_config_entry_setup,
     mock_setup,
 )
@@ -67,9 +67,9 @@ async def mock_tts(hass: HomeAssistant, mock_provider) -> None:
 
 
 @pytest.fixture
-def mock_provider() -> MockProvider:
+def mock_provider() -> MockTTSProvider:
     """Test TTS provider."""
-    return MockProvider(DEFAULT_LANG)
+    return MockTTSProvider(DEFAULT_LANG)
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def config_flow_fixture(
 async def setup_fixture(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up the test environment."""

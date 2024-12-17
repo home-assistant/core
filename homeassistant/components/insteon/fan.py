@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 )
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
+from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 SPEED_RANGE = (1, 255)  # off is not included
@@ -56,7 +56,6 @@ class InsteonFanEntity(InsteonEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_speed_count = 3
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

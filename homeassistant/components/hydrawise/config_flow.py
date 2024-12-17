@@ -6,24 +6,20 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 from aiohttp import ClientError
-from pydrawise import auth, client
+from pydrawise import auth as pydrawise_auth, client
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN, LOGGER
+from .const import APP_ID, DOMAIN, LOGGER
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hydrawise."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Construct a ConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
 
     async def _create_or_update_entry(
         self,
@@ -33,14 +29,19 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         on_failure: Callable[[str], ConfigFlowResult],
     ) -> ConfigFlowResult:
         """Create the config entry."""
-
         # Verify that the provided credentials work."""
-        api = client.Hydrawise(auth.Auth(username, password))
+        auth = pydrawise_auth.Auth(username, password)
         try:
-            # Don't fetch zones because we don't need them yet.
-            user = await api.get_user(fetch_zones=False)
+            await auth.token()
         except NotAuthorizedError:
             return on_failure("invalid_auth")
+        except TimeoutError:
+            return on_failure("timeout_connect")
+
+        try:
+            api = client.Hydrawise(auth, app_id=APP_ID)
+            # Don't fetch zones because we don't need them yet.
+            user = await api.get_user(fetch_zones=False)
         except TimeoutError:
             return on_failure("timeout_connect")
         except ClientError as ex:
@@ -49,20 +50,17 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(f"hydrawise-{user.customer_id}")
 
-        if not self.reauth_entry:
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title="Hydrawise",
                 data={CONF_USERNAME: username, CONF_PASSWORD: password},
             )
 
-        self.hass.config_entries.async_update_entry(
-            self.reauth_entry,
-            data=self.reauth_entry.data
-            | {CONF_USERNAME: username, CONF_PASSWORD: password},
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(),
+            data_updates={CONF_USERNAME: username, CONF_PASSWORD: password},
         )
-        await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -90,10 +88,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth after updating config to username/password."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()

@@ -1,0 +1,79 @@
+[
+  {
+    "locationInfo": {
+      "locationId": "111111",
+      "name": "My Home",
+      "timeZone": {
+        "timeZoneId": "GMTStandardTime",
+        "displayName": "(UTC+00:00) Dublin, Edinburgh, Lisbon, London",
+        "offsetMinutes": 0,
+        "currentOffsetMinutes": 60,
+        "supportsDaylightSaving": true
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "222222",
+          "mac": "00D02DEE0000",
+          "crc": "1234",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "416856",
+            "modelType": "VisionProWifiRetail",
+            "zones": [
+              {
+                "zoneId": "416856",
+                "modelType": "VisionProWifiRetail",
+                "setpointCapabilities": {
+                  "vacationHoldCapabilities": {
+                    "isChangeable": true,
+                    "isCancelable": true,
+                    "minDuration": "1.00:00:00",
+                    "maxDuration": "365.23:45:00",
+                    "timingResolution": "00:15:00"
+                  },
+                  "maxHeatSetpoint": 32.0,
+                  "minHeatSetpoint": 4.5,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride",
+                    "VacationHold"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:15:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 4,
+                  "minSwitchpointsPerDay": 0,
+                  "timingResolution": "00:15:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "THERMOSTAT",
+                "zoneType": "Thermostat"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Off",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "Heat",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "domain": "aps",
+  "name": "Arizona Public Service (APS)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

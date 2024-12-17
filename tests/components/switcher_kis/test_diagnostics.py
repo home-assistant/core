@@ -68,5 +68,7 @@ async def test_diagnostics(
             "disabled_by": None,
             "created_at": ANY,
             "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
     }

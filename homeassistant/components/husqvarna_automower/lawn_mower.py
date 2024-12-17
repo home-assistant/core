@@ -22,11 +22,14 @@ from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
     MowerActivities.LEAVING,
-    MowerActivities.GOING_HOME,
 )
 PAUSED_STATES = [
     MowerStates.PAUSED,
@@ -41,9 +44,6 @@ SUPPORT_STATE_SERVICES = (
 MOW = "mow"
 PARK = "park"
 OVERRIDE_MODES = [MOW, PARK]
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -107,6 +107,8 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             return LawnMowerActivity.PAUSED
         if mower_attributes.mower.activity in MOWING_ACTIVITIES:
             return LawnMowerActivity.MOWING
+        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
+            return LawnMowerActivity.RETURNING
         if (mower_attributes.mower.state == "RESTRICTED") or (
             mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):

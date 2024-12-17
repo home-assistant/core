@@ -11,8 +11,14 @@ from typing import Any, cast
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_NAMES, MODEL_VALVE
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+    RpcCallError,
+)
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
+from propcache import cached_property
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -120,12 +126,12 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
 
-    @property
+    @cached_property
     def model(self) -> str:
         """Model of the device."""
         return cast(str, self.entry.data["model"])
 
-    @property
+    @cached_property
     def mac(self) -> str:
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
@@ -172,8 +178,8 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         try:
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
-        except DeviceConnectionError as err:
-            LOGGER.error(
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
+            LOGGER.debug(
                 "Error connecting to Shelly device %s, error: %r", self.name, err
             )
             return False
@@ -449,7 +455,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
             await self.device.update_shelly()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
@@ -480,15 +486,17 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
-    async def async_device_online(self) -> None:
+    async def async_device_online(self, source: str) -> None:
         """Handle device going online."""
         if not self.sleep_period:
             await self.async_request_refresh()
         elif not self._came_online_once or not self.device.initialized:
             LOGGER.debug(
-                "Sleepy device %s is online, trying to poll and configure", self.name
+                "Sleepy device %s is online (source: %s), trying to poll and configure",
+                self.name,
+                source,
             )
-            # Zeroconf told us the device is online, try to poll
+            # Source told us the device is online, try to poll
             # the device and if possible, set up the outbound
             # websocket so the device will send us updates
             # instead of relying on polling it fast enough before
@@ -600,7 +608,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if self.update_sleep_period():
+        if self.update_sleep_period() or self.hass.is_stopping:
             return
 
         if self.sleep_period:
@@ -790,8 +798,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
-            await self.device.update_status()
-            await self.device.get_dynamic_components()
+            await self.device.poll()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:
@@ -847,7 +854,7 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ShellyConfigEntry) ->
     ):
         entry.async_create_background_task(
             hass,
-            coordinator.async_device_online(),
+            coordinator.async_device_online("zeroconf"),
             "reconnect soon",
             eager_start=True,
         )

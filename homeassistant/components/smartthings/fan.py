@@ -18,8 +18,8 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
 
@@ -70,7 +70,6 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Init the class."""

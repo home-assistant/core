@@ -9,7 +9,7 @@ from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -22,7 +22,7 @@ from homeassistant.components.camera import (
     DynamicStreamSettings,
     _async_get_image,
 )
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
@@ -47,7 +47,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.httpx_client import get_async_client
@@ -283,7 +282,7 @@ async def async_test_stream(
             return {CONF_STREAM_SOURCE: "timeout"}
         await stream.stop()
     except StreamWorkerError as err:
-        return {CONF_STREAM_SOURCE: str(err)}
+        return {CONF_STREAM_SOURCE: "unknown_with_details", "error_details": str(err)}
     except PermissionError:
         return {CONF_STREAM_SOURCE: "stream_not_permitted"}
     except OSError as err:
@@ -316,6 +315,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
+        self.preview_cam: dict[str, Any] = {}
         self.user_input: dict[str, Any] = {}
         self.title = ""
 
@@ -324,7 +324,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return GenericOptionsFlowHandler(config_entry)
+        return GenericOptionsFlowHandler()
 
     def check_for_existing(self, options: dict[str, Any]) -> bool:
         """Check whether an existing entry is using the same URLs."""
@@ -339,6 +339,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
+        description_placeholders = {}
         hass = self.hass
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
@@ -370,8 +371,10 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                             title=self.title, data={}, options=self.user_input
                         )
                     # temporary preview for user to check the image
-                    self.context["preview_cam"] = user_input
+                    self.preview_cam = user_input
                     return await self.async_step_user_confirm_still()
+                if "error_details" in errors:
+                    description_placeholders["error"] = errors.pop("error_details")
         elif self.user_input:
             user_input = self.user_input
         else:
@@ -379,6 +382,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=build_schema(user_input),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -409,9 +413,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 class GenericOptionsFlowHandler(OptionsFlow):
     """Handle Generic IP Camera options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Generic IP Camera options flow."""
-        self.config_entry = config_entry
+        self.preview_cam: dict[str, Any] = {}
         self.user_input: dict[str, Any] = {}
 
     async def async_step_init(
@@ -443,7 +447,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 }
                 self.user_input = data
                 # temporary preview for user to check the image
-                self.context["preview_cam"] = data
+                self.preview_cam = data
                 return await self.async_step_confirm_still()
         return self.async_show_form(
             step_id="init",
@@ -494,15 +498,17 @@ class CameraImagePreview(HomeAssistantView):
     async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
-        try:
-            flow = self.hass.config_entries.flow.async_get(flow_id)
-        except UnknownFlow:
-            try:
-                flow = self.hass.config_entries.options.async_get(flow_id)
-            except UnknownFlow as exc:
-                _LOGGER.warning("Unknown flow while getting image preview")
-                raise web.HTTPNotFound from exc
-        user_input = flow["context"]["preview_cam"]
+        flow = cast(
+            GenericIPCamConfigFlow,
+            self.hass.config_entries.flow._progress.get(flow_id),  # noqa: SLF001
+        ) or cast(
+            GenericOptionsFlowHandler,
+            self.hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
+        )
+        if not flow:
+            _LOGGER.warning("Unknown flow while getting image preview")
+            raise web.HTTPNotFound
+        user_input = flow.preview_cam
         camera = GenericCamera(self.hass, user_input, flow_id, "preview")
         if not camera.is_on:
             _LOGGER.debug("Camera is off")

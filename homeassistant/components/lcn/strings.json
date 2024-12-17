@@ -26,7 +26,12 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "sk_num_tries": "Segment coupler scan attempts",
-          "dim_mode": "Dimming mode"
+          "dim_mode": "Dimming mode",
+          "acknowledge": "Request acknowledgement from modules"
+        },
+        "data_description": {
+          "dim_mode": "The number of steps used for dimming outputs.",
+          "acknowledge": "Retry sendig commands if no response is received (increases bus traffic)."
         }
       },
       "reconfigure": {
@@ -37,8 +42,13 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "sk_num_tries": "Segment coupler scan attempts",
-          "dim_mode": "Dimming mode"
+          "sk_num_tries": "[%key:component::lcn::config::step::user::data::sk_num_tries%]",
+          "dim_mode": "[%key:component::lcn::config::step::user::data::dim_mode%]",
+          "acknowledge": "[%key:component::lcn::config::step::user::data::acknowledge%]"
+        },
+        "data_description": {
+          "dim_mode": "[%key:component::lcn::config::step::user::data_description::dim_mode%]",
+          "acknowledge": "[%key:component::lcn::config::step::user::data_description::acknowledge%]"
         }
       }
     },
@@ -53,17 +63,13 @@
     }
   },
   "issues": {
-    "authentication_error": {
-      "title": "Authentication failed.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure username and password are correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    "deprecated_regulatorlock_sensor": {
+      "title": "Deprecated LCN regulator lock binary sensor",
+      "description": "Your LCN regulator lock binary sensor entity `{entity}` is beeing used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     },
-    "license_error": {
-      "title": "Maximum number of connections was reached.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure sufficient PCHK licenses are registered and restart Home Assistant.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "connection_refused": {
-      "title": "Unable to connect to PCHK.",
-      "description": "Configuring LCN using YAML is being removed but there was an error importing your YAML configuration.\n\nEnsure the connection (IP and port) to the LCN bus coupler is correct.\n\nConsider removing the LCN YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    "deprecated_keylock_sensor": {
+      "title": "Deprecated LCN key lock binary sensor",
+      "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {

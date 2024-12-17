@@ -77,16 +77,18 @@ async def otbr_config_entry_multipan_fixture(
     get_active_dataset_tlvs: AsyncMock,
     get_border_agent_id: AsyncMock,
     get_extended_address: AsyncMock,
-) -> None:
+) -> str:
     """Mock Open Thread Border Router config entry."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    return config_entry.entry_id
 
 
 @pytest.fixture(name="otbr_config_entry_thread")
@@ -102,6 +104,7 @@ async def otbr_config_entry_thread_fixture(
         domain=otbr.DOMAIN,
         options={},
         title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)

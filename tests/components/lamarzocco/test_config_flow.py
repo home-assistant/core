@@ -1,19 +1,24 @@
 """Test the La Marzocco config flow."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from lmcloud.exceptions import AuthFail, RequestNotSuccessful
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import MachineModel
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoDeviceInfo
+import pytest
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
-    SOURCE_REAUTH,
+    SOURCE_DHCP,
     SOURCE_USER,
     ConfigEntryState,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
@@ -78,6 +83,7 @@ async def test_form(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -132,6 +138,7 @@ async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_device_info: LaMarzoccoDeviceInfo,
     mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test invalid auth error."""
 
@@ -159,6 +166,7 @@ async def test_form_invalid_host(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test invalid auth error."""
     result = await hass.config_entries.flow.async_init(
@@ -201,6 +209,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test cannot connect error."""
 
@@ -247,15 +256,7 @@ async def test_reauth_flow(
 
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -272,10 +273,68 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 
 
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
+) -> None:
+    """Testing reconfgure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result2 = await __do_successful_user_step(hass, result, mock_cloud_client)
+    service_info = get_bluetooth_service_info(
+        mock_device_info.model, mock_device_info.serial_number
+    )
+
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.LaMarzoccoLocalClient.validate_connection",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.async_discovered_service_info",
+            return_value=[service_info],
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: "192.168.1.1",
+                CONF_MACHINE: mock_device_info.serial_number,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "bluetooth_selection"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        {CONF_MAC: service_info.address},
+    )
+
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == "reconfigure_successful"
+
+    assert mock_config_entry.title == "My LaMarzocco"
+    assert mock_config_entry.data == {
+        **mock_config_entry.data,
+        CONF_MAC: service_info.address,
+    }
+
+
 async def test_bluetooth_discovery(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test bluetooth discovery."""
     service_info = get_bluetooth_service_info(
@@ -322,11 +381,32 @@ async def test_bluetooth_discovery(
     }
 
 
+async def test_bluetooth_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test bluetooth discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model, mock_lamarzocco.serial_number
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_bluetooth_discovery_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_cloud_client: MagicMock,
     mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test bluetooth discovery errors."""
     service_info = get_bluetooth_service_info(
@@ -387,10 +467,108 @@ async def test_bluetooth_discovery_errors(
     }
 
 
+@pytest.mark.parametrize(
+    "device_fixture",
+    [MachineModel.LINEA_MICRA, MachineModel.LINEA_MINI, MachineModel.GS3_AV],
+)
+async def test_dhcp_discovery(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_device_info: LaMarzoccoDeviceInfo,
+    mock_setup_entry: Generator[AsyncMock],
+) -> None:
+    """Test dhcp discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.42",
+            hostname=mock_lamarzocco.serial_number,
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.lamarzocco.config_flow.LaMarzoccoLocalClient.validate_connection",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {
+            **USER_INPUT,
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_HOST: "192.168.1.42",
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+            CONF_MODEL: mock_device_info.model,
+            CONF_NAME: mock_device_info.name,
+            CONF_TOKEN: mock_device_info.communication_key,
+        }
+
+
+async def test_dhcp_discovery_abort_on_hostname_changed(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery aborts when hostname was changed manually."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.42",
+            hostname="custom_name",
+            macaddress="00:00:00:00:00:00",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_already_configured_and_update(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovered IP address change."""
+    old_ip = mock_config_entry.data[CONF_HOST]
+    old_address = mock_config_entry.data[CONF_ADDRESS]
+
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.42",
+            hostname=mock_lamarzocco.serial_number,
+            macaddress="aa:bb:cc:dd:ee:ff",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] != old_ip
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.42"
+
+    assert mock_config_entry.data[CONF_ADDRESS] != old_address
+    assert mock_config_entry.data[CONF_ADDRESS] == "aa:bb:cc:dd:ee:ff"
+
+
 async def test_options_flow(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test options flow."""
     await async_init_integration(hass, mock_config_entry)

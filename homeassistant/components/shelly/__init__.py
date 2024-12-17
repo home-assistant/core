@@ -290,6 +290,11 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         )
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup(runtime_data.platforms)
+        # Try to connect to the device, if we reached here from config flow
+        # and user woke up the device when adding it, we can continue setup
+        # otherwise we will wait for the device to wake up
+        if sleep_period:
+            await runtime_data.rpc.async_device_online("setup")
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline RPC device %s", entry.title)

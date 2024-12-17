@@ -9,7 +9,6 @@ import aiohttp
 from geniushubclient import GeniusHub
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,20 +20,12 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-    callback,
-)
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import verify_domain_control
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -44,27 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
-
-CLOUD_API_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Required(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
-    }
-)
-
-
-LOCAL_API_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MAC): vol.Match(MAC_ADDRESS_REGEXP),
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Any(LOCAL_API_SCHEMA, CLOUD_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
-)
 
 ATTR_ZONE_MODE = "mode"
 ATTR_DURATION = "duration"
@@ -91,63 +61,13 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = (
-    Platform.CLIMATE,
-    Platform.WATER_HEATER,
-    Platform.SENSOR,
+PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
     Platform.SWITCH,
-)
-
-
-async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
-    """Import a config entry from configuration.yaml."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=base_config[DOMAIN],
-    )
-    if (
-        result["type"] is FlowResultType.CREATE_ENTRY
-        or result["reason"] == "already_configured"
-    ):
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.12.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Genius Hub",
-            },
-        )
-        return
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_yaml_import_issue_{result['reason']}",
-        breaks_in_ha_version="2024.12.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Genius Hub",
-        },
-    )
-
-
-async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Set up a Genius Hub system."""
-    if DOMAIN in base_config:
-        hass.async_create_task(_async_import(hass, base_config))
-    return True
+    Platform.WATER_HEATER,
+]
 
 
 type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
@@ -155,6 +75,19 @@ type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
     """Create a Genius Hub system."""
+    if CONF_TOKEN in entry.data and CONF_MAC in entry.data:
+        entity_registry = er.async_get(hass)
+        registry_entries = er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
+        for reg_entry in registry_entries:
+            if reg_entry.unique_id.startswith(entry.data[CONF_MAC]):
+                entity_registry.async_update_entity(
+                    reg_entry.entity_id,
+                    new_unique_id=reg_entry.unique_id.replace(
+                        entry.data[CONF_MAC], entry.entry_id
+                    ),
+                )
 
     session = async_get_clientsession(hass)
     if CONF_HOST in entry.data:
@@ -169,9 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 
     unique_id = entry.unique_id or entry.entry_id
 
-    broker = entry.runtime_data = GeniusBroker(
-        hass, client, entry.data.get(CONF_MAC, unique_id)
-    )
+    broker = entry.runtime_data = GeniusBroker(hass, client, unique_id)
 
     try:
         await client.update()
@@ -239,7 +170,7 @@ class GeniusBroker:
             await self.client.update()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.info("Connection to geniushub re-established")
+                _LOGGER.warning("Connection to geniushub re-established")
         except (
             aiohttp.ClientResponseError,
             aiohttp.client_exceptions.ClientConnectorError,

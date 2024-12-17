@@ -30,5 +30,3 @@ async def test_wallbox_sensor_class(
     # Test round with precision '0' works
     state = hass.states.get(MOCK_SENSOR_MAX_AVAILABLE_POWER)
     assert state.state == "25.0"
-
-    await hass.config_entries.async_unload(entry.entry_id)

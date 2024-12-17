@@ -81,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) ->
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
     """Migrate old config."""
 
     if entry.version == 1 and entry.minor_version == 1:
@@ -97,10 +97,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Migration failed with error %s", ex)
             return False
 
-        entry.minor_version = 2
-
         hass.config_entries.async_update_entry(
             entry,
+            minor_version=2,
             unique_id=slugify(construct_mastodon_username(instance, account)),
         )
 
@@ -114,7 +113,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def setup_mastodon(entry: ConfigEntry) -> tuple[Mastodon, dict, dict]:
+def setup_mastodon(entry: MastodonConfigEntry) -> tuple[Mastodon, dict, dict]:
     """Get mastodon details."""
     client = create_mastodon_client(
         entry.data[CONF_BASE_URL],

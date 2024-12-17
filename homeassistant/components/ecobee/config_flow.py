@@ -23,18 +23,12 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the ecobee flow."""
-        self._ecobee: Ecobee | None = None
+    _ecobee: Ecobee
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            # Config entry already exists, only one allowed.
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
         stored_api_key = (
             self.hass.data[DATA_ECOBEE_CONFIG].get(CONF_API_KEY)
@@ -59,7 +53,9 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_authorize(self, user_input=None):
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Present the user with the PIN so that the app can be authorized on ecobee.com."""
         errors = {}
 
@@ -80,7 +76,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"pin": self._ecobee.pin},
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Import ecobee config from configuration.yaml.
 
         Triggered by async_setup only if a config entry doesn't already exist.

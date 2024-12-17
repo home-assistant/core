@@ -50,6 +50,18 @@ async def test_setup_entry_success(
             remoteType="DIY Plug",
             hubDeviceId="test-hub-id",
         ),
+        Remote(
+            deviceId="meter-pro-1",
+            deviceName="meter-pro-name-1",
+            deviceType="MeterPro(CO2)",
+            hubDeviceId="test-hub-id",
+        ),
+        Remote(
+            deviceId="hub2-1",
+            deviceName="hub2-name-1",
+            deviceType="Hub 2",
+            hubDeviceId="test-hub-id",
+        ),
     ]
     mock_get_status.return_value = {"power": PowerState.ON.value}
     entry = configure_integration(hass)

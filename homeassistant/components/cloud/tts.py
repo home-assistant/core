@@ -221,7 +221,7 @@ class CloudProvider(Provider):
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Initialize cloud provider."""
         self.cloud = cloud
-        self.name = "Cloud"
+        self.name = "Home Assistant Cloud"
         self._language, self._voice = cloud.client.prefs.tts_default_voice
         cloud.client.prefs.async_listen_updates(self._sync_prefs)
 

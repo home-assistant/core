@@ -33,11 +33,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
+                autocomplete="email",
             ),
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
             ),
         ),
     }
@@ -48,7 +50,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bring!."""
 
     VERSION = 1
-    reauth_entry: BringConfigEntry | None = None
+    reauth_entry: BringConfigEntry
     info: BringAuthResponse
 
     async def async_step_user(
@@ -72,9 +74,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -83,10 +83,9 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
 
-        assert self.reauth_entry
-
         if user_input is not None:
             if not (errors := await self.validate_input(user_input)):
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self.reauth_entry, data=user_input
                 )

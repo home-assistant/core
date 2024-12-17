@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -10,15 +11,16 @@ from regenmaschine.errors import RequestError
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
+    UpdateEntityDescription,
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RainMachineConfigEntry, RainMachineEntity
+from . import RainMachineConfigEntry
 from .const import DATA_MACHINE_FIRMWARE_UPDATE_STATUS
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 
 
 class UpdateStates(Enum):
@@ -42,7 +44,14 @@ UPDATE_STATE_MAP = {
 }
 
 
-UPDATE_DESCRIPTION = RainMachineEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class RainMachineUpdateEntityDescription(
+    UpdateEntityDescription, RainMachineEntityDescription
+):
+    """Describe a RainMachine update."""
+
+
+UPDATE_DESCRIPTION = RainMachineUpdateEntityDescription(
     key="update",
     api_category=DATA_MACHINE_FIRMWARE_UPDATE_STATUS,
 )

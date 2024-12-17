@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzBoxDeviceEntity
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
@@ -32,7 +31,9 @@ from .const import (
     LOGGER,
 )
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
+from .entity import FritzBoxDeviceEntity
 from .model import ClimateExtraAttributes
+from .sensor import value_scheduled_preset
 
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
@@ -87,7 +88,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -135,14 +135,16 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_hvac_mode(hvac_mode)
-        elif kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs[ATTR_TEMPERATURE]
+        elif target_temp is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, temperature
+                self.data.set_target_temperature, target_temp
             )
+        else:
+            return
         await self.coordinator.async_refresh()
 
     @property
@@ -175,7 +177,11 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
         else:
-            await self.async_set_temperature(temperature=self.data.comfort_temperature)
+            if value_scheduled_preset(self.data) == PRESET_ECO:
+                target_temp = self.data.eco_temperature
+            else:
+                target_temp = self.data.comfort_temperature
+            await self.async_set_temperature(temperature=target_temp)
 
     @property
     def preset_mode(self) -> str | None:

@@ -120,23 +120,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
         domain=DOMAIN, data=MOCK_CONF, unique_id=MOCK_CONF[CONF_USERNAME]
     )
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.fireservicerota.config_flow.FireServiceRota"
-    ) as mock_fsr:
-        mock_fireservicerota = mock_fsr.return_value
-        mock_fireservicerota.request_tokens.return_value = MOCK_TOKEN_INFO
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-            },
-            data=MOCK_CONF,
-        )
-
-        await hass.async_block_till_done()
-        assert result["type"] is FlowResultType.FORM
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(

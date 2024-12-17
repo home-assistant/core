@@ -11,6 +11,7 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
+from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
@@ -27,7 +28,9 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -52,6 +55,7 @@ from .const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
+    INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     SupportedDialect,
 )
@@ -127,6 +131,11 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
+    **{
+        unit: BloodGlucoseConcentrationConverter
+        for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
+    },
     **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
@@ -438,8 +447,9 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 }
 
     # Insert compiled hourly statistics in the database
+    now_timestamp = time_time()
     session.add_all(
-        Statistics.from_stats_ts(metadata_id, summary_item)
+        Statistics.from_stats_ts(metadata_id, summary_item, now_timestamp)
         for metadata_id, summary_item in summary.items()
     )
 
@@ -570,6 +580,7 @@ def _compile_statistics(
 
     new_short_term_stats: list[StatisticsBase] = []
     updated_metadata_ids: set[int] = set()
+    now_timestamp = time_time()
     # Insert collected statistics in the database
     for stats in platform_stats:
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
@@ -579,12 +590,20 @@ def _compile_statistics(
             modified_statistic_ids.add(modified_statistic_id)
         updated_metadata_ids.add(metadata_id)
         if new_stat := _insert_statistics(
-            session,
-            StatisticsShortTerm,
-            metadata_id,
-            stats["stat"],
+            session, StatisticsShortTerm, metadata_id, stats["stat"], now_timestamp
         ):
             new_short_term_stats.append(new_stat)
+
+    if start.minute == 50:
+        # Once every hour, update issues
+        for platform in instance.hass.data[DOMAIN].recorder_platforms.values():
+            if not (
+                platform_update_issues := getattr(
+                    platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+                )
+            ):
+                continue
+            platform_update_issues(instance.hass, session)
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -647,10 +666,11 @@ def _insert_statistics(
     table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
+    now_timestamp: float,
 ) -> StatisticsBase | None:
     """Insert statistics in the database."""
     try:
-        stat = table.from_stats(metadata_id, statistic)
+        stat = table.from_stats(metadata_id, statistic, now_timestamp)
         session.add(stat)
     except SQLAlchemyError:
         _LOGGER.exception(
@@ -2088,71 +2108,38 @@ def _build_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
-    mean_idx: int | None,
-    min_idx: int | None,
-    max_idx: int | None,
-    last_reset_ts_idx: int | None,
-    state_idx: int | None,
-    sum_idx: int | None,
+    row_mapping: tuple[tuple[str, int], ...],
 ) -> list[StatisticsRow]:
     """Build a list of statistics without unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{key: db_row[idx] for key, idx in row_mapping},  # type: ignore[typeddict-item]
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = db_row[mean_idx]
-        if min_idx is not None:
-            row["min"] = db_row[min_idx]
-        if max_idx is not None:
-            row["max"] = db_row[max_idx]
-        if state_idx is not None:
-            row["state"] = db_row[state_idx]
-        if sum_idx is not None:
-            row["sum"] = db_row[sum_idx]
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _build_converted_stats(
     db_rows: list[Row],
     table_duration_seconds: float,
     start_ts_idx: int,
-    mean_idx: int | None,
-    min_idx: int | None,
-    max_idx: int | None,
-    last_reset_ts_idx: int | None,
-    state_idx: int | None,
-    sum_idx: int | None,
+    row_mapping: tuple[tuple[str, int], ...],
     convert: Callable[[float | None], float | None] | Callable[[float], float],
 ) -> list[StatisticsRow]:
     """Build a list of statistics with unit conversion."""
-    result: list[StatisticsRow] = []
-    ent_results_append = result.append
-    for db_row in db_rows:
-        row: StatisticsRow = {
+    return [
+        {
             "start": (start_ts := db_row[start_ts_idx]),
             "end": start_ts + table_duration_seconds,
+            **{
+                key: None if (v := db_row[idx]) is None else convert(v)  # type: ignore[typeddict-item]
+                for key, idx in row_mapping
+            },
         }
-        if last_reset_ts_idx is not None:
-            row["last_reset"] = db_row[last_reset_ts_idx]
-        if mean_idx is not None:
-            row["mean"] = None if (v := db_row[mean_idx]) is None else convert(v)
-        if min_idx is not None:
-            row["min"] = None if (v := db_row[min_idx]) is None else convert(v)
-        if max_idx is not None:
-            row["max"] = None if (v := db_row[max_idx]) is None else convert(v)
-        if state_idx is not None:
-            row["state"] = None if (v := db_row[state_idx]) is None else convert(v)
-        if sum_idx is not None:
-            row["sum"] = None if (v := db_row[sum_idx]) is None else convert(v)
-        ent_results_append(row)
-    return result
+        for db_row in db_rows
+    ]
 
 
 def _sorted_statistics_to_dict(
@@ -2192,14 +2179,11 @@ def _sorted_statistics_to_dict(
     # Figure out which fields we need to extract from the SQL result
     # and which indices they have in the result so we can avoid the overhead
     # of doing a dict lookup for each row
-    mean_idx = field_map["mean"] if "mean" in types else None
-    min_idx = field_map["min"] if "min" in types else None
-    max_idx = field_map["max"] if "max" in types else None
-    last_reset_ts_idx = field_map["last_reset_ts"] if "last_reset" in types else None
-    state_idx = field_map["state"] if "state" in types else None
+    if "last_reset_ts" in field_map:
+        field_map["last_reset"] = field_map.pop("last_reset_ts")
     sum_idx = field_map["sum"] if "sum" in types else None
     sum_only = len(types) == 1 and sum_idx is not None
-    row_idxes = (mean_idx, min_idx, max_idx, last_reset_ts_idx, state_idx, sum_idx)
+    row_mapping = tuple((key, field_map[key]) for key in types if key in field_map)
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, db_rows in stats_by_meta_id.items():
@@ -2228,9 +2212,9 @@ def _sorted_statistics_to_dict(
             else:
                 _stats = _build_sum_stats(*build_args, sum_idx)
         elif convert:
-            _stats = _build_converted_stats(*build_args, *row_idxes, convert)
+            _stats = _build_converted_stats(*build_args, row_mapping, convert)
         else:
-            _stats = _build_stats(*build_args, *row_idxes)
+            _stats = _build_stats(*build_args, row_mapping)
 
         result[statistic_id] = _stats
 
@@ -2246,6 +2230,16 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
         ):
             platform_validation.update(platform_validate_statistics(hass))
     return platform_validation
+
+
+def update_statistics_issues(hass: HomeAssistant) -> None:
+    """Update statistics issues."""
+    with session_scope(hass=hass, read_only=True) as session:
+        for platform in hass.data[DOMAIN].recorder_platforms.values():
+            if platform_update_statistics_issues := getattr(
+                platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+            ):
+                platform_update_statistics_issues(hass, session)
 
 
 def _statistics_exists(
@@ -2354,11 +2348,12 @@ def _import_statistics_with_session(
     _, metadata_id = statistics_meta_manager.update_or_add(
         session, metadata, old_metadata_dict
     )
+    now_timestamp = time_time()
     for stat in statistics:
         if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
             _update_statistics(session, table, stat_id, stat)
         else:
-            _insert_statistics(session, table, metadata_id, stat)
+            _insert_statistics(session, table, metadata_id, stat, now_timestamp)
 
     if table != StatisticsShortTerm:
         return True

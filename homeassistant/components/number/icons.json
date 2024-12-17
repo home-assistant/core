@@ -9,11 +9,17 @@
     "aqi": {
       "default": "mdi:air-filter"
     },
+    "area": {
+      "default": "mdi:texture-box"
+    },
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"
     },
     "battery": {
       "default": "mdi:battery"
+    },
+    "blood_glucose_concentration": {
+      "default": "mdi:spoon-sugar"
     },
     "carbon_dioxide": {
       "default": "mdi:molecule-co2"
@@ -149,6 +155,8 @@
     }
   },
   "services": {
-    "set_value": "mdi:numeric"
+    "set_value": {
+      "service": "mdi:numeric"
+    }
   }
 }

@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
-from .conftest import MockSttProviderEntity, MockTTSProvider
+from .conftest import MockSTTProviderEntity, MockTTSProvider
 
 from tests.common import flush_store
 
@@ -398,7 +398,7 @@ async def test_default_pipeline_no_stt_tts(
 @pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline(
     hass: HomeAssistant,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
     ha_language: str,
     ha_country: str | None,
@@ -441,7 +441,7 @@ async def test_default_pipeline(
 
 @pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline_unsupported_stt_language(
-    hass: HomeAssistant, mock_stt_provider_entity: MockSttProviderEntity
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test async_get_pipeline."""
     with patch.object(mock_stt_provider_entity, "_supported_languages", ["smurfish"]):
@@ -574,6 +574,7 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
 
     await async_update_pipeline(
@@ -617,6 +618,7 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
 
 

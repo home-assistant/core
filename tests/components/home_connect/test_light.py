@@ -3,17 +3,20 @@
 from collections.abc import Awaitable, Callable, Generator
 from unittest.mock import MagicMock, Mock
 
-from homeconnect.api import HomeConnectError
+from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
 from homeassistant.components.home_connect.const import (
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
+    BSH_AMBIENT_LIGHT_COLOR,
     BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
     BSH_AMBIENT_LIGHT_ENABLED,
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_POWER,
 )
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -24,6 +27,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import get_all_appliances
 
@@ -65,7 +69,7 @@ async def test_light(
     ("entity_id", "status", "service", "service_data", "state", "appliance"),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -77,7 +81,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -90,7 +94,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
                 COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
@@ -101,7 +105,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": None,
@@ -114,7 +118,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -127,7 +131,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
                 BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
@@ -138,7 +142,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
@@ -147,6 +151,35 @@ async def test_light(
             {},
             STATE_ON,
             "Hood",
+        ),
+        (
+            "light.hood_ambient_light",
+            {
+                BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
+                BSH_AMBIENT_LIGHT_COLOR: {
+                    "value": "",
+                },
+                BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
+            },
+            SERVICE_TURN_ON,
+            {
+                "rgb_color": [255, 255, 0],
+            },
+            STATE_ON,
+            "Hood",
+        ),
+        (
+            "light.fridgefreezer_external_light",
+            {
+                REFRIGERATION_EXTERNAL_LIGHT_POWER: {
+                    "value": True,
+                },
+                REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS: {"value": 75},
+            },
+            SERVICE_TURN_ON,
+            {},
+            STATE_ON,
+            "FridgeFreezer",
         ),
     ],
     indirect=["appliance"],
@@ -166,7 +199,14 @@ async def test_light_functionality(
     get_appliances: MagicMock,
 ) -> None:
     """Test light functionality."""
-    appliance.status.update(SETTINGS_STATUS)
+    appliance.status.update(
+        HomeConnectAppliance.json2dict(
+            load_json_object_fixture("home_connect/settings.json")
+            .get(appliance.name)
+            .get("data")
+            .get("settings")
+        )
+    )
     get_appliances.return_value = [appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
@@ -176,7 +216,7 @@ async def test_light_functionality(
     appliance.status.update(status)
     service_data["entity_id"] = entity_id
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         service,
         service_data,
         blocking=True,
@@ -193,10 +233,11 @@ async def test_light_functionality(
         "mock_attr",
         "attr_side_effect",
         "problematic_appliance",
+        "exception_match",
     ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": False,
@@ -207,9 +248,10 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            r"Error.*turn.*on.*",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
                     "value": True,
@@ -221,9 +263,10 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            r"Error.*turn.*on.*",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {"value": False},
             },
@@ -232,9 +275,10 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            r"Error.*turn.*off.*",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -246,9 +290,10 @@ async def test_light_functionality(
             "set_setting",
             [HomeConnectError, HomeConnectError],
             "Hood",
+            r"Error.*turn.*on.*",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -258,8 +303,9 @@ async def test_light_functionality(
             SERVICE_TURN_ON,
             {"brightness": 200},
             "set_setting",
-            [HomeConnectError, None, HomeConnectError, HomeConnectError],
+            [HomeConnectError, None, HomeConnectError],
             "Hood",
+            r"Error.*set.*color.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -272,6 +318,7 @@ async def test_switch_exception_handling(
     mock_attr: str,
     attr_side_effect: list,
     problematic_appliance: Mock,
+    exception_match: str,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -294,5 +341,8 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     service_data["entity_id"] = entity_id
-    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+    with pytest.raises(HomeAssistantError, match=exception_match):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, service, service_data, blocking=True
+        )
     assert getattr(problematic_appliance, mock_attr).call_count == len(attr_side_effect)

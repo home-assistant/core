@@ -35,14 +35,15 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _session: Session
+
     def __init__(self) -> None:
         """Init config flow."""
         self._hosts = [CLOUD_NAME]
         self._host = None
-        self._session = None
         self._scan_interval = SCAN_INTERVAL
 
-    def _get_auth_url(self):
+    def _get_auth_url(self) -> str | None:
         self._session = Session(
             public_key=PUBLIC_KEY,
             private_key=NOT_SO_PRIVATE_KEY,
@@ -70,7 +71,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the submitted configuration."""
         errors = {}
         if user_input is not None:
@@ -114,25 +117,28 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_discovery(self, discovery_info):
+    async def async_step_discovery(
+        self,
+        discovery_info: list[str],  # type: ignore[override]
+    ) -> ConfigFlowResult:
         """Run when a Tellstick is discovered."""
         await self._async_handle_discovery_without_unique_id()
 
-        _LOGGER.info("Discovered tellstick device: %s", discovery_info)
+        _LOGGER.debug("Discovered tellstick device: %s", discovery_info)
         if supports_local_api(discovery_info[1]):
-            _LOGGER.info("%s support local API", discovery_info[1])
+            _LOGGER.debug("%s support local API", discovery_info[1])
             self._hosts.append(discovery_info[0])
 
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
-        self._scan_interval = user_input[KEY_SCAN_INTERVAL]
-        if user_input[CONF_HOST] != DOMAIN:
-            self._hosts.append(user_input[CONF_HOST])
+        self._scan_interval = import_data[KEY_SCAN_INTERVAL]
+        if import_data[CONF_HOST] != DOMAIN:
+            self._hosts.append(import_data[CONF_HOST])
 
         if not await self.hass.async_add_executor_job(
             os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)
@@ -144,7 +150,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         host = next(iter(conf))
 
-        if user_input[CONF_HOST] != host:
+        if import_data[CONF_HOST] != host:
             return await self.async_step_user()
 
         host = CLOUD_NAME if host == "tellduslive" else host

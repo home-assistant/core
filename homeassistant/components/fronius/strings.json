@@ -3,10 +3,12 @@
     "flow_title": "{device}",
     "step": {
       "user": {
-        "title": "Fronius SolarNet",
-        "description": "Configure the IP address or local hostname of your Fronius device.",
+        "description": "Configure your Fronius SolarAPI device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Fronius device."
         }
       },
       "confirm_discovery": {
@@ -16,6 +18,9 @@
         "description": "Update your configuration information for {device}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::fronius::config::step::user::data_description::host%]"
         }
       }
     },
@@ -26,7 +31,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The identifier does not match the previous identifier"
     }
   },
   "entity": {
@@ -39,9 +45,6 @@
       },
       "energy_total": {
         "name": "Total energy"
-      },
-      "frequency_ac": {
-        "name": "[%key:component::sensor::entity_component::frequency::name%]"
       },
       "current_ac": {
         "name": "AC current"
@@ -83,9 +86,7 @@
           "error": "Error",
           "idle": "Idle",
           "ready": "Ready",
-          "sleeping": "Sleeping",
-          "unknown": "Unknown",
-          "invalid": "Invalid"
+          "sleeping": "Sleeping"
         }
       },
       "led_state": {
@@ -155,9 +156,6 @@
       "power_apparent_phase_3": {
         "name": "Apparent power phase 3"
       },
-      "power_apparent": {
-        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
-      },
       "power_factor_phase_1": {
         "name": "Power factor phase 1"
       },
@@ -166,9 +164,6 @@
       },
       "power_factor_phase_3": {
         "name": "Power factor phase 3"
-      },
-      "power_factor": {
-        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
       },
       "power_reactive_phase_1": {
         "name": "Reactive power phase 1"
@@ -214,12 +209,6 @@
       },
       "energy_real_ac_consumed": {
         "name": "Energy consumed"
-      },
-      "power_real_ac": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "temperature_channel_1": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "state_code": {
         "name": "State code"
@@ -275,7 +264,7 @@
         "name": "Relative self consumption"
       },
       "capacity_maximum": {
-        "name": "Maximum capacity "
+        "name": "Maximum capacity"
       },
       "capacity_designed": {
         "name": "Designed capacity"
@@ -292,6 +281,14 @@
       "temperature_cell": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       }
+    }
+  },
+  "exceptions": {
+    "entry_cannot_connect": {
+      "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
+    },
+    "update_failed": {
+      "message": "An error occurred while attempting to fetch data: {fronius_error}"
     }
   }
 }

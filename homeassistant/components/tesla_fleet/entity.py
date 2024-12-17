@@ -4,7 +4,9 @@ from abc import abstractmethod
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
+from tesla_fleet_api.const import Scope
 
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -14,6 +16,7 @@ from .coordinator import (
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
 )
+from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
 
@@ -27,6 +30,8 @@ class TeslaFleetEntity(
     """Parent class for all TeslaFleet entities."""
 
     _attr_has_entity_name = True
+    read_only: bool
+    scoped: bool
 
     def __init__(
         self,
@@ -57,6 +62,12 @@ class TeslaFleetEntity(
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key, default)
 
+    def get_number(self, key: str, default: float) -> float:
+        """Return a specific number from coordinator data."""
+        if isinstance(value := self.coordinator.data.get(key), (int, float)):
+            return value
+        return default
+
     @property
     def is_none(self) -> bool:
         """Return if the value is a literal None."""
@@ -75,6 +86,14 @@ class TeslaFleetEntity(
     @abstractmethod
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
+
+    def raise_for_read_only(self, scope: Scope) -> None:
+        """Raise an error if a scope is not available."""
+        if not self.scoped:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key=f"missing_scope_{scope.name.lower()}",
+            )
 
 
 class TeslaFleetVehicleEntity(TeslaFleetEntity):
@@ -99,6 +118,10 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
+
+    async def wake_up_if_asleep(self) -> None:
+        """Wake up the vehicle if its asleep."""
+        await wake_up_vehicle(self.vehicle)
 
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):

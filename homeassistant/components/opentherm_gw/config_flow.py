@@ -34,6 +34,7 @@ from .const import (
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
+    OpenThermDataSource,
 )
 
 
@@ -48,9 +49,11 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OpenThermGwOptionsFlow:
         """Get the options flow for this handler."""
-        return OpenThermGwOptionsFlow(config_entry)
+        return OpenThermGwOptionsFlow()
 
-    async def async_step_init(self, info=None):
+    async def async_step_init(
+        self, info: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle config flow initiation."""
         if info:
             name = info[CONF_NAME]
@@ -72,7 +75,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
                 await otgw.disconnect()
                 if not status:
                     raise ConnectionError
-                return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+                return status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_ABOUT)
 
             try:
                 async with asyncio.timeout(CONNECTION_TIMEOUT):
@@ -92,19 +95,20 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual initiation of the config flow."""
         return await self.async_step_init(user_input)
 
-    async def async_step_import(self, import_config):
+    # Deprecated import from configuration.yaml, can be removed in 2025.4.0
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import an OpenTherm Gateway device as a config entry.
 
         This flow is triggered by `async_setup` for configured devices.
         """
         formatted_config = {
-            CONF_NAME: import_config.get(CONF_NAME, import_config[CONF_ID]),
-            CONF_DEVICE: import_config[CONF_DEVICE],
-            CONF_ID: import_config[CONF_ID],
+            CONF_NAME: import_data.get(CONF_NAME, import_data[CONF_ID]),
+            CONF_DEVICE: import_data[CONF_DEVICE],
+            CONF_ID: import_data[CONF_ID],
         }
         return await self.async_step_init(info=formatted_config)
 
-    def _show_form(self, errors=None):
+    def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the config flow form with possible errors."""
         return self.async_show_form(
             step_id="init",
@@ -128,11 +132,9 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
 class OpenThermGwOptionsFlow(OptionsFlow):
     """Handle opentherm_gw options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the opentherm_gw options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

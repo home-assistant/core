@@ -16,14 +16,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.shelly import config_flow
+from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -332,6 +331,7 @@ async def test_form_missing_model_key_zeroconf(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -437,6 +437,7 @@ async def test_user_setup_ignored_device(
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -474,6 +475,7 @@ async def test_form_auth_errors_test_connection_gen1(
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -819,20 +821,15 @@ async def test_reauth_successful(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
@@ -850,14 +847,28 @@ async def test_reauth_successful(
         (3, {"password": "test2 password"}),
     ],
 )
+@pytest.mark.parametrize(
+    ("exc", "abort_reason"),
+    [
+        (DeviceConnectionError, "reauth_unsuccessful"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
+    ],
+)
 async def test_reauth_unsuccessful(
-    hass: HomeAssistant, gen: int, user_input: dict[str, str]
+    hass: HomeAssistant,
+    gen: int,
+    user_input: dict[str, str],
+    exc: Exception,
+    abort_reason: str,
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": gen}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -865,30 +876,17 @@ async def test_reauth_unsuccessful(
             return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
         ),
         patch(
-            "aioshelly.block_device.BlockDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
+            "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
         ),
-        patch(
-            "aioshelly.rpc_device.RpcDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
-        ),
+        patch("aioshelly.rpc_device.RpcDevice.create", new=AsyncMock(side_effect=exc)),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+        assert result["reason"] == abort_reason
 
 
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
@@ -897,20 +895,14 @@ async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
         domain="shelly", unique_id="test-mac", data={"host": "0.0.0.0", "gen": 2}
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
         side_effect=DeviceConnectionError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"password": "test2 password"},
@@ -1379,17 +1371,10 @@ async def test_reconfigure_successful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1418,17 +1403,10 @@ async def test_reconfigure_unsuccessful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1462,17 +1440,10 @@ async def test_reconfigure_with_exception(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result = await hass.config_entries.flow.async_configure(

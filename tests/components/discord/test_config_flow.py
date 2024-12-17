@@ -4,7 +4,7 @@ import nextcord
 
 from homeassistant import config_entries
 from homeassistant.components.discord.const import DOMAIN
-from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -123,16 +123,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
 async def test_flow_reauth(hass: HomeAssistant) -> None:
     """Test a reauth flow."""
     entry = create_entry(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

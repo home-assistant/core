@@ -1,0 +1,19 @@
+{
+  "domain": "palazzetti",
+  "name": "Palazzetti",
+  "codeowners": ["@dotvav"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "connbox*",
+      "macaddress": "40F3857*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/palazzetti",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["pypalazzetti==0.1.14"]
+}

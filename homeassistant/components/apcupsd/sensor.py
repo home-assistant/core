@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
@@ -25,7 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LASTSTEST
+from . import APCUPSdConfigEntry
+from .const import LAST_S_TEST
 from .coordinator import APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
@@ -156,8 +156,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    LASTSTEST: SensorEntityDescription(
-        key=LASTSTEST,
+    LAST_S_TEST: SensorEntityDescription(
+        key=LAST_S_TEST,
         translation_key="last_self_test",
     ),
     "lastxfer": SensorEntityDescription(
@@ -406,11 +406,11 @@ INFERRED_UNITS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: APCUPSdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
-    coordinator: APCUPSdCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # The resource keys in the data dict collected in the coordinator is in upper-case
     # by default, but we use lower cases throughout this integration.
@@ -422,7 +422,7 @@ async def async_setup_entry(
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LASTSTEST}:
+    for resource in available_resources | {LAST_S_TEST}:
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue

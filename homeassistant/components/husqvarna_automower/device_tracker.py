@@ -1,14 +1,15 @@
 """Creates the device tracker entity for the mower."""
 
-from typing import TYPE_CHECKING
-
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -40,20 +41,11 @@ class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):
         self._attr_unique_id = mower_id
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
-
-    @property
     def latitude(self) -> float:
         """Return latitude value of the device."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.positions is not None
         return self.mower_attributes.positions[0].latitude
 
     @property
     def longitude(self) -> float:
         """Return longitude value of the device."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.positions is not None
         return self.mower_attributes.positions[0].longitude

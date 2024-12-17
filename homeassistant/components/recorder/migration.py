@@ -91,27 +91,24 @@ from .queries import (
     find_states_context_ids_to_migrate,
     find_unmigrated_short_term_statistics_rows,
     find_unmigrated_statistics_rows,
+    get_migration_changes,
     has_entity_ids_to_migrate,
     has_event_type_to_migrate,
     has_events_context_ids_to_migrate,
     has_states_context_ids_to_migrate,
+    has_used_states_entity_ids,
     has_used_states_event_ids,
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import get_start_time
-from .tasks import (
-    CommitTask,
-    EntityIDPostMigrationTask,
-    PostSchemaMigrationTask,
-    RecorderTask,
-    StatisticsTimestampMigrationCleanupTask,
-)
+from .statistics import cleanup_statistics_timestamp_migration, get_start_time
+from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
+    database_job_retry_wrapper_method,
     execute_stmt_lambda_element,
     get_index_by_name,
-    retryable_database_job,
+    retryable_database_job_method,
     session_scope,
 )
 
@@ -128,6 +125,11 @@ MIGRATION_NOTE_OFFLINE = (
     "Home Assistant will not start until the upgrade is completed. Please be patient "
     "and do not turn off or restart Home Assistant while the upgrade is in progress!"
 )
+MIGRATION_NOTE_MINUTES = (
+    "Note: this may take several minutes on large databases and slow machines. "
+    "Please be patient!"
+)
+MIGRATION_NOTE_WHILE = "This will take a while; please be patient!"
 
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
@@ -198,12 +200,13 @@ def get_schema_version(session_maker: Callable[[], Session]) -> int | None:
         return None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SchemaValidationStatus:
     """Store schema validation status."""
 
     current_version: int
     migration_needed: bool
+    non_live_data_migration_needed: bool
     schema_errors: set[str]
     start_version: int
 
@@ -233,8 +236,17 @@ def validate_db_schema(
         # columns may otherwise not exist etc.
         schema_errors = _find_schema_errors(hass, instance, session_maker)
 
+    schema_migration_needed = not is_current
+    _non_live_data_migration_needed = non_live_data_migration_needed(
+        instance, session_maker, current_version
+    )
+
     return SchemaValidationStatus(
-        current_version, not is_current, schema_errors, current_version
+        current_version=current_version,
+        non_live_data_migration_needed=_non_live_data_migration_needed,
+        migration_needed=schema_migration_needed or _non_live_data_migration_needed,
+        schema_errors=schema_errors,
+        start_version=current_version,
     )
 
 
@@ -251,7 +263,10 @@ def _find_schema_errors(
 
 def live_migration(schema_status: SchemaValidationStatus) -> bool:
     """Check if live migration is possible."""
-    return schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+    return (
+        schema_status.current_version >= LIVE_MIGRATION_MIN_SCHEMA_VERSION
+        and not schema_status.non_live_data_migration_needed
+    )
 
 
 def pre_migrate_schema(engine: Engine) -> None:
@@ -288,15 +303,17 @@ def _migrate_schema(
             "The database is about to upgrade from schema version %s to %s%s",
             current_version,
             end_version,
-            f". {MIGRATION_NOTE_OFFLINE}"
-            if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
-            else "",
+            (
+                f". {MIGRATION_NOTE_OFFLINE}"
+                if current_version < LIVE_MIGRATION_MIN_SCHEMA_VERSION
+                else ""
+            ),
         )
         schema_status = dataclass_replace(schema_status, current_version=end_version)
 
     for version in range(current_version, end_version):
         new_version = version + 1
-        _LOGGER.info("Upgrading recorder db schema to version %s", new_version)
+        _LOGGER.warning("Upgrading recorder db schema to version %s", new_version)
         _apply_update(instance, hass, engine, session_maker, new_version, start_version)
         with session_scope(session=session_maker()) as session:
             session.add(SchemaChanges(schema_version=new_version))
@@ -345,14 +362,69 @@ def migrate_schema_live(
         states_correct_db_schema(instance, schema_errors)
         events_correct_db_schema(instance, schema_errors)
 
-    start_version = schema_status.start_version
-    if start_version != SCHEMA_VERSION:
-        instance.queue_task(PostSchemaMigrationTask(start_version, SCHEMA_VERSION))
-        # Make sure the post schema migration task is committed in case
-        # the next task does not have commit_before = True
-        instance.queue_task(CommitTask())
-
     return schema_status
+
+
+def _get_migration_changes(session: Session) -> dict[str, int]:
+    """Return migration changes as a dict."""
+    migration_changes: dict[str, int] = {
+        row[0]: row[1]
+        for row in execute_stmt_lambda_element(session, get_migration_changes())
+    }
+    return migration_changes
+
+
+def non_live_data_migration_needed(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_version: int,
+) -> bool:
+    """Return True if non-live data migration is needed.
+
+    This must only be called if database schema is current.
+    """
+    migration_needed = False
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+        for migrator_cls in NON_LIVE_DATA_MIGRATORS:
+            migrator = migrator_cls(schema_version, migration_changes)
+            migration_needed |= migrator.needs_migrate(instance, session)
+
+    return migration_needed
+
+
+def migrate_data_non_live(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> None:
+    """Do non-live data migration.
+
+    This must be called after non-live schema migration is completed.
+    """
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+
+    for migrator_cls in NON_LIVE_DATA_MIGRATORS:
+        migrator = migrator_cls(schema_status.start_version, migration_changes)
+        migrator.migrate_all(instance, session_maker)
+
+
+def migrate_data_live(
+    instance: Recorder,
+    session_maker: Callable[[], Session],
+    schema_status: SchemaValidationStatus,
+) -> None:
+    """Queue live schema migration tasks.
+
+    This must be called after live schema migration is completed.
+    """
+    with session_scope(session=session_maker()) as session:
+        migration_changes = _get_migration_changes(session)
+
+        for migrator_cls in LIVE_DATA_MIGRATORS:
+            migrator = migrator_cls(schema_status.start_version, migration_changes)
+            migrator.queue_migration(instance, session)
 
 
 def _create_index(
@@ -373,11 +445,10 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Adding index `%s` to table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     with session_scope(session=session_maker()) as session:
         try:
@@ -422,11 +493,10 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Dropping index `%s` from table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     index_to_drop: str | None = None
     with session_scope(session=session_maker()) as session:
@@ -472,13 +542,10 @@ def _add_columns(
 ) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
-        (
-            "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Adding columns %s to table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
@@ -487,11 +554,7 @@ def _add_columns(
         try:
             connection = session.connection()
             connection.execute(
-                text(
-                    "ALTER TABLE {table} {columns_def}".format(
-                        table=table_name, columns_def=", ".join(columns_def)
-                    )
-                )
+                text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
         except (InternalError, OperationalError, ProgrammingError):
             # Some engines support adding all columns at once,
@@ -534,21 +597,16 @@ def _modify_columns(
         return
 
     _LOGGER.warning(
-        (
-            "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Modifying columns %s in table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
         columns_def = [
-            "ALTER {column} TYPE {type}".format(
-                **dict(zip(["column", "type"], col_def.split(" ", 1), strict=False))
-            )
-            for col_def in columns_def
+            f"ALTER {column} TYPE {type_}"
+            for column, type_ in (col_def.split(" ", 1) for col_def in columns_def)
         ]
     elif engine.dialect.name == "mssql":
         columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
@@ -559,11 +617,7 @@ def _modify_columns(
         try:
             connection = session.connection()
             connection.execute(
-                text(
-                    "ALTER TABLE {table} {columns_def}".format(
-                        table=table_name, columns_def=", ".join(columns_def)
-                    )
-                )
+                text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
         except (InternalError, OperationalError):
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
@@ -1417,6 +1471,12 @@ class _SchemaVersion32Migrator(_SchemaVersionMigrator, target_version=32):
         _drop_index(self.session_maker, "events", "ix_events_event_type_time_fired")
         _drop_index(self.session_maker, "states", "ix_states_last_updated")
         _drop_index(self.session_maker, "events", "ix_events_time_fired")
+        with session_scope(session=self.session_maker()) as session:
+            # In version 31 we migrated all the time_fired, last_updated, and last_changed
+            # columns to be timestamps. In version 32 we need to wipe the old columns
+            # since they are no longer used and take up a significant amount of space.
+            assert self.instance.engine is not None, "engine should never be None"
+            _wipe_old_string_time_columns(self.instance, self.instance.engine, session)
 
 
 class _SchemaVersion33Migrator(_SchemaVersionMigrator, target_version=33):
@@ -1494,6 +1554,12 @@ class _SchemaVersion35Migrator(_SchemaVersionMigrator, target_version=35):
         )
         # ix_statistics_start and ix_statistics_statistic_id_start are still used
         # for the post migration cleanup and can be removed in a future version.
+
+        # In version 34 we migrated all the created, start, and last_reset
+        # columns to be timestamps. In version 35 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        while not cleanup_statistics_timestamp_migration(self.instance):
+            pass
 
 
 class _SchemaVersion36Migrator(_SchemaVersionMigrator, target_version=36):
@@ -1781,10 +1847,9 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     except IntegrityError as ex:
         _LOGGER.error(
             "Statistics table contains duplicate entries: %s; "
-            "Cleaning up duplicates and trying again; "
-            "This will take a while; "
-            "Please be patient!",
+            "Cleaning up duplicates and trying again; %s",
             ex,
+            MIGRATION_NOTE_WHILE,
         )
         # There may be duplicated statistics entries, delete duplicates
         # and try again
@@ -1812,10 +1877,9 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. "
-        "Note: this can take several minutes on large databases and slow "
-        "machines. Please be patient!",
+        "Updating character set and collation of table %s to utf8mb4. %s",
         table,
+        MIGRATION_NOTE_MINUTES,
     )
     with (
         contextlib.suppress(SQLAlchemyError),
@@ -1831,40 +1895,6 @@ def _correct_table_character_set_and_collation(
                 f"COLLATE {MYSQL_COLLATE}, LOCK=EXCLUSIVE"
             )
         )
-
-
-def post_schema_migration(
-    instance: Recorder,
-    old_version: int,
-    new_version: int,
-) -> None:
-    """Post schema migration.
-
-    Run any housekeeping tasks after the schema migration has completed.
-
-    Post schema migration is run after the schema migration has completed
-    and the queue has been processed to ensure that we reduce the memory
-    pressure since events are held in memory until the queue is processed
-    which is blocked from being processed until the schema migration is
-    complete.
-    """
-    if old_version < 32 <= new_version:
-        # In version 31 we migrated all the time_fired, last_updated, and last_changed
-        # columns to be timestamps. In version 32 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        assert instance.event_session is not None
-        assert instance.engine is not None
-        _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
-    if old_version < 35 <= new_version:
-        # In version 34 we migrated all the created, start, and last_reset
-        # columns to be timestamps. In version 35 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        _wipe_old_string_statistics_columns(instance)
-
-
-def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
-    """Wipe old string statistics columns to save space."""
-    instance.queue_task(StatisticsTimestampMigrationCleanupTask())
 
 
 @database_job_retry_wrapper("Wipe old string time columns", 3)
@@ -2154,7 +2184,6 @@ def _generate_ulid_bytes_at_time(timestamp: float | None) -> bytes:
     return ulid_to_bytes(ulid_at_time(timestamp or time()))
 
 
-@retryable_database_job("post migrate states entity_ids to states_meta")
 def post_migrate_entity_ids(instance: Recorder) -> bool:
     """Remove old entity_id strings from states.
 
@@ -2169,56 +2198,8 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
         # If there is more work to do return False
         # so that we can be called again
 
-    if is_done:
-        # Drop the old indexes since they are no longer needed
-        _drop_index(session_maker, "states", LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
-
     _LOGGER.debug("Cleanup legacy entity_ids done=%s", is_done)
     return is_done
-
-
-@retryable_database_job("cleanup_legacy_event_ids")
-def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
-    """Remove old event_id index from states.
-
-    We used to link states to events using the event_id column but we no
-    longer store state changed events in the events table.
-
-    If all old states have been purged and existing states are in the new
-    format we can drop the index since it can take up ~10MB per 1M rows.
-    """
-    session_maker = instance.get_session
-    _LOGGER.debug("Cleanup legacy entity_ids")
-    with session_scope(session=session_maker()) as session:
-        result = session.execute(has_used_states_event_ids()).scalar()
-        # In the future we may migrate existing states to the new format
-        # but in practice very few of these still exist in production and
-        # removing the index is the likely all that needs to happen.
-        all_gone = not result
-
-    if all_gone:
-        # Only drop the index if there are no more event_ids in the states table
-        # ex all NULL
-        assert instance.engine is not None, "engine should never be None"
-        if instance.dialect_name == SupportedDialect.SQLITE:
-            # SQLite does not support dropping foreign key constraints
-            # so we have to rebuild the table
-            fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
-        else:
-            try:
-                _drop_foreign_key_constraints(
-                    session_maker, instance.engine, TABLE_STATES, "event_id"
-                )
-            except (InternalError, OperationalError):
-                fk_remove_ok = False
-            else:
-                fk_remove_ok = True
-        if fk_remove_ok:
-            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-            instance.use_legacy_events_index = False
-            _mark_migration_done(session, EventIDPostMigration)
-
-    return True
 
 
 def _initialize_database(session: Session) -> bool:
@@ -2275,8 +2256,6 @@ class MigrationTask(RecorderTask):
         if not self.migrator.migrate_data(instance):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(MigrationTask(self.migrator))
-        else:
-            self.migrator.migration_done(instance, None)
 
 
 @dataclass(slots=True)
@@ -2287,45 +2266,53 @@ class CommitBeforeMigrationTask(MigrationTask):
 
 
 @dataclass(frozen=True, kw_only=True)
-class NeedsMigrateResult:
-    """Container for the return value of BaseRunTimeMigration.needs_migrate_impl."""
+class DataMigrationStatus:
+    """Container for data migrator status."""
 
     needs_migrate: bool
     migration_done: bool
 
 
-class BaseRunTimeMigration(ABC):
-    """Base class for run time migrations."""
+class BaseMigration(ABC):
+    """Base class for migrations."""
 
+    index_to_drop: tuple[str, str] | None = None
     required_schema_version = 0
     migration_version = 1
     migration_id: str
-    task = MigrationTask
 
     def __init__(self, schema_version: int, migration_changes: dict[str, int]) -> None:
         """Initialize a new BaseRunTimeMigration."""
         self.schema_version = schema_version
         self.migration_changes = migration_changes
 
-    def do_migrate(self, instance: Recorder, session: Session) -> None:
-        """Start migration if needed."""
-        if self.needs_migrate(instance, session):
-            instance.queue_task(self.task(self))
-        else:
-            self.migration_done(instance, session)
-
-    @staticmethod
     @abstractmethod
-    def migrate_data(instance: Recorder) -> bool:
-        """Migrate some data, returns True if migration is completed."""
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, return True if migration is completed."""
 
-    def migration_done(self, instance: Recorder, session: Session | None) -> None:
+    def _migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        status = self.migrate_data_impl(instance)
+        if status.migration_done:
+            if self.index_to_drop is not None:
+                table, index = self.index_to_drop
+                _drop_index(instance.get_session, table, index)
+            with session_scope(session=instance.get_session()) as session:
+                self.migration_done(instance, session)
+                _mark_migration_done(session, self.__class__)
+        return not status.needs_migrate
+
+    @abstractmethod
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
+        """Migrate some data, return if the migration needs to run and if it is done."""
+
+    def migration_done(self, instance: Recorder, session: Session) -> None:
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
     def needs_migrate_impl(
         self, instance: Recorder, session: Session
-    ) -> NeedsMigrateResult:
+    ) -> DataMigrationStatus:
         """Return if the migration needs to run and if it is done."""
 
     def needs_migrate(self, instance: Recorder, session: Session) -> bool:
@@ -2339,20 +2326,86 @@ class BaseRunTimeMigration(ABC):
         """
         if self.schema_version < self.required_schema_version:
             # Schema is too old, we must have to migrate
+            _LOGGER.info(
+                "Data migration '%s' needed, schema too old", self.migration_id
+            )
             return True
         if self.migration_changes.get(self.migration_id, -1) >= self.migration_version:
             # The migration changes table indicates that the migration has been done
+            _LOGGER.debug(
+                "Data migration '%s' not needed, already completed", self.migration_id
+            )
             return False
         # We do not know if the migration is done from the
-        # migration changes table so we must check the data
+        # migration changes table so we must check the index and data
         # This is the slow path
+        if (
+            self.index_to_drop is not None
+            and get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
+            is not None
+        ):
+            _LOGGER.info(
+                "Data migration '%s' needed, index to drop still exists",
+                self.migration_id,
+            )
+            return True
         needs_migrate = self.needs_migrate_impl(instance, session)
         if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
+        _LOGGER.info(
+            "Data migration '%s' needed: %s",
+            self.migration_id,
+            needs_migrate.needs_migrate,
+        )
         return needs_migrate.needs_migrate
 
 
-class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
+class BaseOffLineMigration(BaseMigration):
+    """Base class for off line migrations."""
+
+    def migrate_all(
+        self, instance: Recorder, session_maker: Callable[[], Session]
+    ) -> None:
+        """Migrate all data."""
+        with session_scope(session=session_maker()) as session:
+            if not self.needs_migrate(instance, session):
+                _LOGGER.debug("Migration not needed for '%s'", self.migration_id)
+                self.migration_done(instance, session)
+                return
+        _LOGGER.warning(
+            "The database is about to do data migration step '%s', %s",
+            self.migration_id,
+            MIGRATION_NOTE_OFFLINE,
+        )
+        while not self.migrate_data(instance):
+            pass
+        _LOGGER.warning("Data migration step '%s' completed", self.migration_id)
+
+    @database_job_retry_wrapper_method("migrate data", 10)
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseRunTimeMigration(BaseMigration):
+    """Base class for run time migrations."""
+
+    task = MigrationTask
+
+    def queue_migration(self, instance: Recorder, session: Session) -> None:
+        """Start migration if needed."""
+        if self.needs_migrate(instance, session):
+            instance.queue_task(self.task(self))
+        else:
+            self.migration_done(instance, session)
+
+    @retryable_database_job_method("migrate data")
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        return self._migrate_data(instance)
+
+
+class BaseMigrationWithQuery(BaseMigration):
     """Base class for run time migrations."""
 
     @abstractmethod
@@ -2361,23 +2414,23 @@ class BaseRunTimeMigrationWithQuery(BaseRunTimeMigration):
 
     def needs_migrate_impl(
         self, instance: Recorder, session: Session
-    ) -> NeedsMigrateResult:
+    ) -> DataMigrationStatus:
         """Return if the migration needs to run."""
         needs_migrate = execute_stmt_lambda_element(session, self.needs_migrate_query())
-        return NeedsMigrateResult(
+        return DataMigrationStatus(
             needs_migrate=bool(needs_migrate), migration_done=not needs_migrate
         )
 
 
-class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
+class StatesContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate states context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "state_context_id_as_binary"
+    migration_version = 2
+    index_to_drop = ("states", "ix_states_context_id")
 
-    @staticmethod
-    @retryable_database_job("migrate states context_ids to binary format")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate states context_ids to use binary format, return True if completed."""
         _to_bytes = _context_id_to_bytes
         session_maker = instance.get_session
@@ -2402,31 +2455,25 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
                         for state_id, last_updated_ts, context_id, context_user_id, context_parent_id in states
                     ],
                 )
-            # If there is more work to do return False
-            # so that we can be called again
-            if is_done := not states:
-                _mark_migration_done(session, StatesContextIDMigration)
-
-        if is_done:
-            _drop_index(session_maker, "states", "ix_states_context_id")
+            is_done = not states
 
         _LOGGER.debug("Migrating states context_ids to binary format: done=%s", is_done)
-        return is_done
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
         return has_states_context_ids_to_migrate()
 
 
-class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
+class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate events context_ids to binary format."""
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "event_context_id_as_binary"
+    migration_version = 2
+    index_to_drop = ("events", "ix_events_context_id")
 
-    @staticmethod
-    @retryable_database_job("migrate events context_ids to binary format")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate events context_ids to use binary format, return True if completed."""
         _to_bytes = _context_id_to_bytes
         session_maker = instance.get_session
@@ -2451,35 +2498,23 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
                         for event_id, time_fired_ts, context_id, context_user_id, context_parent_id in events
                     ],
                 )
-            # If there is more work to do return False
-            # so that we can be called again
-            if is_done := not events:
-                _mark_migration_done(session, EventsContextIDMigration)
-
-        if is_done:
-            _drop_index(session_maker, "events", "ix_events_context_id")
+            is_done = not events
 
         _LOGGER.debug("Migrating events context_ids to binary format: done=%s", is_done)
-        return is_done
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Return the query to check if the migration needs to run."""
         return has_events_context_ids_to_migrate()
 
 
-class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
+class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate event_type to event_type_ids."""
 
     required_schema_version = EVENT_TYPE_IDS_SCHEMA_VERSION
     migration_id = "event_type_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
 
-    @staticmethod
-    @retryable_database_job("migrate events event_types to event_type_ids")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate event_type to event_type_ids, return True if completed."""
         session_maker = instance.get_session
         _LOGGER.debug("Migrating event_types")
@@ -2532,37 +2567,23 @@ class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
                     ],
                 )
 
-            # If there is more work to do return False
-            # so that we can be called again
-            if is_done := not events:
-                _mark_migration_done(session, EventTypeIDMigration)
+            is_done = not events
 
         _LOGGER.debug("Migrating event_types done=%s", is_done)
-        return is_done
-
-    def migration_done(self, instance: Recorder, session: Session | None) -> None:
-        """Will be called after migrate returns True."""
-        _LOGGER.debug("Activating event_types manager as all data is migrated")
-        instance.event_type_manager.active = True
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
         return has_event_type_to_migrate()
 
 
-class EntityIDMigration(BaseRunTimeMigrationWithQuery):
+class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
     """Migration to migrate entity_ids to states_meta."""
 
     required_schema_version = STATES_META_SCHEMA_VERSION
     migration_id = "entity_id_migration"
-    task = CommitBeforeMigrationTask
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
 
-    @staticmethod
-    @retryable_database_job("migrate states entity_ids to states_meta")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate entity_ids to states_meta, return True if completed.
 
         We do this in two steps because we need the history queries to work
@@ -2625,42 +2646,10 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
                     ],
                 )
 
-            # If there is more work to do return False
-            # so that we can be called again
-            if is_done := not states:
-                _mark_migration_done(session, EntityIDMigration)
+            is_done = not states
 
         _LOGGER.debug("Migrating entity_ids done=%s", is_done)
-        return is_done
-
-    def migration_done(self, instance: Recorder, _session: Session | None) -> None:
-        """Will be called after migrate returns True."""
-        # The migration has finished, now we start the post migration
-        # to remove the old entity_id data from the states table
-        # at this point we can also start using the StatesMeta table
-        # so we set active to True
-        _LOGGER.debug("Activating states_meta manager as all data is migrated")
-        instance.states_meta_manager.active = True
-        session_generator = (
-            contextlib.nullcontext(_session)
-            if _session
-            else session_scope(session=instance.get_session())
-        )
-        with (
-            contextlib.suppress(SQLAlchemyError),
-            session_generator as session,
-        ):
-            # If ix_states_entity_id_last_updated_ts still exists
-            # on the states table it means the entity id migration
-            # finished by the EntityIDPostMigrationTask did not
-            # complete because they restarted in the middle of it. We need
-            # to pick back up where we left off.
-            if get_index_by_name(
-                session,
-                TABLE_STATES,
-                LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX,
-            ):
-                instance.queue_task(EntityIDPostMigrationTask())
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
 
     def needs_migrate_query(self) -> StatementLambdaElement:
         """Check if the data is migrated."""
@@ -2674,10 +2663,49 @@ class EventIDPostMigration(BaseRunTimeMigration):
     task = MigrationTask
     migration_version = 2
 
-    @staticmethod
-    def migrate_data(instance: Recorder) -> bool:
-        """Migrate some data, returns True if migration is completed."""
-        return cleanup_legacy_states_event_ids(instance)
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
+        """Remove old event_id index from states, returns True if completed.
+
+        We used to link states to events using the event_id column but we no
+        longer store state changed events in the events table.
+
+        If all old states have been purged and existing states are in the new
+        format we can drop the index since it can take up ~10MB per 1M rows.
+        """
+        session_maker = instance.get_session
+        _LOGGER.debug("Cleanup legacy entity_ids")
+        with session_scope(session=session_maker()) as session:
+            result = session.execute(has_used_states_event_ids()).scalar()
+            # In the future we may migrate existing states to the new format
+            # but in practice very few of these still exist in production and
+            # removing the index is the likely all that needs to happen.
+            all_gone = not result
+
+        fk_remove_ok = False
+        if all_gone:
+            # Only drop the index if there are no more event_ids in the states table
+            # ex all NULL
+            assert instance.engine is not None, "engine should never be None"
+            if instance.dialect_name == SupportedDialect.SQLITE:
+                # SQLite does not support dropping foreign key constraints
+                # so we have to rebuild the table
+                fk_remove_ok = rebuild_sqlite_table(
+                    session_maker, instance.engine, States
+                )
+            else:
+                try:
+                    _drop_foreign_key_constraints(
+                        session_maker, instance.engine, TABLE_STATES, "event_id"
+                    )
+                except (InternalError, OperationalError):
+                    fk_remove_ok = False
+                else:
+                    fk_remove_ok = True
+            if fk_remove_ok:
+                _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+                instance.use_legacy_events_index = False
+
+        return DataMigrationStatus(needs_migrate=False, migration_done=fk_remove_ok)
 
     @staticmethod
     def _legacy_event_id_foreign_key_exists(instance: Recorder) -> bool:
@@ -2698,21 +2726,51 @@ class EventIDPostMigration(BaseRunTimeMigration):
 
     def needs_migrate_impl(
         self, instance: Recorder, session: Session
-    ) -> NeedsMigrateResult:
+    ) -> DataMigrationStatus:
         """Return if the migration needs to run."""
         if self.schema_version <= LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION:
-            return NeedsMigrateResult(needs_migrate=False, migration_done=False)
+            return DataMigrationStatus(needs_migrate=False, migration_done=False)
         if get_index_by_name(
             session, TABLE_STATES, LEGACY_STATES_EVENT_ID_INDEX
         ) is not None or self._legacy_event_id_foreign_key_exists(instance):
             instance.use_legacy_events_index = True
-            return NeedsMigrateResult(needs_migrate=True, migration_done=False)
-        return NeedsMigrateResult(needs_migrate=False, migration_done=True)
+            return DataMigrationStatus(needs_migrate=True, migration_done=False)
+        return DataMigrationStatus(needs_migrate=False, migration_done=True)
 
 
-def _mark_migration_done(
-    session: Session, migration: type[BaseRunTimeMigration]
-) -> None:
+class EntityIDPostMigration(BaseMigrationWithQuery, BaseOffLineMigration):
+    """Migration to remove old entity_id strings from states.
+
+    Introduced in HA Core 2023.4 by PR #89557.
+    """
+
+    migration_id = "entity_id_post_migration"
+    index_to_drop = (TABLE_STATES, LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX)
+
+    def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
+        """Migrate some data, returns True if migration is completed."""
+        is_done = post_migrate_entity_ids(instance)
+        return DataMigrationStatus(needs_migrate=not is_done, migration_done=is_done)
+
+    def needs_migrate_query(self) -> StatementLambdaElement:
+        """Check if the data is migrated."""
+        return has_used_states_entity_ids()
+
+
+NON_LIVE_DATA_MIGRATORS: tuple[type[BaseOffLineMigration], ...] = (
+    StatesContextIDMigration,  # Introduced in HA Core 2023.4
+    EventsContextIDMigration,  # Introduced in HA Core 2023.4
+    EventTypeIDMigration,  # Introduced in HA Core 2023.4 by PR #89465
+    EntityIDMigration,  # Introduced in HA Core 2023.4 by PR #89557
+    EntityIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89557
+)
+
+LIVE_DATA_MIGRATORS: tuple[type[BaseRunTimeMigration], ...] = (
+    EventIDPostMigration,  # Introduced in HA Core 2023.4 by PR #89901
+)
+
+
+def _mark_migration_done(session: Session, migration: type[BaseMigration]) -> None:
     """Mark a migration as done in the database."""
     session.merge(
         MigrationChanges(
@@ -2736,10 +2794,7 @@ def rebuild_sqlite_table(
     orig_name = table_table.name
     temp_name = f"{table_table.name}_temp_{int(time())}"
 
-    _LOGGER.warning(
-        "Rebuilding SQLite table %s; This will take a while; Please be patient!",
-        orig_name,
-    )
+    _LOGGER.warning("Rebuilding SQLite table %s; %s", orig_name, MIGRATION_NOTE_WHILE)
 
     try:
         # 12 step SQLite table rebuild

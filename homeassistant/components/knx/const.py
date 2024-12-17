@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from enum import Enum
-from typing import Final, TypedDict
+from enum import Enum, StrEnum
+from typing import TYPE_CHECKING, Final, TypedDict
 
 from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
-from homeassistant.components.climate import HVACAction, HVACMode
+from homeassistant.components.climate import FAN_AUTO, FAN_OFF, HVACAction, HVACMode
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import KNXModule
 
 DOMAIN: Final = "knx"
+KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
@@ -47,8 +52,8 @@ CONF_KNX_DEFAULT_RATE_LIMIT: Final = 0
 DEFAULT_ROUTING_IA: Final = "0.0.240"
 
 CONF_KNX_TELEGRAM_LOG_SIZE: Final = "telegram_log_size"
-TELEGRAM_LOG_DEFAULT: Final = 200
-TELEGRAM_LOG_MAX: Final = 5000  # ~2 MB or ~5 hours of reasonable bus load
+TELEGRAM_LOG_DEFAULT: Final = 1000
+TELEGRAM_LOG_MAX: Final = 25000  # ~10 MB or ~25 hours of reasonable bus load
 
 ##
 # Secure constants
@@ -68,8 +73,6 @@ CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 
-# yaml config merged with config entry data
-DATA_KNX_CONFIG: Final = "knx_config"
 # original hass yaml config
 DATA_HASS_CONFIG: Final = "knx_hass_config"
 
@@ -101,7 +104,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     route_back: bool  # not required
     host: str  # only required for tunnelling
     port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None
+    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required
@@ -124,6 +127,13 @@ class ColorTempModes(Enum):
     ABSOLUTE = "7.600"
     ABSOLUTE_FLOAT = "9"
     RELATIVE = "5.001"
+
+
+class FanZeroMode(StrEnum):
+    """Enum for setting the fan zero mode."""
+
+    OFF = FAN_OFF
+    AUTO = FAN_AUTO
 
 
 SUPPORTED_PLATFORMS_YAML: Final = {

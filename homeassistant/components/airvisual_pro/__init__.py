@@ -24,15 +24,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -87,6 +81,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name="Node/Pro data",
         update_interval=UPDATE_INTERVAL,
         update_method=async_get_data,
@@ -120,28 +115,3 @@ async def async_unload_entry(
         await entry.runtime_data.node.async_disconnect()
 
     return unload_ok
-
-
-class AirVisualProEntity(CoordinatorEntity):
-    """Define a generic AirVisual Pro entity."""
-
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, description: EntityDescription
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
-        self.entity_description = description
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
-            manufacturer="AirVisual",
-            model=self.coordinator.data["status"]["model"],
-            name=self.coordinator.data["settings"]["node_name"],
-            hw_version=self.coordinator.data["status"]["system_version"],
-            sw_version=self.coordinator.data["status"]["app_version"],
-        )

@@ -1,10 +1,5 @@
 """Support for MQTT vacuums."""
 
-# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
-# and was removed with HA Core 2024.2.0
-# The use of the schema attribute with MQTT vacuum was deprecated with HA Core 2024.2
-# the attribute will be remove with HA Core 2024.8
-
 from __future__ import annotations
 
 import logging
@@ -15,20 +10,12 @@ import voluptuous as vol
 from homeassistant.components import vacuum
 from homeassistant.components.vacuum import (
     ENTITY_ID_FORMAT,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES,
-    CONF_NAME,
-    STATE_IDLE,
-    STATE_PAUSED,
-)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,26 +25,32 @@ from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_SCHEMA, CONF_STATE_TOPIC
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
 
-LEGACY = "legacy"
-STATE = "state"
+PARALLEL_UPDATES = 0
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
-POSSIBLE_STATES: dict[str, str] = {
-    STATE_IDLE: STATE_IDLE,
-    STATE_DOCKED: STATE_DOCKED,
-    STATE_ERROR: STATE_ERROR,
-    STATE_PAUSED: STATE_PAUSED,
-    STATE_RETURNING: STATE_RETURNING,
-    STATE_CLEANING: STATE_CLEANING,
+STATE_IDLE = "idle"
+STATE_DOCKED = "docked"
+STATE_ERROR = "error"
+STATE_PAUSED = "paused"
+STATE_RETURNING = "returning"
+STATE_CLEANING = "cleaning"
+
+POSSIBLE_STATES: dict[str, VacuumActivity] = {
+    STATE_IDLE: VacuumActivity.IDLE,
+    STATE_DOCKED: VacuumActivity.DOCKED,
+    STATE_ERROR: VacuumActivity.ERROR,
+    STATE_PAUSED: VacuumActivity.PAUSED,
+    STATE_RETURNING: VacuumActivity.RETURNING,
+    STATE_CLEANING: VacuumActivity.CLEANING,
 }
 
 CONF_SUPPORTED_FEATURES = ATTR_SUPPORTED_FEATURES
@@ -149,7 +142,7 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
@@ -173,26 +166,10 @@ VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_SCHEMA): vol.All(vol.Lower, vol.Any(LEGACY, STATE)),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(
-    VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
-    # Do not fail a config is the schema option is still present,
-    # De option was deprecated with HA Core 2024.2 and removed with HA Core 2024.8.
-    # As we allow extra options, and we will remove this check silently
-    # with HA Core 2025.8.0, we will only warn,
-    # if a adiscovery config still uses this option.
-    cv.removed(CONF_SCHEMA, raise_if_present=False),
-)
-
-PLATFORM_SCHEMA_MODERN = vol.All(
-    VACUUM_BASE_SCHEMA,
-    # The schema options was removed with HA Core 2024.8,
-    # the cleanup is planned for HA Core 2025.8.
-    cv.removed(CONF_SCHEMA, raise_if_present=True),
-)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(
@@ -287,7 +264,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         if STATE in payload and (
             (state := payload[STATE]) in POSSIBLE_STATES or state is None
         ):
-            self._attr_state = (
+            self._attr_activity = (
                 POSSIBLE_STATES[cast(str, state)] if payload[STATE] else None
             )
             del payload[STATE]
@@ -299,7 +276,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_battery_level", "_attr_fan_speed", "_attr_state"},
+            {"_attr_battery_level", "_attr_fan_speed", "_attr_activity"},
         )
 
     async def _subscribe_topics(self) -> None:
