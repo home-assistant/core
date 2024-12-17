@@ -1,9 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: |
-      Do not remove services when all config entries are removed.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
