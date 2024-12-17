@@ -1,4 +1,5 @@
 """Support for Imou camera"""
+
 import asyncio
 import logging
 
@@ -43,7 +44,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
                 for platform in PLATFORMS
-            ], async_remove_devices(hass, entry.entry_id)
+            ],
+            async_remove_devices(hass, entry.entry_id),
         )
     )
     if unloaded:
@@ -60,13 +62,17 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_remove_devices(hass: HomeAssistant, config_entry_id: str):
     """Remove device."""
     device_registry_object = device_registry.async_get(hass)
-    for device_entry in device_registry_object.devices.get_devices_for_config_entry_id(config_entry_id):
+    for device_entry in device_registry_object.devices.get_devices_for_config_entry_id(
+        config_entry_id
+    ):
         _LOGGER.info("remove device %s", device_entry.id)
         device_registry_object.async_remove_device(device_entry.id)
     return True
 
 
-async def async_remove_config_entry_device(hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry):
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+):
     device_registry_object = device_registry.async_get(hass)
     device_registry_object.async_remove_device(device_entry.id)
     return True

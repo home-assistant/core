@@ -1,4 +1,5 @@
 """Constants."""
+
 # Internal constants
 DOMAIN = "imou_life"
 
@@ -18,6 +19,4 @@ PARAM_CURRENT_OPTION = "current_option"
 PARAM_OPTIONS = "options"
 PARAM_RESTART_DEVICE = "restart_device"
 
-PLATFORMS = [
-    "button"
-]
+PLATFORMS = ["button"]

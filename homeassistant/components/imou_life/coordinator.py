@@ -1,4 +1,5 @@
 """Provides the imou DataUpdateCoordinator."""
+
 import asyncio
 import logging
 from datetime import timedelta
@@ -22,7 +23,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name="ImouDataUpdateCoordinator",
             update_interval=timedelta(seconds=60),
-            always_update=True
+            always_update=True,
         )
         self._device_manager = device_manager
         self._devices = []
@@ -49,8 +50,13 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
             self._devices.append(device)
 
     async def async_update_all_device(self) -> bool:
-        await asyncio.gather(*[self._device_manager.async_update_device_status(device) for device in self._devices],
-                             return_exceptions=True)
+        await asyncio.gather(
+            *[
+                self._device_manager.async_update_device_status(device)
+                for device in self._devices
+            ],
+            return_exceptions=True,
+        )
         return True
 
     async def _async_update_data(self):

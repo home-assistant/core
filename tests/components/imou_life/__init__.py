@@ -7,14 +7,13 @@ from tests.common import MockConfigEntry
 USER_INPUT = {
     "app_id": "test_app_id",
     "app_secret": "test_app_secret",
-    "api_url": "openapi-sg.easy4ip.com"
+    "api_url": "openapi-sg.easy4ip.com",
 }
 
 
 def patch_async_setup_entry() -> _patch:
     return patch(
-        "homeassistant.components.imou_life.async_setup_entry",
-        return_value=True
+        "homeassistant.components.imou_life.async_setup_entry", return_value=True
     )
 
 

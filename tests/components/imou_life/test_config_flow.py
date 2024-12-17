@@ -17,8 +17,7 @@ async def test_async_step_user_without_user_input(hass: HomeAssistant):
     assert result["step_id"] == "login"
     with patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=USER_INPUT
+            result["flow_id"], user_input=USER_INPUT
         )
 
     await hass.async_block_till_done()
@@ -37,8 +36,7 @@ async def test_async_step_user_with_user_input_fail(hass: HomeAssistant):
     assert result["step_id"] == "login"
     with patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=USER_INPUT
+            result["flow_id"], user_input=USER_INPUT
         )
 
     await hass.async_block_till_done()
@@ -57,8 +55,7 @@ async def test_async_step_user_with_user_input(hass: HomeAssistant):
     assert result["step_id"] == "login"
     with patch_async_setup_entry():
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=USER_INPUT
+            result["flow_id"], user_input=USER_INPUT
         )
 
     await hass.async_block_till_done()

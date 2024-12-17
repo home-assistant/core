@@ -1,4 +1,5 @@
 """An abstract class commom to all IMOU entities."""
+
 import logging
 
 from homeassistant.components.button import ButtonDeviceClass
@@ -15,16 +16,28 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 class ImouEntity(CoordinatorEntity):
     """EntityBaseClass"""
+
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: ImouDataUpdateCoordinator, config_entry: ConfigEntry, entity_type: str,
-                 device: ImouHaDevice):
+    def __init__(
+        self,
+        coordinator: ImouDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        entity_type: str,
+        device: ImouHaDevice,
+    ):
         super().__init__(coordinator)
         self.config_entry = config_entry
         self._entity_type = entity_type
         self._device = device
         self.entity_available = None
-        self._unique_id = self._device.device_id + "_" + self._device.channel_id + "#" + self._entity_type
+        self._unique_id = (
+            self._device.device_id
+            + "_"
+            + self._device.channel_id
+            + "#"
+            + self._entity_type
+        )
         self._attr_translation_key = entity_type
 
     @property
@@ -39,7 +52,7 @@ class ImouEntity(CoordinatorEntity):
             manufacturer=self._device.manufacturer,
             model=self._device.model,
             sw_version=self._device.swversion,
-            serial_number=self._device.device_id
+            serial_number=self._device.device_id,
         )
 
     @property

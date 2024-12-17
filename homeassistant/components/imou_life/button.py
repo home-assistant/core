@@ -1,4 +1,5 @@
 """Support for Imou button controls"""
+
 import logging
 
 from homeassistant.components.button import ButtonEntity
@@ -15,7 +16,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     imou_coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
@@ -30,7 +31,8 @@ class ImouButton(ImouEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         try:
-            await self.coordinator.device_manager.async_press_button(self._device.device_id, self._device.channel_id,
-                                                                     self._entity_type)
+            await self.coordinator.device_manager.async_press_button(
+                self._device.device_id, self._device.channel_id, self._entity_type
+            )
         except ImouException as e:
             raise HomeAssistantError(e.message)
