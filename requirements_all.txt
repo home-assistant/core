@@ -286,7 +286,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.1.1
+aiolifx==1.1.2
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -1127,7 +1127,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.62
+holidays==0.63
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241127.8
@@ -1189,10 +1189,10 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.6
+imgw_pib==1.0.7
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.3-1
+incomfort-client==0.6.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
@@ -2734,7 +2734,7 @@ starline==0.1.5
 starlingbank==3.2
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.0
+starlink-grpc-core==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -3044,7 +3044,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.2
+yalexs-ble==2.5.5
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -3066,7 +3066,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2024.12.06
+yt-dlp[default]==2024.12.13
 
 # homeassistant.components.zamg
 zamg==0.3.6
