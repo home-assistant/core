@@ -333,7 +333,7 @@ async def test_attr_bluesound_group(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -361,7 +361,7 @@ async def test_attr_bluesound_group_for_follower(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -370,7 +370,7 @@ async def test_attr_bluesound_group_for_follower(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data_secondary.sync_status_long_polling_mock.get(),
-        master=PairedPlayer("1.1.1.1", 11000),
+        leader=PairedPlayer("1.1.1.1", 11000),
     )
     player_mocks.player_data_secondary.sync_status_long_polling_mock.set(
         updated_sync_status
