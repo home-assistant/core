@@ -167,7 +167,7 @@ class CloudBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
         if not await self.async_get_backup(backup_id):
-            raise BackupAgentError("Backup not found")
+            return
 
         try:
             await async_files_delete_file(
