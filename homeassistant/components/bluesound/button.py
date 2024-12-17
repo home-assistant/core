@@ -88,6 +88,7 @@ class SetSleepTimerButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity)
         )
         self._attr_name = f"{sync_status.name} Set Sleep Timer"
         self._attr_device_info = generate_device_info(sync_status, port)
+        self._attr_entity_registry_enabled_default = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -116,6 +117,7 @@ class ClearSleepTimerButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntit
         )
         self._attr_name = f"{sync_status.name} Clear Sleep Timer"
         self._attr_device_info = generate_device_info(sync_status, port)
+        self._attr_entity_registry_enabled_default = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
