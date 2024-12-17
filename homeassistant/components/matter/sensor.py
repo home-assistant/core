@@ -691,4 +691,20 @@ DISCOVERY_SCHEMAS = [
             clusters.EnergyEvse.Attributes.MinimumChargeCurrent,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseMaximumChargeCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EnergyEvse.Attributes.MaximumChargeCurrent,
+        ),
+    ),
 ]
