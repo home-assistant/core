@@ -70,6 +70,10 @@ def mock_habitica(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
             }
         },
     )
+    aioclient_mock.post(
+        f"{DEFAULT_URL}/api/v3/user/auth/local/login",
+        json=load_json_object_fixture("login.json", DOMAIN),
+    )
 
     return aioclient_mock
 
