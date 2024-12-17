@@ -173,6 +173,7 @@ class SupervisorBackupAgent(BackupAgent):
         except SupervisorBadRequestError as err:
             if err.args[0] != "Backup does not exist":
                 raise
+            _LOGGER.debug("Backup %s does not exist", backup_id)
 
 
 class SupervisorBackupReaderWriter(BackupReaderWriter):
@@ -211,7 +212,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             for agent_id in agent_ids
             if manager.backup_agents[agent_id].domain == DOMAIN
         ]
-        locations = {agent.location for agent in hassio_agents}
+        locations = [agent.location for agent in hassio_agents]
 
         backup = await self._client.backups.partial_backup(
             supervisor_backups.PartialBackupOptions(
