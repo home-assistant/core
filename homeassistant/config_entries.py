@@ -3223,6 +3223,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
+        Reloading is only done if the entry was changed and there is no update listener,
+        unless `reload_even_if_entry_is_unchanged` is set to `True`.
+
         :param data: replace the entry data with new data
         :param data_updates: add items from data_updates to entry data - existing keys
         are overridden
