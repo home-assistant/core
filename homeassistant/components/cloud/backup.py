@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import hashlib
 from typing import Any, Self
 
-from aiohttp import ClientError, StreamReader
+from aiohttp import ClientError, ClientTimeout, StreamReader
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.cloud_api import (
     async_files_delete_file,
@@ -151,9 +151,10 @@ class CloudBackupAgent(BackupAgent):
                 details["url"],
                 data=await open_stream(),
                 headers=details["headers"] | {"content-length": str(backup.size)},
+                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
             )
             upload_status.raise_for_status()
-        except ClientError as err:
+        except (TimeoutError, ClientError) as err:
             raise BackupAgentError("Failed to upload backup") from err
 
     async def async_delete_backup(
