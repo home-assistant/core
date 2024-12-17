@@ -9,3 +9,5 @@ PLATFORMS: list = [Platform.SWITCH]
 
 CONF_ID: Final = "id"
 CONF_SERIAL_NUMBER: Final = "serial"
+
+MANUFACTURER: Final = "Qbus"

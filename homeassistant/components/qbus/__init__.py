@@ -57,9 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
         hass
     ).async_get_or_request_config()
 
-    # Update the device
+    # Update the controller config
     if config:
-        await coordinator.async_update_device_config(config)
+        await coordinator.async_update_controller_config(config)
 
     return True
 

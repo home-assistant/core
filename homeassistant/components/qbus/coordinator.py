@@ -18,11 +18,13 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .entity import QbusEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,9 +54,9 @@ class QbusControllerCoordinator:
             str, tuple[type[QbusEntity], AddEntitiesCallback]
         ] = {}
         self._registered_entity_ids: list[str] = []
-        self._device_activated = False
-        self._subscribed_to_device_state = False
-        self._device: QbusMqttDevice | None
+        self._controller_activated = False
+        self._subscribed_to_controller_state = False
+        self._controller: QbusMqttDevice | None
 
         # Clean up when HA stops
         self._cleanup_callbacks.append(
@@ -71,9 +73,9 @@ class QbusControllerCoordinator:
 
         self._cleanup_callbacks = []
         self._registered_entity_ids = []
-        self._device_activated = False
-        self._subscribed_to_device_state = False
-        self._device = None
+        self._controller_activated = False
+        self._subscribed_to_controller_state = False
+        self._controller = None
 
     def register_platform(
         self,
@@ -85,43 +87,66 @@ class QbusControllerCoordinator:
         _LOGGER.debug("%s - Registering %s", self._entry.unique_id, qbus_type)
         self._platform_register[qbus_type.lower()] = (entity_class, add_entities)
 
-    async def async_update_device_config(self, config: QbusDiscovery) -> None:
-        """Update the device based on the config."""
+    async def async_update_controller_config(self, config: QbusDiscovery) -> None:
+        """Update the controller based on the config."""
         _LOGGER.debug("%s - Updating config", self._entry.unique_id)
         serial = self._entry.data.get(CONF_SERIAL_NUMBER, "")
-        device = config.get_device_by_serial(serial)
+        controller = config.get_device_by_serial(serial)
 
-        if device is None:
+        if controller is None:
             _LOGGER.warning(
-                "%s - Device with serial %s not found", self._entry.unique_id, serial
+                "%s - Controller with serial %s not found",
+                self._entry.unique_id,
+                serial,
             )
             return
 
-        self._device = device
-        device_state_topic = self._topic_factory.get_device_state_topic(self._device.id)
+        self._controller = controller
 
-        if self._subscribed_to_device_state is False:
-            _LOGGER.debug(
-                "%s - Subscribing to %s", self._entry.unique_id, device_state_topic
-            )
-            self._subscribed_to_device_state = True
-            self._cleanup_callbacks.append(
-                await mqtt.async_subscribe(
-                    self._hass,
-                    device_state_topic,
-                    self._device_state_received,
-                )
-            )
+        self._update_device_info(self._controller)
+        await self._async_subscribe_to_controller_state(self._controller)
+        self._add_entities(self._controller)
+        self._request_controller_state(self._controller)
 
-        self._add_entities(self._device)
-        self._request_device_state(self._device)
-
-    async def _device_state_received(self, msg: ReceiveMessage) -> None:
-        _LOGGER.debug(
-            "%s - Receiving device state %s", self._entry.unique_id, msg.topic
+    def _update_device_info(self, controller: QbusMqttDevice) -> None:
+        device_registry = dr.async_get(self._hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self._entry.entry_id,
+            identifiers={(DOMAIN, format_mac(controller.mac))},
+            manufacturer=MANUFACTURER,
+            model=f"{controller.type} {controller.name}",
+            name=f"CTD {controller.serial_number}",
+            serial_number=controller.serial_number,
+            sw_version=controller.version,
         )
 
-        if self._device_activated:
+    async def _async_subscribe_to_controller_state(
+        self, controller: QbusMqttDevice
+    ) -> None:
+        if self._subscribed_to_controller_state is True:
+            return
+
+        controller_state_topic = self._topic_factory.get_device_state_topic(
+            controller.id
+        )
+        _LOGGER.debug(
+            "%s - Subscribing to %s", self._entry.unique_id, controller_state_topic
+        )
+        self._subscribed_to_controller_state = True
+        self._cleanup_callbacks.append(
+            await mqtt.async_subscribe(
+                self._hass,
+                controller_state_topic,
+                self._controller_state_received,
+            )
+        )
+
+    async def _controller_state_received(self, msg: ReceiveMessage) -> None:
+        _LOGGER.debug(
+            "%s - Receiving controller state %s", self._entry.unique_id, msg.topic
+        )
+
+        if self._controller_activated:
             return
 
         state = self._message_factory.parse_device_state(msg.payload)
@@ -130,14 +155,18 @@ class QbusControllerCoordinator:
             state
             and state.properties
             and state.properties.connectable is False
-            and self._device is not None
+            and self._controller is not None
         ):
-            _LOGGER.debug("%s - Activating device %s", self._entry.unique_id, state.id)
-            self._device_activated = True
-            request = self._message_factory.create_device_activate_request(self._device)
+            _LOGGER.debug(
+                "%s - Activating controller %s", self._entry.unique_id, state.id
+            )
+            self._controller_activated = True
+            request = self._message_factory.create_device_activate_request(
+                self._controller
+            )
             await mqtt.async_publish(self._hass, request.topic, request.payload)
 
-    def _add_entities(self, device: QbusMqttDevice) -> None:
+    def _add_entities(self, controller: QbusMqttDevice) -> None:
         """Create the Qbus entities in Home Assistant."""
 
         _LOGGER.debug(
@@ -147,11 +176,11 @@ class QbusControllerCoordinator:
         )
         items: dict[str, list[QbusEntity]] = {}
 
-        if device.id not in self._registered_entity_ids:
-            self._registered_entity_ids.append(device.id)
+        if controller.id not in self._registered_entity_ids:
+            self._registered_entity_ids.append(controller.id)
 
         # Build list of HA entities based on Qbus configuration
-        for output in device.outputs:
+        for output in controller.outputs:
             if output.id in self._registered_entity_ids:
                 continue
 
@@ -187,12 +216,12 @@ class QbusControllerCoordinator:
         if len(self._registered_entity_ids) > 0:
             async_call_later(self._hass, self._WAIT_TIME, request_state)
 
-    def _request_device_state(self, device: QbusMqttDevice) -> None:
-        async def request_device_state(_: datetime) -> None:
-            request = self._message_factory.create_device_state_request(device)
+    def _request_controller_state(self, controller: QbusMqttDevice) -> None:
+        async def request_controller_state(_: datetime) -> None:
+            request = self._message_factory.create_device_state_request(controller)
             await mqtt.async_publish(self._hass, request.topic, request.payload)
 
-        async_call_later(self._hass, self._WAIT_TIME, request_device_state)
+        async_call_later(self._hass, self._WAIT_TIME, request_controller_state)
 
 
 class QbusConfigCoordinator:
@@ -301,4 +330,4 @@ class QbusConfigCoordinator:
 
         for entry in self._hass.config_entries.async_loaded_entries(DOMAIN):
             entry = cast(QbusConfigEntry, entry)
-            await entry.runtime_data.async_update_device_config(config)
+            await entry.runtime_data.async_update_controller_config(config)

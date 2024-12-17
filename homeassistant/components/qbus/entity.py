@@ -11,7 +11,7 @@ from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
 
@@ -56,11 +56,11 @@ class QbusEntity(Entity, ABC):
         )
 
         self._attr_device_info = DeviceInfo(
-            name=f"CTD {mqtt_output.device.serial_number}",
-            manufacturer="Qbus",
-            identifiers={(DOMAIN, format_mac(mqtt_output.device.mac))},
-            serial_number=mqtt_output.device.serial_number,
-            sw_version=mqtt_output.device.version,
+            name=mqtt_output.name,
+            manufacturer=MANUFACTURER,
+            identifiers={(DOMAIN, f"{mqtt_output.device.serial_number}_{ref_id}")},
+            suggested_area=mqtt_output.location.title(),
+            via_device=(DOMAIN, format_mac(mqtt_output.device.mac)),
         )
 
         self._attr_extra_state_attributes = {
