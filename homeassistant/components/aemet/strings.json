@@ -22,6 +22,7 @@
     "step": {
       "init": {
         "data": {
+          "radar_updates": "Gather data from AEMET weather radar",
           "station_updates": "Gather data from AEMET weather stations"
         }
       }
