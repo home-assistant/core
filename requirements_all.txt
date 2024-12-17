@@ -539,7 +539,7 @@ av==13.1.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==63
+axis==64
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.4
@@ -1193,7 +1193,7 @@ iglo==1.2.7
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.6
+imgw_pib==1.0.7
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4

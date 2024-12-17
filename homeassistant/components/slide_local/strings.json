@@ -46,6 +46,11 @@
       "calibrate": {
         "name": "Calibrate"
       }
+    },
+    "switch": {
+      "touchgo": {
+        "name": "TouchGo"
+      }
     }
   },
   "exceptions": {

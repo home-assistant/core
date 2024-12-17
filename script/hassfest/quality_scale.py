@@ -338,7 +338,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "eight_sleep",
     "electrasmart",
     "electric_kiwi",
-    "elevenlabs",
     "eliqonline",
     "elkm1",
     "elmax",
