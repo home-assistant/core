@@ -1,13 +1,20 @@
 """Test supervisor backup functionality."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Callable,
+    Coroutine,
+    Generator,
+)
 from dataclasses import replace
 from datetime import datetime
 from io import StringIO
 import os
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohasupervisor.exceptions import SupervisorBadRequestError
 from aiohasupervisor.models import (
     backups as supervisor_backups,
     mounts as supervisor_mounts,
@@ -19,13 +26,17 @@ from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
     AgentBackup,
+    BackupAgent,
+    BackupAgentPlatformProtocol,
     Folder,
 )
+from homeassistant.components.hassio.backup import LOCATION_CLOUD_BACKUP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
+from tests.common import mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
@@ -186,6 +197,57 @@ async def setup_integration(
 ) -> AsyncGenerator[None]:
     """Set up Backup integration."""
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+    await hass.async_block_till_done()
+
+
+class BackupAgentTest(BackupAgent):
+    """Test backup agent."""
+
+    domain = "test"
+
+    def __init__(self, name: str) -> None:
+        """Initialize the backup agent."""
+        self.name = name
+
+    async def async_download_backup(
+        self, backup_id: str, **kwargs: Any
+    ) -> AsyncIterator[bytes]:
+        """Download a backup file."""
+        return AsyncMock(spec_set=["__aiter__"])
+
+    async def async_upload_backup(
+        self,
+        *,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        backup: AgentBackup,
+        **kwargs: Any,
+    ) -> None:
+        """Upload a backup."""
+        await open_stream()
+
+    async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
+        """List backups."""
+        return []
+
+    async def async_get_backup(
+        self, backup_id: str, **kwargs: Any
+    ) -> AgentBackup | None:
+        """Return a backup."""
+        return None
+
+    async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
+        """Delete a backup file."""
+
+
+async def _setup_backup_platform(
+    hass: HomeAssistant,
+    *,
+    domain: str,
+    platform: BackupAgentPlatformProtocol,
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, f"{domain}.backup", platform)
+    assert await async_setup_component(hass, domain, {})
     await hass.async_block_till_done()
 
 
@@ -405,6 +467,8 @@ async def test_agent_upload(
 
     assert resp.status == 201
     supervisor_client.backups.reload.assert_not_called()
+    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.remove_backup.assert_not_called()
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
@@ -427,6 +491,50 @@ async def test_agent_delete_backup(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+    supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("remove_side_effect", "expected_response"),
+    [
+        (
+            SupervisorBadRequestError("blah"),
+            {
+                "success": False,
+                "error": {"code": "unknown_error", "message": "Unknown error"},
+            },
+        ),
+        (
+            SupervisorBadRequestError("Backup does not exist"),
+            {
+                "success": True,
+                "result": {"agent_errors": {}},
+            },
+        ),
+    ],
+)
+async def test_agent_delete_with_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    remove_side_effect: Exception,
+    expected_response: dict[str, Any],
+) -> None:
+    """Test agent delete backup."""
+    client = await hass_ws_client(hass)
+    backup_id = "abc123"
+
+    supervisor_client.backups.remove_backup.side_effect = remove_side_effect
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response == {"id": 1, "type": "result"} | expected_response
     supervisor_client.backups.remove_backup.assert_called_once_with(backup_id)
 
 
@@ -598,6 +706,84 @@ async def test_reader_writer_create(
         "state": "completed",
     }
 
+    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.remove_backup.assert_not_called()
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_reader_writer_create_remote_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test generating a backup which will be uploaded to a remote agent."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.partial_backup.return_value.job_id = "abc123"
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    remote_agent = BackupAgentTest("remote")
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": ["test.remote"], "name": "Test"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"backup_job_id": "abc123"}
+
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        replace(DEFAULT_BACKUP_OPTIONS, location=LOCATION_CLOUD_BACKUP),
+    )
+
+    await client.send_json_auto_id(
+        {
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {"done": True, "uuid": "abc123", "reference": "test_slug"},
+            },
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "completed",
+    }
+
+    supervisor_client.backups.download_backup.assert_called_once_with("test_slug")
+    supervisor_client.backups.remove_backup.assert_called_once_with("test_slug")
+
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 @pytest.mark.parametrize(
@@ -651,6 +837,65 @@ async def test_reader_writer_create_wrong_parameters(
     assert response["error"] == {"code": "unknown_error", "message": "Unknown error"}
 
     supervisor_client.backups.partial_backup.assert_not_called()
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_agent_receive_remote_backup(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test receiving a backup which will be uploaded to a remote agent."""
+    client = await hass_client()
+    backup_id = "test-backup"
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.backups.upload_backup.return_value = "test_slug"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=False,
+        size=0.0,
+    )
+
+    remote_agent = BackupAgentTest("remote")
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+
+    supervisor_client.backups.reload.assert_not_called()
+    with (
+        patch("pathlib.Path.mkdir"),
+        patch("pathlib.Path.open"),
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("shutil.copy"),
+    ):
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=test.remote",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+
+    supervisor_client.backups.download_backup.assert_called_once_with("test_slug")
+    supervisor_client.backups.remove_backup.assert_called_once_with("test_slug")
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
