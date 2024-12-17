@@ -41,7 +41,7 @@ def _check_requirements_are_typed(integration: Integration) -> str | None:
         if not any(file for file in distribution.files if file.name == "py.typed"):
             # no py.typed file
             return requirement
-        return None
+        continue
     return None
 
 
