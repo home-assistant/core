@@ -284,7 +284,13 @@ def get_significant_states_with_session(
             list[Row],
             execute_stmt_lambda_element(session, stmt, None, end_time, orm_rows=False),
         )
-        rows = row_chunk if not rows else rows + row_chunk
+        if rows:
+            rows += row_chunk
+        else:
+            # If we have no rows yet, we can just assign the chunk
+            # as this is the common case since its rare that
+            # we exceed the MAX_IDS_FOR_START_TIME_QUERY limit
+            rows = row_chunk
     return _sorted_states_to_dict(
         rows,
         start_time_ts if include_start_time_state else None,

@@ -2078,7 +2078,13 @@ def _statistics_at_time(
             table, metadata_ids_chunk, start_time_ts, types
         )
         row_chunk = cast(list[Row], execute_stmt_lambda_element(session, stmt))
-        rows = row_chunk if not rows else rows + row_chunk
+        if rows:
+            rows += row_chunk
+        else:
+            # If we have no rows yet, we can just assign the chunk
+            # as this is the common case since its rare that
+            # we exceed the MAX_IDS_FOR_START_TIME_QUERY limit
+            rows = row_chunk
     return rows
 
 
