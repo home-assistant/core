@@ -79,7 +79,10 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration has one device per config entry.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
