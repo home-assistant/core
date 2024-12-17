@@ -12,7 +12,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
@@ -792,19 +791,19 @@ async def test_emulated_color_temp_group(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.light_group", ATTR_COLOR_TEMP: 200},
+        {ATTR_ENTITY_ID: "light.light_group", ATTR_COLOR_TEMP_KELVIN: 5000},
         blocking=True,
     )
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test1")
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_TEMP] == 200
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 5000
     assert ATTR_HS_COLOR in state.attributes
 
     state = hass.states.get("light.test2")
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_TEMP] == 200
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 5000
     assert ATTR_HS_COLOR in state.attributes
 
     state = hass.states.get("light.test3")

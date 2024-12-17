@@ -41,13 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_create_background_task(
-        hass, client.start_websocket(), "knocki-websocket"
-    )
+    await client.start_websocket()
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: KnockiConfigEntry) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.client.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

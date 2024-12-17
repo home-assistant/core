@@ -13,38 +13,9 @@ from homeassistant.components.heos import (
     async_unload_entry,
 )
 from homeassistant.components.heos.const import DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
-
-
-async def test_async_setup_creates_entry(hass: HomeAssistant, config) -> None:
-    """Test component setup creates entry from config."""
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.title == "Controller (127.0.0.1)"
-    assert entry.data == {CONF_HOST: "127.0.0.1"}
-    assert entry.unique_id == DOMAIN
-
-
-async def test_async_setup_updates_entry(
-    hass: HomeAssistant, config_entry, config, controller
-) -> None:
-    """Test component setup updates entry from config."""
-    config[DOMAIN][CONF_HOST] = "127.0.0.2"
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.title == "Controller (127.0.0.2)"
-    assert entry.data == {CONF_HOST: "127.0.0.2"}
-    assert entry.unique_id == DOMAIN
 
 
 async def test_async_setup_returns_true(

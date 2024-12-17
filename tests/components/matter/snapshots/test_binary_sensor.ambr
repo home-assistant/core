@@ -46,53 +46,6 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
-    'original_icon': None,
-    'original_name': 'Door',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockDoorStateSensor-257-3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_door-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Mock Door Lock Door',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_door',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensors[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

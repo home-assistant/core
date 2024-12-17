@@ -26,6 +26,10 @@
       'brightness_mode': 'auto',
       'display_type': 'mixed',
       'height': 8,
+      'on': None,
+      'screensaver': dict({
+        'enabled': False,
+      }),
       'width': 37,
     }),
     'mode': 'auto',

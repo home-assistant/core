@@ -384,6 +384,18 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         ):
             return self.hass.config.units.temperature_unit
 
+        if (translation_key := self._unit_of_measurement_translation_key) and (
+            unit_of_measurement
+            := self.platform.default_language_platform_translations.get(translation_key)
+        ):
+            if native_unit_of_measurement is not None:
+                raise ValueError(
+                    f"Number entity {type(self)} from integration '{self.platform.platform_name}' "
+                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
+                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                )
+            return unit_of_measurement
+
         return native_unit_of_measurement
 
     @cached_property

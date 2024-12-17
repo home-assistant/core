@@ -12,16 +12,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type SabnzbdConfigEntry = ConfigEntry[SabnzbdUpdateCoordinator]
+
 
 class SabnzbdUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The SABnzbd update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SabnzbdConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SabnzbdConfigEntry,
         sab_api: SabnzbdApi,
     ) -> None:
         """Initialize the SABnzbd update coordinator."""

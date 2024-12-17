@@ -793,7 +793,10 @@ async def test_put_light_state(
     await hass_hue.services.async_call(
         light.DOMAIN,
         const.SERVICE_TURN_ON,
-        {const.ATTR_ENTITY_ID: "light.ceiling_lights", light.ATTR_COLOR_TEMP: 20},
+        {
+            const.ATTR_ENTITY_ID: "light.ceiling_lights",
+            light.ATTR_COLOR_TEMP_KELVIN: 50000,
+        },
         blocking=True,
     )
 
@@ -802,8 +805,10 @@ async def test_put_light_state(
     )
 
     assert (
-        hass_hue.states.get("light.ceiling_lights").attributes[light.ATTR_COLOR_TEMP]
-        == 50
+        hass_hue.states.get("light.ceiling_lights").attributes[
+            light.ATTR_COLOR_TEMP_KELVIN
+        ]
+        == 20000
     )
 
     # mock light.turn_on call
@@ -1785,7 +1790,7 @@ async def test_get_light_state_when_none(
             light.ATTR_BRIGHTNESS: None,
             light.ATTR_RGB_COLOR: None,
             light.ATTR_HS_COLOR: None,
-            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
                 light.COLOR_MODE_COLOR_TEMP,
@@ -1813,7 +1818,7 @@ async def test_get_light_state_when_none(
             light.ATTR_BRIGHTNESS: None,
             light.ATTR_RGB_COLOR: None,
             light.ATTR_HS_COLOR: None,
-            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
                 light.COLOR_MODE_COLOR_TEMP,

@@ -78,7 +78,6 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_translation_key = "fan"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator

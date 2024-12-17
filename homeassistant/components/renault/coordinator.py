@@ -18,7 +18,7 @@ from renault_api.kamereon.models import KamereonVehicleDataAttributes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-T = TypeVar("T", bound=KamereonVehicleDataAttributes | None)
+T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)

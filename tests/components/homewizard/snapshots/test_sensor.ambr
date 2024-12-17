@@ -6468,7 +6468,7 @@
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_water_usage:state]
@@ -6476,7 +6476,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -10228,7 +10228,7 @@
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_water_usage:state]
@@ -10236,7 +10236,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -13562,7 +13562,7 @@
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_water_usage:state]
@@ -13570,7 +13570,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -15301,7 +15301,7 @@
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
-    'unit_of_measurement': 'l/min',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
 # name: test_sensors[HWE-WTR-entity_ids4][sensor.device_water_usage:state]
@@ -15309,7 +15309,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'l/min',
+      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',

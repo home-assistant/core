@@ -83,7 +83,6 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     """Representation of a Switcher climate entity."""
 
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote

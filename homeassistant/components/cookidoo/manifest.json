@@ -1,0 +1,11 @@
+{
+  "domain": "cookidoo",
+  "name": "Cookidoo",
+  "codeowners": ["@miaucl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cookidoo",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["cookidoo-api==0.10.0"]
+}

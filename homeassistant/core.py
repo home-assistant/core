@@ -2432,10 +2432,11 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("domain", "service", "data", "context", "return_response")
+    __slots__ = ("hass", "domain", "service", "data", "context", "return_response")
 
     def __init__(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         data: dict[str, Any] | None = None,
@@ -2443,6 +2444,7 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
+        self.hass = hass
         self.domain = domain
         self.service = service
         self.data = ReadOnlyDict(data or {})
@@ -2768,7 +2770,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_response
+            self._hass, domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire_internal(

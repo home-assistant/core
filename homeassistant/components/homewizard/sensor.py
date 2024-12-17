@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfReactivePower,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -565,7 +566,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="active_liter_lpm",
         translation_key="active_liter_lpm",
-        native_unit_of_measurement="l/min",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.active_liter_lpm is not None,
         value_fn=lambda data: data.active_liter_lpm,

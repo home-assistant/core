@@ -44,6 +44,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
     ):
         flexit_bacnet.serial_number = "0000-0001"
         flexit_bacnet.device_name = "Device Name"
+        flexit_bacnet.model = "S4 RER"
         flexit_bacnet.room_temperature = 19.0
         flexit_bacnet.air_temp_setpoint_away = 18.0
         flexit_bacnet.air_temp_setpoint_home = 22.0
