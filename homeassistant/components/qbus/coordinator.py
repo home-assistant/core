@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Final, cast
@@ -29,18 +28,11 @@ from .entity import QbusEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class QbusRuntimeData:
-    """Runtime data for Qbus integration."""
-
-    coordinator: QbusDataCoordinator
-
-
-type QbusConfigEntry = ConfigEntry[QbusRuntimeData]
+type QbusConfigEntry = ConfigEntry[QbusControllerCoordinator]
 QBUS_KEY: HassKey[QbusConfigCoordinator] = HassKey(DOMAIN)
 
 
-class QbusDataCoordinator:
+class QbusControllerCoordinator:
     """Qbus data coordinator."""
 
     _WAIT_TIME = 3
@@ -74,7 +66,8 @@ class QbusDataCoordinator:
         _LOGGER.debug("%s - Shutting down coordinator for entry", self._entry.unique_id)
 
         while self._cleanup_callbacks:
-            self._cleanup_callbacks.pop()()
+            cleanup_callback = self._cleanup_callbacks.pop()
+            cleanup_callback()
 
         self._cleanup_callbacks = []
         self._registered_entity_ids = []
@@ -235,7 +228,8 @@ class QbusConfigCoordinator:
         """Shutdown Qbus config coordinator."""
         _LOGGER.debug("Shutting down Qbus config coordinator")
         while self._cleanup_callbacks:
-            self._cleanup_callbacks.pop()()
+            cleanup_callback = self._cleanup_callbacks.pop()
+            cleanup_callback()
 
     async def async_subscribe_to_config(self) -> None:
         """Subscribe to config changes."""
@@ -299,9 +293,12 @@ class QbusConfigCoordinator:
 
         config = self._message_factory.parse_discovery(msg.payload)
 
-        if config is not None:
-            self.store_config(config)
+        if config is None:
+            _LOGGER.debug("Incomplete Qbus config")
+            return
 
-            for entry in self._hass.config_entries.async_loaded_entries(DOMAIN):
-                entry = cast(QbusConfigEntry, entry)
-                await entry.runtime_data.coordinator.async_update_device_config(config)
+        self.store_config(config)
+
+        for entry in self._hass.config_entries.async_loaded_entries(DOMAIN):
+            entry = cast(QbusConfigEntry, entry)
+            await entry.runtime_data.async_update_device_config(config)

@@ -12,8 +12,7 @@ from .coordinator import (
     QBUS_KEY,
     QbusConfigCoordinator,
     QbusConfigEntry,
-    QbusDataCoordinator,
-    QbusRuntimeData,
+    QbusControllerCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,8 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
         _LOGGER.error("MQTT integration not available")
         return False
 
-    coordinator = QbusDataCoordinator(hass, entry)
-    entry.runtime_data = QbusRuntimeData(coordinator)
+    coordinator = QbusControllerCoordinator(hass, entry)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -69,7 +68,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> boo
     _LOGGER.debug("%s - Unloading entry", entry.unique_id)
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry.runtime_data.coordinator.shutdown()
+        entry.runtime_data.shutdown()
         cleanup(hass, entry)
 
     return unload_ok
@@ -78,7 +77,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> boo
 async def async_remove_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     """Remove a config entry."""
     _LOGGER.debug("%s - Removing entry", entry.unique_id)
-    cleanup(hass, entry)
 
 
 def cleanup(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
@@ -86,10 +84,7 @@ def cleanup(hass: HomeAssistant, entry: QbusConfigEntry) -> None:
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
     count = len(entries)
 
-    # During unloading of the (last) entry, it is not marked as unloaded yet. So
-    # we check if the last one left is the same as the entry being passed (i.e. the
-    # one that is being unloaded).
-    if (count == 0 or (count == 1 and entries[0].entry_id == entry.entry_id)) and (
-        config_coordinator := hass.data.get(QBUS_KEY)
-    ):
+    # During unloading of the entry, it is not marked as unloaded yet. So
+    # count can be 1 if it is the last one.
+    if count <= 1 and (config_coordinator := hass.data.get(QBUS_KEY)):
         config_coordinator.shutdown()

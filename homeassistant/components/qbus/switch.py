@@ -24,7 +24,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     """Set up switch entities."""
-    entry.runtime_data.coordinator.register_platform("onoff", QbusSwitch, add_entities)
+    entry.runtime_data.register_platform("onoff", QbusSwitch, add_entities)
 
 
 class QbusSwitch(QbusEntity, SwitchEntity):
