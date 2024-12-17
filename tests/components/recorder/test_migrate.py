@@ -712,7 +712,7 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
         migration._create_index(
-            instance.get_session, "states", "ix_states_context_id_bin"
+            instance, instance.get_session, "states", "ix_states_context_id_bin"
         )
     engine.dispose()
 
@@ -788,7 +788,7 @@ def test_forgiving_add_index_with_other_db_types(
     with patch(
         "homeassistant.components.recorder.migration.Table", return_value=mocked_table
     ):
-        migration._create_index(Mock(), "states", "ix_states_context_id")
+        migration._create_index(Mock(), Mock(), "states", "ix_states_context_id")
 
     assert "already exists on states" in caplog.text
     assert "continuing" in caplog.text
