@@ -29,7 +29,7 @@
     'supported_features': 0,
     'translation_key': 'long_capacity',
     'unique_id': 'IJDok-long_capacity',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cars',
   })
 # ---
 # name: test_all_sensors[sensor.ijdok_long_parking_capacity-state]
@@ -37,6 +37,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by municipality of Amsterdam',
       'friendly_name': 'IJDok Long parking capacity',
+      'unit_of_measurement': 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_long_parking_capacity',
@@ -78,7 +79,7 @@
     'supported_features': 0,
     'translation_key': 'free_space_long',
     'unique_id': 'IJDok-free_space_long',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cars',
   })
 # ---
 # name: test_all_sensors[sensor.ijdok_long_parking_free_space-state]
@@ -87,6 +88,7 @@
       'attribution': 'Data provided by municipality of Amsterdam',
       'friendly_name': 'IJDok Long parking free space',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_long_parking_free_space',
@@ -126,7 +128,7 @@
     'supported_features': 0,
     'translation_key': 'short_capacity',
     'unique_id': 'IJDok-short_capacity',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cars',
   })
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_capacity-state]
@@ -134,6 +136,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by municipality of Amsterdam',
       'friendly_name': 'IJDok Short parking capacity',
+      'unit_of_measurement': 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_short_parking_capacity',
@@ -175,7 +178,7 @@
     'supported_features': 0,
     'translation_key': 'free_space_short',
     'unique_id': 'IJDok-free_space_short',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'cars',
   })
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_free_space-state]
@@ -184,6 +187,7 @@
       'attribution': 'Data provided by municipality of Amsterdam',
       'friendly_name': 'IJDok Short parking free space',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_short_parking_free_space',

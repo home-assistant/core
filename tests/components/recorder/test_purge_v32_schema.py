@@ -509,7 +509,7 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
                     event_type="EVENT_TEST_PURGE",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             session.add(
@@ -517,8 +517,8 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
                     entity_id="test.recorder2",
                     state="purgeme",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                     event_id=1001,
                     attributes_id=1002,
                 )
@@ -576,7 +576,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     event_type="KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    time_fired_ts=timestamp_keep.timestamp(),
                 )
             )
             session.add(
@@ -584,8 +584,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     entity_id="test.cutoff",
                     state="keep",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp_keep),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    last_changed_ts=timestamp_keep.timestamp(),
+                    last_updated_ts=timestamp_keep.timestamp(),
                     event_id=1000,
                     attributes_id=1000,
                 )
@@ -604,7 +604,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         event_type="PURGE",
                         event_data="{}",
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        time_fired_ts=timestamp_purge.timestamp(),
                     )
                 )
                 session.add(
@@ -612,8 +612,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         entity_id="test.cutoff",
                         state="purge",
                         attributes="{}",
-                        last_changed_ts=dt_util.utc_to_timestamp(timestamp_purge),
-                        last_updated_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        last_changed_ts=timestamp_purge.timestamp(),
+                        last_updated_ts=timestamp_purge.timestamp(),
                         event_id=1000 + row,
                         attributes_id=1000 + row,
                     )
@@ -771,7 +771,7 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
                         event_type=event_type,
                         event_data=json.dumps(event_data),
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                        time_fired_ts=timestamp.timestamp(),
                     )
                 )
 
@@ -808,7 +808,7 @@ async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
                     Events(
                         event_type=event_type,
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                        time_fired_ts=timestamp.timestamp(),
                         event_data_rel=event_data,
                     )
                 )
@@ -910,8 +910,8 @@ def _add_state_without_event_linkage(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=None,
             state_attributes=state_attrs,
         )
@@ -935,8 +935,8 @@ def _add_state_and_state_changed_event(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=event_id,
             state_attributes=state_attrs,
         )
@@ -947,7 +947,7 @@ def _add_state_and_state_changed_event(
             event_type=EVENT_STATE_CHANGED,
             event_data="{}",
             origin="LOCAL",
-            time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+            time_fired_ts=timestamp.timestamp(),
         )
     )
 

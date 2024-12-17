@@ -10,6 +10,7 @@ from homeassistant.components.assist_pipeline.select import (
 )
 from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -100,7 +101,9 @@ class EsphomeAssistSatelliteWakeWordSelect(
     """Wake word selector for esphome devices."""
 
     entity_description = SelectEntityDescription(
-        key="wake_word", translation_key="wake_word"
+        key="wake_word",
+        translation_key="wake_word",
+        entity_category=EntityCategory.CONFIG,
     )
     _attr_should_poll = False
     _attr_current_option: str | None = None

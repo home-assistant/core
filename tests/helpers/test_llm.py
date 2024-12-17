@@ -517,10 +517,6 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
-- names: script_with_no_fields
-  domain: script
-  state: 'off'
-  description: This is another test script
 - names: Kitchen
   domain: light
   state: 'on'

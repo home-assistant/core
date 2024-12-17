@@ -111,6 +111,7 @@ AUDIO_INFORMATION_MAPPING = [
     "precision_quartz_lock_system",
     "auto_phase_control_delay",
     "auto_phase_control_phase",
+    "upmix_mode",
 ]
 
 VIDEO_INFORMATION_MAPPING = [
@@ -123,6 +124,7 @@ VIDEO_INFORMATION_MAPPING = [
     "output_color_schema",
     "output_color_depth",
     "picture_mode",
+    "input_hdr",
 ]
 ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 

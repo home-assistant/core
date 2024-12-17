@@ -445,17 +445,13 @@ def _get_exposed_entities(
     entities = {}
 
     for state in hass.states.async_all():
-        if not async_should_expose(hass, assistant, state.entity_id):
+        if (
+            not async_should_expose(hass, assistant, state.entity_id)
+            or state.domain == SCRIPT_DOMAIN
+        ):
             continue
 
         description: str | None = None
-        if state.domain == SCRIPT_DOMAIN:
-            description, parameters = _get_cached_script_parameters(
-                hass, state.entity_id
-            )
-            if parameters.schema:  # Only list scripts without input fields here
-                continue
-
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []

@@ -7,15 +7,16 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
 from .const import (
     ATTR_VALUE,
     DOMAIN,
+    SVE_TRANSLATION_KEY_SET_SETTING,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectEntity
@@ -80,13 +81,13 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 time_to_seconds(value),
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_setting",
+                translation_key=SVE_TRANSLATION_KEY_SET_SETTING,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                     SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
                 },
             ) from err
