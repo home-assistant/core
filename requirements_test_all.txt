@@ -2063,7 +2063,7 @@ regenmaschine==2024.03.0
 renault-api==0.2.8
 
 # homeassistant.components.renson
-renson-endura-delta==1.7.1
+renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
 reolink-aio==0.11.5
