@@ -718,7 +718,6 @@ DISCOVERY_SCHEMAS = [
             clusters.EnergyEvse.Attributes.MaximumChargeCurrent,
         ),
     ),
-
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
@@ -733,6 +732,20 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseState",
+            translation_key="evse_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_STATE_MAP.values()),
+            measurement_to_ha=EVSE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.EnergyEvse.Attributes.State,
         ),
     ),
 ]
