@@ -46,10 +46,10 @@ def mock_config_entry() -> MockConfigEntry:
         title="test-user",
         data={
             CONF_URL: DEFAULT_URL,
-            CONF_API_USER: "test-api-user",
-            CONF_API_KEY: "test-api-key",
+            CONF_API_USER: "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+            CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
         },
-        unique_id="00000000-0000-0000-0000-000000000000",
+        unique_id="a380546a-94be-4b8e-8a0b-23e0d5c03303",
     )
 
 

@@ -35,7 +35,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.CLASS: 'class'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_class',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_class',
     'unit_of_measurement': None,
   })
 # ---
@@ -91,7 +91,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.CONSTITUTION: 'constitution'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_constitution',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_constitution',
     'unit_of_measurement': 'CON',
   })
 # ---
@@ -143,7 +143,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -405,7 +405,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.DISPLAY_NAME: 'display_name'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_display_name',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_display_name',
     'unit_of_measurement': None,
   })
 # ---
@@ -451,7 +451,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.EXPERIENCE: 'experience'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_experience',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience',
     'unit_of_measurement': 'XP',
   })
 # ---
@@ -501,7 +501,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.GEMS: 'gems'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_gems',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gems',
     'unit_of_measurement': 'gems',
   })
 # ---
@@ -552,7 +552,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.GOLD: 'gold'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_gold',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gold',
     'unit_of_measurement': 'GP',
   })
 # ---
@@ -599,7 +599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HABITS: 'habits'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_habits',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_habits',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -808,7 +808,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HEALTH: 'health'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_health',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health',
     'unit_of_measurement': 'HP',
   })
 # ---
@@ -858,7 +858,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.INTELLIGENCE: 'intelligence'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_intelligence',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intelligence',
     'unit_of_measurement': 'INT',
   })
 # ---
@@ -910,7 +910,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.LEVEL: 'level'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_level',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_level',
     'unit_of_measurement': None,
   })
 # ---
@@ -959,7 +959,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.MANA: 'mana'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_mana',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana',
     'unit_of_measurement': 'MP',
   })
 # ---
@@ -1006,7 +1006,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HEALTH_MAX: 'health_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_health_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
     'unit_of_measurement': 'HP',
   })
 # ---
@@ -1053,7 +1053,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.MANA_MAX: 'mana_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_mana_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana_max',
     'unit_of_measurement': 'MP',
   })
 # ---
@@ -1103,7 +1103,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.TRINKETS: 'trinkets'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_trinkets',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_trinkets',
     'unit_of_measurement': '⧖',
   })
 # ---
@@ -1151,7 +1151,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.EXPERIENCE_MAX: 'experience_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_experience_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience_max',
     'unit_of_measurement': 'XP',
   })
 # ---
@@ -1201,7 +1201,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.PERCEPTION: 'perception'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_perception',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_perception',
     'unit_of_measurement': 'PER',
   })
 # ---
@@ -1253,7 +1253,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.REWARDS: 'rewards'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_rewards',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_rewards',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -1342,7 +1342,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.STRENGTH: 'strength'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_strength',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_strength',
     'unit_of_measurement': 'STR',
   })
 # ---
@@ -1394,7 +1394,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': 'tasks',
   })
 # ---
