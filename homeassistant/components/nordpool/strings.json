@@ -94,17 +94,6 @@
       }
     }
   },
-  "selector": {
-    "currency": {
-      "options": {
-        "dkk": "DKK",
-        "eur": "EUR",
-        "nok": "NOK",
-        "pln": "PLN",
-        "sek": "SEK"
-      }
-    }
-  },
   "exceptions": {
     "initial_update_failed": {
       "message": "Initial update failed on startup with error {error}"
