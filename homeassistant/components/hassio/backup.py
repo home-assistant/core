@@ -173,6 +173,7 @@ class SupervisorBackupAgent(BackupAgent):
         except SupervisorBadRequestError as err:
             if err.args[0] != "Backup does not exist":
                 raise
+            _LOGGER.debug("Backup %s does not exist", backup_id)
 
 
 class SupervisorBackupReaderWriter(BackupReaderWriter):
