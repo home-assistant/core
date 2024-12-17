@@ -114,6 +114,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),
                 delay=connections[i]["delay"],
                 line=connections[i]["line"],
+                # line=connections[i].get("line"),
             )
             for i in range(limit)
             if len(connections) > i and connections[i] is not None
@@ -135,6 +136,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 "transfers": connection["transfers"],
                 "delay": connection["delay"],
                 "line": connection["line"],
+                # "line": connection.get("line"),
             }
             for connection in await self.fetch_connections(limit)
         ]
