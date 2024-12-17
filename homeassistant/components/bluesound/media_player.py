@@ -359,23 +359,23 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         if sync_status.leader is not None:
             self._is_leader = False
-            master_id = f"{sync_status.leader.ip}:{sync_status.leader.port}"
-            master_device = [
+            leader_id = f"{sync_status.leader.ip}:{sync_status.leader.port}"
+            leader_device = [
                 device
                 for device in self.hass.data[DATA_BLUESOUND]
-                if device.id == master_id
+                if device.id == leader_id
             ]
 
-            if master_device and master_id != self.id:
-                self._leader = master_device[0]
+            if leader_device and leader_id != self.id:
+                self._leader = leader_device[0]
             else:
                 self._leader = None
-                _LOGGER.error("Master not found %s", master_id)
+                _LOGGER.error("Leader not found %s", leader_id)
         else:
             if self._leader is not None:
                 self._leader = None
-            slaves = self._sync_status.followers
-            self._is_leader = slaves is not None
+            followers = self._sync_status.followers
+            self._is_leader = followers is not None
 
         self.async_write_ha_state()
 
