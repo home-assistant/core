@@ -176,7 +176,8 @@ def guarded_import(
     fromlist: Sequence[str] = (),
     level: int = 0,
 ) -> types.ModuleType:
-    """Guard imports. Only allow datetime to import _strptime."""
+    """Guard imports."""
+    # Allow import of _strptime needed by datetime.datetime.strptime
     if name == "_strptime":
         return __import__(name, globals, locals, fromlist, level)
     raise ScriptError(f"Not allowed to import {name}")

@@ -693,7 +693,7 @@ async def test_prohibited_augmented_assignment_operations(
 async def test_import_allow_strptime(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that prohibited augmented assignment operations raise an error."""
+    """Test calling datetime.datetime.strptime works."""
     source = """
 test_date = datetime.datetime.strptime('2024-04-01', '%Y-%m-%d')
 logger.info(f'Date {test_date}')
@@ -707,7 +707,7 @@ logger.info(f'Date {test_date}')
 async def test_no_other_imports_allowed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test that prohibited augmented assignment operations raise an error."""
+    """Test imports are not allowed."""
     source = "import sys"
     hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done(wait_background_tasks=True)
