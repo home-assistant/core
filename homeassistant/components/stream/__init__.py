@@ -77,6 +77,8 @@ from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 if TYPE_CHECKING:
+    from av.container import InputContainer, OutputContainer
+
     from homeassistant.components.camera import DynamicStreamSettings
 
 __all__ = [
@@ -108,10 +110,26 @@ class StreamClientError(StrEnum):
     Other = auto()
 
 
-async def async_check_stream_client_error(
+class StreamOpenClientError(HomeAssistantError):
+    """Raised when client error received when trying to open a stream.
+
+    :param stream_client_error: The type of client error
+    """
+
+    def __init__(
+        self, *args: Any, stream_client_error: StreamClientError, **kwargs: Any
+    ) -> None:
+        self.stream_client_error = stream_client_error
+        super().__init__(*args, **kwargs)
+
+
+async def _async_try_open_stream(
     hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
-) -> StreamClientError | None:
-    """Return an enum value representing a stream client error or None."""
+) -> InputContainer | OutputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
     import av  # pylint: disable=import-outside-toplevel
 
     if not pyav_options:
@@ -136,9 +154,22 @@ async def async_check_stream_client_error(
 
     try:
         func = partial(av.open, source, options=pyav_options, timeout=5)
-        await hass.loop.run_in_executor(None, func)
+        container = await hass.loop.run_in_executor(None, func)
     except av.HTTPClientError as ex:
-        return error_lookup.get(ex.__class__, StreamClientError.Other)
+        client_error = error_lookup.get(ex.__class__, StreamClientError.Other)
+        raise StreamOpenClientError(stream_client_error=client_error) from ex
+    else:
+        return container
+
+
+async def async_check_stream_client_error(
+    hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
+) -> StreamClientError | None:
+    """Return an enum value representing a stream client error or None."""
+    try:
+        await _async_try_open_stream(hass, source, pyav_options)
+    except StreamOpenClientError as ex:
+        return ex.stream_client_error
 
     return None
 
