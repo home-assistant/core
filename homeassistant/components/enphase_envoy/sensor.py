@@ -746,6 +746,8 @@ ACB_BATTERY_POWER_SENSORS = (
     EnvoyAcbBatterySensorEntityDescription(
         key="acb_battery_state",
         translation_key="acb_battery_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["discharging", "idle", "charging", "full"],
         value_fn=attrgetter("state"),
     ),
 )

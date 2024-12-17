@@ -1891,7 +1891,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'discharging',
+        'idle',
+        'charging',
+        'full',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1908,7 +1915,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Battery state',
     'platform': 'enphase_envoy',
@@ -1922,7 +1929,14 @@
 # name: test_sensor[envoy_acb_batt][sensor.acb_1234_battery_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'ACB 1234 Battery state',
+      'options': list([
+        'discharging',
+        'idle',
+        'charging',
+        'full',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.acb_1234_battery_state',

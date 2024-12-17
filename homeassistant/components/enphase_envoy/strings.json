@@ -339,7 +339,13 @@
         "name": "Configured reserve battery level"
       },
       "acb_battery_state": {
-        "name": "Battery state"
+        "name": "Battery state",
+        "state": {
+          "discharging": "discharging",
+          "idle": "idle",
+          "charging": "charging",
+          "full": "full"
+        }
       },
       "acb_available_energy": {
         "name": "Available ACB battery energy"
