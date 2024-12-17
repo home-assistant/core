@@ -698,9 +698,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.CircuitCapacity,
-        ),
+        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -714,9 +712,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.MinimumChargeCurrent,
-        ),
+        required_attributes=(clusters.EnergyEvse.Attributes.MinimumChargeCurrent,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -730,9 +726,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.MaximumChargeCurrent,
-        ),
+        required_attributes=(clusters.EnergyEvse.Attributes.MaximumChargeCurrent,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -746,9 +740,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,
-        ),
+        required_attributes=(required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
