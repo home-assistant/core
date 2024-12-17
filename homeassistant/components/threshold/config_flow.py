@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any
 
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -20,7 +22,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .binary_sensor import ThresholdSensor
+from .binary_sensor import _LOGGER, ThresholdSensor
 from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
 
 
@@ -140,6 +142,15 @@ def ws_start_preview(
         None,
     )
     preview_entity.hass = hass
+    preview_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=SENSOR_DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=timedelta(hours=1),
+        entity_namespace=None,
+    )
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(

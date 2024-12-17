@@ -211,6 +211,7 @@ def media_player_entity(
     media_player.hass = hass
     media_player.platform = MockEntityPlatform(hass)
     media_player.entity_id = "media_player.zone_3"
+    media_player.platform = MockEntityPlatform(hass)
     return media_player
 
 
@@ -274,7 +275,6 @@ async def test_update(
     hass: HomeAssistant, media_player_entity: MediaPlayerEntity
 ) -> None:
     """Test updating values from blackbird."""
-
     assert media_player_entity.state == STATE_ON
     assert media_player_entity.source == "one"
 

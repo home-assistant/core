@@ -39,6 +39,7 @@ from .common import (
 )
 
 from tests.common import (
+    MockEntityPlatform,
     MockModule,
     async_mock_service,
     mock_integration,
@@ -58,9 +59,10 @@ class DefaultEntity(tts.TextToSpeechEntity):
     _attr_default_language = DEFAULT_LANG
 
 
-async def test_default_entity_attributes() -> None:
+async def test_default_entity_attributes(hass: HomeAssistant) -> None:
     """Test default entity attributes."""
     entity = DefaultEntity()
+    entity.platform = MockEntityPlatform(hass)
 
     assert entity.hass is None
     assert entity.default_language == DEFAULT_LANG

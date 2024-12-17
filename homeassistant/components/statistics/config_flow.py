@@ -14,6 +14,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -37,6 +38,7 @@ from homeassistant.helpers.selector import (
 
 from . import DOMAIN
 from .sensor import (
+    _LOGGER,
     CONF_KEEP_LAST_SAMPLE,
     CONF_MAX_AGE,
     CONF_PERCENTILE,
@@ -232,6 +234,15 @@ async def ws_start_preview(
         msg["user_input"].get(CONF_PERCENTILE),
     )
     preview_entity.hass = hass
+    preview_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=SENSOR_DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=timedelta(hours=1),
+        entity_namespace=None,
+    )
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = await preview_entity.async_start_preview(

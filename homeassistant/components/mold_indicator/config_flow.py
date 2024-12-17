@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -36,7 +38,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .sensor import MoldIndicator
+from .sensor import _LOGGER, MoldIndicator
 
 
 async def validate_input(
@@ -168,6 +170,15 @@ def ws_start_preview(
         None,
     )
     preview_entity.hass = hass
+    preview_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=SENSOR_DOMAIN,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=timedelta(hours=1),
+        entity_namespace=None,
+    )
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
