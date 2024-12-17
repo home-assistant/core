@@ -61,6 +61,7 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.TEMPERATURE: SensorEntityDescription(
         key=ThinQProperty.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.TEMPERATURE,
@@ -222,17 +223,20 @@ RUN_STATE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
 TEMPERATURE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.TARGET_TEMPERATURE: SensorEntityDescription(
         key=ThinQProperty.TARGET_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key=ThinQProperty.TARGET_TEMPERATURE,
     ),
     ThinQProperty.DAY_TARGET_TEMPERATURE: SensorEntityDescription(
         key=ThinQProperty.DAY_TARGET_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.DAY_TARGET_TEMPERATURE,
     ),
     ThinQProperty.NIGHT_TARGET_TEMPERATURE: SensorEntityDescription(
         key=ThinQProperty.NIGHT_TARGET_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.NIGHT_TARGET_TEMPERATURE,
@@ -244,6 +248,7 @@ TEMPERATURE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.CURRENT_TEMPERATURE: SensorEntityDescription(
         key=ThinQProperty.CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.CURRENT_TEMPERATURE,
