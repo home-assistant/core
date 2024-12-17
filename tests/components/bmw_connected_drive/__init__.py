@@ -9,6 +9,7 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_CAPTCHA_TOKEN,
     CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
@@ -24,8 +25,12 @@ FIXTURE_USER_INPUT = {
     CONF_PASSWORD: "p4ssw0rd",
     CONF_REGION: "rest_of_world",
 }
-FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
-FIXTURE_GCID = "SOME_GCID"
+FIXTURE_CAPTCHA_INPUT = {
+    CONF_CAPTCHA_TOKEN: "captcha_token",
+}
+FIXTURE_USER_INPUT_W_CAPTCHA = FIXTURE_USER_INPUT | FIXTURE_CAPTCHA_INPUT
+FIXTURE_REFRESH_TOKEN = "another_token_string"
+FIXTURE_GCID = "DUMMY"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -42,6 +47,11 @@ FIXTURE_CONFIG_ENTRY = {
     "source": config_entries.SOURCE_USER,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_USERNAME]}",
 }
+
+REMOTE_SERVICE_EXC_REASON = "HTTPStatusError: 502 Bad Gateway"
+REMOTE_SERVICE_EXC_TRANSLATION = (
+    "Error executing remote service on vehicle. HTTPStatusError: 502 Bad Gateway"
+)
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:

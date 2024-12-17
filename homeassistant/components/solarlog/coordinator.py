@@ -52,7 +52,6 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         path = url.path if url.netloc else ""
         url = ParseResult("http", netloc, path, *url[3:])
         self.unique_id = entry.entry_id
-        self.name = entry.title
         self.host = url.geturl()
 
         self.solarlog = SolarLogConnector(

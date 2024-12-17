@@ -459,7 +459,11 @@ async def test_async_on_entire_period(
     def _fake_states(*args, **kwargs):
         return {
             "binary_sensor.test_on_id": [
-                ha.State("binary_sensor.test_on_id", "on", last_changed=start_time),
+                ha.State(
+                    "binary_sensor.test_on_id",
+                    "on",
+                    last_changed=(start_time - timedelta(seconds=10)),
+                ),
                 ha.State("binary_sensor.test_on_id", "on", last_changed=t0),
                 ha.State("binary_sensor.test_on_id", "on", last_changed=t1),
                 ha.State("binary_sensor.test_on_id", "on", last_changed=t2),

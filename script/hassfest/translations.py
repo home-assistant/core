@@ -172,6 +172,9 @@ def gen_data_entry_schema(
                 vol.Optional("sections"): {
                     str: {
                         vol.Optional("data"): {str: translation_value_validator},
+                        vol.Optional("data_description"): {
+                            str: translation_value_validator
+                        },
                         vol.Optional("description"): translation_value_validator,
                         vol.Optional("name"): translation_value_validator,
                     },
@@ -281,6 +284,15 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 mandatory_description=(
                     "user" if integration.integration_type == "helper" else None
                 ),
+            ),
+            vol.Optional("config_subentries"): cv.schema_with_slug_keys(
+                gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=REQUIRED,
+                    require_step_title=False,
+                ),
+                slug_validator=vol.Any("_", cv.slug),
             ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
