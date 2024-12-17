@@ -11,6 +11,7 @@ from .const import (
     DEFAULT_DEVICE_STATE,
     DEFAULT_NETWORKING_STATE,
     DEFAULT_SERIAL_NUMBER,
+    DEFAULT_TELEMETRY_STATE,
     MOCK_CONFIG,
     MOCK_WEBHOOK_ID,
 )
@@ -38,6 +39,9 @@ def mock_watergate_client() -> Generator[AsyncMock]:
         )
         mock_client_instance.async_get_networking = AsyncMock(
             return_value=DEFAULT_NETWORKING_STATE
+        )
+        mock_client_instance.async_get_telemetry_data = AsyncMock(
+            return_value=DEFAULT_TELEMETRY_STATE
         )
         yield mock_client_instance
 

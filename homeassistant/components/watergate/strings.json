@@ -26,21 +26,6 @@
       "water_meter_duration": {
         "name": "Water meter duration"
       },
-      "ip": {
-        "name": "IP address"
-      },
-      "gateway": {
-        "name": "Gateway address"
-      },
-      "subnet": {
-        "name": "Subnet"
-      },
-      "ssid": {
-        "name": "SSID"
-      },
-      "rssi": {
-        "name": "RSSI"
-      },
       "wifi_uptime": {
         "name": "Wi-Fi uptime"
       },

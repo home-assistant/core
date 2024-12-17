@@ -1,96 +1,4 @@
 # serializer version: 1
-# name: test_sensor[sensor.sonic_gateway_address-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_gateway_address',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Gateway address',
-    'platform': 'watergate',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gateway',
-    'unique_id': 'a63182948ce2896a.gateway',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.sonic_gateway_address-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic Gateway address',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sonic_gateway_address',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.sonic_ip_address-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_ip_address',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'IP address',
-    'platform': 'watergate',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ip',
-    'unique_id': 'a63182948ce2896a.ip',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.sonic_ip_address-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic IP address',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sonic_ip_address',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor[sensor.sonic_mqtt_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -135,7 +43,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2021-01-09T11:59:59+00:00',
   })
 # ---
 # name: test_sensor[sensor.sonic_power_supply-entry]
@@ -182,10 +90,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'battery',
   })
 # ---
-# name: test_sensor[sensor.sonic_rssi-entry]
+# name: test_sensor[sensor.sonic_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -199,7 +107,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_rssi',
+    'entity_id': 'sensor.sonic_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -211,121 +119,29 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'RSSI',
+    'original_name': 'Signal strength',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'rssi',
+    'translation_key': None,
     'unique_id': 'a63182948ce2896a.rssi',
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_sensor[sensor.sonic_rssi-state]
+# name: test_sensor[sensor.sonic_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': 'Sonic RSSI',
+      'friendly_name': 'Sonic Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_rssi',
+    'entity_id': 'sensor.sonic_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.sonic_ssid-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_ssid',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'SSID',
-    'platform': 'watergate',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ssid',
-    'unique_id': 'a63182948ce2896a.ssid',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.sonic_ssid-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic SSID',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sonic_ssid',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.sonic_subnet-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_subnet',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Subnet',
-    'platform': 'watergate',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'subnet',
-    'unique_id': 'a63182948ce2896a.subnet',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.sonic_subnet-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Sonic Subnet',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sonic_subnet',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-50',
   })
 # ---
 # name: test_sensor[sensor.sonic_uptime-entry]
@@ -372,7 +188,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2021-01-09T11:58:20+00:00',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_flow_rate-entry]
@@ -423,7 +239,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_meter_duration-entry]
@@ -474,7 +290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_meter_volume-entry]
@@ -525,7 +341,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_pressure-entry]
@@ -576,7 +392,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '100',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_temperature-entry]
@@ -627,7 +443,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '28.32',
   })
 # ---
 # name: test_sensor[sensor.sonic_wi_fi_uptime-entry]
@@ -674,6 +490,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2021-01-09T11:59:59+00:00',
   })
 # ---

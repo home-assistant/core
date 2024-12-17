@@ -22,7 +22,6 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -55,9 +54,11 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
 
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.state.water_meter.duration
-        if data.state and data.state.water_meter
-        else None,
+        value_fn=lambda data: (
+            data.state.water_meter.duration
+            if data.state and data.state.water_meter
+            else None
+        ),
         translation_key="water_meter_volume",
         key="water_meter_volume",
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -65,9 +66,11 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.state.water_meter.duration
-        if data.state and data.state.water_meter
-        else None,
+        value_fn=lambda data: (
+            data.state.water_meter.duration
+            if data.state and data.state.water_meter
+            else None
+        ),
         translation_key="water_meter_duration",
         key="water_meter_duration",
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -75,36 +78,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.ip if data.networking else None,
-        translation_key="ip",
-        key="ip",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.gateway if data.networking else None,
-        translation_key="gateway",
-        key="gateway",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.subnet if data.networking else None,
-        translation_key="subnet",
-        key="subnet",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.ssid if data.networking else None,
-        translation_key="ssid",
-        key="ssid",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    WatergateSensorEntityDescription(
         value_fn=lambda data: data.networking.rssi if data.networking else None,
-        translation_key="rssi",
         key="rssi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -113,11 +87,13 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: dt_util.as_utc(
-            dt_util.now() - timedelta(microseconds=data.networking.wifi_uptime)
-        )
-        if data.networking
-        else None,
+        value_fn=lambda data: (
+            dt_util.as_utc(
+                dt_util.now() - timedelta(microseconds=data.networking.wifi_uptime)
+            )
+            if data.networking
+            else None
+        ),
         translation_key="wifi_uptime",
         key="wifi_uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -125,11 +101,13 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: dt_util.as_utc(
-            dt_util.now() - timedelta(microseconds=data.networking.mqtt_uptime)
-        )
-        if data.networking
-        else None,
+        value_fn=lambda data: (
+            dt_util.as_utc(
+                dt_util.now() - timedelta(microseconds=data.networking.mqtt_uptime)
+            )
+            if data.networking
+            else None
+        ),
         translation_key="mqtt_uptime",
         key="mqtt_uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -137,9 +115,9 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.telemetry.water_temperature
-        if data.telemetry
-        else None,
+        value_fn=lambda data: (
+            data.telemetry.water_temperature if data.telemetry else None
+        ),
         translation_key="water_temperature",
         key="water_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -155,9 +133,11 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: (data.telemetry.flow / 1000)
-        if (data.telemetry and data.telemetry.flow is not None)
-        else None,
+        value_fn=lambda data: (
+            data.telemetry.flow / 1000
+            if data.telemetry and data.telemetry.flow is not None
+            else None
+        ),
         translation_key="water_flow_rate",
         key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
@@ -165,11 +145,11 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: dt_util.as_utc(
-            dt_util.now() - timedelta(seconds=data.state.uptime)
-        )
-        if data.state
-        else None,
+        value_fn=lambda data: (
+            dt_util.as_utc(dt_util.now() - timedelta(seconds=data.state.uptime))
+            if data.state
+            else None
+        ),
         translation_key="uptime",
         key="uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -225,10 +205,7 @@ class SonicSensor(WatergateEntity, SensorEntity):
             and self.entity_description.value_fn(self.coordinator.data) is not None
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> str | int | float | datetime | PowerSupplyMode | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

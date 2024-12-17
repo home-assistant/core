@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .const import MOCK_WEBHOOK_ID
+from .const import DEFAULT_NETWORKING_STATE, DEFAULT_TELEMETRY_STATE, MOCK_WEBHOOK_ID
 
 from tests.common import AsyncMock, MockConfigEntry, patch, snapshot_platform
 from tests.typing import ClientSessionGenerator
@@ -22,9 +23,11 @@ async def test_sensor(
     entity_registry: er.EntityRegistry,
     mock_entry: MockConfigEntry,
     mock_watergate_client: Generator[AsyncMock],
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test states of the sensor."""
+    freezer.move_to("2021-01-09 12:00:00+00:00")
     with patch("homeassistant.components.watergate.PLATFORMS", [Platform.SENSOR]):
         await init_integration(hass, mock_entry)
 
@@ -49,32 +52,29 @@ async def test_diagnostics_are_disabled_by_default(
         if entry.entity_category == EntityCategory.DIAGNOSTIC
     ]
 
-    assert len(entries) == 9
+    assert len(entries) == 5
     for entry in entries:
         assert entry.disabled
 
 
-@pytest.mark.parametrize(
-    "params",
-    [
-        {"entity_id": "sensor.sonic_water_flow_rate", "result": "2.137"},
-        {"entity_id": "sensor.sonic_water_pressure", "result": "1910"},
-        {"entity_id": "sensor.sonic_water_temperature", "result": "20"},
-    ],
-)
 async def test_telemetry_webhook(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mock_entry: MockConfigEntry,
-    params: dict[str, str],
     mock_watergate_client: Generator[AsyncMock],
 ) -> None:
     """Test if water flow webhook is handled correctly."""
     await init_integration(hass, mock_entry)
 
-    registered_entity = hass.states.get(params["entity_id"])
-    assert registered_entity
-    assert registered_entity.state == "unknown"
+    def assert_state(entity_id: str, expected_state: str):
+        state = hass.states.get(entity_id)
+        assert state.state == str(expected_state)
+
+    assert_state("sensor.sonic_water_flow_rate", DEFAULT_TELEMETRY_STATE.flow)
+    assert_state("sensor.sonic_water_pressure", DEFAULT_TELEMETRY_STATE.pressure)
+    assert_state(
+        "sensor.sonic_water_temperature", DEFAULT_TELEMETRY_STATE.water_temperature
+    )
 
     telemetry_change_data = {
         "type": "telemetry",
@@ -85,41 +85,34 @@ async def test_telemetry_webhook(
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(params["entity_id"]).state == params["result"]
+    assert_state("sensor.sonic_water_flow_rate", "2.137")
+    assert_state("sensor.sonic_water_pressure", "1910")
+    assert_state("sensor.sonic_water_temperature", "20")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize(
-    "params",
-    [
-        {"entity_id": "sensor.sonic_ssid", "result": "Sonic"},
-        {"entity_id": "sensor.sonic_rssi", "result": "-50"},
-        {"entity_id": "sensor.sonic_subnet", "result": "255.255.255.0"},
-        {"entity_id": "sensor.sonic_gateway_address", "result": "192.168.2.1"},
-        {"entity_id": "sensor.sonic_ip_address", "result": "192.168.2.137"},
-    ],
-)
 async def test_wifi_webhook(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mock_entry: MockConfigEntry,
-    params: dict[str, str],
     mock_watergate_client: Generator[AsyncMock],
 ) -> None:
     """Test if water flow webhook is handled correctly."""
     await init_integration(hass, mock_entry)
 
-    registered_entity = hass.states.get(params["entity_id"])
-    assert registered_entity
-    assert registered_entity.state == "unknown"
+    def assert_state(entity_id: str, expected_state: str):
+        state = hass.states.get(entity_id)
+        assert state.state == str(expected_state)
+
+    assert_state("sensor.sonic_signal_strength", DEFAULT_NETWORKING_STATE.rssi)
 
     wifi_change_data = {
         "type": "wifi-changed",
         "data": {
             "ip": "192.168.2.137",
             "gateway": "192.168.2.1",
-            "ssid": "Sonic",
-            "rssi": -50,
+            "ssid": "Sonic 2",
+            "rssi": -70,
             "subnet": "255.255.255.0",
         },
     }
@@ -128,7 +121,7 @@ async def test_wifi_webhook(
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(params["entity_id"]).state == params["result"]
+    assert_state("sensor.sonic_signal_strength", "-70")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -143,7 +136,7 @@ async def test_power_supply_webhook(
     entity_id = "sensor.sonic_power_supply"
     registered_entity = hass.states.get(entity_id)
     assert registered_entity
-    assert registered_entity.state == "unknown"
+    assert registered_entity.state == "battery"
 
     power_supply_change_data = {
         "type": "power-supply-changed",
