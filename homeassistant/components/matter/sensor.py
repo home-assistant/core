@@ -83,6 +83,15 @@ EVSE_STATE_MAP = {
 }
 
 
+EVSE_SUPPLY_STATE_MAP = {
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabled: "Disabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kChargingEnabled: "Charging Enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: "Discharging Enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: "Disabled Diagnostics",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kEnabled: "Enabled",
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
