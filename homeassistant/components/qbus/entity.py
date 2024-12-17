@@ -18,7 +18,7 @@ _REFID_REGEX = re.compile(r"^\d+\/(\d+(?:\/\d+)?)$")
 
 def format_ref_id(ref_id: str) -> str | None:
     """Format the Qbus ref_id."""
-    matches = re.findall(_REFID_REGEX, ref_id)
+    matches: list[str] = re.findall(_REFID_REGEX, ref_id)
 
     if len(matches) > 0:
         if ref_id := matches[0]:
@@ -83,9 +83,9 @@ class QbusEntity(Entity, ABC):
         raise NotImplementedError("Must be implemented by derived class.")
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
-        return self._mqtt_output.name
+        return self._mqtt_output.name if self._mqtt_output else ""
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
