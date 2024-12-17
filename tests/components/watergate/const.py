@@ -1,6 +1,6 @@
 """Constants for the Watergate tests."""
 
-from watergate_local_api.models import DeviceState
+from watergate_local_api.models import DeviceState, NetworkingData
 from watergate_local_api.models.water_meter import WaterMeter
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_WEBHOOK_ID
@@ -25,4 +25,16 @@ DEFAULT_DEVICE_STATE = DeviceState(
     100,
     WaterMeter(1.2, 100),
     DEFAULT_SERIAL_NUMBER,
+)
+
+DEFAULT_NETWORKING_STATE = NetworkingData(
+    True,
+    True,
+    "192.168.1.127",
+    "192.168.1.1",
+    "255.255.255.0",
+    "Sonic",
+    -50,
+    2137,
+    1910,
 )

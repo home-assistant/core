@@ -155,39 +155,3 @@ async def test_power_supply_webhook(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "external"
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_aso_report_webhook(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    mock_entry: MockConfigEntry,
-    mock_watergate_client: Generator[AsyncMock],
-) -> None:
-    """Test if water flow webhook is handled correctly."""
-    await init_integration(hass, mock_entry)
-    entity_id = "sensor.sonic_last_auto_shut_off_event"
-    registered_entity = hass.states.get(entity_id)
-    assert registered_entity
-    assert registered_entity.state == "unknown"
-
-    valve_change_data = {
-        "type": "auto-shut-off-report",
-        "data": {
-            "type": "VOLUME_THRESHOLD",
-            "volume": 1000,
-            "duration": 60,
-            "timestamp": 1630000000,
-        },
-    }
-    client = await hass_client_no_auth()
-    await client.post(f"/api/webhook/{MOCK_WEBHOOK_ID}", json=valve_change_data)
-
-    await hass.async_block_till_done()
-
-    entity_to_check = hass.states.get(entity_id)
-
-    assert entity_to_check.state == "2021-08-26T17:46:40+00:00"
-    assert entity_to_check.attributes["volume"] == 1000
-    assert entity_to_check.attributes["duration"] == 60
-    assert entity_to_check.attributes["type"] == "VOLUME_THRESHOLD"

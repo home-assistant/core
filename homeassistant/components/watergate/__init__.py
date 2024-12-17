@@ -25,7 +25,6 @@ from .coordinator import WatergateDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-WEBHOOK_ASO_REPORT_TYPE = "auto-shut-off-report"
 WEBHOOK_TELEMETRY_TYPE = "telemetry"
 WEBHOOK_VALVE_TYPE = "valve"
 WEBHOOK_WIFI_CHANGED_TYPE = "wifi-changed"
@@ -124,8 +123,6 @@ def get_webhook_handler(
             coordinator_data.networking.rssi = data.rssi
         elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
             coordinator_data.state.power_supply = data.supply
-        elif body_type == WEBHOOK_ASO_REPORT_TYPE:
-            coordinator_data.auto_shut_off_report = data
 
         coordinator.async_set_updated_data(coordinator_data)
 

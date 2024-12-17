@@ -61,9 +61,6 @@
       },
       "power_supply": {
         "name": "Power supply"
-      },
-      "auto_shut_off_event": {
-        "name": "Last auto shut off event"
       }
     }
   }

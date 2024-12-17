@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.components.sensor import (
@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import WatergateConfigEntry
 from .coordinator import WatergateAgregatedRequests, WatergateDataCoordinator
@@ -37,7 +38,9 @@ PARALLEL_UPDATES = 0
 class WatergateSensorEntityDescription(SensorEntityDescription):
     """Description for Watergate sensor entities."""
 
-    value_fn: Callable[[WatergateAgregatedRequests], str | int | float | None]
+    value_fn: Callable[
+        [WatergateAgregatedRequests], str | int | float | datetime | None
+    ]
 
 
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
@@ -100,24 +103,28 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.wifi_uptime if data.networking else None,
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(microseconds=data.networking.wifi_uptime)
+        )
+        if data.networking
+        else None,
         translation_key="wifi_uptime",
         key="wifi_uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.networking.mqtt_uptime if data.networking else None,
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(microseconds=data.networking.mqtt_uptime)
+        )
+        if data.networking
+        else None,
         translation_key="mqtt_uptime",
         key="mqtt_uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.telemetry.water_temperature
@@ -148,14 +155,16 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: data.state.uptime if data.state else None,
+        value_fn=lambda data: dt_util.as_utc(
+            dt_util.now() - timedelta(seconds=data.state.uptime)
+        )
+        if data.state
+        else None,
         translation_key="uptime",
         key="uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
         value_fn=lambda data: data.state.power_supply if data.state else None,
@@ -176,13 +185,9 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    entities: list[SensorEntity] = [
+    async_add_entities(
         SonicSensor(coordinator, description) for description in DESCRIPTIONS
-    ]
-
-    entities.extend([AutoShutOffEventSensor(coordinator)])
-
-    async_add_entities(entities)
+    )
 
 
 class SonicSensor(WatergateEntity, SensorEntity):
@@ -199,48 +204,18 @@ class SonicSensor(WatergateEntity, SensorEntity):
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.value_fn(self.coordinator.data) is not None
+        )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._attr_native_value = self.entity_description.value_fn(
             self.coordinator.data
         )
-        self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
-
-
-class AutoShutOffEventSensor(WatergateEntity, SensorEntity):
-    """Representation of a sensor showing the latest long flow event."""
-
-    def __init__(
-        self,
-        coordinator: WatergateDataCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "auto_shut_off_event")
-        self.entity_description = SensorEntityDescription(
-            key="auto_shut_off_event",
-            translation_key="auto_shut_off_event",
-            device_class=SensorDeviceClass.TIMESTAMP,
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available and self.coordinator.data.auto_shut_off_report is not None
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle data update."""
-        if self.coordinator.last_update_success and (
-            data := self.coordinator.data.auto_shut_off_report
-        ):
-            self._attr_native_value = datetime.fromtimestamp(data.timestamp, UTC)
-            self._attr_extra_state_attributes = {
-                "type": data.type,
-                "duration": data.duration,
-                "volume": data.volume,
-            }
-            self.async_write_ha_state()

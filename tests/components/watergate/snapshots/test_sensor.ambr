@@ -91,61 +91,12 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor[sensor.sonic_last_auto_shut_off_event-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.sonic_last_auto_shut_off_event',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Last auto shut off event',
-    'platform': 'watergate',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_shut_off_event',
-    'unique_id': 'a63182948ce2896a.auto_shut_off_event',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.sonic_last_auto_shut_off_event-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Sonic Last auto shut off event',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.sonic_last_auto_shut_off_event',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_sensor[sensor.sonic_mqtt_uptime-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -162,7 +113,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'MQTT uptime',
     'platform': 'watergate',
@@ -170,16 +121,14 @@
     'supported_features': 0,
     'translation_key': 'mqtt_uptime',
     'unique_id': 'a63182948ce2896a.mqtt_uptime',
-    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.sonic_mqtt_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'timestamp',
       'friendly_name': 'Sonic MQTT uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_mqtt_uptime',
@@ -383,9 +332,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -402,7 +349,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'watergate',
@@ -410,16 +357,14 @@
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'a63182948ce2896a.uptime',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.sonic_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'timestamp',
       'friendly_name': 'Sonic Uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_uptime',
@@ -689,9 +634,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -708,7 +651,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Wi-Fi uptime',
     'platform': 'watergate',
@@ -716,16 +659,14 @@
     'supported_features': 0,
     'translation_key': 'wifi_uptime',
     'unique_id': 'a63182948ce2896a.wifi_uptime',
-    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensor[sensor.sonic_wi_fi_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
+      'device_class': 'timestamp',
       'friendly_name': 'Sonic Wi-Fi uptime',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sonic_wi_fi_uptime',

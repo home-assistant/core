@@ -9,6 +9,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 
 from .const import (
     DEFAULT_DEVICE_STATE,
+    DEFAULT_NETWORKING_STATE,
     DEFAULT_SERIAL_NUMBER,
     MOCK_CONFIG,
     MOCK_WEBHOOK_ID,
@@ -34,6 +35,9 @@ def mock_watergate_client() -> Generator[AsyncMock]:
 
         mock_client_instance.async_get_device_state = AsyncMock(
             return_value=DEFAULT_DEVICE_STATE
+        )
+        mock_client_instance.async_get_networking = AsyncMock(
+            return_value=DEFAULT_NETWORKING_STATE
         )
         yield mock_client_instance
 
