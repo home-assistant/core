@@ -234,6 +234,20 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatReplacementDescription",
+            translation_key="battery_replacement_description",
+            native_unit_of_measurement=None,
+            device_class=None,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.PowerSource.Attributes.BatReplacementDescription,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -612,11 +626,12 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalEnergyMeasurementCumulativeEnergyImported",
             device_class=SensorDeviceClass.ENERGY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
             # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
-            measurement_to_ha=lambda x: x.energy / 1000000,
+            measurement_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
         required_attributes=(

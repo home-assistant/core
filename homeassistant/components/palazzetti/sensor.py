@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PalazzettiConfigEntry
+from .const import STATUS_TO_HA
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
@@ -23,10 +24,19 @@ class PropertySensorEntityDescription(SensorEntityDescription):
     """Describes a Palazzetti sensor entity that is read from a `PalazzettiClient` property."""
 
     client_property: str
+    property_map: dict[StateType, str] | None = None
     presence_flag: None | str = None
 
 
 PROPERTY_SENSOR_DESCRIPTIONS: list[PropertySensorEntityDescription] = [
+    PropertySensorEntityDescription(
+        key="status",
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="status",
+        client_property="status",
+        property_map=STATUS_TO_HA,
+        options=list(STATUS_TO_HA.values()),
+    ),
     PropertySensorEntityDescription(
         key="pellet_quantity",
         device_class=SensorDeviceClass.WEIGHT,
@@ -103,4 +113,11 @@ class PalazzettiSensor(PalazzettiEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state value of the sensor."""
 
-        return getattr(self.coordinator.client, self.entity_description.client_property)
+        raw_value = getattr(
+            self.coordinator.client, self.entity_description.client_property
+        )
+
+        if self.entity_description.property_map:
+            return self.entity_description.property_map[raw_value]
+
+        return raw_value
