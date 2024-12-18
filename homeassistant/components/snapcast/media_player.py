@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
@@ -182,6 +182,8 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_media_content_type = MediaType.MUSIC
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     def __init__(
         self,
@@ -194,8 +196,6 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
         self._device = device
         self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
-        self._attr_media_content_type = MediaType.MUSIC
-        self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -279,44 +279,46 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Handle the unjoin service."""
         raise NotImplementedError
 
-    def _get_metadata(self, key, default=None) -> Any:
+    @property
+    def metadata(self) -> Mapping[str, str | list[str | None]]:
         """Get metadata from the current stream."""
         if metadata := self.coordinator.server.stream(
             self._current_group.stream
         ).metadata:
-            return metadata.get(key, default)
+            return metadata
 
-        return default
+        # Fallback to an empty dict
+        return {}
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._get_metadata("title")
+        return cast(str, self.metadata.get("title"))
 
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return self._get_metadata("artUrl")
+        return cast(str, self.metadata.get("artUrl"))
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self._get_metadata("artist", [None])[0]
+        return self.metadata.get("artist", [None])[0]
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return self._get_metadata("album")
+        return cast(str, self.metadata.get("album"))
 
     @property
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media, music track only."""
-        return self._get_metadata("albumArtist", [None])[0]
+        return self.metadata.get("albumArtist", [None])[0]
 
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        if value := self._get_metadata("trackNumber") is not None:
+        if value := self.metadata.get("trackNumber") is not None:
             return int(value)
 
         return None
@@ -324,7 +326,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if value := self._get_metadata("duration") is not None:
+        if value := self.metadata.get("duration") is not None:
             return int(value)
 
         return None
