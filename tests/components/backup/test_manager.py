@@ -121,6 +121,10 @@ async def test_async_create_backup(
     assert create_backup.call_args == call(
         agent_ids=["backup.local"],
         backup_name="Core 2025.1.0",
+        extra_metadata={
+            "instance_id": hass.data["core.uuid"],
+            "with_automatic_settings": False,
+        },
         include_addons=None,
         include_all_addons=False,
         include_database=True,
@@ -325,6 +329,10 @@ async def test_async_initiate_backup(
     assert backup_json_dict == {
         "compressed": True,
         "date": ANY,
+        "extra": {
+            "instance_id": hass.data["core.uuid"],
+            "with_automatic_settings": False,
+        },
         "homeassistant": {
             "exclude_database": not include_database,
             "version": "2025.1.0",
@@ -345,30 +353,30 @@ async def test_async_initiate_backup(
     backup_agent_ids = backup_data.pop("agent_ids")
 
     assert backup_agent_ids == agent_ids
+    assert backup_data == {
+        "addons": [],
+        "backup_id": ANY,
+        "database_included": include_database,
+        "date": ANY,
+        "failed_agent_ids": [],
+        "folders": [],
+        "homeassistant_included": True,
+        "homeassistant_version": "2025.1.0",
+        "name": name,
+        "protected": bool(password),
+        "size": ANY,
+        "with_automatic_settings": False,
+    }
 
-    backup = AgentBackup.from_dict(backup_data)
-
-    assert backup == AgentBackup(
-        addons=[],
-        backup_id=ANY,
-        database_included=include_database,
-        date=ANY,
-        folders=[],
-        homeassistant_included=True,
-        homeassistant_version="2025.1.0",
-        name=name,
-        protected=bool(password),
-        size=ANY,
-    )
     for agent_id in agent_ids:
         agent = agents[agent_id]
         assert len(agent._backups) == 1
-        agent_backup = agent._backups[backup.backup_id]
-        assert agent_backup.backup_id == backup.backup_id
-        assert agent_backup.date == backup.date
-        assert agent_backup.name == backup.name
-        assert agent_backup.protected == backup.protected
-        assert agent_backup.size == backup.size
+        agent_backup = agent._backups[backup_data["backup_id"]]
+        assert agent_backup.backup_id == backup_data["backup_id"]
+        assert agent_backup.date == backup_data["date"]
+        assert agent_backup.name == backup_data["name"]
+        assert agent_backup.protected == backup_data["protected"]
+        assert agent_backup.size == backup_data["size"]
 
     outer_tar = mocked_tarfile.return_value
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
@@ -380,7 +388,7 @@ async def test_async_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup.backup_id}.tar"
+    assert tar_file_path == f"{backup_directory}/{backup_data["backup_id"]}.tar"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -522,7 +530,6 @@ async def test_async_initiate_backup_with_agent_error(
         {
             "backup_id": "abc123",
             "failed_agent_ids": ["test.remote"],
-            "with_automatic_settings": False,
         }
     ]
 
