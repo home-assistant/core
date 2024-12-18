@@ -113,7 +113,8 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, heater.mac_address)},
+            identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
             model=heater.model,
             name=heater.name,

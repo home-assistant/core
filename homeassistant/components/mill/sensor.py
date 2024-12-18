@@ -193,7 +193,8 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._available = False
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mill_device.mac_address)},
+            connections={(CONNECTION_NETWORK_MAC, mill_device.mac_address)},
+            identifiers={(DOMAIN, mill_device.device_id)},
             name=mill_device.name,
             manufacturer=MANUFACTURER,
             model=mill_device.model,
