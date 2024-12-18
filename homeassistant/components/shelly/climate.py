@@ -542,7 +542,6 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -569,6 +568,9 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
+        if not self._config["enable"]:
+            return None
+
         return cast(float, self.status["current_C"])
 
     @property
@@ -582,8 +584,6 @@ class RpcTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
-        if not self._config["enable"]:
-            return HVACMode.OFF
 
         return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
 
