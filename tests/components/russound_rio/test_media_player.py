@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiorussound.exceptions import CommandError
 from aiorussound.models import PlayStatus
 import pytest
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import mock_state_update, setup_integration
 from .const import ENTITY_ID_ZONE_1
@@ -131,6 +133,30 @@ async def test_source_service(
     mock_russound_client.controllers[1].zones[1].select_source.assert_called_once_with(
         source_id
     )
+
+
+async def test_invalid_source_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test source service with invalid source ID."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_russound_client.controllers[1].zones[
+        1
+    ].select_source.side_effect = CommandError
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Error executing async_select_source on entity media_player.mca_c5_backyard",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_INPUT_SOURCE: "Aux"},
+            blocking=True,
+        )
 
 
 async def test_power_service(
