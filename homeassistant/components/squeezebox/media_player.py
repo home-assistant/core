@@ -36,7 +36,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
-    DeviceEntryType,
     DeviceInfo,
     format_mac,
 )
