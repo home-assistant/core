@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from music_assistant_models.enums import (
     EventType,
@@ -102,14 +102,14 @@ ATTR_AUTO_PLAY = "auto_play"
 
 
 def catch_musicassistant_error[_R, **P](
-    func: Callable[..., Awaitable[_R]],
-) -> Callable[..., Coroutine[Any, Any, _R | None]]:
+    func: Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]]:
     """Check and log commands to players."""
 
     @functools.wraps(func)
     async def wrapper(
         self: MusicAssistantPlayer, *args: P.args, **kwargs: P.kwargs
-    ) -> _R | None:
+    ) -> _R:
         """Catch Music Assistant errors and convert to Home Assistant error."""
         try:
             return await func(self, *args, **kwargs)
@@ -545,7 +545,6 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self, player: Player, queue: PlayerQueue | None
     ) -> None:
         """Update media attributes for the active queue item."""
-        # pylint: disable=too-many-statements
         self._attr_media_artist = None
         self._attr_media_album_artist = None
         self._attr_media_album_name = None
