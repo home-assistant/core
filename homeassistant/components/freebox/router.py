@@ -8,7 +8,6 @@ from datetime import datetime
 import json
 import logging
 import os
-from pathlib import Path
 import re
 from typing import Any
 
@@ -60,7 +59,7 @@ async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)
 
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+    token_file: str = f"{freebox_path}/{slugify(host)}.conf"
 
     return Freepybox(APP_DESC, token_file, API_VERSION)
 
