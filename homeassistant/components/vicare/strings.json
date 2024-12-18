@@ -425,16 +425,10 @@
       "compressor_phase": {
         "name": "Compressor phase"
       },
-      "ventilation_demand": {
-        "name": "Ventilation demand",
-        "state": {
-          "ventilation": "Ventilation"
-        }
-      },
       "ventilation_level": {
         "name": "Ventilation level",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "levelone": "1",
           "leveltwo": "2",
           "levelthree": "3",
@@ -444,7 +438,7 @@
       "ventilation_reason": {
         "name": "Ventilation reason",
         "state": {
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "permanent": "Permanent",
           "schedule": "Schedule",
           "sensordriven": "Sensor-driven",
