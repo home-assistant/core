@@ -72,11 +72,11 @@ rules:
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: todo
-  docs-data-update: todo
+  docs-data-update: done
   docs-known-limitations:
     status: exempt
     comment: |
-      There are no known limitations beyond troubleshooting.
+      There are no known limitations beyond the push API delay noted in Troubleshooting.
   docs-troubleshooting: done
   docs-examples: todo
 
