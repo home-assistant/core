@@ -5,10 +5,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aiohttp import ClientResponseError
 from pyflick import FlickAPI
-from pyflick.authentication import AbstractFlickAuth, AuthException, SimpleFlickAuth
+from pyflick.authentication import AbstractFlickAuth, SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
-from pyflick.types import CustomerAccount
+from pyflick.types import APIException, AuthException, CustomerAccount
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -49,7 +50,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
     accounts: list[CustomerAccount]
     data: dict[str, Any]
 
-    async def _validate_input(self, user_input: Mapping[str, Any]) -> bool:
+    async def _validate_auth(self, user_input: Mapping[str, Any]) -> bool:
         self.auth = SimpleFlickAuth(
             # TODO: Remove UAT
             host="https://api.flickuat.com",
@@ -63,7 +64,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(60):
                 token = await self.auth.async_get_access_token()
-        except TimeoutError as err:
+        except (TimeoutError, ClientResponseError) as err:
             raise CannotConnect from err
         except AuthException as err:
             raise InvalidAuth from err
@@ -81,19 +82,16 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_SUPPLY_NODE_REF] = self._get_supply_node_ref(
                 user_input[CONF_ACCOUNT_ID]
             )
-
-            if self.data[CONF_SUPPLY_NODE_REF] is None:
-                errors["base"] = "not_active"
+            try:
+                # Ensure supply node is active
+                await FlickAPI(self.auth).getPricing(self.data[CONF_SUPPLY_NODE_REF])
+            except (APIException, ClientResponseError):
+                errors["base"] = "cannot_connect"
+            except AuthException:
+                errors["base"] = "invalid_auth"
             else:
-                try:
-                    # Ensure supply node is still active
-                    await FlickAPI(self.auth).getPricing(
-                        self.data[CONF_SUPPLY_NODE_REF]
-                    )
-
-                    return await self._async_create_entry()
-                except:  # noqa: E722
-                    errors["base"] = "cannot_connect"
+                # Supply node is active
+                return await self._async_create_entry()
 
         self.accounts = await FlickAPI(self.auth).getCustomerAccounts()
 
@@ -118,9 +116,9 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
-                                    value=account["id"], label=account_name(account)
+                                    value=account["id"], label=account["address"]
                                 )
-                                for account in self.accounts
+                                for account in active_accounts
                             ],
                             mode=SelectSelectorMode.LIST,
                         )
@@ -137,7 +135,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                await self._validate_input(user_input)
+                await self._validate_auth(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -160,7 +158,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.data = {**user_input}
 
-        if await self._validate_input(self.data):
+        if await self._validate_auth(self.data):
             await self.async_step_select_account(self.data)
 
         if user_input is None:
@@ -202,15 +200,6 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
 
         return main_consumer[CONF_SUPPLY_NODE_REF]
-
-
-def account_name(account: CustomerAccount) -> str:
-    """Generate a name for the account."""
-    name = account["address"]
-    if account["status"] != "active":
-        name += f" [{account['status']}]"
-
-    return name
 
 
 class CannotConnect(HomeAssistantError):
