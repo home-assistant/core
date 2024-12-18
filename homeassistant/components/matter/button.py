@@ -56,6 +56,23 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         )
 
 
+class MatterCommandButtonCustom(MatterEntity, ButtonEntity):
+    """Representation of a Matter Button entity with request timeout."""
+
+    entity_description: MatterButtonEntityDescription
+
+    async def async_press(self) -> None:
+        """Handle the button press leveraging a Matter command."""
+        if TYPE_CHECKING:
+            assert self.entity_description.command is not None
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=self.entity_description.command(),
+            timed_request_timeout_ms=3000,
+        )
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -154,7 +171,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="enable_charging",
             command=clusters.EnergyEvse.Commands.EnableCharging,
         ),
-        entity_class=MatterCommandButton,
+        entity_class=MatterCommandButtonCustom,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
@@ -165,7 +182,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="disable_charging",
             command=clusters.EnergyEvse.Commands.Disable,
         ),
-        entity_class=MatterCommandButton,
+        entity_class=MatterCommandButtonCustom,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
