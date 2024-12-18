@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyoverkiz.enums import OverkizCommand
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.button import (
@@ -82,6 +82,14 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         key=OverkizCommand.CYCLE,
         name="Toggle",
         icon="mdi:sync",
+    ),
+    # SmokeSensor
+    OverkizButtonDescription(
+        key=OverkizCommand.CHECK_EVENT_TRIGGER,
+        press_args=OverkizCommandParam.SHORT,
+        name="Test",
+        icon="mdi:smoke-detector",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 
