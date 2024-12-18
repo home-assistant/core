@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'average_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_average_price',
+    'unique_id': '12345_today_energy_average_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -78,7 +78,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'current_hour_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_current_hour_price',
+    'unique_id': '12345_today_energy_current_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -127,7 +127,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'highest_price_time',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_highest_price_time',
+    'unique_id': '12345_today_energy_highest_price_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -175,7 +175,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hours_priced_equal_or_lower',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_hours_priced_equal_or_lower',
+    'unique_id': '12345_today_energy_hours_priced_equal_or_lower',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -223,7 +223,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'lowest_price_time',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_lowest_price_time',
+    'unique_id': '12345_today_energy_lowest_price_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -271,7 +271,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'max_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_max_price',
+    'unique_id': '12345_today_energy_max_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -319,7 +319,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'min_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_min_price',
+    'unique_id': '12345_today_energy_min_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -367,7 +367,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'next_hour_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_next_hour_price',
+    'unique_id': '12345_today_energy_next_hour_price',
     'unit_of_measurement': '€/kWh',
   })
 # ---
@@ -415,7 +415,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'percentage_of_max',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_energy_percentage_of_max',
+    'unique_id': '12345_today_energy_percentage_of_max',
     'unit_of_measurement': '%',
   })
 # ---
@@ -465,7 +465,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'current_hour_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_gas_current_hour_price',
+    'unique_id': '12345_today_gas_current_hour_price',
     'unit_of_measurement': '€/m³',
   })
 # ---
@@ -514,7 +514,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'next_hour_price',
-    'unique_id': '01JFB74CFGWETPECEN4YNN4P47_today_gas_next_hour_price',
+    'unique_id': '12345_today_gas_next_hour_price',
     'unit_of_measurement': '€/m³',
   })
 # ---

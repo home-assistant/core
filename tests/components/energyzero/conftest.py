@@ -30,6 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={},
         unique_id=DOMAIN,
+        entry_id="12345",
     )
 
 
