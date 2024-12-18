@@ -17,7 +17,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.json import JsonObjectType
 
 from .const import (
     ATTR_ALBUM_ARTISTS_ONLY,
@@ -100,7 +99,7 @@ def register_search_action(hass: HomeAssistant) -> None:
             limit=call.data[ATTR_LIMIT],
             library_only=call.data[ATTR_LIBRARY_ONLY],
         )
-        response: JsonObjectType = SEARCH_RESULT_SCHEMA(
+        response: ServiceResponse = SEARCH_RESULT_SCHEMA(
             {
                 ATTR_ARTISTS: [
                     media_item_dict_from_mass_item(mass, item)
@@ -189,7 +188,7 @@ def register_get_library_action(hass: HomeAssistant) -> None:
         else:
             raise HomeAssistantError(f"Unsupported media type {media_type}")
 
-        response: JsonObjectType = LIBRARY_RESULTS_SCHEMA(
+        response: ServiceResponse = LIBRARY_RESULTS_SCHEMA(
             {
                 ATTR_ITEMS: [
                     media_item_dict_from_mass_item(mass, item)

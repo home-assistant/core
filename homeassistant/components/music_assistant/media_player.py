@@ -46,7 +46,6 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util.json import JsonObjectType
 
 from . import MusicAssistantConfigEntry
 from .const import (
@@ -542,7 +541,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if not self.active_queue:
             raise HomeAssistantError("No active queue found")
         active_queue = self.active_queue
-        response: JsonObjectType = QUEUE_DETAILS_SCHEMA(
+        response: ServiceResponse = QUEUE_DETAILS_SCHEMA(
             {
                 ATTR_QUEUE_ID: active_queue.queue_id,
                 ATTR_ACTIVE: active_queue.active,
