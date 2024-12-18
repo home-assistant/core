@@ -202,12 +202,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(info.identifier)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: info.host})
 
         self._receiver_info = info
 
         title_string = f"{info.model_name} ({info.host})"
-        self.context.update({"title_placeholders": {"name": title_string}})
+        self.context["title_placeholders"] = {"name": title_string}
         return await self.async_step_configure_receiver()
 
     async def async_step_configure_receiver(

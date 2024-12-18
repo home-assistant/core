@@ -84,6 +84,35 @@ async def test_manual_invalid_host(hass: HomeAssistant, stub_mock_discovery) -> 
     assert host_result["errors"]["base"] == "cannot_connect"
 
 
+async def test_ssdp_discovery_already_configured(
+    hass: HomeAssistant, default_mock_discovery
+) -> None:
+    """Test SSDP discovery with already configured device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        unique_id="id1",
+    )
+    config_entry.add_to_hass(hass)
+
+    discovery_info = ssdp.SsdpServiceInfo(
+        ssdp_location="http://192.168.1.100:8080",
+        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        ssdp_usn="uuid:mock_usn",
+        ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
+        ssdp_st="mock_st",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_manual_valid_host_unexpected_error(
     hass: HomeAssistant, empty_mock_discovery
 ) -> None:
@@ -226,6 +255,8 @@ async def test_ssdp_discovery_success(
     )
 
     assert select_result["type"] is FlowResultType.CREATE_ENTRY
+    assert select_result["data"]["host"] == "192.168.1.100"
+    assert select_result["result"].unique_id == "id1"
 
 
 async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
