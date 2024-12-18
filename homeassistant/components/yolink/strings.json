@@ -111,15 +111,15 @@
         },
         "tone": {
           "name": "Tone",
-          "description": "Tone before playing audio (if unset, no tone is played)."
+          "description": "Tone before playing audio."
         },
         "volume": {
           "name": "Volume",
-          "description": "Speaker volume during playback (if unset, uses the current global volume)."
+          "description": "Override the speaker volume during playback of this message only."
         },
         "repeat": {
           "name": "Repeat",
-          "description": "The amount of times the text will be repeated (if unset, will not repeat)."
+          "description": "The amount of times the text will be repeated."
         }
       }
     }
