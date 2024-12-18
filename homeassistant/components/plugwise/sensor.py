@@ -31,6 +31,9 @@ from . import PlugwiseConfigEntry
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class PlugwiseSensorEntityDescription(SensorEntityDescription):
