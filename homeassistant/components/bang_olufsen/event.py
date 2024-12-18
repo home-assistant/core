@@ -27,18 +27,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Sensor entities from config entry."""
 
-    entities: list[EventEntity] = []
-
-    # Add physical "buttons"
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
-        entities.extend(
-            [
-                BangOlufsenButtonEvent(config_entry, button_type)
-                for button_type in DEVICE_BUTTONS
-            ]
+        async_add_entities(
+            BangOlufsenButtonEvent(config_entry, button_type)
+            for button_type in DEVICE_BUTTONS
         )
-
-    async_add_entities(new_entities=entities)
 
 
 class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
