@@ -254,6 +254,15 @@
       },
       "battery_replacement_description": {
         "name": "Battery type"
+      },
+      "evse_state": {
+        "name": "State"
+      },
+      "evse_supply_state": {
+        "name": "Supply state"
+      },
+      "evse_fault_state": {
+        "name": "Fault state"
       }
     },
     "switch": {
