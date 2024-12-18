@@ -263,6 +263,18 @@
       },
       "evse_fault_state": {
         "name": "Fault state"
+      },
+      "evse_circuit_capacity": {
+        "name": "Circuit capacity"
+      },
+      "evse_charge_current": {
+        "name": "Charge current"
+      },
+      "evse_max_charge_current": {
+        "name": "Max charge current"
+      },
+      "evse_user_max_charge_current": {
+        "name": "User max charge current"
       }
     },
     "switch": {
