@@ -1,42 +1,52 @@
 """Suez water update coordinator."""
 
-import asyncio
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
+from pysuez import PySuezError, SuezClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import _LOGGER, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 
 @dataclass
-class AggregatedSensorData:
-    """Hold suez water aggregated sensor data."""
+class SuezWaterAggregatedAttributes:
+    """Class containing aggregated sensor extra attributes."""
 
-    value: float
-    current_month: dict[date, float]
-    previous_month: dict[date, float]
-    previous_year: dict[str, float]
-    current_year: dict[str, float]
+    this_month_consumption: dict[date, float]
+    previous_month_consumption: dict[date, float]
+    last_year_overall: dict[str, float]
+    this_year_overall: dict[str, float]
     history: dict[date, float]
     highest_monthly_consumption: float
-    attribution: str
 
 
-class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
+@dataclass
+class SuezWaterData:
+    """Class used to hold all fetch data from suez api."""
+
+    aggregated_value: float
+    aggregated_attr: Mapping[str, Any]
+    price: float
+
+
+type SuezWaterConfigEntry = ConfigEntry[SuezWaterCoordinator]
+
+
+class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     """Suez water coordinator."""
 
-    _sync_client: SuezClient
-    config_entry: ConfigEntry
+    _suez_client: SuezClient
+    config_entry: SuezWaterConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SuezWaterConfigEntry) -> None:
         """Initialize suez water coordinator."""
         super().__init__(
             hass,
@@ -48,61 +58,34 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedSensorData]):
         )
 
     async def _async_setup(self) -> None:
-        self._sync_client = await self.hass.async_add_executor_job(self._get_client)
+        self._suez_client = SuezClient(
+            username=self.config_entry.data[CONF_USERNAME],
+            password=self.config_entry.data[CONF_PASSWORD],
+            counter_id=self.config_entry.data[CONF_COUNTER_ID],
+        )
+        if not await self._suez_client.check_credentials():
+            raise ConfigEntryError("Invalid credentials for suez water")
 
-    async def _async_update_data(self) -> AggregatedSensorData:
+    async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
-        async with asyncio.timeout(30):
-            return await self.hass.async_add_executor_job(self._fetch_data)
-
-    def _fetch_data(self) -> AggregatedSensorData:
-        """Fetch latest data from Suez."""
         try:
-            self._sync_client.update()
+            aggregated = await self._suez_client.fetch_aggregated_data()
+            data = SuezWaterData(
+                aggregated_value=aggregated.value,
+                aggregated_attr={
+                    "this_month_consumption": aggregated.current_month,
+                    "previous_month_consumption": aggregated.previous_month,
+                    "highest_monthly_consumption": aggregated.highest_monthly_consumption,
+                    "last_year_overall": aggregated.previous_year,
+                    "this_year_overall": aggregated.current_year,
+                    "history": aggregated.history,
+                },
+                price=(await self._suez_client.get_price()).price,
+            )
         except PySuezError as err:
+            _LOGGER.exception(err)
             raise UpdateFailed(
                 f"Suez coordinator error communicating with API: {err}"
             ) from err
-        current_month = {}
-        for item in self._sync_client.attributes["thisMonthConsumption"]:
-            current_month[item] = self._sync_client.attributes["thisMonthConsumption"][
-                item
-            ]
-        previous_month = {}
-        for item in self._sync_client.attributes["previousMonthConsumption"]:
-            previous_month[item] = self._sync_client.attributes[
-                "previousMonthConsumption"
-            ][item]
-        highest_monthly_consumption = self._sync_client.attributes[
-            "highestMonthlyConsumption"
-        ]
-        previous_year = self._sync_client.attributes["lastYearOverAll"]
-        current_year = self._sync_client.attributes["thisYearOverAll"]
-        history = {}
-        for item in self._sync_client.attributes["history"]:
-            history[item] = self._sync_client.attributes["history"][item]
-        _LOGGER.debug("Retrieved consumption: " + str(self._sync_client.state))
-        return AggregatedSensorData(
-            self._sync_client.state,
-            current_month,
-            previous_month,
-            previous_year,
-            current_year,
-            history,
-            highest_monthly_consumption,
-            self._sync_client.attributes["attribution"],
-        )
-
-    def _get_client(self) -> SuezClient:
-        try:
-            client = SuezClient(
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
-                counter_id=self.config_entry.data[CONF_COUNTER_ID],
-                provider=None,
-            )
-            if not client.check_credentials():
-                raise ConfigEntryError
-        except PySuezError as ex:
-            raise ConfigEntryNotReady from ex
-        return client
+        _LOGGER.debug("Successfully fetched suez data")
+        return data

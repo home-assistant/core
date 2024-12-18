@@ -1,8 +1,9 @@
 """Test Suez_water sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
@@ -20,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 async def test_sensors_valid_state(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    suez_client: MagicMock,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -32,11 +33,13 @@ async def test_sensors_valid_state(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize("method", [("fetch_aggregated_data"), ("get_price")])
 async def test_sensors_failed_update(
     hass: HomeAssistant,
-    suez_client,
+    suez_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    method: str,
 ) -> None:
     """Test that suez_water sensor reflect failure when api fails."""
 
@@ -45,18 +48,20 @@ async def test_sensors_failed_update(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     entity_ids = await hass.async_add_executor_job(hass.states.entity_ids)
-    assert len(entity_ids) == 1
+    assert len(entity_ids) == 2
 
-    state = hass.states.get(entity_ids[0])
-    assert entity_ids[0]
-    assert state.state != STATE_UNAVAILABLE
+    for entity in entity_ids:
+        state = hass.states.get(entity)
+        assert entity
+        assert state.state != STATE_UNAVAILABLE
 
-    suez_client.update.side_effect = PySuezError("Should fail to update")
+    getattr(suez_client, method).side_effect = PySuezError("Should fail to update")
 
     freezer.tick(DATA_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
 
-    state = hass.states.get(entity_ids[0])
-    assert state
-    assert state.state == STATE_UNAVAILABLE
+    for entity in entity_ids:
+        state = hass.states.get(entity)
+        assert entity
+        assert state.state == STATE_UNAVAILABLE

@@ -4,10 +4,9 @@
   "after_dependencies": ["media_source", "media_player"],
   "codeowners": ["@music-assistant"],
   "config_flow": true,
-  "documentation": "https://music-assistant.io",
+  "documentation": "https://www.home-assistant.io/integrations/music_assistant",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/music-assistant/hass-music-assistant/issues",
   "loggers": ["music_assistant"],
-  "requirements": ["music-assistant-client==1.0.5"],
+  "requirements": ["music-assistant-client==1.0.8"],
   "zeroconf": ["_mass._tcp.local."]
 }

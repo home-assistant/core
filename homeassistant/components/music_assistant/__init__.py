@@ -28,12 +28,12 @@ from .const import DOMAIN, LOGGER
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
 
-type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
-
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 
 
 @dataclass
@@ -47,7 +47,7 @@ class MusicAssistantEntryData:
 async def async_setup_entry(
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
 ) -> bool:
-    """Set up from a config entry."""
+    """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
     mass = MusicAssistantClient(mass_url, http_session)
@@ -97,6 +97,7 @@ async def async_setup_entry(
         listen_task.cancel()
         raise ConfigEntryNotReady("Music Assistant client not ready") from err
 
+    # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady

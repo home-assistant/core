@@ -24,7 +24,6 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -496,12 +495,14 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
         return await self.async_step_pick_firmware()
 
 
-class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlowWithConfigEntry):
+class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     """Zigbee and Thread options flow handlers."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, config_entry: ConfigEntry, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
+
+        self._config_entry = config_entry
 
         self._probed_firmware_type = ApplicationType(self.config_entry.data["firmware"])
 

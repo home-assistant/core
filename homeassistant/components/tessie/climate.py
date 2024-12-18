@@ -60,7 +60,6 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         TessieClimateKeeper.DOG,
         TessieClimateKeeper.CAMP,
     ]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

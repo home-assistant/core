@@ -19,6 +19,8 @@ from .entity import (
     handle_sending_exception,
 )
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 

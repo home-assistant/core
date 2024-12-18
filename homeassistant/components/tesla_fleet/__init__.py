@@ -34,7 +34,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
@@ -43,7 +42,6 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
-from .oauth import TeslaSystemImplementation
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -73,11 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     token = jwt.decode(access_token, options={"verify_signature": False})
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
     region: str = token["ou_code"].lower()
-
-    OAuth2FlowHandler.async_register_implementation(
-        hass,
-        TeslaSystemImplementation(hass),
-    )
 
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
@@ -135,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             signing = product["command_signing"] == "required"
             if signing:
                 if not tesla.private_key:
-                    await tesla.get_private_key("config/tesla_fleet.key")
+                    await tesla.get_private_key(hass.config.path("tesla_fleet.key"))
                 api = VehicleSigned(tesla.vehicle, vin)
             else:
                 api = VehicleSpecific(tesla.vehicle, vin)
