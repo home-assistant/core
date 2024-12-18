@@ -169,7 +169,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 async def test_form_validate_exception(hass: HomeAssistant) -> None:
     """Test we handle exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": "edit"}
     )
 
     with patch(
@@ -188,6 +188,8 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    await test_user_form(hass)
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
