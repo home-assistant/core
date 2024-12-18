@@ -229,9 +229,6 @@ class MetOfficeCurrentSensor(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
         self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
-        self._attr_entity_registry_enabled_default = (
-            self.entity_description.entity_registry_enabled_default
-        )
 
     @property
     def native_value(self) -> StateType:
