@@ -94,8 +94,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
             if data.networking
             else None
         ),
-        translation_key="wifi_uptime",
-        key="wifi_uptime",
+        translation_key="wifi_up_since",
+        key="wifi_up_since",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -108,8 +108,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
             if data.networking
             else None
         ),
-        translation_key="mqtt_uptime",
-        key="mqtt_uptime",
+        translation_key="mqtt_up_since",
+        key="mqtt_up_since",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -138,7 +138,6 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
             if data.telemetry and data.telemetry.flow is not None
             else None
         ),
-        translation_key="water_flow_rate",
         key="water_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
@@ -150,8 +149,8 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
             if data.state
             else None
         ),
-        translation_key="uptime",
-        key="uptime",
+        translation_key="up_since",
+        key="up_since",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -160,11 +159,16 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         value_fn=lambda data: PowerSupplyMode(data.state.power_supply)
         if data.state
         else None,
-        translation_key="power_supply",
-        key="power_supply",
+        translation_key="power_supply_mode",
+        key="power_supply_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
+        options=[
+            PowerSupplyMode.BATTERY,
+            PowerSupplyMode.EXTERNAL,
+            PowerSupplyMode.BATTERY_EXTERNAL,
+        ],
     ),
 ]
 

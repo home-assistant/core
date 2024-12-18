@@ -70,7 +70,7 @@ async def test_telemetry_webhook(
         state = hass.states.get(entity_id)
         assert state.state == str(expected_state)
 
-    assert_state("sensor.sonic_water_flow_rate", DEFAULT_TELEMETRY_STATE.flow)
+    assert_state("sensor.sonic_volume_flow_rate", DEFAULT_TELEMETRY_STATE.flow)
     assert_state("sensor.sonic_water_pressure", DEFAULT_TELEMETRY_STATE.pressure)
     assert_state(
         "sensor.sonic_water_temperature", DEFAULT_TELEMETRY_STATE.water_temperature
@@ -85,7 +85,7 @@ async def test_telemetry_webhook(
 
     await hass.async_block_till_done()
 
-    assert_state("sensor.sonic_water_flow_rate", "2.137")
+    assert_state("sensor.sonic_volume_flow_rate", "2.137")
     assert_state("sensor.sonic_water_pressure", "1910")
     assert_state("sensor.sonic_water_temperature", "20")
 
@@ -133,7 +133,7 @@ async def test_power_supply_webhook(
 ) -> None:
     """Test if water flow webhook is handled correctly."""
     await init_integration(hass, mock_entry)
-    entity_id = "sensor.sonic_power_supply"
+    entity_id = "sensor.sonic_power_supply_mode"
     registered_entity = hass.states.get(entity_id)
     assert registered_entity
     assert registered_entity.state == "battery"

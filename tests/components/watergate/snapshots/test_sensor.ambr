@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.sonic_mqtt_uptime-entry]
+# name: test_sensor[sensor.sonic_mqtt_up_since-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_mqtt_uptime',
+    'entity_id': 'sensor.sonic_mqtt_up_since',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,42 +23,48 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'MQTT uptime',
+    'original_name': 'MQTT up since',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mqtt_uptime',
-    'unique_id': 'a63182948ce2896a.mqtt_uptime',
+    'translation_key': 'mqtt_up_since',
+    'unique_id': 'a63182948ce2896a.mqtt_up_since',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.sonic_mqtt_uptime-state]
+# name: test_sensor[sensor.sonic_mqtt_up_since-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Sonic MQTT uptime',
+      'friendly_name': 'Sonic MQTT up since',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_mqtt_uptime',
+    'entity_id': 'sensor.sonic_mqtt_up_since',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-01-09T11:59:59+00:00',
   })
 # ---
-# name: test_sensor[sensor.sonic_power_supply-entry]
+# name: test_sensor[sensor.sonic_power_supply_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        <PowerSupplyMode.BATTERY: 'battery'>,
+        <PowerSupplyMode.EXTERNAL: 'external'>,
+        <PowerSupplyMode.BATTERY_EXTERNAL: 'battery+external'>,
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_power_supply',
+    'entity_id': 'sensor.sonic_power_supply_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,23 +76,28 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Power supply',
+    'original_name': 'Power supply mode',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'power_supply',
-    'unique_id': 'a63182948ce2896a.power_supply',
+    'translation_key': 'power_supply_mode',
+    'unique_id': 'a63182948ce2896a.power_supply_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.sonic_power_supply-state]
+# name: test_sensor[sensor.sonic_power_supply_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Sonic Power supply',
+      'friendly_name': 'Sonic Power supply mode',
+      'options': list([
+        <PowerSupplyMode.BATTERY: 'battery'>,
+        <PowerSupplyMode.EXTERNAL: 'external'>,
+        <PowerSupplyMode.BATTERY_EXTERNAL: 'battery+external'>,
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_power_supply',
+    'entity_id': 'sensor.sonic_power_supply_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -144,7 +155,7 @@
     'state': '-50',
   })
 # ---
-# name: test_sensor[sensor.sonic_uptime-entry]
+# name: test_sensor[sensor.sonic_up_since-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +167,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_uptime',
+    'entity_id': 'sensor.sonic_up_since',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,30 +179,30 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Uptime',
+    'original_name': 'Up since',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'uptime',
-    'unique_id': 'a63182948ce2896a.uptime',
+    'translation_key': 'up_since',
+    'unique_id': 'a63182948ce2896a.up_since',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.sonic_uptime-state]
+# name: test_sensor[sensor.sonic_up_since-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Sonic Uptime',
+      'friendly_name': 'Sonic Up since',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_uptime',
+    'entity_id': 'sensor.sonic_up_since',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-01-09T11:58:20+00:00',
   })
 # ---
-# name: test_sensor[sensor.sonic_water_flow_rate-entry]
+# name: test_sensor[sensor.sonic_volume_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -205,7 +216,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sonic_water_flow_rate',
+    'entity_id': 'sensor.sonic_volume_flow_rate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -217,25 +228,25 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
-    'original_name': 'Water flow rate',
+    'original_name': 'Volume flow rate',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'water_flow_rate',
+    'translation_key': None,
     'unique_id': 'a63182948ce2896a.water_flow_rate',
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
-# name: test_sensor[sensor.sonic_water_flow_rate-state]
+# name: test_sensor[sensor.sonic_volume_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
-      'friendly_name': 'Sonic Water flow rate',
+      'friendly_name': 'Sonic Volume flow rate',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_water_flow_rate',
+    'entity_id': 'sensor.sonic_volume_flow_rate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -446,7 +457,7 @@
     'state': '28.32',
   })
 # ---
-# name: test_sensor[sensor.sonic_wi_fi_uptime-entry]
+# name: test_sensor[sensor.sonic_wi_fi_up_since-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -458,7 +469,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sonic_wi_fi_uptime',
+    'entity_id': 'sensor.sonic_wi_fi_up_since',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -470,23 +481,23 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi uptime',
+    'original_name': 'Wi-Fi up since',
     'platform': 'watergate',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_uptime',
-    'unique_id': 'a63182948ce2896a.wifi_uptime',
+    'translation_key': 'wifi_up_since',
+    'unique_id': 'a63182948ce2896a.wifi_up_since',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.sonic_wi_fi_uptime-state]
+# name: test_sensor[sensor.sonic_wi_fi_up_since-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Sonic Wi-Fi uptime',
+      'friendly_name': 'Sonic Wi-Fi up since',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sonic_wi_fi_uptime',
+    'entity_id': 'sensor.sonic_wi_fi_up_since',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

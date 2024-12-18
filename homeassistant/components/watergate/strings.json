@@ -26,11 +26,11 @@
       "water_meter_duration": {
         "name": "Water meter duration"
       },
-      "wifi_uptime": {
-        "name": "Wi-Fi uptime"
+      "wifi_up_since": {
+        "name": "Wi-Fi up since"
       },
-      "mqtt_uptime": {
-        "name": "MQTT uptime"
+      "mqtt_up_since": {
+        "name": "MQTT up since"
       },
       "water_temperature": {
         "name": "Water temperature"
@@ -38,14 +38,11 @@
       "water_pressure": {
         "name": "Water pressure"
       },
-      "water_flow_rate": {
-        "name": "Water flow rate"
+      "up_since": {
+        "name": "Up since"
       },
-      "uptime": {
-        "name": "Uptime"
-      },
-      "power_supply": {
-        "name": "Power supply"
+      "power_supply_mode": {
+        "name": "Power supply mode"
       }
     }
   }
