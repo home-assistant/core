@@ -355,6 +355,7 @@ FLOWS = {
         "mailgun",
         "mastodon",
         "matter",
+        "mawaqit",
         "mealie",
         "meater",
         "medcom_ble",
