@@ -303,8 +303,8 @@ VEHICLE_TIME_DESCRIPTIONS: tuple[TeslaFleetTimeEntityDescription, ...] = (
     ),
 )
 
-ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
-    TeslaFleetSensorEntityDescription(
+ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -312,7 +312,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="energy_left",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -321,7 +321,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="total_pack_energy",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -331,14 +331,14 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="percentage_charged",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=2,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="battery_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -346,7 +346,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="load_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -354,7 +354,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="grid_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -362,7 +362,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="grid_services_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -370,7 +370,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="generator_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -379,21 +379,16 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
-    TeslaFleetSensorEntityDescription(
+    SensorEntityDescription(
         key="island_status",
-        device_class=SensorDeviceClass.ENUM,
         options=[
+            "island_status_unknown",
             "on_grid",
             "off_grid",
             "off_grid_unintentional",
             "off_grid_intentional",
         ],
-        entity_registry_enabled_default=True,
-        value_fn=lambda value: None if value == "island_status_unknown" else value,
-    ),
-    TeslaFleetSensorEntityDescription(
-        key="storm_mode_active",
-        entity_registry_enabled_default=True,
+        device_class=SensorDeviceClass.ENUM,
     ),
 )
 
@@ -555,12 +550,12 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
 class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity):
     """Base class for Tesla Fleet energy site metric sensors."""
 
-    entity_description: TeslaFleetSensorEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         data: TeslaFleetEnergyData,
-        description: TeslaFleetSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
@@ -568,8 +563,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = not self.is_none
-        self._attr_native_value = self.entity_description.value_fn(self._value)
+        self._attr_native_value = self._value
 
 
 class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorEntity):
