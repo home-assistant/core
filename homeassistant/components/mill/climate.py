@@ -113,7 +113,7 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, heater.device_id)},
+            identifiers={(DOMAIN, heater.mac_address)},
             manufacturer=MANUFACTURER,
             model=heater.model,
             name=heater.name,
@@ -197,16 +197,16 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
     def __init__(self, coordinator: MillDataUpdateCoordinator) -> None:
         """Initialize the thermostat."""
         super().__init__(coordinator)
-        if mac := coordinator.mill_data_connection.mac_address:
-            self._attr_unique_id = mac
-            self._attr_device_info = DeviceInfo(
-                connections={(CONNECTION_NETWORK_MAC, mac)},
-                configuration_url=self.coordinator.mill_data_connection.url,
-                manufacturer=MANUFACTURER,
-                model="Generation 3",
-                name=coordinator.mill_data_connection.name,
-                sw_version=coordinator.mill_data_connection.version,
-            )
+        mac = coordinator.mill_data_connection.mac_address
+        self._attr_unique_id = mac
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)},
+            configuration_url=self.coordinator.mill_data_connection.url,
+            manufacturer=MANUFACTURER,
+            model="Generation 3",
+            name=coordinator.mill_data_connection.name,
+            sw_version=coordinator.mill_data_connection.version,
+        )
 
         self._update_attr()
 

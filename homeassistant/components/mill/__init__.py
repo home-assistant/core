@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
@@ -54,6 +55,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await data_coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][conn_type][key] = data_coordinator
+
+    if entry.data.get(CONNECTION_TYPE) == CLOUD:
+        device_registry = dr.async_get(hass)
+        for mill_device in mill_data_connection.devices.values():
+            # migrate to new device ids
+            device_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, mill_device.device_id)}
+            )
+            if device_entry and entry.entry_id in device_entry.config_entries:
+                device_registry.async_update_device(
+                    device_entry.id, new_identifiers={(DOMAIN, mill_device.mac_address)}
+                )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

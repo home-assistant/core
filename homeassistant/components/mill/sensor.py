@@ -193,7 +193,7 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._available = False
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mill_device.device_id)},
+            identifiers={(DOMAIN, mill_device.mac_address)},
             name=mill_device.name,
             manufacturer=MANUFACTURER,
             model=mill_device.model,
@@ -227,16 +227,17 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        if mac := coordinator.mill_data_connection.mac_address:
-            self._attr_unique_id = f"{mac}_{entity_description.key}"
-            self._attr_device_info = DeviceInfo(
-                connections={(CONNECTION_NETWORK_MAC, mac)},
-                configuration_url=self.coordinator.mill_data_connection.url,
-                manufacturer=MANUFACTURER,
-                model="Generation 3",
-                name=coordinator.mill_data_connection.name,
-                sw_version=coordinator.mill_data_connection.version,
-            )
+        mac = coordinator.mill_data_connection.mac_address
+        self._attr_unique_id = f"{mac}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, mac)},
+            configuration_url=self.coordinator.mill_data_connection.url,
+            identifiers={(DOMAIN, mac)},
+            manufacturer=MANUFACTURER,
+            model="Generation 3",
+            name=coordinator.mill_data_connection.name,
+            sw_version=coordinator.mill_data_connection.version,
+        )
 
     @property
     def native_value(self):
