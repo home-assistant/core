@@ -78,7 +78,7 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_strategy_settings': None,
         }),
       ]),
       'last_attempted_strategy_backup': None,
