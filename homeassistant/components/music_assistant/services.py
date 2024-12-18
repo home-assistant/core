@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
-from music_assistant_client.helpers import searchresults_as_compact_dict
 from music_assistant_models.enums import MediaType
 import voluptuous as vol
 
@@ -18,8 +17,35 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.json import JsonObjectType
 
-from .const import DOMAIN
+from .const import (
+    ATTR_ALBUM_ARTISTS_ONLY,
+    ATTR_ALBUM_TYPE,
+    ATTR_ALBUMS,
+    ATTR_ARTISTS,
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_FAVORITE,
+    ATTR_ITEMS,
+    ATTR_LIBRARY_ONLY,
+    ATTR_LIMIT,
+    ATTR_MEDIA_TYPE,
+    ATTR_OFFSET,
+    ATTR_ORDER_BY,
+    ATTR_PLAYLISTS,
+    ATTR_RADIO,
+    ATTR_SEARCH,
+    ATTR_SEARCH_ALBUM,
+    ATTR_SEARCH_ARTIST,
+    ATTR_SEARCH_NAME,
+    ATTR_TRACKS,
+    DOMAIN,
+)
+from .schemas import (
+    LIBRARY_RESULTS_SCHEMA,
+    SEARCH_RESULT_SCHEMA,
+    media_item_dict_from_mass_item,
+)
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -28,26 +54,16 @@ if TYPE_CHECKING:
 
 SERVICE_SEARCH = "search"
 SERVICE_GET_LIBRARY = "get_library"
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_SEARCH_NAME = "name"
-ATTR_SEARCH_ARTIST = "artist"
-ATTR_SEARCH_ALBUM = "album"
-ATTR_LIMIT = "limit"
-ATTR_LIBRARY_ONLY = "library_only"
-ATTR_FAVORITE = "favorite"
-ATTR_SEARCH = "search"
-ATTR_OFFSET = "offset"
-ATTR_ORDER_BY = "order_by"
-ATTR_ALBUM_TYPE = "album_type"
-ATTR_ALBUM_ARTISTS_ONLY = "album_artists_only"
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+DEFAULT_OFFSET = 0
+DEFAULT_LIMIT = 25
+DEFAULT_SORT_ORDER = "name"
 
 
 @callback
 def get_music_assistant_client(
     hass: HomeAssistant, config_entry_id: str
 ) -> MusicAssistantClient:
-    """Get the (first) Music Assistant client from the (loaded) config entries."""
+    """Get the Music Assistant client for the given config entry."""
     entry: MusicAssistantConfigEntry | None
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError("Entry not found")
@@ -84,8 +100,31 @@ def register_search_action(hass: HomeAssistant) -> None:
             limit=call.data[ATTR_LIMIT],
             library_only=call.data[ATTR_LIBRARY_ONLY],
         )
-        # return limited result to prevent it being too verbose
-        return cast(ServiceResponse, searchresults_as_compact_dict(search_results))
+        response: JsonObjectType = SEARCH_RESULT_SCHEMA(
+            {
+                ATTR_ARTISTS: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in search_results.artists
+                ],
+                ATTR_ALBUMS: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in search_results.albums
+                ],
+                ATTR_TRACKS: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in search_results.tracks
+                ],
+                ATTR_PLAYLISTS: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in search_results.playlists
+                ],
+                ATTR_RADIO: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in search_results.radio
+                ],
+            }
+        )
+        return response
 
     hass.services.async_register(
         DOMAIN,
@@ -115,12 +154,15 @@ def register_get_library_action(hass: HomeAssistant) -> None:
         """Handle get_library action."""
         mass = get_music_assistant_client(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         media_type = call.data[ATTR_MEDIA_TYPE]
+        limit = call.data.get(ATTR_LIMIT, DEFAULT_LIMIT)
+        offset = call.data.get(ATTR_OFFSET, DEFAULT_OFFSET)
+        order_by = call.data.get(ATTR_ORDER_BY, DEFAULT_SORT_ORDER)
         base_params = {
             "favorite": call.data.get(ATTR_FAVORITE),
             "search": call.data.get(ATTR_SEARCH),
-            "limit": call.data.get(ATTR_LIMIT),
-            "offset": call.data.get(ATTR_OFFSET),
-            "order_by": call.data.get(ATTR_ORDER_BY),
+            "limit": limit,
+            "offset": offset,
+            "order_by": order_by,
         }
         if media_type == MediaType.ALBUM:
             library_result = await mass.music.get_library_albums(
@@ -146,9 +188,20 @@ def register_get_library_action(hass: HomeAssistant) -> None:
             )
         else:
             raise HomeAssistantError(f"Unsupported media type {media_type}")
-        # result must be a dict so we return the media item (+s) as key
-        result = {f"{media_type.value}s": [item.to_dict() for item in library_result]}
-        return cast(ServiceResponse, result)
+
+        response: JsonObjectType = LIBRARY_RESULTS_SCHEMA(
+            {
+                ATTR_ITEMS: [
+                    media_item_dict_from_mass_item(mass, item)
+                    for item in library_result
+                ],
+                ATTR_LIMIT: limit,
+                ATTR_OFFSET: offset,
+                ATTR_ORDER_BY: order_by,
+                ATTR_MEDIA_TYPE: media_type,
+            }
+        )
+        return response
 
     hass.services.async_register(
         DOMAIN,
