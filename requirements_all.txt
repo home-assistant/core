@@ -1599,6 +1599,9 @@ panasonic-viera==0.4.2
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
+# homeassistant.components.peblar
+peblar==0.2.1
+
 # homeassistant.components.peco
 peco==0.0.30
 
