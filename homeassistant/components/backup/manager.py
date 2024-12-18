@@ -23,7 +23,7 @@ from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import integration_platform
+from homeassistant.helpers import instance_id, integration_platform
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
@@ -200,6 +200,7 @@ class BackupReaderWriter(abc.ABC):
         *,
         agent_ids: list[str],
         backup_name: str,
+        extra_metadata: dict[str, bool | str],
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -445,16 +446,18 @@ class BackupManager:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
                         failed_agent_ids = known_backup.failed_agent_ids
-                        with_automatic_settings = known_backup.with_automatic_settings
                     else:
                         failed_agent_ids = []
-                        with_automatic_settings = None
+                    with_automatic_settings = self.is_our_automatic_backup(
+                        agent_backup, await instance_id.async_get(self.hass)
+                    )
                     backups[backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
                         backup_id=backup_id,
                         date=agent_backup.date,
                         database_included=agent_backup.database_included,
+                        extra_metadata=agent_backup.extra_metadata,
                         failed_agent_ids=failed_agent_ids,
                         folders=agent_backup.folders,
                         homeassistant_included=agent_backup.homeassistant_included,
@@ -494,16 +497,18 @@ class BackupManager:
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
                     failed_agent_ids = known_backup.failed_agent_ids
-                    with_automatic_settings = known_backup.with_automatic_settings
                 else:
                     failed_agent_ids = []
-                    with_automatic_settings = None
+                with_automatic_settings = self.is_our_automatic_backup(
+                    result, await instance_id.async_get(self.hass)
+                )
                 backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
                     database_included=result.database_included,
+                    extra_metadata=result.extra_metadata,
                     failed_agent_ids=failed_agent_ids,
                     folders=result.folders,
                     homeassistant_included=result.homeassistant_included,
@@ -516,6 +521,22 @@ class BackupManager:
             backup.agent_ids.append(agent_ids[idx])
 
         return (backup, agent_errors)
+
+    @staticmethod
+    def is_our_automatic_backup(
+        backup: AgentBackup, our_instance_id: str
+    ) -> bool | None:
+        """Check if a backup was created by us and return automatic_settings flag.
+
+        Returns `None` if the backup was not created by us, or if the
+        automatic_settings flag is not a boolean.
+        """
+        if backup.extra_metadata.get("instance_id") != our_instance_id:
+            return None
+        with_automatic_settings = backup.extra_metadata.get("with_automatic_settings")
+        if not isinstance(with_automatic_settings, bool):
+            return None
+        return with_automatic_settings
 
     async def async_delete_backup(self, backup_id: str) -> dict[str, Exception]:
         """Delete a backup."""
@@ -598,7 +619,7 @@ class BackupManager:
             open_stream=written_backup.open_stream,
         )
         await written_backup.release_stream()
-        self.known_backups.add(written_backup.backup, agent_errors, False)
+        self.known_backups.add(written_backup.backup, agent_errors)
 
     async def async_create_backup(
         self,
@@ -699,6 +720,10 @@ class BackupManager:
         new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
             backup_name=backup_name,
+            extra_metadata={
+                "instance_id": await instance_id.async_get(self.hass),
+                "with_automatic_settings": with_automatic_settings,
+            },
             include_addons=include_addons,
             include_all_addons=include_all_addons,
             include_database=include_database,
@@ -747,9 +772,7 @@ class BackupManager:
                 # create backup was successful, update last_completed_automatic_backup
                 self.config.data.last_completed_automatic_backup = dt_util.now()
                 self.store.save()
-            self.known_backups.add(
-                written_backup.backup, agent_errors, with_automatic_settings
-            )
+            self.known_backups.add(written_backup.backup, agent_errors)
 
             # delete old backups more numerous than copies
             await delete_backups_exceeding_configured_count(self)
@@ -870,7 +893,6 @@ class KnownBackups:
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
                 failed_agent_ids=backup["failed_agent_ids"],
-                with_automatic_settings=backup["with_automatic_settings"],
             )
             for backup in stored_backups
         }
@@ -883,13 +905,11 @@ class KnownBackups:
         self,
         backup: AgentBackup,
         agent_errors: dict[str, Exception],
-        with_automatic_settings: bool,
     ) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
             backup_id=backup.backup_id,
             failed_agent_ids=list(agent_errors),
-            with_automatic_settings=with_automatic_settings,
         )
         self._manager.store.save()
 
@@ -911,14 +931,12 @@ class KnownBackup:
 
     backup_id: str
     failed_agent_ids: list[str]
-    with_automatic_settings: bool
 
     def to_dict(self) -> StoredKnownBackup:
         """Convert known backup to a dict."""
         return {
             "backup_id": self.backup_id,
             "failed_agent_ids": self.failed_agent_ids,
-            "with_automatic_settings": self.with_automatic_settings,
         }
 
 
@@ -927,7 +945,6 @@ class StoredKnownBackup(TypedDict):
 
     backup_id: str
     failed_agent_ids: list[str]
-    with_automatic_settings: bool
 
 
 class CoreBackupReaderWriter(BackupReaderWriter):
@@ -945,6 +962,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         *,
         agent_ids: list[str],
         backup_name: str,
+        extra_metadata: dict[str, bool | str],
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -969,6 +987,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 agent_ids=agent_ids,
                 backup_id=backup_id,
                 backup_name=backup_name,
+                extra_metadata=extra_metadata,
                 include_database=include_database,
                 date_str=date_str,
                 on_progress=on_progress,
@@ -987,6 +1006,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         backup_id: str,
         backup_name: str,
         date_str: str,
+        extra_metadata: dict[str, bool | str],
         include_database: bool,
         on_progress: Callable[[ManagerStateEvent], None],
         password: str | None,
@@ -1012,6 +1032,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             backup_data = {
                 "compressed": True,
                 "date": date_str,
+                "extra": extra_metadata,
                 "homeassistant": {
                     "exclude_database": not include_database,
                     "version": HAVERSION,
@@ -1035,6 +1056,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 backup_id=backup_id,
                 database_included=include_database,
                 date=date_str,
+                extra_metadata=extra_metadata,
                 folders=[],
                 homeassistant_included=True,
                 homeassistant_version=HAVERSION,

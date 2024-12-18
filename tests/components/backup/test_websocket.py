@@ -34,6 +34,7 @@ from tests.typing import WebSocketGenerator
 BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
+    extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
     include_addons=["test-addon"],
     include_all_addons=False,
     include_database=True,
@@ -276,7 +277,6 @@ async def test_delete(
                 {
                     "backup_id": "abc123",
                     "failed_agent_ids": ["test.remote"],
-                    "with_automatic_settings": False,
                 }
             ]
         },
