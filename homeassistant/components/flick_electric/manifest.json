@@ -1,17 +1,11 @@
 {
   "domain": "flick_electric",
   "name": "Flick Electric",
-  "codeowners": [
-    "@ZephireNZ"
-  ],
+  "codeowners": ["@ZephireNZ"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flick_electric",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": [
-    "pyflick"
-  ],
-  "requirements": [
-    "PyFlick==1.0.0"
-  ]
+  "loggers": ["pyflick"],
+  "requirements": ["PyFlick==1.0.0"]
 }
