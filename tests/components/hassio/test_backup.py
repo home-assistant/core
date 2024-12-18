@@ -341,7 +341,7 @@ async def test_agent_info(
                 "name": "Test",
                 "protected": False,
                 "size": 1048576,
-                "with_strategy_settings": None,
+                "with_automatic_settings": None,
             },
         ),
         (
@@ -362,7 +362,7 @@ async def test_agent_info(
                 "name": "Test",
                 "protected": False,
                 "size": 1048576,
-                "with_strategy_settings": None,
+                "with_automatic_settings": None,
             },
         ),
     ],
