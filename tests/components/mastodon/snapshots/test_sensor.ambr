@@ -31,7 +31,7 @@
     'supported_features': 0,
     'translation_key': 'followers',
     'unique_id': 'trwnh_mastodon_social_followers',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'accounts',
   })
 # ---
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-state]
@@ -39,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mastodon @trwnh@mastodon.social Followers',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'accounts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
@@ -80,7 +81,7 @@
     'supported_features': 0,
     'translation_key': 'following',
     'unique_id': 'trwnh_mastodon_social_following',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'accounts',
   })
 # ---
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-state]
@@ -88,6 +89,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mastodon @trwnh@mastodon.social Following',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'accounts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
@@ -129,7 +131,7 @@
     'supported_features': 0,
     'translation_key': 'posts',
     'unique_id': 'trwnh_mastodon_social_posts',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'posts',
   })
 # ---
 # name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-state]
@@ -137,6 +139,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mastodon @trwnh@mastodon.social Posts',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'posts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',

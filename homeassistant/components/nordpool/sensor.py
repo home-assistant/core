@@ -27,7 +27,9 @@ from .entity import NordpoolBaseEntity
 PARALLEL_UPDATES = 0
 
 
-def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]]:
+def get_prices(
+    data: DeliveryPeriodData,
+) -> dict[str, tuple[float | None, float, float | None]]:
     """Return previous, current and next prices.
 
     Output: {"SE3": (10.0, 10.5, 12.1)}
@@ -39,6 +41,7 @@ def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]
     previous_time = current_time - timedelta(hours=1)
     next_time = current_time + timedelta(hours=1)
     price_data = data.entries
+    LOGGER.debug("Price data: %s", price_data)
     for entry in price_data:
         if entry.start <= current_time <= entry.end:
             current_price_entries = entry.entry
@@ -46,10 +49,20 @@ def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]
             last_price_entries = entry.entry
         if entry.start <= next_time <= entry.end:
             next_price_entries = entry.entry
+    LOGGER.debug(
+        "Last price %s, current price %s, next price %s",
+        last_price_entries,
+        current_price_entries,
+        next_price_entries,
+    )
 
     result = {}
     for area, price in current_price_entries.items():
-        result[area] = (last_price_entries[area], price, next_price_entries[area])
+        result[area] = (
+            last_price_entries.get(area),
+            price,
+            next_price_entries.get(area),
+        )
     LOGGER.debug("Prices: %s", result)
     return result
 
@@ -90,7 +103,7 @@ class NordpoolDefaultSensorEntityDescription(SensorEntityDescription):
 class NordpoolPricesSensorEntityDescription(SensorEntityDescription):
     """Describes Nord Pool prices sensor entity."""
 
-    value_fn: Callable[[tuple[float, float, float]], float | None]
+    value_fn: Callable[[tuple[float | None, float, float | None]], float | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -136,13 +149,13 @@ PRICES_SENSOR_TYPES: tuple[NordpoolPricesSensorEntityDescription, ...] = (
     NordpoolPricesSensorEntityDescription(
         key="last_price",
         translation_key="last_price",
-        value_fn=lambda data: data[0] / 1000,
+        value_fn=lambda data: data[0] / 1000 if data[0] else None,
         suggested_display_precision=2,
     ),
     NordpoolPricesSensorEntityDescription(
         key="next_price",
         translation_key="next_price",
-        value_fn=lambda data: data[2] / 1000,
+        value_fn=lambda data: data[2] / 1000 if data[2] else None,
         suggested_display_precision=2,
     ),
 )

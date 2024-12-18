@@ -78,7 +78,7 @@
       "fields": {
         "item": {
           "name": "Item name",
-          "description": "The name for the to-do list items."
+          "description": "The name for the to-do list item."
         }
       }
     }

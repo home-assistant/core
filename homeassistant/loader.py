@@ -830,6 +830,9 @@ class Integration:
     @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
+        # Custom integrations default to "custom" quality scale.
+        if not self.is_built_in or self.overwrites_built_in:
+            return "custom"
         return self.manifest.get("quality_scale")
 
     @cached_property

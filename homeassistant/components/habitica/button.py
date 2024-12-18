@@ -33,7 +33,7 @@ class HabiticaButtonEntityDescription(ButtonEntityDescription):
     """Describes Habitica button entity."""
 
     press_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
-    available_fn: Callable[[HabiticaData], bool] | None = None
+    available_fn: Callable[[HabiticaData], bool]
     class_needed: str | None = None
     entity_picture: str | None = None
 
@@ -343,11 +343,10 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
     @property
     def available(self) -> bool:
         """Is entity available."""
-        if not super().available:
-            return False
-        if self.entity_description.available_fn:
-            return self.entity_description.available_fn(self.coordinator.data)
-        return True
+
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
     def entity_picture(self) -> str | None:
