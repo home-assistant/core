@@ -40,8 +40,12 @@ class VelbusEntity(Entity):
             name=channel.get_full_name(),
             sw_version=channel.get_module_sw_version(),
             serial_number=channel.get_module_serial(),
-            via_device=self._get_via_device(),
         )
+        if self._channel.is_sub_device():
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                str(self._channel.get_module_address()),
+            )
         serial = channel.get_module_serial() or str(channel.get_module_address())
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
@@ -52,12 +56,6 @@ class VelbusEntity(Entity):
         return (
             f"{self._channel.get_module_address()}-{self._channel.get_channel_number()}"
         )
-
-    def _get_via_device(self) -> tuple[str, str]:
-        """Return the via device tuple."""
-        if self._channel.is_sub_device():
-            return (DOMAIN, str(self._channel.get_module_address()))
-        return ("", "")
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
