@@ -64,8 +64,30 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         return False
 
     if config_entry.version == 1:
-        # TODO: Try self-resolve for single accounts
-        config_entry.async_start_reauth(hass)
+        api = FlickAPI(HassFlickAuth(hass, config_entry))
+
+        accounts = await api.getCustomerAccounts()
+        active_accounts = [
+            account for account in accounts if account["status"] == "active"
+        ]
+
+        # A single active account can be auto-migrated
+        if (len(active_accounts)) == 1:
+            account = active_accounts[0]
+
+            main_consumer = account["main_consumer"]
+
+            if main_consumer is not None:
+                new_data = {**config_entry.data}
+                new_data[CONF_SUPPLY_NODE_REF] = account["main_consumer"][
+                    "supply_node_ref"
+                ]
+                hass.config_entries.async_update_entry(
+                    config_entry, data=new_data, version=2
+                )
+                return True
+
+        config_entry.async_start_reauth(hass, data={**config_entry.data})
         return False
 
     return True
