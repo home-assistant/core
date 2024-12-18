@@ -67,7 +67,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
 
     polling: bool = False
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
-    polling_available_fn: Callable[[StateType], StateType] = lambda x: x is not None
+    polling_available_fn: Callable[[StateType], bool] = lambda x: x is not None
     streaming_key: Signal | None = None
     streaming_value_fn: Callable[[StateType], StateType] = lambda x: x
     streaming_firmware: str = "2024.26"
