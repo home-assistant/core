@@ -42,7 +42,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
     account: MyBMWAccount
     config_entry: BMWConfigEntry
 
-    def __init__(self, hass: HomeAssistant, *, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, *, config_entry: BMWConfigEntry) -> None:
         """Initialize account-wide BMW data updater."""
         self.account = MyBMWAccount(
             config_entry.data[CONF_USERNAME],

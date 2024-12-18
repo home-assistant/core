@@ -246,7 +246,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b0
+aiohasupervisor==0.2.2b2
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -488,7 +488,7 @@ automower-ble==0.2.0
 av==13.1.0
 
 # homeassistant.components.axis
-axis==63
+axis==64
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.4
@@ -774,7 +774,7 @@ fitbit==0.3.1
 fivem-api==0.1.2
 
 # homeassistant.components.fjaraskupan
-fjaraskupan==2.3.0
+fjaraskupan==2.3.2
 
 # homeassistant.components.flexit_bacnet
 flexit_bacnet==2.2.1
@@ -809,7 +809,7 @@ fyta_cli==0.7.0
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.4
+gardena-bluetooth==1.5.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -960,7 +960,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.62
+holidays==0.63
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241127.8
@@ -1007,7 +1007,7 @@ idasen-ha==2.6.2
 ifaddr==0.2.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.6
+imgw_pib==1.0.7
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4
@@ -1326,6 +1326,9 @@ panasonic-viera==0.4.2
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
+# homeassistant.components.peblar
+peblar==0.2.1
+
 # homeassistant.components.peco
 peco==0.0.30
 
@@ -1345,7 +1348,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.3
+plugwise==1.6.4
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1477,7 +1480,7 @@ pybalboa==1.0.2
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.4
+pyblu==2.0.0
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -1714,7 +1717,7 @@ pynetgear==0.10.10
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.2
+pynordpool==0.2.3
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1755,13 +1758,13 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.0
+pyoverkiz==1.15.3
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.14
+pypalazzetti==0.1.15
 
 # homeassistant.components.lcn
 pypck==0.7.24
@@ -1942,7 +1945,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.7.2
+python-roborock==2.8.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2063,7 +2066,7 @@ regenmaschine==2024.03.0
 renault-api==0.2.8
 
 # homeassistant.components.renson
-renson-endura-delta==1.7.1
+renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
 reolink-aio==0.11.5
@@ -2202,7 +2205,7 @@ srpenergy==1.3.6
 starline==0.1.5
 
 # homeassistant.components.starlink
-starlink-grpc-core==1.2.0
+starlink-grpc-core==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
