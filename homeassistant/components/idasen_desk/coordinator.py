@@ -19,13 +19,12 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        logger: logging.Logger,
         name: str,
         address: str,
     ) -> None:
         """Init IdasenDeskCoordinator."""
 
-        super().__init__(hass, logger, name=name)
+        super().__init__(hass, _LOGGER, name=name)
         self.address = address
         self._expected_connected = False
 
