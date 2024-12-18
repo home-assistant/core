@@ -363,6 +363,7 @@ homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.panel_custom.*
+homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
