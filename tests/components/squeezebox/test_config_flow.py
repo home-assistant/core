@@ -172,13 +172,7 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": "edit"}
     )
 
-    class FakeError(exceptions.HomeAssistantError):
-        """Error."""
-
-    async def patch_async_query(self, *args):
-        raise FakeError
-
-    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
+    with patch("homeassistant.components.squeezebox.config_flow.Server.async_query", side_effect=Exception):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
