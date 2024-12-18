@@ -8,11 +8,7 @@ from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.camera.const import StreamType
-from homeassistant.components.camera.webrtc import (
-    WebRTCAnswer,
-    WebRTCClientConfiguration,
-    WebRTCSendMessage,
-)
+from homeassistant.components.camera.webrtc import WebRTCAnswer, WebRTCSendMessage
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -193,16 +189,6 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
             """Handle a WebRTC candidate."""
             # Do nothing
 
-    class AsyncTwoWayCamera(AsyncCamera):
-        """Mock Camera with native async WebRTC and 2-way audio support."""
-
-        _attr_name = "AsyncTwoWay"
-
-        def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-            return WebRTCClientConfiguration(
-                audio_direction=WebRTCClientConfiguration.TransportDirection.SENDRECV
-            )
-
     domain = "test"
 
     entry = MockConfigEntry(domain=domain)
@@ -235,10 +221,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
         ),
     )
     setup_test_component_platform(
-        hass,
-        camera.DOMAIN,
-        [SyncCamera(), AsyncCamera(), AsyncTwoWayCamera()],
-        from_config_entry=True,
+        hass, camera.DOMAIN, [SyncCamera(), AsyncCamera()], from_config_entry=True
     )
     mock_platform(hass, f"{domain}.config_flow", Mock())
 

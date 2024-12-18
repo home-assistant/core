@@ -295,7 +295,6 @@ async def test_ws_get_client_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "audioDirection": "recvonly",
         "configuration": {
             "iceServers": [
                 {
@@ -330,7 +329,6 @@ async def test_ws_get_client_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "audioDirection": "recvonly",
         "configuration": {
             "iceServers": [
                 {
@@ -368,7 +366,6 @@ async def test_ws_get_client_config_sync_offer(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "audioDirection": "recvonly",
         "configuration": {},
         "getCandidatesUpfront": True,
     }
@@ -396,40 +393,7 @@ async def test_ws_get_client_config_custom_config(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {
-        "audioDirection": "recvonly",
         "configuration": {"iceServers": [{"urls": ["stun:custom_stun_server:3478"]}]},
-        "getCandidatesUpfront": False,
-    }
-
-
-@pytest.mark.usefixtures("mock_test_webrtc_cameras")
-async def test_ws_get_client_config_two_way_audio(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test get WebRTC client config for two way audio."""
-    await async_setup_component(hass, "camera", {})
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "camera/webrtc/get_client_config", "entity_id": "camera.asynctwoway"}
-    )
-    msg = await client.receive_json()
-
-    # Assert WebSocket response
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"] == {
-        "audioDirection": "sendrecv",
-        "configuration": {
-            "iceServers": [
-                {
-                    "urls": [
-                        "stun:stun.home-assistant.io:80",
-                        "stun:stun.home-assistant.io:3478",
-                    ]
-                },
-            ],
-        },
         "getCandidatesUpfront": False,
     }
 

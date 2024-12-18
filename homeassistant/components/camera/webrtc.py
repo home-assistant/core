@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import asdict, dataclass, field
-from enum import StrEnum, auto
 from functools import cache, partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
@@ -114,23 +113,15 @@ class WebRTCClientConfiguration:
     Not part of the spec, but required to configure client.
     """
 
-    class TransportDirection(StrEnum):
-        """Transport direction enum."""
-
-        RECVONLY = auto()
-        SENDRECV = auto()
-
     configuration: RTCConfiguration = field(default_factory=RTCConfiguration)
     data_channel: str | None = None
     get_candidates_upfront: bool = False
-    audio_direction: TransportDirection | None = TransportDirection.RECVONLY
 
     def to_frontend_dict(self) -> dict[str, Any]:
         """Return a dict that can be used by the frontend."""
         data: dict[str, Any] = {
             "configuration": self.configuration.to_dict(),
             "getCandidatesUpfront": self.get_candidates_upfront,
-            "audioDirection": self.audio_direction,
         }
         if self.data_channel is not None:
             data["dataChannel"] = self.data_channel
