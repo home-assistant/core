@@ -136,21 +136,21 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             (task for task in (self.todo_items or []) if task.uid == item.uid),
             None,
         )
-        task = Task()
 
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
+            assert item.summary
+
+        task = Task(
+            text=item.summary,
+            notes=item.description or "",
+        )
 
         if (
             self.entity_description.key is HabiticaTodoList.TODOS
-            and item.due is not None
         ):  # Only todos support a due date.
             task["date"] = item.due
-        if item.summary:
-            task["text"] = item.summary
-        if item.description:
-            task["notes"] = item.description
 
         if (
             item.summary != current_item.summary

@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from datetime import date
+from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
@@ -212,30 +213,86 @@ async def test_complete_todo_item_exception(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "uid", "date"),
+    ("entity_id", "service_data", "call_args"),
     [
         (
             "todo.test_user_to_do_s",
-            "88de7cd9-af2b-49ce-9afd-bf941d87336b",
-            date(2024, 7, 30),
+            {
+                ATTR_ITEM: "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+                ATTR_RENAME: "test-summary",
+                ATTR_DESCRIPTION: "test-description",
+                ATTR_DUE_DATE: date(2024, 7, 30),
+            },
+            (
+                UUID("88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+                Task(
+                    notes="test-description",
+                    text="test-summary",
+                    date=date(2024, 7, 30),
+                ),
+            ),
+        ),
+        (
+            "todo.test_user_to_do_s",
+            {
+                ATTR_ITEM: "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+                ATTR_RENAME: "test-summary",
+                ATTR_DESCRIPTION: "test-description",
+                ATTR_DUE_DATE: None,
+            },
+            (
+                UUID("88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+                Task(
+                    notes="test-description",
+                    text="test-summary",
+                    date=None,
+                ),
+            ),
+        ),
+        (
+            "todo.test_user_to_do_s",
+            {
+                ATTR_ITEM: "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+                ATTR_RENAME: "test-summary",
+                ATTR_DESCRIPTION: None,
+                ATTR_DUE_DATE: date(2024, 7, 30),
+            },
+            (
+                UUID("88de7cd9-af2b-49ce-9afd-bf941d87336b"),
+                Task(
+                    notes="",
+                    text="test-summary",
+                    date=date(2024, 7, 30),
+                ),
+            ),
         ),
         (
             "todo.test_user_dailies",
-            "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
-            None,
+            {
+                ATTR_ITEM: "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
+                ATTR_RENAME: "test-summary",
+                ATTR_DESCRIPTION: "test-description",
+            },
+            (
+                UUID("f2c85972-1a19-4426-bc6d-ce3337b9d99f"),
+                Task(
+                    notes="test-description",
+                    text="test-summary",
+                ),
+            ),
         ),
     ],
-    ids=["todo", "daily"],
+    ids=["todo", "todo remove date", "todo remove notes", "daily"],
 )
 async def test_update_todo_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
     entity_id: str,
-    uid: str,
-    date: date | None,
+    service_data: dict[str, Any],
+    call_args: tuple[UUID, Task],
 ) -> None:
-    """Test update details of a item on the todo list."""
+    """Test update details of an item on the todo list."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -246,23 +303,12 @@ async def test_update_todo_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {
-            ATTR_ITEM: uid,
-            ATTR_RENAME: "test-summary",
-            ATTR_DESCRIPTION: "test-description",
-            ATTR_DUE_DATE: date,
-        },
+        service_data,
         target={ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    task = Task(
-        notes="test-description",
-        text="test-summary",
-    )
-    if date:
-        task["date"] = date
-    habitica.update_task.assert_awaited_once_with(UUID(uid), task)
+    habitica.update_task.assert_awaited_once_with(*call_args)
 
 
 async def test_update_todo_item_exception(
