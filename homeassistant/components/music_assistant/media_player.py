@@ -553,14 +553,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 ATTR_ELAPSED_TIME: active_queue.corrected_elapsed_time,
                 ATTR_CURRENT_ITEM: queue_item_dict_from_mass_item(
                     self.mass, active_queue.current_item
-                )
-                if active_queue.current_item
-                else None,
+                ),
                 ATTR_NEXT_ITEM: queue_item_dict_from_mass_item(
                     self.mass, active_queue.next_item
-                )
-                if active_queue.next_item
-                else None,
+                ),
             }
         )
         return response

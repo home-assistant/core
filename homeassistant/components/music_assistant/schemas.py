@@ -58,9 +58,11 @@ MEDIA_ITEM_SCHEMA = vol.Schema(
 
 def media_item_dict_from_mass_item(
     mass: MusicAssistantClient,
-    item: MediaItemType | ItemMapping,
-) -> dict[str, Any]:
+    item: MediaItemType | ItemMapping | None,
+) -> dict[str, Any] | None:
     """Parse a Music Assistant MediaItem."""
+    if not item:
+        return None
     base = {
         ATTR_MEDIA_TYPE: item.media_type,
         ATTR_URI: item.uri,
@@ -119,16 +121,16 @@ QUEUE_ITEM_SCHEMA = vol.Schema(
 
 def queue_item_dict_from_mass_item(
     mass: MusicAssistantClient,
-    item: QueueItem,
-) -> dict[str, Any]:
+    item: QueueItem | None,
+) -> dict[str, Any] | None:
     """Parse a Music Assistant QueueItem."""
+    if not item:
+        return None
     return {
         ATTR_QUEUE_ITEM_ID: item.queue_item_id,
         ATTR_NAME: item.name,
         ATTR_DURATION: item.duration,
-        ATTR_MEDIA_ITEM: media_item_dict_from_mass_item(mass, item.media_item)
-        if item.media_item
-        else None,
+        ATTR_MEDIA_ITEM: media_item_dict_from_mass_item(mass, item.media_item),
     }
 
 
