@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -31,18 +30,6 @@ async def test_select(
 
     entry = await setup_platform(hass, [Platform.SELECT])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_select_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the select entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.SELECT])
-    state = hass.states.get("select.test_seat_heater_front_left")
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
@@ -112,3 +99,23 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+async def test_select_invalid_data(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Tests that the select entities handle invalid data."""
+
+    broken_data = VEHICLE_DATA_ALT.copy()
+    broken_data["response"]["climate_state"]["seat_heater_left"] = "green"
+    broken_data["response"]["climate_state"]["steering_wheel_heat_level"] = "yellow"
+
+    mock_vehicle_data.return_value = broken_data
+    await setup_platform(hass, [Platform.SELECT])
+    state = hass.states.get("select.test_seat_heater_front_left")
+    assert state.state == STATE_UNKNOWN
+    state = hass.states.get("select.test_steering_wheel_heater")
+    assert state.state == STATE_UNKNOWN

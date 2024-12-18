@@ -54,6 +54,7 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -352,6 +353,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
@@ -364,6 +366,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 secure_config=SecureConfig(

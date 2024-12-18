@@ -23,6 +23,8 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class HomeWizardSwitchEntityDescription(SwitchEntityDescription):

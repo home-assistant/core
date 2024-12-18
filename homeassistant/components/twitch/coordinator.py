@@ -15,6 +15,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
+type TwitchConfigEntry = ConfigEntry[TwitchCoordinator]
+
 
 def chunk_list(lst: list, chunk_size: int) -> list[list]:
     """Split a list into chunks of chunk_size."""
@@ -44,12 +46,16 @@ class TwitchUpdate:
 class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
     """Class to manage fetching Twitch data."""
 
-    config_entry: ConfigEntry
+    config_entry: TwitchConfigEntry
     users: list[TwitchUser]
     current_user: TwitchUser
 
     def __init__(
-        self, hass: HomeAssistant, twitch: Twitch, session: OAuth2Session
+        self,
+        hass: HomeAssistant,
+        twitch: Twitch,
+        session: OAuth2Session,
+        entry: TwitchConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.twitch = twitch
@@ -58,6 +64,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
+            config_entry=entry,
         )
         self.session = session
 
