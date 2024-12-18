@@ -11,10 +11,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      The data_description fields in translations are missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -65,7 +62,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices: todo
   discovery-update-info: todo
   repair-issues: done
