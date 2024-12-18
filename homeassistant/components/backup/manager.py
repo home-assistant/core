@@ -60,7 +60,7 @@ class ManagerBackup(AgentBackup):
 
     agent_ids: list[str]
     failed_agent_ids: list[str]
-    with_strategy_settings: bool
+    with_strategy_settings: bool | None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -448,7 +448,7 @@ class BackupManager:
                         with_strategy_settings = known_backup.with_strategy_settings
                     else:
                         failed_agent_ids = []
-                        with_strategy_settings = False
+                        with_strategy_settings = None
                     backups[backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
@@ -497,7 +497,7 @@ class BackupManager:
                     with_strategy_settings = known_backup.with_strategy_settings
                 else:
                     failed_agent_ids = []
-                    with_strategy_settings = False
+                    with_strategy_settings = None
                 backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
