@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "load_platforms",
     [[Platform.SELECT]],
@@ -58,6 +59,7 @@ async def test_select(
     assert state1.state == "fixedleft"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
