@@ -3,9 +3,10 @@
 from unittest.mock import patch
 
 from pyflick.authentication import AuthException
+from pyflick.types import FlickPrice
 
 from homeassistant import config_entries
-from homeassistant.components.flick_electric.const import DOMAIN
+from homeassistant.components.flick_electric.const import CONF_SUPPLY_NODE_REF, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -13,7 +14,22 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-CONF = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
+CONF = {
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
+
+
+def _mock_flick_price():
+    return FlickPrice(
+        {
+            "cost": 0.25,
+            "start_at": "2024-01-01T00:00:00Z",
+            "end_at": "2024-01-01T00:00:00Z",
+            "type": "flat",
+            "components": [],
+        }
+    )
 
 
 async def _flow_submit(hass: HomeAssistant) -> ConfigFlowResult:
@@ -25,7 +41,7 @@ async def _flow_submit(hass: HomeAssistant) -> ConfigFlowResult:
 
 
 async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test we get the form with only one, with no account picker."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -37,6 +53,20 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
             return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "main_consumer": {"supply_node_ref": "123"},
+                }
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            return_value=_mock_flick_price(),
         ),
         patch(
             "homeassistant.components.flick_electric.async_setup_entry",
@@ -51,8 +81,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Flick Electric: test-username"
-    assert result2["data"] == CONF
+    assert result2["data"] == {**CONF, CONF_SUPPLY_NODE_REF: "123"}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+# TODO: Test multi account
 
 
 async def test_form_duplicate_login(hass: HomeAssistant) -> None:
@@ -65,9 +98,25 @@ async def test_form_duplicate_login(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
-        return_value="123456789abcdef",
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "main_consumer": {"supply_node_ref": "123"},
+                }
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            return_value=_mock_flick_price(),
+        ),
     ):
         result = await _flow_submit(hass)
 
