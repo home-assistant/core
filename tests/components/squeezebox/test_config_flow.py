@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pysqueezebox import Server
 
-from homeassistant import config_entries
+from homeassistant import config_entries, exceptions
 from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -164,6 +164,33 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_validate_exception(hass: HomeAssistant) -> None:
+    """Test we handle exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "edit"}
+    )
+
+    class FakeError(exceptions.HomeAssistantError):
+        """Error."""
+
+    async def patch_async_query(self, *args):
+        raise FakeError
+
+    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
