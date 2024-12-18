@@ -114,7 +114,9 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     def get_data_current_day(self) -> DeliveryPeriodData | None:
         """Return the current day data."""
         current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+        delivery_period: DeliveryPeriodData | None = None
         for del_period in self.data.entries:
             if del_period.requested_date == current_day:
-                return del_period
-        return None
+                delivery_period = del_period
+                break
+        return delivery_period
