@@ -21,6 +21,9 @@
               "bool": "Optional boolean",
               "int": "Numeric input"
             },
+            "data_description": {
+              "int": "A longer description for the numeric input"
+            },
             "description": "This section allows input of some extra data",
             "name": "Collapsible section"
           }
