@@ -30,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up IronOS update platform."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     async_add_entities(
         [IronOSUpdate(coordinator, hass.data[IRON_OS_KEY], UPDATE_DESCRIPTION)]

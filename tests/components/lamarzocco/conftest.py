@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
@@ -143,7 +143,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine",
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
             autospec=True,
         ) as lamarzocco_mock,
     ):
