@@ -403,11 +403,6 @@ class ViCareNumber(ViCareEntity, NumberEntity):
         )
         self.entity_description = description
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_native_value is not None
-
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.value_setter:
@@ -438,12 +433,18 @@ class ViCareNumber(ViCareEntity, NumberEntity):
                     self._attr_native_step = stepping_value
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
+            self._attr_available = False
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+            self._attr_available = False
         except PyViCareRateLimitError as limit_exception:
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+            self._attr_available = False
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            self._attr_available = False
+        else:
+            self._attr_available = True
 
 
 def _get_value(

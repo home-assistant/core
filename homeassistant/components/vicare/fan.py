@@ -159,12 +159,18 @@ class ViCareFan(ViCareEntity, FanEntity):
                 )
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
+            self._attr_available = False
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+            self._attr_available = False
         except PyViCareRateLimitError as limit_exception:
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+            self._attr_available = False
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            self._attr_available = False
+        else:
+            self._attr_available = True
 
     @property
     def is_on(self) -> bool | None:
