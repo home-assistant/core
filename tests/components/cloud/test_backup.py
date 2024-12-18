@@ -570,4 +570,4 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {"cloud.cloud": "Backup not found"}}
+    assert response["result"] == {"agent_errors": {}}

@@ -1066,8 +1066,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
-/homeassistant/components/onkyo/ @arturpragacz
-/tests/components/onkyo/ @arturpragacz
+/homeassistant/components/onkyo/ @arturpragacz @eclair4151
+/tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck

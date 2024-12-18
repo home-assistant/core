@@ -261,7 +261,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b0
+aiohasupervisor==0.2.2b2
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -1131,7 +1131,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.62
+holidays==0.63
 
 # homeassistant.components.frontend
 home-assistant-frontend==20241127.8
@@ -1803,7 +1803,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.4
+pyblu==2.0.0
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -2162,7 +2162,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.0
+pyoverkiz==1.15.3
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2566,7 +2566,7 @@ regenmaschine==2024.03.0
 renault-api==0.2.8
 
 # homeassistant.components.renson
-renson-endura-delta==1.7.1
+renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
 reolink-aio==0.11.5
