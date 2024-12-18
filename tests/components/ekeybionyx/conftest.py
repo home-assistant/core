@@ -8,7 +8,7 @@ import pytest
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.fixture(name="system", autouse=True)
+@pytest.fixture(name="system")
 def mock_systems(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:

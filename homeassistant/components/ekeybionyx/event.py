@@ -26,23 +26,19 @@ class EkeyEvent(EventEntity):
         self,
         data: dict[str, str],
     ) -> None:
-        """Initialise a BTHome event entity."""
+        """Initialise a Ekey event entity."""
         self._attr_name = data["name"]
         self._attr_unique_id = data["ekey_id"]
         self._webhook_id = data["webhook_id"]
 
     @callback
     def _async_handle_event(self, event: str) -> None:
-        """Handle the demo button event."""
+        """Handle the webhook event."""
         self._trigger_event(event)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks with your device API/library."""
-        self._async_handle_event("webhook_fired")
-        webhook_url = webhook_generate_url(
-            self.hass, self._webhook_id, allow_external=False, allow_ip=True
-        )
 
         async def async_webhook_handler(
             hass: HomeAssistant, webhook_id: str, request: Request
@@ -58,7 +54,11 @@ class EkeyEvent(EventEntity):
             async_webhook_handler,
             allowed_methods=[METH_GET, METH_POST],
         )
-        LOGGER.info(webhook_url)
+        LOGGER.info(
+            webhook_generate_url(
+                self.hass, self._webhook_id, allow_external=False, allow_ip=True
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister Webhook."""
