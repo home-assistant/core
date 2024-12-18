@@ -201,7 +201,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "baf",
     "baidu",
     "balboa",
-    "bang_olufsen",
     "bayesian",
     "bbox",
     "beewi_smartclim",
