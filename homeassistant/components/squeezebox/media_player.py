@@ -202,7 +202,6 @@ class SqueezeBoxMediaPlayerEntity(
         _entry_type = None
         if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
-            _entry_type = DeviceEntryType.SERVICE
         elif (
             "Squeezebox" in player.model
             or "Transporter" in player.model
