@@ -14,10 +14,11 @@ import pytest
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
-from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_platform
 from .const import HOST, SLIDE_INFO_DATA
 
 from tests.common import MockConfigEntry
@@ -63,7 +64,7 @@ async def test_user(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 2
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -96,7 +97,7 @@ async def test_user_api_1(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 1
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -143,7 +144,7 @@ async def test_user_api_error(
     assert result2["data"][CONF_HOST] == HOST
     assert result2["data"][CONF_PASSWORD] == "pwd"
     assert result2["data"][CONF_API_VERSION] == 1
-    assert result2["result"].unique_id == "30:00:00:00:00:00"
+    assert result2["result"].unique_id == "12:34:56:78:90:ab"
     assert not result2["options"][CONF_INVERT_POSITION]
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -259,7 +260,7 @@ async def test_abort_if_already_setup(
 ) -> None:
     """Test we abort if the device is already setup."""
 
-    MockConfigEntry(domain=DOMAIN, unique_id="30:00:00:00:00:00").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="12:34:56:78:90:ab").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -371,3 +372,27 @@ async def test_zeroconf_connection_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "discovery_connection_failed"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_slide_api: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test options flow works correctly."""
+    await setup_platform(hass, mock_config_entry, [Platform.COVER])
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_INVERT_POSITION: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {
+        CONF_INVERT_POSITION: True,
+    }

@@ -8,19 +8,10 @@ rules:
     comment: Integration is a local push integration
   brands: done
   common-modules: todo
-  config-flow-test-coverage:
-    status: todo
-    comment:
-      1. The config flow is 100% covered, however some tests need to let HA create the flow
-      handler instead of doing it manually in the test.
-      2. We should also make sure every test ends in either CREATE_ENTRY or ABORT so we test
-      that the flow is able to recover from an error.
+  config-flow-test-coverage: done
   config-flow:
-    status: todo
-    comment: |
-      1. YAML import to be removed after core team meeting discussion on approach.
-      2. Consider enhnacement to automatically select a host when multiple are discovered.
-      3. Move hass.data[heos_discovered_hosts] into hass.data[heos]
+    status: done
+    comment: Consider enhnacement to automatically select a host when multiple are discovered.
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -34,15 +25,9 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: todo
+  test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: todo
-    comment: |
-      The HEOS integration only supports a single config entry, but needs to be migrated to use
-      the `single_config_entry` flag. HEOS devices interconnect to each other, so connecting to
-      a single node yields access to all the devices setup with HEOS on your network. The HEOS API
-      documentation does not recommend connecting to multiple nodes which would provide no bennefit.
+  unique-config-entry: done
   # Silver
   action-exceptions:
     status: todo
@@ -103,7 +88,7 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: todo
   stale-devices: todo
   # Platinum

@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["evohomeasync", "evohomeasync2"],
   "quality_scale": "legacy",
-  "requirements": ["evohome-async==0.4.20"]
+  "requirements": ["evohome-async==0.4.21"]
 }

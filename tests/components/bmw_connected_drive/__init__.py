@@ -48,6 +48,11 @@ FIXTURE_CONFIG_ENTRY = {
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_USERNAME]}",
 }
 
+REMOTE_SERVICE_EXC_REASON = "HTTPStatusError: 502 Bad Gateway"
+REMOTE_SERVICE_EXC_TRANSLATION = (
+    "Error executing remote service on vehicle. HTTPStatusError: 502 Bad Gateway"
+)
+
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a fully setup config entry and all components based on fixtures."""

@@ -25,15 +25,13 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No custom action.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates: done
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
 
   # Gold
   entity-translations: todo
@@ -43,7 +41,7 @@ rules:
   entity-disabled-by-default: done
   discovery: done
   stale-devices: todo
-  diagnostics: todo
+  diagnostics: done
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo

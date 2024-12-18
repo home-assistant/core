@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -18,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await entry.runtime_data.connect_task
+    await entry.runtime_data.scan_task
     async_add_entities(
         VelbusSwitch(channel)
         for channel in entry.runtime_data.controller.get_all_switch()
