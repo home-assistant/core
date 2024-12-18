@@ -37,7 +37,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 
