@@ -1,5 +1,6 @@
 """Coordinator for Watergate API."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -14,19 +15,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
 class WatergateAgregatedRequests:
     """Class to hold aggregated requests."""
 
-    def __init__(
-        self,
-        state: DeviceState,
-        telemetry: TelemetryData,
-        networking: NetworkingData,
-    ) -> None:
-        """Initialize aggregated requests."""
-        self.state = state
-        self.telemetry = telemetry
-        self.networking = networking
+    state: DeviceState
+    telemetry: TelemetryData
+    networking: NetworkingData
 
 
 class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]):

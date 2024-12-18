@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from . import WatergateConfigEntry
@@ -48,7 +49,7 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[
         [WatergateAgregatedRequests],
-        str | int | float | datetime | PowerSupplyMode | None,
+        StateType | datetime | PowerSupplyMode,
     ]
 
 
