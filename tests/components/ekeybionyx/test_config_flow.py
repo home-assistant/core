@@ -45,6 +45,7 @@ async def test_full_flow(
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
     webhook_id: None,
+    system: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
