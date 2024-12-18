@@ -77,7 +77,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask user to select account."""
 
         errors = {}
-        if user_input is not None:
+        if user_input is not None and CONF_ACCOUNT_ID in user_input:
             self.data[CONF_ACCOUNT_ID] = user_input[CONF_ACCOUNT_ID]
             self.data[CONF_SUPPLY_NODE_REF] = self._get_supply_node_ref(
                 user_input[CONF_ACCOUNT_ID]
@@ -145,7 +145,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self.data = dict(user_input)
-                return await self.async_step_select_account()
+                return await self.async_step_select_account(user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=LOGIN_SCHEMA, errors=errors
@@ -158,19 +158,12 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.data = {**user_input}
 
-        if await self._validate_auth(self.data):
-            await self.async_step_select_account(self.data)
-
-        if user_input is None:
-            return await self.async_step_user()
-
         return await self.async_step_user(user_input)
 
     async def _async_create_entry(self) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
         await self.async_set_unique_id(f"{self.data[CONF_ACCOUNT_ID]}")
-        self._abort_if_unique_id_configured()
 
         account = self._get_account(self.data[CONF_ACCOUNT_ID])
 
@@ -190,6 +183,8 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=account["address"],
                 data=self.data,
             )
+
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=account["address"],

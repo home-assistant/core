@@ -24,6 +24,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_accounts": "No services are active on this Flick account"
     }
   },

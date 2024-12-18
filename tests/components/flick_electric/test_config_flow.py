@@ -21,6 +21,8 @@ from tests.common import MockConfigEntry
 CONF = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
+    CONF_ACCOUNT_ID: "1234",
+    CONF_SUPPLY_NODE_REF: "123",
 }
 
 
@@ -40,7 +42,10 @@ async def _flow_submit(hass: HomeAssistant) -> ConfigFlowResult:
     return await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=CONF,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
     )
 
 
@@ -80,17 +85,16 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            CONF,
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "123 Fake St"
-    assert result2["data"] == {
-        **CONF,
-        CONF_SUPPLY_NODE_REF: "123",
-        CONF_ACCOUNT_ID: "1234",
-    }
+    assert result2["data"] == CONF
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -136,7 +140,10 @@ async def test_form_multi_account(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            CONF,
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
         )
         await hass.async_block_till_done()
 
@@ -161,6 +168,75 @@ async def test_form_multi_account(hass: HomeAssistant) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_reauth_token(hass: HomeAssistant) -> None:
+    """Test reauth flow when username/password is wrong."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONF},
+        title="123 Fake St",
+        unique_id="1234",
+        version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            side_effect=AuthException,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+                "unique_id": entry.unique_id,
+            },
+            data=entry.data,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+        assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "address": "123 Fake St",
+                    "main_consumer": {"supply_node_ref": "123"},
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            return_value=_mock_flick_price(),
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_update_entry",
+            return_value=True,
+        ) as mock_update_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert len(mock_update_entry.mock_calls) > 0
+
+
 # TODO: Test migration
 
 # TODO: Test reauth
@@ -170,9 +246,10 @@ async def test_form_duplicate_account(hass: HomeAssistant) -> None:
     """Test uniqueness for account_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=CONF,
+        data={**CONF, CONF_ACCOUNT_ID: "1234", CONF_SUPPLY_NODE_REF: "123"},
         title="123 Fake St",
         unique_id="1234",
+        version=2,
     )
     entry.add_to_hass(hass)
 
