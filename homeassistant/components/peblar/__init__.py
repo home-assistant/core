@@ -13,7 +13,7 @@ from peblar import (
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .coordinator import PeblarConfigEntry, PeblarMeterDataUpdateCoordinator
@@ -32,11 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         await peblar.login(password=entry.data[CONF_PASSWORD])
         api = await peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
     except PeblarConnectionError as err:
-        raise ConfigEntryError("Could not connect to Peblar charger") from err
+        raise ConfigEntryNotReady("Could not connect to Peblar charger") from err
     except PeblarAuthenticationError as err:
         raise ConfigEntryError("Could not login to Peblar charger") from err
     except PeblarError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             "Unknown error occurred while connecting to Peblar charger"
         ) from err
 

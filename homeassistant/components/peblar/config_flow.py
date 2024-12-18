@@ -32,13 +32,13 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            peblar = Peblar(
+                host=user_input[CONF_HOST],
+                session=async_create_clientsession(
+                    self.hass, cookie_jar=CookieJar(unsafe=True)
+                ),
+            )
             try:
-                peblar = Peblar(
-                    host=user_input[CONF_HOST],
-                    session=async_create_clientsession(
-                        self.hass, cookie_jar=CookieJar(unsafe=True)
-                    ),
-                )
                 await peblar.login(password=user_input[CONF_PASSWORD])
                 info = await peblar.system_information()
             except PeblarAuthenticationError:

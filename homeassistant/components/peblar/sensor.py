@@ -17,7 +17,6 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import PeblarConfigEntry
 from .entity import PeblarEntity
 
@@ -66,7 +65,7 @@ class PeblarSensorEntity(PeblarEntity, SensorEntity):
         """Initialize the Peblar entity."""
         super().__init__(entry)
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}_{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> int | None:

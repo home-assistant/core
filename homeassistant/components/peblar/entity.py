@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import PeblarConfigEntry, PeblarMeterDataUpdateCoordinator
 
 
-class PeblarEntity(CoordinatorEntity[PeblarMeterDataUpdateCoordinator], Entity):
+class PeblarEntity(CoordinatorEntity[PeblarMeterDataUpdateCoordinator]):
     """Defines a Peblar entity."""
 
     _attr_has_entity_name = True
