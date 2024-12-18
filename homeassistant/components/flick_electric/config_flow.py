@@ -105,8 +105,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 active_accounts[0]["id"]
             )
 
-            if self.data[CONF_SUPPLY_NODE_REF] is not None:
-                return await self._async_create_entry()
+            return await self._async_create_entry()
 
         return self.async_show_form(
             step_id="select_account",
