@@ -64,7 +64,7 @@ rules:
   icon-translations:
     status: exempt
     comment: |
-      There are no icons to translate.
+      There are no entities that require icons.
   reconfiguration-flow: todo
   dynamic-devices: todo
   discovery-update-info: todo
