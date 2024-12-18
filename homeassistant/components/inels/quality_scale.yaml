@@ -56,7 +56,7 @@ rules:
     status: done
     comment: |
       A link to the wiki is provided.
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions:
     status: exempt
     comment: |
