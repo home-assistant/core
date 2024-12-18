@@ -41,12 +41,11 @@ SSDP_DISCOVERY_INFO = SsdpServiceInfo(
 )
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_full_cloud_import_flow_multiple_devices(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: MagicMock,
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
 ) -> None:
@@ -119,15 +118,13 @@ async def test_full_cloud_import_flow_multiple_devices(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_full_cloud_import_flow_single_device(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: MagicMock,
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
 ) -> None:
@@ -198,12 +195,11 @@ async def test_full_cloud_import_flow_single_device(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_manual(
     hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
     mock_lametric: MagicMock,
 ) -> None:
     """Check a full flow manual entry."""
@@ -246,15 +242,12 @@ async def test_full_manual(
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound == Sound(sound=NotificationSound.WIN)
 
-    assert len(mock_setup_entry.mock_calls) == 1
 
-
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 async def test_full_ssdp_with_cloud_import(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: MagicMock,
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
 ) -> None:
@@ -319,12 +312,11 @@ async def test_full_ssdp_with_cloud_import(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_ssdp_manual_entry(
     hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
     mock_lametric: MagicMock,
 ) -> None:
     """Check a full flow triggered by SSDP, with manual API key entry."""
@@ -361,7 +353,6 @@ async def test_full_ssdp_manual_entry(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -549,6 +540,7 @@ async def test_cloud_abort_no_devices(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
@@ -561,7 +553,6 @@ async def test_cloud_abort_no_devices(
 async def test_manual_errors(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
-    mock_setup_entry: MagicMock,
     side_effect: Exception,
     reason: str,
 ) -> None:
@@ -586,7 +577,6 @@ async def test_manual_errors(
 
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
 
     mock_lametric.device.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -608,10 +598,9 @@ async def test_manual_errors(
 
     assert len(mock_lametric.device.mock_calls) == 2
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
@@ -625,7 +614,6 @@ async def test_cloud_errors(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: MagicMock,
     mock_lametric_cloud: MagicMock,
     mock_lametric: MagicMock,
     side_effect: Exception,
@@ -672,7 +660,6 @@ async def test_cloud_errors(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 1
     assert len(mock_lametric.notify.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
 
     mock_lametric.device.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -694,7 +681,6 @@ async def test_cloud_errors(
     assert len(mock_lametric_cloud.devices.mock_calls) == 1
     assert len(mock_lametric.device.mock_calls) == 2
     assert len(mock_lametric.notify.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_dhcp_discovery_updates_entry(

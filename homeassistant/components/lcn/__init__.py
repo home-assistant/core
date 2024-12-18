@@ -31,6 +31,7 @@ from .const import (
     CONF_SK_NUM_TRIES,
     CONF_TRANSITION,
     CONNECTION,
+    DEVICE_CONNECTIONS,
     DOMAIN,
     PLATFORMS,
 )
@@ -102,6 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
+        DEVICE_CONNECTIONS: {},
         ADD_ENTITIES_CALLBACKS: {},
     }
     # Update config_entry with LCN device serials

@@ -7,7 +7,7 @@ from ohme import ApiException, AuthException, OhmeApiClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionCoordinator
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
                 translation_key="device_info_failed", translation_domain=DOMAIN
             )
     except AuthException as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_key="auth_failed", translation_domain=DOMAIN
         ) from e
     except ApiException as e:
