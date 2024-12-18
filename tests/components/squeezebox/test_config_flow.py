@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pysqueezebox import Server
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -169,10 +169,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 async def test_form_validate_exception(hass: HomeAssistant) -> None:
     """Test we handle exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "edit"}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.squeezebox.config_flow.Server.async_query", side_effect=Exception):
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.Server.async_query",
+        side_effect=Exception,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
