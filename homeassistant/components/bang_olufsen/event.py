@@ -41,22 +41,11 @@ async def async_setup_entry(
     async_add_entities(new_entities=entities)
 
 
-class BangOlufsenEvent(BangOlufsenEntity, EventEntity):
-    """Base Event class."""
-
-    _attr_entity_registry_enabled_default = False
-
-    @callback
-    def _async_handle_event(self, event: str) -> None:
-        """Handle event."""
-        self._trigger_event(event)
-        self.async_write_ha_state()
-
-
-class BangOlufsenButtonEvent(BangOlufsenEvent):
+class BangOlufsenButtonEvent(BangOlufsenEntity, EventEntity):
     """Event class for Button events."""
 
     _attr_device_class = EventDeviceClass.BUTTON
+    _attr_entity_registry_enabled_default = False
     _attr_event_types = DEVICE_BUTTON_EVENTS
 
     def __init__(self, config_entry: BangOlufsenConfigEntry, button_type: str) -> None:
@@ -86,3 +75,9 @@ class BangOlufsenButtonEvent(BangOlufsenEvent):
                 self._async_handle_event,
             )
         )
+
+    @callback
+    def _async_handle_event(self, event: str) -> None:
+        """Handle event."""
+        self._trigger_event(event)
+        self.async_write_ha_state()
