@@ -131,10 +131,7 @@ async def _start_reconfigure_flow(
     assert reconfigure_result["type"] is FlowResultType.FORM
     assert reconfigure_result["step_id"] == "reconfigure"
 
-    return await hass.config_entries.flow.async_configure(
-        reconfigure_result["flow_id"],
-        MOCK_RECONFIGURATION_CONFIG,
-    )
+    return reconfigure_result
 
 
 async def test_reconfigure_flow(
@@ -145,7 +142,12 @@ async def test_reconfigure_flow(
 ) -> None:
     """Test reconfigure flow."""
 
-    result = await _start_reconfigure_flow(hass, mock_config_entry)
+    reconfigure_result = await _start_reconfigure_flow(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        MOCK_RECONFIGURATION_CONFIG,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -167,7 +169,12 @@ async def test_reconfigure_unique_id_mismatch(
     """Ensure reconfigure flow aborts when the bride changes."""
     mock_russound_client.controllers[1].mac_address = "different_mac"
 
-    result = await _start_reconfigure_flow(hass, mock_config_entry)
+    reconfigure_result = await _start_reconfigure_flow(hass, mock_config_entry)
+
+    result = await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"],
+        MOCK_RECONFIGURATION_CONFIG,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
