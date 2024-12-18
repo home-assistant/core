@@ -17,6 +17,12 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "enable_charging": {
+        "default": "mdi:play"
+      },
+      "disable_charging": {
+        "default": "mdi:stop"
       }
     },
     "fan": {
