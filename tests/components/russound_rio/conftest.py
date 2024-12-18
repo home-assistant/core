@@ -9,9 +9,10 @@ from aiorussound.util import controller_device_str, zone_device_str
 import pytest
 
 from homeassistant.components.russound_rio.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import API_VERSION, HARDWARE_MAC, HOST, MOCK_CONFIG, MODEL, PORT
+from .const import API_VERSION, HARDWARE_MAC, MOCK_CONFIG, MODEL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -68,7 +69,9 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 1, "MCA-C5", client, controller_device_str(1), HARDWARE_MAC, None, zones
             )
         }
-        client.connection_handler = RussoundTcpConnectionHandler(HOST, PORT)
+        client.connection_handler = RussoundTcpConnectionHandler(
+            MOCK_CONFIG[CONF_HOST], MOCK_CONFIG[CONF_PORT]
+        )
         client.is_connected = Mock(return_value=True)
         client.unregister_state_update_callbacks.return_value = True
         client.rio_version = API_VERSION
