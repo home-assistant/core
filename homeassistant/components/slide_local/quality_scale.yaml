@@ -43,7 +43,7 @@ rules:
   entity-disabled-by-default: done
   discovery: done
   stale-devices: todo
-  diagnostics: todo
+  diagnostics: done
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
