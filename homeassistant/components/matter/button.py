@@ -38,6 +38,7 @@ class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescrip
     """Describe Matter Button entities."""
 
     command: Callable[[], Any] | None = None
+    command_timeout: int | None = None
 
 
 class MatterCommandButton(MatterEntity, ButtonEntity):
@@ -53,23 +54,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=self.entity_description.command(),
-        )
-
-
-class MatterCommandButtonCustom(MatterEntity, ButtonEntity):
-    """Representation of a Matter Button entity with request timeout."""
-
-    entity_description: MatterButtonEntityDescription
-
-    async def async_press(self) -> None:
-        """Handle the button press leveraging a Matter command."""
-        if TYPE_CHECKING:
-            assert self.entity_description.command is not None
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(),
-            timed_request_timeout_ms=3000,
+            timed_request_timeout_ms=self.entity_description.command_timeout,
         )
 
 
@@ -170,8 +155,9 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseEnableChargingButton",
             translation_key="enable_charging",
             command=clusters.EnergyEvse.Commands.EnableCharging,
+            command_timeout=3000,
         ),
-        entity_class=MatterCommandButtonCustom,
+        entity_class=MatterCommandButton,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
@@ -181,8 +167,9 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseDisableChargingButton",
             translation_key="disable_charging",
             command=clusters.EnergyEvse.Commands.Disable,
+            command_timeout=3000,
         ),
-        entity_class=MatterCommandButtonCustom,
+        entity_class=MatterCommandButton,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
