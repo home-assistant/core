@@ -9,8 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_PORT
-from .errors import TemporaryFailure, ValidationFailure
-from .helper import get_cert_expiry_timestamp
+from .errors import (
+    CertExpiryException,
+    CertificateExpiredFailure,
+    TemporaryFailure,
+    ValidationFailure,
+)
+from .helper import get_cert_expiry_timestamp, validate_cert_expiry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +27,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
-        self.cert_error: ValidationFailure | None = None
+        self.cert_error: CertExpiryException | None = None
         self.is_cert_valid = False
 
         display_port = f":{port}" if port != DEFAULT_PORT else ""
@@ -40,6 +45,11 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         """Fetch certificate."""
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            await validate_cert_expiry(timestamp)
+            self.is_cert_valid = True
+        except CertificateExpiredFailure as err:
+            self.cert_error = err
+            self.is_cert_valid = False
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
@@ -48,6 +58,4 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
             return None
 
-        self.cert_error = None
-        self.is_cert_valid = True
         return timestamp
