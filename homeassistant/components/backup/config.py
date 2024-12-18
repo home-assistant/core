@@ -404,7 +404,7 @@ async def _delete_filtered_backups(
             get_agent_errors,
         )
 
-    # only delete backups that are created with the save automatic settings
+    # only delete backups that are created with the saved automatic settings
     backups = {
         backup_id: backup
         for backup_id, backup in backups.items()
