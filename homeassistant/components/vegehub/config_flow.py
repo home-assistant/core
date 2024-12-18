@@ -22,9 +22,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-ip_dict: dict[str, str] = {}
-
-
 class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VegeHub integration."""
 
@@ -60,21 +57,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="cannot_connect")
 
-                try:
-                    # Check to see if this MAC address is already in the list.
-                    entry = list(ip_dict.keys())[
-                        list(ip_dict.values()).index(self._hub.mac_address)
-                    ]
-                    # If the mac address is on the list, pop it so we can give it a new IP
-                    if entry:
-                        ip_dict.pop(entry)
-                except ValueError:
-                    # If the MAC address is not in the list, a ValueError will be thrown,
-                    # which just means that we don't need to remove it from the list.
-                    pass
-
-                # Add a new entry to the list of IP:MAC pairs that we have seen
-                ip_dict[self._hub.ip_address] = self._hub.mac_address
+                self._async_abort_entries_match({CONF_IP_ADDRESS: self._hub.ip_address})
 
                 # Set the unique ID for the manual configuration
                 await self.async_set_unique_id(self._hub.mac_address)
@@ -124,45 +107,24 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Extract the IP address from the zeroconf discovery info
         device_ip = discovery_info.host
 
-        # Keep track of which IP addresses have already had their MAC addresses
-        # discovered. This allows us to skip the MAC address retrieval for devices
-        # that don't need it. This stops us from waking up a hub every time we see
-        # it come on-line.
-        have_mac = False
-        if device_ip in ip_dict:
-            have_mac = True
-
         self._hostname = discovery_info.hostname.removesuffix(".local.")
         self._config_url = (
             f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
         )
         self._properties = discovery_info.properties
 
-        if not have_mac:
-            self._hub = VegeHub(device_ip)
+        self._async_abort_entries_match({CONF_IP_ADDRESS: discovery_info.host})
 
+        self._hub = VegeHub(device_ip)
+
+        try:
             await self._hub.retrieve_mac_address()
+        except ConnectionError:
+            _LOGGER.error("Failed to get MAC address for %s", self._hub.ip_address)
 
-            if len(self._hub.mac_address) <= 0:
-                _LOGGER.error("Failed to get device config from %s", device_ip)
-                return self.async_abort(reason="cannot_connect")
-
-            try:
-                # Check to see if this MAC address is already in the list.
-                entry = list(ip_dict.keys())[
-                    list(ip_dict.values()).index(self._hub.mac_address)
-                ]
-                if entry:
-                    # If it's already in the list, then it is connected to another
-                    # IP address. Remove that entry.
-                    ip_dict.pop(entry)
-            except ValueError:
-                _LOGGER.info("Zeroconf found new device at %s", device_ip)
-
-            # Add a new entry to the list of IP:MAC pairs that we have seen
-            ip_dict[device_ip] = self._hub.mac_address
-        else:
-            self._hub = VegeHub(device_ip, mac_address=ip_dict[device_ip])
+        if len(self._hub.mac_address) <= 0:
+            _LOGGER.error("Failed to get device config from %s", device_ip)
+            return self.async_abort(reason="cannot_connect")
 
         # Check if this device already exists
         await self.async_set_unique_id(self._hub.mac_address)
