@@ -101,6 +101,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_accounts")
 
         if len(active_accounts) == 1:
+            self.data[CONF_ACCOUNT_ID] = active_accounts[0]["id"]
             self.data[CONF_SUPPLY_NODE_REF] = self._get_supply_node_ref(
                 active_accounts[0]["id"]
             )
@@ -171,13 +172,14 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{self.data[CONF_ACCOUNT_ID]}")
         self._abort_if_unique_id_configured()
 
-        if self.source == SOURCE_REAUTH:
-            account = self._get_account(self.data[CONF_ACCOUNT_ID])
+        account = self._get_account(self.data[CONF_ACCOUNT_ID])
 
+        if self.source == SOURCE_REAUTH:
             # Migration completed
             if self._get_reauth_entry().version == 1:
                 self.hass.config_entries.async_update_entry(
                     self._get_reauth_entry(),
+                    unique_id=self.unique_id,
                     data=self.data,
                     version=self.VERSION,
                 )

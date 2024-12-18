@@ -6,7 +6,7 @@ import logging
 
 import aiohttp
 from pyflick import FlickAPI, FlickPrice
-from pyflick.types import UnauthorizedException
+from pyflick.types import APIException, AuthException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,9 +41,9 @@ class FlickElectricDataCoordinator(DataUpdateCoordinator[FlickPrice]):
         try:
             async with asyncio.timeout(60):
                 return await self._api.runtime_data.getPricing(self.supply_node_ref)
-        except UnauthorizedException as err:
+        except AuthException as err:
             raise ConfigEntryAuthFailed from err
-        except aiohttp.ClientResponseError as err:
+        except (APIException, aiohttp.ClientResponseError) as err:
             raise UpdateFailed from err
         except Exception as err:
             raise UpdateFailed(
