@@ -1,6 +1,7 @@
 """Config Flow for Flick Electric integration."""
 
 import asyncio
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -48,7 +49,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
     accounts: list[CustomerAccount]
     data: dict[str, Any]
 
-    async def _validate_input(self, user_input: dict[str, Any]) -> bool:
+    async def _validate_input(self, user_input: Mapping[str, Any]) -> bool:
         self.auth = SimpleFlickAuth(
             # TODO: Remove UAT
             host="https://api.flickuat.com",
@@ -70,12 +71,13 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         return token is not None
 
     async def async_step_select_account(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask user to select account."""
 
         errors = {}
         if user_input is not None:
+            self.data[CONF_ACCOUNT_ID] = user_input[CONF_ACCOUNT_ID]
             self.data[CONF_SUPPLY_NODE_REF] = self._get_supply_node_ref(
                 user_input[CONF_ACCOUNT_ID]
             )
@@ -129,7 +131,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle gathering login info."""
         errors = {}
@@ -144,14 +146,16 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.data = user_input
+                self.data = dict(user_input)
                 return await self.async_step_select_account()
 
         return self.async_show_form(
             step_id="user", data_schema=LOGIN_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication."""
 
         self.data = {**user_input}
@@ -167,33 +171,32 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_entry(self) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch()
-
-            # Migration completed
-            if self._get_reauth_entry().version == 1:
-                self.hass.config_entries.async_update_entry(
-                    self._get_reauth_entry(), data=self.data, version=2
-                )
-
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=self.data
-            )
-
-        # TODO: Use account ID
-        await self.async_set_unique_id(f"flick_electric_{self.data[CONF_USERNAME]}")
+        await self.async_set_unique_id(f"{self.data[CONF_ACCOUNT_ID]}")
         self._abort_if_unique_id_configured()
 
+        if self.source == SOURCE_REAUTH:
+            account = self._get_account(self.data[CONF_ACCOUNT_ID])
+
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                unique_id=self.unique_id,
+                title=account["address"],
+                data=self.data,
+                version=self.VERSION,
+            )
+
         return self.async_create_entry(
-            title=f"Flick Electric: {self.data[CONF_USERNAME]}",
+            title=account["address"],
             data=self.data,
         )
 
+    def _get_account(self, account_id: str) -> CustomerAccount:
+        """Get the account for the account ID."""
+        return next(a for a in self.accounts if a["id"] == account_id)
+
     def _get_supply_node_ref(self, account_id: str) -> str | None:
         """Get the supply node ref for the account."""
-        account = next(a for a in self.accounts if a["id"] == account_id)
-
-        main_consumer = account["main_consumer"]
+        main_consumer = self._get_account(account_id)["main_consumer"]
 
         if main_consumer is None:
             return None

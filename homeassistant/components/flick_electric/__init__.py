@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_SUPPLY_NODE_REF, CONF_TOKEN_EXPIRY
+from .const import CONF_ACCOUNT_ID, CONF_SUPPLY_NODE_REF, CONF_TOKEN_EXPIRY
 from .coordinator import FlickConfigEntry, FlickElectricDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,11 +79,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             if main_consumer is not None:
                 new_data = {**config_entry.data}
+                new_data[CONF_ACCOUNT_ID] = account["id"]
                 new_data[CONF_SUPPLY_NODE_REF] = account["main_consumer"][
                     "supply_node_ref"
                 ]
                 hass.config_entries.async_update_entry(
-                    config_entry, data=new_data, version=2
+                    config_entry,
+                    title=account["address"],
+                    unique_id=account["id"],
+                    data=new_data,
+                    version=2,
                 )
                 return True
 

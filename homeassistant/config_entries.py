@@ -3116,6 +3116,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str | UndefinedType = UNDEFINED,
         reload_even_if_entry_is_unchanged: bool = True,
+        version: int | UndefinedType = UNDEFINED,
     ) -> ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow.
 
@@ -3131,6 +3132,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
         :param reload_even_if_entry_is_unchanged: set this to `False` if the entry
         should not be reloaded if it is unchanged
+        :param version: set the version of the entry
         """
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
@@ -3142,6 +3144,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             title=title,
             data=data,
             options=options,
+            version=version,
         )
         if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
