@@ -9,6 +9,7 @@ from typing import Any
 import datapoint
 from datapoint.exceptions import APIException
 import datapoint.Manager
+from requests import HTTPError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,29 +23,40 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
+async def validate_input(
+    hass: HomeAssistant, latitude: float, longitude: float, api_key: str
+) -> dict[str, Any]:
     """Validate that the user input allows us to connect to DataPoint.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    latitude = data[CONF_LATITUDE]
-    longitude = data[CONF_LONGITUDE]
-    api_key = data[CONF_API_KEY]
-
+    errors = {}
     connection = datapoint.Manager.Manager(api_key=api_key)
 
-    forecast = await hass.async_add_executor_job(
-        connection.get_forecast,
-        latitude,
-        longitude,
-        "daily",
-        False,
-    )
+    try:
+        forecast = await hass.async_add_executor_job(
+            connection.get_forecast,
+            latitude,
+            longitude,
+            "daily",
+            False,
+        )
 
-    if forecast is None:
-        raise CannotConnect
+        if forecast is None:
+            errors["base"] = "cannot_connect"
 
-    return {"site_name": forecast.name}
+    except (HTTPError, APIException) as err:
+        if isinstance(err, HTTPError) and err.response.status_code == 401:
+            errors["base"] = "invalid_auth"
+        else:
+            errors["base"] = "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    else:
+        return {"site_name": forecast.name, "errors": errors}
+
+    return {"errors": errors}
 
 
 class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -63,15 +75,17 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            try:
-                info = await validate_input(self.hass, user_input)
-            except (CannotConnect, APIException):
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                user_input[CONF_NAME] = info["site_name"]
+            result = await validate_input(
+                self.hass,
+                latitude=user_input[CONF_LATITUDE],
+                longitude=user_input[CONF_LONGITUDE],
+                api_key=user_input[CONF_API_KEY],
+            )
+
+            errors = result["errors"]
+
+            if not errors:
+                user_input[CONF_NAME] = result["site_name"]
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
@@ -102,11 +116,24 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
+        errors = {}
+
+        entry = self._get_reauth_entry()
         if user_input is not None:
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates=user_input,
+            result = await validate_input(
+                self.hass,
+                latitude=entry.data[CONF_LATITUDE],
+                longitude=entry.data[CONF_LONGITUDE],
+                api_key=user_input[CONF_API_KEY],
             )
+
+            errors = result["errors"]
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -115,6 +142,7 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
+            errors=errors,
         )
 
 

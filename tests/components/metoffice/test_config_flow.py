@@ -188,6 +188,15 @@ async def test_reauth_flow(
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
 
+    result = await hass.config_entries.flow.async_configure(
+        flows[0]["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
         text=wavertree_daily,
@@ -197,11 +206,11 @@ async def test_reauth_flow(
         text=wavertree_hourly,
     )
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         flows[0]["flow_id"],
         {CONF_API_KEY: TEST_API_KEY},
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
