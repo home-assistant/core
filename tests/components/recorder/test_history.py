@@ -1014,3 +1014,65 @@ async def test_get_last_state_changes_with_non_existent_entity_ids_returns_empty
 ) -> None:
     """Test get_last_state_changes returns an empty dict when entities not in the db."""
     assert history.get_last_state_changes(hass, 1, "nonexistent.entity") == {}
+
+
+@pytest.mark.skip_on_db_engine(["sqlite", "mysql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("recorder_db_url")
+async def test_get_significant_states_with_session_uses_lateral_with_postgresql(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test get_significant_states_with_session uses the lateral path with PostgreSQL."""
+    entity_id = "media_player.test"
+    hass.states.async_set("any.other", "on")
+    await async_wait_recording_done(hass)
+    hass.states.async_set(entity_id, "off")
+
+    def set_state(state):
+        """Set the state."""
+        hass.states.async_set(entity_id, state, {"any": 1})
+        return hass.states.get(entity_id)
+
+    start = dt_util.utcnow().replace(microsecond=0)
+    point = start + timedelta(seconds=1)
+    point2 = start + timedelta(seconds=1, microseconds=100)
+    point3 = start + timedelta(seconds=1, microseconds=200)
+    end = point + timedelta(seconds=1, microseconds=400)
+
+    with freeze_time(start) as freezer:
+        set_state("idle")
+        set_state("YouTube")
+
+        freezer.move_to(point)
+        states = [set_state("idle")]
+
+        freezer.move_to(point2)
+        states.append(set_state("Netflix"))
+
+        freezer.move_to(point3)
+        states.append(set_state("Plex"))
+
+        freezer.move_to(end)
+        set_state("Netflix")
+        set_state("Plex")
+    await async_wait_recording_done(hass)
+
+    start_time = point2 + timedelta(microseconds=10)
+    hist = history.get_significant_states(
+        hass=hass,
+        start_time=start_time,  # Pick a point where we will generate a start time state
+        end_time=end,
+        entity_ids=[entity_id, "any.other"],
+        include_start_time_state=True,
+    )
+    assert len(hist[entity_id]) == 2
+
+    sqlalchemy_logs = "".join(
+        [
+            record.getMessage()
+            for record in caplog.records
+            if record.name.startswith("sqlalchemy.engine")
+        ]
+    )
+    # We can't patch inside the lambda so we have to check the logs
+    assert "JOIN LATERAL" in sqlalchemy_logs
