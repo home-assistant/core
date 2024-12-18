@@ -537,8 +537,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 break
 
         if not selected_zone:
-            _LOGGER.error("%s is not a valid zone", zone_name)
-            return
+            raise HomeAssistantError(f"{zone_name} is not a valid zone")
 
         await self.device.home.async_set_schedule_temperatures(
             zone_id=selected_zone.entity_id, temps={self.device.entity_id: temperature}
