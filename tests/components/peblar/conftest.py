@@ -38,9 +38,10 @@ def mock_setup_entry() -> Generator[None]:
 @pytest.fixture
 def mock_peblar() -> Generator[MagicMock]:
     """Return a mocked Peblar client."""
-    with patch(
-        "homeassistant.components.peblar.config_flow.Peblar", autospec=True
-    ) as peblar_mock:
+    with (
+        patch("homeassistant.components.peblar.Peblar", autospec=True) as peblar_mock,
+        patch("homeassistant.components.peblar.config_flow.Peblar", new=peblar_mock),
+    ):
         peblar = peblar_mock.return_value
         peblar.system_information.return_value = PeblarSystemInformation.from_json(
             load_fixture("system_information.json", DOMAIN)
