@@ -415,12 +415,13 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid status",
+        "name": "Grid Status",
         "state": {
-          "on_grid": "[%key:common::state::connected%]",
-          "off_grid": "[%key:common::state::disconnected%]",
-          "off_grid_intentional": "Disconnected intentionally",
-          "off_grid_unintentional": "Disconnected unintentionally"
+          "island_status_unknown": "Unknown",
+          "on_grid": "Connected",
+          "off_grid": "Disconnected",
+          "off_grid_unintentional": "Disconnected unintentionally",
+          "off_grid_intentional": "Disconnected intentionally"
         }
       },
       "storm_mode_active": {
@@ -439,7 +440,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "Version"
+        "name": "version"
       },
       "vin": {
         "name": "Vehicle"
