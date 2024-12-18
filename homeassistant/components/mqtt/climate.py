@@ -521,7 +521,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> VolSchemaType:

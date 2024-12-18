@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from httplib2 import Response
 import pytest
@@ -23,16 +23,11 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import LIST_TASK_LIST_RESPONSE, create_response_object
+
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "todo.my_tasks"
-ITEM = {
-    "id": "task-list-id-1",
-    "title": "My tasks",
-}
-LIST_TASK_LIST_RESPONSE = {
-    "items": [ITEM],
-}
 EMPTY_RESPONSE = {}
 LIST_TASKS_RESPONSE = {
     "items": [],
@@ -149,20 +144,6 @@ async def ws_get_items(
     return get
 
 
-@pytest.fixture(name="api_responses")
-def mock_api_responses() -> list[dict | list]:
-    """Fixture for API responses to return during test."""
-    return []
-
-
-def create_response_object(api_response: dict | list) -> tuple[Response, bytes]:
-    """Create an http response."""
-    return (
-        Response({"Content-Type": "application/json"}),
-        json.dumps(api_response).encode(),
-    )
-
-
 def create_batch_response_object(
     content_ids: list[str], api_responses: list[dict | list | Response | None]
 ) -> tuple[Response, bytes]:
@@ -225,20 +206,13 @@ def create_batch_response_handler(
     return _handler
 
 
-@pytest.fixture(name="response_handler")
-def mock_response_handler(api_responses: list[dict | list]) -> list:
-    """Create a mock http2lib response handler."""
-    return [create_response_object(api_response) for api_response in api_responses]
-
-
 @pytest.fixture(autouse=True)
-def mock_http_response(response_handler: list | Callable) -> Mock:
-    """Fixture to fake out http2lib responses."""
-
-    with patch("httplib2.Http.request", side_effect=response_handler) as mock_response:
-        yield mock_response
+def setup_http_response(mock_http_response: Mock) -> None:
+    """Fixture to load the http response mock."""
+    return
 
 
+@pytest.mark.parametrize("timezone", ["America/Regina", "UTC", "Asia/Tokyo"])
 @pytest.mark.parametrize(
     "api_responses",
     [
@@ -251,7 +225,7 @@ def mock_http_response(response_handler: list | Callable) -> Mock:
                         "title": "Task 1",
                         "status": "needsAction",
                         "position": "0000000000000001",
-                        "due": "2023-11-18T00:00:00+00:00",
+                        "due": "2023-11-18T00:00:00Z",
                     },
                     {
                         "id": "task-2",
@@ -271,8 +245,10 @@ async def test_get_items(
     integration_setup: Callable[[], Awaitable[bool]],
     hass_ws_client: WebSocketGenerator,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    timezone: str,
 ) -> None:
     """Test getting todo list items."""
+    await hass.config.async_set_time_zone(timezone)
 
     assert await integration_setup()
 
@@ -298,29 +274,6 @@ async def test_get_items(
     state = hass.states.get("todo.my_tasks")
     assert state
     assert state.state == "1"
-
-
-@pytest.mark.parametrize(
-    "response_handler",
-    [
-        ([(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")]),
-    ],
-)
-async def test_list_items_server_error(
-    hass: HomeAssistant,
-    setup_credentials: None,
-    integration_setup: Callable[[], Awaitable[bool]],
-    hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-) -> None:
-    """Test an error returned by the server when setting up the platform."""
-
-    assert await integration_setup()
-
-    await hass_ws_client(hass)
-
-    state = hass.states.get("todo.my_tasks")
-    assert state is None
 
 
 @pytest.mark.parametrize(
@@ -474,6 +427,39 @@ async def test_update_todo_list_item(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "some-task-id", ATTR_RENAME: "Soda", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.my_tasks"},
+        blocking=True,
+    )
+    assert len(mock_http_response.call_args_list) == 4
+    call = mock_http_response.call_args_list[2]
+    assert call
+    assert call.args == snapshot
+    assert call.kwargs.get("body") == snapshot
+
+
+@pytest.mark.parametrize("timezone", ["America/Regina", "UTC", "Asia/Tokyo"])
+@pytest.mark.parametrize("api_responses", [UPDATE_API_RESPONSES])
+async def test_update_due_date(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    mock_http_response: Any,
+    snapshot: SnapshotAssertion,
+    timezone: str,
+) -> None:
+    """Test for updating the due date of a To-do item and timezone."""
+    await hass.config.async_set_time_zone(timezone)
+
+    assert await integration_setup()
+
+    state = hass.states.get("todo.my_tasks")
+    assert state
+    assert state.state == "1"
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "some-task-id", ATTR_DUE_DATE: "2024-12-5"},
         target={ATTR_ENTITY_ID: "todo.my_tasks"},
         blocking=True,
     )

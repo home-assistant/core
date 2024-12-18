@@ -1,6 +1,7 @@
 """Tests for Habitica button platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from http import HTTPStatus
 import re
 from unittest.mock import patch
@@ -15,10 +16,16 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .conftest import mock_called_with
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -340,3 +347,65 @@ async def test_button_unavailable(
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id))
         assert state.state == STATE_UNAVAILABLE
+
+
+async def test_class_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing and adding skills after class change."""
+    mage_skills = [
+        "button.test_user_chilling_frost",
+        "button.test_user_earthquake",
+        "button.test_user_ethereal_surge",
+    ]
+    healer_skills = [
+        "button.test_user_healing_light",
+        "button.test_user_protective_aura",
+        "button.test_user_searing_brightness",
+        "button.test_user_blessing",
+    ]
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        json=load_json_object_fixture("wizard_fixture.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        params={"type": "completedTodos"},
+        json=load_json_object_fixture("completed_todos.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        json=load_json_object_fixture("tasks.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    for skill in mage_skills:
+        assert hass.states.get(skill)
+
+    aioclient_mock._mocks.pop(0)
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        json=load_json_object_fixture("healer_fixture.json", DOMAIN),
+    )
+
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    for skill in mage_skills:
+        assert not hass.states.get(skill)
+
+    for skill in healer_skills:
+        assert hass.states.get(skill)

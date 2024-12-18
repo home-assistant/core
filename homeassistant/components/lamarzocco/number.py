@@ -11,8 +11,8 @@ from pylamarzocco.const import (
     PhysicalKey,
     PrebrewMode,
 )
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.number import (
@@ -210,7 +210,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     entities: list[NumberEntity] = [
         LaMarzoccoNumberEntity(coordinator, description)
         for description in ENTITIES

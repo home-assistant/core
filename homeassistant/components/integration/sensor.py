@@ -576,7 +576,7 @@ class IntegrationSensor(RestoreSensor):
         if (
             self._max_sub_interval is not None
             and source_state is not None
-            and (source_state_dec := _decimal_state(source_state.state))
+            and (source_state_dec := _decimal_state(source_state.state)) is not None
         ):
 
             @callback

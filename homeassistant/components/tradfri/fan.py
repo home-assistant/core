@@ -69,7 +69,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     # ... with step size 1
     # 50 = Max
     _attr_speed_count = ATTR_MAX_FAN_STEPS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

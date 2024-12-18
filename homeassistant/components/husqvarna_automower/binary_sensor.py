@@ -30,6 +30,8 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:

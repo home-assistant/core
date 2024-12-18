@@ -970,6 +970,7 @@ class Recorder(threading.Thread):
                 # which does not need migration or repair.
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
+                    initial_version=SCHEMA_VERSION,
                     migration_needed=False,
                     non_live_data_migration_needed=False,
                     schema_errors=set(),
@@ -1430,7 +1431,6 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.recorder_runs_manager.recording_start)
             self.recorder_runs_manager.start(session)
-            self.states_manager.load_from_db(session)
 
         self._open_event_session()
 

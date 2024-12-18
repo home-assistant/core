@@ -9,10 +9,12 @@ from matter_server.client.models import device_types
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -23,6 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -90,6 +93,8 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color_temperature = False
     _transitions_disabled = False
     _platform_translation_key = "light"
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -131,12 +136,16 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_color_temp(self, color_temp: int, transition: float = 0.0) -> None:
+    async def _set_color_temp(
+        self, color_temp_kelvin: int, transition: float = 0.0
+    ) -> None:
         """Set color temperature."""
-
+        color_temp_mired = color_util.color_temperature_kelvin_to_mired(
+            color_temp_kelvin
+        )
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
-                colorTemperatureMireds=color_temp,
+                colorTemperatureMireds=color_temp_mired,
                 # transition in matter is measured in tenths of a second
                 transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
@@ -286,7 +295,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         transition = kwargs.get(ATTR_TRANSITION, 0)
         if self._transitions_disabled:
@@ -298,10 +307,10 @@ class MatterLight(MatterEntity, LightEntity):
             elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
                 await self._set_xy_color(xy_color, transition)
             elif (
-                color_temp is not None
+                color_temp_kelvin is not None
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
             ):
-                await self._set_color_temp(color_temp, transition)
+                await self._set_color_temp(color_temp_kelvin, transition)
 
         if brightness is not None and self._supports_brightness:
             await self._set_brightness(brightness, transition)
@@ -368,12 +377,16 @@ class MatterLight(MatterEntity, LightEntity):
                         clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                     )
                     if min_mireds > 0:
-                        self._attr_min_mireds = min_mireds
+                        self._attr_max_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(min_mireds)
+                        )
                     max_mireds = self.get_matter_attribute_value(
                         clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
-                    if min_mireds > 0:
-                        self._attr_max_mireds = max_mireds
+                    if max_mireds > 0:
+                        self._attr_min_color_temp_kelvin = (
+                            color_util.color_temperature_mired_to_kelvin(max_mireds)
+                        )
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
@@ -399,8 +412,13 @@ class MatterLight(MatterEntity, LightEntity):
         if self._supports_brightness:
             self._attr_brightness = self._get_brightness()
 
-        if self._supports_color_temperature:
-            self._attr_color_temp = self._get_color_temperature()
+        if (
+            self._supports_color_temperature
+            and (color_temperature := self._get_color_temperature()) > 0
+        ):
+            self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+                color_temperature
+            )
 
         if self._supports_color:
             self._attr_color_mode = color_mode = self._get_color_mode()
@@ -414,7 +432,7 @@ class MatterLight(MatterEntity, LightEntity):
                 and color_mode == ColorMode.XY
             ):
                 self._attr_xy_color = self._get_xy_color()
-        elif self._attr_color_temp is not None:
+        elif self._attr_color_temp_kelvin is not None:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif self._attr_brightness is not None:
             self._attr_color_mode = ColorMode.BRIGHTNESS

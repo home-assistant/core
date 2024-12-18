@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CODE
+from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,6 +42,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
+        new_options = entry.options.copy()
         if config_entry_default_code := entry.options.get(CONF_CODE):
             entity_reg = er.async_get(hass)
             entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
@@ -52,12 +53,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
                         LOCK_DOMAIN,
                         {CONF_DEFAULT_CODE: config_entry_default_code},
                     )
-            new_options = entry.options.copy()
             del new_options[CONF_CODE]
 
-            hass.config_entries.async_update_entry(entry, options=new_options)
+        hass.config_entries.async_update_entry(entry, options=new_options, version=2)
 
-        hass.config_entries.async_update_entry(entry, version=2)
+    if entry.version == 2 and entry.minor_version == 1:
+        # Removes name from entry data
+        new_data = entry.data.copy()
+        del new_data[CONF_NAME]
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
     LOGGER.debug("Migration to version %s successful", entry.version)
 

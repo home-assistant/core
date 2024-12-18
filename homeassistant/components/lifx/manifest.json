@@ -23,6 +23,7 @@
       "LIFX Ceiling",
       "LIFX Clean",
       "LIFX Color",
+      "LIFX Colour",
       "LIFX DLCOL",
       "LIFX Dlight",
       "LIFX DLWW",
@@ -35,12 +36,14 @@
       "LIFX Neon",
       "LIFX Nightvision",
       "LIFX PAR38",
+      "LIFX Permanent Outdoor",
       "LIFX Pls",
       "LIFX Plus",
       "LIFX Round",
       "LIFX Square",
       "LIFX String",
       "LIFX Tile",
+      "LIFX Tube",
       "LIFX White",
       "LIFX Z"
     ]
@@ -48,7 +51,7 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==1.1.1",
+    "aiolifx==1.1.2",
     "aiolifx-effects==0.3.2",
     "aiolifx-themes==0.5.5"
   ]

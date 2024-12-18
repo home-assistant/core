@@ -18,6 +18,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TedeeSensorEntityDescription(SensorEntityDescription):

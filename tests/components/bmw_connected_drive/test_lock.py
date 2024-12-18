@@ -16,7 +16,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 from tests.components.recorder.common import async_wait_recording_done
@@ -118,11 +123,11 @@ async def test_service_call_fail(
     monkeypatch.setattr(
         RemoteServices,
         "trigger_remote_service",
-        AsyncMock(side_effect=MyBMWRemoteServiceError),
+        AsyncMock(side_effect=MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON)),
     )
 
     # Test
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=REMOTE_SERVICE_EXC_TRANSLATION):
         await hass.services.async_call(
             "lock",
             service,

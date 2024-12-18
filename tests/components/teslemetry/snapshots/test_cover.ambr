@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'charge_state_charge_port_door_open',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
     'unit_of_measurement': None,
   })
 # ---
@@ -76,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 1>,
     'translation_key': 'vehicle_state_ft',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
     'unit_of_measurement': None,
   })
 # ---
@@ -124,7 +124,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_rt',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
     'unit_of_measurement': None,
   })
 # ---
@@ -220,7 +220,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'windows',
-    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unique_id': 'LRW3F7EK4NC700000-windows',
     'unit_of_measurement': None,
   })
 # ---
@@ -268,7 +268,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'charge_state_charge_port_door_open',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
     'unit_of_measurement': None,
   })
 # ---
@@ -316,7 +316,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 1>,
     'translation_key': 'vehicle_state_ft',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
     'unit_of_measurement': None,
   })
 # ---
@@ -364,7 +364,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -412,7 +412,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_rt',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
     'unit_of_measurement': None,
   })
 # ---
@@ -460,7 +460,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'windows',
-    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unique_id': 'LRW3F7EK4NC700000-windows',
     'unit_of_measurement': None,
   })
 # ---
@@ -508,7 +508,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_port_door_open',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_port_door_open',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
     'unit_of_measurement': None,
   })
 # ---
@@ -556,7 +556,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_ft',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_ft',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
     'unit_of_measurement': None,
   })
 # ---
@@ -604,7 +604,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_sun_roof_state',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_sun_roof_state',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -652,7 +652,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rt',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rt',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
     'unit_of_measurement': None,
   })
 # ---
@@ -700,7 +700,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'windows',
-    'unique_id': 'LRWXF7EK4KC700000-windows',
+    'unique_id': 'LRW3F7EK4NC700000-windows',
     'unit_of_measurement': None,
   })
 # ---
