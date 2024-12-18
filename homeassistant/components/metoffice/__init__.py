@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
-from typing import Any
 
 import datapoint
 import datapoint.Forecast
@@ -19,8 +17,8 @@ from homeassistant.const import (
     CONF_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
@@ -49,42 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     site_name = entry.data[CONF_NAME]
 
     coordinates = f"{latitude}_{longitude}"
-
-    @callback
-    def update_unique_id(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, Any] | None:
-        """Update unique ID of entity entry."""
-
-        if entity_entry.domain != Platform.SENSOR:
-            return None
-
-        key_mapping = {
-            "weather": "significantWeatherCode",
-            "temperature": "screenTemperature",
-            "feels_like_temperature": "feelsLikeTemperature",
-            "wind_speed": "windSpeed10m",
-            "wind_direction": "windDirectionFrom10m",
-            "wind_gust": "windGustSpeed10m",
-            "uv": "uvIndex",
-            "precipitation": "probOfPrecipitation",
-            "humidity": "screenRelativeHumidity",
-        }
-
-        match = re.search(f"(?P<key>.*)_{coordinates}.*", entity_entry.unique_id)
-
-        if match is None:
-            return None
-
-        if (old_key := match.group("key")) in key_mapping:
-            return {
-                "new_unique_id": entity_entry.unique_id.replace(
-                    old_key, key_mapping[old_key]
-                )
-            }
-        return None
-
-    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
     connection = datapoint.Manager.Manager(api_key=api_key)
 
