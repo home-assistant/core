@@ -34,6 +34,7 @@ from ..models import (
     LazyState,
     datetime_to_timestamp_or_none,
     extract_metadata_ids,
+    process_timestamp,
     row_to_compressed_state,
 )
 from ..util import execute_stmt_lambda_element, session_scope
@@ -245,9 +246,9 @@ def get_significant_states_with_session(
             if metadata_id is not None
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
-    oldest_ts: float | None = None
+    run_start_ts: float | None = None
     if include_start_time_state and not (
-        oldest_ts := _get_oldest_possible_ts(hass, start_time)
+        run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
     ):
         include_start_time_state = False
     start_time_ts = start_time.timestamp()
@@ -263,7 +264,7 @@ def get_significant_states_with_session(
             significant_changes_only,
             no_attributes,
             include_start_time_state,
-            oldest_ts,
+            run_start_ts,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -410,9 +411,9 @@ def state_changes_during_period(
         entity_id_to_metadata_id: dict[str, int | None] = {
             entity_id: single_metadata_id
         }
-        oldest_ts: float | None = None
+        run_start_ts: float | None = None
         if include_start_time_state and not (
-            oldest_ts := _get_oldest_possible_ts(hass, start_time)
+            run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
         ):
             include_start_time_state = False
         start_time_ts = start_time.timestamp()
@@ -425,7 +426,7 @@ def state_changes_during_period(
                 no_attributes,
                 limit,
                 include_start_time_state,
-                oldest_ts,
+                run_start_ts,
                 has_last_reported,
             ),
             track_on=[
@@ -599,17 +600,17 @@ def _get_start_time_state_for_entities_stmt(
     )
 
 
-def _get_oldest_possible_ts(
+def _get_run_start_ts_for_utc_point_in_time(
     hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
-    """Return the oldest possible timestamp.
-
-    Returns None if there are no states as old as utc_point_in_time.
-    """
-
-    oldest_ts = get_instance(hass).states_manager.oldest_ts
-    if oldest_ts is not None and oldest_ts < utc_point_in_time.timestamp():
-        return oldest_ts
+    """Return the start time of a run."""
+    run = get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
+    if (
+        run is not None
+        and (run_start := process_timestamp(run.start)) < utc_point_in_time
+    ):
+        return run_start.timestamp()
+    # History did not run before utc_point_in_time but we still
     return None
 
 

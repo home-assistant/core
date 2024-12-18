@@ -38,5 +38,10 @@
         "default": "mdi:cash-multiple"
       }
     }
+  },
+  "services": {
+    "get_prices_for_date": {
+      "service": "mdi:cash-multiple"
+    }
   }
 }
