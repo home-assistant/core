@@ -10,6 +10,7 @@ MANUFACTURER = "https://lyrion.org/"
 PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
 SENSOR_UPDATE_INTERVAL = 60
 SERVER_MODEL = "Lyrion Music Server"
+SERVER_DEVICE_ID = DOMAIN+"_server"
 STATUS_API_TIMEOUT = 10
 STATUS_SENSOR_LASTSCAN = "lastscan"
 STATUS_SENSOR_NEEDSRESTART = "needsrestart"

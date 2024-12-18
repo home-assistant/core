@@ -36,6 +36,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
     DeviceInfo,
     format_mac,
 )
@@ -56,6 +57,7 @@ from .const import (
     DOMAIN,
     KNOWN_PLAYERS,
     KNOWN_SERVERS,
+    SERVER_DEVICE_ID,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -197,8 +199,10 @@ class SqueezeBoxMediaPlayerEntity(
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
         _manufacturer = None
+        _entry_type = None
         if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
+            _entry_type = DeviceEntryType.SERVICE
         elif (
             "Squeezebox" in player.model
             or "Transporter" in player.model
@@ -210,9 +214,10 @@ class SqueezeBoxMediaPlayerEntity(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            via_device=(DOMAIN, coordinator.server_uuid),
+            via_device=(SERVER_DEVICE_ID, coordinator.server_uuid),
             model=player.model,
             manufacturer=_manufacturer,
+            entry_type=_entry_type,
         )
 
     @callback
