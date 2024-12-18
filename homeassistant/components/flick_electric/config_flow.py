@@ -171,7 +171,7 @@ def account_name(account: CustomerAccount) -> str:
     """Generate a name for the account."""
     name = account["address"]
     if account["status"] != "active":
-        name += f" [${account['status']}]"
+        name += f" [{account['status']}]"
 
     return name
 
