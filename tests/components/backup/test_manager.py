@@ -34,6 +34,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -532,6 +533,182 @@ async def test_async_initiate_backup_with_agent_error(
             "failed_agent_ids": ["test.remote"],
         }
     ]
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("create_backup_command", "issues_after_create_backup"),
+    [
+        (
+            {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]},
+            {(DOMAIN, "automatic_backup_failed")},
+        ),
+        (
+            {"type": "backup/generate_with_automatic_settings"},
+            set(),
+        ),
+    ],
+)
+async def test_create_backup_success_clears_issue(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    create_backup_command: dict[str, Any],
+    issues_after_create_backup: set[tuple[str, str]],
+) -> None:
+    """Test backup issue is cleared after backup is created."""
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Create a backup issue
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "automatic_backup_failed",
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="automatic_backup_failed_create",
+    )
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": [LOCAL_AGENT_ID]},
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    await ws_client.send_json_auto_id(create_backup_command)
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert set(issue_registry.issues) == issues_after_create_backup
+
+
+# @pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    (
+        "create_backup_command",
+        "create_backup_side_effect",
+        "agent_upload_side_effect",
+        "create_backup_result",
+        "issues_after_create_backup",
+    ),
+    [
+        (
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            {"type": "backup/generate_with_automatic_settings"},
+            None,
+            None,
+            True,
+            {},
+        ),
+        (
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            Exception("Boom!"),
+            None,
+            False,
+            {},
+        ),
+        (
+            {"type": "backup/generate_with_automatic_settings"},
+            Exception("Boom!"),
+            None,
+            False,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_create",
+                    "translation_placeholders": None,
+                }
+            },
+        ),
+        (
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            None,
+            Exception("Boom!"),
+            True,
+            {},
+        ),
+        (
+            {"type": "backup/generate_with_automatic_settings"},
+            None,
+            Exception("Boom!"),
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_upload_agents",
+                    "translation_placeholders": {"failed_agents": "test.remote"},
+                }
+            },
+        ),
+    ],
+)
+async def test_create_backup_failure_raises_issue(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    create_backup: AsyncMock,
+    create_backup_command: dict[str, Any],
+    create_backup_side_effect: Exception | None,
+    agent_upload_side_effect: Exception | None,
+    create_backup_result: bool,
+    issues_after_create_backup: dict[tuple[str, str], dict[str, Any]],
+) -> None:
+    """Test backup issue is cleared after backup is created."""
+    remote_agent = BackupAgentTest("remote", backups=[])
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await _setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+
+    create_backup.side_effect = create_backup_side_effect
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test.remote"]},
+        }
+    )
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with patch.object(
+        remote_agent, "async_upload_backup", side_effect=agent_upload_side_effect
+    ):
+        await ws_client.send_json_auto_id(create_backup_command)
+        result = await ws_client.receive_json()
+        assert result["success"] == create_backup_result
+        await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert set(issue_registry.issues) == set(issues_after_create_backup)
+    for issue_id, issue_data in issues_after_create_backup.items():
+        issue = issue_registry.issues[issue_id]
+        assert issue.translation_key == issue_data["translation_key"]
+        assert issue.translation_placeholders == issue_data["translation_placeholders"]
 
 
 async def test_loading_platforms(
