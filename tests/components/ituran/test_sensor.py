@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyituran.exceptions import IturanApiError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ituran.const import UPDATE_INTERVAL
@@ -16,47 +17,60 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_device_tracker(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test state of device_tracker."""
-    with patch("homeassistant.components.ituran.PLATFORMS", [Platform.DEVICE_TRACKER]):
+    """Test state of sensor."""
+    with patch("homeassistant.components.ituran.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test device is marked as unavailable when we can't reach the Ituran service."""
-    entity_id = "device_tracker.mock_model"
+    """Test sensor is marked as unavailable when we can't reach the Ituran service."""
+    entities = [
+        "sensor.mock_model_address",
+        "sensor.mock_model_battery_voltage",
+        "sensor.mock_model_heading",
+        "sensor.mock_model_last_update_from_vehicle",
+        "sensor.mock_model_mileage",
+        "sensor.mock_model_speed",
+    ]
+
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
+    for entity_id in entities:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
     mock_ituran.get_vehicles.side_effect = IturanApiError
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
+    for entity_id in entities:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE
 
     mock_ituran.get_vehicles.side_effect = None
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
+    for entity_id in entities:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
