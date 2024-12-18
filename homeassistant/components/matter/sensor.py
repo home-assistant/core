@@ -92,6 +92,26 @@ EVSE_SUPPLY_STATE_MAP = {
 }
 
 
+EVSE_FAULT_STATE_MAP = {
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "No Error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "Meter Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "Over Voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "Under Voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "Over Current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "Contact Wet Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "Contact Dry Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "Power Loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "Power Quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "Pilot Short Circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "Emergency Stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "EV Disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "Wrong Power Supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "Live Neutral Swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "Over Temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "Unknown",
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
