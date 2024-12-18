@@ -38,7 +38,7 @@ rules:
   action-exceptions:
     status: done
     comment: Only providing todo actions
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: done
   test-coverage: done
   integration-owner: done
@@ -66,7 +66,7 @@ rules:
   diagnostics: todo
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   dynamic-devices:
     status: exempt
     comment: No dynamic entities available
