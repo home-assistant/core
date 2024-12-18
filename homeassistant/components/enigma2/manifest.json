@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["openwebif"],
-  "requirements": ["openwebifpy==4.2.7"]
+  "requirements": ["openwebifpy==4.3.0"]
 }

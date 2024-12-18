@@ -210,6 +210,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "registered_devices": True,
     },
     {
+        "domain": "fyta",
+        "hostname": "fyta*",
+    },
+    {
         "domain": "goalzero",
         "registered_devices": True,
     },
@@ -235,6 +239,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "domain": "guardian",
         "hostname": "guardian*",
         "macaddress": "30AEA4*",
+    },
+    {
+        "domain": "homewizard",
+        "registered_devices": True,
     },
     {
         "domain": "hunterdouglas_powerview",

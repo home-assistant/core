@@ -448,7 +448,7 @@ def _get_states_for_entities_stmt(
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
     run_start_ts = process_timestamp(run_start).timestamp()
-    utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
+    utc_point_in_time_ts = utc_point_in_time.timestamp()
     stmt += lambda q: q.join(
         (
             most_recent_states_for_entities_by_date := (
@@ -520,7 +520,7 @@ def _get_single_entity_states_stmt(
     stmt, join_attributes = _lambda_stmt_and_join_attributes(
         no_attributes, include_last_changed=True
     )
-    utc_point_in_time_ts = dt_util.utc_to_timestamp(utc_point_in_time)
+    utc_point_in_time_ts = utc_point_in_time.timestamp()
     stmt += (
         lambda q: q.filter(
             States.last_updated_ts < utc_point_in_time_ts,
