@@ -102,11 +102,9 @@ async def test_static_attributes(
     assert entry
 
     state = hass.states.get(entity_id_dehumidifier)
-    attributes = state.attributes
 
-    assert attributes == snapshot()
+    assert state == snapshot(name="dehumidifier")
 
     state = hass.states.get(entity_id_humidifier)
-    attributes = state.attributes
 
-    assert attributes == snapshot()
+    assert state == snapshot(name="humidifier")
