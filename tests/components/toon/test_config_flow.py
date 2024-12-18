@@ -249,10 +249,6 @@ async def test_agreement_already_set_up(
         assert result3["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.toon.config.abort.connection_error"],
-)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_toon_abort(
     hass: HomeAssistant,

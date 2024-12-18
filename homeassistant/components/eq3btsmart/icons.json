@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "dst": {
+        "default": "mdi:sun-clock",
+        "state": {
+          "off": "mdi:sun-clock-outline"
+        }
+      }
+    },
+    "number": {
+      "comfort": {
+        "default": "mdi:sun-thermometer"
+      },
+      "eco": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "offset": {
+        "default": "mdi:thermometer-plus"
+      },
+      "window_open_temperature": {
+        "default": "mdi:window-open-variant"
+      },
+      "window_open_timeout": {
+        "default": "mdi:timer-refresh"
+      }
+    },
+    "sensor": {
+      "away_until": {
+        "default": "mdi:home-export-outline"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
+      }
+    },
+    "switch": {
+      "away": {
+        "default": "mdi:home-account",
+        "state": {
+          "on": "mdi:home-export-outline"
+        }
+      },
+      "lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-off"
+        }
+      },
+      "boost": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      }
+    }
+  }
+}

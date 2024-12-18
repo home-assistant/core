@@ -47,7 +47,6 @@ class RoborockCoordinators:
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
-    _LOGGER.debug("Integration async setup entry: %s", entry.as_dict())
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])

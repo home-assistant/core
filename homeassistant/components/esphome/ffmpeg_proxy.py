@@ -179,6 +179,9 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Remove metadata and cover art
         command_args.extend(["-map_metadata", "-1", "-vn"])
 
+        # disable progress stats on stderr
+        command_args.append("-nostats")
+
         # Output to stdout
         command_args.append("pipe:")
 
@@ -194,7 +197,11 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Only one conversion process per device is allowed
         self.convert_info.proc = proc
 
-        await self._write_ffmpeg_data(request, writer, proc)
+        # Create background task which will be cancelled when home assistant shuts down
+        write_task = self.hass.async_create_background_task(
+            self._write_ffmpeg_data(request, writer, proc), "ESPHome media proxy"
+        )
+        await write_task
 
     async def _write_ffmpeg_data(
         self,
@@ -204,6 +211,10 @@ class FFmpegConvertResponse(web.StreamResponse):
     ) -> None:
         assert proc.stdout is not None
         assert proc.stderr is not None
+
+        stderr_task = self.hass.async_create_background_task(
+            self._dump_ffmpeg_stderr(proc), "ESPHome media proxy dump stderr"
+        )
 
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
@@ -215,27 +226,39 @@ class FFmpegConvertResponse(web.StreamResponse):
             ):
                 await self.write(chunk)
         except asyncio.CancelledError:
+            _LOGGER.debug("ffmpeg transcoding cancelled")
+            # Abort the transport, we don't wait for ESPHome to drain the write buffer;
+            # it may need a very long time or never finish if the player is paused.
+            if request.transport:
+                request.transport.abort()
             raise  # don't log error
         except:
             _LOGGER.exception("Unexpected error during ffmpeg conversion")
-
-            # Process did not exit successfully
-            stderr_text = ""
-            while line := await proc.stderr.readline():
-                stderr_text += line.decode()
-            _LOGGER.error("FFmpeg output: %s", stderr_text)
-
             raise
         finally:
             # Allow conversion info to be removed
             self.convert_info.is_finished = True
 
+            # stop dumping ffmpeg stderr task
+            stderr_task.cancel()
+
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
 
-            # Close connection
-            await writer.write_eof()
+            # Close connection by writing EOF unless already closing
+            if request.transport and not request.transport.is_closing():
+                await writer.write_eof()
+
+    async def _dump_ffmpeg_stderr(
+        self,
+        proc: asyncio.subprocess.Process,
+    ) -> None:
+        assert proc.stdout is not None
+        assert proc.stderr is not None
+
+        while self.hass.is_running and (chunk := await proc.stderr.readline()):
+            _LOGGER.debug("ffmpeg[%s] output: %s", proc.pid, chunk.decode().rstrip())
 
 
 class FFmpegProxyView(HomeAssistantView):

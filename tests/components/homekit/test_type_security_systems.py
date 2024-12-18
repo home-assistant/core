@@ -10,7 +10,12 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
@@ -307,3 +312,33 @@ async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
 
         for val in valid_target_values.values():
             assert val in test_config.get("target_values")
+
+
+@pytest.mark.parametrize(
+    ("state"),
+    [
+        (None),
+        ("None"),
+        (STATE_UNKNOWN),
+        (STATE_UNAVAILABLE),
+    ],
+)
+async def test_handle_non_alarm_states(
+    hass: HomeAssistant, hk_driver, events: list[Event], state: str
+) -> None:
+    """Test we can handle states that should not raise."""
+    code = "1234"
+    config = {ATTR_CODE: code}
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 11  # AlarmSystem
+
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 3

@@ -22,12 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -72,19 +66,6 @@ class RemoteEntityFeature(IntFlag):
     LEARN_COMMAND = 1
     DELETE_COMMAND = 2
     ACTIVITY = 4
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the RemoteEntityFeature enum instead.
-_DEPRECATED_SUPPORT_LEARN_COMMAND = DeprecatedConstantEnum(
-    RemoteEntityFeature.LEARN_COMMAND, "2025.1"
-)
-_DEPRECATED_SUPPORT_DELETE_COMMAND = DeprecatedConstantEnum(
-    RemoteEntityFeature.DELETE_COMMAND, "2025.1"
-)
-_DEPRECATED_SUPPORT_ACTIVITY = DeprecatedConstantEnum(
-    RemoteEntityFeature.ACTIVITY, "2025.1"
-)
 
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = cv.make_entity_service_schema(
@@ -189,19 +170,6 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> RemoteEntityFeature:
-        """Return the supported features as RemoteEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = RemoteEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     @cached_property
     def current_activity(self) -> str | None:
         """Active activity."""
@@ -216,7 +184,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if RemoteEntityFeature.ACTIVITY not in self.supported_features_compat:
+        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
             return None
 
         return {
@@ -251,11 +219,3 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

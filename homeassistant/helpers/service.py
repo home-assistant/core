@@ -42,6 +42,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
+    ServiceNotSupported,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -986,9 +987,7 @@ async def entity_service_call(
         ):
             # If entity explicitly referenced, raise an error
             if referenced is not None and entity.entity_id in referenced.referenced:
-                raise HomeAssistantError(
-                    f"Entity {entity.entity_id} does not support this service."
-                )
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
 
             continue
 
@@ -1277,14 +1276,12 @@ def async_register_entity_service(
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
         # pylint: disable-next=import-outside-toplevel
-        from .frame import report
+        from .frame import ReportBehavior, report_usage
 
-        report(
-            (
-                "registers an entity service with a non entity service schema "
-                "which will stop working in HA Core 2025.9"
-            ),
-            error_if_core=False,
+        report_usage(
+            "registers an entity service with a non entity service schema",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.9",
         )
 
     service_func: str | HassJob[..., Any]
