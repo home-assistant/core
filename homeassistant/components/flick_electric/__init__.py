@@ -7,6 +7,7 @@ import jwt
 from pyflick import FlickAPI
 from pyflick.authentication import AbstractFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
+from pyflick.types import APIException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_TOKEN_EXPIRY, DOMAIN
@@ -28,13 +30,21 @@ CONF_ID_TOKEN = "id_token"
 
 PLATFORMS = [Platform.SENSOR]
 
+type FlickConfigEntry = ConfigEntry[FlickAPI]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: FlickConfigEntry) -> bool:
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = FlickAPI(auth)
+    entry.runtime_data = FlickAPI(auth)
+
+    try:
+        await entry.runtime_data.getCustomerAccounts()
+    except APIException as err:
+        raise ConfigEntryNotReady("Unable to fetch account information") from err
+    except UnauthorizedException as err:
+        raise ConfigEntryAuthFailed("Invalid authentication") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -47,6 +57,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 2:
+        return False
+
+    if config_entry.version == 1:
+        # TODO: Try self-resolve for single accounts
+        config_entry.async_start_reauth(hass)
+        return False
+
+    return True
 
 
 class HassFlickAuth(AbstractFlickAuth):
