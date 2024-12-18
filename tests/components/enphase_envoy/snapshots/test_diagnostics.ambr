@@ -70,6 +70,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -122,6 +123,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -172,6 +174,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -223,6 +226,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -309,6 +313,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -353,6 +358,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',
@@ -506,6 +512,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -558,6 +565,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -608,6 +616,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -659,6 +668,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -745,6 +755,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -789,6 +800,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',
@@ -982,6 +994,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1034,6 +1047,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1084,6 +1098,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1135,6 +1150,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1221,6 +1237,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': None,
               'domain': 'sensor',
@@ -1265,6 +1282,7 @@
               'categories': dict({
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+              'config_subentry_id': None,
               'device_class': None,
               'disabled_by': 'integration',
               'domain': 'sensor',

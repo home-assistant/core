@@ -42,6 +42,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -85,6 +86,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -135,6 +137,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -185,6 +188,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -233,6 +237,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -277,6 +282,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -321,6 +327,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -373,6 +380,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -432,6 +440,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -482,6 +491,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -522,6 +532,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -562,6 +573,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -640,6 +652,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -715,6 +728,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -756,6 +770,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -797,6 +812,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -840,6 +856,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -884,6 +901,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -958,6 +976,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -999,6 +1018,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1040,6 +1060,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -1083,6 +1104,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1127,6 +1149,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1201,6 +1224,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -1242,6 +1266,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1283,6 +1308,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -1326,6 +1352,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1370,6 +1397,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1448,6 +1476,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'alarm_control_panel',
@@ -1492,6 +1521,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1538,6 +1568,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -1582,6 +1613,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -1656,6 +1688,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -1697,6 +1730,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1740,6 +1774,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -1822,6 +1857,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'alarm_control_panel',
@@ -1866,6 +1902,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -1916,6 +1953,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -1977,6 +2015,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -2021,6 +2060,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2099,6 +2139,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2142,6 +2183,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2224,6 +2266,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -2265,6 +2308,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2306,6 +2350,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -2356,6 +2401,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -2414,6 +2460,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2458,6 +2505,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2504,6 +2552,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2549,6 +2598,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2592,6 +2642,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2632,6 +2683,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -2710,6 +2762,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -2753,6 +2806,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2798,6 +2852,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2843,6 +2898,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2888,6 +2944,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2933,6 +2990,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -2978,6 +3036,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3021,6 +3080,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -3062,6 +3122,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -3141,6 +3202,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3182,6 +3244,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3225,6 +3288,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3302,6 +3366,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3343,6 +3408,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3384,6 +3450,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3424,6 +3491,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3476,6 +3544,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -3540,6 +3609,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -3590,6 +3660,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -3636,6 +3707,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3681,6 +3753,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3758,6 +3831,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3799,6 +3873,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -3842,6 +3917,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -3919,6 +3995,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -3960,6 +4037,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4003,6 +4081,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4084,6 +4163,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4125,6 +4205,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4166,6 +4247,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4206,6 +4288,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4258,6 +4341,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -4322,6 +4406,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4372,6 +4457,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4418,6 +4504,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4463,6 +4550,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4544,6 +4632,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4585,6 +4674,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4660,6 +4750,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -4712,6 +4803,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -4775,6 +4867,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -4821,6 +4914,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4866,6 +4960,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -4943,6 +5038,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -4984,6 +5080,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5027,6 +5124,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5104,6 +5202,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5145,6 +5244,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5188,6 +5288,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5269,6 +5370,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5310,6 +5412,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5351,6 +5454,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5391,6 +5495,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5447,6 +5552,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -5516,6 +5622,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -5566,6 +5673,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -5612,6 +5720,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5657,6 +5766,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5738,6 +5848,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5779,6 +5890,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -5820,6 +5932,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -5863,6 +5976,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5908,6 +6022,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -5951,6 +6066,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6029,6 +6145,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6075,6 +6192,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -6124,6 +6242,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -6170,6 +6289,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6215,6 +6335,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6261,6 +6382,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6306,6 +6428,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6387,6 +6510,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6430,6 +6554,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6475,6 +6600,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6520,6 +6646,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6565,6 +6692,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -6608,6 +6736,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6649,6 +6778,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -6727,6 +6857,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6768,6 +6899,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6808,6 +6940,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6851,6 +6984,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -6934,6 +7068,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -6975,6 +7110,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -7053,6 +7189,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7094,6 +7231,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -7138,6 +7276,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -7216,6 +7355,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7291,6 +7431,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7332,6 +7473,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -7376,6 +7518,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -7458,6 +7601,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7501,6 +7645,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -7580,6 +7725,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7655,6 +7801,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7698,6 +7845,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -7782,6 +7930,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -7833,6 +7982,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -7887,6 +8037,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -7938,6 +8089,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -7984,6 +8136,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8029,6 +8182,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8106,6 +8260,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8185,6 +8340,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8260,6 +8416,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8305,6 +8462,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -8353,6 +8511,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8435,6 +8594,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8476,6 +8636,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -8520,6 +8681,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8598,6 +8760,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8673,6 +8836,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8714,6 +8878,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -8758,6 +8923,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -8840,6 +9006,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -8883,6 +9050,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -8962,6 +9130,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9037,6 +9206,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9080,6 +9250,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9165,6 +9336,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9240,6 +9412,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9283,6 +9456,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9368,6 +9542,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9423,6 +9598,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -9482,6 +9658,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -9533,6 +9710,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -9579,6 +9757,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -9624,6 +9803,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -9701,6 +9881,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9780,6 +9961,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9855,6 +10037,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -9903,6 +10086,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -9956,6 +10140,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10037,6 +10222,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10112,6 +10298,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10160,6 +10347,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -10213,6 +10401,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10294,6 +10483,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10369,6 +10559,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10419,6 +10610,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -10477,6 +10669,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10559,6 +10752,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10616,6 +10810,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -10678,6 +10873,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -10759,6 +10955,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10808,6 +11005,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -10897,6 +11095,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -10946,6 +11145,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11035,6 +11235,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11084,6 +11285,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11173,6 +11375,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11222,6 +11425,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11311,6 +11515,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11360,6 +11565,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11459,6 +11665,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11508,6 +11715,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -11607,6 +11815,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11652,6 +11861,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -11701,6 +11911,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -11750,6 +11961,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -11799,6 +12011,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -11846,6 +12059,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -11924,6 +12138,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -11969,6 +12184,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12049,6 +12265,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12094,6 +12311,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12174,6 +12392,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12219,6 +12438,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12299,6 +12519,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12344,6 +12565,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12424,6 +12646,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12469,6 +12692,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12549,6 +12773,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12594,6 +12819,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12674,6 +12900,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12719,6 +12946,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -12799,6 +13027,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12878,6 +13107,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -12928,6 +13158,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -13022,6 +13253,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13065,6 +13297,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13108,6 +13341,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13187,6 +13421,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13230,6 +13465,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13273,6 +13509,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13313,6 +13550,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13391,6 +13629,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13441,6 +13680,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -13501,6 +13741,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -13547,6 +13788,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13592,6 +13834,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -13673,6 +13916,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13724,6 +13968,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'media_player',
@@ -13776,6 +14021,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -13854,6 +14100,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -13897,6 +14144,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -13976,6 +14224,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14055,6 +14304,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14096,6 +14346,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14136,6 +14387,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14176,6 +14428,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14216,6 +14469,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14256,6 +14510,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -14334,6 +14589,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14379,6 +14635,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -14463,6 +14720,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14513,6 +14771,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -14570,6 +14829,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -14621,6 +14881,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'select',
@@ -14667,6 +14928,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -14712,6 +14974,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -14793,6 +15056,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -14843,6 +15107,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -14918,6 +15183,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -14977,6 +15243,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15065,6 +15332,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15106,6 +15374,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15147,6 +15416,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'camera',
@@ -15194,6 +15464,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'event',
@@ -15241,6 +15512,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15281,6 +15553,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15359,6 +15632,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15400,6 +15674,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'binary_sensor',
@@ -15441,6 +15716,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15520,6 +15796,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15563,6 +15840,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15607,6 +15885,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15652,6 +15931,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15697,6 +15977,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15742,6 +16023,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -15823,6 +16105,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -15864,6 +16147,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15907,6 +16191,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15950,6 +16235,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -15993,6 +16279,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16036,6 +16323,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16079,6 +16367,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16122,6 +16411,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16165,6 +16455,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -16246,6 +16537,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16287,6 +16579,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16331,6 +16624,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16409,6 +16703,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16484,6 +16779,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16525,6 +16821,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16569,6 +16866,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16651,6 +16949,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16692,6 +16991,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16736,6 +17036,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16814,6 +17115,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -16855,6 +17157,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -16899,6 +17202,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -16977,6 +17281,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17018,6 +17323,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17062,6 +17368,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17140,6 +17447,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17215,6 +17523,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17256,6 +17565,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17300,6 +17610,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17382,6 +17693,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17423,6 +17735,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'lock',
@@ -17502,6 +17815,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17545,6 +17859,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'fan',
@@ -17595,6 +17910,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -17679,6 +17995,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17720,6 +18037,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -17801,6 +18119,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -17852,6 +18171,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'climate',
@@ -17907,6 +18227,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -17950,6 +18271,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -17990,6 +18312,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -18031,6 +18354,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -18072,6 +18396,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -18113,6 +18438,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
@@ -18192,6 +18518,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18235,6 +18562,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18280,6 +18608,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18325,6 +18654,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18406,6 +18736,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18481,6 +18812,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18524,6 +18856,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18569,6 +18902,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18614,6 +18948,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -18691,6 +19026,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18732,6 +19068,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -18813,6 +19150,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18854,6 +19192,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -18935,6 +19274,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -18976,6 +19316,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'cover',
@@ -19056,6 +19397,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -19104,6 +19446,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'humidifier',
@@ -19164,6 +19507,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'light',
@@ -19235,6 +19579,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'number',
@@ -19281,6 +19626,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -19362,6 +19708,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'button',
@@ -19405,6 +19752,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'sensor',
@@ -19448,6 +19796,7 @@
             'categories': dict({
             }),
             'config_entry_id': 'TestData',
+            'config_subentry_id': None,
             'device_class': None,
             'disabled_by': None,
             'domain': 'switch',
