@@ -35,8 +35,8 @@ async def async_setup_entry(
     sensors = []
     mac_address = config_entry.data[CONF_MAC]
     ip_addr = config_entry.data[CONF_IP_ADDRESS]
-    num_sensors = int(config_entry.data.get("hub", {}).get("num_channels") or 0)
-    is_ac = int(config_entry.data.get("hub", {}).get("is_ac") or 0)
+    num_sensors = config_entry.runtime_data.num_sensors
+    is_ac = config_entry.runtime_data.is_ac
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.

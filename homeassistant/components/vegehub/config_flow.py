@@ -8,10 +8,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.webhook import (
-    async_generate_id as webhook_generate_id,
-    async_generate_url as webhook_generate_url,
-)
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -19,7 +15,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_MAC,
-    CONF_WEBHOOK_ID,
 )
 
 from .const import DOMAIN
@@ -90,32 +85,13 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._config_url = f"http://{self._hub.ip_address}"
 
             if self._hub is not None:
-                webhook_id = webhook_generate_id()
-                webhook_url = webhook_generate_url(
-                    self.hass,
-                    webhook_id,
-                    allow_external=False,
-                    allow_ip=True,
-                )
-
-                # Send the webhook address to the hub as its server target
-                await self._hub.setup(
-                    "",
-                    webhook_url,
-                )
-
-                info_data = self._hub.info
+                info_data: dict[str, Any] = {}
 
                 info_data[CONF_MAC] = self._hub.mac_address
                 info_data[CONF_IP_ADDRESS] = self._hub.ip_address
                 info_data[CONF_HOST] = self._hostname
                 info_data[ATTR_SW_VERSION] = self._properties.get("version")
                 info_data[ATTR_CONFIGURATION_URL] = self._config_url
-                info_data[CONF_WEBHOOK_ID] = webhook_id
-
-                # Create a task to ask the hub for an update when it can,
-                # so that we have initial data
-                self.hass.async_create_task(self._hub.request_update())
 
                 # Create the config entry for the new device
                 return self.async_create_entry(

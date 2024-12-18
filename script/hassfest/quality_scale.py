@@ -2157,6 +2157,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "v2c",
     "vallox",
     "vasttrafik",
+    "vegehub",
     "velux",
     "venstar",
     "vera",
