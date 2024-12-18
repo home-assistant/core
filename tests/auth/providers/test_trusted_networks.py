@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import auth
 from homeassistant.auth import auth_store
+from homeassistant.auth.models import RefreshFlowContext
 from homeassistant.auth.providers import trusted_networks as tn_auth
 from homeassistant.components.http import CONF_TRUSTED_PROXIES, CONF_USE_X_FORWARDED_FOR
 from homeassistant.core import HomeAssistant
@@ -251,9 +252,11 @@ async def test_validate_refresh_token(
     """Verify re-validation of refresh token."""
     with patch.object(provider, "async_validate_access") as mock:
         with pytest.raises(auth.InvalidAuthError):
-            provider.async_validate_refresh_token(Mock(), None)
+            provider.async_validate_refresh_token(Mock(), RefreshFlowContext())
 
-        provider.async_validate_refresh_token(Mock(), "127.0.0.1")
+        provider.async_validate_refresh_token(
+            Mock(), RefreshFlowContext(ip_address=ip_address("127.0.0.1"))
+        )
         mock.assert_called_once_with(ip_address("127.0.0.1"))
 
 

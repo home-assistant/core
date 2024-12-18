@@ -7,14 +7,7 @@ Abort login flow if not access from trusted network.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from ipaddress import (
-    IPv4Address,
-    IPv4Network,
-    IPv6Address,
-    IPv6Network,
-    ip_address,
-    ip_network,
-)
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network, ip_network
 from typing import Any, cast
 
 import voluptuous as vol
@@ -29,6 +22,7 @@ from ..models import (
     AuthFlowContext,
     AuthFlowResult,
     Credentials,
+    RefreshFlowContext,
     RefreshToken,
     UserMeta,
 )
@@ -206,14 +200,16 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: RefreshToken, remote_ip: str | None = None
+        self,
+        refresh_token: RefreshToken,
+        context: RefreshFlowContext,
     ) -> None:
         """Verify a refresh token is still valid."""
-        if remote_ip is None:
+        if context.get("ip_address") is None:
             raise InvalidAuthError(
                 "Unknown remote ip can't be used for trusted network provider."
             )
-        self.async_validate_access(ip_address(remote_ip))
+        self.async_validate_access(context["ip_address"])
 
 
 class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):

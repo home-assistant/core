@@ -27,6 +27,7 @@ from ..models import (
     AuthFlowContext,
     AuthFlowResult,
     Credentials,
+    RefreshFlowContext,
     RefreshToken,
     User,
     UserMeta,
@@ -135,7 +136,9 @@ class AuthProvider:
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: RefreshToken, remote_ip: str | None = None
+        self,
+        refresh_token: RefreshToken,
+        context: RefreshFlowContext,
     ) -> None:
         """Verify a refresh token is still valid.
 
