@@ -175,12 +175,19 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_REAUTH:
             account = self._get_account(self.data[CONF_ACCOUNT_ID])
 
+            # Migration completed
+            if self._get_reauth_entry().version == 1:
+                self.hass.config_entries.async_update_entry(
+                    self._get_reauth_entry(),
+                    data=self.data,
+                    version=self.VERSION,
+                )
+
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
                 unique_id=self.unique_id,
                 title=account["address"],
                 data=self.data,
-                version=self.VERSION,
             )
 
         return self.async_create_entry(
