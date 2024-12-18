@@ -101,15 +101,20 @@ async def get_data_from_library(
 
 
 @pytest.fixture(name="load_json")
-def load_json_from_fixture() -> list[dict[str, Any]]:
+def load_json_from_fixture(load_data: list[str, str, str]) -> list[dict[str, Any]]:
     """Load fixture with json data and return."""
-    today = load_fixture("delivery_period_today.json", DOMAIN)
-    yesterday = load_fixture("delivery_period_yesterday.json", DOMAIN)
-    tomorrow = load_fixture("delivery_period_tomorrow.json", DOMAIN)
-    return [json.loads(today), json.loads(yesterday), json.loads(tomorrow)]
+    return [
+        json.loads(load_data[0]),
+        json.loads(load_data[1]),
+        json.loads(load_data[2]),
+    ]
 
 
 @pytest.fixture(name="load_data", scope="package")
-def load_data_from_fixture() -> str:
+def load_data_from_fixture() -> list[str, str, str]:
     """Load fixture with fixture data and return."""
-    return load_fixture("delivery_period_today.json", DOMAIN)
+    return [
+        load_fixture("delivery_period_today.json", DOMAIN),
+        load_fixture("delivery_period_yesterday.json", DOMAIN),
+        load_fixture("delivery_period_tomorrow.json", DOMAIN),
+    ]
