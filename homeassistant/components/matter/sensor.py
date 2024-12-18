@@ -718,6 +718,42 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseState",
+            translation_key="evse_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_STATE_MAP.values()),
+            measurement_to_ha=EVSE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.State,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseSupplyState",
+            translation_key="evse_supply_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_SUPPLY_STATE_MAP.values()),
+            measurement_to_ha=EVSE_SUPPLY_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.SupplyState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseFaultState",
+            translation_key="evse_fault_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_FAULT_STATE_MAP.values()),
+            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.FaultState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EnergyEvseCircuitCapacity",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -770,43 +806,5 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="EnergyEvseState",
-            translation_key="evse_state",
-            device_class=SensorDeviceClass.ENUM,
-            options=list(EVSE_STATE_MAP.values()),
-            measurement_to_ha=EVSE_STATE_MAP.get,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.EnergyEvse.Attributes.State,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="EnergyEvseSupplyState",
-            translation_key="evse_supply_state",
-            device_class=SensorDeviceClass.ENUM,
-            options=list(EVSE_SUPPLY_STATE_MAP.values()),
-            measurement_to_ha=EVSE_SUPPLY_STATE_MAP.get,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.EnergyEvse.Attributes.SupplyState,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="EnergyEvseFaultState",
-            translation_key="evse_fault_state",
-            device_class=SensorDeviceClass.ENUM,
-            options=list(EVSE_FAULT_STATE_MAP.values()),
-            measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(
-            clusters.EnergyEvse.Attributes.FaultState,
-        ),
     ),
 ]
