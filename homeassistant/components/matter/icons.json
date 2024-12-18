@@ -43,6 +43,9 @@
       "air_quality": {
         "default": "mdi:air-filter"
       },
+      "bat_replacement_description": {
+        "default": "mdi:battery-sync"
+      },
       "hepa_filter_condition": {
         "default": "mdi:filter-check"
       },
