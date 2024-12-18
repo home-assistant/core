@@ -33,9 +33,10 @@ rules:
   docs-actions: done
   brands: done
   # Silver
-  integration-owner: done
-  reauthentication-flow: done
   config-entry-unloading: done
+  entity-unavailable: done
+  reauthentication-flow: done
+  integration-owner: done
   # Gold
   devices: done
   diagnostics: done
