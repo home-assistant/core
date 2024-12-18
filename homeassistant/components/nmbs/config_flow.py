@@ -73,33 +73,35 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=user_input,
             )
 
+        choices = None
         try:
             choices = await self._fetch_stations_choices()
-            schema = vol.Schema(
-                {
-                    vol.Required(CONF_STATION_FROM): SelectSelector(
-                        SelectSelectorConfig(
-                            options=choices,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Required(CONF_STATION_TO): SelectSelector(
-                        SelectSelectorConfig(
-                            options=choices,
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Optional(CONF_EXCLUDE_VIAS, default=False): BooleanSelector(),
-                    vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
-                },
-            )
-            return self.async_show_form(
-                step_id="user",
-                data_schema=schema,
-                errors=errors,
-            )
         except ConfigEntryError:
             return self.async_abort(reason="api_unavailable")
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_STATION_FROM): SelectSelector(
+                    SelectSelectorConfig(
+                        options=choices,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(CONF_STATION_TO): SelectSelector(
+                    SelectSelectorConfig(
+                        options=choices,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional(CONF_EXCLUDE_VIAS): BooleanSelector(),
+                vol.Optional(CONF_SHOW_ON_MAP): BooleanSelector(),
+            },
+        )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+        )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
