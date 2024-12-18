@@ -69,6 +69,18 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
 
+class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
+    """Representation of a SwitchBot relay switch."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.data:
+            return
+        self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
+        self.async_write_ha_state()
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -82,5 +94,5 @@ def _async_make_entity(
         "Relay Switch 1PM",
         "Relay Switch 1",
     ]:
-        return SwitchBotCloudSwitch(api, device, coordinator)
+        return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
