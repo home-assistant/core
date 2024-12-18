@@ -171,7 +171,7 @@ async def test_agents_list_backups(
             "size": 34519040,
             "agent_ids": ["cloud.cloud"],
             "failed_agent_ids": [],
-            "with_strategy_settings": False,
+            "with_strategy_settings": None,
         }
     ]
 
@@ -218,7 +218,7 @@ async def test_agents_list_backups_fail_cloud(
                 "size": 34519040,
                 "agent_ids": ["cloud.cloud"],
                 "failed_agent_ids": [],
-                "with_strategy_settings": False,
+                "with_strategy_settings": None,
             },
         ),
         (
@@ -372,6 +372,7 @@ async def test_agents_upload(
     assert f"Uploading backup {backup_id}" in caplog.text
 
 
+@pytest.mark.parametrize("put_mock_kwargs", [{"status": 500}, {"exc": TimeoutError}])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_upload_fail_put(
     hass: HomeAssistant,
@@ -379,6 +380,7 @@ async def test_agents_upload_fail_put(
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
+    put_mock_kwargs: dict[str, Any],
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
@@ -395,7 +397,7 @@ async def test_agents_upload_fail_put(
         protected=True,
         size=0.0,
     )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"], status=500)
+    aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
 
     with (
         patch(
@@ -568,4 +570,4 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {"cloud.cloud": "Backup not found"}}
+    assert response["result"] == {"agent_errors": {}}

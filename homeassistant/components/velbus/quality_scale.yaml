@@ -7,10 +7,7 @@ rules:
       This integration does not poll.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Split test_flow_usb from the test that tests already_configured, test_flow_usb should also assert the unique_id of the entry
+  config-flow-test-coverage: done
   config-flow:
     status: todo
     comment: |
@@ -25,7 +22,7 @@ rules:
   has-entity-name: todo
   runtime-data: done
   test-before-configure: done
-  test-before-setup: todo
+  test-before-setup: done
   unique-config-entry:
     status: todo
     comment: |
@@ -39,7 +36,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |

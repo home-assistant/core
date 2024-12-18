@@ -323,25 +323,6 @@ class BackupSchedule:
                 # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
 
-            # delete old backups more numerous than copies
-
-            def _backups_filter(
-                backups: dict[str, ManagerBackup],
-            ) -> dict[str, ManagerBackup]:
-                """Return oldest backups more numerous than copies to delete."""
-                # we need to check here since we await before
-                # this filter is applied
-                if config_data.retention.copies is None:
-                    return {}
-                return dict(
-                    sorted(
-                        backups.items(),
-                        key=lambda backup_item: backup_item[1].date,
-                    )[: len(backups) - config_data.retention.copies]
-                )
-
-            await _delete_filtered_backups(manager, _backups_filter)
-
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )
@@ -469,3 +450,24 @@ async def _delete_filtered_backups(
             "Error deleting old copies: %s",
             agent_errors,
         )
+
+
+async def delete_backups_exceeding_configured_count(manager: BackupManager) -> None:
+    """Delete backups exceeding the configured retention count."""
+
+    def _backups_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return oldest backups more numerous than copies to delete."""
+        # we need to check here since we await before
+        # this filter is applied
+        if manager.config.data.retention.copies is None:
+            return {}
+        return dict(
+            sorted(
+                backups.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )[: len(backups) - manager.config.data.retention.copies]
+        )
+
+    await _delete_filtered_backups(manager, _backups_filter)
