@@ -1120,7 +1120,13 @@ class ConfigEntry[_DataT = Any]:
         Returns function to unlisten.
         """
         self.update_listeners.append(listener)
-        return lambda: self.update_listeners.remove(listener)
+
+        def remove_listener() -> None:
+            """Remove listener."""
+            if listener in self.update_listeners:
+                self.update_listeners.remove(listener)
+
+        return remove_listener
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this entry."""
@@ -3243,7 +3249,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
             data = entry.data | data_updates
-        update_listener_exist = bool(entry.update_listeners)
+        entry.update_listeners = []
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
             unique_id=unique_id,
@@ -3251,9 +3257,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
             data=data,
             options=options,
         )
-        if reload_even_if_entry_is_unchanged or (
-            update_listener_exist is False and result is True
-        ):
+        if reload_even_if_entry_is_unchanged or result:
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         if reason is UNDEFINED:
             reason = "reauth_successful"
