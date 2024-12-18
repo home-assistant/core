@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 import logging
-from typing import Final, cast
+from typing import cast
 
 from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
@@ -192,10 +191,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
 class QbusConfigCoordinator:
     """Class responsible for Qbus config updates."""
 
-    _WAIT_TIMEOUT: Final[int] = 5
-
     _qbus_config: QbusDiscovery | None = None
-    _request_config_event: asyncio.Event | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize config coordinator."""
@@ -243,13 +239,6 @@ class QbusConfigCoordinator:
             _LOGGER.debug("Qbus config already available")
             return self._qbus_config
 
-        # Setup event
-        _LOGGER.debug("Qbus config missing")
-        if self._request_config_event is None:
-            # Create event
-            _LOGGER.debug("Creating config event")
-            self._request_config_event = asyncio.Event()
-
         if not await async_wait_for_mqtt_client(self._hass):
             _LOGGER.debug("MQTT client not ready yet")
             return None
@@ -260,15 +249,6 @@ class QbusConfigCoordinator:
             self._hass, self._topic_factory.get_get_config_topic(), b""
         )
 
-        # Wait
-        try:
-            await asyncio.wait_for(
-                self._request_config_event.wait(), self._WAIT_TIMEOUT
-            )
-        except TimeoutError:
-            _LOGGER.debug("Timeout while waiting for config")
-            return None
-
         return self._qbus_config
 
     def store_config(self, config: QbusDiscovery) -> None:
@@ -276,10 +256,6 @@ class QbusConfigCoordinator:
         _LOGGER.debug("Storing config")
 
         self._qbus_config = config
-
-        if self._request_config_event and not self._request_config_event.is_set():
-            _LOGGER.debug("Mark config event as finished")
-            self._request_config_event.set()
 
     async def _config_received(self, msg: ReceiveMessage) -> None:
         """Handle the received MQTT message containing the Qbus config."""
