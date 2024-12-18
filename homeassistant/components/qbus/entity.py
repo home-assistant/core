@@ -56,7 +56,7 @@ class QbusEntity(Entity, ABC):
         )
 
         self._attr_device_info = DeviceInfo(
-            name=mqtt_output.name,
+            name=mqtt_output.name.title(),
             manufacturer=MANUFACTURER,
             identifiers={(DOMAIN, f"{mqtt_output.device.serial_number}_{ref_id}")},
             suggested_area=mqtt_output.location.title(),
@@ -77,7 +77,7 @@ class QbusEntity(Entity, ABC):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._mqtt_output.name if self._mqtt_output else ""
+        return self._mqtt_output.name.title() if self._mqtt_output else ""
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
