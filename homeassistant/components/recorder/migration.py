@@ -521,7 +521,7 @@ def _create_index(
             index.create(connection)
         except (InternalError, OperationalError, ProgrammingError) as err:
             if _unindexable_legacy_column(instance, base, err):
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Can't add legacy index %s to column %s, continuing",
                     index_name,
                     table_name,
@@ -2528,10 +2528,8 @@ class BaseMigration(ABC):
         """Check if the index needed by the migration exists."""
         if self.index_to_drop is None:
             return None
-        return (
-            get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
-            is not None
-        )
+        table_name, index_name, _ = self.index_to_drop
+        return get_index_by_name(session, table_name, index_name) is not None
 
 
 class BaseOffLineMigration(BaseMigration):

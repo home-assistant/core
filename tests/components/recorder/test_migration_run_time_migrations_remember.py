@@ -89,6 +89,8 @@ def _create_engine_test(
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 @pytest.mark.parametrize(
     ("initial_version", "expected_migrator_calls", "expected_created_indices"),
+    # expected_migrator_calls is a dict of
+    # migrator_id: (needs_migrate_calls, migrate_data_calls)
     [
         (
             27,
@@ -259,14 +261,13 @@ async def test_data_migrator_logic(
 
     index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
     assert index_names == expected_created_indices
+
+    # Check each data migrator's needs_migrate_impl and migrate_data methods were called
+    # the expected number of times.
     for migrator, mock in migrator_mocks.items():
-        assert (
-            len(mock["needs_migrate"].mock_calls)
-            == expected_migrator_calls[migrator][0]
-        )
-        assert (
-            len(mock["migrate_data"].mock_calls) == expected_migrator_calls[migrator][1]
-        )
+        needs_migrate_calls, migrate_data_calls = expected_migrator_calls[migrator]
+        assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls
+        assert len(mock["migrate_data"].mock_calls) == migrate_data_calls
 
 
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])

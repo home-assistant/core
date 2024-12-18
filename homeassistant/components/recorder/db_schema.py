@@ -352,7 +352,7 @@ class Events(Base):
 
 
 class LegacyEvents(LegacyBase):
-    """Event history data."""
+    """Event history data with event_id, used for schema migration."""
 
     __table_args__ = (_DEFAULT_TABLE_ARGS,)
     __tablename__ = TABLE_EVENTS
@@ -588,7 +588,7 @@ class States(Base):
 
 
 class LegacyStates(LegacyBase):
-    """State change history."""
+    """State change history with entity_id, used for schema migration."""
 
     __table_args__ = (
         Index(
