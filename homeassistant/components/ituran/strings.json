@@ -35,6 +35,25 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "heading": {
+        "name": "Heading"
+      },
+      "last_update_from_vehicle": {
+        "name": "Last update from vehicle"
+      },
+      "mileage": {
+        "name": "Mileage"
+      }
+    }
+  },
   "exceptions": {
     "api_error": {
       "message": "An error occurred while communicating with the Ituran service."
