@@ -101,7 +101,7 @@ class LcnServiceCall:
             self.hass,
             DOMAIN,
             "deprecated_address_parameter",
-            breaks_in_ha_version="2025.5.0",
+            breaks_in_ha_version="2025.6.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_address_parameter",

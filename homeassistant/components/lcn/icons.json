@@ -38,9 +38,6 @@
     },
     "pck": {
       "service": "mdi:package-variant-closed"
-    },
-    "address_to_device_id": {
-      "service": "mdi:calculator"
     }
   }
 }

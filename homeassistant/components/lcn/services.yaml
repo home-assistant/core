@@ -566,27 +566,3 @@ pck:
       example: "PIN4"
       selector:
         text:
-
-address_to_device_id:
-  fields:
-    id:
-      required: true
-      selector:
-        number:
-          min: 0
-          max: 255
-    segment_id:
-      selector:
-        number:
-          min: 0
-          max: 255
-    type:
-      selector:
-        select:
-          options:
-            - "module"
-            - "group"
-    host:
-      example: "pchk"
-      selector:
-        text:
