@@ -34,6 +34,7 @@ from tests.typing import WebSocketGenerator
 BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
+    extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
     include_addons=["test-addon"],
     include_all_addons=False,
     include_database=True,
@@ -55,8 +56,8 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
             "name": None,
             "password": None,
         },
-        "last_attempted_strategy_backup": None,
-        "last_completed_strategy_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
         "retention": {
             "copies": None,
             "days": None,
@@ -276,7 +277,6 @@ async def test_delete(
                 {
                     "backup_id": "abc123",
                     "failed_agent_ids": ["test.remote"],
-                    "with_strategy_settings": False,
                 }
             ]
         },
@@ -487,7 +487,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": None,
                 "password": None,
-                "with_strategy_settings": True,
+                "with_automatic_settings": True,
             },
         ),
         (
@@ -509,7 +509,7 @@ async def test_generate_calls_create(
                 "include_homeassistant": True,
                 "name": "test-name",
                 "password": "test-password",
-                "with_strategy_settings": True,
+                "with_automatic_settings": True,
             },
         ),
     ],
@@ -522,7 +522,7 @@ async def test_generate_with_default_settings_calls_create(
     create_backup_settings: dict[str, Any],
     expected_call_params: dict[str, Any],
 ) -> None:
-    """Test backup/generate_with_strategy_settings calls async_initiate_backup."""
+    """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
     await setup_backup_integration(hass, with_hassio=False)
 
     client = await hass_ws_client(hass)
@@ -540,7 +540,7 @@ async def test_generate_with_default_settings_calls_create(
         return_value=NewBackup(backup_job_id="abc123"),
     ) as generate_backup:
         await client.send_json_auto_id(
-            {"type": "backup/generate_with_strategy_settings"}
+            {"type": "backup/generate_with_automatic_settings"}
         )
         result = await client.receive_json()
         assert result["success"]
@@ -780,8 +780,8 @@ async def test_agents_info(
                     "password": "test-password",
                 },
                 "retention": {"copies": 3, "days": 7},
-                "last_attempted_strategy_backup": "2024-10-26T04:45:00+01:00",
-                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
+                "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
+                "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "daily"},
             },
         },
@@ -798,8 +798,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": 3, "days": None},
-                "last_attempted_strategy_backup": None,
-                "last_completed_strategy_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "never"},
             },
         },
@@ -816,8 +816,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": 7},
-                "last_attempted_strategy_backup": "2024-10-27T04:45:00+01:00",
-                "last_completed_strategy_backup": "2024-10-26T04:45:00+01:00",
+                "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
+                "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
                 "schedule": {"state": "never"},
             },
         },
@@ -834,8 +834,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_attempted_strategy_backup": None,
-                "last_completed_strategy_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "mon"},
             },
         },
@@ -852,8 +852,8 @@ async def test_agents_info(
                     "password": None,
                 },
                 "retention": {"copies": None, "days": None},
-                "last_attempted_strategy_backup": None,
-                "last_completed_strategy_backup": None,
+                "last_attempted_automatic_backup": None,
+                "last_completed_automatic_backup": None,
                 "schedule": {"state": "sat"},
             },
         },
@@ -1022,7 +1022,7 @@ async def test_config_update_errors(
 @pytest.mark.parametrize(
     (
         "command",
-        "last_completed_strategy_backup",
+        "last_completed_automatic_backup",
         "time_1",
         "time_2",
         "attempted_backup_time",
@@ -1154,7 +1154,7 @@ async def test_config_schedule_logic(
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
     command: dict[str, Any],
-    last_completed_strategy_backup: str,
+    last_completed_automatic_backup: str,
     time_1: str,
     time_2: str,
     attempted_backup_time: str,
@@ -1179,8 +1179,8 @@ async def test_config_schedule_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": last_completed_strategy_backup,
-            "last_completed_strategy_backup": last_completed_strategy_backup,
+            "last_attempted_automatic_backup": last_completed_automatic_backup,
+            "last_completed_automatic_backup": last_completed_automatic_backup,
             "schedule": {"state": "daily"},
         },
     }
@@ -1210,11 +1210,11 @@ async def test_config_schedule_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_attempted_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
         == attempted_backup_time
     )
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_completed_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         == completed_backup_time
     )
 
@@ -1251,22 +1251,22 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1290,22 +1290,22 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1329,27 +1329,27 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1373,27 +1373,27 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1417,22 +1417,22 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1456,22 +1456,22 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1495,27 +1495,27 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1539,12 +1539,12 @@ async def test_config_schedule_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1595,8 +1595,8 @@ async def test_config_retention_copies_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": last_backup_time,
+            "last_attempted_automatic_backup": None,
+            "last_completed_automatic_backup": last_backup_time,
             "schedule": {"state": "daily"},
         },
     }
@@ -1628,11 +1628,11 @@ async def test_config_retention_copies_logic(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_attempted_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
         == backup_time
     )
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_completed_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         == backup_time
     )
 
@@ -1641,7 +1641,7 @@ async def test_config_retention_copies_logic(
     ("backup_command", "backup_time"),
     [
         (
-            {"type": "backup/generate_with_strategy_settings"},
+            {"type": "backup/generate_with_automatic_settings"},
             "2024-11-11T12:00:00+01:00",
         ),
         (
@@ -1672,22 +1672,22 @@ async def test_config_retention_copies_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1708,22 +1708,22 @@ async def test_config_retention_copies_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1744,27 +1744,27 @@ async def test_config_retention_copies_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1785,27 +1785,27 @@ async def test_config_retention_copies_logic(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1852,8 +1852,8 @@ async def test_config_retention_copies_logic_manual_backup(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": None,
+            "last_attempted_automatic_backup": None,
+            "last_completed_automatic_backup": None,
             "schedule": {"state": "daily"},
         },
     }
@@ -1889,11 +1889,11 @@ async def test_config_retention_copies_logic_manual_backup(
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_attempted_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
         == backup_time
     )
     assert (
-        hass_storage[DOMAIN]["data"]["config"]["last_completed_strategy_backup"]
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
         == backup_time
     )
 
@@ -1922,17 +1922,17 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1955,17 +1955,17 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -1988,22 +1988,22 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -2026,17 +2026,17 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -2059,17 +2059,17 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -2092,22 +2092,22 @@ async def test_config_retention_copies_logic_manual_backup(
             {
                 "backup-1": MagicMock(
                     date="2024-11-09T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
                     date="2024-11-11T04:45:00+01:00",
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
                     date="2024-11-10T04:45:00+01:00",
-                    with_strategy_settings=False,
+                    with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
@@ -2155,8 +2155,8 @@ async def test_config_retention_days_logic(
                 "password": "test-password",
             },
             "retention": {"copies": None, "days": None},
-            "last_attempted_strategy_backup": None,
-            "last_completed_strategy_backup": last_backup_time,
+            "last_attempted_automatic_backup": None,
+            "last_completed_automatic_backup": last_backup_time,
             "schedule": {"state": "never"},
         },
     }

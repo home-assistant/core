@@ -104,6 +104,7 @@ def _backup_details_to_agent_backup(
         backup_id=details.slug,
         database_included=database_included,
         date=details.date.isoformat(),
+        extra_metadata=details.extra or {},
         folders=[Folder(folder) for folder in details.folders],
         homeassistant_included=homeassistant_included,
         homeassistant_version=details.homeassistant,
@@ -202,6 +203,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         *,
         agent_ids: list[str],
         backup_name: str,
+        extra_metadata: dict[str, bool | str],
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -242,6 +244,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 location=locations or LOCATION_CLOUD_BACKUP,
                 homeassistant_exclude_database=not include_database,
                 background=True,
+                extra=extra_metadata,
             )
         )
         backup_task = self._hass.async_create_task(
