@@ -12,6 +12,6 @@
     "cloudapp/QBUSMQTTGW/config",
     "cloudapp/QBUSMQTTGW/+/state"
   ],
-  "requirements": ["qbusmqttapi==1.2.1"],
+  "requirements": ["qbusmqttapi==1.2.2"],
   "single_config_entry": false
 }

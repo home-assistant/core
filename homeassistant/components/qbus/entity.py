@@ -74,14 +74,6 @@ class QbusEntity(Entity, ABC):
             mqtt_output.device.id, mqtt_output.id
         )
 
-    @classmethod
-    def create(
-        cls,
-        mqtt_output: QbusMqttOutput,
-    ) -> "QbusEntity":
-        """Create an instance."""
-        raise NotImplementedError("Must be implemented by derived class.")
-
     @property
     def name(self) -> str:
         """Return the name of the entity."""

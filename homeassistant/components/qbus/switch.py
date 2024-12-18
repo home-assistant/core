@@ -24,7 +24,25 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
 ) -> None:
     """Set up switch entities."""
-    entry.runtime_data.register_platform("onoff", QbusSwitch, add_entities)
+    coordinator = entry.runtime_data
+
+    # Keep a record of added entities
+    known_items: list[QbusMqttOutput] = []
+
+    # Local function that calls add_entities for new entities
+    def _check_items() -> None:
+        new_items = [
+            item
+            for item in coordinator.data
+            if item.type == "onoff" and item.id not in {k.id for k in known_items}
+        ]
+
+        if new_items:
+            known_items.extend(new_items)
+            add_entities([QbusSwitch(item) for item in new_items])
+
+    _check_items()
+    entry.async_on_unload(coordinator.async_add_listener(_check_items))
 
 
 class QbusSwitch(QbusEntity, SwitchEntity):
@@ -41,14 +59,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         super().__init__(mqtt_output, ENTITY_ID_FORMAT)
 
         self._is_on = False
-
-    @classmethod
-    def create(
-        cls,
-        mqtt_output: QbusMqttOutput,
-    ) -> "QbusSwitch":
-        """Create an instance."""
-        return QbusSwitch(mqtt_output)
 
     @property
     def is_on(self) -> bool:

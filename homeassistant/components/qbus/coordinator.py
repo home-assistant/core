@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from typing import Final, cast
 
-from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice
+from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
 from homeassistant.components.mqtt import (
@@ -20,12 +20,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.hass_dict import HassKey
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
-from .entity import QbusEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ type QbusConfigEntry = ConfigEntry[QbusControllerCoordinator]
 QBUS_KEY: HassKey[QbusConfigCoordinator] = HassKey(DOMAIN)
 
 
-class QbusControllerCoordinator:
+class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
     """Qbus data coordinator."""
 
     _WAIT_TIME = 3
@@ -43,25 +42,31 @@ class QbusControllerCoordinator:
         """Initialize Qbus coordinator."""
         _LOGGER.debug("%s - Initializing coordinator", entry.unique_id)
 
-        self._hass = hass
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name=entry.unique_id or entry.entry_id,
+            always_update=False,
+        )
+
         self._entry = entry
 
         self._message_factory = QbusMqttMessageFactory()
         self._topic_factory = QbusMqttTopicFactory()
 
         self._cleanup_callbacks: list[CALLBACK_TYPE] = []
-        self._platform_register: dict[
-            str, tuple[type[QbusEntity], AddEntitiesCallback]
-        ] = {}
-        self._registered_entity_ids: list[str] = []
         self._controller_activated = False
         self._subscribed_to_controller_state = False
-        self._controller: QbusMqttDevice | None
+        self._controller: QbusMqttDevice | None = None
 
         # Clean up when HA stops
         self._cleanup_callbacks.append(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         )
+
+    async def _async_update_data(self) -> list[QbusMqttOutput]:
+        return self._controller.outputs if self._controller else []
 
     def shutdown(self, event: Event | None = None) -> None:
         """Shutdown Qbus coordinator."""
@@ -72,20 +77,9 @@ class QbusControllerCoordinator:
             cleanup_callback()
 
         self._cleanup_callbacks = []
-        self._registered_entity_ids = []
         self._controller_activated = False
         self._subscribed_to_controller_state = False
         self._controller = None
-
-    def register_platform(
-        self,
-        qbus_type: str,
-        entity_class: type[QbusEntity],
-        add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Register the platform so adding entities can be postponed to when the Qbus config is received."""
-        _LOGGER.debug("%s - Registering %s", self._entry.unique_id, qbus_type)
-        self._platform_register[qbus_type.lower()] = (entity_class, add_entities)
 
     async def async_update_controller_config(self, config: QbusDiscovery) -> None:
         """Update the controller based on the config."""
@@ -105,11 +99,12 @@ class QbusControllerCoordinator:
 
         self._update_device_info(self._controller)
         await self._async_subscribe_to_controller_state(self._controller)
-        self._add_entities(self._controller)
+        await self.async_refresh()
         self._request_controller_state(self._controller)
+        self._request_entity_states(self._controller)
 
     def _update_device_info(self, controller: QbusMqttDevice) -> None:
-        device_registry = dr.async_get(self._hass)
+        device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
             config_entry_id=self._entry.entry_id,
             identifiers={(DOMAIN, format_mac(controller.mac))},
@@ -130,12 +125,14 @@ class QbusControllerCoordinator:
             controller.id
         )
         _LOGGER.debug(
-            "%s - Subscribing to %s", self._entry.unique_id, controller_state_topic
+            "%s - Subscribing to %s",
+            self._entry.unique_id,
+            controller_state_topic,
         )
         self._subscribed_to_controller_state = True
         self._cleanup_callbacks.append(
             await mqtt.async_subscribe(
-                self._hass,
+                self.hass,
                 controller_state_topic,
                 self._controller_state_received,
             )
@@ -164,61 +161,32 @@ class QbusControllerCoordinator:
             request = self._message_factory.create_device_activate_request(
                 self._controller
             )
-            await mqtt.async_publish(self._hass, request.topic, request.payload)
+            await mqtt.async_publish(self.hass, request.topic, request.payload)
 
-    def _add_entities(self, controller: QbusMqttDevice) -> None:
-        """Create the Qbus entities in Home Assistant."""
-
-        _LOGGER.debug(
-            "%s - Adding entities for %s registered IDs",
-            self._entry.unique_id,
-            len(self._registered_entity_ids),
-        )
-        items: dict[str, list[QbusEntity]] = {}
-
-        # Build list of HA entities based on Qbus configuration
-        for output in controller.outputs:
-            if output.id in self._registered_entity_ids:
-                continue
-
-            qbus_type = output.type.lower()
-
-            if qbus_type not in self._platform_register:
-                continue
-
-            self._registered_entity_ids.append(output.id)
-
-            entity_class = self._platform_register[qbus_type][0]
-            entity = entity_class.create(output)
-            items.setdefault(qbus_type, []).append(entity)
-
-        # Add entities to HA
-        _LOGGER.debug(
-            "%s - Adding %s entities to HA", self._entry.unique_id, len(items)
-        )
-        for qbus_type, entities in items.items():
-            add_entities = self._platform_register[qbus_type][1]
-            add_entities(entities)
-
-        self._request_entity_states()
-
-    def _request_entity_states(self) -> None:
+    def _request_entity_states(self, controller: QbusMqttDevice) -> None:
         async def request_state(_: datetime) -> None:
-            request = self._message_factory.create_state_request(
-                self._registered_entity_ids
+            _LOGGER.debug(
+                "%s - Requesting %s entity states",
+                self._entry.unique_id,
+                len(controller.outputs),
             )
 
-            await mqtt.async_publish(self._hass, request.topic, request.payload)
+            request = self._message_factory.create_state_request(
+                [item.id for item in controller.outputs]
+            )
 
-        if len(self._registered_entity_ids) > 0:
-            async_call_later(self._hass, self._WAIT_TIME, request_state)
+            await mqtt.async_publish(self.hass, request.topic, request.payload)
+
+        if len(controller.outputs) > 0:
+            async_call_later(self.hass, self._WAIT_TIME, request_state)
 
     def _request_controller_state(self, controller: QbusMqttDevice) -> None:
         async def request_controller_state(_: datetime) -> None:
+            _LOGGER.debug("%s - Requesting controller state", self._entry.unique_id)
             request = self._message_factory.create_device_state_request(controller)
-            await mqtt.async_publish(self._hass, request.topic, request.payload)
+            await mqtt.async_publish(self.hass, request.topic, request.payload)
 
-        async_call_later(self._hass, self._WAIT_TIME, request_controller_state)
+        async_call_later(self.hass, self._WAIT_TIME, request_controller_state)
 
 
 class QbusConfigCoordinator:
