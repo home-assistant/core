@@ -53,9 +53,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        <PowerSupplyMode.BATTERY: 'battery'>,
-        <PowerSupplyMode.EXTERNAL: 'external'>,
-        <PowerSupplyMode.BATTERY_EXTERNAL: 'battery+external'>,
+        'battery',
+        'external',
+        'battery_external',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -91,9 +91,9 @@
       'device_class': 'enum',
       'friendly_name': 'Sonic Power supply mode',
       'options': list([
-        <PowerSupplyMode.BATTERY: 'battery'>,
-        <PowerSupplyMode.EXTERNAL: 'external'>,
-        <PowerSupplyMode.BATTERY_EXTERNAL: 'battery+external'>,
+        'battery',
+        'external',
+        'battery_external',
       ]),
     }),
     'context': <ANY>,

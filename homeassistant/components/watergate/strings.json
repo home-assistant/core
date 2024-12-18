@@ -42,7 +42,12 @@
         "name": "Up since"
       },
       "power_supply_mode": {
-        "name": "Power supply mode"
+        "name": "Power supply mode",
+        "state": {
+          "battery": "Battery",
+          "external": "Mains",
+          "battery_external": "Battery and mains"
+        }
       }
     }
   }

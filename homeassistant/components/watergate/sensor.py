@@ -39,7 +39,7 @@ class PowerSupplyMode(StrEnum):
 
     BATTERY = "battery"
     EXTERNAL = "external"
-    BATTERY_EXTERNAL = "battery+external"
+    BATTERY_EXTERNAL = "battery_external"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -156,7 +156,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: PowerSupplyMode(data.state.power_supply)
+        value_fn=lambda data: PowerSupplyMode(data.state.power_supply.replace("+", "_"))
         if data.state
         else None,
         translation_key="power_supply_mode",
@@ -164,11 +164,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            PowerSupplyMode.BATTERY,
-            PowerSupplyMode.EXTERNAL,
-            PowerSupplyMode.BATTERY_EXTERNAL,
-        ],
+        options=[member.value for member in PowerSupplyMode],
     ),
 ]
 
