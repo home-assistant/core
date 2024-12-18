@@ -33,7 +33,12 @@ HEADER: Final = """
 GENERAL_SETTINGS: Final[dict[str, str]] = {
     "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "platform": "linux",
-    "plugins": "pydantic.mypy",
+    "plugins": ", ".join(  # noqa: FLY002
+        [
+            "pydantic.mypy",
+            "pydantic.v1.mypy",
+        ]
+    ),
     "show_error_codes": "true",
     "follow_imports": "normal",
     # "enable_incomplete_feature": ", ".join(  # noqa: FLY002
@@ -42,6 +47,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
+    "strict_bytes": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",

@@ -69,7 +69,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: translations
           path: translations.tar.gz
@@ -517,7 +517,7 @@ jobs:
           tags: ${{ env.HASSFEST_IMAGE_TAG }}
 
       - name: Run hassfest against core
-        run: docker run --rm -v ${{ github.workspace }}/homeassistant:/github/workspace/homeassistant ${{ env.HASSFEST_IMAGE_TAG }} --core-integrations-path=/github/workspace/homeassistant/components
+        run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
 
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
@@ -531,7 +531,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@c4fbc648846ca6f503a13a2281a5e7b98aa57202 # v2.0.1
+        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
