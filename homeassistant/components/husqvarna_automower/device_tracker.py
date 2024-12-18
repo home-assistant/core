@@ -19,22 +19,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker platform."""
     coordinator = entry.runtime_data
-    known_devices: set[str] = set()
+    async_add_entities(
+        AutomowerDeviceTrackerEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+        if coordinator.data[mower_id].capabilities.position
+    )
 
-    def _check_device() -> None:
-        current_devices = set(coordinator.data)
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
+    def _async_add_new_lock(mower_id: str) -> None:
+        if coordinator.data[mower_id].capabilities.position:
+            async_add_entities([AutomowerDeviceTrackerEntity(mower_id, coordinator)])
 
-            async_add_entities(
-                AutomowerDeviceTrackerEntity(mower_id, coordinator)
-                for mower_id in coordinator.data
-                if coordinator.data[mower_id].capabilities.position
-            )
-
-    _check_device()
-    entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    coordinator.new_lock_callbacks.append(_async_add_new_lock)
 
 
 class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):

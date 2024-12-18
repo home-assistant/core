@@ -7,7 +7,6 @@ from aioautomower.model import MowerModes, StayOutZones, Zone
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
@@ -32,22 +31,28 @@ async def async_setup_entry(
     """Set up switch platform."""
     coordinator = entry.runtime_data
     current_work_areas: dict[str, set[int]] = {}
-    current_stay_out_zones: dict[str, set[str]] = {}
-    known_devices: set[str] = set()
 
-    def _check_device() -> None:
-        current_devices = set(coordinator.data)
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
+    def _async_add_new_lock(mower_id: str) -> None:
+        async_add_entities([AutomowerScheduleSwitchEntity(mower_id, coordinator)])
 
-            async_add_entities(
-                AutomowerScheduleSwitchEntity(mower_id, coordinator)
-                for mower_id in coordinator.data
-            )
+    def _async_add_new_stay_out_zones(mower_id: str, stay_out_zone_uid: str) -> None:
+        async_add_entities(
+            [StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)]
+        )
 
-    _check_device()
-    entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    # Add new lock entities for each mower
+    for mower_id in coordinator.data:
+        _async_add_new_lock(mower_id)
+
+    # Add new stay-out zone entities for each mower that has stay-out zones
+    for mower_id in coordinator.data:
+        mower_data = coordinator.data[mower_id]
+        if (
+            mower_data.capabilities.stay_out_zones
+            and mower_data.stay_out_zones is not None
+        ):
+            for stay_out_zone_uid in mower_data.stay_out_zones.zones:
+                _async_add_new_stay_out_zones(mower_id, stay_out_zone_uid)
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add switch entities if they did not exist.
@@ -72,51 +77,12 @@ async def async_setup_entry(
                         for work_area_id in new_work_areas
                     )
 
-    def _remove_stay_out_zone_entities(
-        removed_stay_out_zones: set, mower_id: str
-    ) -> None:
-        """Remove all unused stay-out zones for all platforms."""
-        entity_reg = er.async_get(hass)
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_reg, entry.entry_id
-        ):
-            for stay_out_zone_uid in removed_stay_out_zones:
-                if entity_entry.unique_id.startswith(f"{mower_id}_{stay_out_zone_uid}"):
-                    entity_reg.async_remove(entity_entry.entity_id)
-
-    def _async_stay_out_zone_listener() -> None:
-        """Listen for new stay-out zones and add/remove switch entities if they did not exist."""
-        for mower_id in coordinator.data:
-            if (
-                coordinator.data[mower_id].capabilities.stay_out_zones
-                and (_stay_out_zones := coordinator.data[mower_id].stay_out_zones)
-                is not None
-            ):
-                received_stay_out_zones = set(_stay_out_zones.zones)
-                current_stay_out_zones_set = current_stay_out_zones.get(mower_id, set())
-                new_stay_out_zones = (
-                    received_stay_out_zones - current_stay_out_zones_set
-                )
-                removed_stay_out_zones = (
-                    current_stay_out_zones_set - received_stay_out_zones
-                )
-                if new_stay_out_zones:
-                    current_stay_out_zones.setdefault(mower_id, set()).update(
-                        new_stay_out_zones
-                    )
-                    async_add_entities(
-                        StayOutZoneSwitchEntity(
-                            coordinator, mower_id, stay_out_zone_uid
-                        )
-                        for stay_out_zone_uid in new_stay_out_zones
-                    )
-                if removed_stay_out_zones:
-                    _remove_stay_out_zone_entities(removed_stay_out_zones, mower_id)
-
     coordinator.async_add_listener(_async_work_area_listener)
-    coordinator.async_add_listener(_async_stay_out_zone_listener)
+    coordinator.new_lock_callbacks.append(_async_add_new_lock)
+    coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
+
+    # Run the work area listener once to catch any initial changes
     _async_work_area_listener()
-    _async_stay_out_zone_listener()
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):

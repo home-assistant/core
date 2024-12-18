@@ -12,13 +12,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
-    device_registry as dr,
     entity_registry as er,
 )
 from homeassistant.util import dt as dt_util
 
 from . import api
-from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,8 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) ->
 
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api)
     await coordinator.async_config_entry_first_refresh()
-    available_devices = list(coordinator.data)
-    cleanup_removed_devices(hass, coordinator.config_entry, available_devices)
+    # available_devices = list(coordinator.data)
+    # cleanup_removed_devices(hass, coordinator.config_entry, available_devices)
     entry.runtime_data = coordinator
 
     entry.async_create_background_task(
@@ -88,20 +86,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def cleanup_removed_devices(
-    hass: HomeAssistant,
-    config_entry: AutomowerConfigEntry,
-    available_devices: list[str],
-) -> None:
-    """Cleanup entity and device registry from removed devices."""
-    device_reg = dr.async_get(hass)
-    identifiers = {(DOMAIN, mower_id) for mower_id in available_devices}
-    for device in dr.async_entries_for_config_entry(device_reg, config_entry.entry_id):
-        if not set(device.identifiers) & identifiers:
-            _LOGGER.debug("Removing obsolete device entry %s", device.name)
-            device_reg.async_update_device(
-                device.id, remove_config_entry_id=config_entry.entry_id
-            )
+# def cleanup_removed_devices(
+#     hass: HomeAssistant,
+#     config_entry: AutomowerConfigEntry,
+#     available_devices: list[str],
+# ) -> None:
+#     """Cleanup entity and device registry from removed devices."""
+#     device_reg = dr.async_get(hass)
+#     identifiers = {(DOMAIN, mower_id) for mower_id in available_devices}
+#     for device in dr.async_entries_for_config_entry(device_reg, config_entry.entry_id):
+#         if not set(device.identifiers) & identifiers:
+#             _LOGGER.debug("Removing obsolete device entry %s", device.name)
+#             device_reg.async_update_device(
+#                 device.id, remove_config_entry_id=config_entry.entry_id
+#             )
 
 
 def remove_work_area_entities(
