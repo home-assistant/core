@@ -17,62 +17,9 @@ from homeassistant.components.media_player import (
 class BangOlufsenSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
-    URI_STREAMER: Final[Source] = Source(
-        name="Audio Streamer",
-        id="uriStreamer",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    BLUETOOTH: Final[Source] = Source(
-        name="Bluetooth",
-        id="bluetooth",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    CHROMECAST: Final[Source] = Source(
-        name="Chromecast built-in",
-        id="chromeCast",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    LINE_IN: Final[Source] = Source(
-        name="Line-In",
-        id="lineIn",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    SPDIF: Final[Source] = Source(
-        name="Optical",
-        id="spdif",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    NET_RADIO: Final[Source] = Source(
-        name="B&O Radio",
-        id="netRadio",
-        is_seekable=False,
-        is_enabled=True,
-        is_playable=True,
-    )
-    DEEZER: Final[Source] = Source(
-        name="Deezer",
-        id="deezer",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
-    TIDAL: Final[Source] = Source(
-        name="Tidal",
-        id="tidal",
-        is_seekable=True,
-        is_enabled=True,
-        is_playable=True,
-    )
+    LINE_IN: Final[Source] = Source(name="Line-In", id="lineIn")
+    SPDIF: Final[Source] = Source(name="Optical", id="spdif")
+    URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
 BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
@@ -263,3 +210,20 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
+
+# Beolink Converter NL/ML sources need to be transformed to upper case
+BEOLINK_JOIN_SOURCES_TO_UPPER = (
+    "aux_a",
+    "cd",
+    "ph",
+    "radio",
+    "tp1",
+    "tp2",
+)
+BEOLINK_JOIN_SOURCES = (
+    *BEOLINK_JOIN_SOURCES_TO_UPPER,
+    "beoradio",
+    "deezer",
+    "spotify",
+    "tidal",
+)

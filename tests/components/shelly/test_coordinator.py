@@ -10,6 +10,7 @@ import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.shelly import MacAddressMismatchError
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -254,11 +255,13 @@ async def test_block_polling_connection_error(
     assert get_entity_state(hass, "switch.test_name_channel_1") == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
 async def test_block_rest_update_connection_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    exc: Exception,
 ) -> None:
     """Test block REST update connection error."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
@@ -269,11 +272,7 @@ async def test_block_rest_update_connection_error(
     await mock_rest_update(hass, freezer)
     assert get_entity_state(hass, entity_id) == STATE_ON
 
-    monkeypatch.setattr(
-        mock_block_device,
-        "update_shelly",
-        AsyncMock(side_effect=DeviceConnectionError),
-    )
+    monkeypatch.setattr(mock_block_device, "update_shelly", AsyncMock(side_effect=exc))
     await mock_rest_update(hass, freezer)
 
     assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
@@ -702,11 +701,13 @@ async def test_rpc_polling_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
+@pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
 async def test_rpc_reconnect_error(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
     await init_integration(hass, 2)
@@ -714,13 +715,7 @@ async def test_rpc_reconnect_error(
     assert get_entity_state(hass, "switch.test_switch_0") == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    monkeypatch.setattr(
-        mock_rpc_device,
-        "initialize",
-        AsyncMock(
-            side_effect=DeviceConnectionError,
-        ),
-    )
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock(side_effect=exc))
 
     # Move time to generate reconnect
     freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))

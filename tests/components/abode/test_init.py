@@ -13,7 +13,6 @@ from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 
 from .common import setup_platform
 
@@ -63,25 +62,23 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
     """Test Abode credentials changing."""
-    with (
-        patch(
-            "homeassistant.components.abode.Abode",
-            side_effect=AbodeAuthenticationException(
-                (HTTPStatus.BAD_REQUEST, "auth error")
-            ),
+    with patch(
+        "homeassistant.components.abode.Abode",
+        side_effect=AbodeAuthenticationException(
+            (HTTPStatus.BAD_REQUEST, "auth error")
         ),
-        patch(
-            "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth",
-            return_value={
-                "type": FlowResultType.FORM,
-                "flow_id": "mock_flow",
-                "step_id": "reauth_confirm",
-            },
-        ) as mock_async_step_reauth,
     ):
-        await setup_platform(hass, ALARM_DOMAIN)
+        config_entry = await setup_platform(hass, ALARM_DOMAIN)
+        await hass.async_block_till_done()
 
-        mock_async_step_reauth.assert_called_once()
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:

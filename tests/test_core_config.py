@@ -1075,9 +1075,32 @@ async def test_set_time_zone_deprecated(hass: HomeAssistant) -> None:
     with pytest.raises(
         RuntimeError,
         match=re.escape(
-            "Detected code that set the time zone using set_time_zone instead of "
-            "async_set_time_zone which will stop working in Home Assistant 2025.6. "
-            "Please report this issue.",
+            "Detected code that sets the time zone using set_time_zone instead of "
+            "async_set_time_zone. Please report this issue"
         ),
     ):
         await hass.config.set_time_zone("America/New_York")
+
+
+async def test_core_config_schema_imperial_unit(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test core config schema."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "latitude": 60,
+            "longitude": 50,
+            "elevation": 25,
+            "name": "Home",
+            "unit_system": "imperial",
+            "time_zone": "America/New_York",
+            "currency": "USD",
+            "country": "US",
+            "language": "en",
+            "radius": 150,
+        },
+    )
+
+    issue = issue_registry.async_get_issue("homeassistant", "imperial_unit_system")
+    assert issue

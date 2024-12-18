@@ -1,0 +1,30 @@
+{
+  "domain": "acaia",
+  "name": "Acaia",
+  "bluetooth": [
+    {
+      "manufacturer_id": 16962
+    },
+    {
+      "local_name": "ACAIA*"
+    },
+    {
+      "local_name": "PYXIS-*"
+    },
+    {
+      "local_name": "LUNAR-*"
+    },
+    {
+      "local_name": "PROCHBT001"
+    }
+  ],
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/acaia",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["aioacaia"],
+  "quality_scale": "platinum",
+  "requirements": ["aioacaia==0.1.11"]
+}

@@ -7,6 +7,7 @@ from aioautomower.auth import AbstractAuth
 from aioautomower.const import API_BASE_URL
 from aiohttp import ClientSession
 
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,3 +29,16 @@ class AsyncConfigEntryAuth(AbstractAuth):
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
         return cast(str, self._oauth_session.token["access_token"])
+
+
+class AsyncConfigFlowAuth(AbstractAuth):
+    """Provide Automower AbstractAuth for the config flow."""
+
+    def __init__(self, websession: ClientSession, token: dict) -> None:
+        """Initialize Husqvarna Automower auth."""
+        super().__init__(websession, API_BASE_URL)
+        self.token: dict = token
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        return cast(str, self.token[CONF_ACCESS_TOKEN])

@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
     InvalidAuthError,
+    MacAddressMismatchError,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
@@ -176,6 +177,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
+                except MacAddressMismatchError:
+                    errors["base"] = "mac_address_mismatch"
                 except CustomPortNotSupported:
                     errors["base"] = "custom_port_not_supported"
                 except Exception:  # noqa: BLE001
@@ -215,6 +218,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
+            except MacAddressMismatchError:
+                errors["base"] = "mac_address_mismatch"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -378,6 +383,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, host, port, info, user_input)
             except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
+            except MacAddressMismatchError:
+                return self.async_abort(reason="mac_address_mismatch")
 
             return self.async_update_reload_and_abort(
                 reauth_entry, data_updates=user_input

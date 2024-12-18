@@ -64,10 +64,10 @@ WEBHOOK_SCHEMA = vol.Schema(
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_DEVICE_ID): cv.positive_int,
         vol.Required(ATTR_TEMP_UNIT): vol.In(
-            UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
+            [UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]
         ),
         vol.Required(ATTR_VOLUME_UNIT): vol.In(
-            UnitOfVolume.LITERS, UnitOfVolume.GALLONS
+            [UnitOfVolume.LITERS, UnitOfVolume.GALLONS]
         ),
         vol.Required(ATTR_BPM): cv.positive_int,
         vol.Required(ATTR_TEMP): vol.Coerce(float),

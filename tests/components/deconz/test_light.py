@@ -11,7 +11,7 @@ from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
@@ -391,7 +391,7 @@ async def test_light_state_change(
                 "call": {
                     ATTR_ENTITY_ID: "light.hue_go",
                     ATTR_BRIGHTNESS: 200,
-                    ATTR_COLOR_TEMP: 200,
+                    ATTR_COLOR_TEMP_KELVIN: 5000,
                     ATTR_TRANSITION: 5,
                     ATTR_FLASH: FLASH_SHORT,
                     ATTR_EFFECT: EFFECT_COLORLOOP,
@@ -804,7 +804,7 @@ async def test_groups(
                 "call": {
                     ATTR_ENTITY_ID: "light.group",
                     ATTR_BRIGHTNESS: 200,
-                    ATTR_COLOR_TEMP: 200,
+                    ATTR_COLOR_TEMP_KELVIN: 5000,
                     ATTR_TRANSITION: 5,
                     ATTR_FLASH: FLASH_SHORT,
                     ATTR_EFFECT: EFFECT_COLORLOOP,
@@ -830,7 +830,7 @@ async def test_groups(
             },
             {
                 "on": True,
-                "xy": (0.235, 0.164),
+                "xy": (0.236, 0.166),
             },
         ),
         (  # Turn on group with short color loop
@@ -845,7 +845,7 @@ async def test_groups(
             },
             {
                 "on": True,
-                "xy": (0.235, 0.164),
+                "xy": (0.236, 0.166),
             },
         ),
     ],
@@ -1079,7 +1079,7 @@ async def test_non_color_light_reports_color(
         hass.states.get("light.group").attributes[ATTR_COLOR_MODE]
         == ColorMode.COLOR_TEMP
     )
-    assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP] == 250
+    assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     # Updating a scene will return a faulty color value
     # for a non-color light causing an exception in hs_color
@@ -1099,7 +1099,7 @@ async def test_non_color_light_reports_color(
     group = hass.states.get("light.group")
     assert group.attributes[ATTR_COLOR_MODE] == ColorMode.XY
     assert group.attributes[ATTR_HS_COLOR] == (40.571, 41.176)
-    assert group.attributes.get(ATTR_COLOR_TEMP) is None
+    assert group.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
 
 
 @pytest.mark.parametrize(

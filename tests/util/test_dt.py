@@ -116,10 +116,14 @@ def test_utc_from_timestamp() -> None:
     )
 
 
-def test_timestamp_to_utc() -> None:
+def test_timestamp_to_utc(caplog: pytest.LogCaptureFixture) -> None:
     """Test we can convert a utc datetime to a timestamp."""
     utc_now = dt_util.utcnow()
     assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
+    assert (
+        "utc_to_timestamp is a deprecated function which will be removed "
+        "in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
+    )
 
 
 def test_as_timestamp() -> None:
