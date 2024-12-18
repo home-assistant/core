@@ -11,8 +11,8 @@ from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
 from homematicip.base.base_connection import HmipConnectionError
 from homematicip.base.enums import EventType
-from homematicip.connection_v2.connection_context import ConnectionContextBuilder
-from homematicip.connection_v2.rest_connection import RestConnection
+from homematicip.connection.connection_context import ConnectionContextBuilder
+from homematicip.connection.rest_connection import RestConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -63,11 +63,12 @@ class HomematicipAuth:
     async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
         context = ConnectionContextBuilder.build_context(accesspoint_id=hapid)
-        connection = RestConnection(context)
+        connection = RestConnection(context, log_status_exceptions=False)
         # hass.loop
         auth = Auth(connection=connection, client_auth_token=context.client_auth_token)
         try:
-            await auth.connection_request("HomeAssistant", pin=pin)
+            auth.set_pin(pin)
+            await auth.connection_request("HomeAssistant")
         except HmipConnectionError:
             return None
         return auth

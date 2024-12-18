@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from homematicip.async_home import AsyncHome
 from homematicip.auth import Auth
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
-from homematicip.connection_v2.rest_connection import RestConnection
+from homematicip.connection.rest_connection import RestConnection
 import pytest
 
 from homeassistant.components.homematicip_cloud import (
