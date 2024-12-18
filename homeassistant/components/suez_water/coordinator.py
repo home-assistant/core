@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import _LOGGER, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -80,11 +80,10 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             counter_id=self.config_entry.data[CONF_COUNTER_ID],
         )
         if not await self._suez_client.check_credentials():
-            raise ConfigEntryAuthFailed("Invalid credentials for suez water")
+            raise ConfigEntryError("Invalid credentials for suez water")
 
     async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
-
 
         def map_dict(param: dict[date, float]) -> dict[str, float]:
             return {str(key): value for key, value in param.items()}
