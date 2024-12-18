@@ -56,7 +56,6 @@ async def test_service_output_abs(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test output_abs service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -77,16 +76,12 @@ async def test_service_output_abs(
 
     dim_output.assert_awaited_with(0, 100, 9)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_output_rel(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test output_rel service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -106,16 +101,12 @@ async def test_service_output_rel(
 
     rel_output.assert_awaited_with(0, 25)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_output_toggle(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test output_toggle service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -135,16 +126,12 @@ async def test_service_output_toggle(
 
     toggle_output.assert_awaited_with(0, 9)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_relays(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test relays service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -163,16 +150,12 @@ async def test_service_relays(
 
     control_relays.assert_awaited_with(relay_states)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_led(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test led service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -195,16 +178,12 @@ async def test_service_led(
 
     control_led.assert_awaited_with(led, led_state)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_var_abs(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test var_abs service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -227,16 +206,12 @@ async def test_service_var_abs(
         pypck.lcn_defs.Var["VAR1"], 75, pypck.lcn_defs.VarUnit.parse("%")
     )
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_var_rel(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test var_rel service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -263,16 +238,12 @@ async def test_service_var_rel(
         pypck.lcn_defs.RelVarRef["CURRENT"],
     )
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_var_reset(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test var_reset service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -288,16 +259,12 @@ async def test_service_var_reset(
 
     var_reset.assert_awaited_with(pypck.lcn_defs.Var["VAR1"])
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_lock_regulator(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test lock_regulator service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -317,16 +284,12 @@ async def test_service_lock_regulator(
 
     lock_regulator.assert_awaited_with(0, True)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_send_keys(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test send_keys service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -351,16 +314,12 @@ async def test_service_send_keys(
 
     send_keys.assert_awaited_with(keys, pypck.lcn_defs.SendKeyCommand["HIT"])
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_send_keys_hit_deferred(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test send_keys (hit_deferred) service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -391,9 +350,6 @@ async def test_service_send_keys_hit_deferred(
         keys, 5, pypck.lcn_defs.TimeUnit.parse("S")
     )
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
     # wrong key action
     with (
         patch.object(
@@ -420,7 +376,6 @@ async def test_service_lock_keys(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test lock_keys service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -443,16 +398,12 @@ async def test_service_lock_keys(
 
     lock_keys.assert_awaited_with(0, lock_states)
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_lock_keys_tab_a_temporary(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test lock_keys (tab_a_temporary) service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -481,9 +432,6 @@ async def test_service_lock_keys_tab_a_temporary(
         10, pypck.lcn_defs.TimeUnit.parse("S"), lock_states
     )
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
     # wrong table
     with (
         patch.object(
@@ -510,7 +458,6 @@ async def test_service_dyn_text(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test dyn_text service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -530,16 +477,12 @@ async def test_service_dyn_text(
 
     dyn_text.assert_awaited_with(0, "text in row 1")
 
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
-
 
 @pytest.mark.parametrize("config_type", [CONF_ADDRESS, CONF_DEVICE_ID])
 async def test_service_pck(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     config_type: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test pck service."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -554,9 +497,6 @@ async def test_service_pck(
         )
 
     pck.assert_awaited_with("PIN4")
-
-    if config_type == CONF_ADDRESS:
-        assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
 
 
 async def test_service_called_with_invalid_host_id(
@@ -575,3 +515,20 @@ async def test_service_called_with_invalid_host_id(
         )
 
     pck.assert_not_awaited()
+
+
+async def test_service_with_deprecated_address_parameter(
+    hass: HomeAssistant, entry: MockConfigEntry, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test service puts issue in registry if called with address parameter."""
+    await async_setup_component(hass, "persistent_notification", {})
+    await init_integration(hass, entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        LcnService.PCK,
+        {CONF_ADDRESS: "pchk.s0.m7", CONF_PCK: "PIN4"},
+        blocking=True,
+    )
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_address_parameter")
