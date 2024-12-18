@@ -174,6 +174,8 @@ def _unindexable_legacy_column(
     instance: Recorder, base: type[DeclarativeBase], err: Exception
 ) -> bool:
     """Ignore index errors on char(0) columns."""
+    # The error code is hard coded because the PyMySQL library may not be
+    # installed when using other database engines than MySQL or MariaDB.
     # 1167: The used storage engine can't index column '%s'
     return bool(
         base == LegacyBase
