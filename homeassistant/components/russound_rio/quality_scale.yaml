@@ -11,7 +11,10 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      The data_description fields in translations are missing.
   dependency-transparency: done
   docs-actions:
     status: exempt

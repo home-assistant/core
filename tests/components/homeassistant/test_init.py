@@ -184,6 +184,7 @@ async def test_turn_on_skips_domains_without_service(
     # because by mocking out the call service method, we mock out all
     # So we mimic how the service registry calls services
     service_call = ha.ServiceCall(
+        hass,
         "homeassistant",
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},

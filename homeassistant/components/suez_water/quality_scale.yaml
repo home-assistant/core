@@ -4,9 +4,7 @@ rules:
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
-  runtime-data:
-    status: todo
-    comment: coordinator is created during setup, should be stored in runtime_data
+  runtime-data: done
   test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
@@ -21,7 +19,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions:
     status: exempt
     comment: no service action
