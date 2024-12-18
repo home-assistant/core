@@ -1089,6 +1089,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
+    "vegehub",
     "velux",
     "venstar",
     "vera",
