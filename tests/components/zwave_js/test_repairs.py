@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import patch
 
+import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
@@ -179,6 +180,10 @@ async def test_device_config_file_changed_ignore_step(
     assert msg["result"]["issues"][0].get("dismissed_version") is not None
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.zwave_js.issues.invalid_issue.title"],
+)
 async def test_invalid_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

@@ -151,5 +151,5 @@ class AndroidTVEntity(Entity):
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = ADB_PYTHON_EXCEPTIONS
         else:
-            # Using "pure-python-adb" (communicate with ADB server)
+            # Communicate via ADB server
             self.exceptions = ADB_TCP_EXCEPTIONS

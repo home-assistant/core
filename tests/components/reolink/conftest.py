@@ -86,6 +86,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
+        host_mock.sw_upload_progress.return_value = 100
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
         host_mock.item_number = TEST_ITEM_NUMBER

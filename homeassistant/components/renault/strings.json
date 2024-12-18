@@ -6,18 +6,27 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "kamereon": {
         "data": {
-          "kamereon_account_id": "Kamereon account id"
+          "kamereon_account_id": "Account ID"
         },
-        "title": "Select Kamereon account id"
+        "data_description": {
+          "kamereon_account_id": "The Kamereon account ID associated with your vehicle"
+        },
+        "title": "Kamereon Account ID",
+        "description": "You have multiple Kamereon accounts associated to this email, please select one"
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your MyRenault phone application password"
         },
         "description": "Please update your password for {username}",
         "title": "[%key:common::config_flow::title::reauth%]"
@@ -27,6 +36,11 @@
           "locale": "Locale",
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "locale": "Your country code",
+          "username": "Your MyRenault phone application email address",
+          "password": "Your MyRenault phone application password"
         },
         "title": "Set Renault credentials"
       }
@@ -210,6 +224,14 @@
           "description": "[%key:component::renault::services::charge_set_schedules::fields::schedules::description%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_device_id": {
+      "message": "No device with id {device_id} was found"
+    },
+    "no_config_entry_for_device": {
+      "message": "No loaded config entry was found for device with id {device_id}"
     }
   }
 }

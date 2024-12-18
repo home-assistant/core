@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, Mock
 from homeconnect.api import HomeConnectAppliance, HomeConnectError
 import pytest
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.home_connect.const import (
     ATTR_ALLOWED_VALUES,
     ATTR_CONSTRAINTS,
@@ -16,8 +18,10 @@ from homeassistant.components.home_connect.const import (
     BSH_POWER_ON,
     BSH_POWER_STANDBY,
     BSH_POWER_STATE,
+    DOMAIN,
     REFRIGERATION_SUPERMODEFREEZER,
 )
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -29,7 +33,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import get_all_appliances
 
@@ -162,7 +168,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*off.*appliance.*value",
+            r"Error.*turn.*off.*",
         ),
         (
             "switch.dishwasher_power",
@@ -170,7 +176,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*on.*appliance.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -178,7 +184,7 @@ async def test_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*on.*key.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.dishwasher_child_lock",
@@ -186,7 +192,7 @@ async def test_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "Dishwasher",
-            r"Error.*turn.*off.*key.*",
+            r"Error.*turn.*off.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -219,7 +225,7 @@ async def test_switch_exception_handling(
     with pytest.raises(HomeConnectError):
         getattr(problematic_appliance, mock_attr)()
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
@@ -297,7 +303,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_ON,
             "set_setting",
             "FridgeFreezer",
-            r"Error.*turn.*on.*key.*",
+            r"Error.*turn.*on.*",
         ),
         (
             "switch.fridgefreezer_freezer_super_mode",
@@ -305,7 +311,7 @@ async def test_ent_desc_switch_functionality(
             SERVICE_TURN_OFF,
             "set_setting",
             "FridgeFreezer",
-            r"Error.*turn.*off.*key.*",
+            r"Error.*turn.*off.*",
         ),
     ],
     indirect=["problematic_appliance"],
@@ -344,7 +350,7 @@ async def test_ent_desc_switch_exception_handling(
         getattr(problematic_appliance, mock_attr)()
 
     problematic_appliance.status.update(status)
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -502,7 +508,76 @@ async def test_power_switch_service_validation_errors(
 
     appliance.status.update({BSH_POWER_STATE: {"value": BSH_POWER_ON}})
 
-    with pytest.raises(ServiceValidationError, match=exception_match):
+    with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
             SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
         )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_create_issue(
+    hass: HomeAssistant,
+    appliance: Mock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    entity_id = "switch.washer_program_mix"
+    appliance.status.update(SETTINGS_STATUS)
+    appliance.get_programs_available.return_value = [PROGRAM]
+    get_appliances.return_value = [appliance]
+    issue_id = f"deprecated_program_switch_{entity_id}"
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {
+                        "entity_id": "automation.test",
+                    },
+                },
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "action": "switch.turn_on",
+                            "entity_id": entity_id,
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+
+    assert len(issue_registry.issues) == 1
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
