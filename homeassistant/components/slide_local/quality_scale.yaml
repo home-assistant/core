@@ -30,7 +30,7 @@ rules:
     comment: No custom action.
   reauthentication-flow: todo
   parallel-updates: done
-  test-coverage: todo
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters: done
