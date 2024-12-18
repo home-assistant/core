@@ -89,7 +89,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: AutomowerConfigEntry) -
 
 
 def cleanup_removed_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, available_devices: list[str]
+    hass: HomeAssistant,
+    config_entry: AutomowerConfigEntry,
+    available_devices: list[str],
 ) -> None:
     """Cleanup entity and device registry from removed devices."""
     device_reg = dr.async_get(hass)
@@ -104,7 +106,7 @@ def cleanup_removed_devices(
 
 def remove_work_area_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AutomowerConfigEntry,
     removed_work_areas: set[int],
     mower_id: str,
 ) -> None:
