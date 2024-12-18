@@ -270,7 +270,7 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
     return handle_vehicle_stream
 
 
-async def async_setup_stream(vehicle: TeslemetryVehicleData):
+async def async_setup_stream(vehicle: TeslemetryVehicleData) -> None:
     """Set up the stream for a vehicle."""
 
     # Create TeslemetryStreamVehicle directly so it can be patched for testing
