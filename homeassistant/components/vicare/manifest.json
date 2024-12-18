@@ -3,6 +3,7 @@
   "name": "Viessmann ViCare",
   "codeowners": ["@CFenner"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "macaddress": "B87424*"
