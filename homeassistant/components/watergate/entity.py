@@ -26,7 +26,7 @@ class WatergateEntity(CoordinatorEntity[WatergateDataCoordinator]):
             name="Sonic",
             serial_number=coordinator.data.state.serial_number,
             manufacturer=MANUFACTURER,
-            sw_version=coordinator.data.state.firmware_version
-            if coordinator.data
-            else None,
+            sw_version=(
+                coordinator.data.state.firmware_version if coordinator.data else None
+            ),
         )

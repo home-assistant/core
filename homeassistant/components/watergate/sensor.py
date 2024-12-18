@@ -157,9 +157,11 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     WatergateSensorEntityDescription(
-        value_fn=lambda data: PowerSupplyMode(data.state.power_supply.replace("+", "_"))
-        if data.state
-        else None,
+        value_fn=lambda data: (
+            PowerSupplyMode(data.state.power_supply.replace("+", "_"))
+            if data.state
+            else None
+        ),
         translation_key="power_supply_mode",
         key="power_supply_mode",
         entity_category=EntityCategory.DIAGNOSTIC,

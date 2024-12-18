@@ -21,7 +21,7 @@
   "entity": {
     "sensor": {
       "water_meter_volume": {
-        "name": "Water Meter Volume"
+        "name": "Water meter volume"
       },
       "water_meter_duration": {
         "name": "Water meter duration"

@@ -42,9 +42,9 @@ class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]
             state = await self.api.async_get_device_state()
             telemetry = await self.api.async_get_telemetry_data()
             networking = await self.api.async_get_networking()
-            return WatergateAgregatedRequests(state, telemetry, networking)
         except WatergateApiException as exc:
             raise UpdateFailed(f"Sonic device is unavailable: {exc}") from exc
+        return WatergateAgregatedRequests(state, telemetry, networking)
 
     def async_set_updated_data(self, data: WatergateAgregatedRequests) -> None:
         """Manually update data, notify listeners and DO NOT reset refresh interval."""
