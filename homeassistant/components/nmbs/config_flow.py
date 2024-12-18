@@ -6,7 +6,6 @@ from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -34,12 +33,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _fetch_stations(self) -> list[dict[str, Any]]:
         """Fetch the stations."""
-
         stations_response = await self.hass.async_add_executor_job(
             self.api_client.get_stations
         )
         if stations_response == -1:
-            raise ConfigEntryError("The API is currently unavailable.")
+            raise CannotConnect("The API is currently unavailable.")
         return stations_response["station"]
 
     async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
@@ -62,21 +60,23 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_STATION_FROM]}-{user_input[CONF_STATION_TO]}"
-            )
-            self._abort_if_unique_id_configured()
+            if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
+                errors["base"] = "same_station"
+            else:
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}"
+                )
+                self._abort_if_unique_id_configured()
 
-            config_entry_name = f"Train from {user_input[CONF_STATION_FROM]} to {user_input[CONF_STATION_TO]}"
-            return self.async_create_entry(
-                title=config_entry_name,
-                data=user_input,
-            )
+                config_entry_name = f"Train from {user_input[CONF_STATION_FROM]} to {user_input[CONF_STATION_TO]}"
+                return self.async_create_entry(
+                    title=config_entry_name,
+                    data=user_input,
+                )
 
-        choices = None
         try:
             choices = await self._fetch_stations_choices()
-        except ConfigEntryError:
+        except CannotConnect:
             return self.async_abort(reason="api_unavailable")
 
         schema = vol.Schema(
@@ -105,4 +105,20 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
+        try:
+            await self._fetch_stations_choices()
+        except CannotConnect:
+            return self.async_abort(reason="api_unavailable")
+        stations = [station["standardname"] for station in await self._fetch_stations()]
+        if (
+            user_input[CONF_STATION_FROM] not in stations
+            or user_input[CONF_STATION_TO] not in stations
+        ):
+            return self.async_abort(reason="invalid_station")
+        if user_input[CONF_STATION_FROM] == user_input[CONF_STATION_TO]:
+            return self.async_abort(reason="same_station")
         return await self.async_step_user(user_input)
+
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect to NMBS."""

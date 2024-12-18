@@ -2,9 +2,13 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-      "api_unavailable": "The API is currently unavailable."
+      "api_unavailable": "The API is currently unavailable.",
+      "same_station": "[%key:component::nmbs::config::error::same_station%]",
+      "invalid_station": "Invalid station."
     },
-    "error": {},
+    "error": {
+      "same_station": "Departure and arrival station can not be the same."
+    },
     "step": {
       "user": {
         "data": {
