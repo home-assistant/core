@@ -726,7 +726,7 @@ class BackupManager:
         include_homeassistant: bool,
         name: str | None,
         password: str | None,
-        raise_task_error: bool = False,
+        raise_task_error: bool,
         with_automatic_settings: bool,
     ) -> NewBackup:
         """Initiate generating a backup."""
