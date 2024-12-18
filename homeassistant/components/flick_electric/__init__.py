@@ -7,7 +7,6 @@ import jwt
 from pyflick import FlickAPI
 from pyflick.authentication import AbstractFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
-from pyflick.types import APIException, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -19,10 +18,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_TOKEN_EXPIRY, DOMAIN
+from .const import CONF_SUPPLY_NODE_REF, CONF_TOKEN_EXPIRY
+from .coordinator import FlickConfigEntry, FlickElectricDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,33 +29,27 @@ CONF_ID_TOKEN = "id_token"
 
 PLATFORMS = [Platform.SENSOR]
 
-type FlickConfigEntry = ConfigEntry[FlickAPI]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: FlickConfigEntry) -> bool:
     """Set up Flick Electric from a config entry."""
     auth = HassFlickAuth(hass, entry)
 
-    entry.runtime_data = FlickAPI(auth)
+    coordinator = FlickElectricDataCoordinator(
+        hass, FlickAPI(auth), entry.data[CONF_SUPPLY_NODE_REF]
+    )
 
-    try:
-        await entry.runtime_data.getCustomerAccounts()
-    except APIException as err:
-        raise ConfigEntryNotReady("Unable to fetch account information") from err
-    except UnauthorizedException as err:
-        raise ConfigEntryAuthFailed("Invalid authentication") from err
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FlickConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -105,6 +98,8 @@ class HassFlickAuth(AbstractFlickAuth):
         _LOGGER.debug("Fetching new access token")
 
         token = await self.get_new_token(
+            # TODO: Remove UAT
+            host="https://api.flickuat.com",
             username=self._entry.data[CONF_USERNAME],
             password=self._entry.data[CONF_PASSWORD],
             client_id=self._entry.data.get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID),

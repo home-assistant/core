@@ -1,0 +1,51 @@
+"""Data Coordinator for Flick Electric."""
+
+import asyncio
+from datetime import timedelta
+import logging
+
+import aiohttp
+from pyflick import FlickAPI, FlickPrice
+from pyflick.types import UnauthorizedException
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=5)
+
+type FlickConfigEntry = ConfigEntry[FlickElectricDataCoordinator]
+
+
+class FlickElectricDataCoordinator(DataUpdateCoordinator[FlickPrice]):
+    """Coordinator for flick power price."""
+
+    def __init__(
+        self, hass: HomeAssistant, api: FlickAPI, supply_node_ref: str
+    ) -> None:
+        """Initialize FlickElectricDataCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Flick Electric",
+            update_interval=SCAN_INTERVAL,
+        )
+        self.supply_node_ref = supply_node_ref
+        self._api = api
+
+    async def _async_update_data(self) -> FlickPrice:
+        """Fetch pricing data from Flick Electric."""
+        try:
+            async with asyncio.timeout(60):
+                return await self._api.runtime_data.getPricing(self.supply_node_ref)
+        except UnauthorizedException as err:
+            raise ConfigEntryAuthFailed from err
+        except aiohttp.ClientResponseError as err:
+            raise UpdateFailed from err
+        except Exception as err:
+            raise UpdateFailed(
+                f"Error communicating with Flick Electric API: {err}"
+            ) from err
