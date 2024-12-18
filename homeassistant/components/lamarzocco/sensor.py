@@ -99,15 +99,15 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
 SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="scale_battery",
-        translation_key=None,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda device: (
             device.config.scale.battery if device.config.scale else 0
         ),
-        supported_fn=lambda coordinator: coordinator.device.model
-        == MachineModel.LINEA_MINI,
+        supported_fn=(
+            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+        ),
     ),
 )
 
@@ -131,7 +131,7 @@ async def async_setup_entry(
         and config_coordinator.device.config.scale
     ):
         entities.extend(
-            LaMarzoccoScaleSensor(config_coordinator, description)
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
             for description in SCALE_ENTITIES
         )
 
@@ -144,7 +144,7 @@ async def async_setup_entry(
 
     def _async_add_new_scale() -> None:
         async_add_entities(
-            LaMarzoccoScaleSensor(config_coordinator, description)
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
             for description in SCALE_ENTITIES
         )
 
@@ -164,7 +164,7 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.device)
 
 
-class LaMarzoccoScaleSensor(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
+class LaMarzoccoScaleSensorEntity(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
     """Sensor for a La Marzocco scale."""
 
     entity_description: LaMarzoccoSensorEntityDescription

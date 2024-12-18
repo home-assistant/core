@@ -219,9 +219,10 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
         native_value_fn=lambda config, key: (
             config.bbw_settings.doses[key] if config.bbw_settings else None
         ),
-        supported_fn=lambda coordinator: coordinator.device.model
-        == MachineModel.LINEA_MINI
-        and coordinator.device.config.scale is not None,
+        supported_fn=(
+            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+            and coordinator.device.config.scale is not None
+        ),
     ),
 )
 
@@ -251,14 +252,16 @@ async def async_setup_entry(
         if description.supported_fn(coordinator):
             if bbw_settings := coordinator.device.config.bbw_settings:
                 entities.extend(
-                    LaMarzoccoScaleTargetNumber(coordinator, description, int(key))
+                    LaMarzoccoScaleTargetNumberEntity(
+                        coordinator, description, int(key)
+                    )
                     for key in bbw_settings.doses
                 )
 
     def _async_add_new_scale() -> None:
         if bbw_settings := coordinator.device.config.bbw_settings:
             async_add_entities(
-                LaMarzoccoScaleTargetNumber(coordinator, description, int(key))
+                LaMarzoccoScaleTargetNumberEntity(coordinator, description, int(key))
                 for description in SCALE_KEY_ENTITIES
                 for key in bbw_settings.doses
             )
@@ -348,7 +351,9 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
             self.async_write_ha_state()
 
 
-class LaMarzoccoScaleTargetNumber(LaMarzoccoKeyNumberEntity, LaMarzoccScaleEntity):
+class LaMarzoccoScaleTargetNumberEntity(
+    LaMarzoccoKeyNumberEntity, LaMarzoccScaleEntity
+):
     """Entity representing a key number on the scale."""
 
     entity_description: LaMarzoccoKeyNumberEntityDescription

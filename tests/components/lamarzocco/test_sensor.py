@@ -128,13 +128,13 @@ async def test_other_models_no_scale_battery(
 
 
 @pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
-async def test_scale_added(
+async def test_battery_on_new_scale_added(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure new scale is added automatically."""
+    """Ensure the battery sensor for a new scale is added automatically."""
 
     mock_lamarzocco.config.scale = None
     await async_init_integration(hass, mock_config_entry)

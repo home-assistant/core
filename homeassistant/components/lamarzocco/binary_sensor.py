@@ -61,7 +61,6 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
 SCALE_ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
     LaMarzoccoBinarySensorEntityDescription(
         key="connected",
-        translation_key=None,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         is_on_fn=lambda config: config.scale.connected if config.scale else False,
         entity_category=EntityCategory.DIAGNOSTIC,
