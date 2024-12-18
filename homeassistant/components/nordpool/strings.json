@@ -50,6 +50,12 @@
       "next_price": {
         "name": "Next price"
       },
+      "lowest_price": {
+        "name": "Lowest price"
+      },
+      "highest_price": {
+        "name": "Highest price"
+      },
       "block_average": {
         "name": "{block} average"
       },
