@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -9,8 +10,8 @@ from typing import TYPE_CHECKING
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
-    NordPoolAuthenticationError,
     NordPoolClient,
+    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -19,7 +20,7 @@ from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREAS, DOMAIN, LOGGER
@@ -69,27 +70,30 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
+        data = await self.api_call()
+        if data:
+            self.async_set_updated_data(data)
+
+    async def api_call(self, retry: int = 3) -> DeliveryPeriodData | None:
+        """Make api call to retrieve data with retry if failure."""
+        data = None
         try:
             data = await self.client.async_get_delivery_period(
                 dt_util.now(),
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
-        except NordPoolAuthenticationError as error:
-            LOGGER.error("Authentication error: %s", error)
-            self.async_set_update_error(error)
-            return
-        except NordPoolResponseError as error:
-            LOGGER.debug("Response error: %s", error)
-            self.async_set_update_error(error)
-            return
-        except NordPoolError as error:
+        except (
+            NordPoolEmptyResponseError,
+            NordPoolResponseError,
+            NordPoolError,
+        ) as error:
             LOGGER.debug("Connection error: %s", error)
+            if retry > 0:
+                next_run = (4 - retry) * 15
+                LOGGER.debug("Wait %d seconds for next try", next_run)
+                await asyncio.sleep(next_run)
+                return await self.api_call(retry - 1)
             self.async_set_update_error(error)
-            return
 
-        if not data.raw:
-            self.async_set_update_error(UpdateFailed("No data"))
-            return
-
-        self.async_set_updated_data(data)
+        return data

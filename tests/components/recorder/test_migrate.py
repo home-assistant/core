@@ -97,6 +97,7 @@ async def test_schema_update_calls(
             session_maker,
             migration.SchemaValidationStatus(
                 current_version=0,
+                initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
                 schema_errors=set(),
@@ -111,6 +112,7 @@ async def test_schema_update_calls(
             session_maker,
             migration.SchemaValidationStatus(
                 current_version=42,
+                initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
                 schema_errors=set(),

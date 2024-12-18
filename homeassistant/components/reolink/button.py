@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import GuardEnum, Host, PtzEnum
-from reolink_aio.exceptions import ReolinkError
 import voluptuous as vol
 
 from homeassistant.components.button import (
@@ -18,7 +17,6 @@ from homeassistant.components.button import (
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -31,8 +29,9 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
+PARALLEL_UPDATES = 0
 ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
 SERVICE_PTZ_MOVE = "ptz_move"
@@ -204,22 +203,18 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         ):
             self._attr_supported_features = SUPPORT_PTZ_SPEED
 
+    @raise_translated_error
     async def async_press(self) -> None:
         """Execute the button action."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel)
 
-    async def async_ptz_move(self, **kwargs) -> None:
+    @raise_translated_error
+    async def async_ptz_move(self, **kwargs: Any) -> None:
         """PTZ move with speed."""
         speed = kwargs[ATTR_SPEED]
-        try:
-            await self._host.api.set_ptz_command(
-                self._channel, command=self.entity_description.ptz_cmd, speed=speed
-            )
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self._host.api.set_ptz_command(
+            self._channel, command=self.entity_description.ptz_cmd, speed=speed
+        )
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
@@ -236,9 +231,7 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data)
 
+    @raise_translated_error
     async def async_press(self) -> None:
         """Execute the button action."""
-        try:
-            await self.entity_description.method(self._host.api)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api)

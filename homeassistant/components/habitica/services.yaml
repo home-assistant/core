@@ -72,3 +72,25 @@ score_reward:
   fields:
     config_entry: *config_entry
     task: *task
+transformation:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: habitica
+    item:
+      required: true
+      selector:
+        select:
+          options:
+            - "snowball"
+            - "spooky_sparkles"
+            - "seafoam"
+            - "shiny_seed"
+          mode: dropdown
+          translation_key: "transformation_item_select"
+    target:
+      required: true
+      selector:
+        text:
