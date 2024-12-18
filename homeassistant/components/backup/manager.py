@@ -60,7 +60,7 @@ class ManagerBackup(AgentBackup):
 
     agent_ids: list[str]
     failed_agent_ids: list[str]
-    with_strategy_settings: bool | None
+    with_automatic_settings: bool | None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -445,10 +445,10 @@ class BackupManager:
                 if (backup_id := agent_backup.backup_id) not in backups:
                     if known_backup := self.known_backups.get(backup_id):
                         failed_agent_ids = known_backup.failed_agent_ids
-                        with_strategy_settings = known_backup.with_strategy_settings
+                        with_automatic_settings = known_backup.with_automatic_settings
                     else:
                         failed_agent_ids = []
-                        with_strategy_settings = None
+                        with_automatic_settings = None
                     backups[backup_id] = ManagerBackup(
                         agent_ids=[],
                         addons=agent_backup.addons,
@@ -462,7 +462,7 @@ class BackupManager:
                         name=agent_backup.name,
                         protected=agent_backup.protected,
                         size=agent_backup.size,
-                        with_strategy_settings=with_strategy_settings,
+                        with_automatic_settings=with_automatic_settings,
                     )
                 backups[backup_id].agent_ids.append(agent_ids[idx])
 
@@ -494,10 +494,10 @@ class BackupManager:
             if backup is None:
                 if known_backup := self.known_backups.get(backup_id):
                     failed_agent_ids = known_backup.failed_agent_ids
-                    with_strategy_settings = known_backup.with_strategy_settings
+                    with_automatic_settings = known_backup.with_automatic_settings
                 else:
                     failed_agent_ids = []
-                    with_strategy_settings = None
+                    with_automatic_settings = None
                 backup = ManagerBackup(
                     agent_ids=[],
                     addons=result.addons,
@@ -511,7 +511,7 @@ class BackupManager:
                     name=result.name,
                     protected=result.protected,
                     size=result.size,
-                    with_strategy_settings=with_strategy_settings,
+                    with_automatic_settings=with_automatic_settings,
                 )
             backup.agent_ids.append(agent_ids[idx])
 
@@ -611,7 +611,7 @@ class BackupManager:
         include_homeassistant: bool,
         name: str | None,
         password: str | None,
-        with_strategy_settings: bool = False,
+        with_automatic_settings: bool = False,
     ) -> NewBackup:
         """Create a backup."""
         new_backup = await self.async_initiate_backup(
@@ -623,7 +623,7 @@ class BackupManager:
             include_homeassistant=include_homeassistant,
             name=name,
             password=password,
-            with_strategy_settings=with_strategy_settings,
+            with_automatic_settings=with_automatic_settings,
         )
         assert self._backup_finish_task
         await self._backup_finish_task
@@ -640,14 +640,14 @@ class BackupManager:
         include_homeassistant: bool,
         name: str | None,
         password: str | None,
-        with_strategy_settings: bool = False,
+        with_automatic_settings: bool = False,
     ) -> NewBackup:
         """Initiate generating a backup."""
         if self.state is not BackupManagerState.IDLE:
             raise HomeAssistantError(f"Backup manager busy: {self.state}")
 
-        if with_strategy_settings:
-            self.config.data.last_attempted_strategy_backup = dt_util.now()
+        if with_automatic_settings:
+            self.config.data.last_attempted_automatic_backup = dt_util.now()
             self.store.save()
 
         self.async_on_backup_event(
@@ -663,7 +663,7 @@ class BackupManager:
                 include_homeassistant=include_homeassistant,
                 name=name,
                 password=password,
-                with_strategy_settings=with_strategy_settings,
+                with_automatic_settings=with_automatic_settings,
             )
         except Exception:
             self.async_on_backup_event(
@@ -683,7 +683,7 @@ class BackupManager:
         include_homeassistant: bool,
         name: str | None,
         password: str | None,
-        with_strategy_settings: bool,
+        with_automatic_settings: bool,
     ) -> NewBackup:
         """Initiate generating a backup."""
         if not agent_ids:
@@ -708,13 +708,13 @@ class BackupManager:
             password=password,
         )
         self._backup_finish_task = self.hass.async_create_task(
-            self._async_finish_backup(agent_ids, with_strategy_settings),
+            self._async_finish_backup(agent_ids, with_automatic_settings),
             name="backup_manager_finish_backup",
         )
         return new_backup
 
     async def _async_finish_backup(
-        self, agent_ids: list[str], with_strategy_settings: bool
+        self, agent_ids: list[str], with_automatic_settings: bool
     ) -> None:
         if TYPE_CHECKING:
             assert self._backup_task is not None
@@ -743,12 +743,12 @@ class BackupManager:
                 open_stream=written_backup.open_stream,
             )
             await written_backup.release_stream()
-            if with_strategy_settings:
-                # create backup was successful, update last_completed_strategy_backup
-                self.config.data.last_completed_strategy_backup = dt_util.now()
+            if with_automatic_settings:
+                # create backup was successful, update last_completed_automatic_backup
+                self.config.data.last_completed_automatic_backup = dt_util.now()
                 self.store.save()
             self.known_backups.add(
-                written_backup.backup, agent_errors, with_strategy_settings
+                written_backup.backup, agent_errors, with_automatic_settings
             )
 
             # delete old backups more numerous than copies
@@ -870,7 +870,7 @@ class KnownBackups:
             backup["backup_id"]: KnownBackup(
                 backup_id=backup["backup_id"],
                 failed_agent_ids=backup["failed_agent_ids"],
-                with_strategy_settings=backup["with_strategy_settings"],
+                with_automatic_settings=backup["with_automatic_settings"],
             )
             for backup in stored_backups
         }
@@ -883,13 +883,13 @@ class KnownBackups:
         self,
         backup: AgentBackup,
         agent_errors: dict[str, Exception],
-        with_strategy_settings: bool,
+        with_automatic_settings: bool,
     ) -> None:
         """Add a backup."""
         self._backups[backup.backup_id] = KnownBackup(
             backup_id=backup.backup_id,
             failed_agent_ids=list(agent_errors),
-            with_strategy_settings=with_strategy_settings,
+            with_automatic_settings=with_automatic_settings,
         )
         self._manager.store.save()
 
@@ -911,14 +911,14 @@ class KnownBackup:
 
     backup_id: str
     failed_agent_ids: list[str]
-    with_strategy_settings: bool
+    with_automatic_settings: bool
 
     def to_dict(self) -> StoredKnownBackup:
         """Convert known backup to a dict."""
         return {
             "backup_id": self.backup_id,
             "failed_agent_ids": self.failed_agent_ids,
-            "with_strategy_settings": self.with_strategy_settings,
+            "with_automatic_settings": self.with_automatic_settings,
         }
 
 
@@ -927,7 +927,7 @@ class StoredKnownBackup(TypedDict):
 
     backup_id: str
     failed_agent_ids: list[str]
-    with_strategy_settings: bool
+    with_automatic_settings: bool
 
 
 class CoreBackupReaderWriter(BackupReaderWriter):
