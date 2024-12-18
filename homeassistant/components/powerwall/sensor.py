@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import attrgetter, methodcaller
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING
 
 from tesla_powerwall import GridState, MeterResponse, MeterType
 
@@ -35,14 +35,12 @@ from .models import BatteryResponse, PowerwallConfigEntry, PowerwallRuntimeData
 _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
 
-_ValueParamT = TypeVar("_ValueParamT")
-_ValueT = TypeVar("_ValueT", bound=float | int | str | None)
+type _ValueType = float | int | str | None
 
 
 @dataclass(frozen=True, kw_only=True)
-class PowerwallSensorEntityDescription(
-    SensorEntityDescription,
-    Generic[_ValueParamT, _ValueT],
+class PowerwallSensorEntityDescription[_ValueParamT, _ValueT: _ValueType](
+    SensorEntityDescription
 ):
     """Describes Powerwall entity."""
 
@@ -389,7 +387,7 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         return meter.get_energy_imported()
 
 
-class PowerWallBatterySensor(BatteryEntity, SensorEntity, Generic[_ValueT]):
+class PowerWallBatterySensor[_ValueT: _ValueType](BatteryEntity, SensorEntity):
     """Representation of an Powerwall Battery sensor."""
 
     entity_description: PowerwallSensorEntityDescription[BatteryResponse, _ValueT]

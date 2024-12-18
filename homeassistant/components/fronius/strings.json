@@ -3,10 +3,12 @@
     "flow_title": "{device}",
     "step": {
       "user": {
-        "title": "Fronius SolarNet",
-        "description": "Configure the IP address or local hostname of your Fronius device.",
+        "description": "Configure your Fronius SolarAPI device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Fronius device."
         }
       },
       "confirm_discovery": {
@@ -16,6 +18,9 @@
         "description": "Update your configuration information for {device}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::fronius::config::step::user::data_description::host%]"
         }
       }
     },
@@ -40,9 +45,6 @@
       },
       "energy_total": {
         "name": "Total energy"
-      },
-      "frequency_ac": {
-        "name": "[%key:component::sensor::entity_component::frequency::name%]"
       },
       "current_ac": {
         "name": "AC current"
@@ -84,9 +86,7 @@
           "error": "Error",
           "idle": "Idle",
           "ready": "Ready",
-          "sleeping": "Sleeping",
-          "unknown": "Unknown",
-          "invalid": "Invalid"
+          "sleeping": "Sleeping"
         }
       },
       "led_state": {
@@ -156,9 +156,6 @@
       "power_apparent_phase_3": {
         "name": "Apparent power phase 3"
       },
-      "power_apparent": {
-        "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
-      },
       "power_factor_phase_1": {
         "name": "Power factor phase 1"
       },
@@ -167,9 +164,6 @@
       },
       "power_factor_phase_3": {
         "name": "Power factor phase 3"
-      },
-      "power_factor": {
-        "name": "[%key:component::sensor::entity_component::power_factor::name%]"
       },
       "power_reactive_phase_1": {
         "name": "Reactive power phase 1"
@@ -215,12 +209,6 @@
       },
       "energy_real_ac_consumed": {
         "name": "Energy consumed"
-      },
-      "power_real_ac": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
-      "temperature_channel_1": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "state_code": {
         "name": "State code"
@@ -296,9 +284,6 @@
     }
   },
   "exceptions": {
-    "no_supported_device_found": {
-      "message": "No supported Fronius SolarNet device found."
-    },
     "entry_cannot_connect": {
       "message": "Failed to connect to Fronius device at {host}: {fronius_error}"
     },
