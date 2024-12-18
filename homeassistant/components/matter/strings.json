@@ -93,6 +93,12 @@
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
+      },
+      "enable_charging": {
+        "name": "[%key:common::action::start%]"
+      },
+      "disable_charging": {
+        "name": "[%key:common::action::stop%]"
       }
     },
     "climate": {
