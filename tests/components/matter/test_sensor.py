@@ -333,3 +333,23 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+
+@pytest.mark.parametrize("node_fixture", ["evse_charging"])
+async def test_evse_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test evse sensor."""
+    # State
+    state = hass.states.get("sensor.mock_evse_evse_state")
+    assert state
+    assert state.state == "3"
+
+    set_node_attribute(matter_node, 1, 153, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_evse_evse_state")
+    assert state
+    assert state.state == "1"
