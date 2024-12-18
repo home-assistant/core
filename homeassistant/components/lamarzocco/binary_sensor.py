@@ -29,7 +29,7 @@ class LaMarzoccoBinarySensorEntityDescription(
 ):
     """Description of a La Marzocco binary sensor."""
 
-    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
+    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool | None]
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
@@ -62,7 +62,7 @@ SCALE_ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
     LaMarzoccoBinarySensorEntityDescription(
         key="connected",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        is_on_fn=lambda config: config.scale.connected if config.scale else False,
+        is_on_fn=lambda config: config.scale.connected if config.scale else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -108,7 +108,7 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     entity_description: LaMarzoccoBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.device.config)
 
