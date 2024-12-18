@@ -29,11 +29,13 @@ DEVICE_DATA_QUERY = {
         mac="xx:xx:xx:xx:xx:xx",
         type="laptop",
         wifi="2.4G",
-    )
+    ),
 }
 
+SERIAL = "m123456789"
+
 SENSOR_DATA_QUERY = {
-    "sys_serial_number": "M123456789",
+    "sys_serial_number": SERIAL,
     "sys_firmware_version": "XF6_4.0.05.04",
     "sys_bootloader_version": "0220",
     "sys_hardware_version": "RHG3006 v1",

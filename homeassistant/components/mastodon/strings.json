@@ -42,13 +42,16 @@
   "entity": {
     "sensor": {
       "followers": {
-        "name": "Followers"
+        "name": "Followers",
+        "unit_of_measurement": "accounts"
       },
       "following": {
-        "name": "Following"
+        "name": "Following",
+        "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
       },
       "posts": {
-        "name": "Posts"
+        "name": "Posts",
+        "unit_of_measurement": "posts"
       }
     }
   }

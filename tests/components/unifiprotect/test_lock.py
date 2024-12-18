@@ -75,7 +75,7 @@ async def test_lock_locked(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
@@ -102,7 +102,7 @@ async def test_lock_unlocking(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.OPENING
 
     mock_msg = Mock()
@@ -129,7 +129,7 @@ async def test_lock_locking(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSING
 
     mock_msg = Mock()
@@ -156,7 +156,7 @@ async def test_lock_jammed(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.JAMMED_WHILE_CLOSING
 
     mock_msg = Mock()
@@ -183,7 +183,7 @@ async def test_lock_unavailable(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.NOT_CALIBRATED
 
     mock_msg = Mock()
@@ -210,7 +210,7 @@ async def test_lock_do_lock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    doorlock.__fields__["close_lock"] = Mock(final=False)
+    doorlock.__pydantic_fields__["close_lock"] = Mock(final=False, frozen=False)
     doorlock.close_lock = AsyncMock()
 
     await hass.services.async_call(
@@ -234,7 +234,7 @@ async def test_lock_do_unlock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    new_lock = doorlock.copy()
+    new_lock = doorlock.model_copy()
     new_lock.lock_status = LockStatusType.CLOSED
 
     mock_msg = Mock()
@@ -245,7 +245,7 @@ async def test_lock_do_unlock(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    new_lock.__fields__["open_lock"] = Mock(final=False)
+    doorlock.__pydantic_fields__["open_lock"] = Mock(final=False, frozen=False)
     new_lock.open_lock = AsyncMock()
 
     await hass.services.async_call(

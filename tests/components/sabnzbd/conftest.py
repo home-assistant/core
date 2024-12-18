@@ -26,7 +26,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_sabnzbd() -> Generator[AsyncMock]:
     """Mock the Sabnzbd API."""
     with patch(
-        "homeassistant.components.sabnzbd.sab.SabnzbdApi", autospec=True
+        "homeassistant.components.sabnzbd.helpers.SabnzbdApi", autospec=True
     ) as mock_sabnzbd:
         mock = mock_sabnzbd.return_value
         mock.return_value.check_available = True

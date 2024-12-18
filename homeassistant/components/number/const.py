@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import partial
 from typing import Final
 
 import voluptuous as vol
@@ -41,12 +40,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     TemperatureConverter,
@@ -74,12 +67,6 @@ class NumberMode(StrEnum):
     AUTO = "auto"
     BOX = "box"
     SLIDER = "slider"
-
-
-# MODE_* are deprecated as of 2021.12, use the NumberMode enum instead.
-_DEPRECATED_MODE_AUTO: Final = DeprecatedConstantEnum(NumberMode.AUTO, "2025.1")
-_DEPRECATED_MODE_BOX: Final = DeprecatedConstantEnum(NumberMode.BOX, "2025.1")
-_DEPRECATED_MODE_SLIDER: Final = DeprecatedConstantEnum(NumberMode.SLIDER, "2025.1")
 
 
 class NumberDeviceClass(StrEnum):
@@ -176,7 +163,7 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -185,7 +172,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     FREQUENCY = "frequency"
@@ -480,7 +467,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
-    NumberDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
+    NumberDeviceClass.POWER: {
+        UnitOfPower.WATT,
+        UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+        UnitOfPower.GIGA_WATT,
+        UnitOfPower.TERA_WATT,
+    },
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
@@ -519,10 +512,3 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
