@@ -528,8 +528,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         schedule = self._get_active_schedule()
         if not schedule:
-            _LOGGER.error("Could not determine active schedule")
-            return
+            raise HomeAssistantError("Could not determine active schedule")
 
         selected_zone = None
         for zone in schedule.zones:
