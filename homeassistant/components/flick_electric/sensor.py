@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_END_AT, ATTR_START_AT, DOMAIN
+from .const import ATTR_END_AT, ATTR_START_AT
 from .coordinator import FlickConfigEntry, FlickElectricDataCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Flick Sensor Setup."""
     coordinator = entry.runtime_data
 
-    async_add_entities([FlickPricingSensor(coordinator)], True)
+    async_add_entities([FlickPricingSensor(coordinator)])
 
 
 class FlickPricingSensor(CoordinatorEntity[FlickElectricDataCoordinator], SensorEntity):
@@ -34,13 +34,12 @@ class FlickPricingSensor(CoordinatorEntity[FlickElectricDataCoordinator], Sensor
     _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{UnitOfEnergy.KILO_WATT_HOUR}"
     _attr_has_entity_name = True
     _attr_translation_key = "power_price"
-    _attributes: dict[str, Any] = {}
 
     def __init__(self, coordinator: FlickElectricDataCoordinator) -> None:
         """Entity object for Flick Electric sensor."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{DOMAIN}_{coordinator.supply_node_ref}_pricing"
+        self._attr_unique_id = f"{coordinator.supply_node_ref}_pricing"
 
     @property
     def native_value(self) -> Decimal:
