@@ -7,7 +7,11 @@ from dataclasses import dataclass
 from pyoverkiz.enums import OverkizCommand
 from pyoverkiz.types import StateType as OverkizStateType
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -52,6 +56,7 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=ButtonDeviceClass.IDENTIFY,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
     OverkizButtonDescription(key="dingDong", name="Ding dong", icon="mdi:bell-ring"),
