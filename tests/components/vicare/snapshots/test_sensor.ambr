@@ -1050,58 +1050,20 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_demand-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_ventilation_demand',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Ventilation demand',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'ventilation_demand',
-    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_demand',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_demand-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Ventilation demand',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_ventilation_demand',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'ventilation',
-  })
-# ---
 # name: test_all_ventilation_entities[sensor.model0_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1118,7 +1080,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation level',
     'platform': 'vicare',
@@ -1132,7 +1094,15 @@
 # name: test_all_ventilation_entities[sensor.model0_ventilation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'model0 Ventilation level',
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model0_ventilation_level',
@@ -1147,13 +1117,22 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.model0_ventilation_reason',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1164,7 +1143,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Ventilation reason',
     'platform': 'vicare',
@@ -1178,7 +1157,16 @@
 # name: test_all_ventilation_entities[sensor.model0_ventilation_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'model0 Ventilation reason',
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model0_ventilation_reason',
