@@ -88,7 +88,6 @@ EVSE_SUPPLY_STATE_MAP = {
     clusters.EnergyEvse.Enums.SupplyStateEnum.kChargingEnabled: "Charging Enabled",
     clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: "Discharging Enabled",
     clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: "Disabled Diagnostics",
-    clusters.EnergyEvse.Enums.SupplyStateEnum.kEnabled: "Enabled",
 }
 
 
