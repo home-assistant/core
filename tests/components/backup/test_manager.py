@@ -17,7 +17,6 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentPlatformProtocol,
     BackupManager,
-    BackupPlatformProtocol,
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
@@ -45,9 +44,9 @@ from .common import (
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
     BackupAgentTest,
+    setup_backup_platform,
 )
 
-from tests.common import MockPlatform, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
@@ -62,18 +61,6 @@ _EXPECTED_FILES_WITH_DATABASE = {
     True: [*_EXPECTED_FILES, "home-assistant_v2.db"],
     False: _EXPECTED_FILES,
 }
-
-
-async def _setup_backup_platform(
-    hass: HomeAssistant,
-    *,
-    domain: str = "some_domain",
-    platform: BackupPlatformProtocol | BackupAgentPlatformProtocol | None = None,
-) -> None:
-    """Set up a mock domain."""
-    mock_platform(hass, f"{domain}.backup", platform or MockPlatform())
-    assert await async_setup_component(hass, domain, {})
-    await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)
@@ -248,7 +235,7 @@ async def test_async_initiate_backup(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        await _setup_backup_platform(
+        await setup_backup_platform(
             hass,
             domain="test",
             platform=Mock(
@@ -419,7 +406,7 @@ async def test_async_initiate_backup_with_agent_error(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        await _setup_backup_platform(
+        await setup_backup_platform(
             hass,
             domain="test",
             platform=Mock(
@@ -779,7 +766,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        await _setup_backup_platform(
+        await setup_backup_platform(
             hass,
             domain="test",
             platform=Mock(
@@ -889,7 +876,7 @@ async def test_async_initiate_backup_with_task_error(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        await _setup_backup_platform(
+        await setup_backup_platform(
             hass,
             domain="test",
             platform=Mock(
@@ -993,7 +980,7 @@ async def test_initiate_backup_file_error(
         core_get_backup_agents.return_value = [local_agent]
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-        await _setup_backup_platform(
+        await setup_backup_platform(
             hass,
             domain="test",
             platform=Mock(
@@ -1093,8 +1080,9 @@ async def test_loading_platforms(
 
     get_agents_mock = AsyncMock(return_value=[])
 
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
+        domain="test",
         platform=Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
@@ -1115,7 +1103,7 @@ class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
 
     def get_backup_path(self, backup_id: str) -> Path:
         """Return the local path to a backup."""
-        return "test.tar"
+        return Path("test.tar")
 
 
 @pytest.mark.parametrize(
@@ -1136,7 +1124,7 @@ async def test_loading_platform_with_listener(
     get_agents_mock = AsyncMock(return_value=[agent_class("remote1", backups=[])])
     register_listener_mock = Mock()
 
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
@@ -1185,7 +1173,7 @@ async def test_not_loading_bad_platforms(
     platform_mock: Mock,
 ) -> None:
     """Test not loading bad backup platforms."""
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=platform_mock,
@@ -1203,7 +1191,7 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
     remote_agent = BackupAgentTest("remote", backups=[])
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
@@ -1233,7 +1221,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
         raise HomeAssistantError("Test exception")
 
     remote_agent = BackupAgentTest("remote", backups=[])
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
@@ -1308,7 +1296,7 @@ async def test_receive_backup(
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
     remote_agent = BackupAgentTest("remote", backups=[])
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
@@ -1432,8 +1420,8 @@ async def test_async_trigger_restore(
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     hass.data[DATA_MANAGER] = manager
 
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await _setup_backup_platform(
+    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
@@ -1562,7 +1550,7 @@ async def test_async_trigger_restore_wrong_parameters(
     """Test trigger restore."""
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
 
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
     await manager.load_platforms()
 
     local_agent = manager.backup_agents[LOCAL_AGENT_ID]
