@@ -1,0 +1,5 @@
+{
+  "services": {
+    "execute_command": { "service": "mdi:code-greater-than" }
+  }
+}
