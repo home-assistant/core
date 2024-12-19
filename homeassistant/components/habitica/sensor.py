@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any
+
+from habiticalib import (
+    ContentData,
+    HabiticaClass,
+    TaskData,
+    TaskType,
+    UserData,
+    deserialize_task,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -36,10 +45,10 @@ _LOGGER = logging.getLogger(__name__)
 class HabitipySensorEntityDescription(SensorEntityDescription):
     """Habitipy Sensor Description."""
 
-    value_fn: Callable[[dict[str, Any], dict[str, Any]], StateType]
-    attributes_fn: (
-        Callable[[dict[str, Any], dict[str, Any]], dict[str, Any] | None] | None
-    ) = None
+    value_fn: Callable[[UserData, ContentData], StateType]
+    attributes_fn: Callable[[UserData, ContentData], dict[str, Any] | None] | None = (
+        None
+    )
     entity_picture: str | None = None
 
 
@@ -47,7 +56,7 @@ class HabitipySensorEntityDescription(SensorEntityDescription):
 class HabitipyTaskSensorEntityDescription(SensorEntityDescription):
     """Habitipy Task Sensor Description."""
 
-    value_fn: Callable[[list[dict[str, Any]]], list[dict[str, Any]]]
+    value_fn: Callable[[list[TaskData]], list[TaskData]]
 
 
 class HabitipySensorEntity(StrEnum):
@@ -79,75 +88,70 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.DISPLAY_NAME,
         translation_key=HabitipySensorEntity.DISPLAY_NAME,
-        value_fn=lambda user, _: user.get("profile", {}).get("name"),
+        value_fn=lambda user, _: user.profile.name,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH,
         translation_key=HabitipySensorEntity.HEALTH,
         suggested_display_precision=0,
-        value_fn=lambda user, _: user.get("stats", {}).get("hp"),
+        value_fn=lambda user, _: user.stats.hp,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.HEALTH_MAX,
         translation_key=HabitipySensorEntity.HEALTH_MAX,
         entity_registry_enabled_default=False,
-        value_fn=lambda user, _: user.get("stats", {}).get("maxHealth"),
+        value_fn=lambda user, _: 50,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA,
         translation_key=HabitipySensorEntity.MANA,
         suggested_display_precision=0,
-        value_fn=lambda user, _: user.get("stats", {}).get("mp"),
+        value_fn=lambda user, _: user.stats.mp,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.MANA_MAX,
         translation_key=HabitipySensorEntity.MANA_MAX,
-        value_fn=lambda user, _: user.get("stats", {}).get("maxMP"),
+        value_fn=lambda user, _: user.stats.maxMP,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE,
         translation_key=HabitipySensorEntity.EXPERIENCE,
-        value_fn=lambda user, _: user.get("stats", {}).get("exp"),
+        value_fn=lambda user, _: user.stats.exp,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.EXPERIENCE_MAX,
         translation_key=HabitipySensorEntity.EXPERIENCE_MAX,
-        value_fn=lambda user, _: user.get("stats", {}).get("toNextLevel"),
+        value_fn=lambda user, _: user.stats.toNextLevel,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.LEVEL,
         translation_key=HabitipySensorEntity.LEVEL,
-        value_fn=lambda user, _: user.get("stats", {}).get("lvl"),
+        value_fn=lambda user, _: user.stats.lvl,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GOLD,
         translation_key=HabitipySensorEntity.GOLD,
         suggested_display_precision=2,
-        value_fn=lambda user, _: user.get("stats", {}).get("gp"),
+        value_fn=lambda user, _: user.stats.gp,
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.CLASS,
         translation_key=HabitipySensorEntity.CLASS,
-        value_fn=lambda user, _: user.get("stats", {}).get("class"),
+        value_fn=lambda user, _: user.stats.Class.value if user.stats.Class else None,
         device_class=SensorDeviceClass.ENUM,
-        options=["warrior", "healer", "wizard", "rogue"],
+        options=[item.value for item in HabiticaClass],
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.GEMS,
         translation_key=HabitipySensorEntity.GEMS,
-        value_fn=lambda user, _: user.get("balance", 0) * 4,
+        value_fn=lambda user, _: round(user.balance * 4) if user.balance else None,
         suggested_display_precision=0,
         entity_picture="shop_gem.png",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.TRINKETS,
         translation_key=HabitipySensorEntity.TRINKETS,
-        value_fn=(
-            lambda user, _: user.get("purchased", {})
-            .get("plan", {})
-            .get("consecutive", {})
-            .get("trinkets", 0)
-        ),
+        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets or 0,
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
         entity_picture="notif_subscriber_reward.png",
@@ -155,16 +159,16 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.STRENGTH,
         translation_key=HabitipySensorEntity.STRENGTH,
-        value_fn=lambda user, content: get_attributes_total(user, content, "str"),
-        attributes_fn=lambda user, content: get_attribute_points(user, content, "str"),
+        value_fn=lambda user, content: get_attributes_total(user, content, "Str"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "Str"),
         suggested_display_precision=0,
         native_unit_of_measurement="STR",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.INTELLIGENCE,
         translation_key=HabitipySensorEntity.INTELLIGENCE,
-        value_fn=lambda user, content: get_attributes_total(user, content, "int"),
-        attributes_fn=lambda user, content: get_attribute_points(user, content, "int"),
+        value_fn=lambda user, content: get_attributes_total(user, content, "Int"),
+        attributes_fn=lambda user, content: get_attribute_points(user, content, "Int"),
         suggested_display_precision=0,
         native_unit_of_measurement="INT",
     ),
@@ -203,7 +207,7 @@ TASKS_MAP = {
     "yester_daily": "yesterDaily",
     "completed": "completed",
     "collapse_checklist": "collapseChecklist",
-    "type": "type",
+    "type": "Type",
     "notes": "notes",
     "tags": "tags",
     "value": "value",
@@ -221,26 +225,28 @@ TASK_SENSOR_DESCRIPTION: tuple[HabitipyTaskSensorEntityDescription, ...] = (
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.HABITS,
         translation_key=HabitipySensorEntity.HABITS,
-        value_fn=lambda tasks: [r for r in tasks if r.get("type") == "habit"],
+        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.HABIT],
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.DAILIES,
         translation_key=HabitipySensorEntity.DAILIES,
-        value_fn=lambda tasks: [r for r in tasks if r.get("type") == "daily"],
+        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.DAILY],
         entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.TODOS,
         translation_key=HabitipySensorEntity.TODOS,
-        value_fn=lambda tasks: [
-            r for r in tasks if r.get("type") == "todo" and not r.get("completed")
-        ],
+        value_fn=(
+            lambda tasks: [
+                r for r in tasks if r.Type is TaskType.TODO and not r.completed
+            ]
+        ),
         entity_registry_enabled_default=False,
     ),
     HabitipyTaskSensorEntityDescription(
         key=HabitipySensorEntity.REWARDS,
         translation_key=HabitipySensorEntity.REWARDS,
-        value_fn=lambda tasks: [r for r in tasks if r.get("type") == "reward"],
+        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.REWARD],
     ),
 )
 
@@ -309,15 +315,14 @@ class HabitipyTaskSensor(HabiticaBase, SensorEntity):
         attrs = {}
 
         # Map tasks to TASKS_MAP
-        for received_task in self.entity_description.value_fn(
-            self.coordinator.data.tasks
-        ):
+        for task_data in self.entity_description.value_fn(self.coordinator.data.tasks):
+            received_task = deserialize_task(asdict(task_data))
             task_id = received_task[TASKS_MAP_ID]
             task = {}
             for map_key, map_value in TASKS_MAP.items():
                 if value := received_task.get(map_value):
                     task[map_key] = value
-            attrs[task_id] = task
+            attrs[str(task_id)] = task
         return attrs
 
     async def async_added_to_hass(self) -> None:
