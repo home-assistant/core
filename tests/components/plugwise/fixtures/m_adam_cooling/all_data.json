@@ -176,8 +176,8 @@
         "Weekschema",
         "off"
       ],
-      "climate_mode": "cool",
-      "control_state": "auto",
+      "climate_mode": "auto",
+      "control_state": "cooling",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Bathroom",

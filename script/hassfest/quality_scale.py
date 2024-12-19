@@ -18,10 +18,12 @@ from .quality_scale_validation import (
     config_flow,
     diagnostics,
     discovery,
+    parallel_updates,
     reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
+    test_before_setup,
     unique_config_entry,
 )
 
@@ -55,7 +57,7 @@ ALL_RULES = [
     Rule("has-entity-name", ScaledQualityScaleTiers.BRONZE),
     Rule("runtime-data", ScaledQualityScaleTiers.BRONZE, runtime_data),
     Rule("test-before-configure", ScaledQualityScaleTiers.BRONZE),
-    Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE),
+    Rule("test-before-setup", ScaledQualityScaleTiers.BRONZE, test_before_setup),
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
@@ -67,7 +69,7 @@ ALL_RULES = [
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
     Rule(
         "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
     ),
@@ -310,7 +312,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "drop_connect",
     "dsmr",
     "dsmr_reader",
-    "dte_energy_bridge",
     "dublin_bus_transport",
     "duckdns",
     "duke_energy",
@@ -337,7 +338,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "eight_sleep",
     "electrasmart",
     "electric_kiwi",
-    "elevenlabs",
     "eliqonline",
     "elkm1",
     "elmax",
@@ -355,7 +355,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "energyzero",
     "enigma2",
     "enocean",
-    "enphase_envoy",
     "entur_public_transport",
     "environment_canada",
     "envisalink",
@@ -389,7 +388,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fints",
     "fireservicerota",
     "firmata",
-    "fitbit",
     "fivem",
     "fixer",
     "fjaraskupan",
@@ -418,7 +416,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "freedompro",
     "fritzbox",
     "fritzbox_callmonitor",
-    "fronius",
     "frontier_silicon",
     "fujitsu_fglair",
     "fujitsu_hvac",
@@ -457,7 +454,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "google_maps",
     "google_pubsub",
     "google_sheets",
-    "google_tasks",
     "google_translate",
     "google_travel_time",
     "google_wifi",
@@ -474,7 +470,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "gstreamer",
     "gtfs",
     "guardian",
-    "habitica",
     "harman_kardon_avr",
     "harmony",
     "hassio",
@@ -482,7 +477,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hddtemp",
     "hdmi_cec",
     "heatmiser",
-    "heos",
     "here_travel_time",
     "hikvision",
     "hikvisioncam",
@@ -518,7 +512,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "iaqualink",
     "ibeacon",
     "icloud",
-    "idasen_desk",
     "idteck_prox",
     "ifttt",
     "iglo",
@@ -580,7 +573,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kwb",
     "lacrosse",
     "lacrosse_view",
-    "lametric",
     "landisgyr_heat_meter",
     "lannouncer",
     "lastfm",
@@ -700,7 +692,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mysensors",
     "mystrom",
     "mythicbeastsdns",
-    "myuplink",
     "nad",
     "nam",
     "namecheapdns",
@@ -709,7 +700,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "neato",
     "nederlandse_spoorwegen",
     "ness_alarm",
-    "nest",
     "netatmo",
     "netdata",
     "netgear",
@@ -734,7 +724,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "no_ip",
     "noaa_tides",
     "nobo_hub",
-    "nordpool",
     "norway_air",
     "notify_events",
     "notion",
@@ -893,12 +882,10 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rtorrent",
     "rtsp_to_webrtc",
     "ruckus_unleashed",
-    "russound_rio",
     "russound_rnet",
     "ruuvi_gateway",
     "ruuvitag_ble",
     "rympro",
-    "sabnzbd",
     "saj",
     "samsungtv",
     "sanix",
@@ -990,7 +977,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "steam_online",
     "steamist",
     "stiebel_eltron",
-    "stookalert",
     "stream",
     "streamlabswater",
     "subaru",
@@ -1018,7 +1004,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tankerkoenig",
@@ -1109,7 +1094,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "v2c",
     "vallox",
     "vasttrafik",
-    "velbus",
     "velux",
     "venstar",
     "vera",
@@ -1350,16 +1334,19 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             "quality_scale", f"Invalid {name}: {humanize_error(data, err)}"
         )
 
+    rules_done = set[str]()
     rules_met = set[str]()
     for rule_name, rule_value in data.get("rules", {}).items():
         status = rule_value["status"] if isinstance(rule_value, dict) else rule_value
         if status not in {"done", "exempt"}:
             continue
         rules_met.add(rule_name)
-        if (
-            status == "done"
-            and (validator := VALIDATORS.get(rule_name))
-            and (errors := validator.validate(integration))
+        if status == "done":
+            rules_done.add(rule_name)
+
+    for rule_name in rules_done:
+        if (validator := VALIDATORS.get(rule_name)) and (
+            errors := validator.validate(config, integration, rules_done=rules_done)
         ):
             for error in errors:
                 integration.add_error("quality_scale", f"[{rule_name}] {error}")

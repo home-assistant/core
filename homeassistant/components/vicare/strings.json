@@ -9,6 +9,12 @@
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "Client ID",
           "heating_type": "Heating type"
+        },
+        "data_description": {
+          "username": "The email address to login to your ViCare account.",
+          "password": "The password to login to your ViCare account.",
+          "client_id": "The ID of the API client created in the Viessmann developer portal.",
+          "heating_type": "Allows to overrule the device auto detection."
         }
       },
       "reauth_confirm": {
@@ -16,6 +22,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "[%key:component::vicare::config::step::user::data::client_id%]"
+        },
+        "data_description": {
+          "password": "[%key:component::vicare::config::step::user::data_description::password%]",
+          "client_id": "[%key:component::vicare::config::step::user::data_description::client_id%]"
         }
       }
     },
