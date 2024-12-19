@@ -36,12 +36,3 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
             model="Bring! Grocery Shopping List",
             configuration_url=f"https://web.getbring.com/app/lists/{self.coordinator.lists.index(bring_list)}",
         )
-
-    @property
-    def available(self) -> bool:
-        """Return false if list is no longer available."""
-
-        return super().available and any(
-            bring_list["listUuid"] == self._list_uuid
-            for bring_list in self.coordinator.lists
-        )

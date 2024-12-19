@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -28,7 +29,7 @@ class BringData(BringItemsResponse):
     """Coordinator data class."""
 
 
-class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
+class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     """A Bring Data Update Coordinator."""
 
     config_entry: ConfigEntry
@@ -45,9 +46,9 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
         )
         self.bring = bring
 
-    async def _async_update_data(self) -> list[BringData]:
+    async def _async_update_data(self) -> dict[str, BringData]:
         """Fetch the latest data from bring."""
-        items = []
+        items = {}
 
         try:
             self.lists = (await self.bring.load_lists())["lists"]
@@ -71,11 +72,13 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             raise UpdateFailed(
                 "Authentication failed but re-authentication was successful, trying again later"
             ) from e
+        else:
+            self._purge_deleted_lists()
 
         for lst in self.lists:
             try:
                 response = await self.bring.get_list(lst["listUuid"])
-                items.append(BringData(**response))
+                items[lst["listUuid"]] = BringData(**response)
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
@@ -93,3 +96,20 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[list[BringData]]):
             raise UpdateFailed(
                 "Unable to connect and retrieve user settings from bring"
             ) from e
+
+    def _purge_deleted_lists(self) -> None:
+        """Purge device entries of deleted lists."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {
+            (DOMAIN, f"{self.config_entry.unique_id}_{lst["listUuid"]}")
+            for lst in self.lists
+        }
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
