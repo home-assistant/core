@@ -1,0 +1,105 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Remove snapshot from config flow tests.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id:
+    status: todo
+    comment: |
+      Migrate entities and devices to a unique ID without entry id.
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: todo
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no authentication needed in the integration.
+  test-coverage:
+    status: todo
+    comment: |
+      Set real world value for unique_id in mock_config_entry fixture.
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider.
+  discovery:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This is an service, which doesn't integrate with any devices.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      The integration provides services and not devices that can be added at a later stage.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      Change translations string for already_configured error.
+  icon-translations:
+    status: todo
+    comment: |
+      Not yet done for all sensor entities.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: exempt
+    comment: |
+      The integration provides services and has no devices that can become stale.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
