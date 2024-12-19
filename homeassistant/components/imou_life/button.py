@@ -1,18 +1,14 @@
 """Support for Imou button controls"""
 
-import logging
+from pyimouapi.exceptions import ImouException
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
+from .const import DOMAIN, PARAM_RESTART_DEVICE
 from .entity import ImouEntity
-from .const import DOMAIN
-from pyimouapi.exceptions import ImouException
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(
@@ -21,8 +17,11 @@ async def async_setup_entry(
     imou_coordinator = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for device in imou_coordinator.devices:
-        for button in device.buttons:
-            entities.append(ImouButton(imou_coordinator, entry, button, device))
+        for button_type in device.buttons:
+            button_entity = ImouButton(imou_coordinator, entry, button_type, device)
+            if button_type == PARAM_RESTART_DEVICE:
+                button_entity._attr_device_class = ButtonDeviceClass.RESTART
+            entities.append(button_entity)
     async_add_entities(entities)
 
 

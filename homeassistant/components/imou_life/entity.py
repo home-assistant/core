@@ -1,17 +1,12 @@
 """An abstract class commom to all IMOU entities."""
 
-import logging
+from pyimouapi.ha_device import ImouHaDevice, DeviceStatus
 
-from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 from . import ImouDataUpdateCoordinator
-from .const import PARAM_RESTART_DEVICE, DOMAIN, PARAM_STATUS
-from pyimouapi.ha_device import ImouHaDevice, DeviceStatus
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+from .const import DOMAIN, PARAM_STATUS
 
 
 class ImouEntity(CoordinatorEntity):
@@ -25,8 +20,9 @@ class ImouEntity(CoordinatorEntity):
         config_entry: ConfigEntry,
         entity_type: str,
         device: ImouHaDevice,
-    ):
+    ) -> None:
         super().__init__(coordinator)
+        self.coordinator = coordinator
         self.config_entry = config_entry
         self._entity_type = entity_type
         self._device = device
@@ -61,12 +57,6 @@ class ImouEntity(CoordinatorEntity):
         return self._unique_id
 
     @property
-    def device_class(self) -> str | None:
-        if self._entity_type == PARAM_RESTART_DEVICE:
-            return ButtonDeviceClass.RESTART
-        return None
-
-    @property
     def translation_key(self):
         return self._attr_translation_key
 
@@ -75,9 +65,3 @@ class ImouEntity(CoordinatorEntity):
         if self._entity_type == PARAM_STATUS:
             return True
         return self._device.sensors[PARAM_STATUS] != DeviceStatus.OFFLINE.status
-
-    @property
-    def state(self) -> str | None:
-        if self._entity_type == PARAM_STATUS:
-            return self._device.sensors[PARAM_STATUS]
-        return super().state

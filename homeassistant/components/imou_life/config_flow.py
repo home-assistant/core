@@ -1,11 +1,13 @@
 """config flow for Imou."""
 
-import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
+from pyimouapi.exceptions import ImouException
+from pyimouapi.openapi import ImouOpenApiClient
 
+from homeassistant import config_entries
 from .const import (
     DOMAIN,
     PARAM_API_URL,
@@ -15,21 +17,19 @@ from .const import (
     CONF_API_URL_FK,
     CONF_API_URL_SG,
 )
-from pyimouapi.exceptions import ImouException
-from pyimouapi.openapi import ImouOpenApiClient
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class ImouConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    def __init__(self):
+    def __init__(self) -> None:
         self._api_url = None
         self._app_id = None
         self._app_secret = None
         self._api_client = None
         self._session = None
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         # USER INPUT IS EMPTY RETURN TO FORM
         if user_input is None:
             return self.async_show_form(
@@ -47,7 +47,7 @@ class ImouConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # USER INPUT IS NOT EMPTY START LOGIN
         return await self.async_step_login(user_input)
 
-    async def async_step_login(self, user_input):
+    async def async_step_login(self, user_input) -> ConfigFlowResult:
         await self.async_set_unique_id(user_input[PARAM_APP_ID])
         self._abort_if_unique_id_configured()
         api_client = ImouOpenApiClient(

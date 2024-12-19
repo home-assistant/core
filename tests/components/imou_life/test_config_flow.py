@@ -5,11 +5,11 @@ from homeassistant.config_entries import SOURCE_USER
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.imou_life.const import DOMAIN
-from tests.components.imou_life import patch_async_setup_entry, USER_INPUT
+from . import patch_async_setup_entry, USER_INPUT
 
 
 @pytest.mark.usefixtures("imou_config_flow")
-async def test_async_step_user_without_user_input(hass: HomeAssistant):
+async def test_async_step_user_without_user_input(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -28,7 +28,7 @@ async def test_async_step_user_without_user_input(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("imou_config_flow_exception")
-async def test_async_step_user_with_user_input_fail(hass: HomeAssistant):
+async def test_async_step_user_with_user_input_fail(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -46,7 +46,7 @@ async def test_async_step_user_with_user_input_fail(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("imou_config_flow_exception")
-async def test_async_step_user_with_user_input(hass: HomeAssistant):
+async def test_async_step_user_with_user_input(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
     )

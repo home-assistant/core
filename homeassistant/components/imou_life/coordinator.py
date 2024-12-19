@@ -8,25 +8,27 @@ import async_timeout
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from pyimouapi.ha_device import ImouHaDeviceManager
+from pyimouapi.ha_device import ImouHaDeviceManager, ImouHaDevice
 
-_LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 class ImouDataUpdateCoordinator(DataUpdateCoordinator):
     """DATA UPDATE COORDINATOR"""
 
-    def __init__(self, hass: HomeAssistant, device_manager: ImouHaDeviceManager):
-        _LOGGER.info("ImouDataUpdateCoordinator init")
+    def __init__(
+        self, hass: HomeAssistant, device_manager: ImouHaDeviceManager
+    ) -> None:
+        LOGGER.info("ImouDataUpdateCoordinator init")
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name="ImouDataUpdateCoordinator",
             update_interval=timedelta(seconds=60),
             always_update=True,
         )
         self._device_manager = device_manager
-        self._devices = []
+        self._devices: list[ImouHaDevice] = []
 
     @property
     def devices(self):
@@ -60,10 +62,10 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
         return True
 
     async def _async_update_data(self):
-        _LOGGER.info("ImouDataUpdateCoordinator update_data")
+        LOGGER.info("ImouDataUpdateCoordinator update_data")
         async with async_timeout.timeout(120):
             try:
                 return await self.async_update_all_device()
             except Exception as err:
-                _LOGGER.error("Error fetching data: %s" % err)
+                LOGGER.error("Error fetching data: %s" % err)
                 raise UpdateFailed() from err
