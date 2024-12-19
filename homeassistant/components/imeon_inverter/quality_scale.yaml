@@ -1,0 +1,24 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: todo
+  appropriate-polling: todo
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not have any service for now.
+  dependency-transparency: todo
+  action-setup:
+    status: exempt
+    comment: This integration does not have any service for now.
+  common-modules: todo
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  docs-actions: todo
+  brands: done
