@@ -260,6 +260,33 @@ async def test_snapshot_bad_timestamp(
     ufp.api.request.assert_not_called()
 
 
+@pytest.mark.parametrize(("width", "height"), [("test", None), (None, "test")])
+async def test_snapshot_bad_params(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+    camera: Camera,
+    fixed_now: datetime,
+    width: Any,
+    height: Any,
+) -> None:
+    """Test invalid bad query parameters."""
+
+    ufp.api.get_event_thumbnail = AsyncMock()
+
+    await init_entry(hass, ufp, [camera])
+
+    url = async_generate_snapshot_url(
+        ufp.api.bootstrap.nvr.id, camera.id, fixed_now, width=width, height=height
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 400
+    ufp.api.get_event_thumbnail.assert_not_called()
+
+
 async def test_video_bad_event(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
