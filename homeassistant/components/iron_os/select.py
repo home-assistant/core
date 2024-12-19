@@ -164,13 +164,13 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: IronOSCoordinators,
+        coordinators: IronOSCoordinators,
         entity_description: IronOSSelectEntityDescription,
     ) -> None:
         """Initialize the select entity."""
-        super().__init__(coordinator.live_data, entity_description)
+        super().__init__(coordinators.live_data, entity_description)
 
-        self.settings = coordinator.settings
+        self.settings = coordinators.settings
 
     @property
     def current_option(self) -> str | None:
