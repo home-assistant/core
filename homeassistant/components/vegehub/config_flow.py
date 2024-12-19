@@ -48,13 +48,13 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self._hub.retrieve_mac_address(retries=2)
                 except ConnectionError:
                     _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
-                    return self.async_abort(reason="cannot_connect")
+                    errors["base"] = "cannot_connect"
 
                 if len(self._hub.mac_address) <= 0:
                     _LOGGER.error(
                         "Failed to get MAC address for %s", self._hub.ip_address
                     )
-                    return self.async_abort(reason="cannot_connect")
+                    errors["base"] = "cannot_connect"
 
                 self._async_abort_entries_match({CONF_IP_ADDRESS: self._hub.ip_address})
 
