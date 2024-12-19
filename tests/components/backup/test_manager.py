@@ -963,9 +963,9 @@ async def test_async_initiate_backup_with_task_error(
         "unlink_exception",
     ),
     [
-        (1, OSError("Boom!"), 0, None, 0, None, 0, None),
-        (1, None, 1, OSError("Boom!"), 1, None, 0, None),
-        (1, None, 1, None, 1, OSError("Boom!"), 0, None),
+        (1, OSError("Boom!"), 0, None, 0, None, 1, None),
+        (1, None, 1, OSError("Boom!"), 1, None, 1, None),
+        (1, None, 1, None, 1, OSError("Boom!"), 1, None),
         (1, None, 1, None, 1, None, 1, OSError("Boom!")),
     ],
 )

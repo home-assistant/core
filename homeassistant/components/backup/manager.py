@@ -831,8 +831,6 @@ class BackupManager:
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
                 )
-                self.known_backups.add(written_backup.backup, agent_errors)
-                await written_backup.release_stream()
             except BaseException as err:
                 self.async_on_backup_event(
                     CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
@@ -840,12 +838,20 @@ class BackupManager:
                 if isinstance(err, BackupReaderWriterError):
                     raise BackupManagerError(str(err)) from err
                 raise  # manager or unexpected error
-            else:
-                if with_automatic_settings:
-                    # create backup was successful, update last_completed_automatic_backup
-                    self.config.data.last_completed_automatic_backup = dt_util.now()
-                    self.store.save()
-                    self._update_issue_after_agent_upload(agent_errors)
+            finally:
+                try:
+                    await written_backup.release_stream()
+                except Exception:
+                    self.async_on_backup_event(
+                        CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
+                    )
+                    raise
+            self.known_backups.add(written_backup.backup, agent_errors)
+            if with_automatic_settings:
+                # create backup was successful, update last_completed_automatic_backup
+                self.config.data.last_completed_automatic_backup = dt_util.now()
+                self.store.save()
+                self._update_issue_after_agent_upload(agent_errors)
             if agent_errors:
                 self.async_on_backup_event(
                     CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
