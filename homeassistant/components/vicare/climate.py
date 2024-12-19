@@ -24,7 +24,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
@@ -39,7 +38,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import HeatingProgram, ViCareDevice
+from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
 from .utils import get_burners, get_circuits, get_compressors, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +98,7 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ViCareConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""

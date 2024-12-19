@@ -25,7 +25,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -50,7 +49,7 @@ from .const import (
     VICARE_WH,
 )
 from .entity import ViCareEntity
-from .types import ViCareDevice, ViCareRequiredKeysMixin
+from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
     get_burners,
     get_circuits,
@@ -968,7 +967,7 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ViCareConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""

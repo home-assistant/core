@@ -16,7 +16,6 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -30,14 +29,14 @@ from .const import (
     PLATFORMS,
     UNSUPPORTED_DEVICES,
 )
-from .types import ViCareDevice
+from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
@@ -75,7 +74,7 @@ def vicare_login(
     return vicare_api
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
     """Set up PyVicare API."""
     vicare_api = vicare_login(hass, entry.data)
 
@@ -101,7 +100,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     ]
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Unload ViCare config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -116,7 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_devices_and_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+    hass: HomeAssistant, entry: ViCareConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
     device_registry = dr.async_get(hass)

@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     PRESET_SLEEP,
 )
+from homeassistant.config_entries import ConfigEntry
 
 
 class HeatingProgram(enum.StrEnum):
@@ -70,6 +71,14 @@ VICARE_TO_HA_PRESET_HEATING = {
     HeatingProgram.REDUCED: PRESET_SLEEP,
     HeatingProgram.REDUCED_HEATING: PRESET_SLEEP,
 }
+
+
+type ViCareConfigEntry = ConfigEntry[ViCareData]
+
+
+@dataclass(frozen=True)
+class ViCareData:
+    """ViCare data class."""
 
 
 @dataclass(frozen=True)

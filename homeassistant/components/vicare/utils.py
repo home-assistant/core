@@ -14,16 +14,14 @@ from PyViCare.PyViCareUtils import (
 )
 import requests
 
-from homeassistant.config_entries import ConfigEntry
-
 from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
-from .types import ViCareRequiredKeysMixin
+from .types import ViCareConfigEntry, ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def get_device(
-    entry: ConfigEntry, device_config: PyViCareDeviceConfig
+    entry: ViCareConfigEntry, device_config: PyViCareDeviceConfig
 ) -> PyViCareDevice:
     """Get device for device config."""
     return getattr(
