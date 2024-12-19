@@ -126,7 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         sw_version=version,
         entry_type=DeviceEntryType.SERVICE,
         connections=mac_connect,
-        configuration_url=lms.generate_image_url(""),
     )
     _LOGGER.debug("LMS Device %s", device)
 
