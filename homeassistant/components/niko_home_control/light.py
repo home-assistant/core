@@ -104,7 +104,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = action.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if action.type == 2:  # noqa: SLF001
+        if action.type == 2:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
