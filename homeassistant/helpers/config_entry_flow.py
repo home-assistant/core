@@ -67,9 +67,11 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
             in_progress = self._async_in_progress()
 
             if not (has_devices := bool(in_progress)):
-                has_devices = await cast(
-                    "asyncio.Future[bool]", self._discovery_function(self.hass)
-                )
+                discovery_result = self._discovery_function(self.hass)
+                if isinstance(discovery_result, bool):
+                    has_devices = discovery_result
+                else:
+                    has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
                 return self.async_abort(reason="no_devices_found")
