@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -25,8 +24,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NikoHomeControlConfigEntry
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 # delete after 2025.7.0
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
@@ -86,10 +83,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Niko Home Control light entry."""
     controller = entry.runtime_data
-    entities: list[NikoHomeControlLight] = []
+
+    entities = []
     for light in controller.lights:
-        entity = NikoHomeControlLight(light, controller)
-        controller.entities[entity.action_id] = entity
+        entity = NikoHomeControlLight(light, controller, entry)
+        controller.register_callback(entity.async_update_callback)
         entities.append(entity)
     return async_add_entities(entities)
 
@@ -97,7 +95,7 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    def __init__(self, action, controller):
+    def __init__(self, action, controller, entry: NikoHomeControlConfigEntry) -> None:
         """Set up the Niko Home Control light platform."""
         self._controller = controller
         self._action = action
@@ -117,18 +115,17 @@ class NikoHomeControlLight(LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.debug("Turn on: %s", self.name)
         self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        _LOGGER.debug("Turn off: %s", self.name)
         self._action.turn_off()
 
-    def update_state(self, state):
-        """Update HA state."""
-        self._action.update_state(state)
-        self._attr_is_on = state > 0
-        if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = state * 2.55
-        self.async_write_ha_state()
+    async def async_update_callback(self, action_id: str, state) -> None:
+        """Handle updates from the controller."""
+        if action_id == self._action.id:
+            self._action.update_state(state)
+            self._attr_is_on = state > 0
+            if brightness_supported(self.supported_color_modes):
+                self._attr_brightness = state * 2.55
+            self.async_write_ha_state()

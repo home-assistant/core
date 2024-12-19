@@ -21,6 +21,7 @@ DATA_SCHEMA = vol.Schema(
 
 async def test_connection(host: str) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
+
     try:
         controller = NHCController(host, 8000)
         await controller.connect()
@@ -32,7 +33,7 @@ async def test_connection(host: str) -> str | None:
 class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
