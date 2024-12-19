@@ -1914,18 +1914,11 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
     assert cache_key_1 != cache_key_3
 
 
-@pytest.mark.parametrize("lateral_join_for_start_time", [True, False])
-def test_cache_key_for_generate_statistics_at_time_stmt(
-    lateral_join_for_start_time: bool,
-) -> None:
+def test_cache_key_for_generate_statistics_at_time_stmt() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, set(), lateral_join_for_start_time
-    )
+    stmt = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, set(), lateral_join_for_start_time
-    )
+    stmt2 = _generate_statistics_at_time_stmt(StatisticsShortTerm, {0}, 0.0, set())
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
     stmt3 = _generate_statistics_at_time_stmt(
@@ -1933,164 +1926,9 @@ def test_cache_key_for_generate_statistics_at_time_stmt(
         {0},
         0.0,
         {"sum", "mean"},
-        lateral_join_for_start_time,
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
-
-
-@pytest.mark.skip_on_db_engine(["sqlite", "mysql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-@pytest.mark.usefixtures("recorder_db_url")
-@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-async def test_statistics_at_time_uses_lateral_query_with_postgresql(
-    hass: HomeAssistant,
-    setup_recorder: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test statistics_at_time uses a lateral query with PostgreSQL."""
-    await async_wait_recording_done(hass)
-    assert "Compiling statistics for" not in caplog.text
-    assert "Statistics already compiled" not in caplog.text
-
-    zero = dt_util.utcnow()
-    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
-    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
-    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
-    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
-
-    external_statistics = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "state": 0,
-            "sum": 2,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "state": 1,
-            "sum": 3,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "state": 2,
-            "sum": 5,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 8,
-        },
-    )
-    external_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": "recorder",
-        "statistic_id": "sensor.total_energy_import",
-        "unit_of_measurement": "kWh",
-    }
-
-    async_import_statistics(hass, external_metadata, external_statistics)
-    await async_wait_recording_done(hass)
-    # Get change from far in the past
-    stats = statistics_during_period(
-        hass,
-        zero,
-        period="hour",
-        statistic_ids={"sensor.total_energy_import"},
-        types={"change", "sum"},
-    )
-    assert stats
-    sqlalchemy_logs = "".join(
-        [
-            record.getMessage()
-            for record in caplog.records
-            if record.name.startswith("sqlalchemy.engine")
-        ]
-    )
-    # We can't patch inside the lambda so we have to check the logs
-    assert "JOIN LATERAL" in sqlalchemy_logs
-
-
-@pytest.mark.skip_on_db_engine(["postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
-@pytest.mark.usefixtures("recorder_db_url")
-@pytest.mark.freeze_time("2022-10-01 00:00:00+00:00")
-async def test_statistics_at_time_uses_non_lateral_query_without_postgresql(
-    hass: HomeAssistant,
-    setup_recorder: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test statistics_at_time does not use a lateral query without PostgreSQL."""
-    await async_wait_recording_done(hass)
-    assert "Compiling statistics for" not in caplog.text
-    assert "Statistics already compiled" not in caplog.text
-
-    zero = dt_util.utcnow()
-    period1 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00"))
-    period2 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00"))
-    period3 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00"))
-    period4 = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00"))
-
-    external_statistics = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "state": 0,
-            "sum": 2,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "state": 1,
-            "sum": 3,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "state": 2,
-            "sum": 5,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 8,
-        },
-    )
-    external_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": "recorder",
-        "statistic_id": "sensor.total_energy_import",
-        "unit_of_measurement": "kWh",
-    }
-
-    async_import_statistics(hass, external_metadata, external_statistics)
-    await async_wait_recording_done(hass)
-    # Get change from far in the past
-    stats = statistics_during_period(
-        hass,
-        zero,
-        period="hour",
-        statistic_ids={"sensor.total_energy_import"},
-        types={"change", "sum"},
-    )
-    assert stats
-    sqlalchemy_logs = "".join(
-        [
-            record.getMessage()
-            for record in caplog.records
-            if record.name.startswith("sqlalchemy.engine")
-        ]
-    )
-    # We can't patch inside the lambda so we have to check the logs
-    assert "JOIN LATERAL" not in sqlalchemy_logs
 
 
 @pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
