@@ -54,8 +54,8 @@
       "away": "[%key:common::state::not_home%]",
       "schedule": "Schedule",
       "hg": "Frost guard",
-      "temperature": "Temperatures",
-      "zone_name": "Zone name"
+      "temperature": "Temperature",
+      "temperature_set": "Temperature Set"
     },
     "trigger_type": {
       "turned_off": "[%key:common::device_automation::trigger_type::turned_off%]",
@@ -114,12 +114,12 @@
         }
       }
     },
-    "set_scheduled_room_temperature": {
-      "name": "Set scheduled room temperature",
-      "description": "Sets the desired room temperature for the given zone and the active schedule. The zone name must match a zone configured at Netatmo.",
+    "set_scheduled_thermostat_temperature": {
+      "name": "Set scheduled thermostat temperature",
+      "description": "Sets the desired temperature for a given thermostat, temperature set and the active schedule. The selected temperature set must correspond to one configured in Netatmo.",
       "fields": {
-        "zone_name": {
-          "name": "[%key:component::netatmo::device_automation::trigger_subtype::zone_name%]",
+        "temperature_set": {
+          "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature_set%]",
           "description": "Zone name."
         },
         "temperature": {

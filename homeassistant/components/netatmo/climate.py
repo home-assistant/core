@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,8 +41,8 @@ from .const import (
     ATTR_SELECTED_SCHEDULE,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TEMPERATURE as NETATMO_ATTR_TEMPERATURE,
+    ATTR_TEMPERATURE_SET,
     ATTR_TIME_PERIOD,
-    ATTR_ZONE_NAME,
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
@@ -52,7 +53,7 @@ from .const import (
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
-    SERVICE_SET_SCHEDULED_ROOM_TEMPERATURE,
+    SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
@@ -181,12 +182,12 @@ async def async_setup_entry(
         "_async_service_clear_temperature_setting",
     )
     platform.async_register_entity_service(
-        SERVICE_SET_SCHEDULED_ROOM_TEMPERATURE,
+        SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
         {
-            vol.Required(ATTR_ZONE_NAME): cv.string,
+            vol.Required(ATTR_TEMPERATURE_SET): cv.string,
             vol.Required(NETATMO_ATTR_TEMPERATURE): vol.Coerce(float),
         },
-        "_async_service_set_scheduled_room_temperature",
+        "_async_service_set_scheduled_thermostat_temperature",
     )
 
 
@@ -520,38 +521,41 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         _LOGGER.debug("Clearing %s temperature setting", self.device.entity_id)
         await self.device.async_therm_home()
 
-    async def _async_service_set_scheduled_room_temperature(
+    async def _async_service_set_scheduled_thermostat_temperature(
         self, **kwargs: Any
     ) -> None:
         temperature = kwargs[ATTR_TEMPERATURE]
-        zone_name = kwargs[ATTR_ZONE_NAME]
+        temperature_set = kwargs[ATTR_TEMPERATURE_SET]
 
         schedule = self._get_active_schedule()
         if not schedule:
             raise HomeAssistantError("Could not determine active schedule")
 
-        selected_zone = None
+        selected_temperature_set = None
         for zone in schedule.zones:
-            if zone.name == zone_name:
-                selected_zone = zone
+            if zone.name == temperature_set:
+                selected_temperature_set = zone
                 break
 
-        if not selected_zone:
-            raise HomeAssistantError(f"{zone_name} is not a valid zone")
+        if not selected_temperature_set:
+            raise HomeAssistantError(
+                f"{temperature_set} is not a valid temperature set"
+            )
 
         await self.device.home.async_set_schedule_temperatures(
-            zone_id=selected_zone.entity_id, temps={self.device.entity_id: temperature}
+            zone_id=selected_temperature_set.entity_id,
+            temps={self.device.entity_id: temperature},
         )
         _LOGGER.debug(
-            "Setting temperature for room %s to %s for zone %s",
+            "Setting temperature for room %s to %s for temperature set %s",
             self.device.entity_id,
             temperature,
-            selected_zone.entity_id,
+            selected_temperature_set.entity_id,
         )
 
         # manually set temperature in home assistant and netatmo
         self._attr_target_temperature = temperature
-        for room in selected_zone.rooms:
+        for room in selected_temperature_set.rooms:
             if room.entity_id == self.device.entity_id:
                 room.therm_setpoint_temperature = temperature
                 break
