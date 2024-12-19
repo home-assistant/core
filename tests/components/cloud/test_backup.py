@@ -108,6 +108,7 @@ def mock_list_files() -> Generator[MagicMock]:
                     "backup_id": "23e64aec",
                     "date": "2024-11-22T11:48:48.727189+01:00",
                     "database_included": True,
+                    "extra_metadata": {},
                     "folders": [],
                     "homeassistant_included": True,
                     "homeassistant_version": "2024.12.0.dev0",
@@ -171,7 +172,7 @@ async def test_agents_list_backups(
             "size": 34519040,
             "agent_ids": ["cloud.cloud"],
             "failed_agent_ids": [],
-            "with_strategy_settings": None,
+            "with_automatic_settings": None,
         }
     ]
 
@@ -195,8 +196,8 @@ async def test_agents_list_backups_fail_cloud(
     assert response["result"] == {
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
-        "last_attempted_strategy_backup": None,
-        "last_completed_strategy_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
     }
 
 
@@ -218,7 +219,7 @@ async def test_agents_list_backups_fail_cloud(
                 "size": 34519040,
                 "agent_ids": ["cloud.cloud"],
                 "failed_agent_ids": [],
-                "with_strategy_settings": None,
+                "with_automatic_settings": None,
             },
         ),
         (
@@ -335,6 +336,7 @@ async def test_agents_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -390,6 +392,7 @@ async def test_agents_upload_fail_put(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -438,6 +441,7 @@ async def test_agents_upload_fail_cloud(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -479,6 +483,7 @@ async def test_agents_upload_not_protected(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",

@@ -18,7 +18,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import INVALID_AUTH_ERRORS
+from .const import DOMAIN, INVALID_AUTH_ERRORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -158,9 +158,23 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     # token likely expired or firmware changed, try to re-authenticate
                     self._setup_complete = False
                     continue
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_error",
+                    translation_placeholders={
+                        "host": envoy.host,
+                        "args": err.args[0],
+                    },
+                ) from err
             except EnvoyError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="envoy_error",
+                    translation_placeholders={
+                        "host": envoy.host,
+                        "args": err.args[0],
+                    },
+                ) from err
 
             # if we have a firmware version from previous setup, compare to current one
             # when envoy gets new firmware there will be an authentication failure

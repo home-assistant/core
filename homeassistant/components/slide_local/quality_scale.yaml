@@ -25,12 +25,10 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: No custom action.
+  action-exceptions: done
   reauthentication-flow: todo
   parallel-updates: done
-  test-coverage: todo
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters: done

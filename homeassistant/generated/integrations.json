@@ -4618,6 +4618,12 @@
       "integration_type": "virtual",
       "supported_by": "upb"
     },
+    "peblar": {
+      "name": "Peblar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "peco": {
       "name": "PECO Outage Counter",
       "integration_type": "hub",

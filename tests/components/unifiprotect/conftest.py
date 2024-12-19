@@ -98,6 +98,7 @@ def bootstrap_fixture(nvr: NVR):
     data["events"] = []
     data["doorlocks"] = []
     data["chimes"] = []
+    data["aiports"] = []
 
     return Bootstrap.from_unifi_dict(**data)
 
