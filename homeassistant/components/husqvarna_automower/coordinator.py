@@ -51,8 +51,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
+        self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
         self._device_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
+        self._areas_last_update: dict[str, set[int]] = {}
 
     async def _async_update_data(self) -> dict[str, MowerAttributes]:
         """Subscribe for websocket and poll data from the API."""
@@ -71,6 +73,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         for mower_id in self.data:
             if self.data[mower_id].capabilities.stay_out_zones:
                 self._async_add_remove_stay_out_zones()
+        for mower_id in self.data:
+            if self.data[mower_id].capabilities.work_areas:
+                self._async_add_remove_work_areas()
         return self.data
 
     @callback
@@ -194,3 +199,48 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                         entity_registry.async_remove(entity_entry.entity_id)
 
         return current_zones
+
+    def _async_add_remove_work_areas(self) -> None:
+        """Add new work areas, remove non-existing work areas."""
+        current_areas = {
+            mower_id: set(mower_data.work_areas)
+            for mower_id, mower_data in self.data.items()
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None
+        }
+
+        if not self._areas_last_update:
+            self._areas_last_update = current_areas
+            return
+
+        if current_areas == self._areas_last_update:
+            return
+
+        self._areas_last_update = self._update_work_areas(current_areas)
+
+    def _update_work_areas(
+        self, current_areas: dict[str, set[int]]
+    ) -> dict[str, set[int]]:
+        """Update work areas by adding and removing as needed."""
+        new_areas = {
+            mower_id: areas - self._areas_last_update.get(mower_id, set())
+            for mower_id, areas in current_areas.items()
+        }
+        removed_areas = {
+            mower_id: self._areas_last_update.get(mower_id, set()) - areas
+            for mower_id, areas in current_areas.items()
+        }
+
+        for mower_id, areas in new_areas.items():
+            for area_callback in self.new_areas_callbacks:
+                area_callback(mower_id, set(areas))
+
+        entity_registry = er.async_get(self.hass)
+        for mower_id, areas in removed_areas.items():
+            for entity_entry in er.async_entries_for_config_entry(
+                entity_registry, self.config_entry.entry_id
+            ):
+                for area in areas:
+                    if entity_entry.unique_id.startswith(f"{mower_id}_{area}_"):
+                        entity_registry.async_remove(entity_entry.entity_id)
+
+        return current_areas

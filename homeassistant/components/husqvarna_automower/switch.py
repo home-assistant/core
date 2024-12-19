@@ -30,15 +30,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
-    current_work_areas: dict[str, set[int]] = {}
-
-    def _async_add_new_devices(mower_ids: set[str]) -> None:
-        async_add_entities(
-            AutomowerScheduleSwitchEntity(mower_id, coordinator)
-            for mower_id in mower_ids
-        )
-
-    _async_add_new_devices(set(coordinator.data))
 
     def _async_add_new_stay_out_zones(
         mower_id: str, stay_out_zone_uids: set[str]
@@ -48,44 +39,35 @@ async def async_setup_entry(
             for zone_uid in stay_out_zone_uids
         )
 
-    # Add new stay-out zone entities for each mower that has stay-out zones
-    for mower_id in coordinator.data:
-        mower_data = coordinator.data[mower_id]
-        if (
-            mower_data.capabilities.stay_out_zones
-            and mower_data.stay_out_zones is not None
-        ):
-            _async_add_new_stay_out_zones(
-                mower_id, set(mower_data.stay_out_zones.zones)
-            )
+    def _async_add_new_work_areas(mower_id: str, work_area_ids: set[int]) -> None:
+        async_add_entities(
+            WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+            for work_area_id in work_area_ids
+        )
 
-    def _async_work_area_listener() -> None:
-        """Listen for new work areas and add switch entities if they did not exist.
-
-        Listening for deletable work areas is managed in the number platform.
-        """
-        for mower_id in coordinator.data:
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerScheduleSwitchEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+        )
+        for mower_id in mower_ids:
+            mower_data = coordinator.data[mower_id]
             if (
-                coordinator.data[mower_id].capabilities.work_areas
-                and (_work_areas := coordinator.data[mower_id].work_areas) is not None
+                mower_data.capabilities.stay_out_zones
+                and mower_data.stay_out_zones is not None
+                and mower_data.stay_out_zones.zones is not None
             ):
-                received_work_areas = set(_work_areas.keys())
-                new_work_areas = received_work_areas - current_work_areas.get(
-                    mower_id, set()
+                _async_add_new_stay_out_zones(
+                    mower_id, set(mower_data.stay_out_zones.zones.keys())
                 )
-                if new_work_areas:
-                    current_work_areas.setdefault(mower_id, set()).update(
-                        new_work_areas
-                    )
-                    async_add_entities(
-                        WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
-                        for work_area_id in new_work_areas
-                    )
+            if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
+                _async_add_new_work_areas(mower_id, set(mower_data.work_areas.keys()))
 
-    coordinator.async_add_listener(_async_work_area_listener)
+    _async_add_new_devices(set(coordinator.data))
+
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
     coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
-    _async_work_area_listener()
+    coordinator.new_areas_callbacks.append(_async_add_new_work_areas)
 
 
 class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
