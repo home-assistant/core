@@ -1670,7 +1670,6 @@ def _augment_result_with_change(
     drop_sum = "sum" not in _types
     prev_sums = {}
     if tmp := _statistics_at_time(
-        hass,
         session,
         {metadata[statistic_id][0] for statistic_id in result},
         table,
@@ -2034,60 +2033,42 @@ def _generate_statistics_at_time_stmt(
     metadata_ids: set[int],
     start_time_ts: float,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    lateral_join_for_start_time: bool,
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last start_time_ts before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last start_time_ts
+    # before a specific point in time for all entities.
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    if lateral_join_for_start_time:
-        # PostgreSQL does not support index skip scan/loose index scan
-        # https://wiki.postgresql.org/wiki/Loose_indexscan
-        # so we need to do a lateral join to get the max max_start_ts
-        # for each metadata_id as a group-by is too slow.
-        # https://github.com/home-assistant/core/issues/132865
-        max_metadata_id = StatisticsMeta.id.label("max_metadata_id")
-        max_start = (
-            select(func.max(table.start_ts))
-            .filter(table.metadata_id == max_metadata_id)
-            .filter(table.start_ts < start_time_ts)
-            .filter(table.metadata_id.in_(metadata_ids))
-            .subquery()
-            .lateral()
+    stmt += (
+        lambda q: q.select_from(StatisticsMeta)
+        .join(
+            table,
+            and_(
+                table.start_ts
+                == (
+                    select(table.start_ts)
+                    .where(
+                        (StatisticsMeta.id == table.metadata_id)
+                        & (table.start_ts < start_time_ts)
+                    )
+                    .order_by(table.start_ts.desc())
+                    .limit(1)
+                )
+                .scalar_subquery()
+                .correlate(StatisticsMeta),
+                table.metadata_id == StatisticsMeta.id,
+            ),
         )
-        most_recent_statistic_ids = (
-            select(max_metadata_id, max_start.c[0].label("max_start_ts"))
-            .select_from(StatisticsMeta)
-            .join(
-                max_start,
-                StatisticsMeta.id == max_metadata_id,
-            )
-            .where(StatisticsMeta.id.in_(metadata_ids))
-        ).subquery()
-    else:
-        # Simple group-by for MySQL and SQLite, must use less
-        # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly.
-        most_recent_statistic_ids = (
-            select(
-                func.max(table.start_ts).label("max_start_ts"),
-                table.metadata_id.label("max_metadata_id"),
-            )
-            .filter(table.start_ts < start_time_ts)
-            .filter(table.metadata_id.in_(metadata_ids))
-            .group_by(table.metadata_id)
-            .subquery()
-        )
-    stmt += lambda q: q.join(
-        most_recent_statistic_ids,
-        and_(
-            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
-            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
-        ),
+        .where(table.metadata_id.in_(metadata_ids))
     )
     return stmt
 
 
 def _statistics_at_time(
-    hass: HomeAssistant,
     session: Session,
     metadata_ids: set[int],
     table: type[StatisticsBase],
@@ -2096,11 +2077,7 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    dialect_name = get_instance(hass).dialect_name
-    lateral_join_for_start_time = dialect_name == SupportedDialect.POSTGRESQL
-    stmt = _generate_statistics_at_time_stmt(
-        table, metadata_ids, start_time_ts, types, lateral_join_for_start_time
-    )
+    stmt = _generate_statistics_at_time_stmt(table, metadata_ids, start_time_ts, types)
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
