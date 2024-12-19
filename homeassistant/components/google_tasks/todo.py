@@ -80,7 +80,7 @@ async def async_setup_entry(
                 entry.entry_id,
                 coordinator.task_list_id,
             )
-            for coordinator in entry.runtime_data.coordinators.values()
+            for coordinator in entry.runtime_data
         ),
     )
 
