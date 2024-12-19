@@ -185,7 +185,7 @@ async def async_setup_entry(
         SERVICE_SET_SCHEDULED_THERMOSTAT_TEMPERATURE,
         {
             vol.Required(ATTR_TEMPERATURE_SET): cv.string,
-            vol.Required(NETATMO_ATTR_TEMPERATURE): vol.Coerce(float),
+            vol.Required(ATTR_TEMPERATURE): vol.Coerce(float),
         },
         "_async_service_set_scheduled_thermostat_temperature",
     )
