@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -11,6 +11,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
+    BackupAgentPlatformProtocol,
     BackupReaderWriterError,
     Folder,
 )
@@ -24,6 +25,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -31,6 +33,7 @@ from .common import (
     TEST_BACKUP_DEF456,
     BackupAgentTest,
     setup_backup_integration,
+    setup_backup_platform,
 )
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -478,11 +481,16 @@ async def test_generate_calls_create(
 
 
 @pytest.mark.parametrize(
-    ("create_backup_settings", "expected_call_params"),
+    (
+        "create_backup_settings",
+        "expected_call_params",
+        "side_effect",
+        "last_completed_automatic_backup",
+    ),
     [
         (
             {
-                "agent_ids": [LOCAL_AGENT_ID],
+                "agent_ids": ["test.remote"],
                 "include_addons": None,
                 "include_all_addons": False,
                 "include_database": True,
@@ -491,7 +499,7 @@ async def test_generate_calls_create(
                 "password": None,
             },
             {
-                "agent_ids": [LOCAL_AGENT_ID],
+                "agent_ids": ["test.remote"],
                 "backup_name": ANY,
                 "extra_metadata": {
                     "instance_id": ANY,
@@ -505,10 +513,12 @@ async def test_generate_calls_create(
                 "on_progress": ANY,
                 "password": None,
             },
+            None,
+            "2024-11-13T12:01:01+01:00",
         ),
         (
             {
-                "agent_ids": [LOCAL_AGENT_ID],
+                "agent_ids": ["test.remote"],
                 "include_addons": ["test-addon"],
                 "include_all_addons": False,
                 "include_database": True,
@@ -517,7 +527,7 @@ async def test_generate_calls_create(
                 "password": "test-password",
             },
             {
-                "agent_ids": [LOCAL_AGENT_ID],
+                "agent_ids": ["test.remote"],
                 "backup_name": "test-name",
                 "extra_metadata": {
                     "instance_id": ANY,
@@ -531,6 +541,36 @@ async def test_generate_calls_create(
                 "on_progress": ANY,
                 "password": "test-password",
             },
+            None,
+            "2024-11-13T12:01:01+01:00",
+        ),
+        (
+            {
+                "agent_ids": ["test.remote"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["test.remote"],
+                "backup_name": ANY,
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+            BackupAgentError("Boom!"),
+            None,
         ),
     ],
 )
@@ -539,15 +579,27 @@ async def test_generate_with_default_settings_calls_create(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
-    snapshot: SnapshotAssertion,
     create_backup: AsyncMock,
     create_backup_settings: dict[str, Any],
     expected_call_params: dict[str, Any],
+    side_effect: Exception | None,
+    last_completed_automatic_backup: str,
 ) -> None:
     """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
     client = await hass_ws_client(hass)
-    freezer.move_to("2024-11-13 12:01:00+01:00")
-    await setup_backup_integration(hass, with_hassio=False)
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-13T12:01:00+01:00")
+    remote_agent = BackupAgentTest("remote", backups=[])
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     await client.send_json_auto_id(
         {"type": "backup/config/update", "create_backup": create_backup_settings}
@@ -572,12 +624,16 @@ async def test_generate_with_default_settings_calls_create(
         is None
     )
 
-    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
-    result = await client.receive_json()
-    assert result["success"]
-    assert result["result"] == {"backup_job_id": "abc123"}
+    with patch.object(remote_agent, "async_upload_backup", side_effect=side_effect):
+        await client.send_json_auto_id(
+            {"type": "backup/generate_with_automatic_settings"}
+        )
+        result = await client.receive_json()
+        assert result["success"]
+        assert result["result"] == {"backup_job_id": "abc123"}
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
     create_backup.assert_called_once_with(**expected_call_params)
 
     freezer.tick()
@@ -586,11 +642,11 @@ async def test_generate_with_default_settings_calls_create(
 
     assert (
         hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
-        is not None
+        == "2024-11-13T12:01:01+01:00"
     )
     assert (
         hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
-        is not None
+        == last_completed_automatic_backup
     )
 
 
