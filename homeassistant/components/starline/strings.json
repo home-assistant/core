@@ -63,9 +63,6 @@
       },
       "moving_ban": {
         "name": "Moving ban"
-      },
-      "is_running": {
-        "name": "Running"
       }
     },
     "device_tracker": {
