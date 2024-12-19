@@ -7,9 +7,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Missing zeroconf duplicate entry test.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
