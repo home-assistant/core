@@ -99,7 +99,7 @@ class NikoHomeControlLight(LightEntity):
         """Set up the Niko Home Control light platform."""
         self._controller = controller
         self._action = action
-        self._attr_unique_id = f"light-{action.id}"
+        self._attr_unique_id = f"{entry.entry_id}.niko_home_control_{action.id}"
         self._attr_name = action.name
         self._attr_is_on = action.is_on
         self._attr_color_mode = ColorMode.ONOFF
