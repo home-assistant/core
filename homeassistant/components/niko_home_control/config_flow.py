@@ -22,8 +22,8 @@ DATA_SCHEMA = vol.Schema(
 async def test_connection(host: str) -> str | None:
     """Test if we can connect to the Niko Home Control controller."""
 
+    controller = NHCController(host, 8000)
     try:
-        controller = NHCController(host, 8000)
         await controller.connect()
     except Exception:  # noqa: BLE001
         return "cannot_connect"
