@@ -11,7 +11,6 @@ ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
 
-
 ATTR_MASS_PLAYER_TYPE = "mass_player_type"
 ATTR_ACTIVE_QUEUE = "active_queue"
 ATTR_STREAM_TITLE = "stream_title"
@@ -58,6 +57,13 @@ ATTR_NEXT_ITEM = "next_item"
 ATTR_QUEUE_ITEM_ID = "queue_item_id"
 ATTR_DURATION = "duration"
 ATTR_MEDIA_ITEM = "media_item"
+ATTR_STREAM_DETAILS = "stream_details"
+ATTR_CONTENT_TYPE = "content_type"
+ATTR_SAMPLE_RATE = "sample_rate"
+ATTR_BIT_DEPTH = "bit_depth"
+ATTR_STREAM_TITLE = "stream_title"
+ATTR_PROVIDER = "provider"
+ATTR_ITEM_ID = "item_id"
 
 
 LOGGER = logging.getLogger(__package__)

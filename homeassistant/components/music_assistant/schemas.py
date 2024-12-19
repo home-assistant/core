@@ -15,11 +15,14 @@ from .const import (
     ATTR_ALBUM,
     ATTR_ALBUMS,
     ATTR_ARTISTS,
+    ATTR_BIT_DEPTH,
+    ATTR_CONTENT_TYPE,
     ATTR_CURRENT_INDEX,
     ATTR_CURRENT_ITEM,
     ATTR_DURATION,
     ATTR_ELAPSED_TIME,
     ATTR_IMAGE,
+    ATTR_ITEM_ID,
     ATTR_ITEMS,
     ATTR_LIMIT,
     ATTR_MEDIA_ITEM,
@@ -28,11 +31,15 @@ from .const import (
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
+    ATTR_PROVIDER,
     ATTR_QUEUE_ID,
     ATTR_QUEUE_ITEM_ID,
     ATTR_RADIO,
     ATTR_REPEAT_MODE,
+    ATTR_SAMPLE_RATE,
     ATTR_SHUFFLE_ENABLED,
+    ATTR_STREAM_DETAILS,
+    ATTR_STREAM_TITLE,
     ATTR_TRACKS,
     ATTR_URI,
     ATTR_VERSION,
@@ -49,7 +56,7 @@ MEDIA_ITEM_SCHEMA = vol.Schema(
         vol.Required(ATTR_URI): cv.string,
         vol.Required(ATTR_NAME): cv.string,
         vol.Required(ATTR_VERSION): cv.string,
-        vol.Optional(ATTR_IMAGE): vol.Any(None, cv.string),
+        vol.Optional(ATTR_IMAGE, default=None): vol.Any(None, cv.string),
         vol.Optional(ATTR_ARTISTS): [vol.Self],
         vol.Optional(ATTR_ALBUM): vol.Self,
     }
@@ -109,12 +116,26 @@ LIBRARY_RESULTS_SCHEMA = vol.Schema(
     }
 )
 
+AUDIO_FORMAT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONTENT_TYPE): str,
+        vol.Required(ATTR_SAMPLE_RATE): int,
+        vol.Required(ATTR_BIT_DEPTH): int,
+        vol.Required(ATTR_PROVIDER): str,
+        vol.Required(ATTR_ITEM_ID): str,
+    }
+)
+
 QUEUE_ITEM_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_QUEUE_ITEM_ID): cv.string,
         vol.Required(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_DURATION): vol.Any(None, int),
-        vol.Optional(ATTR_MEDIA_ITEM): vol.Any(None, vol.Schema(MEDIA_ITEM_SCHEMA)),
+        vol.Optional(ATTR_DURATION, default=None): vol.Any(None, int),
+        vol.Optional(ATTR_MEDIA_ITEM, default=None): vol.Any(
+            None, vol.Schema(MEDIA_ITEM_SCHEMA)
+        ),
+        vol.Optional(ATTR_STREAM_DETAILS): vol.Schema(AUDIO_FORMAT_SCHEMA),
+        vol.Optional(ATTR_STREAM_TITLE, default=None): vol.Any(None, cv.string),
     }
 )
 
@@ -126,12 +147,23 @@ def queue_item_dict_from_mass_item(
     """Parse a Music Assistant QueueItem."""
     if not item:
         return None
-    return {
+    base = {
         ATTR_QUEUE_ITEM_ID: item.queue_item_id,
         ATTR_NAME: item.name,
         ATTR_DURATION: item.duration,
         ATTR_MEDIA_ITEM: media_item_dict_from_mass_item(mass, item.media_item),
     }
+    if streamdetails := item.streamdetails:
+        base[ATTR_STREAM_TITLE] = streamdetails.stream_title
+        base[ATTR_STREAM_DETAILS] = {
+            ATTR_CONTENT_TYPE: streamdetails.audio_format.content_type.value,
+            ATTR_SAMPLE_RATE: streamdetails.audio_format.sample_rate,
+            ATTR_BIT_DEPTH: streamdetails.audio_format.bit_depth,
+            ATTR_PROVIDER: streamdetails.provider,
+            ATTR_ITEM_ID: streamdetails.item_id,
+        }
+
+    return base
 
 
 QUEUE_DETAILS_SCHEMA = vol.Schema(
