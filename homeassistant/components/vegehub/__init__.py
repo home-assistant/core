@@ -61,10 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     )
 
     # Send the webhook address to the hub as its server target
-    await hub.setup(
-        "",
-        webhook_url,
-    )
+    await hub.setup("", webhook_url, retries=1)
 
     # Initialize runtime data
     entry.runtime_data = hub

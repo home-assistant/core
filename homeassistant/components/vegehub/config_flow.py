@@ -45,15 +45,14 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
 
                 try:
-                    await self._hub.retrieve_mac_address()
+                    await self._hub.retrieve_mac_address(retries=2)
                 except ConnectionError:
-                    _LOGGER.error(
-                        "Failed to get MAC address for %s", self._hub.ip_address
-                    )
+                    _LOGGER.error("Failed to conneect to %s", self._hub.ip_address)
+                    return self.async_abort(reason="cannot_connect")
 
                 if len(self._hub.mac_address) <= 0:
                     _LOGGER.error(
-                        "Failed to get device config from %s", self._hub.ip_address
+                        "Failed to get MAC address for %s", self._hub.ip_address
                     )
                     return self.async_abort(reason="cannot_connect")
 
@@ -118,12 +117,13 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hub = VegeHub(device_ip)
 
         try:
-            await self._hub.retrieve_mac_address()
+            await self._hub.retrieve_mac_address(retries=2)
         except ConnectionError:
-            _LOGGER.error("Failed to get MAC address for %s", self._hub.ip_address)
+            _LOGGER.error("Failed to conneect to %s", self._hub.ip_address)
+            return self.async_abort(reason="cannot_connect")
 
         if len(self._hub.mac_address) <= 0:
-            _LOGGER.error("Failed to get device config from %s", device_ip)
+            _LOGGER.error("Failed to get MAC address for %s", device_ip)
             return self.async_abort(reason="cannot_connect")
 
         # Check if this device already exists
