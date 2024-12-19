@@ -185,11 +185,6 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
         )
         self.entity_description = description
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_is_on is not None
-
     def update(self) -> None:
         """Update state of sensor."""
         try:
@@ -197,9 +192,15 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
                 self._attr_is_on = self.entity_description.value_getter(self._api)
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
+            self._attr_available = False
         except ValueError:
             _LOGGER.error("Unable to decode data from ViCare server")
+            self._attr_available = False
         except PyViCareRateLimitError as limit_exception:
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+            self._attr_available = False
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            self._attr_available = False
+        else:
+            self._attr_available = True
