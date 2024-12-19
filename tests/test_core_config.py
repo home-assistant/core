@@ -46,7 +46,7 @@ from homeassistant.util.unit_system import (
     UnitSystem,
 )
 
-from .common import MockUser, async_capture_events
+from .common import MockEntityPlatform, MockUser, async_capture_events
 
 
 def test_core_config_schema() -> None:
@@ -221,6 +221,7 @@ async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State |
     entity = Entity()
     entity.entity_id = "test.test"
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     entity.schedule_update_ha_state()
 
     await hass.async_block_till_done()
