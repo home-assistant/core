@@ -2035,6 +2035,13 @@ def _generate_statistics_at_time_stmt(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last start_time_ts before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last start_time_ts
+    # before a specific point in time for all entities.
     stmt = _generate_select_columns_for_types_stmt(table, types)
     stmt += (
         lambda q: q.select_from(StatisticsMeta)
