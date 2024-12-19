@@ -822,8 +822,6 @@ class BackupManager:
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
                 )
-                # TODO: Should we track backups that raise due to writer errors?
-                # Should we release the stream in case of writer errors?
                 self.known_backups.add(written_backup.backup, agent_errors)
                 await written_backup.release_stream()
             except Exception as err:
