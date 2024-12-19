@@ -198,7 +198,6 @@ class SqueezeBoxMediaPlayerEntity(
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
         _manufacturer = None
-        _entry_type = None
         if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
         elif (
@@ -215,7 +214,6 @@ class SqueezeBoxMediaPlayerEntity(
             via_device=(SERVER_DEVICE_ID, coordinator.server_uuid),
             model=player.model,
             manufacturer=_manufacturer,
-            entry_type=_entry_type,
         )
 
     @callback
