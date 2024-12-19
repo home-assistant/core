@@ -66,10 +66,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed device per game type.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -84,7 +81,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This integration has a fixed device per game type.
+      Games can't be "unplayed".
 
   # Platinum
   async-dependency: done
