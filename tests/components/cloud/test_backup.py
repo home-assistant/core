@@ -32,7 +32,10 @@ async def setup_integration(
     cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
     """Set up cloud integration."""
-    with patch("homeassistant.components.backup.is_hassio", return_value=False):
+    with (
+        patch("homeassistant.components.backup.is_hassio", return_value=False),
+        patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
+    ):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -342,7 +345,7 @@ async def test_agents_upload(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     aioclient_mock.put(mock_get_upload_details.return_value["url"])
 
@@ -379,7 +382,7 @@ async def test_agents_upload(
 async def test_agents_upload_fail_put(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
     put_mock_kwargs: dict[str, Any],
@@ -398,7 +401,7 @@ async def test_agents_upload_fail_put(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
 
@@ -418,9 +421,14 @@ async def test_agents_upload_fail_put(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Error during backup upload - Failed to upload backup" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 @pytest.mark.parametrize("side_effect", [ClientError, CloudError])
@@ -428,9 +436,9 @@ async def test_agents_upload_fail_put(
 async def test_agents_upload_fail_cloud(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
     mock_get_upload_details: Mock,
     side_effect: Exception,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
@@ -447,7 +455,7 @@ async def test_agents_upload_fail_cloud(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     with (
         patch(
@@ -465,15 +473,20 @@ async def test_agents_upload_fail_cloud(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Error during backup upload - Failed to get upload details" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 async def test_agents_upload_not_protected(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
@@ -489,7 +502,7 @@ async def test_agents_upload_not_protected(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
-        size=0.0,
+        size=0,
     )
     with (
         patch("pathlib.Path.open"),
@@ -502,9 +515,14 @@ async def test_agents_upload_not_protected(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Error during backup upload - Cloud backups must be protected" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
