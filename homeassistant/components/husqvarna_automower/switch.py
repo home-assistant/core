@@ -35,9 +35,14 @@ async def async_setup_entry(
     def _async_add_new_lock(mower_id: str) -> None:
         async_add_entities([AutomowerScheduleSwitchEntity(mower_id, coordinator)])
 
-    def _async_add_new_stay_out_zones(mower_id: str, stay_out_zone_uid: str) -> None:
+    def _async_add_new_stay_out_zones(
+        mower_id: str, stay_out_zone_uids: set[str]
+    ) -> None:
         async_add_entities(
-            [StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)]
+            [
+                StayOutZoneSwitchEntity(coordinator, mower_id, zone_uid)
+                for zone_uid in stay_out_zone_uids
+            ]
         )
 
     # Add new lock entities for each mower
@@ -51,8 +56,9 @@ async def async_setup_entry(
             mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
         ):
-            for stay_out_zone_uid in mower_data.stay_out_zones.zones:
-                _async_add_new_stay_out_zones(mower_id, stay_out_zone_uid)
+            _async_add_new_stay_out_zones(
+                mower_id, set(mower_data.stay_out_zones.zones)
+            )
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add switch entities if they did not exist.
@@ -80,8 +86,6 @@ async def async_setup_entry(
     coordinator.async_add_listener(_async_work_area_listener)
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
     coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
-
-    # Run the work area listener once to catch any initial changes
     _async_work_area_listener()
 
 

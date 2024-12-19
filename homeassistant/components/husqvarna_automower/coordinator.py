@@ -50,7 +50,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self.ws_connected: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_lock_callbacks: list[Callable[[str], None]] = []
-        self.new_zones_callbacks: list[Callable[[str, str], None]] = []
+        self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self._locks_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
 
@@ -182,9 +182,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         }
 
         for mower_id, zones in new_zones.items():
-            for zone in zones:
-                for zone_callback in self.new_zones_callbacks:
-                    zone_callback(mower_id, zone)
+            for zone_callback in self.new_zones_callbacks:
+                zone_callback(mower_id, set(zones))
 
         entity_registry = er.async_get(self.hass)
         for mower_id, zones in removed_zones.items():
