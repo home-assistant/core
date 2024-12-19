@@ -57,6 +57,16 @@ async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NHCController",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.123"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_duplicate_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
