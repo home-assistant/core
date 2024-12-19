@@ -940,7 +940,7 @@ forecast-solar==4.0.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.1.0
+freebox-api==1.2.0
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
