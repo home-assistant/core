@@ -45,11 +45,11 @@ rules:
     status: exempt
     comment: This is a self-hosted service without a way to discover.
   discovery: todo
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: todo
   docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
