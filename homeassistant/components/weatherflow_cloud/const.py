@@ -5,7 +5,7 @@ import logging
 DOMAIN = "weatherflow_cloud"
 LOGGER = logging.getLogger(__package__)
 
-ATTR_ATTRIBUTION = "Weather data delivered by WeatherFlow/Tempest REST Api"
+ATTR_ATTRIBUTION = "Weather data delivered by WeatherFlow/Tempest API"
 MANUFACTURER = "WeatherFlow"
 
 STATE_MAP = {
@@ -29,3 +29,6 @@ STATE_MAP = {
     "thunderstorm": "lightning",
     "windy": "windy",
 }
+
+WEBSOCKET_API = "Websocket API"
+REST_API = "REST API"
