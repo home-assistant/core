@@ -21,7 +21,6 @@ import asyncio
 from collections.abc import Callable, Mapping
 import copy
 from enum import IntEnum
-from functools import partial
 import logging
 import secrets
 import threading
@@ -130,6 +129,16 @@ async def _async_try_open_stream(
 
     Will raise StreamOpenClientError if an http client error is encountered.
     """
+    return await hass.loop.run_in_executor(None, _try_open_stream, source, pyav_options)
+
+
+def _try_open_stream(
+    source: str, pyav_options: dict[str, str] | None = None
+) -> InputContainer | OutputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
     import av  # pylint: disable=import-outside-toplevel
 
     if not pyav_options:
@@ -146,8 +155,7 @@ async def _async_try_open_stream(
     }
 
     try:
-        func = partial(av.open, source, options=pyav_options, timeout=5)
-        container = await hass.loop.run_in_executor(None, func)
+        container = av.open(source, options=pyav_options, timeout=5)
 
     except av.HTTPBadRequestError as ex:
         raise StreamOpenClientError(
@@ -180,12 +188,21 @@ async def async_check_stream_client_error(
     hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
 ) -> StreamClientError | None:
     """Return an enum value representing a stream client error or None."""
+    return await hass.loop.run_in_executor(
+        None, _check_stream_client_error, source, pyav_options
+    )
+
+
+def _check_stream_client_error(
+    source: str, pyav_options: dict[str, str] | None = None
+) -> StreamClientError | None:
+    """Return an enum value representing a stream client error or None."""
     try:
-        container = await _async_try_open_stream(hass, source, pyav_options)
+        container = _try_open_stream(source, pyav_options)
     except StreamOpenClientError as ex:
         return ex.stream_client_error
     else:
-        await hass.loop.run_in_executor(None, container.close)
+        container.close()
 
     return None
 
