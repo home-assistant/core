@@ -26,6 +26,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -79,10 +80,17 @@ def add_province_and_language_to_schema(
         }
 
     if provinces := all_countries.get(country):
+        if subdiv_aliases := _country.get_subdivision_aliases():
+            province_options: list[Any] = [
+                SelectOptionDict(value=k, label=", ".join(v))
+                for k, v in subdiv_aliases.items()
+            ]
+        else:
+            province_options = provinces
         province_schema = {
             vol.Optional(CONF_PROVINCE): SelectSelector(
                 SelectSelectorConfig(
-                    options=provinces,
+                    options=province_options,
                     mode=SelectSelectorMode.DROPDOWN,
                     translation_key=CONF_PROVINCE,
                 )
