@@ -115,6 +115,14 @@ async def test_template_legacy(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
     assert hass.states.get(TEST_NAME).state == "It Works."
+    entity_reported = hass.states.get(TEST_NAME).last_reported_timestamp
+    entity_changed = hass.states.get(TEST_NAME).last_changed_timestamp
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).state == "It Works."
+    assert hass.states.get(TEST_NAME).last_reported_timestamp > entity_reported
+    assert hass.states.get(TEST_NAME).last_changed_timestamp == entity_changed
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, sensor.DOMAIN)])
