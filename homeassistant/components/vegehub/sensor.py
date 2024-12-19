@@ -1,29 +1,18 @@
 """Sensor configuration for VegeHub integration."""
 
-from vegehub import therm200_transform, vh400_transform
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_MAC,
-    PERCENTAGE,
     UnitOfElectricPotential,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CHAN_TYPE_BATTERY,
-    CHAN_TYPE_SENSOR,
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-    OPTION_DATA_TYPE_CHOICES,
-)
+from .const import DOMAIN, MANUFACTURER, MODEL
 
 
 async def async_setup_entry(
@@ -48,17 +37,11 @@ async def async_setup_entry(
             # Skipping battery slot for AC hub
             continue
 
-        chan_type = CHAN_TYPE_SENSOR
-        if i == num_sensors:
-            chan_type = CHAN_TYPE_BATTERY
-
         sensor = VegeHubSensor(
             mac_address=mac_address,
             slot=i + 1,
             ip_addr=ip_addr,
             dev_name=config_entry.data[CONF_HOST],
-            data_type=str(config_entry.options.get(f"data_type_{i + 1}", None)),
-            chan_type=chan_type,
         )
 
         # Store the entity by ID in runtime_data
@@ -79,8 +62,6 @@ class VegeHubSensor(SensorEntity):
         slot: int,
         ip_addr: str,
         dev_name: str,
-        data_type: str,
-        chan_type: str,
     ) -> None:
         """Initialize the sensor."""
         new_id = (
@@ -89,26 +70,12 @@ class VegeHubSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_placeholders = {"index": str(slot)}
-        self._data_type: str = data_type
         self._unit_of_measurement: str = ""
         self._attr_native_value = None
 
-        if chan_type == CHAN_TYPE_BATTERY:
-            self._unit_of_measurement = UnitOfElectricPotential.VOLT
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_translation_key = "battery"
-        elif data_type == OPTION_DATA_TYPE_CHOICES[1]:
-            self._unit_of_measurement = PERCENTAGE
-            self._attr_device_class = SensorDeviceClass.MOISTURE
-            self._attr_translation_key = "vh400_sensor"
-        elif data_type == OPTION_DATA_TYPE_CHOICES[2]:
-            self._unit_of_measurement = UnitOfTemperature.CELSIUS
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_translation_key = "therm200_temp"
-        else:
-            self._unit_of_measurement = UnitOfElectricPotential.VOLT
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_translation_key = "analog_sensor"
+        self._unit_of_measurement = UnitOfElectricPotential.VOLT
+        self._attr_device_class = SensorDeviceClass.VOLTAGE
+        self._attr_translation_key = "analog_sensor"
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
@@ -128,15 +95,6 @@ class VegeHubSensor(SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if (
-            self._data_type == OPTION_DATA_TYPE_CHOICES[1] and self._attr_native_value
-        ):  # Percentage
-            return vh400_transform(self._attr_native_value)
-        if (
-            self._data_type == OPTION_DATA_TYPE_CHOICES[2] and self._attr_native_value
-        ):  # Temperature C
-            return therm200_transform(self._attr_native_value)
-
         if isinstance(self._attr_native_value, (int, str, float)):
             return float(self._attr_native_value)
         return None
