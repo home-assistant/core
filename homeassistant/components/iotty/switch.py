@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
-from iottycloud.verbs import LS_DEVICE_TYPE_UID
+from iottycloud.outlet import Outlet
+from iottycloud.verbs import (
+    COMMAND_TURNOFF,
+    COMMAND_TURNON,
+    LS_DEVICE_TYPE_UID,
+    OU_DEVICE_TYPE_UID,
+)
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -20,31 +32,105 @@ from .entity import IottyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+T = TypeVar("T", bound=Device)
+
+
+@dataclass(frozen=True, kw_only=True)
+class IottySwitchEntityDescription(
+    Generic[T],
+    SwitchEntityDescription,
+):
+    """Description of a iotty Switch."""
+
+    control_fn: Callable[[IottyProxy, T, str], Coroutine[Any, Any, Any]]
+    is_on_fn: Callable[[T], bool]
+    set_is_on_fn: Callable[[T, T], Any]
+
+
+def _is_on_lightswitch(lightswitch: LightSwitch) -> bool:
+    return lightswitch.is_on
+
+
+def _set_is_on_lightswitch(
+    lightswitch: LightSwitch, updated_lightswitch: LightSwitch
+) -> Any:
+    lightswitch.is_on = updated_lightswitch.is_on
+
+
+def _is_on_outlet(outlet: Outlet) -> bool:
+    return outlet.is_on
+
+
+def _set_is_on_outlet(outlet: Outlet, updated_outlet: Outlet) -> Any:
+    outlet.is_on = updated_outlet.is_on
+
+
+ENTITIES: dict[str, IottySwitchEntityDescription] = {
+    LS_DEVICE_TYPE_UID: IottySwitchEntityDescription(
+        key="light",
+        name=None,
+        control_fn=lambda cloud, lightswitch, command_code: cloud.command(
+            lightswitch.device_id, command_code
+        ),
+        is_on_fn=_is_on_lightswitch,
+        set_is_on_fn=_set_is_on_lightswitch,
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    OU_DEVICE_TYPE_UID: IottySwitchEntityDescription(
+        key="outlet",
+        name=None,
+        control_fn=lambda cloud, outlet, command_code: cloud.command(
+            outlet.device_id, command_code
+        ),
+        is_on_fn=_is_on_outlet,
+        set_is_on_fn=_set_is_on_outlet,
+        device_class=SwitchDeviceClass.OUTLET,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IottyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Activate the iotty LightSwitch component."""
+    """Activate the iotty Switch component."""
     _LOGGER.debug("Setup SWITCH entry id is %s", config_entry.entry_id)
 
     coordinator = config_entry.runtime_data.coordinator
-    entities = [
-        IottyLightSwitch(
-            coordinator=coordinator, iotty_cloud=coordinator.iotty, iotty_device=d
+    lightswitch_entities = [
+        IottySwitch(
+            coordinator=coordinator,
+            iotty_cloud=coordinator.iotty,
+            iotty_device=d,
+            entity_description=ENTITIES[LS_DEVICE_TYPE_UID],
         )
         for d in coordinator.data.devices
         if d.device_type == LS_DEVICE_TYPE_UID
         if (isinstance(d, LightSwitch))
     ]
-    _LOGGER.debug("Found %d LightSwitches", len(entities))
+    _LOGGER.debug("Found %d LightSwitches", len(lightswitch_entities))
+
+    outlet_entities = [
+        IottySwitch(
+            coordinator=coordinator,
+            iotty_cloud=coordinator.iotty,
+            iotty_device=d,
+            entity_description=ENTITIES[OU_DEVICE_TYPE_UID],
+        )
+        for d in coordinator.data.devices
+        if d.device_type == OU_DEVICE_TYPE_UID
+        if (isinstance(d, Outlet))
+    ]
+    _LOGGER.debug("Found %d Outlets", len(outlet_entities))
+
+    entities = lightswitch_entities + outlet_entities
 
     async_add_entities(entities)
 
     known_devices: set = config_entry.runtime_data.known_devices
     for known_device in coordinator.data.devices:
-        if known_device.device_type == LS_DEVICE_TYPE_UID:
+        if known_device.device_type in {LS_DEVICE_TYPE_UID, OU_DEVICE_TYPE_UID}:
             known_devices.add(known_device)
 
     @callback
@@ -59,21 +145,33 @@ async def async_setup_entry(
 
         # Add entities for devices which we've not yet seen
         for device in devices:
-            if (
-                any(d.device_id == device.device_id for d in known_devices)
-                or device.device_type != LS_DEVICE_TYPE_UID
+            if any(d.device_id == device.device_id for d in known_devices) or (
+                device.device_type not in {LS_DEVICE_TYPE_UID, OU_DEVICE_TYPE_UID}
             ):
                 continue
 
-            iotty_entity = IottyLightSwitch(
-                coordinator=coordinator,
-                iotty_cloud=coordinator.iotty,
-                iotty_device=LightSwitch(
+            iotty_entity: SwitchEntity
+            iotty_device: Device
+            if device.device_type == LS_DEVICE_TYPE_UID:
+                iotty_device = LightSwitch(
                     device.device_id,
                     device.serial_number,
                     device.device_type,
                     device.device_name,
-                ),
+                )
+            else:
+                iotty_device = Outlet(
+                    device.device_id,
+                    device.serial_number,
+                    device.device_type,
+                    device.device_name,
+                )
+
+            iotty_entity = IottySwitch(
+                coordinator=coordinator,
+                iotty_cloud=coordinator.iotty,
+                iotty_device=iotty_device,
+                entity_description=ENTITIES[device.device_type],
             )
 
             entities.extend([iotty_entity])
@@ -85,44 +183,49 @@ async def async_setup_entry(
     coordinator.async_add_listener(async_update_data)
 
 
-class IottyLightSwitch(IottyEntity, SwitchEntity):
-    """Haas entity class for iotty LightSwitch."""
+class IottySwitch(IottyEntity, SwitchEntity):
+    """Haas entity class for iotty switch."""
 
-    _attr_device_class = SwitchDeviceClass.SWITCH
-    _iotty_device: LightSwitch
+    entity_description: IottySwitchEntityDescription
+    _attr_device_class: SwitchDeviceClass | None
+    _iotty_device: Device
 
     def __init__(
         self,
         coordinator: IottyDataUpdateCoordinator,
         iotty_cloud: IottyProxy,
-        iotty_device: LightSwitch,
+        iotty_device: Device,
+        entity_description: IottySwitchEntityDescription,
     ) -> None:
-        """Initialize the LightSwitch device."""
+        """Initialize the Switch device."""
         super().__init__(coordinator, iotty_cloud, iotty_device)
+        self.entity_description = entity_description
+        # print(entity_description.device_class)
+        self._attr_device_class = entity_description.device_class
 
     @property
     def is_on(self) -> bool:
-        """Return true if the LightSwitch is on."""
+        """Return true if the Switch is on."""
         _LOGGER.debug(
             "Retrieve device status for %s ? %s",
             self._iotty_device.device_id,
-            self._iotty_device.is_on,
+            self.entity_description.is_on_fn(self._iotty_device),
         )
-        return self._iotty_device.is_on
+        return self.entity_description.is_on_fn(self._iotty_device)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the LightSwitch on."""
+        """Turn the Switch on."""
         _LOGGER.debug("[%s] Turning on", self._iotty_device.device_id)
-        await self._iotty_cloud.command(
-            self._iotty_device.device_id, self._iotty_device.cmd_turn_on()
+        await self.entity_description.control_fn(
+            self._iotty_cloud, self._iotty_device, COMMAND_TURNON
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the LightSwitch off."""
+        """Turn the Switch off."""
         _LOGGER.debug("[%s] Turning off", self._iotty_device.device_id)
-        await self._iotty_cloud.command(
-            self._iotty_device.device_id, self._iotty_device.cmd_turn_off()
+        await self.entity_description.control_fn(
+            self._iotty_cloud, self._iotty_device, COMMAND_TURNOFF
         )
         await self.coordinator.async_request_refresh()
 
@@ -135,6 +238,5 @@ class IottyLightSwitch(IottyEntity, SwitchEntity):
             for device in self.coordinator.data.devices
             if device.device_id == self._iotty_device.device_id
         )
-        if isinstance(device, LightSwitch):
-            self._iotty_device.is_on = device.is_on
+        self.entity_description.set_is_on_fn(self._iotty_device, device)
         self.async_write_ha_state()
