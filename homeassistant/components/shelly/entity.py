@@ -352,11 +352,19 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        }
-        self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
+
+    @property
+    def unique_id(self) -> str:
+        """Define default unique id."""
+        return f"{self.coordinator.mac}-{self.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Define default device info."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
+        )
 
     @property
     def available(self) -> bool:
