@@ -77,4 +77,4 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         step_id="user", data_schema=schema, errors=errors
                     )
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="user", data_schema=schema)
