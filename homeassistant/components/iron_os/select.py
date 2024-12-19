@@ -168,9 +168,7 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
         entity_description: IronOSSelectEntityDescription,
     ) -> None:
         """Initialize the select entity."""
-        super().__init__(
-            coordinator.live_data, entity_description, entity_description.characteristic
-        )
+        super().__init__(coordinator.live_data, entity_description)
 
         self.settings = coordinator.settings
 
