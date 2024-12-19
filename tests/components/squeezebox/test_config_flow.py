@@ -143,27 +143,67 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "edit"}
-    )
 
     async def patch_async_query(self, *args):
         self.http_status = HTTPStatus.UNAUTHORIZED
         return False
 
-    with patch("pysqueezebox.Server.async_query", new=patch_async_query):
+    with (
+        patch(
+            "pysqueezebox.Server.async_query",
+            return_value={"uuid": UUID},
+        ),
+        patch(
+            "homeassistant.components.squeezebox.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.squeezebox.config_flow.async_discover",
+            mock_discover,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "edit"
+
+        with patch(
+            "homeassistant.components.squeezebox.config_flow.Server.async_query",
+            new=patch_async_query,
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {
+                    CONF_HOST: HOST,
+                    CONF_PORT: PORT,
+                    CONF_USERNAME: "test-username",
+                    CONF_PASSWORD: "test-password",
+                },
+            )
+
+            assert result["type"] is FlowResultType.FORM
+            assert result["errors"] == {"base": "invalid_auth"}
+
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: HOST,
                 CONF_PORT: PORT,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
             },
         )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == HOST
+        assert result["data"] == {
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_HTTPS: False,
+        }
 
 
 async def test_form_validate_exception(hass: HomeAssistant) -> None:
