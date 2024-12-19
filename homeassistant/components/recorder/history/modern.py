@@ -563,8 +563,13 @@ def _get_start_time_state_for_entities_stmt(
     include_last_changed: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    # We got an include-list of entities, accelerate the query by filtering already
-    # in the inner and the outer query.
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last state change before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last state change
+    # before a specific point in time for all entities.
     stmt = (
         _stmt_and_join_attributes_for_start_state(
             no_attributes, include_last_changed, False
