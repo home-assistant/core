@@ -31,6 +31,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -270,6 +273,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -465,6 +471,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -704,6 +713,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -939,6 +951,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),
@@ -1178,6 +1193,9 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
+          'config_subentries': dict({
+            '45a36e55aaddb2007c5f6602e0c38e72': None,
+          }),
           'configuration_url': None,
           'connections': list([
           ]),

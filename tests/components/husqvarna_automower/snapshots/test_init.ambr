@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'garden',
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
