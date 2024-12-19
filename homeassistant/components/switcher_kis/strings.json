@@ -66,10 +66,10 @@
     },
     "switch": {
       "child_lock": {
-        "name": "Lock physical controls"
+        "name": "Child lock"
       },
       "multi_child_lock": {
-        "name": "Lock physical controls {cover_id}"
+        "name": "Child lock {cover_id}"
       }
     }
   },

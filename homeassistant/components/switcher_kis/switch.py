@@ -237,7 +237,9 @@ class SwitchereShutterChildLockSingleSwitchEntity(
         super().__init__(coordinator)
         self._cover_id = cover_id
 
-        self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
+        self._attr_unique_id = (
+            f"{coordinator.device_id}-{coordinator.mac_address}-child_lock"
+        )
 
 
 class SwitchereShutterChildLockMultiSwitchEntity(
@@ -258,5 +260,5 @@ class SwitchereShutterChildLockMultiSwitchEntity(
 
         self._attr_translation_placeholders = {"cover_id": str(cover_id + 1)}
         self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}"
+            f"{coordinator.device_id}-{coordinator.mac_address}-{cover_id}-child_lock"
         )

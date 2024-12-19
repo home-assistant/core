@@ -30,10 +30,10 @@ from .consts import (
     DUMMY_WATER_HEATER_DEVICE,
 )
 
-ENTITY_ID = f"{SWITCH_DOMAIN}.{slugify(DEVICE.name)}_lock_physical_controls"
-ENTITY_ID2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE2.name)}_lock_physical_controls"
-ENTITY_ID3 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_lock_physical_controls_1"
-ENTITY_ID3_2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_lock_physical_controls_2"
+ENTITY_ID = f"{SWITCH_DOMAIN}.{slugify(DEVICE.name)}_child_lock"
+ENTITY_ID2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE2.name)}_child_lock"
+ENTITY_ID3 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_1"
+ENTITY_ID3_2 = f"{SWITCH_DOMAIN}.{slugify(DEVICE3.name)}_child_lock_2"
 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
