@@ -23,11 +23,11 @@ async def async_setup_entry(
     def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(
             AutomowerDeviceTrackerEntity(mower_id, coordinator)
-            for mower_id in coordinator.data
+            for mower_id in mower_ids
             if coordinator.data[mower_id].capabilities.position
         )
 
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     _async_add_new_devices(set(coordinator.data))
 
 

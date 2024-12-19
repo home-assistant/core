@@ -32,7 +32,7 @@ async def async_setup_entry(
             AutomowerCalendarEntity(mower_id, coordinator) for mower_id in mower_ids
         )
 
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     _async_add_new_devices(set(coordinator.data))
 
 

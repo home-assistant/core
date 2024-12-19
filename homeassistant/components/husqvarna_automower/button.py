@@ -67,7 +67,7 @@ async def async_setup_entry(
             if description.exists_fn(coordinator.data[mower_id])
         )
 
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     _async_add_new_devices(set(coordinator.data))
 
 

@@ -49,7 +49,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self.api = api
         self.ws_connected: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
-        self.new_lock_callbacks: list[Callable[[set[str]], None]] = []
+        self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self._device_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
@@ -129,15 +129,15 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             _LOGGER.debug("New device found: %s", ", ".join(map(str, new_device)))
             self._add_new_device(new_device)
 
-        # Update lock state
+        # Update device state
         self._device_last_update = current_device
 
     def _remove_device(self, removed_device: set[str]) -> None:
         """Remove device from the registry."""
         device_registry = dr.async_get(self.hass)
-        for lock_id in removed_device:
+        for mower_id in removed_device:
             if device := device_registry.async_get_device(
-                identifiers={(DOMAIN, str(lock_id))}
+                identifiers={(DOMAIN, str(mower_id))}
             ):
                 device_registry.async_update_device(
                     device_id=device.id,
@@ -146,7 +146,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
     def _add_new_device(self, new_device: set[str]) -> None:
         """Add new device and trigger callbacks."""
-        for mower_callback in self.new_lock_callbacks:
+        for mower_callback in self.new_devices_callbacks:
             mower_callback(new_device)
 
     def _async_add_remove_stay_out_zones(self) -> None:

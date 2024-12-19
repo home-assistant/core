@@ -83,7 +83,7 @@ async def async_setup_entry(
             for description in MOWER_BINARY_SENSOR_TYPES
         )
 
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     _async_add_new_devices(set(coordinator.data))
 
 

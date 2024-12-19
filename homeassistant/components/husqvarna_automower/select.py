@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     _async_add_new_devices(set(coordinator.data))
 
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
 class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):

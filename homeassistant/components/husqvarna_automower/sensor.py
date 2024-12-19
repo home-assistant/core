@@ -474,7 +474,7 @@ async def async_setup_entry(
                     )
 
     coordinator.async_add_listener(_async_work_area_listener)
-    coordinator.new_lock_callbacks.append(_async_add_new_devices)
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     _async_work_area_listener()
 
 
