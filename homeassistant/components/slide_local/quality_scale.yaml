@@ -44,9 +44,9 @@ rules:
   entity-disabled-by-default: done
   discovery: done
   stale-devices:
-    status: exempt
+    status: done
     comment: |
-      Slide_local represents a single physical device, no dynamic changes of devices possible (besides removal of instance itself).
+      Slide_local represents a single physical device, no removal stale devices required (besides removal of instance itself).
   diagnostics: done
   exception-translations: done
   icon-translations: done
