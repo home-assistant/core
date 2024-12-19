@@ -68,7 +68,7 @@
         },
         "restrict_domain": {
           "name": "Restrict to domain",
-          "description": "Restrict automatic reply to domain. This only affects Workspace accounts."
+          "description": "Restrict automatic reply to domain. This only affects Google Workspace accounts."
         },
         "start": {
           "name": "Start",
