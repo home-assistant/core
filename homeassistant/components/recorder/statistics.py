@@ -63,6 +63,7 @@ from .db_schema import (
     STATISTICS_TABLES,
     Statistics,
     StatisticsBase,
+    StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
@@ -1669,6 +1670,7 @@ def _augment_result_with_change(
     drop_sum = "sum" not in _types
     prev_sums = {}
     if tmp := _statistics_at_time(
+        hass,
         session,
         {metadata[statistic_id][0] for statistic_id in result},
         table,
@@ -2032,22 +2034,50 @@ def _generate_statistics_at_time_stmt(
     metadata_ids: set[int],
     start_time_ts: float,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    lateral_join_for_start_time: bool,
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    stmt += lambda q: q.join(
-        (
-            most_recent_statistic_ids := (
-                select(
-                    func.max(table.start_ts).label("max_start_ts"),
-                    table.metadata_id.label("max_metadata_id"),
-                )
-                .filter(table.start_ts < start_time_ts)
-                .filter(table.metadata_id.in_(metadata_ids))
-                .group_by(table.metadata_id)
-                .subquery()
+    if lateral_join_for_start_time:
+        # PostgreSQL does not support index skip scan/loose index scan
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # so we need to do a lateral join to get the max max_start_ts
+        # for each metadata_id as a group-by is too slow.
+        # https://github.com/home-assistant/core/issues/132865
+        max_metadata_id = StatisticsMeta.id.label("max_metadata_id")
+        max_start = (
+            select(func.max(table.start_ts))
+            .filter(table.metadata_id == max_metadata_id)
+            .filter(table.start_ts < start_time_ts)
+            .filter(table.metadata_id.in_(metadata_ids))
+            .subquery()
+            .lateral()
+        )
+        most_recent_statistic_ids = (
+            select(max_metadata_id, max_start.c[0].label("max_start_ts"))
+            .select_from(StatisticsMeta)
+            .join(
+                max_start,
+                StatisticsMeta.id == max_metadata_id,
             )
-        ),
+            .where(StatisticsMeta.id.in_(metadata_ids))
+        ).subquery()
+    else:
+        # Simple group-by for MySQL and SQLite, must use less
+        # than 1000 metadata_ids in the IN clause for MySQL
+        # or it will optimize poorly.
+        most_recent_statistic_ids = (
+            select(
+                func.max(table.start_ts).label("max_start_ts"),
+                table.metadata_id.label("max_metadata_id"),
+            )
+            .filter(table.start_ts < start_time_ts)
+            .filter(table.metadata_id.in_(metadata_ids))
+            .group_by(table.metadata_id)
+            .subquery()
+        )
+    stmt += lambda q: q.join(
+        most_recent_statistic_ids,
         and_(
             table.start_ts == most_recent_statistic_ids.c.max_start_ts,
             table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
@@ -2057,6 +2087,7 @@ def _generate_statistics_at_time_stmt(
 
 
 def _statistics_at_time(
+    hass: HomeAssistant,
     session: Session,
     metadata_ids: set[int],
     table: type[StatisticsBase],
@@ -2065,7 +2096,11 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    stmt = _generate_statistics_at_time_stmt(table, metadata_ids, start_time_ts, types)
+    dialect_name = get_instance(hass).dialect_name
+    lateral_join_for_start_time = dialect_name == SupportedDialect.POSTGRESQL
+    stmt = _generate_statistics_at_time_stmt(
+        table, metadata_ids, start_time_ts, types, lateral_join_for_start_time
+    )
     return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
 
 
