@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pynecil import (
     CommunicationError,
@@ -20,6 +22,8 @@ from pynecil import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -43,7 +47,6 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
     config_entry: ConfigEntry
-    device_info: DeviceInfoResponse
 
     def __init__(
         self,
@@ -64,14 +67,6 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
         self.device = device
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-        try:
-            self.device_info = await self.device.get_device_info()
-
-        except (CommunicationError, TimeoutError):
-            self.device_info = DeviceInfoResponse()
-
 
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
@@ -79,15 +74,13 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(hass, device=device, update_interval=SCAN_INTERVAL)
+        self.device_info = DeviceInfoResponse()
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
 
         try:
-            # device info is cached and won't be refetched on every
-            # coordinator refresh, only after the device has disconnected
-            # the device info is refetched
-            self.device_info = await self.device.get_device_info()
+            await self._update_device_info()
             return await self.device.get_live_data()
 
         except CommunicationError:
@@ -104,6 +97,35 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             threshold = self.data.max_tip_temp_ability - 5
             return self.data.live_temp <= threshold
         return False
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        with suppress(CommunicationError, TimeoutError):
+            await self._update_device_info()
+
+    async def _update_device_info(self) -> None:
+        """Update device info.
+
+        device info is cached and won't be refetched on every
+        coordinator refresh, only after the device has disconnected
+        the device info is refetched
+        """
+        build = self.device_info.build
+        self.device_info = await self.device.get_device_info()
+
+        if build != self.device_info.build:
+            device_registry = dr.async_get(self.hass)
+            if TYPE_CHECKING:
+                assert self.config_entry.unique_id
+            device = device_registry.async_get_device(
+                connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
+            )
+            if device is not None:
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    sw_version=self.device_info.build,
+                    serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
+                )
 
 
 class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
