@@ -108,7 +108,7 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 # Retry when one of the following MySQL errors occurred:
 RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 # The error codes are hard coded because the PyMySQL library may not be
-# installed when using other database engines than MySQL or MariaDB.
+# installed when using database engines other than MySQL or MariaDB.
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
