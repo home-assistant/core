@@ -40,6 +40,7 @@ class TeslemetryVehicleData:
     wakelock = asyncio.Lock()
     device: DeviceInfo
     remove_listener: Callable
+    firmware: str
 
 
 @dataclass
