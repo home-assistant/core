@@ -48,7 +48,14 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import MusicAssistantConfigEntry
-from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
+from .const import (
+    ATTR_ACTIVE_QUEUE,
+    ATTR_MASS_PLAYER_TYPE,
+    ATTR_MEDIA_ID,
+    ATTR_RADIO_MODE,
+    DOMAIN,
+    SERVICE_PLAY_MEDIA_ADVANCED,
+)
 from .entity import MusicAssistantEntity
 from .media_browser import async_browse_media
 
@@ -86,11 +93,8 @@ QUEUE_OPTION_MAP = {
     MediaPlayerEnqueue.REPLACE: QueueOption.REPLACE,
 }
 
-SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
-ATTR_RADIO_MODE = "radio_mode"
-ATTR_MEDIA_ID = "media_id"
 ATTR_MEDIA_TYPE = "media_type"
 ATTR_ARTIST = "artist"
 ATTR_ALBUM = "album"
