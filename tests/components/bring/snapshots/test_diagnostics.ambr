@@ -1,101 +1,169 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'b4776778-7f6c-496e-951b-92a35d3db0dd': dict({
-      'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
-      'name': 'Baumarkt',
-      'purchase': list([
-        dict({
-          'attributes': list([
-            dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
+    'list_items': list([
+      dict({
+        'purchase': list([
+          dict({
+            'attributes': list([
+              dict({
+                'content': dict({
+                  'convenient': True,
+                  'discounted': True,
+                  'urgent': True,
+                }),
+                'type': 'PURCHASE_CONDITIONS',
               }),
-              'type': 'PURCHASE_CONDITIONS',
+            ]),
+            'itemId': 'Paprika',
+            'specification': 'Rot',
+            'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
+          }),
+          dict({
+            'attributes': list([
+              dict({
+                'content': dict({
+                  'convenient': True,
+                  'discounted': True,
+                  'urgent': True,
+                }),
+                'type': 'PURCHASE_CONDITIONS',
+              }),
+            ]),
+            'itemId': 'Pouletbrüstli',
+            'specification': 'Bio',
+            'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
+          }),
+        ]),
+        'recently': list([
+          dict({
+            'attributes': list([
+            ]),
+            'itemId': 'Ananas',
+            'specification': '',
+            'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+          }),
+        ]),
+        'status': 'REGISTERED',
+        'uuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+      }),
+      dict({
+        'purchase': list([
+          dict({
+            'attributes': list([
+              dict({
+                'content': dict({
+                  'convenient': True,
+                  'discounted': True,
+                  'urgent': True,
+                }),
+                'type': 'PURCHASE_CONDITIONS',
+              }),
+            ]),
+            'itemId': 'Paprika',
+            'specification': 'Rot',
+            'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
+          }),
+          dict({
+            'attributes': list([
+              dict({
+                'content': dict({
+                  'convenient': True,
+                  'discounted': True,
+                  'urgent': True,
+                }),
+                'type': 'PURCHASE_CONDITIONS',
+              }),
+            ]),
+            'itemId': 'Pouletbrüstli',
+            'specification': 'Bio',
+            'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
+          }),
+        ]),
+        'recently': list([
+          dict({
+            'attributes': list([
+            ]),
+            'itemId': 'Ananas',
+            'specification': '',
+            'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+          }),
+        ]),
+        'status': 'REGISTERED',
+        'uuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+      }),
+    ]),
+    'lists': list([
+      dict({
+        'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+        'name': 'Einkauf',
+        'theme': 'ch.publisheria.bring.theme.home',
+      }),
+      dict({
+        'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+        'name': 'Baumarkt',
+        'theme': 'ch.publisheria.bring.theme.home',
+      }),
+    ]),
+    'user_settings': dict({
+      'userlistsettings': list([
+        dict({
+          'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+          'usersettings': list([
+            dict({
+              'key': 'listSectionOrder',
+              'value': '["Früchte & Gemüse","Brot & Gebäck","Milch & Käse","Fleisch & Fisch","Zutaten & Gewürze","Fertig- & Tiefkühlprodukte","Getreideprodukte","Snacks & Süsswaren","Getränke & Tabak","Haushalt & Gesundheit","Pflege & Gesundheit","Tierbedarf","Baumarkt & Garten","Eigene Artikel"]',
+            }),
+            dict({
+              'key': 'listArticleLanguage',
+              'value': 'de-DE',
             }),
           ]),
-          'itemId': 'Paprika',
-          'specification': 'Rot',
-          'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
         }),
         dict({
-          'attributes': list([
+          'listUuid': 'b4776778-7f6c-496e-951b-92a35d3db0dd',
+          'usersettings': list([
             dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
-              }),
-              'type': 'PURCHASE_CONDITIONS',
+              'key': 'listSectionOrder',
+              'value': '["Früchte & Gemüse","Brot & Gebäck","Milch & Käse","Fleisch & Fisch","Zutaten & Gewürze","Fertig- & Tiefkühlprodukte","Getreideprodukte","Snacks & Süsswaren","Getränke & Tabak","Haushalt & Gesundheit","Pflege & Gesundheit","Tierbedarf","Baumarkt & Garten","Eigene Artikel"]',
+            }),
+            dict({
+              'key': 'listArticleLanguage',
+              'value': 'en-US',
             }),
           ]),
-          'itemId': 'Pouletbrüstli',
-          'specification': 'Bio',
-          'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
         }),
       ]),
-      'recently': list([
+      'usersettings': list([
         dict({
-          'attributes': list([
-          ]),
-          'itemId': 'Ananas',
-          'specification': '',
-          'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
+          'key': 'autoPush',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideOffersBadge',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideSponsoredCategories',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'premiumHideInspirationsBadge',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'onboardClient',
+          'value': 'android',
+        }),
+        dict({
+          'key': 'premiumHideOffersOnMain',
+          'value': 'ON',
+        }),
+        dict({
+          'key': 'defaultListUUID',
+          'value': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
         }),
       ]),
-      'status': 'REGISTERED',
-      'theme': 'ch.publisheria.bring.theme.home',
-      'uuid': '77a151f8-77c4-47a3-8295-c750a0e69d4f',
-    }),
-    'e542eef6-dba7-4c31-a52c-29e6ab9d83a5': dict({
-      'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
-      'name': 'Einkauf',
-      'purchase': list([
-        dict({
-          'attributes': list([
-            dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
-              }),
-              'type': 'PURCHASE_CONDITIONS',
-            }),
-          ]),
-          'itemId': 'Paprika',
-          'specification': 'Rot',
-          'uuid': 'b5d0790b-5f32-4d5c-91da-e29066f167de',
-        }),
-        dict({
-          'attributes': list([
-            dict({
-              'content': dict({
-                'convenient': True,
-                'discounted': True,
-                'urgent': True,
-              }),
-              'type': 'PURCHASE_CONDITIONS',
-            }),
-          ]),
-          'itemId': 'Pouletbrüstli',
-          'specification': 'Bio',
-          'uuid': '72d370ab-d8ca-4e41-b956-91df94795b4e',
-        }),
-      ]),
-      'recently': list([
-        dict({
-          'attributes': list([
-          ]),
-          'itemId': 'Ananas',
-          'specification': '',
-          'uuid': 'fc8db30a-647e-4e6c-9d71-3b85d6a2d954',
-        }),
-      ]),
-      'status': 'REGISTERED',
-      'theme': 'ch.publisheria.bring.theme.home',
-      'uuid': '77a151f8-77c4-47a3-8295-c750a0e69d4f',
     }),
   })
 # ---
