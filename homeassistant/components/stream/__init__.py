@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 import copy
-from enum import StrEnum, auto
+from enum import IntEnum
 from functools import partial
 import logging
 import secrets
@@ -100,14 +100,14 @@ __all__ = [
 _LOGGER = logging.getLogger(__name__)
 
 
-class StreamClientError(StrEnum):
+class StreamClientError(IntEnum):
     """Enum for stream client errors."""
 
-    BadRequest = auto()
-    Unauthorized = auto()
-    Forbidden = auto()
-    NotFound = auto()
-    Other = auto()
+    BadRequest = 400
+    Unauthorized = 401
+    Forbidden = 403
+    NotFound = 404
+    Other = 4
 
 
 class StreamOpenClientError(HomeAssistantError):
@@ -144,20 +144,34 @@ async def _async_try_open_stream(
         **default_pyav_options,
         **pyav_options,
     }
-    error_lookup = {
-        av.HTTPBadRequestError: StreamClientError.BadRequest,
-        av.HTTPUnauthorizedError: StreamClientError.Unauthorized,
-        av.HTTPForbiddenError: StreamClientError.Forbidden,
-        av.HTTPNotFoundError: StreamClientError.NotFound,
-        av.HTTPOtherClientError: StreamClientError.Other,
-    }
 
     try:
         func = partial(av.open, source, options=pyav_options, timeout=5)
         container = await hass.loop.run_in_executor(None, func)
-    except av.HTTPClientError as ex:
-        client_error = error_lookup.get(ex.__class__, StreamClientError.Other)
-        raise StreamOpenClientError(stream_client_error=client_error) from ex
+
+    except av.HTTPBadRequestError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.BadRequest
+        ) from ex
+
+    except av.HTTPUnauthorizedError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.Unauthorized
+        ) from ex
+
+    except av.HTTPForbiddenError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.Forbidden
+        ) from ex
+
+    except av.HTTPNotFoundError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.NotFound
+        ) from ex
+
+    except av.HTTPOtherClientError as ex:
+        raise StreamOpenClientError(stream_client_error=StreamClientError.Other) from ex
+
     else:
         return container
 
@@ -167,9 +181,11 @@ async def async_check_stream_client_error(
 ) -> StreamClientError | None:
     """Return an enum value representing a stream client error or None."""
     try:
-        await _async_try_open_stream(hass, source, pyav_options)
+        container = await _async_try_open_stream(hass, source, pyav_options)
     except StreamOpenClientError as ex:
         return ex.stream_client_error
+    else:
+        await hass.loop.run_in_executor(None, container.close)
 
     return None
 
