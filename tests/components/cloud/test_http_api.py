@@ -223,6 +223,31 @@ async def test_login_view_existing_pipeline(
     create_pipeline_mock.assert_not_awaited()
 
 
+async def test_login_view_call_backup_agent_listener(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test calling the listener for backup agents while logging in."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.client.CloudClient.async_call_backup_agent_listener"
+    ) as mock_call_backup_agents_listener:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    mock_call_backup_agents_listener.assert_called_once()
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
+
+
 async def test_login_view_create_pipeline(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -530,6 +555,27 @@ async def test_logout_view(
     cloud_client = await hass_client()
     req = await cloud_client.post("/api/cloud/logout")
 
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data == {"message": "ok"}
+    assert cloud.logout.call_count == 1
+
+
+async def test_logout_view_call_backup_agent_listener(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test calling backup agent listener when logging out."""
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.client.CloudClient.async_call_backup_agent_listener"
+    ) as mock_call_backup_agents_listener:
+        req = await cloud_client.post("/api/cloud/logout")
+
+    mock_call_backup_agents_listener.assert_called_once()
+    assert cloud.client._backup_agent_listener is None
     assert req.status == HTTPStatus.OK
     data = await req.json()
     assert data == {"message": "ok"}

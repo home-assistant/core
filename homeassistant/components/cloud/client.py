@@ -64,6 +64,7 @@ class CloudClient(Interface):
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
         self._cloud_ice_servers_listener: Callable[[], None] | None = None
+        self._backup_agent_listener: Callable[[], None] | None = None
 
     @property
     def base_path(self) -> Path:
@@ -153,6 +154,28 @@ class CloudClient(Interface):
                 self._google_config = google_conf
 
         return self._google_config
+
+    @callback
+    def async_call_backup_agent_listener(self) -> None:
+        """Register backup agent listener."""
+        if self._backup_agent_listener:
+            self._backup_agent_listener()
+
+    @callback
+    def async_register_backup_agent_listener(
+        self,
+        listener: Callable[[], None],
+    ) -> Callable[[], None]:
+        """Register backup agent listener."""
+
+        @callback
+        def remove_listener() -> None:
+            if self._backup_agent_listener:
+                self._backup_agent_listener()
+                self._backup_agent_listener = None
+
+        self._backup_agent_listener = listener
+        return remove_listener
 
     async def cloud_connected(self) -> None:
         """When cloud is connected."""
@@ -274,6 +297,8 @@ class CloudClient(Interface):
         if self._cloud_ice_servers_listener:
             self._cloud_ice_servers_listener()
             self._cloud_ice_servers_listener = None
+
+        self.async_call_backup_agent_listener()
 
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:

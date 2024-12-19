@@ -45,6 +45,17 @@ async def async_get_backup_agents(
     return [CloudBackupAgent(hass=hass, cloud=cloud)]
 
 
+@callback
+def async_register_backup_agents_listener(
+    hass: HomeAssistant,
+    *,
+    listener: Callable[[], None],
+    **kwargs: Any,
+) -> Callable[[], None]:
+    """Register a listener to be called when agents are added or removed."""
+    return hass.data[DATA_CLOUD].client.async_register_backup_agent_listener(listener)
+
+
 class ChunkAsyncStreamIterator:
     """Async iterator for chunked streams.
 

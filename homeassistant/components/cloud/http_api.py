@@ -278,6 +278,7 @@ class CloudLoginView(HomeAssistantView):
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
         else:
             new_cloud_pipeline_id = None
+        cloud.client.async_call_backup_agent_listener()
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
