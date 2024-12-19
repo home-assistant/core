@@ -50,6 +50,7 @@
             "state": {
               "auto": "Auto",
               "sleep": "Sleep",
+	      "advancedSleep": "Advanced Sleep",
               "pet": "Pet",
               "turbo": "Turbo"
             }
