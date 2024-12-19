@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES, LOGGER, UPDATE_INTERVAL
 
 EVENT_HANDLERS: Registry[
     str, Callable[[OverkizDataUpdateCoordinator, Event], Coroutine[Any, Any, None]]
@@ -59,12 +59,15 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.data = {}
         self.client = client
         self.devices: dict[str, Device] = {d.device_url: d for d in devices}
-        self.is_stateless = all(
-            device.protocol in (Protocol.RTS, Protocol.INTERNAL) for device in devices
-        )
         self.executions: dict[str, dict[str, str]] = {}
         self.areas = self._places_to_area(places) if places else None
         self.config_entry_id = config_entry_id
+        self.is_stateless = all(
+            device.protocol in (Protocol.RTS, Protocol.INTERNAL)
+            for device in devices
+            if device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+        )
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
