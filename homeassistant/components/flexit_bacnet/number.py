@@ -20,13 +20,31 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FlexitCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, MAX_FAN_SETPOINT, MIN_FAN_SETPOINT
 from .entity import FlexitEntity
 
 
 @dataclass(kw_only=True, frozen=True)
 class FlexitNumberEntityDescription(NumberEntityDescription):
-    """Describes a Flexit number entity."""
+    """Describes a Flexit number entity.
+
+    Setpoints for Away, Home and High are dependent of each other. Fireplace and Cooker Hood
+    have setpoints between 0 (MIN_FAN_SETPOINT) and 100 (MAX_FAN_SETPOINT).
+    See the table below for all the setpoints.
+
+    | Mode        | Setpoint | Min                   | Max                   |
+    |:------------|----------|:----------------------|:----------------------|
+    | HOME        | Supply   | AWAY Supply setpoint  | 100                   |
+    | HOME        | Extract  | AWAY Extract setpoint | 100                   |
+    | AWAY        | Supply   | 30                    | HOME Supply setpoint  |
+    | AWAY        | Extract  | 30                    | HOME Extract setpoint |
+    | HIGH        | Supply   | HOME Supply setpoint  | 100                   |
+    | HIGH        | Extract  | HOME Extract setpoint | 100                   |
+    | COOKER_HOOD | Supply   | 30                    | 100                   |
+    | COOKER_HOOD | Extract  | 30                    | 100                   |
+    | FIREPLACE   | Supply   | 30                    | 100                   |
+    | FIREPLACE   | Extract  | 30                    | 100                   |
+    """
 
     native_value_fn: Callable[[FlexitBACnet], float]
     native_max_value_fn: Callable[[FlexitBACnet], int]
@@ -45,7 +63,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_away,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
-        native_min_value_fn=lambda _: 30,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="away_supply_fan_setpoint",
@@ -57,7 +75,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_away,
         native_unit_of_measurement=PERCENTAGE,
         native_max_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
-        native_min_value_fn=lambda _: 30,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_extract_fan_setpoint",
@@ -68,8 +86,8 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_extract_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_cooker,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
-        native_min_value_fn=lambda _: 30,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_supply_fan_setpoint",
@@ -80,8 +98,8 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_supply_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_cooker,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
-        native_min_value_fn=lambda _: 30,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="fireplace_extract_fan_setpoint",
@@ -92,8 +110,8 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_extract_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_fire,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
-        native_min_value_fn=lambda _: 30,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="fireplace_supply_fan_setpoint",
@@ -104,8 +122,8 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_supply_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_fire,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
-        native_min_value_fn=lambda _: 30,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="high_extract_fan_setpoint",
@@ -116,7 +134,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_extract_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_high,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
         native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
     ),
     FlexitNumberEntityDescription(
@@ -128,7 +146,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_supply_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_high,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
         native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
     ),
     FlexitNumberEntityDescription(
@@ -140,7 +158,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_extract_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_home,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
         native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_away),
     ),
     FlexitNumberEntityDescription(
@@ -152,7 +170,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_value_fn=lambda device: device.fan_setpoint_supply_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_home,
         native_unit_of_measurement=PERCENTAGE,
-        native_max_value_fn=lambda _: 100,
+        native_max_value_fn=lambda _: MAX_FAN_SETPOINT,
         native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_away),
     ),
 )
