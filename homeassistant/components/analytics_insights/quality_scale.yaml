@@ -68,7 +68,10 @@ rules:
     comment: |
       This integration has a fixed single service.
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: exempt
+    comment: |
+      This integration does not have entities with device classes.
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
