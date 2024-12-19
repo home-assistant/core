@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from pynordpool import (
-    DeliveryPeriodData,
+    NordPoolClient,
     NordPoolConnectionError,
     NordPoolEmptyResponseError,
     NordPoolError,
@@ -22,7 +22,8 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
+@pytest.mark.freeze_time("2024-11-05T10:00:00+00:00")
+async def test_unload_entry(hass: HomeAssistant, get_client: NordPoolClient) -> None:
     """Test load and unload an entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -31,13 +32,7 @@ async def test_unload_entry(hass: HomeAssistant, get_data: DeliveryPeriodData) -
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-            return_value=get_data,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -56,7 +51,7 @@ async def test_unload_entry(hass: HomeAssistant, get_data: DeliveryPeriodData) -
     ],
 )
 async def test_initial_startup_fails(
-    hass: HomeAssistant, get_data: DeliveryPeriodData, error: Exception
+    hass: HomeAssistant, get_client: NordPoolClient, error: Exception
 ) -> None:
     """Test load and unload an entry."""
     entry = MockConfigEntry(
