@@ -54,7 +54,7 @@ async def test_create_entry_when_host_valid(hass: HomeAssistant, controller) -> 
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "Controller (127.0.0.1)"
+    assert result["title"] == "HEOS System (via 127.0.0.1)"
     assert result["data"] == data
     assert controller.connect.call_count == 2  # Also called in async_setup_entry
     assert controller.disconnect.call_count == 1
@@ -73,7 +73,7 @@ async def test_create_entry_when_friendly_name_valid(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "Controller (127.0.0.1)"
+    assert result["title"] == "HEOS System (via 127.0.0.1)"
     assert result["data"] == {CONF_HOST: "127.0.0.1"}
     assert controller.connect.call_count == 2  # Also called in async_setup_entry
     assert controller.disconnect.call_count == 1
@@ -120,3 +120,73 @@ async def test_discovery_flow_aborts_already_setup(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_reconfigure_validates_and_updates_config(
+    hass: HomeAssistant, config_entry, controller
+) -> None:
+    """Test reconfigure validates host and successfully updates."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    # Test reconfigure initially shows form with current host value.
+    host = next(
+        key.default() for key in result["data_schema"].schema if key == CONF_HOST
+    )
+    assert host == "127.0.0.1"
+    assert result["errors"] == {}
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+
+    # Test reconfigure successfully updates.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2"},
+    )
+    assert controller.connect.call_count == 2  # Also called when entry reloaded
+    assert controller.disconnect.call_count == 1
+    assert config_entry.data == {CONF_HOST: "127.0.0.2"}
+    assert config_entry.unique_id == DOMAIN
+    assert result["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reconfigure_cannot_connect_recovers(
+    hass: HomeAssistant, config_entry, controller
+) -> None:
+    """Test reconfigure cannot connect and recovers."""
+    controller.connect.side_effect = HeosError()
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2"},
+    )
+
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
+    host = next(
+        key.default() for key in result["data_schema"].schema if key == CONF_HOST
+    )
+    assert host == "127.0.0.2"
+    assert result["errors"][CONF_HOST] == "cannot_connect"
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+
+    # Test reconfigure recovers and successfully updates.
+    controller.connect.side_effect = None
+    controller.connect.reset_mock()
+    controller.disconnect.reset_mock()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.2"},
+    )
+    assert controller.connect.call_count == 2  # Also called when entry reloaded
+    assert controller.disconnect.call_count == 1
+    assert config_entry.data == {CONF_HOST: "127.0.0.2"}
+    assert config_entry.unique_id == DOMAIN
+    assert result["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT

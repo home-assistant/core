@@ -9,23 +9,25 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    _DEPRECATED_ATTR_COLOR_TEMP,
+    _DEPRECATED_ATTR_MAX_MIREDS,
+    _DEPRECATED_ATTR_MIN_MIREDS,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
@@ -115,15 +117,15 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
         ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP,
+        _DEPRECATED_ATTR_COLOR_TEMP.value,
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_EFFECT_LIST,
         ATTR_HS_COLOR,
         ATTR_MAX_COLOR_TEMP_KELVIN,
-        ATTR_MAX_MIREDS,
+        _DEPRECATED_ATTR_MAX_MIREDS.value,
         ATTR_MIN_COLOR_TEMP_KELVIN,
-        ATTR_MIN_MIREDS,
+        _DEPRECATED_ATTR_MIN_MIREDS.value,
         ATTR_RGB_COLOR,
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
@@ -264,12 +266,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
             if (max_mireds := config.get(CONF_MAX_MIREDS))
-            else super().min_color_temp_kelvin
+            else DEFAULT_MIN_KELVIN
         )
         self._attr_max_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(min_mireds)
             if (min_mireds := config.get(CONF_MIN_MIREDS))
-            else super().max_color_temp_kelvin
+            else DEFAULT_MAX_KELVIN
         )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 

@@ -205,9 +205,9 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
-def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
+def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str | None:
     """Retrieve the state of the device."""
-    return DEVICE_STATES[device.state]
+    return DEVICE_STATES.get(device.state)
 
 
 @callback

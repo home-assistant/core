@@ -37,13 +37,16 @@ class SuezWaterData:
     price: float
 
 
+type SuezWaterConfigEntry = ConfigEntry[SuezWaterCoordinator]
+
+
 class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     """Suez water coordinator."""
 
     _suez_client: SuezClient
-    config_entry: ConfigEntry
+    config_entry: SuezWaterConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SuezWaterConfigEntry) -> None:
         """Initialize suez water coordinator."""
         super().__init__(
             hass,

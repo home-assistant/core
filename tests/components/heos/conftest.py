@@ -27,7 +27,10 @@ from tests.common import MockConfigEntry
 def config_entry_fixture():
     """Create a mock HEOS config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, title="Controller (127.0.0.1)"
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        unique_id=DOMAIN,
     )
 
 

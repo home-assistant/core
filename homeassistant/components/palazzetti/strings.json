@@ -57,6 +57,42 @@
       }
     },
     "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "off": "Off",
+          "off_timer": "Timer-regulated switch off",
+          "test_fire": "Ignition test",
+          "heatup": "Pellet feed",
+          "fueling": "Ignition",
+          "ign_test": "Fuel check",
+          "burning": "Operating",
+          "burning_mod": "Operating - Modulating",
+          "unknown": "Unknown",
+          "cool_fluid": "Stand-by",
+          "fire_stop": "Switch off",
+          "clean_fire": "Burn pot cleaning",
+          "cooling": "Cooling in progress",
+          "cleanup": "Final cleaning",
+          "ecomode": "Ecomode",
+          "chimney_alarm": "Chimney alarm",
+          "grate_error": "Grate error",
+          "pellet_water_error": "Pellet probe or return water error",
+          "t05_error": "T05 error disconnected or faulty probe",
+          "hatch_door_open": "Feed hatch or door open",
+          "pressure_error": "Safety pressure switch error",
+          "main_probe_failure": "Main probe failure",
+          "flue_probe_failure": "Flue gas probe failure",
+          "exhaust_temp_high": "Too high exhaust gas temperature",
+          "pellet_finished": "Pellets finished or ignition failed",
+          "firewood_finished": "Firewood finished",
+          "general_error": "General error",
+          "door_open": "Door open",
+          "temp_too_high": "Temperature too high",
+          "cleaning_warning": "Cleaning warning",
+          "fuel_error": "Fuel error"
+        }
+      },
       "pellet_quantity": {
         "name": "Pellet quantity"
       },
