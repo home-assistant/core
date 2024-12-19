@@ -16,7 +16,7 @@ from homeassistant.components.habitica.const import (
     EVENT_API_CALL_SUCCESS,
     SERVICE_API_CALL,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Event, HomeAssistant
 
@@ -94,7 +94,8 @@ async def test_service_call(
 
 
 @pytest.mark.parametrize(
-    ("status"), [HTTPStatus.NOT_FOUND, HTTPStatus.TOO_MANY_REQUESTS]
+    ("status"),
+    [HTTPStatus.NOT_FOUND, HTTPStatus.TOO_MANY_REQUESTS],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -114,6 +115,36 @@ async def test_config_entry_not_ready(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_config_entry_auth_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test config entry auth failed setup error."""
+
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        status=HTTPStatus.UNAUTHORIZED,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == config_entry.entry_id
 
 
 async def test_coordinator_update_failed(
