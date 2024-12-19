@@ -176,18 +176,45 @@ class TriggerBaseEntity(Entity):
                 extra_state_attributes[attr] = last_state.attributes[attr]
             self._rendered[CONF_ATTRIBUTES] = extra_state_attributes
 
+    def _render_availability_template(self, variables: dict[str, Any]) -> None:
+        """Render availability template."""
+        rendered = dict(self._static_rendered)
+        key = CONF_AVAILABILITY
+        try:
+            if key in self._to_render_simple:
+                rendered[key] = self._config[key].async_render(
+                    variables,
+                    parse_result=key in self._parse_result,
+                )
+            elif key in self._to_render_complex:
+                rendered[key] = render_complex(
+                    self._config[key],
+                    variables,
+                )
+        except TemplateError as err:
+            logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
+                "Error rendering %s template for %s: %s", key, self.entity_id, err
+            )
+        self._rendered = rendered
+
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
+        rendered = dict(self._rendered)
+        if CONF_AVAILABILITY in rendered and rendered[CONF_AVAILABILITY] == "off":
+            self._rendered = self._static_rendered
+            return
         try:
-            rendered = dict(self._static_rendered)
-
             for key in self._to_render_simple:
+                if key == CONF_AVAILABILITY:
+                    continue
                 rendered[key] = self._config[key].async_render(
                     variables,
                     parse_result=key in self._parse_result,
                 )
 
             for key in self._to_render_complex:
+                if key == CONF_AVAILABILITY:
+                    continue
                 rendered[key] = render_complex(
                     self._config[key],
                     variables,
@@ -198,13 +225,14 @@ class TriggerBaseEntity(Entity):
                     self._config[CONF_ATTRIBUTES],
                     variables,
                 )
-
-            self._rendered = rendered
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
+            # Availability property specifically checks if self._rendered is not self._static_rendered
             self._rendered = self._static_rendered
+            return
+        self._rendered = rendered
 
 
 class ManualTriggerEntity(TriggerBaseEntity):
@@ -230,16 +258,16 @@ class ManualTriggerEntity(TriggerBaseEntity):
         Implementing class should call this last in update method to render templates.
         Ex: self._process_manual_data(payload)
         """
-
         run_variables: dict[str, Any] = {"value": value}
         # Silently try if variable is a json and store result in `value_json` if it is.
         with contextlib.suppress(*JSON_DECODE_EXCEPTIONS):
             run_variables["value_json"] = json_loads(run_variables["value"])
+
         variables = {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
             **(run_variables or {}),
         }
-
+        self._render_availability_template(variables)
         self._render_templates(variables)
 
 
