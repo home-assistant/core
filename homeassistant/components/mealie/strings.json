@@ -39,10 +39,6 @@
           "api_token": "[%key:component::mealie::common::data_description_api_token%]",
           "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
-      },
-      "hassio_confirm": {
-        "title": "Mealie via Home Assistant add-on",
-        "description": "Do you want to configure Home Assistant to connect to the Mealie instance provided by the add-on: {addon}?"
       }
     },
     "error": {
