@@ -1,0 +1,30 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data:
+    status: exempt
+    comment: No runtime data
+  test-before-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: No polling
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: No actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: exempt
+    comment: No special instructions
+  docs-actions:
+    status: exempt
+    comment: No action
+  brands: done
