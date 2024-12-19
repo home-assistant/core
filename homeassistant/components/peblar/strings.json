@@ -31,5 +31,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_serial_number": "The discovered Peblar device did not provide a serial number."
     }
+  },
+  "entity": {
+    "update": {
+      "customization": {
+        "name": "Customization"
+      }
+    }
   }
 }

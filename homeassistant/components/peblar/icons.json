@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "update": {
+      "customization": {
+        "default": "mdi:palette"
+      }
+    }
+  }
+}
