@@ -1012,7 +1012,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "`color_temp_kelvin` (see "
                 "https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
-                core_behavior=ReportBehavior.LOG,
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                custom_integration_behavior=ReportBehavior.ERROR,
                 integration_domain=self.platform.platform_name
                 if self.platform
                 else None,
@@ -1050,7 +1052,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "`min_color_temp_kelvin`, possibly with default DEFAULT_MIN_KELVIN "
                 "(see https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
-                core_behavior=ReportBehavior.LOG,
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                custom_integration_behavior=ReportBehavior.ERROR,
                 integration_domain=self.platform.platform_name
                 if self.platform
                 else None,
@@ -1070,7 +1074,9 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 "`max_color_temp_kelvin`, possibly with default DEFAULT_MAX_KELVIN "
                 "(see https://github.com/home-assistant/core/pull/79591)",
                 breaks_in_ha_version="2026.1",
-                core_behavior=ReportBehavior.LOG,
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                custom_integration_behavior=ReportBehavior.ERROR,
                 integration_domain=self.platform.platform_name
                 if self.platform
                 else None,
