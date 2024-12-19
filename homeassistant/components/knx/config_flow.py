@@ -93,13 +93,10 @@ OPTION_MANUAL_TUNNEL: Final = "Manual"
 
 _IA_SELECTOR = selector.TextSelector()
 _IP_SELECTOR = selector.TextSelector()
-_PORT_SELECTOR = vol.All(
-    selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
-        ),
+_PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        min=1, max=65535, mode=selector.NumberSelectorMode.BOX, step=1
     ),
-    vol.Coerce(int),
 )
 
 
@@ -410,13 +407,10 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             vol.Required(
                 CONF_KNX_SECURE_USER_ID,
                 default=self.initial_data.get(CONF_KNX_SECURE_USER_ID, 2),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1, max=127, mode=selector.NumberSelectorMode.BOX
-                    ),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=127, mode=selector.NumberSelectorMode.BOX, step=1
                 ),
-                vol.Coerce(int),
             ),
             vol.Required(
                 CONF_KNX_SECURE_USER_PASSWORD,
@@ -472,16 +466,14 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE,
                 default=self.initial_data.get(CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE)
                 or 1000,
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=400,
-                        max=4000,
-                        unit_of_measurement="ms",
-                        mode=selector.NumberSelectorMode.BOX,
-                    ),
-                ),
-                vol.Coerce(int),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=400,
+                    max=4000,
+                    unit_of_measurement="ms",
+                    mode=selector.NumberSelectorMode.BOX,
+                    step=1,
+                )
             ),
         }
 
@@ -820,30 +812,26 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
                 default=self.initial_data.get(
                     CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT
                 ),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=CONF_MAX_RATE_LIMIT,
-                        mode=selector.NumberSelectorMode.BOX,
-                    ),
-                ),
-                vol.Coerce(int),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0,
+                    max=CONF_MAX_RATE_LIMIT,
+                    mode=selector.NumberSelectorMode.BOX,
+                    step=1,
+                )
             ),
             vol.Required(
                 CONF_KNX_TELEGRAM_LOG_SIZE,
                 default=self.initial_data.get(
                     CONF_KNX_TELEGRAM_LOG_SIZE, TELEGRAM_LOG_DEFAULT
                 ),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=TELEGRAM_LOG_MAX,
-                        mode=selector.NumberSelectorMode.BOX,
-                    ),
-                ),
-                vol.Coerce(int),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0,
+                    max=TELEGRAM_LOG_MAX,
+                    mode=selector.NumberSelectorMode.BOX,
+                    step=1,
+                )
             ),
         }
         return self.async_show_form(
