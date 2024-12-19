@@ -48,7 +48,7 @@ ProgettiHWSW==0.1.3
 PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
-PyFlick==0.0.2
+PyFlick==1.0.0
 
 # homeassistant.components.flume
 PyFlume==0.6.5
