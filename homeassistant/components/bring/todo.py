@@ -98,29 +98,26 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     @property
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
-        try:
-            return [
-                *(
-                    TodoItem(
-                        uid=item["uuid"],
-                        summary=item["itemId"],
-                        description=item["specification"] or "",
-                        status=TodoItemStatus.NEEDS_ACTION,
-                    )
-                    for item in self.bring_list["purchase"]
-                ),
-                *(
-                    TodoItem(
-                        uid=item["uuid"],
-                        summary=item["itemId"],
-                        description=item["specification"] or "",
-                        status=TodoItemStatus.COMPLETED,
-                    )
-                    for item in self.bring_list["recently"]
-                ),
-            ]
-        except StopIteration:
-            return []
+        return [
+            *(
+                TodoItem(
+                    uid=item["uuid"],
+                    summary=item["itemId"],
+                    description=item["specification"] or "",
+                    status=TodoItemStatus.NEEDS_ACTION,
+                )
+                for item in self.bring_list["purchase"]
+            ),
+            *(
+                TodoItem(
+                    uid=item["uuid"],
+                    summary=item["itemId"],
+                    description=item["specification"] or "",
+                    status=TodoItemStatus.COMPLETED,
+                )
+                for item in self.bring_list["recently"]
+            ),
+        ]
 
     @property
     def bring_list(self) -> BringData:
@@ -163,14 +160,8 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
             instead and no update for this item is performed and on the next cloud pull
             update, it will get cleared and replaced seamlessly.
         """
-        try:
-            bring_list = self.bring_list
-        except StopIteration as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="todo_rename_item_failed",
-                translation_placeholders={"name": item.summary or ""},
-            ) from e
+
+        bring_list = self.bring_list
 
         bring_purchase_item = next(
             (i for i in bring_list["purchase"] if i["uuid"] == item.uid),
