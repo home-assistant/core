@@ -62,23 +62,24 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self.data.has_color:
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
-            # color capabilities are pre-loaded in the coordinator
-            if supported_color_temps := self.data.supported_color_temps:
-                # only available for color bulbs
-                self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
-                self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
-
-            # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
-            # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
-            for values in self.data.supported_colors.values():
-                hue = int(values[0][0])
-                self._supported_hs[hue] = [
-                    int(values[0][1]),
-                    int(values[1][1]),
-                    int(values[2][1]),
-                ]
         elif self.data.has_level:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+        # color capabilities are pre-loaded in the coordinator
+        if supported_color_temps := self.data.supported_color_temps:
+            # only available for color bulbs
+            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
+
+        # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
+        # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
+        for values in self.data.supported_colors.values():
+            hue = int(values[0][0])
+            self._supported_hs[hue] = [
+                int(values[0][1]),
+                int(values[1][1]),
+                int(values[2][1]),
+            ]
 
     @property
     def is_on(self) -> bool:

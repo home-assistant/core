@@ -21,13 +21,6 @@ from .const import DOMAIN, LOGGER
 type FritzboxConfigEntry = ConfigEntry[FritzboxDataUpdateCoordinator]
 
 
-def pre_load_light_capabilities(device: FritzhomeDevice) -> None:
-    """Pre-load light capabilities for lightbulbs."""
-    if device.has_lightbulb and device.has_color:
-        device.supported_colors = device.get_colors()
-        device.supported_color_temps = device.get_color_temps()
-
-
 @dataclass
 class FritzboxCoordinatorData:
     """Data Type of FritzboxDataUpdateCoordinator's data."""
@@ -141,12 +134,12 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 LOGGER.debug("Assume device %s as unavailable", device.name)
                 device.present = False
 
-            if (
-                device.has_lightbulb
-                and device.has_color
-                and not hasattr(device, "supported_colors")
-            ):
-                pre_load_light_capabilities(device)
+            if device.has_lightbulb:
+                # Ensure pre-loading of light capabilities
+                if not hasattr(device, "supported_colors"):
+                    device.supported_colors = device.get_colors()
+                if not hasattr(device, "supported_color_temps"):
+                    device.supported_color_temps = device.get_color_temps()
 
             device_data[device.ain] = device
 

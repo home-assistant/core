@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import Mock
 
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.components.fritzbox.coordinator import pre_load_light_capabilities
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -36,7 +35,9 @@ async def setup_config_entry(
     entry.add_to_hass(hass)
     if device is not None and fritz is not None:
         fritz().get_devices.return_value = [device]
-        pre_load_light_capabilities(device)
+        if device.has_lightbulb:
+            device.supported_colors = device.get_colors()
+            device.supported_color_temps = device.get_color_temps()
 
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
@@ -53,8 +54,6 @@ def set_devices(
     """Set list of devices or templates."""
     if devices is not None:
         fritz().get_devices.return_value = devices
-        for device in devices:
-            pre_load_light_capabilities(device)
 
     if templates is not None:
         fritz().get_templates.return_value = templates
