@@ -36,7 +36,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -62,7 +62,6 @@ from .const import (
     ATTR_MASS_PLAYER_TYPE,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
-    ATTR_NAME,
     ATTR_NEXT_ITEM,
     ATTR_QUEUE_ID,
     ATTR_RADIO_MODE,
