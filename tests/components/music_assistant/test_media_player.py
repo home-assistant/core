@@ -592,7 +592,7 @@ async def test_media_player_get_queue_action(
     music_assistant_client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test media_player play_announcement action."""
+    """Test media_player get_queue action."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     response = await hass.services.async_call(
