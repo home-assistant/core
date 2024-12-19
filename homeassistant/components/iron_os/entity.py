@@ -9,22 +9,22 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER, MODEL
-from .coordinator import IronOSBaseCoordinator
+from .coordinator import IronOSLiveDataCoordinator
 
 
-class IronOSBaseEntity(CoordinatorEntity[IronOSBaseCoordinator]):
+class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
     """Base IronOS entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: IronOSBaseCoordinator,
+        coordinator: IronOSLiveDataCoordinator,
         entity_description: EntityDescription,
         context: Any | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, context=context)
+        super().__init__(coordinator)
 
         self.entity_description = entity_description
         self._attr_unique_id = (
@@ -32,11 +32,15 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSBaseCoordinator]):
         )
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
-        self.device_info = DeviceInfo(
+
+        self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
-            sw_version=coordinator.device_info.build,
-            serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.device.is_connected
