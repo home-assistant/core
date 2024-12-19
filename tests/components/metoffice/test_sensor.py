@@ -7,8 +7,9 @@ import pytest
 import requests_mock
 
 from homeassistant.components.metoffice.const import ATTRIBUTION, DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     DEVICE_KEY_KINGSLYNN,
@@ -17,6 +18,8 @@ from .const import (
     METOFFICE_CONFIG_KINGSLYNN,
     METOFFICE_CONFIG_WAVERTREE,
     TEST_DATETIME_STRING,
+    TEST_LATITUDE_WAVERTREE,
+    TEST_LONGITUDE_WAVERTREE,
     TEST_SITE_NAME_KINGSLYNN,
     TEST_SITE_NAME_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
@@ -25,7 +28,7 @@ from .const import (
 from tests.common import MockConfigEntry, load_fixture
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -34,17 +37,15 @@ async def test_one_sensor_site_running(
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
-    all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly",
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
         text=wavertree_hourly,
     )
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily",
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
         text=wavertree_daily,
     )
 
@@ -71,12 +72,11 @@ async def test_one_sensor_site_running(
 
         assert sensor.state == sensor_value
         assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
-        assert sensor.attributes.get("site_id") == "354107"
         assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -86,24 +86,18 @@ async def test_two_sensor_sites_running(
 
     # all metoffice test data encapsulated in here
     mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
-    all_sites = json.dumps(mock_json["all_sites"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
     kingslynn_daily = json.dumps(mock_json["kingslynn_daily"])
 
-    requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=3hourly", text=wavertree_hourly
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=wavertree_hourly,
     )
     requests_mock.get(
-        "/public/data/val/wxfcs/all/json/354107?res=daily", text=wavertree_daily
-    )
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/322380?res=3hourly", text=kingslynn_hourly
-    )
-    requests_mock.get(
-        "/public/data/val/wxfcs/all/json/322380?res=daily", text=kingslynn_daily
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
     )
 
     entry = MockConfigEntry(
@@ -112,6 +106,16 @@ async def test_two_sensor_sites_running(
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=kingslynn_hourly,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=kingslynn_daily,
+    )
+
     entry2 = MockConfigEntry(
         domain=DOMAIN,
         data=METOFFICE_CONFIG_KINGSLYNN,
@@ -135,14 +139,13 @@ async def test_two_sensor_sites_running(
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
         sensor_id = sensor.attributes.get("sensor_id")
-        if sensor.attributes.get("site_id") == "354107":
+        if "wavertree" in running_id:
             _, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
-            assert sensor.attributes.get("site_id") == "354107"
             assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
@@ -153,6 +156,55 @@ async def test_two_sensor_sites_running(
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
             assert sensor.attributes.get("sensor_id") == sensor_id
-            assert sensor.attributes.get("site_id") == "322380"
             assert sensor.attributes.get("site_name") == TEST_SITE_NAME_KINGSLYNN
             assert sensor.attributes.get("attribution") == ATTRIBUTION
+
+
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.parametrize(
+    ("old_unique_id"),
+    [
+        f"visibility_distance_{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}",
+        f"visibility_distance_{TEST_LATITUDE_WAVERTREE}_{TEST_LONGITUDE_WAVERTREE}_daily",
+    ],
+)
+async def test_legacy_config_entry_is_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    requests_mock: requests_mock.Mocker,
+    old_unique_id: str,
+) -> None:
+    """Test the expected entities are deleted."""
+    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=wavertree_hourly,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
+    )
+    # Pre-create the entity
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id=old_unique_id,
+        suggested_object_id="met_office_wavertree_visibility_distance",
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=METOFFICE_CONFIG_WAVERTREE,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
+        is None
+    )
