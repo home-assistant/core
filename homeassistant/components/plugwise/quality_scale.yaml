@@ -52,9 +52,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: This integration does not have any reconfiguration steps (yet) investigate how/why
+  reconfiguration-flow: done
   dynamic-devices: done
   discovery-update-info: done
   repair-issues:
