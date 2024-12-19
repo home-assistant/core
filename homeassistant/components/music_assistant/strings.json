@@ -143,8 +143,8 @@
       "description": "Get items from a Music Assistant library.",
       "fields": {
         "config_entry_id": {
-          "name": "Music Assistant instance",
-          "description": "Select the Music Assistant instance on which to query the library."
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]",
+          "description": "[%key:component::music_assistant::services::search::fields::config_entry_id::description%]"
         },
         "media_type": {
           "name": "Media type",
