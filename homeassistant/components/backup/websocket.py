@@ -297,21 +297,21 @@ async def handle_config_info(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
                 vol.Optional("include_addons"): vol.Any(
-                    vol.All([str], vol.Unique()), None
+                    None, vol.All([str], vol.Unique())
                 ),
                 vol.Optional("include_all_addons"): bool,
                 vol.Optional("include_database"): bool,
                 vol.Optional("include_folders"): vol.Any(
-                    vol.All([vol.Coerce(Folder)], vol.Unique()), None
+                    None, vol.All([vol.Coerce(Folder)], vol.Unique())
                 ),
-                vol.Optional("name"): vol.Any(str, None),
-                vol.Optional("password"): vol.Any(str, None),
+                vol.Optional("name"): vol.Any(None, str),
+                vol.Optional("password"): vol.Any(None, str),
             },
         ),
         vol.Optional("retention"): vol.Schema(
             {
-                vol.Optional("copies"): vol.Any(int, None),
-                vol.Optional("days"): vol.Any(int, None),
+                vol.Optional("copies"): vol.Any(None, int),
+                vol.Optional("days"): vol.Any(None, int),
             },
         ),
         vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
