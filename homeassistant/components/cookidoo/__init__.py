@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.TODO]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
