@@ -13,7 +13,7 @@ from simplefin4py.exceptions import (
 
 from homeassistant.components.simplefin import CONF_ACCESS_URL
 from homeassistant.components.simplefin.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
@@ -162,3 +162,32 @@ async def test_claim_token_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ACCESS_URL: "https://i:am@yomama.house.com"}
     assert result["title"] == "SimpleFIN"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_simplefin_client: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_ACCESS_URL: MOCK_ACCESS_URL},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

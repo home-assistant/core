@@ -4,7 +4,14 @@
       "user": {
         "description": "Please enter either a Claim Token or an Access URL.",
         "data": {
-          "api_token": "Claim Token or Access URL"
+          "access_url": "Claim Token or Access URL"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please enter either a new Claim Token or an Access URL.",
+        "data": {
+          "access_url": "Claim Token or Access URL"
         }
       }
     },
@@ -17,7 +24,8 @@
     },
     "abort": {
       "missing_access_url": "Access URL or Claim Token missing",
-      "already_configured": "This Access URL is already configured."
+      "already_configured": "This Access URL is already configured.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
