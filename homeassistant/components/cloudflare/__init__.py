@@ -12,15 +12,11 @@ import pycfdns
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.location import async_detect_location_info
-from homeassistant.util.network import is_ipv4_address
+from homeassistant.util.network import is_ipv4_address, is_ipv6_address
 
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
@@ -97,22 +93,46 @@ async def _async_update_cloudflare(
 ) -> None:
     _LOGGER.debug("Starting update for zone %s", dns_zone["name"])
 
-    records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
-    _LOGGER.debug("Records: %s", records)
+    old_records = await client.list_dns_records(zone_id=dns_zone["id"])
+    _LOGGER.debug("Records: %s", old_records)
 
-    session = async_get_clientsession(hass, family=socket.AF_INET)
-    location_info = await async_detect_location_info(session)
+    records_to_be_updated = []
 
-    if not location_info or not is_ipv4_address(location_info.ip):
-        raise HomeAssistantError("Could not get external IPv4 address")
+    for record in old_records:
+        if record["name"] not in target_records:
+            continue
+        if record["type"] == "A":
+            _LOGGER.debug("Found target record: %s", record["name"])
+            session = async_get_clientsession(hass, family=socket.AF_INET)
+            location_info = await async_detect_location_info(session)
+            if location_info and is_ipv4_address(location_info.ip):
+                _LOGGER.debug("IPv4 address detected: %s", location_info.ip)
+                if record["content"] != location_info.ip:
+                    _LOGGER.info(
+                        "IPv4 address change detected for record: %s,will DNS entry from %s to %s",
+                        record["name"],
+                        record["content"],
+                        location_info.ip,
+                    )
+                    record["content"] = location_info.ip
+                    records_to_be_updated.append(record)
+        if record["type"] == "AAAA":
+            _LOGGER.debug("Found target record: %s", record["name"])
+            session_ipv6 = async_get_clientsession(hass, family=socket.AF_INET6)
+            location_info_v6 = await async_detect_location_info(session_ipv6)
+            if location_info_v6 and is_ipv6_address(location_info_v6.ip):
+                _LOGGER.debug("IPv6 address detected: %s", location_info_v6.ip)
+                if record["content"] != location_info_v6.ip:
+                    _LOGGER.info(
+                        "IPv6 address change detected for record: %s,will DNS entry from %s to %s",
+                        record["name"],
+                        record["content"],
+                        location_info_v6.ip,
+                    )
+                    record["content"] = location_info_v6.ip
+                    records_to_be_updated.append(record)
 
-    filtered_records = [
-        record
-        for record in records
-        if record["name"] in target_records and record["content"] != location_info.ip
-    ]
-
-    if len(filtered_records) == 0:
+    if len(records_to_be_updated) == 0:
         _LOGGER.debug("All target records are up to date")
         return
 
@@ -121,12 +141,12 @@ async def _async_update_cloudflare(
             client.update_dns_record(
                 zone_id=dns_zone["id"],
                 record_id=record["id"],
-                record_content=location_info.ip,
+                record_content=record["content"],
                 record_name=record["name"],
                 record_type=record["type"],
                 record_proxied=record["proxied"],
             )
-            for record in filtered_records
+            for record in records_to_be_updated
         ]
     )
 
