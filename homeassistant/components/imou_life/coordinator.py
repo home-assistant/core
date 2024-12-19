@@ -1,24 +1,25 @@
 """Provides the imou DataUpdateCoordinator."""
 
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import async_timeout
+from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from pyimouapi.ha_device import ImouHaDeviceManager, ImouHaDevice
 
 LOGGER = logging.getLogger(__name__)
 
 
 class ImouDataUpdateCoordinator(DataUpdateCoordinator):
-    """DATA UPDATE COORDINATOR"""
+    """DATA UPDATE COORDINATOR."""
 
     def __init__(
         self, hass: HomeAssistant, device_manager: ImouHaDeviceManager
     ) -> None:
+        """Init ImouDataUpdateCoordinator."""
         LOGGER.info("ImouDataUpdateCoordinator init")
         super().__init__(
             hass,
@@ -31,15 +32,15 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
         self._devices: list[ImouHaDevice] = []
 
     @property
-    def devices(self):
+    def devices(self):  # noqa: D102
         return self._devices
 
     @property
-    def device_manager(self):
+    def device_manager(self):  # noqa: D102
         return self._device_manager
 
     async def _async_setup(self):
-        """Set up the coordinator
+        """Set up the coordinator.
 
         This is the place to set up your coordinator,
         or to load data, that only needs to be loaded once.
@@ -52,6 +53,7 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
             self._devices.append(device)
 
     async def async_update_all_device(self) -> bool:
+        """Update all device."""
         await asyncio.gather(
             *[
                 self._device_manager.async_update_device_status(device)
@@ -67,5 +69,5 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 return await self.async_update_all_device()
             except Exception as err:
-                LOGGER.error("Error fetching data: %s" % err)
-                raise UpdateFailed() from err
+                LOGGER.error(f"Error fetching data: {err}")  # noqa: G004
+                raise UpdateFailed from err

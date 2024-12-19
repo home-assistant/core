@@ -6,6 +6,6 @@
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/imou_life",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "bronze",
   "requirements": ["pyimouapi==1.0.4"]
 }

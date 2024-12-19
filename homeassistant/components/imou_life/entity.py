@@ -1,16 +1,17 @@
 """An abstract class commom to all IMOU entities."""
 
-from pyimouapi.ha_device import ImouHaDevice, DeviceStatus
+from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from . import ImouDataUpdateCoordinator
 from .const import DOMAIN, PARAM_STATUS
 
 
 class ImouEntity(CoordinatorEntity):
-    """EntityBaseClass"""
+    """EntityBaseClass."""
 
     _attr_has_entity_name = True
 
@@ -21,6 +22,7 @@ class ImouEntity(CoordinatorEntity):
         entity_type: str,
         device: ImouHaDevice,
     ) -> None:
+        """Init ImouEntity."""
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.config_entry = config_entry
@@ -58,10 +60,12 @@ class ImouEntity(CoordinatorEntity):
 
     @property
     def translation_key(self):
+        """Return translation_key."""
         return self._attr_translation_key
 
     @property
     def available(self) -> bool:
+        """Return entity is available."""
         if self._entity_type == PARAM_STATUS:
             return True
         return self._device.sensors[PARAM_STATUS] != DeviceStatus.OFFLINE.status
