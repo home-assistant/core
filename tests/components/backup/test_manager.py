@@ -591,7 +591,16 @@ async def test_create_backup_success_clears_issue(
     assert set(issue_registry.issues) == issues_after_create_backup
 
 
-# @pytest.mark.usefixtures("mock_backup_generation")
+async def delayed_boom(*args, **kwargs) -> None:
+    """Raise an exception after a delay."""
+
+    async def delayed_boom() -> None:
+        await asyncio.sleep(0)
+        raise Exception("Boom!")  # noqa: TRY002
+
+    return (NewBackup(backup_job_id="abc123"), delayed_boom())
+
+
 @pytest.mark.parametrize(
     (
         "create_backup_command",
@@ -601,6 +610,7 @@ async def test_create_backup_success_clears_issue(
         "issues_after_create_backup",
     ),
     [
+        # No error
         (
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             None,
@@ -615,6 +625,7 @@ async def test_create_backup_success_clears_issue(
             True,
             {},
         ),
+        # Error raised in async_initiate_backup
         (
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             Exception("Boom!"),
@@ -634,6 +645,27 @@ async def test_create_backup_success_clears_issue(
                 }
             },
         ),
+        # Error raised when awaiting the backup task
+        (
+            {"type": "backup/generate", "agent_ids": ["test.remote"]},
+            delayed_boom,
+            None,
+            True,
+            {},
+        ),
+        (
+            {"type": "backup/generate_with_automatic_settings"},
+            delayed_boom,
+            None,
+            True,
+            {
+                (DOMAIN, "automatic_backup_failed"): {
+                    "translation_key": "automatic_backup_failed_create",
+                    "translation_placeholders": None,
+                }
+            },
+        ),
+        # Error raised in async_upload_backup
         (
             {"type": "backup/generate", "agent_ids": ["test.remote"]},
             None,
