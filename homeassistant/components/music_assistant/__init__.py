@@ -24,8 +24,8 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from .actions import register_actions
 from .const import DOMAIN, LOGGER
-from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent

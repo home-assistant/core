@@ -1,20 +1,20 @@
-"""Test Music Assistant actions (services)."""
+"""Test Music Assistant actions."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.media_items import SearchResults
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.music_assistant.actions import (
+    SERVICE_GET_LIBRARY,
+    SERVICE_SEARCH,
+)
 from homeassistant.components.music_assistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
     ATTR_SEARCH_NAME,
     DOMAIN as MASS_DOMAIN,
-)
-from homeassistant.components.music_assistant.services import (
-    SERVICE_GET_LIBRARY,
-    SERVICE_SEARCH,
 )
 from homeassistant.core import HomeAssistant
 
