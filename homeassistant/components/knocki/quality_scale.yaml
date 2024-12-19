@@ -19,8 +19,8 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
@@ -38,9 +38,9 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable: todo
   parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: done
@@ -59,13 +59,22 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations:
-    status: done
+  entity-category:
+    status: exempt
     comment: |
-      This integration does not have any entities.
+      The default ones are good.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Knocki does not have a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration does not have any entities that are disabled by default.
+  entity-translations:
+    status: exempt
+    comment: |
+      This integration does not have any translatable entities.
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
@@ -73,11 +82,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  stale-devices:
-    status: exempt
-    comment: |
-      This integration has a fixed single device.
-
+  stale-devices: todo
   # Platinum
   async-dependency: done
   inject-websession: done
