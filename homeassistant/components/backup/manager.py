@@ -831,12 +831,10 @@ class BackupManager:
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
                 )
-            except BaseException as err:
+            except BaseException:
                 self.async_on_backup_event(
                     CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
                 )
-                if isinstance(err, BackupReaderWriterError):
-                    raise BackupManagerError(str(err)) from err
                 raise  # manager or unexpected error
             finally:
                 try:
