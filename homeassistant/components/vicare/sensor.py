@@ -52,6 +52,7 @@ from .const import (
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
+    filter_states,
     get_burners,
     get_circuits,
     get_compressors,
@@ -799,7 +800,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
-        value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
+        value_getter=lambda api: filter_states(api.getPhotovoltaicStatus()),
     ),
     ViCareSensorEntityDescription(
         key="room_temperature",
@@ -923,10 +924,6 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _filter_pv_states(state: str) -> str | None:
-    return None if state in ("nothing", "unknown") else state
-
-
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareSensor]:
@@ -943,7 +940,7 @@ def _build_entities(
                 device.api,
             )
             for description in GLOBAL_SENSORS
-            if is_supported(description.key, description, device.api)
+            if is_supported(description.key, description.value_getter, device.api)
         )
         # add component entities
         for component_list, entity_description_list in (
@@ -961,7 +958,7 @@ def _build_entities(
                 )
                 for component in component_list
                 for description in entity_description_list
-                if is_supported(description.key, description, component)
+                if is_supported(description.key, description.value_getter, component)
             )
     return entities
 

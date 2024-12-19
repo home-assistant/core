@@ -350,7 +350,7 @@ def _build_entities(
                 device.api,
             )
             for description in DEVICE_ENTITY_DESCRIPTIONS
-            if is_supported(description.key, description, device.api)
+            if is_supported(description.key, description.value_getter, device.api)
         )
         # add component entities
         entities.extend(
@@ -363,7 +363,7 @@ def _build_entities(
             )
             for circuit in get_circuits(device.api)
             for description in CIRCUIT_ENTITY_DESCRIPTIONS
-            if is_supported(description.key, description, circuit)
+            if is_supported(description.key, description.value_getter, circuit)
         )
     return entities
 
