@@ -14,7 +14,7 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
-from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
+from sqlalchemy import Select, bindparam, func, lambda_stmt, select, text
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -2047,21 +2047,18 @@ def _generate_statistics_at_time_stmt(
         lambda q: q.select_from(StatisticsMeta)
         .join(
             table,
-            and_(
-                table.start_ts
-                == (
-                    select(table.start_ts)
-                    .where(
-                        (StatisticsMeta.id == table.metadata_id)
-                        & (table.start_ts < start_time_ts)
-                    )
-                    .order_by(table.start_ts.desc())
-                    .limit(1)
+            table.id
+            == (
+                select(table.id)
+                .where(
+                    (StatisticsMeta.id == table.metadata_id)
+                    & (table.start_ts < start_time_ts)
                 )
-                .scalar_subquery()
-                .correlate(StatisticsMeta),
-                table.metadata_id == StatisticsMeta.id,
-            ),
+                .order_by(table.start_ts.desc())
+                .limit(1)
+            )
+            .scalar_subquery()
+            .correlate(StatisticsMeta),
         )
         .where(table.metadata_id.in_(metadata_ids))
     )

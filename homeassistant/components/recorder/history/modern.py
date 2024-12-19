@@ -577,22 +577,19 @@ def _get_start_time_state_for_entities_stmt(
         .select_from(StatesMeta)
         .join(
             States,
-            and_(
-                States.last_updated_ts
-                == (
-                    select(States.last_updated_ts)
-                    .where(
-                        (StatesMeta.metadata_id == States.metadata_id)
-                        & (States.last_updated_ts < epoch_time)
-                        & (States.last_updated_ts >= run_start_ts)
-                    )
-                    .order_by(States.last_updated_ts.desc())
-                    .limit(1)
+            States.state_id
+            == (
+                select(States.state_id)
+                .where(
+                    (StatesMeta.metadata_id == States.metadata_id)
+                    & (States.last_updated_ts < epoch_time)
+                    & (States.last_updated_ts >= run_start_ts)
                 )
-                .scalar_subquery()
-                .correlate(StatesMeta),
-                States.metadata_id == StatesMeta.metadata_id,
-            ),
+                .order_by(States.last_updated_ts.desc())
+                .limit(1)
+            )
+            .scalar_subquery()
+            .correlate(StatesMeta),
         )
         .where(StatesMeta.metadata_id.in_(metadata_ids))
     )
