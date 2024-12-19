@@ -51,10 +51,26 @@
         "name": "Next price"
       },
       "lowest_price": {
-        "name": "Lowest price"
+        "name": "Lowest price",
+        "state_attributes": {
+          "start": {
+            "name": "Start time"
+          },
+          "end": {
+            "name": "End time"
+          }
+        }
       },
       "highest_price": {
-        "name": "Highest price"
+        "name": "Highest price",
+        "state_attributes": {
+          "start": {
+            "name": "Start time"
+          },
+          "end": {
+            "name": "End time"
+          }
+        }
       },
       "block_average": {
         "name": "{block} average"
