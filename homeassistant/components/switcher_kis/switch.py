@@ -193,7 +193,7 @@ class SwitchereShutterChildLockBaseSwitchEntity(SwitcherEntity, SwitchEntity):
     def _handle_coordinator_update(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
-        self.async_write_ha_state()
+        super._handle_coordinator_update()
 
     @property
     def is_on(self) -> bool:
