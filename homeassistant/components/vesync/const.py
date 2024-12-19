@@ -73,5 +73,4 @@ SKU_TO_BASE_DEVICE = {
     "LTF-F422S-WUSR": "SmartTowerFan",  # Alt ID Model SmartTowerFan
     "LTF-F422_WJP": "SmartTowerFan",  # Alt ID Model SmartTowerFan
     "LTF-F422S-WUS": "SmartTowerFan",  # Alt ID Model SmartTowerFan
-    
 }

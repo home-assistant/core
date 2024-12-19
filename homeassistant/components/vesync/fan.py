@@ -26,7 +26,7 @@ FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
 FAN_MODE_PET = "pet"
 FAN_MODE_TURBO = "turbo"
-FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
+FAN_MODE_ADVANCED_SLEEP = "advanced_sleep"
 
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
@@ -132,7 +132,12 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_ADVANCED_SLEEP, FAN_MODE_TURBO):
+        if self.smartfan.mode in (
+            FAN_MODE_AUTO,
+            FAN_MODE_SLEEP,
+            FAN_MODE_ADVANCED_SLEEP,
+            FAN_MODE_TURBO,
+        ):
             return self.smartfan.mode
         return None
 
