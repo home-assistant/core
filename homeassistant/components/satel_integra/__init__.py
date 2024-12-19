@@ -18,6 +18,7 @@ DEFAULT_PORT = 7094
 DEFAULT_CONF_ARM_HOME_MODE = 1
 DEFAULT_DEVICE_PARTITION = 1
 DEFAULT_ZONE_TYPE = "motion"
+DEFAULT_NAME = "Home"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ DOMAIN = "satel_integra"
 
 DATA_SATEL = "satel_integra"
 
+CONF_NAME = "name"
 CONF_DEVICE_CODE = "code"
 CONF_DEVICE_PARTITIONS = "partitions"
 CONF_ARM_HOME_MODE = "arm_home_mode"
@@ -33,6 +35,12 @@ CONF_ZONE_TYPE = "type"
 CONF_ZONES = "zones"
 CONF_OUTPUTS = "outputs"
 CONF_SWITCHABLE_OUTPUTS = "switchable_outputs"
+
+CONF_ONE_ALARM_PANEL = "one_alarm_panel"
+
+CONF_ARM_MAPPING = "arm_mapping"
+CONF_ARM_MAPPING_HOME = "home_mode"
+CONF_ARM_MAPPING_AWAY = "away_mode"
 
 ZONES = "zones"
 
@@ -51,12 +59,15 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 EDITABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_NAME): cv.string})
-PARTITION_SCHEMA = vol.Schema(
+PARTITION_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_NAME): cv.string})
+ARM_MAPPING_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE_NAME): cv.string,
-        vol.Optional(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
-            [1, 2, 3]
-        ),
+        vol.Required(
+            CONF_ARM_MAPPING_HOME, default=DEFAULT_CONF_ARM_HOME_MODE
+        ): vol.Range(min=0, max=3),
+        vol.Required(
+            CONF_ARM_MAPPING_AWAY, default=DEFAULT_CONF_ARM_HOME_MODE
+        ): vol.Range(min=0, max=3),
     }
 )
 
@@ -74,8 +85,10 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             {
                 vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_DEVICE_CODE): cv.string,
+                vol.Optional(CONF_ONE_ALARM_PANEL, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_PARTITIONS, default={}): {
                     vol.Coerce(int): PARTITION_SCHEMA
                 },
@@ -84,6 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SWITCHABLE_OUTPUTS, default={}): {
                     vol.Coerce(int): EDITABLE_OUTPUT_SCHEMA
                 },
+                vol.Optional(CONF_ARM_MAPPING, default={}): ARM_MAPPING_SCHEMA,
             },
             is_alarm_code_necessary,
         )
@@ -121,8 +135,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         controller.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
-
-    _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
 
     hass.async_create_task(
         async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, conf, config)
