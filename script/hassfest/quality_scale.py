@@ -632,7 +632,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "matter",
     "maxcube",
     "mazda",
-    "mealie",
     "meater",
     "medcom_ble",
     "media_extractor",
