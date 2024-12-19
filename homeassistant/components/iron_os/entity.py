@@ -38,13 +38,6 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
             model=MODEL,
             name="Pinecil",
         )
-        if coordinator.device_info.is_synced:
-            self._attr_device_info.update(
-                DeviceInfo(
-                    sw_version=coordinator.device_info.build,
-                    serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
-                )
-            )
 
     @property
     def available(self) -> bool:
