@@ -10,7 +10,8 @@
           "port": "[%key:common::config_flow::data::port%]",
           "base_path": "Relative path to the printer",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "proto_legacy": "Use IPP v1.1 for compatibility with older printers"
         }
       },
       "zeroconf_confirm": {
