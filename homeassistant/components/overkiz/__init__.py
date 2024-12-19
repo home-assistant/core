@@ -31,7 +31,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -194,7 +198,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
                     "Home Assistant Service",
                 )
             except InvalidCommandException as exception:
-                LOGGER.error(exception)
+                raise HomeAssistantError(exception) from exception
 
     async_register_admin_service(
         hass,
