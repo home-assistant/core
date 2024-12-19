@@ -35,6 +35,7 @@ from .const import (
     KNOWN_PLAYERS,
     KNOWN_SERVERS,
     MANUFACTURER,
+    SERVER_DEVICE_ID,
     SERVER_MODEL,
     SIGNAL_PLAYER_DISCOVERED,
     SIGNAL_PLAYER_REDISCOVERED,
@@ -118,13 +119,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, lms.uuid)},
+        identifiers={(SERVER_DEVICE_ID, lms.uuid)},
         name=lms.name,
         manufacturer=MANUFACTURER,
         model=SERVER_MODEL,
         sw_version=version,
         entry_type=DeviceEntryType.SERVICE,
         connections=mac_connect,
+        configuration_url=lms.generate_image_url(""),
     )
     _LOGGER.debug("LMS Device %s", device)
 
