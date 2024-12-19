@@ -40,7 +40,6 @@ from .const import (
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
     ATTR_TARGET_TEMPERATURE,
-    ATTR_TEMPERATURE as NETATMO_ATTR_TEMPERATURE,
     ATTR_TEMPERATURE_SET,
     ATTR_TIME_PERIOD,
     DATA_SCHEDULES,
@@ -527,7 +526,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         temperature = kwargs[ATTR_TEMPERATURE]
         temperature_set = kwargs[ATTR_TEMPERATURE_SET]
 
-        schedule = self._get_active_schedule()
+        schedule = self.device.home.get_selected_schedule()
         if not schedule:
             raise HomeAssistantError("Could not determine active schedule")
 
@@ -543,7 +542,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             )
 
         await self.device.home.async_set_schedule_temperatures(
-            zone_id=selected_temperature_set.entity_id,
+            zone_id=int(selected_temperature_set.entity_id),
             temps={self.device.entity_id: temperature},
         )
         _LOGGER.debug(
@@ -561,6 +560,3 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 break
 
         self.async_write_ha_state()
-
-    def _get_active_schedule(self) -> Any:
-        return self.device.home.get_selected_schedule()

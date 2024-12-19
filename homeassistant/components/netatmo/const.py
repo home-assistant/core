@@ -94,7 +94,6 @@ ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
-ATTR_TEMPERATURE = "temperature"
 ATTR_TEMPERATURE_SET = "temperature_set"
 ATTR_TIME_PERIOD = "time_period"
 

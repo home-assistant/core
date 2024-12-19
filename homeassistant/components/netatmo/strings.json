@@ -120,11 +120,11 @@
       "fields": {
         "temperature_set": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature_set%]",
-          "description": "Zone name."
+          "description": "Temperature Set."
         },
         "temperature": {
           "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature%]",
-          "description": "Desired room temperature."
+          "description": "Desired thermostat temperature."
         }
       }
     },
