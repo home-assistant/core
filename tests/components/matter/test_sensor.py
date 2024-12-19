@@ -377,4 +377,3 @@ async def test_evse_sensor(
     state = hass.states.get("sensor.mock_evse_evse_fault_state")
     assert state
     assert state.state == "2"
-
