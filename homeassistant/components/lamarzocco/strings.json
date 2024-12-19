@@ -122,9 +122,6 @@
       "preinfusion_off_key": {
         "name": "Preinfusion time Key {key}"
       },
-      "scale_target_key": {
-        "name": "Brew by weight target {key}"
-      },
       "smart_standby_time": {
         "name": "Smart standby time"
       },
