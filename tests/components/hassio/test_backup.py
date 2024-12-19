@@ -860,7 +860,7 @@ async def test_reader_writer_create_missing_reference_error(
 @pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 @pytest.mark.parametrize(
     ("method", "download_call_count", "remove_call_count"),
-    [("download_backup", 1, 0), ("remove_backup", 1, 1)],
+    [("download_backup", 1, 1), ("remove_backup", 1, 1)],
 )
 async def test_reader_writer_create_download_remove_error(
     hass: HomeAssistant,

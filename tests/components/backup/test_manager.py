@@ -399,14 +399,14 @@ async def test_async_initiate_backup(
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize("exception", [BackupAgentError("Boom!"), Exception("Boom!")])
 async def test_async_initiate_backup_with_agent_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mocked_json_bytes: Mock,
-    mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
     path_glob: MagicMock,
     hass_storage: dict[str, Any],
+    exception: Exception,
 ) -> None:
     """Test agent upload error during backup generation."""
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
@@ -456,7 +456,7 @@ async def test_async_initiate_backup_with_agent_error(
         patch.object(
             remote_agent,
             "async_upload_backup",
-            side_effect=BackupAgentError("Test exception"),
+            side_effect=exception,
         ),
     ):
         await ws_client.send_json_auto_id(
@@ -751,17 +751,24 @@ async def test_create_backup_failure_raises_issue(
         assert issue.translation_placeholders == issue_data["translation_placeholders"]
 
 
+@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    "exception", [BackupReaderWriterError("Boom!"), Exception("Boom!")]
+    "exception", [BackupReaderWriterError("Boom!"), BaseException("Boom!")]
 )
 async def test_async_initiate_backup_non_agent_upload_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
     path_glob: MagicMock,
+    hass_storage: dict[str, Any],
     exception: Exception,
 ) -> None:
     """Test an unknown or writer upload error during backup generation."""
+    hass_storage[DOMAIN] = {
+        "data": {},
+        "key": DOMAIN,
+        "version": 1,
+    }
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
@@ -852,6 +859,8 @@ async def test_async_initiate_backup_non_agent_upload_error(
 
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    assert not hass_storage[DOMAIN]["data"]
 
 
 @pytest.mark.usefixtures("mock_backup_generation")

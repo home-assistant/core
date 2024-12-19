@@ -430,11 +430,20 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
+            if isinstance(result, BackupReaderWriterError):
+                # writer errors will affect all agents
+                # no point in continuing
+                raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
                 agent_errors[agent_ids[idx]] = result
                 continue
+            if isinstance(result, Exception):
+                # trap bugs from agents
+                agent_errors[agent_ids[idx]] = result
+                LOGGER.error("Unexpected error: %s", result, exc_info=result)
+                continue
             if isinstance(result, BaseException):
-                raise result  # unexpected or writer error
+                raise result
 
         return agent_errors
 
@@ -824,13 +833,13 @@ class BackupManager:
                 )
                 self.known_backups.add(written_backup.backup, agent_errors)
                 await written_backup.release_stream()
-            except Exception as err:
+            except BaseException as err:
                 self.async_on_backup_event(
                     CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
                 )
                 if isinstance(err, BackupReaderWriterError):
                     raise BackupManagerError(str(err)) from err
-                raise  # unexpected error
+                raise  # manager or unexpected error
             else:
                 if with_automatic_settings:
                     # create backup was successful, update last_completed_automatic_backup
