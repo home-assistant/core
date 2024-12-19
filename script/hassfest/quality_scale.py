@@ -151,7 +151,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "amcrest",
     "ampio",
     "analytics",
-    "analytics_insights",
     "android_ip_webcam",
     "androidtv",
     "androidtv_remote",
