@@ -86,9 +86,7 @@
           "error": "Error",
           "idle": "Idle",
           "ready": "Ready",
-          "sleeping": "Sleeping",
-          "unknown": "Unknown",
-          "invalid": "Invalid"
+          "sleeping": "Sleeping"
         }
       },
       "led_state": {

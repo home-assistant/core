@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SlideCoordinator
 
-PLATFORMS = [Platform.BUTTON, Platform.COVER]
+PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SWITCH]
 type SlideConfigEntry = ConfigEntry[SlideCoordinator]
 
 
