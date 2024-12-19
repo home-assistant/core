@@ -92,6 +92,6 @@ async def test_switch_create(hass: HomeAssistant) -> None:
     mock_output = MagicMock(spec=QbusMqttOutput)
     mock_output.ref_id = "000001/10"
 
-    entity = QbusSwitch.create(mock_output)
+    entity = QbusSwitch(mock_output)
 
     assert isinstance(entity, QbusSwitch)
