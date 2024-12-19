@@ -1,0 +1,15 @@
+execute_command:
+  target:
+    entity:
+      integration: overkiz
+  fields:
+    command:
+      required: true
+      example: setIntensity
+      selector:
+        text:
+    args:
+      required: false
+      example: [30]
+      selector:
+        object:
