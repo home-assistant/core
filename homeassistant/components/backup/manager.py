@@ -895,6 +895,7 @@ class BackupManager:
             "automatic_backup_failed",
             is_fixable=False,
             is_persistent=True,
+            learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_create",
         )
@@ -912,6 +913,7 @@ class BackupManager:
             "automatic_backup_failed",
             is_fixable=False,
             is_persistent=True,
+            learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
             translation_placeholders={"failed_agents": ", ".join(agent_errors)},
