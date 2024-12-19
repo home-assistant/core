@@ -36,9 +36,15 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable:
+    status: exempt
+    comment: |
+      The coordinator handles this.
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      The coordinator handles this.
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
@@ -76,7 +82,9 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: All the options of this integration are managed via the options flow
   repair-issues:
     status: exempt
     comment: |
