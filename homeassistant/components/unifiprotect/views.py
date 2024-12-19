@@ -48,7 +48,7 @@ def async_generate_thumbnail_url(
 def async_generate_snapshot_url(
     nvr_id: str,
     camera_id: str,
-    timestamp: datetime | None = None,
+    timestamp: datetime,
     width: int | None = None,
     height: int | None = None,
 ) -> str:
@@ -57,7 +57,11 @@ def async_generate_snapshot_url(
     url_format = SnapshotProxyView.url
     if TYPE_CHECKING:
         assert url_format is not None
-    url = url_format.format(nvr_id=nvr_id, camera_id=camera_id, timestamp=timestamp)
+    url = url_format.format(
+        nvr_id=nvr_id,
+        camera_id=camera_id,
+        timestamp=timestamp.replace(microsecond=0).isoformat(),
+    )
 
     params = {}
     if width is not None:
