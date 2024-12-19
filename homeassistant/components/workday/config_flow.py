@@ -80,7 +80,9 @@ def add_province_and_language_to_schema(
         }
 
     if provinces := all_countries.get(country):
-        if subdiv_aliases := _country.get_subdivision_aliases():
+        if _country.subdivisions_aliases and (
+            subdiv_aliases := _country.get_subdivision_aliases()
+        ):
             province_options: list[Any] = [
                 SelectOptionDict(value=k, label=", ".join(v))
                 for k, v in subdiv_aliases.items()
