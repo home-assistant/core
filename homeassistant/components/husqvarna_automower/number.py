@@ -112,24 +112,18 @@ async def async_setup_entry(
     """Set up number platform."""
     coordinator = entry.runtime_data
     current_work_areas: dict[str, set[int]] = {}
-    # async_add_entities(
-    #     AutomowerNumberEntity(mower_id, coordinator, description)
-    #     for mower_id in coordinator.data
-    #     for description in MOWER_NUMBER_TYPES
-    #     if description.exists_fn(coordinator.data[mower_id])
-    # )
 
-    def _async_add_new_mower(mower_id: str) -> None:
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(
             AutomowerNumberEntity(mower_id, coordinator, description)
             for description in MOWER_NUMBER_TYPES
+            for mower_id in mower_ids
             if description.exists_fn(coordinator.data[mower_id])
         )
 
-    for mower_id in coordinator.data:
-        _async_add_new_mower(mower_id)
+    _async_add_new_devices(set(coordinator.data))
 
-    coordinator.new_lock_callbacks.append(_async_add_new_mower)
+    coordinator.new_lock_callbacks.append(_async_add_new_devices)
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add/remove entities as needed."""

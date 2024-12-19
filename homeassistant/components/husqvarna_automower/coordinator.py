@@ -49,9 +49,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self.api = api
         self.ws_connected: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
-        self.new_lock_callbacks: list[Callable[[str], None]] = []
+        self.new_lock_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
-        self._locks_last_update: set[str] = set()
+        self._device_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
 
     async def _async_update_data(self) -> dict[str, MowerAttributes]:
@@ -67,7 +67,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         except AuthException as err:
             raise ConfigEntryAuthFailed(err) from err
 
-        self._async_add_remove_locks()
+        self._async_add_remove_device()
         for mower_id in self.data:
             if self.data[mower_id].capabilities.stay_out_zones:
                 self._async_add_remove_stay_out_zones()
@@ -109,33 +109,33 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "reconnect_task",
             )
 
-    def _async_add_remove_locks(self) -> None:
-        """Add new locks, remove non-existing locks."""
-        current_locks = set(self.data)
+    def _async_add_remove_device(self) -> None:
+        """Add new device, remove non-existing device."""
+        current_device = set(self.data)
 
         # Skip update if no changes
-        if current_locks == self._locks_last_update:
+        if current_device == self._device_last_update:
             return
 
-        # Process removed locks
-        removed_locks = self._locks_last_update - current_locks
-        if removed_locks:
-            _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
-            self._remove_locks(removed_locks)
+        # Process removed device
+        removed_device = self._device_last_update - current_device
+        if removed_device:
+            _LOGGER.debug("Removed device: %s", ", ".join(map(str, removed_device)))
+            self._remove_device(removed_device)
 
-        # Process new locks
-        new_locks = current_locks - self._locks_last_update
-        if new_locks:
-            _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
-            self._add_new_locks(new_locks)
+        # Process new device
+        new_device = current_device - self._device_last_update
+        if new_device:
+            _LOGGER.debug("New device found: %s", ", ".join(map(str, new_device)))
+            self._add_new_device(new_device)
 
         # Update lock state
-        self._locks_last_update = current_locks
+        self._device_last_update = current_device
 
-    def _remove_locks(self, removed_locks: set[str]) -> None:
-        """Remove locks from the registry."""
+    def _remove_device(self, removed_device: set[str]) -> None:
+        """Remove device from the registry."""
         device_registry = dr.async_get(self.hass)
-        for lock_id in removed_locks:
+        for lock_id in removed_device:
             if device := device_registry.async_get_device(
                 identifiers={(DOMAIN, str(lock_id))}
             ):
@@ -144,11 +144,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
 
-    def _add_new_locks(self, new_locks: set[str]) -> None:
-        """Add new locks and trigger callbacks."""
-        for lock_id in new_locks:
-            for mower_callback in self.new_lock_callbacks:
-                mower_callback(lock_id)
+    def _add_new_device(self, new_device: set[str]) -> None:
+        """Add new device and trigger callbacks."""
+        for mower_callback in self.new_lock_callbacks:
+            mower_callback(new_device)
 
     def _async_add_remove_stay_out_zones(self) -> None:
         """Add new stay-out zones, remove non-existing stay-out zones."""

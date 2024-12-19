@@ -435,19 +435,16 @@ async def async_setup_entry(
     """Set up sensor platform."""
     coordinator = entry.runtime_data
     current_work_areas: dict[str, set[int]] = {}
-    async_add_entities(
-        AutomowerSensorEntity(mower_id, coordinator, description)
-        for mower_id, data in coordinator.data.items()
-        for description in MOWER_SENSOR_TYPES
-        if description.exists_fn(data)
-    )
 
-    def _async_add_new_lock(mower_id: str) -> None:
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
         async_add_entities(
             AutomowerSensorEntity(mower_id, coordinator, description)
+            for mower_id in mower_ids
             for description in MOWER_SENSOR_TYPES
             if description.exists_fn(coordinator.data[mower_id])
         )
+
+    _async_add_new_devices(set(coordinator.data))
 
     def _async_work_area_listener() -> None:
         """Listen for new work areas and add sensor entities if they did not exist.
@@ -477,7 +474,7 @@ async def async_setup_entry(
                     )
 
     coordinator.async_add_listener(_async_work_area_listener)
-    coordinator.new_lock_callbacks.append(_async_add_new_lock)
+    coordinator.new_lock_callbacks.append(_async_add_new_devices)
     _async_work_area_listener()
 
 

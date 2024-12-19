@@ -32,22 +32,21 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     current_work_areas: dict[str, set[int]] = {}
 
-    def _async_add_new_lock(mower_id: str) -> None:
-        async_add_entities([AutomowerScheduleSwitchEntity(mower_id, coordinator)])
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerScheduleSwitchEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+        )
+
+    _async_add_new_devices(set(coordinator.data))
 
     def _async_add_new_stay_out_zones(
         mower_id: str, stay_out_zone_uids: set[str]
     ) -> None:
         async_add_entities(
-            [
-                StayOutZoneSwitchEntity(coordinator, mower_id, zone_uid)
-                for zone_uid in stay_out_zone_uids
-            ]
+            StayOutZoneSwitchEntity(coordinator, mower_id, zone_uid)
+            for zone_uid in stay_out_zone_uids
         )
-
-    # Add new lock entities for each mower
-    for mower_id in coordinator.data:
-        _async_add_new_lock(mower_id)
 
     # Add new stay-out zone entities for each mower that has stay-out zones
     for mower_id in coordinator.data:
@@ -84,7 +83,7 @@ async def async_setup_entry(
                     )
 
     coordinator.async_add_listener(_async_work_area_listener)
-    coordinator.new_lock_callbacks.append(_async_add_new_lock)
+    coordinator.new_lock_callbacks.append(_async_add_new_devices)
     coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
     _async_work_area_listener()
 
