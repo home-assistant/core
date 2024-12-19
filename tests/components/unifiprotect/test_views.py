@@ -272,8 +272,7 @@ async def test_snapshot_bad_params(
 ) -> None:
     """Test invalid bad query parameters."""
 
-    ufp.api.get_event_thumbnail = AsyncMock()
-
+    ufp.api.request = AsyncMock()
     await init_entry(hass, ufp, [camera])
 
     url = async_generate_snapshot_url(
@@ -284,7 +283,7 @@ async def test_snapshot_bad_params(
     response = cast(ClientResponse, await http_client.get(url))
 
     assert response.status == 400
-    ufp.api.get_event_thumbnail.assert_not_called()
+    ufp.api.request.assert_not_called()
 
 
 async def test_video_bad_event(
