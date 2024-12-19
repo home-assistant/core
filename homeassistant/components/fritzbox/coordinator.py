@@ -134,13 +134,6 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
                 LOGGER.debug("Assume device %s as unavailable", device.name)
                 device.present = False
 
-            if device.has_lightbulb:
-                # Ensure pre-loading of light capabilities
-                if not hasattr(device, "supported_colors"):
-                    device.supported_colors = device.get_colors()
-                if not hasattr(device, "supported_color_temps"):
-                    device.supported_color_temps = device.get_color_temps()
-
             device_data[device.ain] = device
 
         template_data = {}
