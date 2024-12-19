@@ -28,7 +28,12 @@ from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
 from ..const import LAST_REPORTED_SCHEMA_VERSION
-from ..db_schema import SHARED_ATTR_OR_LEGACY_ATTRIBUTES, StateAttributes, States
+from ..db_schema import (
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
+    StateAttributes,
+    States,
+    StatesMeta,
+)
 from ..filters import Filters
 from ..models import (
     LazyState,
@@ -558,40 +563,38 @@ def _get_start_time_state_for_entities_stmt(
     include_last_changed: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    # We got an include-list of entities, accelerate the query by filtering already
-    # in the inner and the outer query.
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last state change before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last state change
+    # before a specific point in time for all entities.
     stmt = (
         _stmt_and_join_attributes_for_start_state(
             no_attributes, include_last_changed, False
         )
+        .select_from(StatesMeta)
         .join(
-            (
-                most_recent_states_for_entities_by_date := (
-                    select(
-                        States.metadata_id.label("max_metadata_id"),
-                        func.max(States.last_updated_ts).label("max_last_updated"),
-                    )
-                    .filter(
-                        (States.last_updated_ts >= run_start_ts)
-                        & (States.last_updated_ts < epoch_time)
-                        & States.metadata_id.in_(metadata_ids)
-                    )
-                    .group_by(States.metadata_id)
-                    .subquery()
-                )
-            ),
+            States,
             and_(
-                States.metadata_id
-                == most_recent_states_for_entities_by_date.c.max_metadata_id,
                 States.last_updated_ts
-                == most_recent_states_for_entities_by_date.c.max_last_updated,
+                == (
+                    select(States.last_updated_ts)
+                    .where(
+                        (StatesMeta.metadata_id == States.metadata_id)
+                        & (States.last_updated_ts < epoch_time)
+                        & (States.last_updated_ts >= run_start_ts)
+                    )
+                    .order_by(States.last_updated_ts.desc())
+                    .limit(1)
+                )
+                .scalar_subquery()
+                .correlate(StatesMeta),
+                States.metadata_id == StatesMeta.metadata_id,
             ),
         )
-        .filter(
-            (States.last_updated_ts >= run_start_ts)
-            & (States.last_updated_ts < epoch_time)
-            & States.metadata_id.in_(metadata_ids)
-        )
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
     )
     if no_attributes:
         return stmt
