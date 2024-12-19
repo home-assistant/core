@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -97,11 +96,6 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             threshold = self.data.max_tip_temp_ability - 5
             return self.data.live_temp <= threshold
         return False
-
-    async def _async_setup(self) -> None:
-        """Set up the coordinator."""
-        with suppress(CommunicationError, TimeoutError):
-            await self._update_device_info()
 
     async def _update_device_info(self) -> None:
         """Update device info.
