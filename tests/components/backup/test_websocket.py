@@ -12,6 +12,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
     BackupReaderWriterError,
+    Folder,
 )
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
@@ -476,27 +477,38 @@ async def test_generate_calls_create(
         )
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("create_backup_settings", "expected_call_params"),
     [
         (
-            {},
             {
-                "agent_ids": [],
+                "agent_ids": [LOCAL_AGENT_ID],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": [LOCAL_AGENT_ID],
+                "backup_name": ANY,
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
                 "include_addons": None,
                 "include_all_addons": False,
                 "include_database": True,
                 "include_folders": None,
                 "include_homeassistant": True,
-                "name": None,
+                "on_progress": ANY,
                 "password": None,
-                "with_automatic_settings": True,
             },
         ),
         (
             {
-                "agent_ids": ["test-agent"],
+                "agent_ids": [LOCAL_AGENT_ID],
                 "include_addons": ["test-addon"],
                 "include_all_addons": False,
                 "include_database": True,
@@ -505,15 +517,19 @@ async def test_generate_calls_create(
                 "password": "test-password",
             },
             {
-                "agent_ids": ["test-agent"],
+                "agent_ids": [LOCAL_AGENT_ID],
+                "backup_name": "test-name",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
                 "include_addons": ["test-addon"],
                 "include_all_addons": False,
                 "include_database": True,
-                "include_folders": ["media"],
+                "include_folders": [Folder.MEDIA],
                 "include_homeassistant": True,
-                "name": "test-name",
+                "on_progress": ANY,
                 "password": "test-password",
-                "with_automatic_settings": True,
             },
         ),
     ],
@@ -521,17 +537,17 @@ async def test_generate_calls_create(
 async def test_generate_with_default_settings_calls_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
+    create_backup: AsyncMock,
     create_backup_settings: dict[str, Any],
     expected_call_params: dict[str, Any],
 ) -> None:
     """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
-    await setup_backup_integration(hass, with_hassio=False)
-
     client = await hass_ws_client(hass)
     freezer.move_to("2024-11-13 12:01:00+01:00")
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass, with_hassio=False)
 
     await client.send_json_auto_id(
         {"type": "backup/config/update", "create_backup": create_backup_settings}
@@ -539,17 +555,43 @@ async def test_generate_with_default_settings_calls_create(
     result = await client.receive_json()
     assert result["success"]
 
-    with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_initiate_backup",
-        return_value=NewBackup(backup_job_id="abc123"),
-    ) as generate_backup:
-        await client.send_json_auto_id(
-            {"type": "backup/generate_with_automatic_settings"}
-        )
-        result = await client.receive_json()
-        assert result["success"]
-        assert result["result"] == {"backup_job_id": "abc123"}
-        generate_backup.assert_called_once_with(**expected_call_params)
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["create_backup"]
+        == create_backup_settings
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        is None
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        is None
+    )
+
+    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
+    result = await client.receive_json()
+    assert result["success"]
+    assert result["result"] == {"backup_job_id": "abc123"}
+
+    await hass.async_block_till_done()
+    create_backup.assert_called_once_with(**expected_call_params)
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        is not None
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
