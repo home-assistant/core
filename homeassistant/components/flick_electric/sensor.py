@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from decimal import Decimal
+import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
@@ -10,9 +11,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_END_AT, ATTR_START_AT
+from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT
 from .coordinator import FlickConfigEntry, FlickElectricDataCoordinator
 
+_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
@@ -44,13 +46,27 @@ class FlickPricingSensor(CoordinatorEntity[FlickElectricDataCoordinator], Sensor
     @property
     def native_value(self) -> Decimal:
         """Return the state of the sensor."""
-        return self.coordinator.data.price
+        # The API should return a unit price with quantity of 1.0 when no start/end time is provided
+        if self.coordinator.data.quantity != 1:
+            _LOGGER.warning(
+                "Unexpected quantity for unit price: %s", self.coordinator.data
+            )
+        return self.coordinator.data.cost
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
+        components: dict[str, Decimal] = {}
+
+        for component in self.coordinator.data.components:
+            if component.charge_setter not in ATTR_COMPONENTS:
+                _LOGGER.warning("Found unknown component: %s", component.charge_setter)
+                continue
+
+            components[component.charge_setter] = component.value
+
         return {
             ATTR_START_AT: self.coordinator.data.start_at,
             ATTR_END_AT: self.coordinator.data.end_at,
-            # TODO: Components
+            **components,
         }

@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyflick"],
-  "requirements": ["PyFlick==1.0.0"]
+  "requirements": ["PyFlick==1.1.0"]
 }
