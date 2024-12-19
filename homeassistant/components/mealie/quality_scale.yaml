@@ -41,9 +41,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: This is a self-hosted service without a way to discover.
+  discovery-update-info: todo
   discovery: todo
   docs-data-update: done
   docs-examples: done
