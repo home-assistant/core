@@ -56,6 +56,7 @@ async def async_setup_entry(
                 subscription_code=CODE.STATUS_CHANGED,
                 data_root=(DEVICE.BODY,),
                 key=body_index,
+                translation_key=f"body_{body_index}",
             ),
         )
         for body_index in gateway.get_data(DEVICE.BODY)
@@ -97,7 +98,6 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
 
         self._attr_min_temp = self.entity_data[ATTR.MIN_SETPOINT]
         self._attr_max_temp = self.entity_data[ATTR.MAX_SETPOINT]
-        self._attr_name = self.entity_data[VALUE.HEAT_STATE][ATTR.NAME]
         self._last_preset = None
 
     @property
