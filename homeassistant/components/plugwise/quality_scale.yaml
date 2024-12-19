@@ -17,10 +17,8 @@ rules:
   common-modules: done
   docs-high-level-description:
     status: todo
-    comment: Rewrite top section, docs PR prepared waiting for 36087 merge
-  docs-installation-instructions:
-    status: todo
-    comment: Docs PR 36087
+    comment: Top section rewritten, PR 36333
+  docs-installation-instructions: done
   docs-removal-instructions: done
   docs-actions: done
   brands: done
@@ -37,7 +35,7 @@ rules:
   integration-owner: done
   docs-installation-parameters:
     status: todo
-    comment: Docs PR 36087 (partial) + todo rewrite generically (PR prepared)
+    comment: Docs PR 36087 (done) + more generic rewrite in PR 36333
   docs-configuration-parameters:
     status: exempt
     comment: Plugwise has no options flow
@@ -62,23 +60,23 @@ rules:
     comment: This integration does not have repairs
   docs-use-cases:
     status: todo
-    comment: Check for completeness, PR prepared waiting for 36087 merge
+    comment: Added via PR 36333
   docs-supported-devices:
     status: todo
-    comment: The list is there but could be improved for readability, PR prepared waiting for 36087 merge
+    comment: Rewritten top section with overview of devices + improved specific list in PR 36333
   docs-supported-functions:
     status: todo
-    comment: Check for completeness, PR prepared waiting for 36087 merge
+    comment: Added accordingly in PR 36333
   docs-data-update: done
   docs-known-limitations:
     status: todo
-    comment: Partial in 36087 but could be more elaborate
+    comment: Partial in 36087 but more elaborate and complete in PR 36333
   docs-troubleshooting:
     status: todo
-    comment: Check for completeness, PR prepared waiting for 36087 merge
+    comment: Improved in PR 36333
   docs-examples:
     status: todo
-    comment: Check for completeness, PR prepared waiting for 36087 merge
+    comment: Improved in PR 36333
   ## Platinum
   async-dependency: done
   inject-websession: done
