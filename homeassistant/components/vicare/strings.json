@@ -14,7 +14,7 @@
           "username": "The email address to login to your ViCare account.",
           "password": "The password to login to your ViCare account.",
           "client_id": "The ID of the API client created in the Viessmann developer portal.",
-          "heating_type": "Use to overrule the device auto detection."
+          "heating_type": "Allows to overrule the device auto detection."
         }
       },
       "reauth_confirm": {
