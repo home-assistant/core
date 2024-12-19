@@ -114,7 +114,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 {
                     vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
                     vol.Required(ATTR_KEY): cv.string,
-                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int),
+                    vol.Required(ATTR_VALUE): vol.Any(str, bool, int, object),
                 }
             )
         ),
