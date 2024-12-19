@@ -65,10 +65,10 @@
         "name": "Highest price",
         "state_attributes": {
           "start": {
-            "name": "Start time"
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::start::name%]"
           },
           "end": {
-            "name": "End time"
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::end::name%]"
           }
         }
       },
