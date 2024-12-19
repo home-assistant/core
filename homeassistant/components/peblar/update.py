@@ -5,7 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
+from homeassistant.components.update import (
+    UpdateDeviceClass,
+    UpdateEntity,
+    UpdateEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +34,7 @@ class PeblarUpdateEntityDescription(UpdateEntityDescription):
 DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
     PeblarUpdateEntityDescription(
         key="firmware",
-        translation_key="firmware",
+        device_class=UpdateDeviceClass.FIRMWARE,
         installed_fn=lambda x: x.current.firmware,
         available_fn=lambda x: x.available.firmware,
     ),

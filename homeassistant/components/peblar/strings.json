@@ -36,9 +36,6 @@
     "update": {
       "customization": {
         "name": "Customization"
-      },
-      "firmware": {
-        "name": "Firmware"
       }
     }
   }
