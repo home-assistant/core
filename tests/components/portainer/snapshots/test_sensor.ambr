@@ -1,0 +1,193 @@
+# serializer version: 1
+# name: test_sensor_snapshot[sensor.local_linkding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.local_linkding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Linkding',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': '2-cd1939dc524aca2ff7e3b1afdc80c3609466ec79b80dd0cb6ffed65df3c66088-container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.local_linkding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'local Linkding',
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.local_linkding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.local_portainer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.local_portainer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Portainer',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': '2-7c20c78e1734a50af2d881aace4a2f760d249e2f1db7157f1ffb431f12ed12dd-container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.local_portainer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'local Portainer',
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.local_portainer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.local_ts_linkding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.local_ts_linkding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Ts-linkding',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': '2-e194753bd70cbe8a8c8d5747c3fb5b5e3626f0960609e6244ddc0db2912147f8-container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.local_ts_linkding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'local Ts-linkding',
+      'options': list([
+        'created',
+        'dead',
+        'exited',
+        'running',
+        'restarting',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.local_ts_linkding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
