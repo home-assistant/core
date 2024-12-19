@@ -5,7 +5,7 @@ from typing import Final
 from homeassistant.const import Platform
 
 DOMAIN: Final = "qbus"
-PLATFORMS: list = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 CONF_ID: Final = "id"
 CONF_SERIAL_NUMBER: Final = "serial"
