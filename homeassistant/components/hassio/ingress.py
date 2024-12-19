@@ -284,23 +284,32 @@ def _is_websocket(request: web.Request) -> bool:
     )
 
 
+_CLOSE_TYPES = {
+    aiohttp.WSMsgType.CLOSE,
+    aiohttp.WSMsgType.CLOSING,
+    aiohttp.WSMsgType.CLOSED,
+}
+
+
 async def _websocket_forward(
     ws_from: web.WebSocketResponse | ClientWebSocketResponse,
     ws_to: web.WebSocketResponse | ClientWebSocketResponse,
 ) -> None:
     """Handle websocket message directly."""
     try:
-        async for msg in ws_from:
-            if msg.type is aiohttp.WSMsgType.TEXT:
+        while msg := await ws_from.receive():
+            msg_type = msg.type
+            if msg_type is aiohttp.WSMsgType.TEXT:
                 await ws_to.send_str(msg.data)
-            elif msg.type is aiohttp.WSMsgType.BINARY:
+            elif msg_type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
-            elif msg.type is aiohttp.WSMsgType.PING:
+            elif msg_type is aiohttp.WSMsgType.PING:
                 await ws_to.ping()
-            elif msg.type is aiohttp.WSMsgType.PONG:
+            elif msg_type is aiohttp.WSMsgType.PONG:
                 await ws_to.pong()
-            elif ws_to.closed:
+            elif msg_type in _CLOSE_TYPES:
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
+                break
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
     except ConnectionResetError:
