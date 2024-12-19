@@ -4,16 +4,25 @@ from __future__ import annotations
 
 from typing import Any
 
+from goslideapi.goslideapi import (
+    AuthenticationFailed,
+    ClientConnectionError,
+    ClientTimeoutError,
+    DigestAuthCalcError,
+)
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SlideConfigEntry
+from .const import DOMAIN
 from .coordinator import SlideCoordinator
 from .entity import SlideEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -47,10 +56,38 @@ class SlideSwitch(SlideEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off touchgo."""
-        await self.coordinator.slide.slide_set_touchgo(self.coordinator.host, False)
+        try:
+            await self.coordinator.slide.slide_set_touchgo(self.coordinator.host, False)
+        except (
+            ClientConnectionError,
+            AuthenticationFailed,
+            ClientTimeoutError,
+            DigestAuthCalcError,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="touchgo_error",
+                translation_placeholders={
+                    "state": "off",
+                },
+            ) from ex
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on touchgo."""
-        await self.coordinator.slide.slide_set_touchgo(self.coordinator.host, True)
+        try:
+            await self.coordinator.slide.slide_set_touchgo(self.coordinator.host, True)
+        except (
+            ClientConnectionError,
+            AuthenticationFailed,
+            ClientTimeoutError,
+            DigestAuthCalcError,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="touchgo_error",
+                translation_placeholders={
+                    "state": "on",
+                },
+            ) from ex
         await self.coordinator.async_request_refresh()

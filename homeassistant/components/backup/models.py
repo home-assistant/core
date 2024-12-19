@@ -33,6 +33,7 @@ class AgentBackup:
     backup_id: str
     date: str
     database_included: bool
+    extra_metadata: dict[str, bool | str]
     folders: list[Folder]
     homeassistant_included: bool
     homeassistant_version: str | None  # None if homeassistant_included is False
@@ -44,6 +45,12 @@ class AgentBackup:
         """Return a dict representation of this backup."""
         return asdict(self)
 
+    def as_frontend_json(self) -> dict:
+        """Return a dict representation of this backup for sending to frontend."""
+        return {
+            key: val for key, val in asdict(self).items() if key != "extra_metadata"
+        }
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         """Create an instance from a JSON serialization."""
@@ -52,6 +59,7 @@ class AgentBackup:
             backup_id=data["backup_id"],
             date=data["date"],
             database_included=data["database_included"],
+            extra_metadata=data["extra_metadata"],
             folders=[Folder(folder) for folder in data["folders"]],
             homeassistant_included=data["homeassistant_included"],
             homeassistant_version=data["homeassistant_version"],
