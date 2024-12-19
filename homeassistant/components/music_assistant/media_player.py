@@ -566,17 +566,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._attr_media_position = int(player.elapsed_time)
+            self._attr_media_position = int(player.elapsed_time or 0)
             self._attr_media_position_updated_at = (
                 utc_from_timestamp(player.elapsed_time_last_updated)
                 if player.elapsed_time_last_updated
                 else None
             )
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._prev_time = player.elapsed_time
+            self._prev_time = player.elapsed_time or 0
             return
 
         if queue is None:
