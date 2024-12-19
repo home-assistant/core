@@ -10,17 +10,18 @@ from PyViCare.PyViCareUtils import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
-from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN, HeatingType
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+
+# from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_MAC, MODULE
+from . import MOCK_MAC, MODULE, setup_integration
+from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 VALID_CONFIG = {
     CONF_USERNAME: "foo@bar.com",
@@ -175,7 +176,9 @@ async def test_form_dhcp(
     mock_setup_entry.assert_called_once()
 
 
-async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
+async def test_dhcp_single_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -192,7 +195,9 @@ async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
+async def test_user_input_single_instance_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -206,3 +211,42 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test config flow options."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.auto.value
+    # state = hass.states.get("sensor.model0_heating_gas_consumption_today")
+    # assert state
+    # assert state.state == "0"
+
+    # await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_HEATING_TYPE: HeatingType.heatpump.value},
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        mock_config_entry.options.get(CONF_HEATING_TYPE) == HeatingType.heatpump.value
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
