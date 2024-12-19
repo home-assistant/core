@@ -108,6 +108,10 @@
         "path": "Path",
         "language": "Language"
       },
+      "data_description": {
+        "username": "The username of your {account_name} account.",
+        "password": "The password of your {account_name} account."
+      },
       "create_entry": {
         "authenticated": "Successfully authenticated"
       },
