@@ -55,6 +55,45 @@
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a chime"
+    },
+    "invalid_parameter": {
+      "message": "Invalid input parameter: {err}"
+    },
+    "api_error": {
+      "message": "The device responded with a error: {err}"
+    },
+    "invalid_content_type": {
+      "message": "Received a different content type than expected: {err}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials: {err}"
+    },
+    "login_error": {
+      "message": "Error during login attempt: {err}"
+    },
+    "no_data": {
+      "message": "Device returned no data: {err}"
+    },
+    "unexpected_data": {
+      "message": "Device returned unexpected data: {err}"
+    },
+    "not_supported": {
+      "message": "Function not supported by this device: {err}"
+    },
+    "subscription_error": {
+      "message": "Error during ONVIF subscription: {err}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the device: {err}"
+    },
+    "timeout": {
+      "message": "Timeout waiting on a response: {err}"
+    },
+    "firmware_install_error": {
+      "message": "Error trying to update Reolink firmware: {err}"
+    },
+    "config_entry_not_ready": {
+      "message": "Error while trying to setup {host}: {err}"
     }
   },
   "issues": {
