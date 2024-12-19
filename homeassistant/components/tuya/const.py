@@ -265,6 +265,9 @@ class DPCode(StrEnum):
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
+    RELAY_STATUS_1 = "relay_status_1"
+    RELAY_STATUS_2 = "relay_status_2"
+    RELAY_STATUS_3 = "relay_status_3"
     REMAIN_TIME = "remain_time"
     RESET_DUSTER_CLOTH = "reset_duster_cloth"
     RESET_EDGE_BRUSH = "reset_edge_brush"
@@ -360,6 +363,9 @@ class DPCode(StrEnum):
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
     VOICE_TIMES = "voice_times"
+    VOICE_MIC = "voice_mic"
+    VOICE_BT_PLAY = "voice_bt_play"
+    VOICE_VOL = "voice_vol"
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time

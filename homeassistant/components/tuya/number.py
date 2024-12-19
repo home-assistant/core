@@ -292,6 +292,15 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
+    # Moes Smart Control Panel Mini
+    # Not documented
+    "dgnzk": (
+        NumberEntityDescription(
+            key=DPCode.VOICE_VOL,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="voice_volume",
+        )
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
