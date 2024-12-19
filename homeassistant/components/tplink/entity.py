@@ -73,6 +73,13 @@ EXCLUDED_FEATURES = {
     "check_latest_firmware",
     # siren
     "alarm",
+    # camera
+    "pan_left",
+    "pan_right",
+    "pan_step",
+    "tilt_up",
+    "tilt_down",
+    "tilt_step",
 }
 
 
@@ -87,6 +94,13 @@ LEGACY_KEY_MAPPING = {
 @dataclass(frozen=True, kw_only=True)
 class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
+
+    deprecated_info: DeprecatedInfo | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkModuleEntityDescription(EntityDescription):
+    """Base class for a TPLink module based entity description."""
 
     deprecated_info: DeprecatedInfo | None = None
 
