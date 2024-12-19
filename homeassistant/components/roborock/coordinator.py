@@ -16,6 +16,7 @@ from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClient
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -26,6 +27,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
+from .roborock_storage import RoborockStorage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -34,6 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -72,6 +76,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         # Maps from map flag to map name
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
+        self.roborock_storage = RoborockStorage(hass, self.config_entry.entry_id)
 
     async def verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
@@ -129,12 +134,28 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def get_maps(self) -> None:
         """Add a map to the coordinators mapping."""
+        self.maps = await self.roborock_storage.async_load_map_info(self.duid)
         maps = await self.api.get_multi_maps_list()
+        update = False
         if maps and maps.map_info:
             for roborock_map in maps.map_info:
-                self.maps[roborock_map.mapFlag] = RoborockMapInfo(
-                    flag=roborock_map.mapFlag, name=roborock_map.name, rooms={}
-                )
+                # To prevent weirdness - if there is a map without a name
+                # - set its name to its flag
+                map_name = roborock_map.name or str(roborock_map.mapFlag)
+                if roborock_map.mapFlag not in self.maps:
+                    self.maps[roborock_map.mapFlag] = RoborockMapInfo(
+                        flag=roborock_map.mapFlag, name=map_name, rooms={}
+                    )
+                    update = True
+                elif (
+                    roborock_map.mapFlag in self.maps
+                    and self.maps[roborock_map.mapFlag].name != map_name
+                ):
+                    _LOGGER.warning(
+                        "A map's name has updated, please reload the integration"
+                    )
+        if update:
+            await self.roborock_storage.async_save_map_info(self.duid, self.maps)
 
     async def get_rooms(self) -> None:
         """Get all of the rooms for the current map."""
@@ -143,11 +164,16 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         # about selected.
         if self.current_map in self.maps:
             iot_rooms = await self.api.get_room_mapping()
+            update = False
             if iot_rooms is not None:
                 for room in iot_rooms:
-                    self.maps[self.current_map].rooms[room.segment_id] = (
-                        self._home_data_rooms.get(room.iot_id, "Unknown")
-                    )
+                    if room.segment_id not in self.maps[self.current_map].rooms:
+                        self.maps[self.current_map].rooms[room.segment_id] = (
+                            self._home_data_rooms.get(room.iot_id, "Unknown")
+                        )
+                        update = True
+            if update:
+                await self.roborock_storage.async_save_map_info(self.duid, self.maps)
 
     @cached_property
     def duid(self) -> str:

@@ -1,7 +1,9 @@
 """Global fixtures for Roborock integration."""
 
 from copy import deepcopy
+import shutil
 from unittest.mock import patch
+import uuid
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
@@ -68,6 +70,9 @@ def bypass_api_fixture() -> None:
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
+        ),
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
             return_value=HOME_DATA,
@@ -176,3 +181,14 @@ async def setup_entry(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     return mock_roborock_entry
+
+
+@pytest.fixture(autouse=True)
+def cleanup_map_storage(hass: HomeAssistant):
+    """Test cleanup, remove any map storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.MAP_PATH", new=tmp_path
+    ):
+        yield tmp_path
+        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
