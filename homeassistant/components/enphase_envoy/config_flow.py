@@ -156,8 +156,6 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self._get_reauth_entry()
-        if unique_id := self._reauth_entry.unique_id:
-            await self.async_set_unique_id(unique_id, raise_on_progress=False)
         return await self.async_step_user()
 
     def _async_envoy_name(self) -> str:
