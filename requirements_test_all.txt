@@ -929,7 +929,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habitipy==0.3.3
+habiticalib==0.3.1
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
