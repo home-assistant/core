@@ -52,8 +52,6 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_auth(self, user_input: Mapping[str, Any]) -> bool:
         self.auth = SimpleFlickAuth(
-            # TODO: Remove UAT
-            host="https://api.flickuat.com",
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             websession=aiohttp_client.async_get_clientsession(self.hass),

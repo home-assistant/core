@@ -125,8 +125,6 @@ class HassFlickAuth(AbstractFlickAuth):
         _LOGGER.debug("Fetching new access token")
 
         token = await self.get_new_token(
-            # TODO: Remove UAT
-            host="https://api.flickuat.com",
             username=self._entry.data[CONF_USERNAME],
             password=self._entry.data[CONF_PASSWORD],
             client_id=self._entry.data.get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID),
