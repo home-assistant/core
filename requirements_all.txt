@@ -1064,7 +1064,7 @@ greenwavereality==0.5.1
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==1.5.0
+growattServer==1.6.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0

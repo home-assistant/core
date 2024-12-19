@@ -1,0 +1,33 @@
+update_tlx_inverter_time_segment:
+  fields:
+    segment_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 9
+      example: 1
+    batt_mode:
+      required: true
+      selector:
+        select:
+          options:
+            - "load-first"
+            - "battery-first"
+            - "grid-first"
+      example: "load-first"
+    start_time:
+      required: true
+      selector:
+        date:
+      example: "08:00"
+    end_time:
+      required: true
+      selector:
+        date:
+      example: "12:00"
+    enabled:
+      required: true
+      selector:
+        boolean:
+      example: true
