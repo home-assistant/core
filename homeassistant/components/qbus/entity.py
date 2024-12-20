@@ -54,6 +54,7 @@ class QbusEntity(Entity, ABC):
         self.entity_id = entity_id_format.format(
             f"qbus_{mqtt_output.device.serial_number}_{ref_id}{id_suffix}"
         )
+        self._attr_name = mqtt_output.name.title()
 
         self._attr_device_info = DeviceInfo(
             name=mqtt_output.name.title(),
@@ -74,11 +75,6 @@ class QbusEntity(Entity, ABC):
             mqtt_output.device.id, mqtt_output.id
         )
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._mqtt_output.name.title() if self._mqtt_output else ""
-
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
@@ -86,9 +82,6 @@ class QbusEntity(Entity, ABC):
             self.hass, self._state_topic, self._state_received
         )
         self.async_on_remove(unsubscribe)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
 
     @abstractmethod
     async def _state_received(self, msg: ReceiveMessage) -> None:

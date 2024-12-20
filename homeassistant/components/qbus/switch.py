@@ -26,23 +26,24 @@ async def async_setup_entry(
     """Set up switch entities."""
     coordinator = entry.runtime_data
 
-    # Keep a record of added entities
-    known_items: list[QbusMqttOutput] = []
+    added_outputs: list[QbusMqttOutput] = []
 
     # Local function that calls add_entities for new entities
-    def _check_items() -> None:
-        new_items = [
+    def _check_outputs() -> None:
+        added_output_ids = {k.id for k in added_outputs}
+
+        new_outputs = [
             item
             for item in coordinator.data
-            if item.type == "onoff" and item.id not in {k.id for k in known_items}
+            if item.type == "onoff" and item.id not in added_output_ids
         ]
 
-        if new_items:
-            known_items.extend(new_items)
-            add_entities([QbusSwitch(item) for item in new_items])
+        if new_outputs:
+            added_outputs.extend(new_outputs)
+            add_entities([QbusSwitch(output) for output in new_outputs])
 
-    _check_items()
-    entry.async_on_unload(coordinator.async_add_listener(_check_items))
+    _check_outputs()
+    entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
 
 
 class QbusSwitch(QbusEntity, SwitchEntity):
@@ -58,12 +59,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
         super().__init__(mqtt_output, ENTITY_ID_FORMAT)
 
-        self._is_on = False
-
-    @property
-    def is_on(self) -> bool:
-        """Return if the switch is on."""
-        return self._is_on
+        self._attr_is_on = False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -71,7 +67,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(True)
 
         await self._async_publish_output_state(state)
-        self._is_on = True
+        self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -79,7 +75,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         state.write_value(False)
 
         await self._async_publish_output_state(state)
-        self._is_on = False
+        self._attr_is_on = False
 
     async def _state_received(self, msg: ReceiveMessage) -> None:
         output = self._message_factory.parse_output_state(
@@ -87,5 +83,5 @@ class QbusSwitch(QbusEntity, SwitchEntity):
         )
 
         if output is not None:
-            self._is_on = output.read_value()
+            self._attr_is_on = output.read_value()
             self.async_schedule_update_ha_state()
