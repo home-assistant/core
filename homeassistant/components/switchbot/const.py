@@ -71,19 +71,13 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO,
 }
 
-CLASS_BY_DEVICE = {
-    SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
-    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
-    SupportedModels.BOT.value: switchbot.Switchbot,
-    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
-    SupportedModels.BULB.value: switchbot.SwitchbotBulb,
-    SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
-    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
-    SupportedModels.LOCK.value: switchbot.SwitchbotLock,
-    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
-    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
-    SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
-    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
+ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
+    SwitchbotModel, switchbot.SwitchbotLock | switchbot.SwitchbotRelaySwitch
+] = {
+    SwitchbotModel.LOCK: switchbot.SwitchbotLock,
+    SwitchbotModel.LOCK_PRO: switchbot.SwitchbotLock,
+    SwitchbotModel.RELAY_SWITCH_1PM: switchbot.SwitchbotRelaySwitch,
+    SwitchbotModel.RELAY_SWITCH_1: switchbot.SwitchbotRelaySwitch,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

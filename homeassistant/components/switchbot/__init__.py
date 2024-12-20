@@ -19,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    CLASS_BY_DEVICE,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
@@ -65,6 +64,20 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HUB2.value: [Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
+}
+CLASS_BY_DEVICE = {
+    SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
+    SupportedModels.CURTAIN.value: switchbot.SwitchbotCurtain,
+    SupportedModels.BOT.value: switchbot.Switchbot,
+    SupportedModels.PLUG.value: switchbot.SwitchbotPlugMini,
+    SupportedModels.BULB.value: switchbot.SwitchbotBulb,
+    SupportedModels.LIGHT_STRIP.value: switchbot.SwitchbotLightStrip,
+    SupportedModels.HUMIDIFIER.value: switchbot.SwitchbotHumidifier,
+    SupportedModels.LOCK.value: switchbot.SwitchbotLock,
+    SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
+    SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
+    SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
 }
 
 

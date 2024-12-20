@@ -10,6 +10,7 @@ from switchbot import (
     SwitchBotAdvertisement,
     SwitchbotApiError,
     SwitchbotAuthenticationError,
+    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -35,7 +36,6 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CLASS_BY_DEVICE,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
@@ -45,6 +45,7 @@ from .const import (
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     ENCRYPTED_MODELS,
+    ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_MODEL_TYPES,
     SupportedModels,
@@ -179,8 +180,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_adv is not None
         description_placeholders = {}
         if user_input is not None:
-            model = self._discovered_adv.data["modelName"]
-            cls = CLASS_BY_DEVICE[model]
+            model: SwitchbotModel = self._discovered_adv.data["modelName"]
+            cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
             try:
                 key_details = await cls.async_retrieve_encryption_key(
                     async_get_clientsession(self.hass),
@@ -241,8 +242,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._discovered_adv is not None
         if user_input is not None:
-            model = self._discovered_adv.data["modelName"]
-            cls = CLASS_BY_DEVICE[model]
+            model: SwitchbotModel = self._discovered_adv.data["modelName"]
+            cls = ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS[model]
             if not await cls.verify_encryption_key(
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
