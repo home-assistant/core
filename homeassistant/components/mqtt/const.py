@@ -4,7 +4,7 @@ import logging
 
 import jinja2
 
-from homeassistant.const import CONF_PAYLOAD, Platform
+from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
 from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
@@ -162,6 +162,15 @@ PAYLOAD_NONE = "None"
 
 ENTRY_VERSION = 1
 ENTRY_MINOR_VERSION = 2
+
+# Split mqtt entry data and options
+# Can be removed with HA Core 2026.1.0
+ENTRY_OPTION_FIELDS = (
+    CONF_DISCOVERY,
+    CONF_DISCOVERY_PREFIX,
+    "birth_message",
+    "will_message",
+)
 
 ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,

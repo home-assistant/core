@@ -78,6 +78,7 @@ from .const import (  # noqa: F401
     DOMAIN,
     ENTITY_PLATFORMS,
     ENTRY_MINOR_VERSION,
+    ENTRY_OPTION_FIELDS,
     ENTRY_VERSION,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
@@ -111,16 +112,6 @@ from .util import (  # noqa: F401
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-# Split mqtt entry data and options
-# Can be removed with HA Core 2026.1.0
-ENTRY_OPTION_FIELDS = (
-    CONF_DISCOVERY,
-    CONF_DISCOVERY_PREFIX,
-    "birth_message",
-    "will_message",
-)
 
 SERVICE_PUBLISH = "publish"
 SERVICE_DUMP = "dump"
@@ -367,7 +358,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# Can be removed with HA Core 2026.1.0
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the options from config entry data."""
     data: dict[str, Any] = dict(entry.data)
