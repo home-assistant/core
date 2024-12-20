@@ -61,7 +61,7 @@ rules:
     comment: |
       This integration does not have any irrelevant entities.
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
