@@ -598,7 +598,7 @@ async def test_calling_listener_on_login_logout(
 
 
 async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
-    """Test register backup agents listener."""
+    """Test only calling listener until unsub."""
     listener = MagicMock()
     unsub = async_register_backup_agents_listener(hass, listener=listener)
 
@@ -612,3 +612,16 @@ async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
     async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
     await hass.async_block_till_done()
     assert listener.call_count == 1
+
+
+async def test_not_calling_listener_with_unknown_event_type(
+    hass: HomeAssistant,
+) -> None:
+    """Test not calling listener if we did not get the expected event type."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "unknown"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 0
