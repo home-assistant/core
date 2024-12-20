@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -28,6 +29,32 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
+
+
+def get_optional_provinces(country: str) -> list[Any]:
+    """Return the country provinces (territories).
+
+    Some territories can have extra or different holidays
+    from another within the same country.
+    Some territories can have different names (aliases).
+    """
+    province_options: list[Any] = []
+
+    if provinces := SUPPORTED_COUNTRIES[country]:
+        country_data = country_holidays(country, years=dt_util.utcnow().year)
+        if country_data.subdivisions_aliases and (
+            subdiv_aliases := country_data.get_subdivision_aliases()
+        ):
+            # Remember the user choice among all of the aliases available
+            province_options = [
+                SelectOptionDict(value=alias, label=alias)
+                for aliases in subdiv_aliases.values()
+                for alias in aliases
+            ]
+        else:
+            province_options = provinces
+
+    return province_options
 
 
 def get_optional_categories(country: str) -> list[str]:
@@ -45,7 +72,7 @@ def get_optional_categories(country: str) -> list[str]:
 def get_options_schema(country: str) -> vol.Schema:
     """Return the options schema."""
     schema = {}
-    if provinces := SUPPORTED_COUNTRIES[country]:
+    if provinces := get_optional_provinces(country):
         schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
                 options=provinces,
@@ -62,6 +89,12 @@ def get_options_schema(country: str) -> vol.Schema:
             )
         )
     return vol.Schema(schema)
+
+
+def get_province_code(country: str, province: str) -> str:
+    """Return the ISO 3166 code for a given province alias, if any."""
+    country_data = country_holidays(country, province, years=dt_util.utcnow().year)
+    return country_data.subdivisions_aliases.get(province, province)
 
 
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -128,7 +161,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {CONF_COUNTRY: country}
             options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
-                data[CONF_PROVINCE] = province
+                # Don't store the user alias but the stable ISO 3166 code
+                province_code = await self.hass.async_add_executor_job(
+                    get_province_code, country, province
+                )
+                data[CONF_PROVINCE] = province_code
             if categories := user_input.get(CONF_CATEGORIES):
                 options = {CONF_CATEGORIES: categories}
 
@@ -165,7 +202,11 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {CONF_COUNTRY: country}
             options: dict[str, Any] | None = None
             if province := user_input.get(CONF_PROVINCE):
-                data[CONF_PROVINCE] = province
+                # Don't store the user alias but the stable ISO 3166 code
+                province_code = await self.hass.async_add_executor_job(
+                    get_province_code, country, province
+                )
+                data[CONF_PROVINCE] = province_code
             if categories := user_input.get(CONF_CATEGORIES):
                 options = {CONF_CATEGORIES: categories}
 
