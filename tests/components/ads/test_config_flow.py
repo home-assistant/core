@@ -29,7 +29,7 @@ class TestADSConfigFlow:
 
         # Simulate user input with valid AMS Net ID and other fields
         user_input = {
-            CONF_DEVICE: "192.168.10.120.1.1",  # valid AMS Net ID
+            CONF_DEVICE: "10.0.10.20.1.1",  # valid AMS Net ID
             CONF_PORT: 851,
             CONF_IP_ADDRESS: "10.0.10.20",
         }
@@ -56,7 +56,7 @@ class TestADSConfigFlow:
 
         # Simulate user input with an invalid AMS Net ID
         user_input = {
-            CONF_DEVICE: "192.168.10.120.1",  # Invalid AMS Net ID (missing last part)
+            CONF_DEVICE: "10.0.10.20.1",  # Invalid AMS Net ID (missing last part)
             CONF_PORT: 851,
             CONF_IP_ADDRESS: "10.0.10.20",
         }
@@ -90,7 +90,7 @@ class TestADSConfigFlow:
 
         # Valid user input
         user_input = {
-            CONF_DEVICE: "192.168.10.120.1.1",  # valid AMS Net ID
+            CONF_DEVICE: "10.0.10.20.1.1",  # valid AMS Net ID
             CONF_PORT: 851,
             CONF_IP_ADDRESS: "10.0.10.20",
         }
@@ -110,7 +110,7 @@ class TestADSConfigFlow:
 
         # Invalid port (outside the allowed range)
         user_input = {
-            CONF_DEVICE: "192.168.10.120.1.1",
+            CONF_DEVICE: "10.0.10.20.1.1",
             CONF_PORT: 99999,  # Invalid port number (too large)
             CONF_IP_ADDRESS: "10.0.10.20",
         }
