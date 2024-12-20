@@ -1562,8 +1562,8 @@ async def test_async_trigger_restore_wrong_password(hass: HomeAssistant) -> None
     manager = BackupManager(hass, CoreBackupReaderWriter(hass))
     hass.data[DATA_MANAGER] = manager
 
-    await _setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await _setup_backup_platform(
+    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
