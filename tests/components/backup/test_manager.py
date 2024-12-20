@@ -781,7 +781,7 @@ async def test_create_backup_failure_raises_issue(
 
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    await _setup_backup_platform(
+    await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
