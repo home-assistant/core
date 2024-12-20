@@ -405,7 +405,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                     "show_advanced_options": self.show_advanced_options,
@@ -788,7 +788,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -826,7 +826,7 @@ async def test_get_progress_flow_unauth(
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -858,7 +858,7 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
                     schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema(schema),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 

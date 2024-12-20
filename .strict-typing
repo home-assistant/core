@@ -137,6 +137,7 @@ homeassistant.components.co2signal.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
+homeassistant.components.cookidoo.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
@@ -169,6 +170,7 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
+homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elevenlabs.*
@@ -269,6 +271,7 @@ homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
+homeassistant.components.iron_os.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -360,6 +363,7 @@ homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.panel_custom.*
+homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*

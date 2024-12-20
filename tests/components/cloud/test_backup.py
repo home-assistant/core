@@ -17,7 +17,10 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud.backup import async_register_backup_agents_listener
+from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -26,7 +29,10 @@ from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 @pytest.fixture(autouse=True)
 async def setup_integration(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, cloud: MagicMock
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    cloud: MagicMock,
+    cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
     """Set up cloud integration."""
     with patch("homeassistant.components.backup.is_hassio", return_value=False):
@@ -105,6 +111,7 @@ def mock_list_files() -> Generator[MagicMock]:
                     "backup_id": "23e64aec",
                     "date": "2024-11-22T11:48:48.727189+01:00",
                     "database_included": True,
+                    "extra_metadata": {},
                     "folders": [],
                     "homeassistant_included": True,
                     "homeassistant_version": "2024.12.0.dev0",
@@ -168,7 +175,7 @@ async def test_agents_list_backups(
             "size": 34519040,
             "agent_ids": ["cloud.cloud"],
             "failed_agent_ids": [],
-            "with_strategy_settings": False,
+            "with_automatic_settings": None,
         }
     ]
 
@@ -192,8 +199,8 @@ async def test_agents_list_backups_fail_cloud(
     assert response["result"] == {
         "agent_errors": {"cloud.cloud": "Failed to list backups"},
         "backups": [],
-        "last_attempted_strategy_backup": None,
-        "last_completed_strategy_backup": None,
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
     }
 
 
@@ -215,7 +222,7 @@ async def test_agents_list_backups_fail_cloud(
                 "size": 34519040,
                 "agent_ids": ["cloud.cloud"],
                 "failed_agent_ids": [],
-                "with_strategy_settings": False,
+                "with_automatic_settings": None,
             },
         ),
         (
@@ -332,6 +339,7 @@ async def test_agents_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -369,6 +377,7 @@ async def test_agents_upload(
     assert f"Uploading backup {backup_id}" in caplog.text
 
 
+@pytest.mark.parametrize("put_mock_kwargs", [{"status": 500}, {"exc": TimeoutError}])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_upload_fail_put(
     hass: HomeAssistant,
@@ -376,6 +385,7 @@ async def test_agents_upload_fail_put(
     caplog: pytest.LogCaptureFixture,
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
+    put_mock_kwargs: dict[str, Any],
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
@@ -385,6 +395,7 @@ async def test_agents_upload_fail_put(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -392,7 +403,7 @@ async def test_agents_upload_fail_put(
         protected=True,
         size=0.0,
     )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"], status=500)
+    aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
 
     with (
         patch(
@@ -433,6 +444,7 @@ async def test_agents_upload_fail_cloud(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -474,6 +486,7 @@ async def test_agents_upload_not_protected(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -565,4 +578,50 @@ async def test_agents_delete_not_found(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {"cloud.cloud": "Backup not found"}}
+    assert response["result"] == {"agent_errors": {}}
+
+
+@pytest.mark.parametrize("event_type", ["login", "logout"])
+async def test_calling_listener_on_login_logout(
+    hass: HomeAssistant,
+    event_type: str,
+) -> None:
+    """Test calling listener for login and logout events."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": event_type})
+    await hass.async_block_till_done()
+
+    assert listener.call_count == 1
+
+
+async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
+    """Test only calling listener until unsub."""
+    listener = MagicMock()
+    unsub = async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+    unsub()
+
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+
+async def test_not_calling_listener_with_unknown_event_type(
+    hass: HomeAssistant,
+) -> None:
+    """Test not calling listener if we did not get the expected event type."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "unknown"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 0

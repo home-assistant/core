@@ -8,7 +8,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -165,17 +164,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: SabnzbdConfigEntry) -> bool:
     """Unload a Sabnzbd config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
-        # If this is the last loaded instance of Sabnzbd, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
