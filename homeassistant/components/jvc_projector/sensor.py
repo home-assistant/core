@@ -43,11 +43,13 @@ JVC_SENSORS = (
         key=const.KEY_LASER_VALUE,
         translation_key="jvc_laser_value",
         entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
     ),
     JVCSensorEntityDescription(
         key=const.KEY_LASER_TIME,
         translation_key="jvc_laser_time",
         entity_category=EntityCategory.DIAGNOSTIC,
+        enabled_default=False,
     ),
     JVCSensorEntityDescription(
         key=const.KEY_HDR_CONTENT_TYPE,
@@ -55,6 +57,7 @@ JVC_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=const.VAL_HDR_CONTENT_TYPE,
+        enabled_default=False,
     ),
     # niche sensors that are disabled by default
     JVCSensorEntityDescription(
@@ -62,13 +65,7 @@ JVC_SENSORS = (
         translation_key="jvc_hdr_mode",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.HDR_CONTENT_NONE,
-            const.HDR_CONTENT_HDR10,
-            const.HDR_CONTENT_HDR10PLUS,
-            const.HDR_CONTENT_HLG,
-            const.HDR_CONTENT_SDR,
-        ],
+        options=const.VAL_HDR_MODES,
         enabled_default=False,
     ),
     JVCSensorEntityDescription(
@@ -128,7 +125,7 @@ JVC_SENSORS = (
         translation_key="jvc_hdr_processing_mode",
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=const.VAL_HDR_PROCESSING,
+        options=["0", "1", "2", "3"],  # translated
         enabled_default=False,
     ),
 )

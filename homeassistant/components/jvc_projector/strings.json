@@ -44,7 +44,7 @@
         "name": "Low latency"
       },
       "jvc_eshift": {
-        "name": "eshift"
+        "name": "e-shift"
       }
     },
     "select": {
@@ -165,10 +165,12 @@
         "name": "Color profile"
       },
       "jvc_graphics_mode": {
-        "name": "Graphics mode",
+        "name": "Graphic mode",
         "state": {
           "standard": "Standard",
-          "high-res": "High Resolution"
+          "high-res": "High Resolution",
+          "high-res2": "High Resolution 2",
+          "off": "[%key:common::state::off%]"
         }
       },
       "jvc_color_space": {
@@ -191,7 +193,7 @@
         "name": "Laser value"
       },
       "jvc_laser_power": {
-        "name": "Laser power",
+        "name": "Laser/Lamp power",
         "state": {
           "low": "Low",
           "medium": "Medium",
@@ -199,7 +201,7 @@
         }
       },
       "jvc_laser_time": {
-        "name": "Laser time"
+        "name": "Laser/Lamp time"
       },
       "jvc_motion_enhance": {
         "name": "Motion enhance",
@@ -222,9 +224,10 @@
       "jvc_hdr_processing_mode": {
         "name": "HDR processing",
         "state": {
-          "static": "Static",
-          "frame": "Frame by Frame",
-          "scene": "Scene by Scene"
+          "0": "HDR10+",
+          "1": "Static",
+          "2": "Frame by Frame",
+          "3": "Scene by Scene"
         }
       },
       "jvc_hdr_content_type": {
