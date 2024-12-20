@@ -3,9 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from energyzero import EnergyZeroNoDataError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.energyzero.const import SCAN_INTERVAL
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -13,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -42,11 +44,16 @@ async def test_diagnostics_no_gas_today(
     hass_client: ClientSessionGenerator,
     mock_energyzero: MagicMock,
     init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
     await async_setup_component(hass, "homeassistant", {})
     mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "homeassistant",
@@ -54,7 +61,6 @@ async def test_diagnostics_no_gas_today(
         {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
