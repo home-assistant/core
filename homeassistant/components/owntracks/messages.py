@@ -1,5 +1,6 @@
 """OwnTracks Message handlers."""
 
+from datetime import timedelta
 import json
 import logging
 
@@ -9,6 +10,7 @@ from nacl.secret import SecretBox
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.util import decorator, slugify
 
 from .helper import supports_encryption
@@ -317,6 +319,15 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     )
     zone.hass = hass
     zone.entity_id = entity_id
+    zone.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain="zone",
+        platform_name="owntracks",
+        platform=None,
+        scan_interval=timedelta(seconds=15),
+        entity_namespace=None,
+    )
     zone.async_write_ha_state()
 
 
