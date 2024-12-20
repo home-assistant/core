@@ -17,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IronOSConfigEntry
 from .const import DOMAIN
+from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -67,10 +68,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button entities from a config entry."""
-    coordinator = entry.runtime_data.live_data
+    coordinators = entry.runtime_data
 
     async_add_entities(
-        IronOSButtonEntity(coordinator, description)
+        IronOSButtonEntity(coordinators, description)
         for description in BUTTON_DESCRIPTIONS
     )
 
@@ -79,6 +80,16 @@ class IronOSButtonEntity(IronOSBaseEntity, ButtonEntity):
     """Implementation of a IronOS button entity."""
 
     entity_description: IronOSButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinators: IronOSCoordinators,
+        entity_description: IronOSButtonEntityDescription,
+    ) -> None:
+        """Initialize the select entity."""
+        super().__init__(coordinators.live_data, entity_description)
+
+        self.settings = coordinators.settings
 
     async def async_press(self) -> None:
         """Handle the button press."""
@@ -89,3 +100,4 @@ class IronOSButtonEntity(IronOSBaseEntity, ButtonEntity):
                 translation_domain=DOMAIN,
                 translation_key="submit_setting_failed",
             ) from e
+        await self.settings.async_request_refresh()
