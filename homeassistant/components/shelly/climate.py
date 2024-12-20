@@ -608,6 +608,9 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """HVAC current mode."""
+        if self.target_temperature == self._attr_min_temp:
+            return HVACMode.OFF
+
         return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
 
     @property
