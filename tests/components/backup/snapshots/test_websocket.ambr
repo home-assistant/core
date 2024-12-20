@@ -3050,6 +3050,17 @@
 # name: test_restore_remote_agent[remote_agents1-backups1].1
   1
 # ---
+# name: test_restore_wrong_password
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_subscribe_event
   dict({
     'event': dict({
