@@ -553,7 +553,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
         self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
-        self._device_id = self._config["addr"]
+        self._device_id = self._config["addr"].replace(":", "")
         self._thermostat_type = self._config.get("type", "heating")
         self._attr_hvac_modes = [
             HVACMode.OFF,
@@ -572,7 +572,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Define BluTrv device info."""
-        device_name = self._config["name"]
+        device_name = self._config["name"] or f"shelyblutrv-{self._device_id}"
         model_id = self._config.get("local_name")
         return DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._device_id)},
