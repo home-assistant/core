@@ -177,9 +177,11 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
     assert result["step_id"] == "encrypted_key"
     assert result["errors"] == {}
 
-    # There is currently no universal way to verify an encryption key.
     with (
         patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotRelaySwitch.verify_encryption_key", return_value=True
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -914,9 +916,11 @@ async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
     assert result["step_id"] == "encrypted_key"
     assert result["errors"] == {}
 
-    # There is currently no universal way to verify an encryption key.
     with (
         patch_async_setup_entry() as mock_setup_entry,
+        patch(
+            "switchbot.SwitchbotRelaySwitch.verify_encryption_key", return_value=True
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -985,6 +989,9 @@ async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
                 CONF_KEY_ID: "ff",
                 CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
             },
+        ),
+        patch(
+            "switchbot.SwitchbotRelaySwitch.verify_encryption_key", return_value=True
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
