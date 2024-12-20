@@ -61,7 +61,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
             date=cast(str, data["date"]),
-            extra_metadata=cast(dict[str, bool | str], data.get("metadata", {})),
+            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
