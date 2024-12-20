@@ -67,21 +67,36 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._config_url = f"http://{self._hub.ip_address}"
 
             if self._hub is not None:
-                info_data: dict[str, Any] = {}
+                if len(self._hub.ip_address) <= 0 or len(self._hub.mac_address) <= 0:
+                    _LOGGER.error("Missing IP address or MAC address for device")
+                    errors["base"] = "missing_data"
+                else:
+                    try:
+                        # Attempt communication with the Hub before creating the entry to
+                        # make sure it's awake and ready to be set up.
+                        await self._hub.retrieve_mac_address()
+                    except ConnectionError:
+                        _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
+                        errors["base"] = "cannot_connect"
+                    except TimeoutError:
+                        _LOGGER.error(
+                            "Timed out trying to connect to %s", self._hub.ip_address
+                        )
+                        errors["base"] = "timeout_connect"
 
-                info_data[CONF_MAC] = self._hub.mac_address
-                info_data[CONF_IP_ADDRESS] = self._hub.ip_address
-                info_data[CONF_HOST] = self._hostname
-                info_data[ATTR_SW_VERSION] = self._properties.get("version")
-                info_data[ATTR_CONFIGURATION_URL] = self._config_url
+                if len(errors) == 0:
+                    info_data: dict[str, Any] = {}
 
-                # Create the config entry for the new device
-                return self.async_create_entry(
-                    title=f"{self._hostname}", data=info_data
-                )
+                    info_data[CONF_MAC] = self._hub.mac_address
+                    info_data[CONF_IP_ADDRESS] = self._hub.ip_address
+                    info_data[CONF_HOST] = self._hostname
+                    info_data[ATTR_SW_VERSION] = self._properties.get("version")
+                    info_data[ATTR_CONFIGURATION_URL] = self._config_url
 
-            _LOGGER.error("No IP address for device")
-            errors["base"] = "cannot_connect"
+                    # Create the config entry for the new device
+                    return self.async_create_entry(
+                        title=f"{self._hostname}", data=info_data
+                    )
 
         if self._hub is None:
             # Show the form to allow the user to manually enter the IP address
