@@ -992,6 +992,18 @@ async def test_config_update(
             "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "someday",
         },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent", "test-agent"]},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"include_addons": ["my-addon", "my-addon"]},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"include_folders": ["media", "media"]},
+        },
     ],
 )
 async def test_config_update_errors(
