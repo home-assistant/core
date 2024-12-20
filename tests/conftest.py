@@ -708,7 +708,7 @@ async def hass_access_token(
     refresh_token = await hass.auth.async_create_refresh_token(
         hass_admin_user, CLIENT_ID, credential=hass_admin_credential
     )
-    return hass.auth.async_create_access_token(refresh_token)
+    return hass.auth.async_create_access_token(refresh_token, {})
 
 
 @pytest.fixture
