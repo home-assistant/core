@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pyflick.authentication import AuthException
+from pyflick.types import APIException
 
 from homeassistant import config_entries
 from homeassistant.components.flick_electric.const import (
@@ -417,3 +418,165 @@ async def test_form_generic_exception(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_form_select_account_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle connection errors for select account."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "address": "123 Fake St",
+                    "main_consumer": {"supply_node_ref": "123"},
+                },
+                {
+                    "id": "5678",
+                    "status": "active",
+                    "address": "456 Fake St",
+                    "main_consumer": {"supply_node_ref": "456"},
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            side_effect=APIException,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "select_account"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"account_id": "5678"},
+        )
+
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["step_id"] == "select_account"
+        assert result3["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_select_account_invalid_auth(hass: HomeAssistant) -> None:
+    """Test we handle connection errors for select account."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "address": "123 Fake St",
+                    "main_consumer": {"supply_node_ref": "123"},
+                },
+                {
+                    "id": "5678",
+                    "status": "active",
+                    "address": "456 Fake St",
+                    "main_consumer": {"supply_node_ref": "456"},
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            side_effect=AuthException,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "select_account"
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            side_effect=AuthException,
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            side_effect=AuthException,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"account_id": "5678"},
+        )
+
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["step_id"] == "user"
+        assert result3["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_select_account_no_accounts(hass: HomeAssistant) -> None:
+    """Test we handle connection errors for select account."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "closed",
+                    "address": "123 Fake St",
+                    "main_consumer": {"supply_node_ref": "123"},
+                },
+            ],
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "no_accounts"

@@ -86,7 +86,8 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             except (APIException, ClientResponseError):
                 errors["base"] = "cannot_connect"
             except AuthException:
-                errors["base"] = "invalid_auth"
+                # Send user back to enter credentials
+                return await self.async_step_user({**self.data})
             else:
                 # Supply node is active
                 return await self._async_create_entry()
@@ -193,14 +194,9 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the account for the account ID."""
         return next(a for a in self.accounts if a["id"] == account_id)
 
-    def _get_supply_node_ref(self, account_id: str) -> str | None:
+    def _get_supply_node_ref(self, account_id: str) -> str:
         """Get the supply node ref for the account."""
-        main_consumer = self._get_account(account_id)["main_consumer"]
-
-        if main_consumer is None:
-            return None
-
-        return main_consumer[CONF_SUPPLY_NODE_REF]
+        return self._get_account(account_id)["main_consumer"][CONF_SUPPLY_NODE_REF]
 
 
 class CannotConnect(HomeAssistantError):
