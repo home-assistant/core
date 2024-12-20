@@ -42,7 +42,7 @@ rules:
       This is handled by the coordinator.
   integration-owner: done
   log-when-unavailable:
-    status: exempt
+    status: done
     comment: |
       This is handled by the coordinator.
   parallel-updates: todo
@@ -67,7 +67,10 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category: done
+  entity-category:
+    status: done
+    comment: |
+      The entities are categorized well by using default category.
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
