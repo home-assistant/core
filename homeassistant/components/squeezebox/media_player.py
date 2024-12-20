@@ -55,6 +55,7 @@ from .const import (
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
+    KNOWN_SERVERS,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -220,13 +221,12 @@ class SqueezeBoxMediaPlayerEntity(
         if self._previous_media_position != self.media_position:
             self._previous_media_position = self.media_position
             self._last_update = utcnow()
-        self._attr_available = self.coordinator.available
         self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available and super().available
+        return self.coordinator.available and super().available
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -251,7 +251,9 @@ class SqueezeBoxMediaPlayerEntity(
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        self.hass.data[DOMAIN][KNOWN_PLAYERS].remove(self.coordinator)
+        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
+        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
+        known_players.remove(self.coordinator.player.player_id)
 
     @property
     def volume_level(self) -> float | None:

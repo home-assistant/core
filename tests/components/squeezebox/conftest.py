@@ -6,14 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.media_player import MediaType
+from homeassistant.components.squeezebox import const
 from homeassistant.components.squeezebox.browse_media import (
     MEDIA_TYPE_TO_SQUEEZEBOX,
     SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import (
-    CONF_HTTPS,
-    DOMAIN,
-    KNOWN_PLAYERS,
+    SIGNAL_PLAYER_DISCOVERED,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
@@ -28,9 +27,13 @@ from homeassistant.components.squeezebox.const import (
     STATUS_SENSOR_PLAYER_COUNT,
     STATUS_SENSOR_RESCAN,
 )
+from homeassistant.components.squeezebox.coordinator import (
+    SqueezeBoxPlayerUpdateCoordinator,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
@@ -104,12 +107,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the squeezebox mock config entry to hass."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=const.DOMAIN,
         unique_id=SERVER_UUIDS[0],
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_HTTPS: TEST_USE_HTTPS,
+            const.CONF_HTTPS: TEST_USE_HTTPS,
         },
     )
     config_entry.add_to_hass(hass)
@@ -285,9 +288,17 @@ async def configure_squeezebox_switch_platform(
         ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):
+        coordinator: SqueezeBoxPlayerUpdateCoordinator | None = None
+
+        def discovery_callback(player: SqueezeBoxPlayerUpdateCoordinator):
+            """Find the coordinator for the discovered player so we can manually refresh it."""
+            nonlocal coordinator
+            coordinator = player
+
+        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, discovery_callback)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        await hass.data[DOMAIN][KNOWN_PLAYERS][0].async_refresh()
+        await coordinator.async_refresh()
 
 
 @pytest.fixture
