@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import instance_id
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -104,7 +105,7 @@ async def test_agents_list_backups(
             "name": "Kitchen sink syncer",
             "protected": False,
             "size": 1234,
-            "with_strategy_settings": False,
+            "with_automatic_settings": None,
         }
     ]
 
@@ -137,6 +138,10 @@ async def test_agents_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={
+            "instance_id": await instance_id.async_get(hass),
+            "with_automatic_settings": False,
+        },
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -183,7 +188,7 @@ async def test_agents_upload(
         "name": "Test",
         "protected": False,
         "size": 0.0,
-        "with_strategy_settings": False,
+        "with_automatic_settings": False,
     }
 
 
