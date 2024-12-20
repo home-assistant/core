@@ -172,6 +172,54 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_encrypted_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the SwitchBot API auth step."""
+        errors = {}
+        assert self._discovered_adv is not None
+        description_placeholders = {}
+        if user_input is not None:
+            try:
+                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                    async_get_clientsession(self.hass),
+                    self._discovered_adv.address,
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                )
+            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
+                _LOGGER.debug(
+                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
+                )
+                return self.async_abort(
+                    reason="api_error",
+                    description_placeholders={"error_detail": str(ex)},
+                )
+            except SwitchbotAuthenticationError as ex:
+                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
+                errors = {"base": "auth_failed"}
+                description_placeholders = {"error_detail": str(ex)}
+            else:
+                return await self.async_step_encrypted_key(key_details)
+
+        user_input = user_input or {}
+        return self.async_show_form(
+            step_id="auth",
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={
+                "name": name_from_discovery(self._discovered_adv),
+                **description_placeholders,
+            },
+        )
+
     async def async_step_encrypted_choose_method(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -218,54 +266,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "name": name_from_discovery(self._discovered_adv),
-            },
-        )
-
-    async def async_step_encrypted_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the SwitchBot API auth step."""
-        errors = {}
-        assert self._discovered_adv is not None
-        description_placeholders = {}
-        if user_input is not None:
-            try:
-                key_details = await SwitchbotLock.async_retrieve_encryption_key(
-                    async_get_clientsession(self.hass),
-                    self._discovered_adv.address,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except (SwitchbotApiError, SwitchbotAccountConnectionError) as ex:
-                _LOGGER.debug(
-                    "Failed to connect to SwitchBot API: %s", ex, exc_info=True
-                )
-                return self.async_abort(
-                    reason="api_error",
-                    description_placeholders={"error_detail": str(ex)},
-                )
-            except SwitchbotAuthenticationError as ex:
-                _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
-                errors = {"base": "auth_failed"}
-                description_placeholders = {"error_detail": str(ex)}
-            else:
-                return await self.async_step_encrypted_key(key_details)
-
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="auth",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_USERNAME, default=user_input.get(CONF_USERNAME)
-                    ): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
-            description_placeholders={
-                "name": name_from_discovery(self._discovered_adv),
-                **description_placeholders,
             },
         )
 
