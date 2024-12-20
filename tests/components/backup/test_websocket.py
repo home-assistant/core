@@ -571,6 +571,7 @@ async def test_restore_local_agent(
     with (
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.write_text"),
+        patch("homeassistant.components.backup.manager.validate_password"),
     ):
         await client.send_json_auto_id(
             {
@@ -606,7 +607,11 @@ async def test_restore_remote_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch("pathlib.Path.write_text"), patch("pathlib.Path.open"):
+    with (
+        patch("pathlib.Path.write_text"),
+        patch("pathlib.Path.open"),
+        patch("homeassistant.components.backup.manager.validate_password"),
+    ):
         await client.send_json_auto_id(
             {
                 "type": "backup/restore",
