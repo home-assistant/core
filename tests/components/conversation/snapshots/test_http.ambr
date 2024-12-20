@@ -571,7 +571,7 @@
           'name': 'HassGetState',
         }),
         'match': True,
-        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [in <area>]',
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [<in_area_floor>]',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'lights',
@@ -693,6 +693,14 @@
   })
 # ---
 # name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'trigger_sentences': list([
+      'hello',
+      'hello[ world]',
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger.1
   dict({
     'results': list([
       dict({

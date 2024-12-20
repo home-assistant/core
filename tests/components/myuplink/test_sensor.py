@@ -1,28 +1,30 @@
 """Tests for myuplink sensor module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+import pytest
+from syrupy import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_states(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor state."""
-    await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.gotham_city_average_outdoor_temp_bt1")
-    assert state is not None
-    assert state.state == "-12.2"
-    assert state.attributes == {
-        "friendly_name": "Gotham City Average outdoor temp (BT1)",
-        "device_class": "temperature",
-        "state_class": "measurement",
-        "unit_of_measurement": "°C",
-    }
+    with patch("homeassistant.components.myuplink.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

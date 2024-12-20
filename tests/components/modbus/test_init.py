@@ -19,7 +19,7 @@ from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
+from pymodbus.pdu import ExceptionResponse
 import pytest
 import voluptuous as vol
 
@@ -820,7 +820,6 @@ SERVICE = "service"
     [
         {VALUE: ReadResult([0x0001]), DATA: ""},
         {VALUE: ExceptionResponse(0x06), DATA: "Pymodbus:"},
-        {VALUE: IllegalFunctionRequest(0x06), DATA: "Pymodbus:"},
         {VALUE: ModbusException("fail write_"), DATA: "Pymodbus:"},
     ],
 )
@@ -928,7 +927,6 @@ async def mock_modbus_read_pymodbus_fixture(
     ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         (ReadResult([1]), None, STATE_ON, "1"),
-        (IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (
             ReadResult([1]),

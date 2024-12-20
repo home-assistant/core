@@ -49,7 +49,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
 
     _attr_force_update = False
     _attr_translation_key = "car"
-    _attr_icon = "mdi:car"
+    _attr_name = None
 
     def __init__(
         self,
@@ -58,9 +58,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
     ) -> None:
         """Initialize the Tracker."""
         super().__init__(coordinator, vehicle)
-
         self._attr_unique_id = vehicle.vin
-        self._attr_name = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
