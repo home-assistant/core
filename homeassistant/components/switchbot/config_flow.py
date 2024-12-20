@@ -193,13 +193,13 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._discovered_adv is not None
         if user_input is not None:
-            model_name = self._discovered_adv.data["modelName"]
-            cls = CLASS_BY_DEVICE[model_name]
+            model = self._discovered_adv.data["modelName"]
+            cls = CLASS_BY_DEVICE[model]
             if not await cls.verify_encryption_key(
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
-                model=self._discovered_adv.data["modelName"],
+                model=model,
             ):
                 errors = {
                     "base": "encryption_key_invalid",
