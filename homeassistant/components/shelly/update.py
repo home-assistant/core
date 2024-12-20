@@ -243,8 +243,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
         self._attr_release_url = get_release_url(
             coordinator.device.gen, coordinator.model, description.beta
         )
-        self._key = key
-        self._attribute = attribute
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -266,11 +264,6 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
                 self._ota_in_progress = False
                 self._ota_progress_percentage = None
             self.async_write_ha_state()
-
-    @property
-    def unique_id(self) -> str:
-        """Define unique id."""
-        return f"{self.coordinator.mac}-{self._key}-{self._attribute}"
 
     @property
     def installed_version(self) -> str | None:

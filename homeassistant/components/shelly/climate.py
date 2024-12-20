@@ -559,32 +559,22 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             HVACMode.OFF,
             HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT,
         ]
-        self._humidity_key: str | None = None
-        # Check if there is a corresponding humidity key for the thermostat ID
-        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
-            self._humidity_key = humidity_key
-
-    @property
-    def unique_id(self) -> str:
-        """Define BluTrv unique id."""
-        return f"{self.coordinator.mac}-{self._device_id}-{self.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Define BluTrv device info."""
-        device_name = (
-            self._config["name"] or f"shelyblutrv-{self._device_id.replace(":", "")}"
-        )
+        self._attr_unique_id = f"{self._device_id}-{self.key}"
         model_id = self._config.get("local_name")
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._device_id)},
             identifiers={(DOMAIN, self._device_id)},
             via_device=(DOMAIN, self.coordinator.mac),
             manufacturer="Shelly",
             model=BLU_TRV_MODEL_NAME.get(model_id),
             model_id=model_id,
-            name=device_name,
+            name=self._config["name"]
+            or f"shelyblutrv-{self._device_id.replace(":", "")}",
         )
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
