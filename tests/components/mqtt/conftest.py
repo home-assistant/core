@@ -91,6 +91,7 @@ async def setup_with_birth_msg_client_mock(
             data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
             options=mqtt_config_entry_options or {},
             version=mqtt.ENTRY_VERSION,
+            minor_version=mqtt.ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         hass.config.components.add(mqtt.DOMAIN)

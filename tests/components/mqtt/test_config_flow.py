@@ -43,6 +43,28 @@ ADD_ON_DISCOVERY_INFO = {
 MOCK_CLIENT_CERT = b"## mock client certificate file ##"
 MOCK_CLIENT_KEY = b"## mock key file ##"
 
+MOCK_ENTRY_DATA = {
+    mqtt.CONF_BROKER: "test-broker",
+    CONF_PORT: 1234,
+    CONF_USERNAME: "user",
+    CONF_PASSWORD: "pass",
+}
+MOCK_ENTRY_OPTIONS = {
+    mqtt.CONF_DISCOVERY: True,
+    mqtt.CONF_BIRTH_MESSAGE: {
+        mqtt.ATTR_TOPIC: "ha_state/online",
+        mqtt.ATTR_PAYLOAD: "online",
+        mqtt.ATTR_QOS: 1,
+        mqtt.ATTR_RETAIN: True,
+    },
+    mqtt.CONF_WILL_MESSAGE: {
+        mqtt.ATTR_TOPIC: "ha_state/offline",
+        mqtt.ATTR_PAYLOAD: "offline",
+        mqtt.ATTR_QOS: 2,
+        mqtt.ATTR_RETAIN: False,
+    },
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_finish_setup() -> Generator[MagicMock]:
@@ -396,7 +418,11 @@ async def test_manual_config_set(
 
 async def test_user_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain="mqtt", version=mqtt.ENTRY_VERSION).add_to_hass(hass)
+    MockConfigEntry(
+        domain="mqtt",
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -407,7 +433,11 @@ async def test_user_single_instance(hass: HomeAssistant) -> None:
 
 async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(domain="mqtt", version=mqtt.ENTRY_VERSION).add_to_hass(hass)
+    MockConfigEntry(
+        domain="mqtt",
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_HASSIO}
@@ -422,6 +452,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
         domain=mqtt.DOMAIN,
         source=config_entries.SOURCE_IGNORE,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1485,7 +1516,10 @@ async def test_step_reauth(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data=test_input, version=mqtt.ENTRY_VERSION
+        domain=mqtt.DOMAIN,
+        data=test_input,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1563,7 +1597,10 @@ async def test_step_hassio_reauth(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data=entry_data, version=mqtt.ENTRY_VERSION
+        domain=mqtt.DOMAIN,
+        data=entry_data,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1647,7 +1684,10 @@ async def test_step_hassio_reauth_no_discovery_info(
 
     # Prepare the config entry
     config_entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data=entry_data, version=mqtt.ENTRY_VERSION
+        domain=mqtt.DOMAIN,
+        data=entry_data,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -1674,7 +1714,11 @@ async def test_reconfigure_user_connection_fails(
     hass: HomeAssistant, mock_try_connection_time_out: MagicMock
 ) -> None:
     """Test if connection cannot be made."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1708,7 +1752,11 @@ async def test_options_bad_birth_message_fails(
     hass: HomeAssistant, mock_try_connection: MqttMockPahoClient
 ) -> None:
     """Test bad birth message."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1742,7 +1790,11 @@ async def test_options_bad_will_message_fails(
     hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
     """Test bad will message."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1777,7 +1829,11 @@ async def test_try_connection_with_advanced_parameters(
     hass: HomeAssistant, mock_try_connection_success: MqttMockPahoClient
 ) -> None:
     """Test config flow with advanced parameters from config."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -1888,7 +1944,11 @@ async def test_setup_with_advanced_settings(
     """Test config flow setup with advanced parameters."""
     file_id = mock_process_uploaded_file.file_id
 
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -2033,7 +2093,11 @@ async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
     """Test reconfiguration flow changing websockets transport settings."""
-    config_entry = MockConfigEntry(domain=mqtt.DOMAIN, version=mqtt.ENTRY_VERSION)
+    config_entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry,
@@ -2126,47 +2190,49 @@ async def test_reconfigure_flow_form(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
+@pytest.mark.parametrize(
+    (
+        "version",
+        "minor_version",
+        "data",
+        "options",
+        "expected_version",
+        "expected_minor_version",
+    ),
+    [
+        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 1, 1),
+        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
+        (1, 3, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
+        (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
+    ],
+)
 @pytest.mark.usefixtures("mock_reload_after_entry_update")
 async def test_migrate_config_entry(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    version: int,
+    minor_version: int,
+    data: dict[str, Any],
+    options: dict[str, Any],
+    expected_version: int,
+    expected_minor_version: int,
 ) -> None:
-    """Test migrating a v1 config entry."""
-    data = {
-        mqtt.CONF_BROKER: "test-broker",
-        CONF_PORT: 1234,
-        CONF_USERNAME: "user",
-        CONF_PASSWORD: "pass",
-    }
-    options = {
-        mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_BIRTH_MESSAGE: {
-            mqtt.ATTR_TOPIC: "ha_state/online",
-            mqtt.ATTR_PAYLOAD: "online",
-            mqtt.ATTR_QOS: 1,
-            mqtt.ATTR_RETAIN: True,
-        },
-        mqtt.CONF_WILL_MESSAGE: {
-            mqtt.ATTR_TOPIC: "ha_state/offline",
-            mqtt.ATTR_PAYLOAD: "offline",
-            mqtt.ATTR_QOS: 2,
-            mqtt.ATTR_RETAIN: False,
-        },
-    }
-
+    """Test migrating a config entry."""
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    # Revert to v1 config entry
+    # Mock an incompatible config entry version
     hass.config_entries.async_update_entry(
         config_entry,
-        data=data | options,
-        options={},
-        version=1,
+        data=data,
+        options=options,
+        version=version,
+        minor_version=minor_version,
     )
     await hass.async_block_till_done()
-    assert config_entry.data == data | options
-    assert config_entry.options == {}
-    assert config_entry.version == 1
+    # Start MQTT
     await mqtt_mock_entry()
     await hass.async_block_till_done()
-    assert config_entry.data == data
-    assert config_entry.options == options
-    assert config_entry.version == mqtt.ENTRY_VERSION
+    assert (
+        config_entry.data | config_entry.options == MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS
+    )
+    assert config_entry.version == expected_version
+    assert config_entry.minor_version == expected_minor_version

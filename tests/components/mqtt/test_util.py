@@ -232,6 +232,7 @@ async def test_waiting_for_client_not_loaded(
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -288,6 +289,7 @@ async def test_waiting_for_client_entry_fails(
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -317,6 +319,7 @@ async def test_waiting_for_client_setup_fails(
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -345,6 +348,7 @@ async def test_waiting_for_client_timeout(
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -365,6 +369,7 @@ async def test_waiting_for_client_with_disabled_entry(
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

@@ -106,6 +106,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
                 mqtt.CONF_DISCOVERY: False,
             },
             version=mqtt.ENTRY_VERSION,
+            minor_version=mqtt.ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1141,6 +1142,7 @@ async def test_initial_setup_logs_error(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.side_effect = MagicMock(return_value=1)
@@ -1248,6 +1250,7 @@ async def test_publish_error(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -1393,6 +1396,7 @@ async def test_handle_mqtt_timeout_on_callback(
             domain=mqtt.DOMAIN,
             data={mqtt.CONF_BROKER: "test-broker"},
             version=mqtt.ENTRY_VERSION,
+            minor_version=mqtt.ENTRY_MINOR_VERSION,
         )
         entry.add_to_hass(hass)
 
@@ -1429,6 +1433,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -1542,6 +1547,7 @@ async def test_custom_birth_message(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1591,6 +1597,7 @@ async def test_no_birth_message(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1630,6 +1637,7 @@ async def test_delayed_birth_message(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1701,6 +1709,7 @@ async def test_custom_will_message(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1738,6 +1747,7 @@ async def test_no_will_message(
         data=mqtt_config_entry_data,
         options=mqtt_config_entry_options,
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)

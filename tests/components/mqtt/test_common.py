@@ -1891,6 +1891,7 @@ async def help_test_reloadable(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.ENTRY_VERSION,
+        minor_version=mqtt.ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0

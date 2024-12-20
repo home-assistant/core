@@ -77,6 +77,8 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
+    ENTRY_MINOR_VERSION,
+    ENTRY_VERSION,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
 )
@@ -110,7 +112,6 @@ from .util import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTRY_VERSION = 2
 
 # Split mqtt entry data and options
 # Can be removed with HA Core 2026.1.0
@@ -376,7 +377,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         options[key] = data.pop(key)
     hass.config_entries.async_update_entry(
-        entry, data=data, options=options, version=ENTRY_VERSION
+        entry,
+        data=data,
+        options=options,
+        version=ENTRY_VERSION,
+        minor_version=ENTRY_MINOR_VERSION,
     )
     _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
@@ -389,11 +394,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
-        conf = dict(entry.data)
+        conf = dict(entry.data | entry.options)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
-        client = MQTT(hass, entry)
+        client = MQTT(hass, entry, conf)
         if DOMAIN in hass.data:
             mqtt_data = hass.data[DATA_MQTT]
             mqtt_data.config = mqtt_yaml
@@ -494,9 +499,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_RELOAD):
         async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
     # Setup discovery
-    if entry.options.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
+    if conf.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
         await discovery.async_start(
-            hass, entry.options.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
+            hass, conf.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX), entry
         )
 
     return True

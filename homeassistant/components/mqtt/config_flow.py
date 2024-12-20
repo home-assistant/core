@@ -87,6 +87,8 @@ from .const import (
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
     DOMAIN,
+    ENTRY_MINOR_VERSION,
+    ENTRY_VERSION,
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
@@ -205,7 +207,8 @@ def update_password_from_user_input(
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = ENTRY_VERSION
+    SUBVERSION = ENTRY_MINOR_VERSION
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
