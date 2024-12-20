@@ -28,12 +28,11 @@ async def test_form(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with mock_auth:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            FORM_USER_INPUT,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FORM_USER_INPUT,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Client Credentials"

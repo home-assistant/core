@@ -33,7 +33,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_auth():
+async def mock_auth() -> Generator[AsyncMock]:
     """Set up the mock for the igloohome_api Auth module. Defaults to always successfully operate."""
     with patch(
         "igloohome_api.Auth.async_get_access_token",
