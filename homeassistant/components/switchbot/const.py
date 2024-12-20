@@ -72,7 +72,7 @@ ENCRYPTED_MODELS = {
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
-    SwitchbotModel, switchbot.SwitchbotLock | switchbot.SwitchbotRelaySwitch
+    SwitchbotModel, switchbot.SwitchbotEncryptedDevice
 ] = {
     SwitchbotModel.LOCK: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO: switchbot.SwitchbotLock,
