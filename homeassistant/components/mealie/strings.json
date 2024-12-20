@@ -126,6 +126,15 @@
     },
     "version_error": {
       "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please reauthenticate with Mealie."
+    },
+    "update_failed": {
+      "message": "Could not fetch {type} data from Mealie."
+    },
+    "setup_failed": {
+      "message": "Could not connect to the Mealie instance."
     }
   },
   "services": {
