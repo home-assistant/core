@@ -24,10 +24,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    _TOKEN_FILENAME,
     CONF_HEATING_TYPE,
     DEFAULT_CACHE_DURATION,
     HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_TOKEN_FILENAME,
     HeatingType,
 )
 from .types import ViCareConfigEntry, ViCareRequiredKeysMixin
@@ -47,7 +47,7 @@ def login(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
+        hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
     )
     return vicare_api
 

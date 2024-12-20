@@ -26,7 +26,7 @@ UNSUPPORTED_DEVICES = [
 ]
 
 VICARE_NAME = "ViCare"
-_TOKEN_FILENAME = "vicare_token.save"
+VICARE_TOKEN_FILENAME = "vicare_token.save"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"

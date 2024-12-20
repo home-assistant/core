@@ -20,11 +20,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    _TOKEN_FILENAME,
     DEFAULT_CACHE_DURATION,
     DOMAIN,
     PLATFORMS,
     UNSUPPORTED_DEVICES,
+    VICARE_TOKEN_FILENAME,
 )
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device, get_device_serial, login
@@ -86,7 +86,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> b
 
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, _TOKEN_FILENAME)
+            os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
         )
 
     return unload_ok
