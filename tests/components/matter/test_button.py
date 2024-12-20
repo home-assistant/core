@@ -48,6 +48,7 @@ async def test_identify_button(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.Identify.Commands.Identify(identifyTime=15),
+        timed_request_timeout_ms=None,
     )
 
 
@@ -79,4 +80,5 @@ async def test_operational_state_buttons(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.OperationalState.Commands.Pause(),
+        timed_request_timeout_ms=None,
     )

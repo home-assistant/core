@@ -38,6 +38,7 @@ class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescrip
     """Describe Matter Button entities."""
 
     command: Callable[[], Any] | None = None
+    command_timeout: int | None = None
 
 
 class MatterCommandButton(MatterEntity, ButtonEntity):
@@ -53,6 +54,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=self.entity_description.command(),
+            timed_request_timeout_ms=self.entity_description.command_timeout,
         )
 
 
@@ -145,6 +147,30 @@ DISCOVERY_SCHEMAS = [
             clusters.ActivatedCarbonFilterMonitoring.Attributes.AcceptedCommandList,
         ),
         value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="EnergyEvseEnableChargingButton",
+            translation_key="enable_charging",
+            command=clusters.EnergyEvse.Commands.EnableCharging,
+            command_timeout=3000,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="EnergyEvseDisableChargingButton",
+            translation_key="disable_charging",
+            command=clusters.EnergyEvse.Commands.Disable,
+            command_timeout=3000,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
         allow_multi=True,
     ),
 ]
