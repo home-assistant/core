@@ -131,7 +131,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
         self, start_date: datetime, end_date: datetime
     ) -> Iterable[Event]:
         """Get all events in a specific time frame."""
-        request = ListEventsRequest(  # type: ignore[call-arg]
+        request = ListEventsRequest(
             calendar_id=self.calendar_id,
             start_time=start_date,
             end_time=end_date,
@@ -149,7 +149,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
 
     async def _async_update_data(self) -> list[Event]:
         """Fetch data from API endpoint."""
-        request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)  # type: ignore[call-arg]
+        request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)
         try:
             result = await self.calendar_service.async_list_events(request)
         except ApiException as err:

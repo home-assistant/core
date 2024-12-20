@@ -6,26 +6,17 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      The coordinator isn't in the common module yet.
+  common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      data_description's are missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description:
-    status: todo
-    comment: |
-      The introduction can be improved and is missing links to the provider.
+  docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -57,7 +48,7 @@ rules:
       data), there is no need to implement parallel updates.
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: |
@@ -101,16 +92,16 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have any cases where raising an issue is needed.
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices:
     status: exempt
     comment: |
       This is an service, which doesn't integrate with any devices.
   docs-supported-functions: done
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   # Platinum
   async-dependency: done

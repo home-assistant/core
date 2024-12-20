@@ -272,7 +272,7 @@ async def async_setup_entry(
                     entity_description.search,
                 )
             else:
-                request_template = SyncEventsRequest(  # type: ignore[call-arg]
+                request_template = SyncEventsRequest(
                     calendar_id=calendar_id,
                     start_time=dt_util.now() + SYNC_EVENT_MIN_TIME,
                 )
@@ -437,11 +437,11 @@ class GoogleCalendarEntity(
         start: DateOrDatetime
         end: DateOrDatetime
         if isinstance(dtstart, datetime):
-            start = DateOrDatetime(  # type: ignore[call-arg]
+            start = DateOrDatetime(
                 date_time=dt_util.as_local(dtstart),
                 timezone=str(dt_util.get_default_time_zone()),
             )
-            end = DateOrDatetime(  # type: ignore[call-arg]
+            end = DateOrDatetime(
                 date_time=dt_util.as_local(dtend),
                 timezone=str(dt_util.get_default_time_zone()),
             )
@@ -543,8 +543,8 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
         start_dt = call.data[EVENT_START_DATETIME]
         end_dt = call.data[EVENT_END_DATETIME]
-        start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))  # type: ignore[call-arg]
-        end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))  # type: ignore[call-arg]
+        start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))
+        end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
 
     if start is None or end is None:
         raise ValueError("Missing required fields to set start or end date/datetime")
