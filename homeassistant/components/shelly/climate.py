@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_NAMES, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, BLU_TRV_MODEL_NAME, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -553,7 +553,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
         self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
-        self._device_id = self._config["addr"].replace(":", "")
+        self._device_id: str = self._config["addr"]
         self._thermostat_type = self._config.get("type", "heating")
         self._attr_hvac_modes = [
             HVACMode.OFF,
@@ -572,14 +572,16 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Define BluTrv device info."""
-        device_name = self._config["name"] or f"shelyblutrv-{self._device_id}"
+        device_name = (
+            self._config["name"] or f"shelyblutrv-{self._device_id.replace(":", "")}"
+        )
         model_id = self._config.get("local_name")
         return DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self._device_id)},
             identifiers={(DOMAIN, self._device_id)},
             via_device=(DOMAIN, self.coordinator.mac),
             manufacturer="Shelly",
-            model=MODEL_NAMES.get(model_id),
+            model=BLU_TRV_MODEL_NAME.get(model_id),
             model_id=model_id,
             name=device_name,
         )
