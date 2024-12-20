@@ -1,5 +1,6 @@
 """Test the igloohome config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -19,7 +20,7 @@ FORM_USER_INPUT = {
 
 
 async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth: Generator[AsyncMock]
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -45,7 +46,11 @@ async def test_form(
     [(AuthException(), "invalid_auth"), (ClientError(), "cannot_connect")],
 )
 async def test_form_invalid_input(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth, exception, result_error
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_auth: Generator[AsyncMock],
+    exception: Exception,
+    result_error: str,
 ) -> None:
     """Tests where we handle errors in the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -64,7 +69,7 @@ async def test_form_invalid_input(
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    mock_auth.side_effect = "mock_access_token"
+    mock_auth.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         FORM_USER_INPUT,
