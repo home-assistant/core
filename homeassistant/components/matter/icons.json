@@ -17,6 +17,12 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "enable_charging": {
+        "default": "mdi:play"
+      },
+      "disable_charging": {
+        "default": "mdi:stop"
       }
     },
     "fan": {
@@ -57,6 +63,15 @@
       },
       "valve_position": {
         "default": "mdi:valve"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
       }
     }
   }
