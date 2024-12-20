@@ -5,8 +5,8 @@
       "description": "Starts playing content pinned on the specified device.",
       "fields": {
         "pin": {
-          "name": "Pin",
-          "description": "Number of the pinned content."
+          "name": "Pin ID",
+          "description": "ID of the pinned content."
         }
       }
     }
