@@ -1,6 +1,6 @@
 {
   "common": {
-    "service_config_entry_name": "Config Entry",
+    "service_config_entry_name": "Config entry",
     "service_config_entry_description": "The config entry to use for this action.",
     "climate_preset_solar": "Solar",
     "climate_preset_solar_prefered": "Solar Prefered",
