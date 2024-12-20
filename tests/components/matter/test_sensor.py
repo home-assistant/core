@@ -365,3 +365,15 @@ async def test_evse_sensor(
     state = hass.states.get("sensor.evse_none_2")
     assert state
     assert state.state == "Disabled"
+
+    # EnergyEvseFaultState
+    state = hass.states.get("sensor.evse_none_3")
+    assert state
+    assert state.state == "No Error"
+
+    set_node_attribute(matter_node, 1, 153, 2, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_none_3")
+    assert state
+    assert state.state == "Over Current"
