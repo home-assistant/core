@@ -34,6 +34,7 @@ def is_docker_env() -> bool:
         or Path("/.dockerenv").exists()
         or os.environ.get("container")  # noqa: SIM112
         or os.environ.get("KUBERNETES_SERVICE_HOST")
+        or is_official_image()
     )
 
 
