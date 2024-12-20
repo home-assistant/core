@@ -70,10 +70,7 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except MealieConnectionError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={
-                    "type": self._name,
-                },
+                translation_key=f"update_failed_{self._name}",
             ) from error
 
     @abstractmethod
@@ -115,7 +112,7 @@ class MealieShoppingListCoordinator(
 ):
     """Class to manage fetching Mealie Shopping list data."""
 
-    _name = "shopping list"
+    _name = "shopping_list"
     _update_interval = timedelta(minutes=5)
 
     async def _async_update_internal(
