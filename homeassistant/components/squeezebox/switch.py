@@ -69,7 +69,9 @@ class SqueezeBoxAlarmEntity(
         super().__init__(coordinator)
         self._alarm: Alarm | None = alarm
         self._attr_available = True
-        self._attr_unique_id: str = f"{coordinator.player_uuid}-alarm-{alarm["id"]}"
+        self._attr_unique_id: str = (
+            f"{coordinator.player.player_id}-alarm-{alarm["id"]}"
+        )
         self.entity_id: str = ENTITY_ID_FORMAT.format(
             f"squeezebox_alarm_{self.alarm["id"]}"
         )

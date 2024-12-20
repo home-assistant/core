@@ -11,7 +11,6 @@ from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -99,11 +98,10 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
         self.available = True
         self.known_alarms: list[str] = []
         self._remove_dispatcher: Callable | None = None
-        self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
 
-    async def _async_update_data(self) -> dict:
-        """Update the Player() object."""
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update the Player() object if available, or listen for rediscovery if not."""
         if self.available:
             # Only update players available at last update, unavailable players are rediscovered instead
             await self.player.async_update()
