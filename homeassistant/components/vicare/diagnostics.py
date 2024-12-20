@@ -9,7 +9,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DEVICE_LIST, DOMAIN
 from .types import ViCareConfigEntry
 
 TO_REDACT = {CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME}
@@ -23,8 +22,8 @@ async def async_get_config_entry_diagnostics(
     def dump_devices() -> list[dict[str, Any]]:
         """Dump devices."""
         return [
-            json.loads(device.config.dump_secure())
-            for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]
+            json.loads(device.dump_secure())
+            for device in entry.runtime_data.client.devices
         ]
 
     return {
