@@ -359,13 +359,6 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Define default device info."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self.coordinator.mac)},
-        )
-
-    @property
     def available(self) -> bool:
         """Check if device is available and initialized or sleepy."""
         coordinator = self.coordinator
