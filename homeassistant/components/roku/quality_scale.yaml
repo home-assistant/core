@@ -36,9 +36,9 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
+    status: todo
     comment: |
-      The integration only has an entity service.
+      The integration only has an entity service but will look into it for mutable platforms.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -86,7 +86,7 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
