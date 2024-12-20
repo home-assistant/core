@@ -191,10 +191,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "Failed to connect to SwitchBot API: %s", ex, exc_info=True
                 )
-                return self.async_abort(
-                    reason="api_error",
-                    description_placeholders={"error_detail": str(ex)},
-                )
+                raise AbortFlow(
+                    "api_error", description_placeholders={"error_detail": str(ex)}
+                ) from ex
             except SwitchbotAuthenticationError as ex:
                 _LOGGER.debug("Authentication failed: %s", ex, exc_info=True)
                 errors = {"base": "auth_failed"}
