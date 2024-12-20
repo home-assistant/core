@@ -82,7 +82,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         return data
 
 
-class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator):
+class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Squeezebox players."""
 
     def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
