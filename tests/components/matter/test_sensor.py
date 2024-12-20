@@ -413,3 +413,15 @@ async def test_evse_sensor(
     state = hass.states.get("sensor.evse_current_4")
     assert state
     assert state.state == "20.0"
+
+    # EnergyEvseMaximumChargeCurrent
+    state = hass.states.get("sensor.evse_current_5")
+    assert state
+    assert state.state == "32.0"
+
+    set_node_attribute(matter_node, 1, 153, 9, 63000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_current_5")
+    assert state
+    assert state.state == "63.0"
