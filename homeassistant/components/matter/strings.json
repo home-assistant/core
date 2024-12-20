@@ -95,10 +95,10 @@
         "name": "Reset filter condition"
       },
       "enable_charging": {
-        "name": "[%key:common::action::start%]"
+        "name": "Enable charging"
       },
       "disable_charging": {
-        "name": "[%key:common::action::stop%]"
+        "name": "Disable charging"
       }
     },
     "climate": {
