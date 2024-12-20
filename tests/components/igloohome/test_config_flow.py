@@ -80,3 +80,15 @@ async def test_form_invalid_input(
     assert result["title"] == "Client Credentials"
     assert result["data"] == FORM_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
+
+    # Attempt another config flow with the same client credentials
+    # and ensure that FlowResultType.ABORT is returned.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        FORM_USER_INPUT,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.ABORT
