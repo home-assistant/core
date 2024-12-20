@@ -53,7 +53,7 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
         super().__init__(
             api_device_info=api_device_info,
             api=api,
-            unique_key=SensorDeviceClass.BATTERY,
+            unique_key="battery",
         )
 
     async def async_update(self) -> None:
