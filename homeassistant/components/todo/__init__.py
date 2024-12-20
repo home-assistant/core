@@ -190,6 +190,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
+    component.async_register_entity_service(
+        TodoServices.REMOVE_ALL_ITEMS,
+        None,
+        _async_remove_all_items,
+        required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
+    )
 
     await component.async_setup(config)
     return True
@@ -540,5 +546,12 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
         for item in entity.todo_items or ()
         if item.status == TodoItemStatus.COMPLETED and item.uid
     ]
+    if uids:
+        await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_remove_all_items(entity: TodoListEntity, _: ServiceCall) -> None:
+    """Remove all items from the To-do list."""
+    uids = [item.uid for item in entity.todo_items or () if item.uid]
     if uids:
         await entity.async_delete_todo_items(uids=uids)
