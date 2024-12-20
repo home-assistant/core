@@ -51,6 +51,10 @@ from .store import BackupStore
 from .util import make_backup_dir, read_backup, validate_password
 
 
+class IncorrectPasswordError(HomeAssistantError):
+    """Raised when the password is incorrect."""
+
+
 @dataclass(frozen=True, kw_only=True, slots=True)
 class NewBackup:
     """New backup class."""
@@ -1273,7 +1277,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             validate_password, path, password
         )
         if not password_valid:
-            raise HomeAssistantError("The password provided is incorrect.")
+            raise IncorrectPasswordError("The password provided is incorrect.")
 
         def _write_restore_file() -> None:
             """Write the restore file."""

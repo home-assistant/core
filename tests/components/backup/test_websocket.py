@@ -623,6 +623,39 @@ async def test_restore_remote_agent(
     assert len(restart_calls) == snapshot
 
 
+async def test_restore_wrong_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test calling the restore command."""
+    await setup_backup_integration(
+        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    )
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text"),
+        patch(
+            "homeassistant.components.backup.manager.validate_password",
+            return_value=False,
+        ),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+            }
+        )
+        assert await client.receive_json() == snapshot
+    assert len(restart_calls) == 0
+
+
 @pytest.mark.parametrize(
     "access_token_fixture_name",
     ["hass_access_token", "hass_supervisor_access_token"],

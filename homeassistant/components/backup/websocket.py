@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import ManagerStateEvent
+from .manager import IncorrectPasswordError, ManagerStateEvent
 from .models import Folder
 
 
@@ -131,16 +131,20 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(
-        msg["backup_id"],
-        agent_id=msg["agent_id"],
-        password=msg.get("password"),
-        restore_addons=msg.get("restore_addons"),
-        restore_database=msg["restore_database"],
-        restore_folders=msg.get("restore_folders"),
-        restore_homeassistant=msg["restore_homeassistant"],
-    )
-    connection.send_result(msg["id"])
+    try:
+        await hass.data[DATA_MANAGER].async_restore_backup(
+            msg["backup_id"],
+            agent_id=msg["agent_id"],
+            password=msg.get("password"),
+            restore_addons=msg.get("restore_addons"),
+            restore_database=msg["restore_database"],
+            restore_folders=msg.get("restore_folders"),
+            restore_homeassistant=msg["restore_homeassistant"],
+        )
+    except IncorrectPasswordError:
+        connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    else:
+        connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
