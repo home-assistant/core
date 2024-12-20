@@ -204,7 +204,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
         return self.async_show_form(
-            step_id="auth",
+            step_id="encrypted_auth",
             errors=errors,
             data_schema=vol.Schema(
                 {
