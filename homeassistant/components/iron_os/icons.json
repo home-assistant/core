@@ -8,6 +8,20 @@
         }
       }
     },
+    "button": {
+      "ble_enabled": {
+        "default": "mdi:bluetooth-off",
+        "state": {
+          "unknown": "mdi:bluetooth"
+        }
+      },
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      },
+      "settings_reset": {
+        "default": "mdi:refresh"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
