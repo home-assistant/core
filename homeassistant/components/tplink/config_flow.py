@@ -18,7 +18,7 @@ from kasa import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ffmpeg
+from homeassistant.components import dhcp, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -44,7 +44,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import (
     async_discover_devices,
-    async_has_stream_auth_error,
     create_async_tplink_clientsession,
     get_credentials,
     mac_alias,
@@ -424,33 +423,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def _check_camera_stream_error(
-        self, device: Device, username: str | None, password: str | None
-    ) -> str | None:
-        """Return an error string if error accessing the camera stream."""
-        camera_creds: Credentials | None = None
-        assert bool(username) == bool(password)
-
-        if username:
-            camera_creds = Credentials(username, cast(str, password))
-
-        camera_module = device.modules[Module.Camera]
-        rtsp_url = camera_module.stream_rtsp_url(camera_creds)
-        assert rtsp_url
-
-        if await ffmpeg.async_get_image(self.hass, rtsp_url):
-            return None
-
-        if await async_has_stream_auth_error(self.hass, rtsp_url):
-            return "invalid_camera_auth"
-
-        return "cannot_connect_camera"
-
     async def async_step_camera_auth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that gives the user option to set camera credentials."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         device = self._discovered_device
         assert device
 
@@ -463,13 +441,23 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
             un = user_input.get(CONF_USERNAME)
             pw = user_input.get(CONF_PASSWORD)
-            both_or_none = bool(un) == bool(pw)
 
-        if user_input and not both_or_none:
-            errors["base"] = "both_or_none"
+        if user_input and un and pw:
+            camera_creds = Credentials(un, cast(str, pw))
 
-        if user_input and both_or_none:
-            if (error := await self._check_camera_stream_error(device, un, pw)) is None:
+            camera_module = device.modules[Module.Camera]
+            rtsp_url = camera_module.stream_rtsp_url(camera_creds)
+            assert rtsp_url
+
+            try:
+                await stream.async_check_stream_client_error(self.hass, rtsp_url)
+            except stream.StreamOpenClientError as ex:
+                if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+                    errors["base"] = "invalid_camera_auth"
+                else:
+                    errors["base"] = "cannot_connect_camera"
+                    placeholders["error"] = str(ex)
+            else:
                 entry_data: dict[str, bool | dict[str, str]] = {CONF_LIVE_VIEW: True}
                 if un:
                     entry_data[CONF_CAMERA_CREDENTIALS] = {
@@ -480,9 +468,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     device, camera_data=entry_data
                 )
 
-            errors["base"] = error
-
-        placeholders: dict[str, str] = {}
+        elif user_input:
+            errors["base"] = "camera_creds"
 
         entry = None
         if self.source == SOURCE_RECONFIGURE:

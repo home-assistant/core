@@ -4,12 +4,12 @@ import asyncio
 from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import make_mocked_request
-import av
 from freezegun.api import FrozenDateTimeFactory
 from kasa import Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import stream
 from homeassistant.components.camera import (
     CameraEntityFeature,
     StreamType,
@@ -126,6 +126,7 @@ async def test_camera_image(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_get_image."""
     mock_device = _mocked_device(
@@ -143,7 +144,7 @@ async def test_camera_image(
     assert state is not None
 
     with patch(
-        "homeassistant.components.tplink.camera.ffmpeg.async_get_image",
+        "homeassistant.components.ffmpeg.async_get_image",
         return_value=SMALLEST_VALID_JPEG_BYTES,
     ) as mock_get_image:
         image = await async_get_image(hass, "camera.my_camera_live_view")
@@ -167,6 +168,20 @@ async def test_camera_image(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    # Test image returns None
+    with patch(
+        "homeassistant.components.ffmpeg.async_get_image",
+        return_value=None,
+    ) as mock_get_image:
+        msg = f"None camera image returned for {IP_ADDRESS3}"
+        assert msg not in caplog.text
+
+        mock_get_image.reset_mock()
+        image = await async_get_image(hass, "camera.my_camera_live_view")
+        mock_get_image.assert_called_once()
+
+        assert msg in caplog.text
+
 
 async def test_no_camera_image_when_streaming(
     hass: HomeAssistant,
@@ -189,7 +204,7 @@ async def test_no_camera_image_when_streaming(
     assert state is not None
 
     with patch(
-        "homeassistant.components.tplink.camera.ffmpeg.async_get_image",
+        "homeassistant.components.ffmpeg.async_get_image",
         return_value=SMALLEST_VALID_JPEG_BYTES,
     ) as mock_get_image:
         await async_get_image(hass, "camera.my_camera_live_view")
@@ -256,7 +271,7 @@ async def test_no_concurrent_camera_image(
         return SMALLEST_VALID_JPEG_BYTES
 
     with patch(
-        "homeassistant.components.tplink.camera.ffmpeg.async_get_image",
+        "homeassistant.components.ffmpeg.async_get_image",
         new=_waiter,
     ):
         tasks = asyncio.gather(
@@ -297,12 +312,14 @@ async def test_camera_image_auth_error(
 
     with (
         patch(
-            "homeassistant.components.tplink.config_flow.ffmpeg.async_get_image",
+            "homeassistant.components.ffmpeg.async_get_image",
             return_value=b"",
         ),
         patch(
-            "homeassistant.components.tplink.av.open",
-            side_effect=av.HTTPUnauthorizedError(404, "Unauthorized"),
+            "homeassistant.components.stream.async_check_stream_client_error",
+            side_effect=stream.StreamOpenClientError(
+                stream_client_error=stream.StreamClientError.Unauthorized
+            ),
         ),
         pytest.raises(HomeAssistantError),
     ):

@@ -64,8 +64,8 @@
       "cannot_connect": "Connection error: {error}",
       "invalid_auth": "Unable to authenticate: {error}",
       "invalid_camera_auth": "Camera stream authentication failed",
-      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account",
-      "both_or_none": "You have to set both username and password, or leave them both empty"
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+      "camera_creds": "You have to set both username and password"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

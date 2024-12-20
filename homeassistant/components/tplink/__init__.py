@@ -5,12 +5,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
-from functools import partial
 import logging
 from typing import Any
 
 from aiohttp import ClientSession
-import av
 from kasa import (
     AuthenticationError,
     Credentials,
@@ -450,14 +448,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             "Migration to version %s.%s complete", entry_version, new_minor_version
         )
     return True
-
-
-async def async_has_stream_auth_error(hass: HomeAssistant, source: str) -> bool:
-    """Return true if rtsp stream raises an HTTPUnauthorizedError error."""
-    pyav_options = {"rtsp_flags": "prefer_tcp", "timeout": "5000000"}
-    try:
-        func = partial(av.open, source, options=pyav_options, timeout=5)
-        await hass.loop.run_in_executor(None, func)
-    except av.HTTPUnauthorizedError:
-        return True
-    return False

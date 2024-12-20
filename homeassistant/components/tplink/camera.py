@@ -10,7 +10,7 @@ from haffmpeg.camera import CameraMjpeg
 from kasa import Credentials, Device, Module
 from kasa.smartcam.modules import Camera as CameraModule
 
-from homeassistant.components import ffmpeg
+from homeassistant.components import ffmpeg, stream
 from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import TPLinkConfigEntry, async_has_stream_auth_error, legacy_device_id
+from . import TPLinkConfigEntry, legacy_device_id
 from .const import CONF_CAMERA_CREDENTIALS
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, TPLinkModuleEntityDescription
@@ -122,19 +122,22 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
 
     async def _async_check_stream_auth(self, video_url: str) -> None:
         """Check for an auth error and start reauth flow."""
-        if await async_has_stream_auth_error(self.hass, video_url):
-            _LOGGER.debug(
-                "Camera stream failed authentication for %s",
-                self._device.host,
-            )
-            self._can_stream = False
-            self.coordinator.config_entry.async_start_reauth(
-                self.hass,
-                ConfigFlowContext(
-                    reauth_source=CONF_CAMERA_CREDENTIALS,  # type: ignore[typeddict-unknown-key]
-                ),
-                {"device": self._device},
-            )
+        try:
+            await stream.async_check_stream_client_error(self.hass, video_url)
+        except stream.StreamOpenClientError as ex:
+            if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+                _LOGGER.debug(
+                    "Camera stream failed authentication for %s",
+                    self._device.host,
+                )
+                self._can_stream = False
+                self.coordinator.config_entry.async_start_reauth(
+                    self.hass,
+                    ConfigFlowContext(
+                        reauth_source=CONF_CAMERA_CREDENTIALS,  # type: ignore[typeddict-unknown-key]
+                    ),
+                    {"device": self._device},
+                )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
@@ -193,11 +196,11 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         if self._video_url is None or self._can_stream is False:
             return None
 
-        stream = CameraMjpeg(self._ffmpeg_manager.binary)
-        await stream.open_camera(self._video_url)
+        mjpeg_stream = CameraMjpeg(self._ffmpeg_manager.binary)
+        await mjpeg_stream.open_camera(self._video_url)
         self._http_mpeg_stream_running = True
         try:
-            stream_reader = await stream.get_reader()
+            stream_reader = await mjpeg_stream.get_reader()
             return await async_aiohttp_proxy_stream(
                 self.hass,
                 request,
@@ -206,7 +209,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
             )
         finally:
             self._http_mpeg_stream_running = False
-            await stream.close()
+            await mjpeg_stream.close()
             _LOGGER.debug("Stopped http mjpeg stream for %s", self._device.host)
 
     async def async_turn_on(self) -> None:
