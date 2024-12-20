@@ -9,7 +9,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -46,7 +45,6 @@ async def test_diagnostics_no_gas_today(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics, no gas sensors available."""
-    await async_setup_component(hass, "homeassistant", {})
     mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
 
     freezer.tick(SCAN_INTERVAL)

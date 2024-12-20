@@ -11,7 +11,6 @@ from homeassistant.components.energyzero.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -41,8 +40,6 @@ async def test_no_gas_today(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the EnergyZero - No gas sensors available."""
-    await async_setup_component(hass, "homeassistant", {})
-
     mock_energyzero.gas_prices.side_effect = EnergyZeroNoDataError
 
     freezer.tick(SCAN_INTERVAL)
