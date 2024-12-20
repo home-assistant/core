@@ -183,6 +183,14 @@ def mock_pynecil() -> Generator[AsyncMock]:
             desc_scroll_speed=ScrollSpeed.FAST,
             logo_duration=LogoDuration.LOOP,
             locking_mode=LockingMode.FULL_LOCKING,
+            animation_loop=True,
+            cooling_temp_blink=True,
+            idle_screen_details=True,
+            solder_screen_details=True,
+            invert_buttons=True,
+            display_invert=True,
+            calibrate_cjc=True,
+            usb_pd_mode=True,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,
