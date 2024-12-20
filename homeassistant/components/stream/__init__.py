@@ -141,7 +141,7 @@ def _try_open_stream(
     """
     import av  # pylint: disable=import-outside-toplevel
 
-    if not pyav_options:
+    if pyav_options is None:
         pyav_options = {}
 
     default_pyav_options = {
@@ -186,25 +186,24 @@ def _try_open_stream(
 
 async def async_check_stream_client_error(
     hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
-) -> StreamClientError | None:
-    """Return an enum value representing a stream client error or None."""
-    return await hass.loop.run_in_executor(
+) -> None:
+    """Check if a stream can be successfully opened.
+
+    Raise StreamOpenClientError if an http client error is encountered.
+    """
+    await hass.loop.run_in_executor(
         None, _check_stream_client_error, source, pyav_options
     )
 
 
 def _check_stream_client_error(
     source: str, pyav_options: dict[str, str] | None = None
-) -> StreamClientError | None:
-    """Return an enum value representing a stream client error or None."""
-    try:
-        container = _try_open_stream(source, pyav_options)
-    except StreamOpenClientError as ex:
-        return ex.stream_client_error
-    else:
-        container.close()
+) -> None:
+    """Check if a stream can be successfully opened.
 
-    return None
+    Raise StreamOpenClientError if an http client error is encountered.
+    """
+    _try_open_stream(source, pyav_options).close()
 
 
 def redact_credentials(url: str) -> str:
