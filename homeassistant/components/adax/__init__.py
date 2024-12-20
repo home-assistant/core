@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-PLATFORMS = [Platform.CLIMATE]
+from .climate import AdaxDataHandler
+from .const import PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Adax from a config entry."""
+    adax_data_handler = AdaxDataHandler(entry, hass)
+    await adax_data_handler.async_update()
+    hass.data[entry.entry_id] = adax_data_handler
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
