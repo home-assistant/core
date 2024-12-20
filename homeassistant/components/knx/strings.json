@@ -70,7 +70,7 @@
         "title": "Tunnel endpoint",
         "description": "Select the tunnel endpoint used for the connection.",
         "data": {
-          "user_id": "`Automatic` will use the first free tunnel endpoint."
+          "user_id": "'Automatic' selects a free tunnel endpoint for you when connecting. If you're unsure, this is the best option."
         }
       },
       "secure_tunnel_manual": {
