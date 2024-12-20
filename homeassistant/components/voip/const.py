@@ -12,4 +12,8 @@ RTP_AUDIO_SETTINGS = {
     "sleep_ratio": 0.99,
 }
 
+DEFAULT_SIP_HOST = "127.0.0.1"
+
+CONF_SIP_HOST = "sip_host"
 CONF_SIP_PORT = "sip_port"
+CONF_SIP_USER = "sip_user"

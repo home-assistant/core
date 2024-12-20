@@ -8,12 +8,15 @@ from functools import partial
 import io
 import logging
 from pathlib import Path
+import socket
 from typing import TYPE_CHECKING, Any, Final
 import wave
 
-from voip_utils import RtpDatagramProtocol
+from voip_utils import SIP_PORT, RtpDatagramProtocol
+from voip_utils.sip import CallInfo, SipEndpoint
+from voip_utils.voip import CallProtocolFactory, RtcpDatagramProtocol, RtcpState
 
-from homeassistant.components import tts
+from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -24,7 +27,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .const import (
+    CHANNELS,
+    CONF_SIP_HOST,
+    CONF_SIP_PORT,
+    DOMAIN,
+    RATE,
+    RTP_AUDIO_SETTINGS,
+    WIDTH,
+)
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
@@ -33,7 +44,11 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+_CRLF = "\r\n"
+
 _PIPELINE_TIMEOUT_SEC: Final = 30
+
+RTP_PORT_RANGE_START = 1024
 
 
 class Tones(IntFlag):
@@ -104,6 +119,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tone_bytes: dict[Tones, bytes] = {}
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
+        self._hass_sip_host = config_entry.options.get(CONF_SIP_HOST, "127.0.0.1")
+        self._hass_sip_port = config_entry.options.get(CONF_SIP_PORT, SIP_PORT)
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -130,6 +147,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         await super().async_added_to_hass()
         self.voip_device.protocol = self
 
+        # Device supports announcements
+        self._attr_supported_features |= (
+            assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -148,6 +170,83 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     ) -> None:
         """Set the current satellite configuration."""
         raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    # RTP/RTCP port selection
+    # -------------------------------------------------------------------------
+    def _choose_rtp_ports(self) -> tuple[int, int]:
+        rtp_port = RTP_PORT_RANGE_START
+        while True:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setblocking(False)
+
+            # Bind to a random UDP port
+            sock.bind(("", 0))
+            _, rtp_port = sock.getsockname()
+
+            # Close socket to free port for reuse
+            sock.close()
+
+            # Check that the next port up is available for RTCP
+            rtcp_port = rtp_port + 1
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                sock.bind(("", rtcp_port))
+
+                # Will be opened again below
+                sock.close()
+
+                # Found our ports
+                break
+            except OSError:
+                # RTCP port is taken
+                pass
+
+        return rtp_port, rtcp_port
+
+    async def _create_rtp_server(
+        self,
+        protocol_factory: CallProtocolFactory,
+        call_info: CallInfo,
+        rtp_ip: str,
+        rtp_port: int,
+    ):
+        # Shared state between RTP/RTCP servers
+        rtcp_state = RtcpState()
+
+        loop = asyncio.get_running_loop()
+
+        # RTCP server
+        await loop.create_datagram_endpoint(
+            lambda: RtcpDatagramProtocol(rtcp_state),
+            (rtp_ip, rtp_port + 1),
+        )
+
+        # RTP server
+        await loop.create_datagram_endpoint(
+            partial(protocol_factory, call_info, rtcp_state),
+            (rtp_ip, rtp_port),
+        )
+
+    async def async_announce(
+        self, announcement: assist_satellite.AssistSatelliteAnnouncement
+    ) -> None:
+        """Announce media on the phone. First call and wait for phone.
+
+        Before calling the phone, we should check to make sure there is not
+        already an ongoing call. After calling, should block until the
+        announcement is done playing.
+        """
+        _LOGGER.debug(
+            "Calling phone for announcement (message=%s, media_id=%s)",
+            announcement.message,
+            announcement.media_id,
+        )
+        rtp_port, rtcp_port = self._choose_rtp_ports()
+        source = self.hass.data[DOMAIN].protocol.local_endpoint
+        destination = SipEndpoint(self.voip_device.voip_id)
+
+        self.hass.data[DOMAIN].protocol.outgoing_call(source, destination, rtp_port)
 
     # -------------------------------------------------------------------------
     # VoIP

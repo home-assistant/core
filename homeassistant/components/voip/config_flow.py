@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SIP_PORT, DOMAIN
+from .const import CONF_SIP_HOST, CONF_SIP_PORT, CONF_SIP_USER, DOMAIN
 
 
 class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -64,13 +64,27 @@ class VoipOptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        CONF_SIP_USER,
+                        default=self.config_entry.options.get(
+                            CONF_SIP_USER,
+                            "HA",
+                        ),
+                    ): str,
+                    vol.Required(
+                        CONF_SIP_HOST,
+                        default=self.config_entry.options.get(
+                            CONF_SIP_HOST,
+                            "127.0.0.1",
+                        ),
+                    ): str,
                     vol.Required(
                         CONF_SIP_PORT,
                         default=self.config_entry.options.get(
                             CONF_SIP_PORT,
                             SIP_PORT,
                         ),
-                    ): cv.port
+                    ): cv.port,
                 }
             ),
         )

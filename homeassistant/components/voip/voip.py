@@ -16,6 +16,7 @@ from voip_utils import (
     SdpInfo,
     VoipDatagramProtocol,
 )
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.assist_pipeline import (
     Pipeline,
@@ -79,7 +80,9 @@ def make_protocol(
 class HassVoipDatagramProtocol(VoipDatagramProtocol):
     """HA UDP server for Voice over IP (VoIP)."""
 
-    def __init__(self, hass: HomeAssistant, devices: VoIPDevices) -> None:
+    def __init__(
+        self, hass: HomeAssistant, devices: VoIPDevices, local_endpoint: SipEndpoint
+    ) -> None:
         """Set up VoIP call handler."""
         super().__init__(
             sdp_info=SdpInfo(
@@ -102,6 +105,9 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         )
         self.hass = hass
         self.devices = devices
+        self.local_endpoint = local_endpoint
+        self.sip_host = local_endpoint.host
+        self.sip_port = local_endpoint.port
         self._closed_event = asyncio.Event()
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
