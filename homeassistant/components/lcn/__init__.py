@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             f"Unable to connect to {config_entry.title}: {ex}"
         ) from ex
 
-    _LOGGER.info('LCN connected to "%s"', config_entry.title)
+    _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
         DEVICE_CONNECTIONS: {},
