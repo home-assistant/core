@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    BIMMER_CONNECTED_LOGIN_PATCH,
+    BIMMER_CONNECTED_VEHICLE_PATCH,
     FIXTURE_CAPTCHA_INPUT,
     FIXTURE_CONFIG_ENTRY,
     FIXTURE_GCID,
@@ -72,7 +74,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     """Test we show user form on MyBMW API error."""
 
     with patch(
-        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        BIMMER_CONNECTED_LOGIN_PATCH,
         side_effect=RequestError("Connection reset"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -163,7 +165,7 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
     """Test config flow options."""
     with (
         patch(
-            "bimmer_connected.account.MyBMWAccount.get_vehicles",
+            BIMMER_CONNECTED_VEHICLE_PATCH,
             return_value=[],
         ),
         patch(
@@ -200,7 +202,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     """Test the reauth form."""
     with (
         patch(
-            "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+            BIMMER_CONNECTED_LOGIN_PATCH,
             side_effect=login_sideeffect,
             autospec=True,
         ),
@@ -249,7 +251,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 async def test_reconfigure(hass: HomeAssistant) -> None:
     """Test the reconfiguration form."""
     with patch(
-        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        BIMMER_CONNECTED_LOGIN_PATCH,
         side_effect=login_sideeffect,
         autospec=True,
     ):

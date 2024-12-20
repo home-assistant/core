@@ -19,7 +19,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import FIXTURE_CONFIG_ENTRY
+from . import BIMMER_CONNECTED_VEHICLE_PATCH, FIXTURE_CONFIG_ENTRY
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -55,7 +55,7 @@ async def test_update_failed(
     freezer.tick(timedelta(minutes=5, seconds=1))
 
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAPIError("Test error"),
     ):
         async_fire_time_changed(hass)
@@ -83,7 +83,7 @@ async def test_update_reauth(
 
     freezer.tick(timedelta(minutes=5, seconds=1))
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
     ):
         async_fire_time_changed(hass)
@@ -94,7 +94,7 @@ async def test_update_reauth(
 
     freezer.tick(timedelta(minutes=5, seconds=1))
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
     ):
         async_fire_time_changed(hass)
@@ -117,7 +117,7 @@ async def test_init_reauth(
     assert len(issue_registry.issues) == 0
 
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -152,7 +152,7 @@ async def test_captcha_reauth(
 
     freezer.tick(timedelta(minutes=10, seconds=1))
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWCaptchaMissingError(
             "Missing hCaptcha token for North America login"
         ),
