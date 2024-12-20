@@ -27,7 +27,7 @@ class AdsHub:
         self._client.open()
 
         # All ADS devices are registered here
-        self._mac_address = self._get_mac_address()
+        self._mac_address = self.get_mac_address()
         self._devices = []
         self._notification_items = {}
         self._lock = threading.Lock()
