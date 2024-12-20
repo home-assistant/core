@@ -231,7 +231,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         if not device_info.friendly_name:
             return
         self._attr_has_entity_name = True
-        self.entity_id = f"{domain}.{device_info.name}_{entity_info.object_id}"
+        self.entity_id = f"{domain}.{device_info.friendly_name}_{entity_info.name}"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
