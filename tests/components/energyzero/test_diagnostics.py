@@ -8,8 +8,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.energyzero.const import SCAN_INTERVAL
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -54,13 +52,6 @@ async def test_diagnostics_no_gas_today(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        "homeassistant",
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: ["sensor.energyzero_today_gas_current_hour_price"]},
-        blocking=True,
-    )
 
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
