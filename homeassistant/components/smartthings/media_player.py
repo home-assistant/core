@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from pysmartthings import Capability, DeviceEntity
+from pysmartthings import APIResponseError, Capability, DeviceEntity
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -15,6 +15,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_BROKERS, DOMAIN
@@ -39,11 +40,9 @@ async def async_setup_entry(
     """Add media players for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [
-            SmartThingsMediaPlayer(device)
-            for device in broker.devices.values()
-            if broker.any_assigned(device.device_id, MEDIA_PLAYER_DOMAIN)
-        ]
+        SmartThingsMediaPlayer(device)
+        for device in broker.devices.values()
+        if broker.any_assigned(device.device_id, MEDIA_PLAYER_DOMAIN)
     )
 
 
@@ -74,84 +73,134 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def __init__(self, device: DeviceEntity) -> None:
         """Initialize the media_player class."""
         super().__init__(device)
-        self._state = None
-        self._state_attrs = None
-        self._supported_features = (
-            MediaPlayerEntityFeature.PLAY
-            | MediaPlayerEntityFeature.PAUSE
-            | MediaPlayerEntityFeature.STOP
-        )
+        if Capability.audio_mute in device.capabilities:
+            self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
         if Capability.audio_volume in device.capabilities:
-            self._supported_features |= (
+            self._attr_supported_features |= (
                 MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_STEP
             )
-        if Capability.audio_mute in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.VOLUME_MUTE
+        if Capability.media_input_source in device.capabilities:
+            self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        if Capability.media_playback in device.capabilities:
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
+            )
         if Capability.switch in device.capabilities:
-            self._supported_features |= (
+            self._attr_supported_features |= (
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
             )
-        if Capability.media_input_source in device.capabilities:
-            self._supported_features |= MediaPlayerEntityFeature.SELECT_SOURCE
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the media player on."""
-        await self._device.switch_on(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.switch_on(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"err": str(err)},
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the media player off."""
-        await self._device.switch_off(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.switch_off(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError("Failed to turn off SmartThings device") from err
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         if mute:
-            await self._device.mute(set_status=True)
+            try:
+                await self._device.mute(set_status=True)
+                self.async_write_ha_state()
+            except APIResponseError as err:
+                raise HomeAssistantError(
+                    "Failed to mute volume on SmartThings device"
+                ) from err
         else:
-            await self._device.unmute(set_status=True)
-        self.async_write_ha_state()
+            try:
+                await self._device.unmute(set_status=True)
+                self.async_write_ha_state()
+            except APIResponseError as err:
+                raise HomeAssistantError(
+                    "Failed to unmute volume on SmartThings device"
+                ) from err
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-        await self._device.set_volume(int(volume * 100), set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.set_volume(int(volume * 100), set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to set volume on SmartThings device"
+            ) from err
 
     async def async_volume_up(self) -> None:
         """Increase volume."""
-        await self._device.volume_up(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.volume_up(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to increase volume on SmartThings device"
+            ) from err
 
     async def async_volume_down(self) -> None:
         """Decrease volume."""
-        await self._device.volume_down(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.volume_down(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to decrease volume on SmartThings device"
+            ) from err
 
     async def async_media_play(self) -> None:
         """Play media."""
-        await self._device.play(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.play(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to play media on SmartThings device"
+            ) from err
 
     async def async_media_pause(self) -> None:
         """Pause media."""
-        await self._device.pause(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.pause(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to pause media on SmartThings device"
+            ) from err
 
     async def async_media_stop(self) -> None:
         """Stop media."""
-        await self._device.stop(set_status=True)
-        self.async_write_ha_state()
+        try:
+            await self._device.stop(set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to stop media on SmartThings device"
+            ) from err
 
     async def async_select_source(self, source: str) -> None:
         """Select source."""
-        await self._device.set_input_source(source, set_status=True)
-        self.async_write_ha_state()
-
-    @property
-    def supported_features(self) -> MediaPlayerEntityFeature:
-        """Supported features."""
-        return self._supported_features
+        try:
+            await self._device.set_input_source(source, set_status=True)
+            self.async_write_ha_state()
+        except APIResponseError as err:
+            raise HomeAssistantError(
+                "Failed to set source on SmartThings device"
+            ) from err
 
     @property
     def media_title(self) -> str | None:
