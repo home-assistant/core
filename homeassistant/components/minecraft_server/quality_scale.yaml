@@ -9,7 +9,12 @@ rules:
   config-flow:
     status: todo
     comment: Check removal and replacement of name in config flow with the title (server address).
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Merge test_show_config_form with full flow test.
+      Move full flow test to the top of all tests.
+      All test cases should end in either CREATE_ENTRY or ABORT.
   dependency-transparency: done
   docs-actions:
     status: exempt
