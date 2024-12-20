@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': 'http://slzb-06.local',
     'connections': set({
       tuple(
