@@ -18,6 +18,8 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
+from .const import UNPLAYABLE_TYPES
+
 LIBRARY = [
     "Favorites",
     "Artists",
@@ -26,6 +28,8 @@ LIBRARY = [
     "Playlists",
     "Genres",
     "New Music",
+    "Apps",
+    "Radios",
 ]
 
 MEDIA_TYPE_TO_SQUEEZEBOX = {
@@ -41,6 +45,9 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     MediaType.TRACK: "title",
     MediaType.PLAYLIST: "playlist",
     MediaType.GENRE: "genre",
+    MediaType.APPS: "apps",
+    "Apps": "apps",
+    "Radios": "radios",
 }
 
 SQUEEZEBOX_ID_BY_TYPE = {
@@ -50,10 +57,14 @@ SQUEEZEBOX_ID_BY_TYPE = {
     MediaType.PLAYLIST: "playlist_id",
     MediaType.GENRE: "genre_id",
     "Favorites": "item_id",
+    MediaType.APPS: "item_id",
 }
 
 CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | None]] = {
     "Favorites": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    "Apps": {"item": MediaClass.DIRECTORY, "children": MediaClass.APP},
+    "Radios": {"item": MediaClass.DIRECTORY, "children": MediaClass.APP},
+    "App": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
     "Artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
     "Albums": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
     "Tracks": {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
@@ -65,6 +76,8 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | None]] = 
     MediaType.TRACK: {"item": MediaClass.TRACK, "children": None},
     MediaType.GENRE: {"item": MediaClass.GENRE, "children": MediaClass.ARTIST},
     MediaType.PLAYLIST: {"item": MediaClass.PLAYLIST, "children": MediaClass.TRACK},
+    MediaType.APP: {"item": MediaClass.DIRECTORY, "children": MediaClass.TRACK},
+    MediaType.APPS: {"item": MediaClass.DIRECTORY, "children": MediaClass.APP},
 }
 
 CONTENT_TYPE_TO_CHILD_TYPE = {
@@ -78,8 +91,15 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Playlists": MediaType.PLAYLIST,
     "Genres": MediaType.GENRE,
     "Favorites": None,  # can only be determined after inspecting the item
+    "Apps": MediaClass.APP,
+    "Radios": MediaClass.APP,
+    "App": None,  # can only be determined after inspecting the item
     "New Music": MediaType.ALBUM,
+    MediaType.APPS: MediaType.APP,
+    MediaType.APP: MediaType.TRACK,
 }
+
+KNOWN_APPS: set[str | None] = set()
 
 BROWSE_LIMIT = 1000
 
@@ -116,7 +136,7 @@ async def build_item_response(
 
         children = []
         for item in result["items"]:
-            item_id = str(item["id"])
+            item_id = str(item.get("id", ""))
             item_thumbnail: str | None = None
             if item_type:
                 child_item_type: MediaType | str = item_type
@@ -142,6 +162,46 @@ async def build_item_response(
                     can_expand = False
                     can_play = True
 
+            if search_type in ["Apps", "Radios"]:
+                # item["cmd"] contains the name of the command to use with the cli for the app
+                # add the command to the dictionaries
+                if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
+                    # Skip searches in apps as they'd need UI or if the link isn't to audio
+                    continue
+                _cmd = "app-" + item["cmd"]
+                MEDIA_TYPE_TO_SQUEEZEBOX.update({_cmd: _cmd})
+                SQUEEZEBOX_ID_BY_TYPE.update({_cmd: "item_id"})
+                CONTENT_TYPE_MEDIA_CLASS.update(
+                    {
+                        _cmd: {
+                            "item": MediaClass.DIRECTORY,
+                            "children": MediaClass.TRACK,
+                        }
+                    }
+                )
+                CONTENT_TYPE_TO_CHILD_TYPE.update({_cmd: MediaType.TRACK})
+
+                if _cmd not in KNOWN_APPS:
+                    KNOWN_APPS.add(_cmd)
+
+                child_item_type = _cmd
+                child_media_class = CONTENT_TYPE_MEDIA_CLASS[_cmd]
+                can_expand = True
+                can_play = False
+
+            if search_type in KNOWN_APPS:
+                if item.get("title") in ["Search", None] or item.get("type") in [
+                    "text",
+                    "actions",
+                ]:
+                    # Skip searches in apps as they'd need UI
+                    continue
+
+                child_item_type = search_type
+                child_media_class = CONTENT_TYPE_MEDIA_CLASS[search_type]
+                can_play = item["isaudio"] and item.get("url")
+                can_expand = item["hasitems"]
+
             if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
                     item_thumbnail = player.generate_image_url_from_track_id(
@@ -151,6 +211,8 @@ async def build_item_response(
                     item_thumbnail = entity.get_browse_image_url(
                         item_type, item_id, artwork_track_id
                     )
+            elif search_type in ["Apps", "Radios"]:
+                item_thumbnail = player.generate_image_url(item["icon"])
             else:
                 item_thumbnail = item.get("image_url")  # will not be proxied by HA
 
@@ -173,13 +235,14 @@ async def build_item_response(
     assert media_class["item"] is not None
     if not search_id:
         search_id = search_type
+
     return BrowseMedia(
         title=result.get("title"),
         media_class=media_class["item"],
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=search_type != "Favorites",
+        can_play=search_type not in ["Favorites", "Apps"],
         children=children,
         can_expand=True,
     )
@@ -212,7 +275,7 @@ async def library_payload(hass: HomeAssistant, player: Player) -> BrowseMedia:
                     media_class=media_class["children"],
                     media_content_id=item,
                     media_content_type=item,
-                    can_play=item != "Favorites",
+                    can_play=item not in ["Favorites", "Apps", "Radios"],
                     can_expand=True,
                 )
             )
@@ -244,8 +307,13 @@ async def generate_playlist(player: Player, payload: dict[str, str]) -> list | N
         raise BrowseError(f"Media type not supported: {media_type}")
 
     browse_id = (SQUEEZEBOX_ID_BY_TYPE[media_type], media_id)
+    if media_type[:4] == "app-":
+        category = media_type
+    else:
+        category = "titles"
+
     result = await player.async_browse(
-        "titles", limit=BROWSE_LIMIT, browse_id=browse_id
+        category, limit=BROWSE_LIMIT, browse_id=browse_id
     )
     if result and "items" in result:
         items: list = result["items"]
