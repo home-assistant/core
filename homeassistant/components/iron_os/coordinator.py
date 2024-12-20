@@ -5,15 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
-from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 from pynecil import (
     CommunicationError,
     DeviceInfoResponse,
+    IronOSUpdate,
+    LatestRelease,
     LiveDataResponse,
     Pynecil,
     SettingsDataResponse,
+    UpdateException,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -104,10 +105,10 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         return False
 
 
-class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
     """IronOS coordinator for retrieving update information from github."""
 
-    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
+    def __init__(self, hass: HomeAssistant, github: IronOSUpdate) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(
             hass,
@@ -118,21 +119,13 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel])
         )
         self.github = github
 
-    async def _async_update_data(self) -> GitHubReleaseModel:
+    async def _async_update_data(self) -> LatestRelease:
         """Fetch data from Github."""
 
         try:
-            release = await self.github.repos.releases.latest("Ralim/IronOS")
-
-        except GitHubException as e:
-            raise UpdateFailed(
-                "Failed to retrieve latest release data from Github"
-            ) from e
-
-        if TYPE_CHECKING:
-            assert release.data
-
-        return release.data
+            return await self.github.latest_release()
+        except UpdateException as e:
+            raise UpdateFailed("Failed to check for latest IronOS update") from e
 
 
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):

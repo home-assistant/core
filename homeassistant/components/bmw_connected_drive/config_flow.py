@@ -18,7 +18,6 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -39,6 +38,7 @@ from .const import (
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
 )
+from .coordinator import BMWConfigEntry
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -224,7 +224,7 @@ class BMWConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: BMWConfigEntry,
     ) -> BMWOptionsFlow:
         """Return a MyBMW option flow."""
         return BMWOptionsFlow()

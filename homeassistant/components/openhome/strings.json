@@ -2,11 +2,11 @@
   "services": {
     "invoke_pin": {
       "name": "Invoke PIN",
-      "description": "Invokes a pin on the specified device.",
+      "description": "Invokes a PIN on the specified device.",
       "fields": {
         "pin": {
           "name": "PIN",
-          "description": "Which pin to invoke."
+          "description": "Which PIN to invoke."
         }
       }
     }

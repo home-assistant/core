@@ -1,8 +1,10 @@
 """Test initialization of lamarzocco."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.const import FirmwareType
+from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco.const import FirmwareType, MachineModel
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
@@ -27,7 +29,7 @@ from homeassistant.helpers import (
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -174,9 +176,7 @@ async def test_bluetooth_is_set_from_discovery(
             "homeassistant.components.lamarzocco.async_discovered_service_info",
             return_value=[service_info],
         ) as discovery,
-        patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine"
-        ) as init_device,
+        patch("homeassistant.components.lamarzocco.LaMarzoccoMachine") as init_device,
     ):
         await async_init_integration(hass, mock_config_entry)
     discovery.assert_called_once()
@@ -253,3 +253,49 @@ async def test_device(
     device = device_registry.async_get(entry.device_id)
     assert device
     assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_scale_device(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_lamarzocco.config.scale.address)}
+    )
+    assert device
+    assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_remove_stale_scale(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure stale scale is cleaned up."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    scale_address = mock_lamarzocco.config.scale.address
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scale_address)})
+    assert device
+
+    mock_lamarzocco.config.scale = None
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scale_address)})
+    assert device is None
