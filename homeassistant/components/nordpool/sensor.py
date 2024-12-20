@@ -81,11 +81,11 @@ def get_prices(
 
 def get_min_max_price(
     entity: NordpoolPriceSensor,
-    area: str,
     func: Callable[[float, float], float],
 ) -> tuple[float, datetime, datetime]:
     """Get the lowest price from the data."""
     data = entity.coordinator.get_data_current_day()
+    area = entity.area
     price_data = data.entries
     price: float = price_data[0].entry[area]
     start: datetime = price_data[0].start
@@ -199,20 +199,20 @@ PRICES_SENSOR_TYPES: tuple[NordpoolPricesSensorEntityDescription, ...] = (
     NordpoolPricesSensorEntityDescription(
         key="lowest_price",
         translation_key="lowest_price",
-        value_fn=lambda entity: get_min_max_price(entity, entity.area, min)[0] / 1000,
+        value_fn=lambda entity: get_min_max_price(entity, min)[0] / 1000,
         extra_fn=lambda entity: {
-            "start": get_min_max_price(entity, entity.area, min)[1].isoformat(),
-            "end": get_min_max_price(entity, entity.area, min)[2].isoformat(),
+            "start": get_min_max_price(entity, min)[1].isoformat(),
+            "end": get_min_max_price(entity, min)[2].isoformat(),
         },
         suggested_display_precision=2,
     ),
     NordpoolPricesSensorEntityDescription(
         key="highest_price",
         translation_key="highest_price",
-        value_fn=lambda entity: get_min_max_price(entity, entity.area, max)[0] / 1000,
+        value_fn=lambda entity: get_min_max_price(entity, max)[0] / 1000,
         extra_fn=lambda entity: {
-            "start": get_min_max_price(entity, entity.area, max)[1].isoformat(),
-            "end": get_min_max_price(entity, entity.area, max)[2].isoformat(),
+            "start": get_min_max_price(entity, max)[1].isoformat(),
+            "end": get_min_max_price(entity, max)[2].isoformat(),
         },
         suggested_display_precision=2,
     ),
