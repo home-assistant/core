@@ -784,6 +784,15 @@
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
       },
+      "remote_temperature": {
+        "name": "Remote temperature"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
       "irrigation_cycles": {
         "name": "Irrigation cycles"
       },
@@ -911,6 +920,12 @@
       },
       "setpoint_response_time": {
         "name": "Setpoint response time"
+      },
+      "display_orientation": {
+        "name": "Display orientation"
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature"
       },
       "irrigation_mode": {
         "name": "Irrigation mode"
@@ -1103,6 +1118,9 @@
       "motor_stepcount": {
         "name": "Motor stepcount"
       },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
       "irrigation_duration": {
         "name": "Last irrigation duration"
       },
@@ -1236,6 +1254,12 @@
       },
       "adaptation_run_enabled": {
         "name": "Adaptation run enabled"
+      },
+      "window_open": {
+        "name": "Window open"
+      },
+      "boost_heating": {
+        "name": "Boost heating"
       },
       "valve_on_off_1": {
         "name": "Valve 1"
