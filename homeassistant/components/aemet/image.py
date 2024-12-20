@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Final
 
 from aemet_opendata.const import AOD_DATETIME, AOD_IMG_BYTES, AOD_IMG_TYPE, AOD_RADAR
@@ -15,14 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class AemetImageEntityDescription(ImageEntityDescription):
-    """A class that describes AEMET OpenData image entities."""
-
-
-AEMET_IMAGES: Final[tuple[AemetImageEntityDescription, ...]] = (
-    AemetImageEntityDescription(
+AEMET_IMAGES: Final[tuple[ImageEntityDescription, ...]] = (
+    ImageEntityDescription(
         key=AOD_RADAR,
         name="Weather Radar image",
     ),
@@ -58,14 +51,14 @@ async def async_setup_entry(
 class AemetImage(AemetEntity, ImageEntity):
     """Implementation of an AEMET OpenData image."""
 
-    entity_description: AemetImageEntityDescription
+    entity_description: ImageEntityDescription
 
     def __init__(
         self,
         hass: HomeAssistant,
         name: str,
         coordinator: WeatherUpdateCoordinator,
-        description: AemetImageEntityDescription,
+        description: ImageEntityDescription,
         unique_id: str,
     ) -> None:
         """Initialize the image."""
