@@ -25,7 +25,6 @@ UNSUPPORTED_DEVICES = [
     "E3_RoomControl_One_522",
 ]
 
-DEVICE_LIST = "device_list"
 VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
