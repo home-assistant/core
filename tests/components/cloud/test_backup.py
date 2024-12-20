@@ -17,7 +17,10 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud.backup import async_register_backup_agents_listener
+from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -576,3 +579,36 @@ async def test_agents_delete_not_found(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+@pytest.mark.parametrize("event_type", ["login", "logout"])
+async def test_calling_listener_on_login_logout(
+    hass: HomeAssistant,
+    event_type: str,
+) -> None:
+    """Test calling listener for login and logout events."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": event_type})
+    await hass.async_block_till_done()
+
+    assert listener.call_count == 1
+
+
+async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
+    """Test register backup agents listener."""
+    listener = MagicMock()
+    unsub = async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+    unsub()
+
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
