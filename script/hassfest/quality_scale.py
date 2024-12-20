@@ -983,7 +983,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "supla",
     "surepetcare",
     "swiss_hydrological_data",
-    "swiss_public_transport",
     "swisscom",
     "switch_as_x",
     "switchbee",
