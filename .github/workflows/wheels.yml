@@ -109,6 +109,8 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
+    environment:
+      name: wheel_builder
     strategy:
       fail-fast: false
       matrix:
@@ -153,6 +155,8 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
+    environment:
+      name: wheel_builder
     strategy:
       fail-fast: false
       matrix:
