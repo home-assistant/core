@@ -191,7 +191,7 @@ get_library:
           max: 1000000
           step: 1
     order_by:
-      example: "playlist"
+      example: "random"
       selector:
         select:
           translation_key: order_by
