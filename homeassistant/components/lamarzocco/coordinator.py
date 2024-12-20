@@ -86,9 +86,11 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    async def _async_setup(self) -> None:
+    async def _async_connect_websocket(self) -> None:
         """Set up the coordinator."""
-        if self._local_client is not None:
+        if self._local_client is not None and (
+            self._local_client.websocket is None or self._local_client.websocket.closed
+        ):
             _LOGGER.debug("Init WebSocket in background task")
 
             self.config_entry.async_create_background_task(
@@ -118,6 +120,7 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         """Fetch data from API endpoint."""
         await self.device.get_config()
         _LOGGER.debug("Current status: %s", str(self.device.config))
+        await self._async_connect_websocket()
 
 
 class LaMarzoccoFirmwareUpdateCoordinator(LaMarzoccoUpdateCoordinator):
