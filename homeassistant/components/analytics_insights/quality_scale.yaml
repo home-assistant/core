@@ -42,7 +42,7 @@ rules:
       The coordinator handles this.
   integration-owner: done
   log-when-unavailable:
-    status: exempt
+    status: done
     comment: |
       The coordinator handles this.
   parallel-updates: todo
