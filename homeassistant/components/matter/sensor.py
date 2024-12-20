@@ -763,7 +763,7 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
-        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity),
+        required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
