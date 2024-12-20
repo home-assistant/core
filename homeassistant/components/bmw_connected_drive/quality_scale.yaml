@@ -1,3 +1,5 @@
+# + in comment indicates requirement for quality scale
+# - in comment indicates issue to be fixed, not impacting quality scale
 rules:
   # Bronze
   action-setup:
@@ -6,9 +8,24 @@ rules:
       Does not have custom services
   appropriate-polling: done
   brands: done
-  common-modules: done
-  config-flow-test-coverage: done
-  config-flow: done
+  common-modules:
+    status: done
+    comment: |
+      - 2 states writes in async_added_to_hass() required for platforms that redefine _handle_coordinator_update()
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - test_show_form doesn't really add anything
+      - Patch bimmer_connected imports with homeassistant.components.bmw_connected_drive.bimmer_connected imports
+      + Ensure that configs flows end in CREATE_ENTRY or ABORT
+      - Parameterize test_authentication_error, test_api_error and test_connection_error
+      + test_full_user_flow_implementation doesn't assert unique id of created entry
+      + test that aborts when a mocked config entry already exists
+      + don't test on internals (e.g. `coordinator.last_update_success`) but rather on the resulting state (change)
+  config-flow:
+    status: done
+    comment: |
+      - Don't set `data` as class instance
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -41,7 +58,10 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: done
+    comment: |
+      - Use constants in tests where possible
 
   # Gold
   devices: done
@@ -61,7 +81,9 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: todo
-    comment: Ongoing discussion, we cannot regularly get new devices/vehicles due to API quota limitations.
+    comment: >
+      To be discussed.
+      We cannot regularly get new devices/vehicles due to API quota limitations.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -75,10 +97,14 @@ rules:
       Other than reauthentication, this integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: todo
-    comment: Ongoing discussion, we cannot regularly check for stale devices/vehicles due to API quota limitations.
+    comment: >
+      To be discussed.
+      We cannot regularly check for stale devices/vehicles due to API quota limitations.
   # Platinum
   async-dependency: done
   inject-websession:
     status: todo
-    comment: The library requires a custom client for API authentication, with custom auth lifecycle and user agents.
+    comment: >
+      To be discussed. The library requires a custom client for API authentication,
+      with custom auth lifecycle and user agents.
   strict-typing: done
