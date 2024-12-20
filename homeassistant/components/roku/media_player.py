@@ -91,8 +91,7 @@ async def async_setup_entry(
             RokuMediaPlayer(
                 coordinator=entry.runtime_data,
             )
-        ],
-        True,
+        ]
     )
 
     platform = entity_platform.async_get_current_platform()
