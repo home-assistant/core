@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
-from typing import Any, Final
+from typing import Any, Final, Literal
 
 import voluptuous as vol
 from xknx import XKNX
@@ -207,21 +207,21 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
                 CONF_KNX_AUTOMATIC: CONF_KNX_AUTOMATIC.capitalize()
             } | supported_connection_types
 
+        default_connection_type: Literal["automatic", "tunneling", "routing"]
         _current_conn = self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
-        default_connection_type = (
-            CONF_KNX_TUNNELING
-            if _current_conn
-            in (
-                CONF_KNX_TUNNELING,
-                CONF_KNX_TUNNELING_TCP,
-                CONF_KNX_TUNNELING_TCP_SECURE,
-            )
-            else CONF_KNX_ROUTING
-            if _current_conn in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE)
-            else CONF_KNX_AUTOMATIC
-            if CONF_KNX_AUTOMATIC in supported_connection_types
-            else CONF_KNX_TUNNELING
-        )
+        if _current_conn in (
+            CONF_KNX_TUNNELING,
+            CONF_KNX_TUNNELING_TCP,
+            CONF_KNX_TUNNELING_TCP_SECURE,
+        ):
+            default_connection_type = CONF_KNX_TUNNELING
+        elif _current_conn in (CONF_KNX_ROUTING, CONF_KNX_ROUTING_SECURE):
+            default_connection_type = CONF_KNX_ROUTING
+        elif CONF_KNX_AUTOMATIC in supported_connection_types:
+            default_connection_type = CONF_KNX_AUTOMATIC
+        else:
+            default_connection_type = CONF_KNX_TUNNELING
+
         fields = {
             vol.Required(
                 CONF_KNX_CONNECTION_TYPE, default=default_connection_type
