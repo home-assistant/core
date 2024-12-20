@@ -71,6 +71,42 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
+EVSE_STATE_MAP = {
+    clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: "NotPluggedIn",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInNoDemand: "PluggedIn, NoDemand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDemand: "PluggedIn, Demand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInCharging: "PluggedIn, Charging",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDischarging: "PluggedIn, Discharging",
+    clusters.EnergyEvse.Enums.StateEnum.kSessionEnding: "SessionEnding",
+    clusters.EnergyEvse.Enums.StateEnum.kFault: "Fault",
+}
+
+EVSE_SUPPLY_STATE_MAP = {
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabled: "Disabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kChargingEnabled: "Charging Enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: "Discharging Enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: "Disabled Diagnostics",
+}
+
+EVSE_FAULT_STATE_MAP = {
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "No Error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "Meter Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "Over Voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "Under Voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "Over Current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "Contact Wet Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "Contact Dry Failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "Power Loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "Power Quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "Pilot Short Circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "Emergency Stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "EV Disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "Wrong Power Supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "Live Neutral Swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "Over Temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "Unknown",
+}
+
 
 EVSE_STATE_MAP = {
     clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: "NotPluggedIn",
@@ -261,10 +297,10 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="PowerSourceBatVoltage",
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
-            measurement_to_ha=lambda x: x / 1000,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -619,10 +655,10 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalPowerMeasurementWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfPower.WATT,
+            native_unit_of_measurement=UnitOfPower.MILLIWATT,
+            suggested_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -635,10 +671,10 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalPowerMeasurementVoltage",
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             suggested_display_precision=0,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
@@ -649,10 +685,10 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalPowerMeasurementActiveCurrent",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -726,7 +762,6 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.State,),
     ),
-    '''
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
@@ -757,10 +792,10 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseCircuitCapacity",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.CircuitCapacity,),
@@ -771,10 +806,10 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseMinimumChargeCurrent",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.MinimumChargeCurrent,),
@@ -785,10 +820,10 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseMaximumChargeCurrent",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.MaximumChargeCurrent,),
@@ -799,13 +834,12 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseUserMaximumChargeCurrent",
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+            suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.EnergyEvse.Attributes.UserMaximumChargeCurrent,),
     ),
-    '''
 ]

@@ -50,6 +50,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
         if (
             homeassistant := cast(JsonObjectType, data.get("homeassistant"))
         ) and "version" in homeassistant:
+            homeassistant_included = True
             homeassistant_version = cast(str, homeassistant["version"])
             database_included = not cast(
                 bool, homeassistant.get("exclude_database", False)
@@ -60,6 +61,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
             date=cast(str, data["date"]),
+            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
