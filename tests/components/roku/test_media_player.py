@@ -5,26 +5,24 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from rokuecp import RokuConnectionError, RokuConnectionTimeoutError, RokuError
+from rokuecp import (
+    Device as RokuDevice,
+    RokuConnectionError,
+    RokuConnectionTimeoutError,
+    RokuError,
+)
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
-    ATTR_APP_ID,
-    ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
-    ATTR_MEDIA_CHANNEL,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
     ATTR_MEDIA_EXTRA,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaClass,
-    MediaPlayerDeviceClass,
-    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.components.roku.const import (
@@ -52,101 +50,50 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_UP,
     STATE_IDLE,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 
-async def test_setup(
+@pytest.mark.parametrize(
+    "mock_device",
+    [
+        "roku3",
+        "roku3-idle",
+        "roku3-app",
+        "roku3-screensaver",
+        "roku3-media-paused",
+        "roku3-media-playing",
+        "rokutv-7820x",
+    ],
+    indirect=True,
+)
+async def test_entities(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test setup with basic config."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    entry = entity_registry.async_get(MAIN_ENTITY_ID)
-
-    assert state
-    assert entry
-    assert entry.original_device_class is MediaPlayerDeviceClass.RECEIVER
-    assert entry.unique_id == "1GU48T017973"
-
-    assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, "1GU48T017973")}
-    assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fb"),
-        (dr.CONNECTION_NETWORK_MAC, "b0:a7:37:96:4d:fa"),
-    }
-    assert device_entry.manufacturer == "Roku"
-    assert device_entry.model == "Roku 3"
-    assert device_entry.name == "My Roku 3"
-    assert device_entry.entry_type is None
-    assert device_entry.sw_version == "7.5.0"
-    assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
-
-
-@pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
-async def test_idle_setup(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_device: RokuDevice,
     mock_roku: MagicMock,
 ) -> None:
-    """Test setup with idle device."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_STANDBY
+    """Test the Roku media player entities."""
+    with patch("homeassistant.components.roku.PLATFORMS", [Platform.MEDIA_PLAYER]):
+        await setup_integration(hass, mock_config_entry, mock_device)
 
-
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
-async def test_tv_setup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test Roku TV setup."""
-    state = hass.states.get(TV_ENTITY_ID)
-    entry = entity_registry.async_get(TV_ENTITY_ID)
-
-    assert state
-    assert entry
-    assert entry.original_device_class is MediaPlayerDeviceClass.TV
-    assert entry.unique_id == "YN00H5555555"
-
-    assert entry.device_id
-    device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry
-    assert device_entry.identifiers == {(DOMAIN, "YN00H5555555")}
-    assert device_entry.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "d8:13:99:f8:b0:c6"),
-        (dr.CONNECTION_NETWORK_MAC, "d4:3a:2e:07:fd:cb"),
-    }
-    assert device_entry.manufacturer == "Onn"
-    assert device_entry.model == "100005844"
-    assert device_entry.name == '58" Onn Roku TV'
-    assert device_entry.entry_type is None
-    assert device_entry.sw_version == "9.2.0"
-    assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -181,160 +128,6 @@ async def test_availability(
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
     assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
-
-
-async def test_supported_features(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test supported features."""
-    # Features supported for Rokus
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert (
-        state.attributes.get("supported_features")
-        == MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.VOLUME_STEP
-        | MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.TURN_ON
-        | MediaPlayerEntityFeature.TURN_OFF
-        | MediaPlayerEntityFeature.BROWSE_MEDIA
-    )
-
-
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
-async def test_tv_supported_features(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test supported features for Roku TV."""
-    state = hass.states.get(TV_ENTITY_ID)
-    assert state
-    assert (
-        state.attributes.get("supported_features")
-        == MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.VOLUME_STEP
-        | MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.TURN_ON
-        | MediaPlayerEntityFeature.TURN_OFF
-        | MediaPlayerEntityFeature.BROWSE_MEDIA
-    )
-
-
-async def test_attributes(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test attributes."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_IDLE
-
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
-    assert state.attributes.get(ATTR_APP_ID) is None
-    assert state.attributes.get(ATTR_APP_NAME) == "Roku"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
-
-
-@pytest.mark.parametrize("mock_device", ["roku/roku3-app.json"], indirect=True)
-async def test_attributes_app(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test attributes for app."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_ON
-
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
-    assert state.attributes.get(ATTR_APP_ID) == "12"
-    assert state.attributes.get(ATTR_APP_NAME) == "Netflix"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Netflix"
-
-
-@pytest.mark.parametrize(
-    "mock_device", ["roku/roku3-media-playing.json"], indirect=True
-)
-async def test_attributes_app_media_playing(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test attributes for app with playing media."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_PLAYING
-
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
-    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
-    assert state.attributes.get(ATTR_MEDIA_POSITION) == 38
-    assert state.attributes.get(ATTR_APP_ID) == "74519"
-    assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
-
-
-@pytest.mark.parametrize("mock_device", ["roku/roku3-media-paused.json"], indirect=True)
-async def test_attributes_app_media_paused(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test attributes for app with paused media."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_PAUSED
-
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.APP
-    assert state.attributes.get(ATTR_MEDIA_DURATION) == 6496
-    assert state.attributes.get(ATTR_MEDIA_POSITION) == 313
-    assert state.attributes.get(ATTR_APP_ID) == "74519"
-    assert state.attributes.get(ATTR_APP_NAME) == "Pluto TV - It's Free TV"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Pluto TV - It's Free TV"
-
-
-@pytest.mark.parametrize("mock_device", ["roku/roku3-screensaver.json"], indirect=True)
-async def test_attributes_screensaver(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_roku: MagicMock,
-) -> None:
-    """Test attributes for app with screensaver."""
-    state = hass.states.get(MAIN_ENTITY_ID)
-    assert state
-    assert state.state == STATE_IDLE
-
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) is None
-    assert state.attributes.get(ATTR_APP_ID) is None
-    assert state.attributes.get(ATTR_APP_NAME) == "Roku"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Roku"
-
-
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
-async def test_tv_attributes(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> None:
-    """Test attributes for Roku TV."""
-    state = hass.states.get(TV_ENTITY_ID)
-    assert state
-    assert state.state == STATE_ON
-
-    assert state.attributes.get(ATTR_APP_ID) == "tvinput.dtv"
-    assert state.attributes.get(ATTR_APP_NAME) == "Antenna TV"
-    assert state.attributes.get(ATTR_INPUT_SOURCE) == "Antenna TV"
-    assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MediaType.CHANNEL
-    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "getTV (14.3)"
-    assert state.attributes.get(ATTR_MEDIA_TITLE) == "Airwolf"
 
 
 async def test_services(
@@ -676,7 +469,7 @@ async def test_services_play_media_local_source(
     )
 
 
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["rokutv-7820x"], indirect=True)
 async def test_tv_services(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -958,7 +751,7 @@ async def test_media_browse_local_source(
     )
 
 
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["rokutv-7820x"], indirect=True)
 async def test_tv_media_browse(
     hass: HomeAssistant,
     init_integration,

@@ -1,0 +1,538 @@
+# serializer version: 1
+# name: test_entities[roku3-app][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3-app][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': '12',
+      'app_name': 'Netflix',
+      'device_class': 'receiver',
+      'entity_picture': '/api/media_player_proxy/media_player.my_roku_3?token=ed44071fe209b5b8ee2390ef473fa7540ff125ff441441dbb0026f7cec87e224&cache=2cab7007c60e13ef',
+      'friendly_name': 'My Roku 3',
+      'media_content_type': <MediaType.APP: 'app'>,
+      'source': 'Netflix',
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[roku3-idle][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3-idle][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_name': 'Roku',
+      'device_class': 'receiver',
+      'friendly_name': 'My Roku 3',
+      'source': 'Roku',
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---
+# name: test_entities[roku3-media-paused][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3-media-paused][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': '74519',
+      'app_name': "Pluto TV - It's Free TV",
+      'device_class': 'receiver',
+      'entity_picture': '/api/media_player_proxy/media_player.my_roku_3?token=fc68bc359dd5eb6b27813cfa435d46364c52b848985dff874ef6d806a8fb601e&cache=be54f0f123f7d91f',
+      'friendly_name': 'My Roku 3',
+      'media_content_type': <MediaType.APP: 'app'>,
+      'media_duration': 6496,
+      'media_position': 313,
+      'media_position_updated_at': datetime.datetime(2024, 12, 20, 4, 46, 23, 278644, tzinfo=datetime.timezone.utc),
+      'source': "Pluto TV - It's Free TV",
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'paused',
+  })
+# ---
+# name: test_entities[roku3-media-playing][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3-media-playing][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': '74519',
+      'app_name': "Pluto TV - It's Free TV",
+      'device_class': 'receiver',
+      'entity_picture': '/api/media_player_proxy/media_player.my_roku_3?token=6ab003edbdf03f5beab0aacb4ee82e6e0d178c80b56d74edd7f348fbc3882bf6&cache=be54f0f123f7d91f',
+      'friendly_name': 'My Roku 3',
+      'media_content_type': <MediaType.APP: 'app'>,
+      'media_duration': 6496,
+      'media_position': 38,
+      'media_position_updated_at': datetime.datetime(2024, 12, 20, 4, 46, 23, 323203, tzinfo=datetime.timezone.utc),
+      'source': "Pluto TV - It's Free TV",
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_entities[roku3-screensaver][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3-screensaver][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_name': 'Roku',
+      'device_class': 'receiver',
+      'friendly_name': 'My Roku 3',
+      'source': 'Roku',
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_entities[roku3][media_player.my_roku_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_roku_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': '1GU48T017973',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][media_player.my_roku_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_name': 'Roku',
+      'device_class': 'receiver',
+      'friendly_name': 'My Roku 3',
+      'source': 'Roku',
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_roku_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_entities[rokutv-7820x][media_player.58_onn_roku_tv-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Antenna TV',
+        'Blu-ray player',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+        'Satellite TV',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.58_onn_roku_tv',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.TV: 'tv'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 151481>,
+    'translation_key': None,
+    'unique_id': 'YN00H5555555',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][media_player.58_onn_roku_tv-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'app_id': 'tvinput.dtv',
+      'app_name': 'Antenna TV',
+      'device_class': 'tv',
+      'entity_picture': '/api/media_player_proxy/media_player.58_onn_roku_tv?token=98a23df6bbb5d177ad741987614efa5130764520f97c4afac6a876eff0a8d1a6&cache=545b6ca11153d83a',
+      'friendly_name': '58" Onn Roku TV',
+      'media_channel': 'getTV (14.3)',
+      'media_content_type': <MediaType.CHANNEL: 'channel'>,
+      'media_title': 'Airwolf',
+      'source': 'Antenna TV',
+      'source_list': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Antenna TV',
+        'Blu-ray player',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+        'Satellite TV',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 151481>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.58_onn_roku_tv',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -163,7 +163,7 @@ async def test_homekit_unknown_error(
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
+@pytest.mark.parametrize("mock_device", ["rokutv-7820x"], indirect=True)
 async def test_homekit_discovery(
     hass: HomeAssistant,
     mock_roku_config_flow: MagicMock,

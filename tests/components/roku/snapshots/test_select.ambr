@@ -1,0 +1,204 @@
+# serializer version: 1
+# name: test_entities[roku3][select.my_roku_3_application-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.my_roku_3_application',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Application',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'application',
+    'unique_id': '1GU48T017973_application',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][select.my_roku_3_application-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Application',
+      'options': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.my_roku_3_application',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Home',
+  })
+# ---
+# name: test_entities[rokutv-7820x][select.58_onn_roku_tv_application-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Antenna TV',
+        'Blu-ray player',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+        'Satellite TV',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.58_onn_roku_tv_application',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Application',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'application',
+    'unique_id': 'YN00H5555555_application',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][select.58_onn_roku_tv_application-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Application',
+      'options': list([
+        'Home',
+        'Amazon Video on Demand',
+        'Antenna TV',
+        'Blu-ray player',
+        'Free FrameChannel Service',
+        'MLB.TV®',
+        'Mediafly',
+        'Netflix',
+        'Pandora',
+        "Pluto TV - It's Free TV",
+        'Roku Channel Store',
+        'Satellite TV',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.58_onn_roku_tv_application',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Antenna TV',
+  })
+# ---
+# name: test_entities[rokutv-7820x][select.58_onn_roku_tv_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '99.1',
+        'QVC (1.3)',
+        'WhatsOn (1.1)',
+        'getTV (14.3)',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.58_onn_roku_tv_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Channel',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'channel',
+    'unique_id': 'YN00H5555555_channel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][select.58_onn_roku_tv_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Channel',
+      'options': list([
+        '99.1',
+        'QVC (1.3)',
+        'WhatsOn (1.1)',
+        'getTV (14.3)',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.58_onn_roku_tv_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'getTV (14.3)',
+  })
+# ---
