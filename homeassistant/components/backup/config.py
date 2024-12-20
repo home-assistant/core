@@ -467,7 +467,7 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
             sorted(
                 backups.items(),
                 key=lambda backup_item: backup_item[1].date,
-            )[: len(backups) - manager.config.data.retention.copies]
+            )[: max(len(backups) - manager.config.data.retention.copies, 0)]
         )
 
     await _delete_filtered_backups(manager, _backups_filter)

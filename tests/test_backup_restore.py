@@ -57,11 +57,14 @@ def test_reading_the_instruction_contents(
             return_value=content,
             side_effect=side_effect,
         ),
+        mock.patch("pathlib.Path.unlink", autospec=True) as unlink_mock,
     ):
-        read_content = backup_restore.restore_backup_file_content(
-            Path(get_test_config_dir())
-        )
+        config_path = Path(get_test_config_dir())
+        read_content = backup_restore.restore_backup_file_content(config_path)
         assert read_content == expected
+        unlink_mock.assert_called_once_with(
+            config_path / ".HA_RESTORE", missing_ok=True
+        )
 
 
 def test_restoring_backup_that_does_not_exist() -> None:

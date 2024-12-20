@@ -637,6 +637,15 @@ def find_states_to_purge(
     )
 
 
+def find_oldest_state() -> StatementLambdaElement:
+    """Find the last_updated_ts of the oldest state."""
+    return lambda_stmt(
+        lambda: select(States.last_updated_ts).where(
+            States.state_id.in_(select(func.min(States.state_id)))
+        )
+    )
+
+
 def find_short_term_statistics_to_purge(
     purge_before: datetime, max_bind_vars: int
 ) -> StatementLambdaElement:

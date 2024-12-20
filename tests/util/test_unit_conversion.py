@@ -537,6 +537,7 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfPower.GIGA_WATT, 10e9, UnitOfPower.WATT),
         (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+        (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),

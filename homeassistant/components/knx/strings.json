@@ -360,8 +360,8 @@
       }
     },
     "read": {
-      "name": "Reads from KNX bus",
-      "description": "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "name": "Read from KNX bus",
+      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -370,8 +370,8 @@
       }
     },
     "event_register": {
-      "name": "Registers knx_event",
-      "description": "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "name": "Register knx_event",
+      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -389,7 +389,7 @@
     },
     "exposure_register": {
       "name": "Expose to KNX bus",
-      "description": "Adds or remove exposures to KNX bus. Only exposures added with this service can be removed.",
+      "description": "Adds or removes exposures to KNX bus. Only exposures added with this service can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",

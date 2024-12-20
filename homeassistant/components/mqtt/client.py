@@ -661,7 +661,7 @@ class MQTT:
                     self.conf.get(CONF_PORT, DEFAULT_PORT),
                     self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
                 )
-        except OSError as err:
+        except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
         finally:

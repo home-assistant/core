@@ -352,7 +352,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '1.2',
   })
 # ---
 # name: test_sensor[sensor.sonic_water_pressure-entry]

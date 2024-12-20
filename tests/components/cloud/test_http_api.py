@@ -1819,3 +1819,45 @@ async def test_api_calls_require_admin(
     resp = await client.post(endpoint, json=data)
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_view_dispatch_event(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test dispatching event while logging in."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.http_api.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert async_dispatcher_send_mock.call_count == 1
+    assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
+    assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "login"}
+
+
+async def test_logout_view_dispatch_event(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test dispatching event while logging out."""
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.http_api.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        await cloud_client.post("/api/cloud/logout")
+
+    assert async_dispatcher_send_mock.call_count == 1
+    assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
+    assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
