@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.39.0
+PyViCare==2.39.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -940,7 +940,7 @@ forecast-solar==4.0.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.1.0
+freebox-api==1.2.1
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
@@ -3060,7 +3060,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.5
+yalexs-ble==2.5.6
 
 # homeassistant.components.august
 # homeassistant.components.yale
