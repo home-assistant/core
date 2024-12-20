@@ -64,6 +64,9 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
         )
     except (FileNotFoundError, KeyError, json.JSONDecodeError):
         return None
+    finally:
+        # Always remove the backup instruction file to prevent a boot loop
+        instruction_path.unlink(missing_ok=True)
 
 
 def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> None:
