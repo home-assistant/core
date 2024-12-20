@@ -50,12 +50,30 @@ class ADSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 hub = AdsHub(ads_client)
 
+                mac_address = hub.get_mac_address()
+
+                if mac_address is None:
+                    raise ValueError("Failed to retrieve MAC address")
+
+                # Check if this MAC address already exists in existing config entries
+                for entry in self._async_current_entries():
+                    if entry.data.get("mac_address") == mac_address:
+                        errors["base"] = "duplicate_mac"
+                        break
                 # Test the connection
                 await self.hass.async_add_executor_job(hub.test_connection)
 
             if not errors:
                 # If validation passes, create entry
-                return self.async_create_entry(title="ADS", data=user_input)
+                return self.async_create_entry(
+                    title=f"ADS Device ({mac_address})",
+                    data={
+                        CONF_DEVICE: user_input[CONF_DEVICE],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_IP_ADDRESS: user_input.get(CONF_IP_ADDRESS),
+                        "mac_address": mac_address,
+                    },
+                )
 
         # Define the input schema with required fields for config flow form
         data_schema = vol.Schema(

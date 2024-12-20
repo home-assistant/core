@@ -13,6 +13,7 @@
       }
     },
     "error": {
+      "duplicate_mac": "This device is already configured.",
       "invalid_ams_net_id": "Invalid AMS Net ID. Valid format: 192.168.1.10.1.1",
       "invalid_port": "Must be between 1-65535. Usually 801 for TwinCAT 2 / 851 for TwinCAT 3"
     }

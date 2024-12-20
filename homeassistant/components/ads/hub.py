@@ -6,6 +6,7 @@ import ctypes
 import logging
 import struct
 import threading
+import uuid
 
 import pyads
 
@@ -26,9 +27,24 @@ class AdsHub:
         self._client.open()
 
         # All ADS devices are registered here
+        self._mac_address = self._get_mac_address()
         self._devices = []
         self._notification_items = {}
         self._lock = threading.Lock()
+
+    def get_mac_address(self):
+        """Retrieve the MAC address of the device."""
+        try:
+            mac = uuid.getnode()
+            mac_address = ":".join(
+                format((mac >> 8 * i) & 0xFF, "02x") for i in range(6)[::-1]
+            ).upper()
+            _LOGGER.info("Successfully retrieved MAC address: %s", mac_address)
+        except (OSError, ValueError) as err:
+            _LOGGER.error("Failed to retrieve MAC address: %s", err)
+            return None
+        else:
+            return mac_address
 
     def test_connection(self, timeout=5):
         """Test the ADS connection by opening and closing the client connection with a timeout."""
