@@ -303,6 +303,36 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        NumberEntityDescription(
+            key=DPCode.MAX_SET,
+            translation_key="liquid_high_level",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:arrow-collapse-up",
+        ),
+        NumberEntityDescription(
+            key=DPCode.MINI_SET,
+            translation_key="liquid_low_level",
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:arrow-collapse-down",
+        ),
+        NumberEntityDescription(
+            key=DPCode.INSTALLATION_HEIGHT,
+            translation_key="installation_height",
+            entity_category=EntityCategory.CONFIG,
+            device_class=NumberDeviceClass.DISTANCE,
+            icon="mdi:human-male-height",
+        ),
+        NumberEntityDescription(
+            key=DPCode.LIQUID_DEPTH_MAX,
+            translation_key="maximum_depth",
+            entity_category=EntityCategory.CONFIG,
+            device_class=NumberDeviceClass.DISTANCE,
+            icon="mdi:wave-arrow-up",
+        ),
+    ),
 }
 
 
