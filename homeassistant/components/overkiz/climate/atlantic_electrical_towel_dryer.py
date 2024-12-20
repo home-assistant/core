@@ -84,14 +84,19 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def target_temperature(self) -> None:
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self.hvac_mode == HVACMode.AUTO:
-            return self.executor.select_state(
-                OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
+            return cast(
+                float,
+                self.executor.select_state(
+                    OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
+                ),
             )
 
-        return self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
+        return cast(
+            float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
+        )
 
     @property
     def current_temperature(self) -> float | None:
