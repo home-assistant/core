@@ -108,20 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    if cls is switchbot.SwitchbotLock:
-        try:
-            device = switchbot.SwitchbotLock(
-                device=ble_device,
-                key_id=entry.data.get(CONF_KEY_ID),
-                encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),
-                retry_count=entry.options[CONF_RETRY_COUNT],
-                model=switchbot_model,
-            )
-        except ValueError as error:
-            raise ConfigEntryNotReady(
-                "Invalid encryption configuration provided"
-            ) from error
-    elif switchbot_model in ENCRYPTED_MODELS:
+    if switchbot_model in ENCRYPTED_MODELS:
         try:
             device = cls(
                 device=ble_device,
