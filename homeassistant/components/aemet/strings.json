@@ -18,6 +18,13 @@
       }
     }
   },
+  "entity": {
+    "image": {
+      "weather_radar": {
+        "name": "Weather radar"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
