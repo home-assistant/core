@@ -144,7 +144,6 @@ async def async_setup_entry(
 class IottySwitch(IottyEntity, SwitchEntity):
     """Haas entity class for iotty switch."""
 
-    entity_description: SwitchEntityDescription
     _attr_device_class: SwitchDeviceClass | None
     _iotty_device: LightSwitch | Outlet
 
@@ -158,7 +157,6 @@ class IottySwitch(IottyEntity, SwitchEntity):
         """Initialize the Switch device."""
         super().__init__(coordinator, iotty_cloud, iotty_device)
         self.entity_description = entity_description
-        # print(entity_description.device_class)
         self._attr_device_class = entity_description.device_class
 
     @property
