@@ -46,6 +46,7 @@ from .const import (
     STARTUP_EXCEPTIONS,
     SUBSCRIBE_COOLDOWN,
 )
+from .device_action import async_setup_actions_for_entry
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 from .utils import IidTuple, unique_id_to_iids
 
@@ -696,6 +697,9 @@ class HKDevice:
 
         # Load any triggers for this config entry
         await async_setup_triggers_for_entry(self.hass, self.config_entry)
+
+        # Load device actions for this config entry
+        await async_setup_actions_for_entry(self.hass, self.config_entry)
 
     async def async_unload(self) -> None:
         """Stop interacting with device and prepare for removal from hass."""
