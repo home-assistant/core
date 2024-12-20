@@ -40,7 +40,7 @@ class FlickElectricDataCoordinator(DataUpdateCoordinator[FlickPrice]):
         """Fetch pricing data from Flick Electric."""
         try:
             async with asyncio.timeout(60):
-                return await self._api.runtime_data.getPricing(self.supply_node_ref)
+                return await self._api.getPricing(self.supply_node_ref)
         except AuthException as err:
             raise ConfigEntryAuthFailed from err
         except (APIException, aiohttp.ClientResponseError) as err:

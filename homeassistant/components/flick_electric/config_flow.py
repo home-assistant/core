@@ -161,7 +161,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_entry(self) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
-        await self.async_set_unique_id(f"{self.data[CONF_ACCOUNT_ID]}")
+        await self.async_set_unique_id(self.data[CONF_ACCOUNT_ID])
 
         account = self._get_account(self.data[CONF_ACCOUNT_ID])
 

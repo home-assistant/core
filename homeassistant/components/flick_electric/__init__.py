@@ -75,22 +75,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if (len(active_accounts)) == 1:
             account = active_accounts[0]
 
-            main_consumer = account["main_consumer"]
-
-            if main_consumer is not None:
-                new_data = {**config_entry.data}
-                new_data[CONF_ACCOUNT_ID] = account["id"]
-                new_data[CONF_SUPPLY_NODE_REF] = account["main_consumer"][
-                    "supply_node_ref"
-                ]
-                hass.config_entries.async_update_entry(
-                    config_entry,
-                    title=account["address"],
-                    unique_id=account["id"],
-                    data=new_data,
-                    version=2,
-                )
-                return True
+            new_data = {**config_entry.data}
+            new_data[CONF_ACCOUNT_ID] = account["id"]
+            new_data[CONF_SUPPLY_NODE_REF] = account["main_consumer"]["supply_node_ref"]
+            hass.config_entries.async_update_entry(
+                config_entry,
+                title=account["address"],
+                unique_id=account["id"],
+                data=new_data,
+                version=2,
+            )
+            return True
 
         config_entry.async_start_reauth(hass, data={**config_entry.data})
         return False
