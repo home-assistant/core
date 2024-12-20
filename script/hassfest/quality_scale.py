@@ -733,7 +733,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nut",
     "nws",
     "nx584",
-    "nyt_games",
     "nzbget",
     "oasa_telematics",
     "obihai",
