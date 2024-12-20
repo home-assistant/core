@@ -1,0 +1,14 @@
+{
+  "domain": "microsoft_speech",
+  "name": "Microsoft Speech",
+  "codeowners": ["@lukcz"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/microsoft_speech",
+  "homekit": {},
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "requirements": ["aiohttp==3.10.9"],
+  "ssdp": [],
+  "zeroconf": []
+}
