@@ -81,6 +81,7 @@ TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
     ],
     indirect=True,
 )
+@pytest.mark.freeze_time("2023-08-15 17:00:00-00:00")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
