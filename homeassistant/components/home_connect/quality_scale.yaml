@@ -1,0 +1,93 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: todo
+    comment: |
+      The integration polls the Home Connect API every minute. This frequency can be lowered
+      because we receive push updates from the API so we don't need to poll that often.
+  brands: done
+  common-modules:
+    status: todo
+    comment: |
+      Coordinator is not present in this integration but should be.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: todo
+  unique-config-entry:
+    status: exempt
+    comment: |
+      The Home Connect API does not allow to identify a user, so there is no
+      way to know if multiple config entries are using the same account.
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      The integration does not raise exceptions when an action fails.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: todo
+    comment: |
+      Some entities are not marked as unavailable in cases it should be.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow: todo
+  test-coverage:
+    status: todo
+    comment: |
+      entity, light, and number tests coverage is under 95%.
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Devices from this integration can't be discovered.
+  discovery:
+    status: exempt
+    comment: |
+      Devices from this integration can't be discovered.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: todo
+    comment: |
+      Some entities that can be config or diagnostic are not marked as such.
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not raise any repairable issues.
+  stale-devices: todo
+  # Platinum
+  async-dependency: todo
+  inject-websession: done
+  strict-typing: done
