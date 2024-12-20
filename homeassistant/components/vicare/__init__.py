@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from contextlib import suppress
 import logging
 import os
-from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -16,18 +14,22 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_CACHE_DURATION, DOMAIN, PLATFORMS, UNSUPPORTED_DEVICES
+from .const import (
+    _TOKEN_FILENAME,
+    DEFAULT_CACHE_DURATION,
+    DOMAIN,
+    PLATFORMS,
+    UNSUPPORTED_DEVICES,
+)
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device, get_device_serial
+from .utils import get_device, get_device_serial, login
 
 _LOGGER = logging.getLogger(__name__)
-_TOKEN_FILENAME = "vicare_token.save"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
@@ -49,26 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def vicare_login(
-    hass: HomeAssistant,
-    entry_data: Mapping[str, Any],
-    cache_duration=DEFAULT_CACHE_DURATION,
-) -> PyViCare:
-    """Login via PyVicare API."""
-    vicare_api = PyViCare()
-    vicare_api.setCacheDuration(cache_duration)
-    vicare_api.initWithCredentials(
-        entry_data[CONF_USERNAME],
-        entry_data[CONF_PASSWORD],
-        entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, _TOKEN_FILENAME),
-    )
-    return vicare_api
-
-
 def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
     """Set up PyVicare API."""
-    client = vicare_login(hass, entry.data)
+    client = login(hass, entry.data)
 
     device_config_list = get_supported_devices(client.devices)
 
@@ -80,7 +65,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
             number_of_devices,
             cache_duration,
         )
-        client = vicare_login(hass, entry.data, cache_duration)
+        client = login(hass, entry.data, cache_duration)
         device_config_list = get_supported_devices(client.devices)
 
     for device in device_config_list:
