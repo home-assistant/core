@@ -72,6 +72,17 @@ OPERATIONAL_STATE_MAP = {
 }
 
 
+EVSE_STATE_MAP = {
+    clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: "NotPluggedIn",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInNoDemand: "PluggedIn, NoDemand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDemand: "PluggedIn, Demand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInCharging: "PluggedIn, Charging",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDischarging: "PluggedIn, Discharging",
+    clusters.EnergyEvse.Enums.StateEnum.kSessionEnding: "SessionEnding",
+    clusters.EnergyEvse.Enums.StateEnum.kFault: "Fault",
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -674,5 +685,17 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalState,
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EnergyEvseState",
+            translation_key="evse_state",
+            device_class=SensorDeviceClass.ENUM,
+            options=list(EVSE_STATE_MAP.values()),
+            measurement_to_ha=EVSE_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.EnergyEvse.Attributes.State,),
     ),
 ]
