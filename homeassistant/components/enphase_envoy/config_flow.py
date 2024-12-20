@@ -42,12 +42,28 @@ INSTALLER_AUTH_USERNAME = "installer"
 
 
 async def validate_input(
-    hass: HomeAssistant, host: str, username: str, password: str
+    hass: HomeAssistant,
+    host: str,
+    username: str,
+    password: str,
+    errors: dict[str, str],
+    description_placeholders: dict[str, str],
 ) -> Envoy:
     """Validate the user input allows us to connect."""
-    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
-    await envoy.setup()
-    await envoy.authenticate(username=username, password=password)
+    try:
+        envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
+        await envoy.setup()
+        await envoy.authenticate(username=username, password=password)
+    except INVALID_AUTH_ERRORS as e:
+        errors["base"] = "invalid_auth"
+        description_placeholders["reason"] = str(e)
+    except EnvoyError as e:
+        errors["base"] = "cannot_connect"
+        description_placeholders["reason"] = str(e)
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+
     return envoy
 
 
@@ -171,23 +187,15 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
 
         if user_input is not None:
-            try:
-                envoy = await validate_input(
-                    self.hass,
-                    host,
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                )
-            except INVALID_AUTH_ERRORS as e:
-                errors["base"] = "invalid_auth"
-                description_placeholders = {"reason": str(e)}
-            except EnvoyError as e:
-                errors["base"] = "cannot_connect"
-                description_placeholders = {"reason": str(e)}
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            envoy = await validate_input(
+                self.hass,
+                host,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                errors,
+                description_placeholders,
+            )
+            if not errors and envoy:
                 name = self._async_envoy_name()
 
                 if self.source == SOURCE_REAUTH:
@@ -241,23 +249,15 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             host: str = user_input[CONF_HOST]
             username: str = user_input[CONF_USERNAME]
             password: str = user_input[CONF_PASSWORD]
-            try:
-                envoy = await validate_input(
-                    self.hass,
-                    host,
-                    username,
-                    password,
-                )
-            except INVALID_AUTH_ERRORS as e:
-                errors["base"] = "invalid_auth"
-                description_placeholders = {"reason": str(e)}
-            except EnvoyError as e:
-                errors["base"] = "cannot_connect"
-                description_placeholders = {"reason": str(e)}
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            envoy = await validate_input(
+                self.hass,
+                host,
+                username,
+                password,
+                errors,
+                description_placeholders,
+            )
+            if not errors and envoy:
                 await self.async_set_unique_id(envoy.serial_number)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
