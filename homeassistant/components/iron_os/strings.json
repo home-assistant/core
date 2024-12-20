@@ -29,6 +29,17 @@
         "name": "Soldering tip"
       }
     },
+    "button": {
+      "ble_enabled": {
+        "name": "Disable Bluetooth"
+      },
+      "settings_save": {
+        "name": "Save settings"
+      },
+      "settings_reset": {
+        "name": "Restore default settings"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "name": "Setpoint temperature"
