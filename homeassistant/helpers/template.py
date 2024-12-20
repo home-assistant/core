@@ -522,11 +522,9 @@ class Template:
 
         if not hass:
             report_usage(
-                (
-                    "creates a template object without passing hass, "
-                    "which will stop working in HA Core 2025.10"
-                ),
+                "creates a template object without passing hass",
                 core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2025.10",
             )
 
         self.template: str = template.strip()

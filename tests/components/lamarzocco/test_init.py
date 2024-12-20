@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
+from websockets.protocol import State
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -182,7 +183,7 @@ async def test_websocket_closed_on_unload(
     ) as local_client:
         client = local_client.return_value
         client.websocket = AsyncMock()
-        client.websocket.connected = True
+        client.websocket.state = State.OPEN
         await async_init_integration(hass, mock_config_entry)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()

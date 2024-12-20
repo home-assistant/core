@@ -6,6 +6,9 @@
         "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of your HomeWizard Energy device."
         }
       },
       "discovery_confirm": {
@@ -17,7 +20,7 @@
       }
     },
     "error": {
-      "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
+      "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
     },
     "abort": {
@@ -120,7 +123,7 @@
   },
   "exceptions": {
     "api_disabled": {
-      "message": "The local API of the HomeWizard device is disabled"
+      "message": "The local API is disabled."
     },
     "communication_error": {
       "message": "An error occurred while communicating with HomeWizard device"

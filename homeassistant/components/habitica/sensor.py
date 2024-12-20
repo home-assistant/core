@@ -158,6 +158,7 @@ SENSOR_DESCRIPTIONS: tuple[HabitipySensorEntityDescription, ...] = (
         ),
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
+        entity_picture="notif_subscriber_reward.png",
     ),
     HabitipySensorEntityDescription(
         key=HabitipySensorEntity.STRENGTH,

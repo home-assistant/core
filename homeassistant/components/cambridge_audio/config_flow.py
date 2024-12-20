@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
@@ -30,7 +31,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.properties["serial"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        client = StreamMagicClient(host)
+        client = StreamMagicClient(host, async_get_clientsession(self.hass))
         try:
             async with asyncio.timeout(CONNECT_TIMEOUT):
                 await client.connect()
@@ -69,7 +70,9 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            client = StreamMagicClient(user_input[CONF_HOST])
+            client = StreamMagicClient(
+                user_input[CONF_HOST], async_get_clientsession(self.hass)
+            )
             try:
                 async with asyncio.timeout(CONNECT_TIMEOUT):
                     await client.connect()

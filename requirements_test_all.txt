@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.6.2
+AEMET-OpenData==0.6.3
 
 # homeassistant.components.honeywell
 AIOSomecomfort==0.0.25
@@ -143,7 +143,7 @@ afsapi==0.2.7
 agent-py==0.0.24
 
 # homeassistant.components.geo_json_events
-aio-geojson-generic-client==0.4
+aio-geojson-generic-client==0.5
 
 # homeassistant.components.geonetnz_quakes
 aio-geojson-geonetnz-quakes==0.16
@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.8
+aioacaia==0.1.9
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==27.0.1
+aioesphomeapi==27.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -366,7 +366,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.8.5
+aiostreammagic==2.10.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==5.0.0
@@ -628,7 +628,7 @@ dbus-fast==2.24.3
 debugpy==1.8.6
 
 # homeassistant.components.ecovacs
-deebot-client==8.4.1
+deebot-client==9.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1367,7 +1367,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.10
+py-aosmith==1.0.11
 
 # homeassistant.components.canary
 py-canary==0.5.4
@@ -1632,7 +1632,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.2.7
+pylamarzocco==1.2.11
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1880,7 +1880,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v6.3.0
+python-homewizard-energy==v7.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2153,10 +2153,10 @@ snapcast==2.3.6
 soco==0.30.6
 
 # homeassistant.components.solarlog
-solarlog_cli==0.3.2
+solarlog_cli==0.4.0
 
 # homeassistant.components.solax
-solax==3.1.1
+solax==3.2.1
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
@@ -2310,7 +2310,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==6.6.1
+uiprotect==6.6.2
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2433,7 +2433,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.5.0
+yalexs-ble==2.5.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
