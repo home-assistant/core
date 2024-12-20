@@ -102,7 +102,7 @@
     },
     "get_queue": {
       "name": "Get playerQueue details (advanced)",
-      "description": "Get the full details of the currently active queue of a Music Assistant player."
+      "description": "Get the details of the currently active queue of a Music Assistant player."
     },
     "search": {
       "name": "Search Music Assistant",
