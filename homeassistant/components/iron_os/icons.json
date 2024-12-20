@@ -149,6 +149,26 @@
       "estimated_power": {
         "default": "mdi:flash"
       }
+    },
+    "switch": {
+      "animation_loop": {
+        "default": "mdi:play-box"
+      },
+      "calibrate_cjc": {
+        "default": "mdi:tune-vertical"
+      },
+      "cooling_temp_blink": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "display_invert": {
+        "default": "mdi:invert-colors"
+      },
+      "invert_buttons": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
+      }
     }
   }
 }
