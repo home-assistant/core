@@ -855,11 +855,14 @@ class BackupManager:
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
                     self._update_issue_after_agent_upload(agent_errors)
-                # delete old backups more numerous than copies
-                await delete_backups_exceeding_configured_count(self)
+
                 self.async_on_backup_event(
                     CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED)
                 )
+
+            # delete old backups more numerous than copies
+            # try this regardless of agent errors above
+            await delete_backups_exceeding_configured_count(self)
 
         finally:
             self._backup_task = None

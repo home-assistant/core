@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from dataclasses import replace
 from io import StringIO
 import json
 from pathlib import Path
@@ -398,7 +399,84 @@ async def test_async_initiate_backup_with_agent_error(
     """Test agent upload error during backup generation."""
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    remote_agent = BackupAgentTest("remote", backups=[])
+    backup_1 = replace(TEST_BACKUP_ABC123, backup_id="backup1")  # matching instance id
+    backup_2 = replace(TEST_BACKUP_DEF456, backup_id="backup2")  # other instance id
+    backup_3 = replace(TEST_BACKUP_ABC123, backup_id="backup3")  # matching instance id
+    backups_info: list[dict[str, Any]] = [
+        {
+            "addons": [
+                {
+                    "name": "Test",
+                    "slug": "test",
+                    "version": "1.0.0",
+                },
+            ],
+            "agent_ids": [
+                "test.remote",
+            ],
+            "backup_id": "backup1",
+            "database_included": True,
+            "date": "1970-01-01T00:00:00.000Z",
+            "failed_agent_ids": [],
+            "folders": [
+                "media",
+                "share",
+            ],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
+            "name": "Test",
+            "protected": False,
+            "size": 0,
+            "with_automatic_settings": True,
+        },
+        {
+            "addons": [],
+            "agent_ids": [
+                "test.remote",
+            ],
+            "backup_id": "backup2",
+            "database_included": False,
+            "date": "1980-01-01T00:00:00.000Z",
+            "failed_agent_ids": [],
+            "folders": [
+                "media",
+                "share",
+            ],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
+            "name": "Test 2",
+            "protected": False,
+            "size": 1,
+            "with_automatic_settings": None,
+        },
+        {
+            "addons": [
+                {
+                    "name": "Test",
+                    "slug": "test",
+                    "version": "1.0.0",
+                },
+            ],
+            "agent_ids": [
+                "test.remote",
+            ],
+            "backup_id": "backup3",
+            "database_included": True,
+            "date": "1970-01-01T00:00:00.000Z",
+            "failed_agent_ids": [],
+            "folders": [
+                "media",
+                "share",
+            ],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
+            "name": "Test",
+            "protected": False,
+            "size": 0,
+            "with_automatic_settings": True,
+        },
+    ]
+    remote_agent = BackupAgentTest("remote", backups=[backup_1, backup_2, backup_3])
 
     with patch(
         "homeassistant.components.backup.backup.async_get_backup_agents"
@@ -424,11 +502,17 @@ async def test_async_initiate_backup_with_agent_error(
 
     assert result["success"] is True
     assert result["result"] == {
-        "backups": [],
+        "backups": backups_info,
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
     }
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/config/update", "retention": {"copies": 1, "days": None}}
+    )
+    result = await ws_client.receive_json()
+    assert result["success"]
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
 
@@ -438,6 +522,8 @@ async def test_async_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
+    delete_backup = AsyncMock()
+
     with (
         patch("pathlib.Path.open", mock_open(read_data=b"test")),
         patch.object(
@@ -445,6 +531,7 @@ async def test_async_initiate_backup_with_agent_error(
             "async_upload_backup",
             side_effect=exception,
         ),
+        patch.object(remote_agent, "async_delete_backup", delete_backup),
     ):
         await ws_client.send_json_auto_id(
             {"type": "backup/generate", "agent_ids": agent_ids}
@@ -487,7 +574,7 @@ async def test_async_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
-    expected_backup_data = {
+    new_expected_backup_data = {
         "addons": [],
         "agent_ids": ["backup.local"],
         "backup_id": "abc123",
@@ -503,20 +590,14 @@ async def test_async_initiate_backup_with_agent_error(
         "with_automatic_settings": False,
     }
 
-    await ws_client.send_json_auto_id(
-        {"type": "backup/details", "backup_id": backup_id}
-    )
-    result = await ws_client.receive_json()
-    assert result["result"] == {
-        "agent_errors": {},
-        "backup": expected_backup_data,
-    }
-
     await ws_client.send_json_auto_id({"type": "backup/info"})
     result = await ws_client.receive_json()
+    backups_response = result["result"].pop("backups")
+
+    assert len(backups_response) == 4
+    assert new_expected_backup_data in backups_response
     assert result["result"] == {
         "agent_errors": {},
-        "backups": [expected_backup_data],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
     }
@@ -528,6 +609,9 @@ async def test_async_initiate_backup_with_agent_error(
             "failed_agent_ids": ["test.remote"],
         }
     ]
+
+    # one of the two matching backups with the remote agent should have been deleted
+    assert delete_backup.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
