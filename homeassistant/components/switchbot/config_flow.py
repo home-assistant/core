@@ -36,6 +36,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CLASS_BY_DEVICE,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
@@ -192,7 +193,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         assert self._discovered_adv is not None
         if user_input is not None:
-            if not await SwitchbotLock.verify_encryption_key(
+            model_name = self._discovered_adv.data["modelName"]
+            cls = CLASS_BY_DEVICE[model_name]
+            if not await cls.verify_encryption_key(
                 self._discovered_adv.device,
                 user_input[CONF_KEY_ID],
                 user_input[CONF_ENCRYPTION_KEY],
