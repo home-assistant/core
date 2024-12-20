@@ -29,30 +29,29 @@ _MIN_FAN_SETPOINT = 30
 
 @dataclass(kw_only=True, frozen=True)
 class FlexitNumberEntityDescription(NumberEntityDescription):
-    """Describes a Flexit number entity.
-
-    Setpoints for Away, Home and High are dependent of each other. Fireplace and Cooker Hood
-    have setpoints between 0 (MIN_FAN_SETPOINT) and 100 (MAX_FAN_SETPOINT).
-    See the table below for all the setpoints.
-
-    | Mode        | Setpoint | Min                   | Max                   |
-    |:------------|----------|:----------------------|:----------------------|
-    | HOME        | Supply   | AWAY Supply setpoint  | 100                   |
-    | HOME        | Extract  | AWAY Extract setpoint | 100                   |
-    | AWAY        | Supply   | 30                    | HOME Supply setpoint  |
-    | AWAY        | Extract  | 30                    | HOME Extract setpoint |
-    | HIGH        | Supply   | HOME Supply setpoint  | 100                   |
-    | HIGH        | Extract  | HOME Extract setpoint | 100                   |
-    | COOKER_HOOD | Supply   | 30                    | 100                   |
-    | COOKER_HOOD | Extract  | 30                    | 100                   |
-    | FIREPLACE   | Supply   | 30                    | 100                   |
-    | FIREPLACE   | Extract  | 30                    | 100                   |
-    """
+    """Describes a Flexit number entity."""
 
     native_value_fn: Callable[[FlexitBACnet], float]
     native_max_value_fn: Callable[[FlexitBACnet], int]
     native_min_value_fn: Callable[[FlexitBACnet], int]
     set_native_value_fn: Callable[[FlexitBACnet], Callable[[int], Awaitable[None]]]
+
+    # Setpoints for Away, Home and High are dependent of each other. Fireplace and Cooker Hood
+    # have setpoints between 0 (MIN_FAN_SETPOINT) and 100 (MAX_FAN_SETPOINT).
+    # See the table below for all the setpoints.
+    #
+    # | Mode        | Setpoint | Min                   | Max                   |
+    # |:------------|----------|:----------------------|:----------------------|
+    # | HOME        | Supply   | AWAY Supply setpoint  | 100                   |
+    # | HOME        | Extract  | AWAY Extract setpoint | 100                   |
+    # | AWAY        | Supply   | 30                    | HOME Supply setpoint  |
+    # | AWAY        | Extract  | 30                    | HOME Extract setpoint |
+    # | HIGH        | Supply   | HOME Supply setpoint  | 100                   |
+    # | HIGH        | Extract  | HOME Extract setpoint | 100                   |
+    # | COOKER_HOOD | Supply   | 30                    | 100                   |
+    # | COOKER_HOOD | Extract  | 30                    | 100                   |
+    # | FIREPLACE   | Supply   | 30                    | 100                   |
+    # | FIREPLACE   | Extract  | 30                    | 100                   |
 
 
 NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
