@@ -1414,8 +1414,15 @@ async def test_handle_mqtt_timeout_on_callback(
         assert not mock_debouncer.is_set()
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        OSError("Connection error"),
+        paho_mqtt.WebsocketConnectionError("Connection error"),
+    ],
+)
 async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, exception: Exception
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
     entry = MockConfigEntry(
@@ -1428,7 +1435,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
-        mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
+        mock_client().connect = MagicMock(side_effect=exception)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
