@@ -39,8 +39,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DEVICE_LIST,
-    DOMAIN,
     VICARE_CUBIC_METER,
     VICARE_KW,
     VICARE_KWH,
@@ -971,12 +969,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         ),
         # run update to have device_class set depending on unit_of_measurement
         True,

@@ -22,14 +22,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    DEFAULT_CACHE_DURATION,
-    DEVICE_LIST,
-    DOMAIN,
-    PLATFORMS,
-    UNSUPPORTED_DEVICES,
-)
-from .types import ViCareConfigEntry, ViCareDevice
+from .const import DEFAULT_CACHE_DURATION, DOMAIN, PLATFORMS, UNSUPPORTED_DEVICES
+from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,11 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     hass.data[DOMAIN][entry.entry_id] = {}
 
     try:
-        await hass.async_add_executor_job(setup_vicare_api, hass, entry)
+        entry.runtime_data = await hass.async_add_executor_job(
+            setup_vicare_api, hass, entry
+        )
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
-    for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
+    for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)
 
@@ -74,11 +70,13 @@ def vicare_login(
     return vicare_api
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
+def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    client = vicare_login(hass, entry.data)
 
-    device_config_list = get_supported_devices(vicare_api.devices)
+    device_config_list = get_supported_devices(client.devices)
+
+    # increase cache duration to fit rate limit to number of devices
     if (number_of_devices := len(device_config_list)) > 1:
         cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
         _LOGGER.debug(
@@ -86,18 +84,19 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> None:
             number_of_devices,
             cache_duration,
         )
-        vicare_api = vicare_login(hass, entry.data, cache_duration)
-        device_config_list = get_supported_devices(vicare_api.devices)
+        client = vicare_login(hass, entry.data, cache_duration)
+        device_config_list = get_supported_devices(client.devices)
 
     for device in device_config_list:
         _LOGGER.debug(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
+    devices = [
         ViCareDevice(config=device_config, api=get_device(entry, device_config))
         for device_config in device_config_list
     ]
+    return ViCareData(client=client, devices=devices)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:

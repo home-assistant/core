@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import enum
 from typing import Any
 
+from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
@@ -73,20 +74,23 @@ VICARE_TO_HA_PRESET_HEATING = {
 }
 
 
-type ViCareConfigEntry = ConfigEntry[ViCareData]
-
-
-@dataclass(frozen=True)
-class ViCareData:
-    """ViCare data class."""
-
-
 @dataclass(frozen=True)
 class ViCareDevice:
     """Dataclass holding the device api and config."""
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
+
+
+@dataclass(frozen=True)
+class ViCareData:
+    """ViCare data class."""
+
+    client: PyViCare
+    devices: list[ViCareDevice]
+
+
+type ViCareConfigEntry = ConfigEntry[ViCareData]
 
 
 @dataclass(frozen=True)
