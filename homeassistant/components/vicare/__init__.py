@@ -33,10 +33,6 @@ _TOKEN_FILENAME = "vicare_token.save"
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     try:
         entry.runtime_data = await hass.async_add_executor_job(
             setup_vicare_api, hass, entry
@@ -102,8 +98,6 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
 async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Unload ViCare config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     with suppress(FileNotFoundError):
         await hass.async_add_executor_job(
