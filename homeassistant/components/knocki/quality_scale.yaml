@@ -36,7 +36,10 @@ rules:
     comment: |
       This integration does not provide actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have any configuration parameters.
   docs-installation-parameters: todo
   entity-unavailable: todo
   integration-owner: done
