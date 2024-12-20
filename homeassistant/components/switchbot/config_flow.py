@@ -10,7 +10,6 @@ from switchbot import (
     SwitchBotAdvertisement,
     SwitchbotApiError,
     SwitchbotAuthenticationError,
-    SwitchbotLock,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -180,8 +179,10 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_adv is not None
         description_placeholders = {}
         if user_input is not None:
+            model = self._discovered_adv.data["modelName"]
+            cls = CLASS_BY_DEVICE[model]
             try:
-                key_details = await SwitchbotLock.async_retrieve_encryption_key(
+                key_details = await cls.async_retrieve_encryption_key(
                     async_get_clientsession(self.hass),
                     self._discovered_adv.address,
                     user_input[CONF_USERNAME],
@@ -255,7 +256,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self._async_create_entry_from_discovery(user_input)
 
         return self.async_show_form(
-            step_id="lock_key",
+            step_id="encrypted_key",
             errors=errors,
             data_schema=vol.Schema(
                 {
