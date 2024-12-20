@@ -35,7 +35,9 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                async with AqualinkClient(username, password, httpx_client=get_async_client(self.hass)):
+                async with AqualinkClient(
+                    username, password, httpx_client=get_async_client(self.hass)
+                ):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"
