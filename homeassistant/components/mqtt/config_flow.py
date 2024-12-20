@@ -577,6 +577,9 @@ class MQTTOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
+
+        # Can be removed when config entry is bumped to version 2.1
+        # with HA Core 2026.1.0
         legacy_data_options = {
             key: self.config_entry.data[key]
             for key in ENTRY_OPTION_FIELDS
