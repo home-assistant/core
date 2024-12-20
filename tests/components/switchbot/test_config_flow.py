@@ -961,7 +961,7 @@ async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+        "switchbot.SwitchbotRelaySwitch.async_retrieve_encryption_key",
         side_effect=SwitchbotAuthenticationError("error from api"),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -980,7 +980,7 @@ async def test_user_setup_worelay_switch_1pm_auth(hass: HomeAssistant) -> None:
     with (
         patch_async_setup_entry() as mock_setup_entry,
         patch(
-            "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+            "switchbot.SwitchbotRelaySwitch.async_retrieve_encryption_key",
             return_value={
                 CONF_KEY_ID: "ff",
                 CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
@@ -1032,7 +1032,7 @@ async def test_user_setup_worelay_switch_1pm_auth_switchbot_api_down(
     assert result["errors"] == {}
 
     with patch(
-        "switchbot.SwitchbotLock.async_retrieve_encryption_key",
+        "switchbot.SwitchbotRelaySwitch.async_retrieve_encryption_key",
         side_effect=SwitchbotAccountConnectionError("Switchbot API down"),
     ):
         result = await hass.config_entries.flow.async_configure(
