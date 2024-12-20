@@ -1441,9 +1441,10 @@
     },
     "easyenergy": {
       "name": "easyEnergy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "ebox": {
       "name": "EBox",
@@ -1653,9 +1654,10 @@
     },
     "energyzero": {
       "name": "EnergyZero",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "enigma2": {
       "name": "Enigma2 (OpenWebif)",
@@ -2822,7 +2824,7 @@
           "name": "IKEA TR\u00c5DFRI"
         },
         "idasen_desk": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "IKEA Idasen Desk"
@@ -4621,6 +4623,12 @@
       "name": "PCS Lighting",
       "integration_type": "virtual",
       "supported_by": "upb"
+    },
+    "peblar": {
+      "name": "Peblar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "peco": {
       "name": "PECO Outage Counter",
