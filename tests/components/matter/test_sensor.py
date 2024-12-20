@@ -343,37 +343,37 @@ async def test_evse_sensor(
 ) -> None:
     """Test evse sensor."""
     # EnergyEvseState
-    state = hass.states.get("sensor.mock_evse_evse_state")
+    state = hass.states.get("sensor.evse_state")
     assert state
     assert state.state == "3"
 
     set_node_attribute(matter_node, 1, 153, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.mock_evse_evse_state")
+    state = hass.states.get("sensor.evse_state")
     assert state
     assert state.state == "1"
 
     # EnergyEvseSupplyState
-    state = hass.states.get("sensor.mock_evse_evse_supply_state")
+    state = hass.states.get("sensor.evse_supply_state")
     assert state
     assert state.state == "1"
 
     set_node_attribute(matter_node, 1, 153, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.mock_evse_evse_supply_state")
+    state = hass.states.get("sensor.evse_supply_state")
     assert state
     assert state.state == "0"
 
     # EnergyEvseFaultState
-    state = hass.states.get("sensor.mock_evse_evse_fault_state")
+    state = hass.states.get("sensor.evse_fault_state")
     assert state
     assert state.state == "0"
 
     set_node_attribute(matter_node, 1, 153, 1, 2)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.mock_evse_evse_fault_state")
+    state = hass.states.get("sensor.evse_fault_state")
     assert state
     assert state.state == "2"
