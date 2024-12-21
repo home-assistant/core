@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -13,7 +13,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    PRECISION_HALVES,
+    PRECISION_WHOLE,
     STATE_OFF,
     STATE_ON,
     UnitOfTemperature,
@@ -35,7 +35,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
     _attr_min_temp = 30.0
     _attr_max_temp = 70.0
-    _attr_precision = PRECISION_HALVES
+    _attr_precision = PRECISION_WHOLE
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
@@ -45,23 +45,23 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> int | None:
         """Return the current temperature."""
         current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
 
         if current_temperature:
-            return cast(float, current_temperature.value)
+            return current_temperature.value_as_int
 
         return None
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states[
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
         ]
         if target_temperature:
-            return cast(float, target_temperature.value)
+            return target_temperature.value_as_int
 
         return None
 
