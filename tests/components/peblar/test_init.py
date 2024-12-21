@@ -4,10 +4,12 @@ from unittest.mock import MagicMock
 
 from peblar import PeblarAuthenticationError, PeblarConnectionError, PeblarError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -67,3 +69,17 @@ async def test_config_entry_authentication_failed(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_peblar_device_entry(
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test authentication error, aborts setup."""
+    assert (
+        device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, "23-45-A4O-MOF")}
+        )
+    )
+    assert device_entry == snapshot
