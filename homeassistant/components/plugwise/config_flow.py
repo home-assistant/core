@@ -44,7 +44,6 @@ from .const import (
 SMILE_RECONF_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
     }
 )
 
@@ -57,6 +56,7 @@ def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
         schema = schema.extend(
             {
                 vol.Required(CONF_HOST): str,
+                # Port under investigation for removal (hence not added in #132878)
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
@@ -223,7 +223,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             # Keep current username and password
             full_input = {
                 CONF_HOST: user_input.get(CONF_HOST),
-                CONF_PORT: user_input.get(CONF_PORT),
+                CONF_PORT: reconfigure_entry.data.get(CONF_PORT),
                 CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
                 CONF_PASSWORD: reconfigure_entry.data.get(CONF_PASSWORD),
             }
