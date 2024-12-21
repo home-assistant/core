@@ -18,7 +18,7 @@ from kasa import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp, stream
+from homeassistant.components import dhcp, ffmpeg, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -423,6 +423,18 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    def _create_camera_entry(
+        self, device: Device, un: str, pw: str
+    ) -> ConfigFlowResult:
+        entry_data: dict[str, bool | dict[str, str]] = {CONF_LIVE_VIEW: True}
+        entry_data[CONF_CAMERA_CREDENTIALS] = {
+            CONF_USERNAME: un,
+            CONF_PASSWORD: pw,
+        }
+        return self._async_create_or_update_entry_from_device(
+            device, camera_data=entry_data
+        )
+
     async def async_step_camera_auth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -455,18 +467,16 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 if ex.stream_client_error is stream.StreamClientError.Unauthorized:
                     errors["base"] = "invalid_camera_auth"
                 else:
+                    # If camera fails to create HLS stream but can create the
+                    # mpeg stream, we know it's authorised ok and will fallback
+                    # to mpeg in the frontend
+                    if await ffmpeg.async_get_image(self.hass, rtsp_url):
+                        return self._create_camera_entry(device, un, pw)
+
                     errors["base"] = "cannot_connect_camera"
                     placeholders["error"] = str(ex)
             else:
-                entry_data: dict[str, bool | dict[str, str]] = {CONF_LIVE_VIEW: True}
-                if un:
-                    entry_data[CONF_CAMERA_CREDENTIALS] = {
-                        CONF_USERNAME: cast(str, un),
-                        CONF_PASSWORD: cast(str, pw),
-                    }
-                return self._async_create_or_update_entry_from_device(
-                    device, camera_data=entry_data
-                )
+                return self._create_camera_entry(device, un, pw)
 
         elif user_input:
             errors["base"] = "camera_creds"
