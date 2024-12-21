@@ -37,6 +37,9 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
             manufacturer=MANUFACTURER,
             model=MODEL,
             name="Pinecil",
-            sw_version=coordinator.device_info.build,
-            serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.device.is_connected
