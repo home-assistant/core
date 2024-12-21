@@ -11,6 +11,11 @@ from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -19,6 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DOMAIN,
     PLAYER_UPDATE_INTERVAL,
     SENSOR_UPDATE_INTERVAL,
     SIGNAL_ALARM_DISCOVERED,
@@ -98,7 +104,27 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.available = True
         self.known_alarms: list[str] = []
         self._remove_dispatcher: Callable | None = None
+        self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
+
+        _manufacturer = None
+        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
+            _manufacturer = "Ralph Irving"
+        elif (
+            "Squeezebox" in player.model
+            or "Transporter" in player.model
+            or "Slim" in player.model
+        ):
+            _manufacturer = "Logitech"
+
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.player_uuid)},
+            name=player.name,
+            connections={(CONNECTION_NETWORK_MAC, self.player_uuid)},
+            via_device=(DOMAIN, self.server_uuid),
+            model=player.model,
+            manufacturer=_manufacturer,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
