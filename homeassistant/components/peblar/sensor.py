@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from peblar import PeblarUserConfiguration
 
@@ -24,8 +25,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT,
+    PEBLAR_CP_STATE_TO_HOME_ASSISTANT,
+)
 from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator
 
 
@@ -34,21 +40,37 @@ class PeblarSensorDescription(SensorEntityDescription):
     """Describe a Peblar sensor."""
 
     has_fn: Callable[[PeblarUserConfiguration], bool] = lambda _: True
-    value_fn: Callable[[PeblarData], int | None]
+    value_fn: Callable[[PeblarData], datetime | int | str | None]
 
 
 DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
     PeblarSensorDescription(
-        key="current",
+        key="cp_state",
+        translation_key="cp_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(PEBLAR_CP_STATE_TO_HOME_ASSISTANT.values()),
+        value_fn=lambda x: PEBLAR_CP_STATE_TO_HOME_ASSISTANT[x.ev.cp_state],
+    ),
+    PeblarSensorDescription(
+        key="charge_current_limit_source",
+        translation_key="charge_current_limit_source",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=list(PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT.values()),
+        value_fn=lambda x: PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT[
+            x.ev.charge_current_limit_source
+        ],
+    ),
+    PeblarSensorDescription(
+        key="current_total",
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_fn=lambda x: x.connected_phases == 1,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda x: x.meter.current_phase_1,
+        value_fn=lambda x: x.meter.current_total,
     ),
     PeblarSensorDescription(
         key="current_phase_1",
@@ -193,6 +215,16 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.meter.voltage_phase_3,
     ),
+    PeblarSensorDescription(
+        key="uptime",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda x: (
+            utcnow().replace(microsecond=0) - timedelta(seconds=x.system.uptime)
+        ),
+    ),
 )
 
 
@@ -232,6 +264,6 @@ class PeblarSensorEntity(CoordinatorEntity[PeblarDataUpdateCoordinator], SensorE
         )
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> datetime | int | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
