@@ -1,7 +1,6 @@
 """Fixtures for Roku integration tests."""
 
 from collections.abc import Generator
-import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -11,7 +10,7 @@ from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def app_icon_url(*args, **kwargs):
@@ -43,33 +42,26 @@ async def mock_device(
     request: pytest.FixtureRequest,
 ) -> RokuDevice:
     """Return the mocked roku device."""
-    fixture: str = "roku/roku3.json"
+    fixture: str = "roku3"
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    return RokuDevice(json.loads(load_fixture(fixture)))
-
-
-@pytest.fixture
-def mock_roku_config_flow(mock_device: RokuDevice) -> Generator[MagicMock]:
-    """Return a mocked Roku client."""
-
-    with patch(
-        "homeassistant.components.roku.config_flow.Roku", autospec=True
-    ) as roku_mock:
-        client = roku_mock.return_value
-        client.app_icon_url.side_effect = app_icon_url
-        client.update.return_value = mock_device
-        yield client
+    return RokuDevice(load_json_object_fixture(f"{fixture}.json", DOMAIN))
 
 
 @pytest.fixture
 def mock_roku(mock_device: RokuDevice) -> Generator[MagicMock]:
     """Return a mocked Roku client."""
 
-    with patch(
-        "homeassistant.components.roku.coordinator.Roku", autospec=True
-    ) as roku_mock:
+    with (
+        patch(
+            "homeassistant.components.roku.coordinator.Roku", autospec=True
+        ) as roku_mock,
+        patch(
+            "homeassistant.components.roku.config_flow.Roku",
+            new=roku_mock,
+        ),
+    ):
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
         client.update.return_value = mock_device
