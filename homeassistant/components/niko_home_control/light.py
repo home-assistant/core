@@ -105,6 +105,7 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = action.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._attr_should_poll = False
         if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
