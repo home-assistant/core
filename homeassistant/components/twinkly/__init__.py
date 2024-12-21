@@ -23,7 +23,7 @@ class TwinklyData:
 
     client: Twinkly
     device_info: dict[str, Any]
-    sw_version: str
+    sw_version: str | None
 
 
 type TwinklyConfigEntry = ConfigEntry[TwinklyData]
