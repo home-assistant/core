@@ -337,6 +337,30 @@
       },
       "configured_reserve_soc": {
         "name": "Configured reserve battery level"
+      },
+      "acb_battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "Charging",
+          "full": "Full"
+        }
+      },
+      "acb_available_energy": {
+        "name": "Available ACB battery energy"
+      },
+      "acb_max_capacity": {
+        "name": "ACB Battery capacity"
+      },
+      "aggregated_available_energy": {
+        "name": "Aggregated available battery energy"
+      },
+      "aggregated_max_capacity": {
+        "name": "Aggregated Battery capacity"
+      },
+      "aggregated_soc": {
+        "name": "Aggregated battery soc"
       }
     },
     "switch": {
@@ -346,6 +370,17 @@
       "grid_enabled": {
         "name": "Grid enabled"
       }
+    }
+  },
+  "exceptions": {
+    "unexpected_device": {
+      "message": "Unexpected Envoy serial-number found at {host}; expected {expected_serial}, found {actual_serial}"
+    },
+    "authentication_error": {
+      "message": "Envoy authentication failure on {host}: {args}"
+    },
+    "envoy_error": {
+      "message": "Error communicating with Envoy API on {host}: {args}"
     }
   }
 }

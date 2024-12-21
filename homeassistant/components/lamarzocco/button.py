@@ -16,6 +16,7 @@ from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
+PARALLEL_UPDATES = 1
 BACKFLUSH_ENABLED_DURATION = 15
 
 
@@ -56,7 +57,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up button entities."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     async_add_entities(
         LaMarzoccoButtonEntity(coordinator, description)
         for description in ENTITIES

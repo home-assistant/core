@@ -16,11 +16,11 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],
-      "elapsed_time": 0,
+      "elapsed_time": null,
       "elapsed_time_last_updated": 0,
       "state": "idle",
       "volume_level": 20,
@@ -57,7 +57,7 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],
@@ -109,7 +109,7 @@
         "volume_set",
         "volume_mute",
         "pause",
-        "sync",
+        "set_members",
         "power",
         "enqueue"
       ],

@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from . import TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
+from . import TEST_MAC, TEST_MODEL, TEST_NAME, TEST_NAME_ORIGINAL, ClientMock
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -301,7 +301,7 @@ async def test_update_name(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    dev_entry = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
+    dev_entry = device_registry.async_get_device({(TWINKLY_DOMAIN, TEST_MAC)})
 
     assert dev_entry.name == "new_device_name"
     assert config_entry.data[CONF_NAME] == "new_device_name"
@@ -310,10 +310,9 @@ async def test_update_name(
 async def test_unload(hass: HomeAssistant) -> None:
     """Validate that entities can be unloaded from the UI."""
 
-    _, _, client, _ = await _create_entries(hass)
-    entry_id = client.id
+    _, _, _, entry = await _create_entries(hass)
 
-    assert await hass.config_entries.async_unload(entry_id)
+    assert await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def _create_entries(
@@ -330,18 +329,19 @@ async def _create_entries(
                 CONF_NAME: TEST_NAME_ORIGINAL,
                 CONF_MODEL: TEST_MODEL,
             },
-            entry_id=client.id,
+            unique_id=TEST_MAC,
+            minor_version=2,
         )
         config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(client.id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
+    entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, TEST_MAC)
     entity_entry = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device(identifiers={(TWINKLY_DOMAIN, client.id)})
+    device = device_registry.async_get_device(identifiers={(TWINKLY_DOMAIN, TEST_MAC)})
 
     assert entity_entry is not None
     assert device is not None

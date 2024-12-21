@@ -65,11 +65,6 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
             self._attr_fan_modes.append(FAN_AUTO)
 
     @property
-    def available(self) -> bool:
-        """Is the entity available."""
-        return super().available and self.coordinator.client.connected
-
-    @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat or off mode."""
         return HVACMode.HEAT if self.coordinator.client.is_on else HVACMode.OFF
