@@ -33,6 +33,18 @@
     }
   },
   "entity": {
+    "select": {
+      "smart_charging": {
+        "name": "Smart charging",
+        "state": {
+          "default": "Default",
+          "fast_solar": "Fast solar",
+          "pure_solar": "Pure solar",
+          "scheduled": "Scheduled",
+          "smart_solar": "Smart solar"
+        }
+      }
+    },
     "update": {
       "customization": {
         "name": "Customization"
