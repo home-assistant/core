@@ -36,7 +36,7 @@ from homeassistant.components.intent import (
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -95,11 +95,7 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities(
-            [
-                EsphomeAssistSatellite(entry, entry_data),
-            ]
-        )
+        async_add_entities([EsphomeAssistSatellite(entry, entry_data)])
 
 
 class EsphomeAssistSatellite(
@@ -108,9 +104,7 @@ class EsphomeAssistSatellite(
     """Satellite running ESPHome."""
 
     entity_description = assist_satellite.AssistSatelliteEntityDescription(
-        key="assist_satellite",
-        translation_key="assist_satellite",
-        entity_category=EntityCategory.CONFIG,
+        key="assist_satellite", translation_key="assist_satellite"
     )
 
     def __init__(
@@ -200,6 +194,9 @@ class EsphomeAssistSatellite(
         self._satellite_config.max_active_wake_words = config.max_active_wake_words
         _LOGGER.debug("Received satellite configuration: %s", self._satellite_config)
 
+        # Inform listeners that config has been updated
+        self.entry_data.async_assist_satellite_config_updated(self._satellite_config)
+
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -255,6 +252,13 @@ class EsphomeAssistSatellite(
         if not (feature_flags & VoiceAssistantFeature.SPEAKER):
             # Will use media player for TTS/announcements
             self._update_tts_format()
+
+        # Update wake word select when config is updated
+        self.async_on_remove(
+            self.entry_data.async_register_assist_satellite_set_wake_word_callback(
+                self.async_set_wake_word
+            )
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -479,6 +483,17 @@ class EsphomeAssistSatellite(
     ) -> None:
         """Handle announcement finished message (also sent for TTS)."""
         self.tts_response_finished()
+
+    @callback
+    def async_set_wake_word(self, wake_word_id: str) -> None:
+        """Set active wake word and update config on satellite."""
+        self._satellite_config.active_wake_words = [wake_word_id]
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self.async_set_configuration(self._satellite_config),
+            "esphome_voice_assistant_set_config",
+        )
+        _LOGGER.debug("Setting active wake word: %s", wake_word_id)
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""

@@ -9,6 +9,12 @@
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "Client ID",
           "heating_type": "Heating type"
+        },
+        "data_description": {
+          "username": "The email address to login to your ViCare account.",
+          "password": "The password to login to your ViCare account.",
+          "client_id": "The ID of the API client created in the Viessmann developer portal.",
+          "heating_type": "Allows to overrule the device auto detection."
         }
       },
       "reauth_confirm": {
@@ -16,6 +22,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "[%key:component::vicare::config::step::user::data::client_id%]"
+        },
+        "data_description": {
+          "password": "[%key:component::vicare::config::step::user::data_description::password%]",
+          "client_id": "[%key:component::vicare::config::step::user::data_description::client_id%]"
         }
       }
     },
@@ -97,13 +107,22 @@
         "name": "Comfort temperature"
       },
       "normal_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::normal_temperature::name%]"
+        "name": "Normal heating temperature"
       },
       "reduced_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::reduced_temperature::name%]"
+        "name": "Reduced heating temperature"
       },
       "comfort_heating_temperature": {
-        "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
+        "name": "Comfort heating temperature"
+      },
+      "normal_cooling_temperature": {
+        "name": "Normal cooling temperature"
+      },
+      "reduced_cooling_temperature": {
+        "name": "Reduced cooling temperature"
+      },
+      "comfort_cooling_temperature": {
+        "name": "Comfort cooling temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
@@ -244,6 +263,15 @@
       },
       "energy_summary_consumption_heating_lastsevendays": {
         "name": "Heating electricity consumption last seven days"
+      },
+      "energy_consumption_cooling_today": {
+        "name": "Cooling electricity consumption today"
+      },
+      "energy_consumption_cooling_this_month": {
+        "name": "Cooling electricity consumption this month"
+      },
+      "energy_consumption_cooling_this_year": {
+        "name": "Cooling electricity consumption this year"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"

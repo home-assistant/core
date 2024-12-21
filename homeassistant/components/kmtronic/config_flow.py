@@ -66,7 +66,7 @@ class KmtronicConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> KMTronicOptionsFlow:
         """Get the options flow for this handler."""
-        return KMTronicOptionsFlow(config_entry)
+        return KMTronicOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -101,10 +101,6 @@ class InvalidAuth(HomeAssistantError):
 
 class KMTronicOptionsFlow(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

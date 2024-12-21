@@ -1,0 +1,93 @@
+# serializer version: 1
+# name: test_all_entities[switch.cambridge_audio_cxnv2_early_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_early_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Early update',
+    'platform': 'cambridge_audio',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'early_update',
+    'unique_id': '0020c2d8-early_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.cambridge_audio_cxnv2_early_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cambridge Audio CXNv2 Early update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_early_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.cambridge_audio_cxnv2_pre_amp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_pre_amp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pre-Amp',
+    'platform': 'cambridge_audio',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pre_amp',
+    'unique_id': '0020c2d8-pre_amp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.cambridge_audio_cxnv2_pre_amp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cambridge Audio CXNv2 Pre-Amp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.cambridge_audio_cxnv2_pre_amp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

@@ -57,8 +57,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
         """Get the options flow for this handler."""
         if config_entry.data.get(CONF_API_VERSION, 1) == 1:
-            return HueV1OptionsFlowHandler(config_entry)
-        return HueV2OptionsFlowHandler(config_entry)
+            return HueV1OptionsFlowHandler()
+        return HueV2OptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
@@ -280,10 +280,6 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 class HueV1OptionsFlowHandler(OptionsFlow):
     """Handle Hue options for V1 implementation."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Hue options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -314,10 +310,6 @@ class HueV1OptionsFlowHandler(OptionsFlow):
 
 class HueV2OptionsFlowHandler(OptionsFlow):
     """Handle Hue options for V2 implementation."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Hue options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -92,6 +92,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Colour": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX DLCOL": {
         "always_discover": True,
         "domain": "lifx",
@@ -140,6 +144,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Permanent Outdoor": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Tile": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Tube": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -525,6 +537,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "eheimdigital",
+            "name": "eheimdigital._http._tcp.local.",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -543,6 +559,14 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "peblar",
+            "name": "pblr-*",
+        },
+        {
+            "domain": "powerfox",
+            "name": "powerfox*",
+        },
+        {
             "domain": "pure_energie",
             "name": "smartbridge*",
         },
@@ -557,6 +581,10 @@ ZEROCONF = {
         {
             "domain": "shelly",
             "name": "shelly*",
+        },
+        {
+            "domain": "slide_local",
+            "name": "slide*",
         },
         {
             "domain": "synology_dsm",
@@ -617,6 +645,12 @@ ZEROCONF = {
         {
             "domain": "lutron_caseta",
             "properties": {
+                "SYSTYPE": "hwqs*",
+            },
+        },
+        {
+            "domain": "lutron_caseta",
+            "properties": {
                 "SYSTYPE": "radiora3*",
             },
         },
@@ -631,6 +665,11 @@ ZEROCONF = {
             "properties": {
                 "SYSTYPE": "ra2select*",
             },
+        },
+    ],
+    "_mass._tcp.local.": [
+        {
+            "domain": "music_assistant",
         },
     ],
     "_matter._tcp.local.": [
@@ -859,6 +898,12 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "*zigate*",
+        },
+    ],
+    "_zigbee-coordinator._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*",
         },
     ],
     "_zigstar_gw._tcp.local.": [

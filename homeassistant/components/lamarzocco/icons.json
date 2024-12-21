@@ -43,6 +43,12 @@
       "preinfusion_off": {
         "default": "mdi:water"
       },
+      "scale_target": {
+        "default": "mdi:scale-balance"
+      },
+      "smart_standby_time": {
+        "default": "mdi:timer"
+      },
       "steam_temp": {
         "default": "mdi:thermometer-water"
       },
@@ -51,6 +57,20 @@
       }
     },
     "select": {
+      "active_bbw": {
+        "default": "mdi:alpha-u",
+        "state": {
+          "a": "mdi:alpha-a",
+          "b": "mdi:alpha-b"
+        }
+      },
+      "smart_standby_mode": {
+        "default": "mdi:power",
+        "state": {
+          "poweron": "mdi:power",
+          "lastbrewing": "mdi:coffee"
+        }
+      },
       "steam_temp_select": {
         "default": "mdi:thermometer",
         "state": {
@@ -98,6 +118,12 @@
         "state": {
           "on": "mdi:alarm",
           "off": "mdi:alarm-off"
+        }
+      },
+      "smart_standby_enabled": {
+        "state": {
+          "on": "mdi:sleep",
+          "off": "mdi:sleep-off"
         }
       },
       "steam_boiler": {
