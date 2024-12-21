@@ -7,7 +7,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, BLU_TRV_MODEL_NAME, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -22,7 +22,11 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -124,6 +128,7 @@ def async_setup_rpc_entry(
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
     climate_key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+    blutrv_key_ids = get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER)
 
     climate_ids = []
     for id_ in climate_key_ids:
@@ -139,10 +144,11 @@ def async_setup_rpc_entry(
             unique_id = f"{coordinator.mac}-switch:{id_}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if not climate_ids:
-        return
+    if climate_ids:
+        async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
 
-    async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
+    if blutrv_key_ids:
+        async_add_entities(RpcBluTrvClimate(coordinator, id_) for id_ in blutrv_key_ids)
 
 
 @dataclass
@@ -525,4 +531,105 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
         await self.call_rpc(
             "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
+        )
+
+
+class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
+    """Entity that controls a thermostat on RPC based Shelly devices."""
+
+    _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
+    _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
+        self._id = id_
+        self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        device_id: str = self._config["addr"]
+        self._attr_unique_id = f"{device_id}-{self.key}"
+        model_id = self._config.get("local_name")
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, device_id)},
+            identifiers={(DOMAIN, device_id)},
+            via_device=(DOMAIN, self.coordinator.mac),
+            manufacturer="Shelly",
+            model=BLU_TRV_MODEL_NAME.get(model_id),
+            model_id=model_id,
+            name=self._config["name"] or f"shelyblutrv-{device_id.replace(":", "")}",
+        )
+        self._humidity_key: str | None = None
+        # Check if there is a corresponding humidity key for the thermostat ID
+        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
+            self._humidity_key = humidity_key
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Set target temperature."""
+        if not self._config["enable"]:
+            return None
+
+        return cast(float, self.status["target_C"])
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return current temperature."""
+        return cast(float, self.status["current_C"])
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return current humidity."""
+        if self._humidity_key is None:
+            return None
+
+        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
+
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """HVAC current mode."""
+        if self.target_temperature == self._attr_min_temp:
+            return HVACMode.OFF
+
+        return HVACMode.HEAT
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """HVAC current action."""
+        if not self.status["pos"]:
+            return HVACAction.IDLE
+
+        return HVACAction.HEATING
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+
+        await self.call_rpc(
+            "BluTRV.Call",
+            {
+                "id": self._id,
+                "method": "Trv.SetTarget",
+                "params": {"id": 0, "target_C": target_temp},
+            },
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
+        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
+        await self.call_rpc(
+            "BluTRV.Call",
+            {
+                "id": self._id,
+                "method": "Trv.SetConfig",
+                "params": {"id": 0, "config": {"enable": mode}},
+            },
         )
