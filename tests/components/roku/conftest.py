@@ -50,25 +50,18 @@ async def mock_device(
 
 
 @pytest.fixture
-def mock_roku_config_flow(mock_device: RokuDevice) -> Generator[MagicMock]:
-    """Return a mocked Roku client."""
-
-    with patch(
-        "homeassistant.components.roku.config_flow.Roku", autospec=True
-    ) as roku_mock:
-        client = roku_mock.return_value
-        client.app_icon_url.side_effect = app_icon_url
-        client.update.return_value = mock_device
-        yield client
-
-
-@pytest.fixture
 def mock_roku(mock_device: RokuDevice) -> Generator[MagicMock]:
     """Return a mocked Roku client."""
 
-    with patch(
-        "homeassistant.components.roku.coordinator.Roku", autospec=True
-    ) as roku_mock:
+    with (
+        patch(
+            "homeassistant.components.roku.coordinator.Roku", autospec=True
+        ) as roku_mock,
+        patch(
+            "homeassistant.components.roku.config_flow.Roku",
+            new=roku_mock,
+        ),
+    ):
         client = roku_mock.return_value
         client.app_icon_url.side_effect = app_icon_url
         client.update.return_value = mock_device

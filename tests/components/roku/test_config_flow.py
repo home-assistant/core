@@ -36,7 +36,7 @@ RECONFIGURE_HOST = "192.168.1.190"
 
 async def test_form(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     mock_setup_entry: None,
 ) -> None:
     """Test the user step."""
@@ -75,12 +75,12 @@ async def test_form(
 )
 async def test_form_error(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     error: Exception,
     reason: str,
 ) -> None:
     """Test we handle usrr flow on error."""
-    mock_roku_config_flow.update.side_effect = error
+    mock_roku.update.side_effect = error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -97,7 +97,7 @@ async def test_form_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
-    mock_roku_config_flow.update.side_effect = None
+    mock_roku.update.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"], user_input={CONF_HOST: HOST}
@@ -108,11 +108,9 @@ async def test_form_error(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_unknown_error(
-    hass: HomeAssistant, mock_roku_config_flow: MagicMock
-) -> None:
+async def test_form_unknown_error(hass: HomeAssistant, mock_roku: MagicMock) -> None:
     """Test we handle user flow on unknown error."""
-    mock_roku_config_flow.update.side_effect = Exception
+    mock_roku.update.side_effect = Exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
@@ -134,7 +132,7 @@ async def test_form_unknown_error(
 async def test_form_duplicate_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
 ) -> None:
     """Test that we handle user flow on duplicates."""
     mock_config_entry.add_to_hass(hass)
@@ -163,7 +161,7 @@ async def test_form_duplicate_error(
 @pytest.mark.parametrize("mock_device", ["rokutv-7820x"], indirect=True)
 async def test_homekit_discovery(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     mock_setup_entry: None,
 ) -> None:
     """Test the homekit discovery flow."""
@@ -205,12 +203,12 @@ async def test_homekit_discovery(
 )
 async def test_homekit_error(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     error: Exception,
     reason: str,
 ) -> None:
     """Test we abort Homekit flow on error."""
-    mock_roku_config_flow.update.side_effect = error
+    mock_roku.update.side_effect = error
 
     discovery_info = MOCK_HOMEKIT_DISCOVERY_INFO
     result = await hass.config_entries.flow.async_init(
@@ -226,7 +224,7 @@ async def test_homekit_error(
 async def test_homekit_duplicate_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
 ) -> None:
     """Test that we handle Homekit flow on duplicates."""
     mock_config_entry.add_to_hass(hass)
@@ -244,7 +242,7 @@ async def test_homekit_duplicate_error(
 
 async def test_ssdp_discovery(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     mock_setup_entry: None,
 ) -> None:
     """Test the SSDP discovery flow."""
@@ -286,12 +284,12 @@ async def test_ssdp_discovery(
 )
 async def test_ssdp_error(
     hass: HomeAssistant,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
     error: Exception,
     reason: str,
 ) -> None:
     """Test we abort SSDP flow on error."""
-    mock_roku_config_flow.update.side_effect = error
+    mock_roku.update.side_effect = error
 
     discovery_info = MOCK_SSDP_DISCOVERY_INFO
     result = await hass.config_entries.flow.async_init(
@@ -309,7 +307,7 @@ async def test_ssdp_error(
 async def test_ssdp_duplicate_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
 ) -> None:
     """Test that we handle SSDP flow on duplicates."""
     mock_config_entry.add_to_hass(hass)
@@ -373,7 +371,7 @@ async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
 ) -> None:
     """Test reconfigure flow."""
     result = await _start_reconfigure_flow(hass, mock_config_entry)
@@ -395,7 +393,7 @@ async def test_reconfigure_unique_id_mismatch(
     mock_device: RokuDevice,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_roku_config_flow: MagicMock,
+    mock_roku: MagicMock,
 ) -> None:
     """Ensure reconfigure flow aborts when the device changes."""
     mock_device.info.serial_number = "RECONFIG"
