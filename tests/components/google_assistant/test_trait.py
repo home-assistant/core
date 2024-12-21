@@ -4158,3 +4158,38 @@ async def test_binary_sensorstate(
         )
         is False
     )
+
+
+async def test_reboot_button(hass: HomeAssistant) -> None:
+    """Test Reboot trait support for the button domain."""
+    assert (
+        helpers.get_google_type(button.DOMAIN, button.ButtonDeviceClass.RESTART)
+        is not None
+    )
+    assert trait.RebootTrait.supported(
+        button.DOMAIN, 0, button.ButtonDeviceClass.RESTART, None
+    )
+
+    trt = trait.RebootTrait(
+        hass,
+        State(
+            f"{button.DOMAIN}.bla",
+            STATE_UNKNOWN,
+            {
+                "device_class": button.ButtonDeviceClass.RESTART,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {}
+    assert trt.can_execute(trait.COMMAND_REBOOT, {})
+
+    calls = async_mock_service(hass, button.DOMAIN, button.SERVICE_PRESS)
+    await trt.execute(trait.COMMAND_REBOOT, BASIC_DATA, {}, {})
+
+    # We don't wait till button press is done.
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: f"{button.DOMAIN}.bla"}
