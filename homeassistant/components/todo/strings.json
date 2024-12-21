@@ -69,7 +69,7 @@
       }
     },
     "remove_completed_items": {
-      "name": "Remove all completed items",
+      "name": "Remove completed items",
       "description": "Removes all to-do list items that have been completed."
     },
     "remove_item": {
