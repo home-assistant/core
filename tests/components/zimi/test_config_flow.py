@@ -23,8 +23,6 @@ def api_mock():
         "homeassistant.components.zimi.config_flow.async_connect_to_controller",
     ) as mock:
         api = MagicMock(spec=ControlPoint)
-        api.mac = MOCK_MAC
-        api.ready = True
         mock.return_value = api
         yield mock
 
@@ -68,6 +66,9 @@ async def test_successful_config_manual(
 ) -> None:
     """Test successful configuration with manual host entry."""
 
+    api_mock.return_value.mac = MOCK_MAC
+    api_mock.return_value.ready = True
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -97,6 +98,9 @@ async def test_successful_config_discovery(
     socket_mock: MagicMock,
 ) -> None:
     """Test successful configuration with automatic discovery."""
+
+    api_mock.return_value.mac = MOCK_MAC
+    api_mock.return_value.ready = True
 
     discovery_mock.discover.return_value = ControlPointDescription(
         host=MOCK_HOST, port=MOCK_PORT
