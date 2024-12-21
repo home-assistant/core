@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from nhc.light import NHCLight
 import pytest
 
 from homeassistant.components.niko_home_control.const import DOMAIN
@@ -22,16 +23,47 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_niko_home_control_connection() -> Generator[AsyncMock]:
+def light() -> NHCLight:
+    """Return a light mock."""
+    mock = AsyncMock(spec=NHCLight)
+    mock.id = 1
+    mock.type = 1
+    mock.is_dimmable = False
+    mock.name = "light"
+    mock.location = "room"
+    return mock
+
+
+@pytest.fixture
+def dimmable_light() -> NHCLight:
+    """Return a dimmable light mock."""
+    mock = AsyncMock(spec=NHCLight)
+    mock.id = 2
+    mock.type = 2
+    mock.is_dimmable = True
+    mock.name = "dimmable light"
+    mock.location = "room"
+    mock.state = 100
+    return mock
+
+
+@pytest.fixture
+def mock_niko_home_control_connection(
+    light: NHCLight, dimmable_light: NHCLight
+) -> Generator[AsyncMock]:
     """Mock a NHC client."""
     with (
         patch(
-            "homeassistant.components.niko_home_control.config_flow.NHCController",
+            "homeassistant.components.niko_home_control.NHCController",
             autospec=True,
         ) as mock_client,
+        patch(
+            "homeassistant.components.niko_home_control.config_flow.NHCController",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
-        client.return_value = True
+        client.lights = [light, dimmable_light]
         yield client
 
 
@@ -39,5 +71,8 @@ def mock_niko_home_control_connection() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, title="Niko Home Control", data={CONF_HOST: "192.168.0.123"}
+        domain=DOMAIN,
+        title="Niko Home Control",
+        data={CONF_HOST: "192.168.0.123"},
+        entry_id="01JFN93M7KRA38V5AMPCJ2JYYV",
     )

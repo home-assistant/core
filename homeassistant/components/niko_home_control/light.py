@@ -109,6 +109,7 @@ class NikoHomeControlLight(LightEntity):
         if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_brightness = round(action.state * 2.55)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
