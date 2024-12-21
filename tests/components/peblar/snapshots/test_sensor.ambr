@@ -741,7 +741,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-12-18T03:04:54+00:00',
+    'state': '2024-12-18T04:16:46+00:00',
   })
 # ---
 # name: test_entities[sensor][sensor.peblar_ev_charger_voltage_phase_1-entry]
