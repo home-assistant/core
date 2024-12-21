@@ -1,11 +1,14 @@
 """Test for diagnostics platform of the Bring! integration."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bring.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -16,8 +19,13 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     bring_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    mock_bring_client: AsyncMock,
 ) -> None:
     """Test diagnostics."""
+    mock_bring_client.get_list.side_effect = [
+        load_json_object_fixture("items.json", DOMAIN),
+        load_json_object_fixture("items2.json", DOMAIN),
+    ]
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()

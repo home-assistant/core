@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -24,7 +25,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BringData(BringList, BringItemsResponse):
+class BringData(BringItemsResponse):
     """Coordinator data class."""
 
 
@@ -33,6 +34,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
 
     config_entry: ConfigEntry
     user_settings: BringUserSettingsResponse
+    lists: list[BringList]
 
     def __init__(self, hass: HomeAssistant, bring: Bring) -> None:
         """Initialize the Bring data coordinator."""
@@ -45,11 +47,14 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         self.bring = bring
 
     async def _async_update_data(self) -> dict[str, BringData]:
+        """Fetch the latest data from bring."""
+        items = {}
+
         try:
-            lists_response = await self.bring.load_lists()
+            self.lists = (await self.bring.load_lists())["lists"]
         except BringRequestException as e:
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
-        except BringParseException as e:
+        except (BringParseException, KeyError) as e:
             raise UpdateFailed("Unable to parse response from bring") from e
         except BringAuthException as e:
             # try to recover by refreshing access token, otherwise
@@ -67,32 +72,44 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed(
                 "Authentication failed but re-authentication was successful, trying again later"
             ) from e
+        else:
+            self._purge_deleted_lists()
 
-        list_dict: dict[str, BringData] = {}
-        for lst in lists_response["lists"]:
+        for lst in self.lists:
             try:
-                items = await self.bring.get_list(lst["listUuid"])
+                response = await self.bring.get_list(lst["listUuid"])
+                items[lst["listUuid"]] = BringData(**response)
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            else:
-                list_dict[lst["listUuid"]] = BringData(**lst, **items)
 
-        return list_dict
+        return items
 
     async def _async_setup(self) -> None:
         """Set up coordinator."""
-
-        await self.async_refresh_user_settings()
-
-    async def async_refresh_user_settings(self) -> None:
-        """Refresh user settings."""
         try:
             self.user_settings = await self.bring.get_all_user_settings()
         except (BringAuthException, BringRequestException, BringParseException) as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve user settings from bring"
             ) from e
+
+    def _purge_deleted_lists(self) -> None:
+        """Purge device entries of deleted lists."""
+
+        device_reg = dr.async_get(self.hass)
+        identifiers = {
+            (DOMAIN, f"{self.config_entry.unique_id}_{lst["listUuid"]}")
+            for lst in self.lists
+        }
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
