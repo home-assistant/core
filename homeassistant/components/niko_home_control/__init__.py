@@ -37,7 +37,9 @@ async def async_setup_entry(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: NikoHomeControlConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: NikoHomeControlConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
@@ -57,9 +59,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: NikoHomeControl
                     entry.entity_id, new_unique_id=new_unique_id
                 )
 
-        hass.config_entries.async_update_entry(
-            config_entry, data={**config_entry.data}, minor_version=2
-        )
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",

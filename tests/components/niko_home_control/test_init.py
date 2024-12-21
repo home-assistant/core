@@ -18,12 +18,19 @@ async def test_migrate_entry(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         minor_version=1,
-        unique_id="light_1",
         data={CONF_HOST: "192.168.0.123"},
     )
     config_entry.add_to_hass(hass)
     entity_entry = entity_registry.async_get_or_create(
-        LIGHT_DOMAIN, DOMAIN, config_entry.unique_id
+        LIGHT_DOMAIN, DOMAIN, "light-1", config_entry=config_entry
     )
     await hass.config_entries.async_setup(config_entry.entry_id)
-    assert entity_entry.unique_id != f"{config_entry.entry_id}-1"
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get(entity_entry.entity_id)
+
+    assert config_entry.minor_version == 2
+    assert (
+        entity_registry.async_get(entity_entry.entity_id).unique_id
+        == f"{config_entry.entry_id}-1"
+    )
