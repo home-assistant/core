@@ -28,8 +28,13 @@ def is_virtual_env() -> bool:
 
 @cache
 def is_docker_env() -> bool:
-    """Return True if we run in a docker env."""
-    return Path("/.dockerenv").exists()
+    """Return True if we run in a container env."""
+    return (
+        Path("/run/.containerenv").exists()
+        or Path("/.dockerenv").exists()
+        or os.environ.get("KUBERNETES_SERVICE_HOST")
+        or is_official_image()
+    )
 
 
 def get_installed_versions(specifiers: set[str]) -> set[str]:
