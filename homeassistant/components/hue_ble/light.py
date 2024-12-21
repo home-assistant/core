@@ -13,7 +13,6 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
-    LightEntityDescription,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -39,10 +38,6 @@ async def async_setup_entry(
 
 class HaHueBLE(LightEntity):
     """Representation of a light."""
-
-    entity_description = LightEntityDescription(
-        key="hue_light", has_entity_name=True, name=None
-    )
 
     def __init__(self, api: HueBleLight) -> None:
         """Initialize the light object. Does not connect."""
