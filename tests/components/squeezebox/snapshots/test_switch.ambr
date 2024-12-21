@@ -77,11 +77,11 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:alarm',
-    'original_name': 'Test Player Alarms Enabled',
+    'original_name': 'Alarms Enabled',
     'platform': 'squeezebox',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'alarms_enabled',
     'unique_id': 'aa:bb:cc:dd:ee:ff-alarms-enabled',
     'unit_of_measurement': None,
   })
