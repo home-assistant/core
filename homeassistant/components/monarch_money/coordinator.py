@@ -66,7 +66,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         now = datetime.now()
 
         account_data, cashflow_summary = await asyncio.gather(
-            self.client.get_accounts_as_dict_with_id_key(),
+            self.client.get_accounts_as_dict_with_id_key(with_holdings=True),
             self.client.get_cashflow_summary(
                 start_date=f"{now.year}-01-01", end_date=f"{now.year}-12-31"
             ),
