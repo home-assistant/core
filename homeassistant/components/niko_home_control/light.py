@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import NikoHomeControlConfigEntry, NikoHomeController
+from . import NHCController, NikoHomeControlConfigEntry
 from .const import DOMAIN
 
 # delete after 2025.7.0
@@ -95,7 +95,7 @@ class NikoHomeControlLight(LightEntity):
     """Representation of a Niko Light."""
 
     def __init__(
-        self, action: NHCLight, controller: NikoHomeController, unique_id: str
+        self, action: NHCLight, controller: NHCController, unique_id: str
     ) -> None:
         """Set up the Niko Home Control light platform."""
         self._controller = controller
@@ -127,7 +127,6 @@ class NikoHomeControlLight(LightEntity):
 
     async def async_update_callback(self, state: int) -> None:
         """Handle updates from the controller."""
-        self._action.update_state(state)
         self._attr_is_on = state > 0
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = round(state * 2.55)

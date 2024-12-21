@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from typing import Any
-
 from nclib.errors import NetcatError
 from nhc.controller import NHCController
 
@@ -18,14 +15,14 @@ from .const import _LOGGER
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
-type NikoHomeControlConfigEntry = ConfigEntry[NikoHomeController]
+type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: NikoHomeControlConfigEntry
 ) -> bool:
     """Set Niko Home Control from a config entry."""
-    controller = NikoHomeController(entry.data[CONF_HOST])
+    controller = NHCController(entry.data[CONF_HOST])
     try:
         await controller.connect()
     except NetcatError as err:
@@ -36,7 +33,6 @@ async def async_setup_entry(
         ) from err
 
     entry.runtime_data = controller
-    controller.add_callback(controller.handle_event)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -78,34 +74,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class NikoHomeController(NHCController):
-    """The niko home control controller."""
-
-    def __init__(self, host: str) -> None:
-        """Init niko home control controller."""
-        super().__init__(host, 8000)
-        self._callbacks: dict[str, list[Callable[[int], Awaitable[None]]]] = {}
-
-    def register_callback(
-        self, action_id: str, callback: Callable[[int], Awaitable[None]]
-    ) -> Callable[[], None]:
-        """Register a callback for entity updates."""
-        self._callbacks.setdefault(action_id, []).append(callback)
-
-        def remove_callback() -> None:
-            self._callbacks[action_id].remove(callback)
-            if not self._callbacks[action_id]:
-                del self._callbacks[action_id]
-
-        return remove_callback
-
-    async def async_dispatch_update(self, action_id: str, value: int) -> None:
-        """Dispatch an update to all registered callbacks."""
-        for callback in self._callbacks.get(action_id, []):
-            await callback(value)
-
-    async def handle_event(self, event: dict[str, Any]) -> None:
-        """Handle an event."""
-        await self.async_dispatch_update(event["id"], event["value1"])
