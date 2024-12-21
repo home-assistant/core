@@ -22,10 +22,7 @@ rules:
       + test_full_user_flow_implementation doesn't assert unique id of created entry
       + test that aborts when a mocked config entry already exists
       + don't test on internals (e.g. `coordinator.last_update_success`) but rather on the resulting state (change)
-  config-flow:
-    status: done
-    comment: |
-      - Don't set `data` as class instance
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -105,6 +102,6 @@ rules:
   inject-websession:
     status: todo
     comment: >
-      To be discussed. The library requires a custom client for API authentication,
-      with custom auth lifecycle and user agents.
+      To be discussed.
+      The library requires a custom client for API authentication, with custom auth lifecycle and user agents.
   strict-typing: done
