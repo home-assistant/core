@@ -10,11 +10,11 @@
           "smart_solar": "mdi:solar-power"
         }
       }
-    }
-  },
-  "update": {
-    "customization": {
-      "default": "mdi:palette"
+    },
+    "update": {
+      "customization": {
+        "default": "mdi:palette"
+      }
     }
   }
 }

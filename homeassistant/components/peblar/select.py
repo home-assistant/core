@@ -9,7 +9,6 @@ from typing import Any
 from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -48,7 +47,7 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PeblarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Peblar select based on a config entry."""
