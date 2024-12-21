@@ -105,6 +105,7 @@ async def test_update_failed(
 async def test_auth_failed_as_update_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a single auth failure not initializing reauth flow."""
     config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
@@ -136,6 +137,10 @@ async def test_auth_failed_as_update_failed(
 
     for entity_id, state in FIXTURE_ENTITY_STATES.items():
         assert hass.states.get(entity_id).state == state
+
+    # Verify that no issues are raised and no reauth flow is initialized
+    assert len(issue_registry.issues) == 0
+    assert len(hass.config_entries.flow.async_progress_by_handler(BMW_DOMAIN)) == 0
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -189,6 +194,12 @@ async def test_auth_failed_init_reauth(
     )
     assert reauth_issue.active is True
 
+    # Check if reauth flow is initialized correctly
+    flow = hass.config_entries.flow.async_get(reauth_issue.data["flow_id"])
+    assert flow["handler"] == BMW_DOMAIN
+    assert flow["context"]["source"] == "reauth"
+    assert flow["context"]["unique_id"] == config_entry.unique_id
+
 
 @pytest.mark.usefixtures("bmw_fixture")
 async def test_captcha_reauth(
@@ -225,3 +236,9 @@ async def test_captcha_reauth(
         f"config_entry_reauth_{BMW_DOMAIN}_{config_entry.entry_id}",
     )
     assert reauth_issue.active is True
+
+    # Check if reauth flow is initialized correctly
+    flow = hass.config_entries.flow.async_get(reauth_issue.data["flow_id"])
+    assert flow["handler"] == BMW_DOMAIN
+    assert flow["context"]["source"] == "reauth"
+    assert flow["context"]["unique_id"] == config_entry.unique_id
