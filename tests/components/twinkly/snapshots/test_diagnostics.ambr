@@ -15,6 +15,7 @@
     }),
     'device_info': dict({
       'device_name': 'twinkly_test_device_name',
+      'mac': '**REDACTED**',
       'product_code': 'twinkly_test_device_model',
       'uuid': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
     }),
