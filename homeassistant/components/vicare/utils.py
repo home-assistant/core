@@ -1,7 +1,12 @@
 """ViCare helpers functions."""
 
-import logging
+from __future__ import annotations
 
+from collections.abc import Mapping
+import logging
+from typing import Any
+
+from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
@@ -14,16 +19,41 @@ from PyViCare.PyViCareUtils import (
 )
 import requests
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
-from .types import ViCareRequiredKeysMixin
+from .const import (
+    CONF_HEATING_TYPE,
+    DEFAULT_CACHE_DURATION,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    VICARE_TOKEN_FILENAME,
+    HeatingType,
+)
+from .types import ViCareConfigEntry, ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
 
+def login(
+    hass: HomeAssistant,
+    entry_data: Mapping[str, Any],
+    cache_duration=DEFAULT_CACHE_DURATION,
+) -> PyViCare:
+    """Login via PyVicare API."""
+    vicare_api = PyViCare()
+    vicare_api.setCacheDuration(cache_duration)
+    vicare_api.initWithCredentials(
+        entry_data[CONF_USERNAME],
+        entry_data[CONF_PASSWORD],
+        entry_data[CONF_CLIENT_ID],
+        hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
+    )
+    return vicare_api
+
+
 def get_device(
-    entry: ConfigEntry, device_config: PyViCareDeviceConfig
+    entry: ViCareConfigEntry, device_config: PyViCareDeviceConfig
 ) -> PyViCareDevice:
     """Get device for device config."""
     return getattr(
