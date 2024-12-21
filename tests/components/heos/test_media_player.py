@@ -1059,16 +1059,20 @@ async def test_media_player_group_fails_when_entity_removed(
     config_entry,
     config,
     controller,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test grouping fails when entity removed."""
     await setup_platform(hass, config_entry, config)
 
     # Remove one of the players
-    er.async_get(hass).async_remove("media_player.test_player_2")
+    entity_registry.async_remove("media_player.test_player_2")
 
     # Attempt to group
-    with pytest.raises(HomeAssistantError) as exc_info:
+    with pytest.raises(
+        HomeAssistantError,
+        match="The group member media_player.test_player_2 could not be resolved to a HEOS player.",
+    ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_JOIN,
@@ -1078,10 +1082,4 @@ async def test_media_player_group_fails_when_entity_removed(
             },
             blocking=True,
         )
-
-    # Assert that the group call failed
-    assert (
-        exc_info.value.args[0]
-        == "The group member media_player.test_player_2 could not be resolved to a HEOS player."
-    )
     controller.create_group.assert_not_called()
