@@ -15,12 +15,14 @@ from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_NAME,
     CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
 )
@@ -38,6 +40,7 @@ from . import (
     number as number_platform,
     select as select_platform,
     sensor as sensor_platform,
+    switch as switch_platform,
     weather as weather_platform,
 )
 from .const import (
@@ -85,6 +88,12 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
         ),
         vol.Optional(WEATHER_DOMAIN): vol.All(
             cv.ensure_list, [weather_platform.WEATHER_SCHEMA]
+        ),
+        vol.Optional(SWITCH_DOMAIN): vol.All(
+            cv.ensure_list, [switch_platform.SWITCH_SCHEMA]
+        ),
+        vol.Optional(CONF_SWITCHES): cv.schema_with_slug_keys(
+            switch_platform.LEGACY_SWITCH_SCHEMA
         ),
     },
 )
@@ -183,6 +192,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
                 CONF_BINARY_SENSORS,
                 BINARY_SENSOR_DOMAIN,
                 binary_sensor_platform.rewrite_legacy_to_modern_conf,
+            ),
+            (
+                CONF_SWITCHES,
+                SWITCH_DOMAIN,
+                switch_platform.rewrite_legacy_to_modern_conf,
             ),
         ):
             if old_key not in template_config:
