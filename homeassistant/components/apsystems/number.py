@@ -20,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
 
-    add_entities([ApSystemsMaxOutputNumber(config_entry.runtime_data)])
+    add_entities([ApSystemsMaxOutputNumber(config_entry.runtime_data)], True)
 
 
 class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
