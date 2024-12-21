@@ -3,14 +3,25 @@
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant.components.twinkly.const import DEV_NAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 TEST_HOST = "test.twinkly.com"
 TEST_ID = "twinkly_test_device_id"
 TEST_UID = "4c8fccf5-e08a-4173-92d5-49bf479252a2"
-TEST_MAC = "aa:bb:cc:dd:ee:ff"
-TEST_NAME = "twinkly_test_device_name"
+TEST_MAC = "00:2d:13:3b:aa:bb"
+TEST_NAME = "Tree 1"
 TEST_NAME_ORIGINAL = "twinkly_test_original_device_name"  # the original (deprecated) name stored in the conf
-TEST_MODEL = "twinkly_test_device_model"
+TEST_MODEL = "TW2016"
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 class ClientMock:
