@@ -16,12 +16,12 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    habitica_data = await config_entry.runtime_data.api.user.anonymized.get()
+    habitica_data = await config_entry.runtime_data.habitica.get_user_anonymized()
 
     return {
         "config_entry_data": {
             CONF_URL: config_entry.data[CONF_URL],
             CONF_API_USER: config_entry.data[CONF_API_USER],
         },
-        "habitica_data": habitica_data,
+        "habitica_data": habitica_data.to_dict()["data"],
     }
