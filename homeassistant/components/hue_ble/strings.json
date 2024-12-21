@@ -7,7 +7,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth": "Invalid authentication. Ensure light is in [Alexa/Google pairing mode.]({url_pairing_mode})",
       "no_scanners": "No Bluetooth scanners are available to search for the light.",
       "not_found": "The light was not found.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
