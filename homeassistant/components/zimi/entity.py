@@ -27,7 +27,6 @@ class ZimiEntity(ToggleEntity):
 
         self._attr_unique_id = device.identifier
         self._device = device
-        self._device.subscribe(self)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.identifier)},
             name=self._device.name.strip(),
@@ -46,10 +45,15 @@ class ZimiEntity(ToggleEntity):
         """Return True if Home Assistant is able to read the state and control the underlying device."""
         return self._device.is_connected
 
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to the events."""
+        await super().async_added_to_hass()
+        self._device.subscribe(self)
+
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup ZimiLight with removal of notification prior to removal."""
-        await super().async_will_remove_from_hass()
         self._device.unsubscribe(self)
+        await super().async_will_remove_from_hass()
 
     def notify(self, _observable):
         """Receive notification from device that state has changed."""
