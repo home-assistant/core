@@ -60,8 +60,8 @@ class TwinklyLight(LightEntity):
         entry: TwinklyConfigEntry,
     ) -> None:
         """Initialize a TwinklyLight entity."""
-        self._attr_unique_id: str = entry.data[CONF_ID]
         device_info = entry.runtime_data.device_info
+        self._attr_unique_id: str = device_info["mac"]
         self._conf = entry
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
@@ -98,7 +98,7 @@ class TwinklyLight(LightEntity):
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self._mac)},
             connections={(CONNECTION_NETWORK_MAC, self._mac)},
             manufacturer="LEDWORKS",
             model=self._model,
