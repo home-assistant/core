@@ -245,6 +245,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      },
+      "current_phase": {
+        "name": "Current phase"
       }
     },
     "switch": {

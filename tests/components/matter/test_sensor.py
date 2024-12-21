@@ -321,19 +321,15 @@ async def test_operational_state_phase_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test laundrywasher sensor."""
-    # OperationalState Cluster / Phaselist attribute (1/96/0)
-    state = hass.states.get("sensor.laundrywasher_operational_state_phase_list")
+    """Test laundry washer sensor."""
+    # OperationalState Cluster / CurrentPhase attribute (1/96/1)
+    state = hass.states.get("sensor.laundry_washer_current_phase")
     assert state
-    assert state.attributes["phase_list"] == [
-        "pre-soak",
-        "rinse",
-        "spin",
-    ]
+    assert state.state == "0"
 
-    set_node_attribute(matter_node, 1, 96, 4, 8)
+    set_node_attribute(matter_node, 1, 96, 1, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.dishwasher_operational_state")
+    state = hass.states.get("sensor.laundry_washer_current_phase")
     assert state
-    assert state.state == "extra_state"
+    assert state.state == "1"
