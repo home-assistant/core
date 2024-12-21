@@ -16,6 +16,11 @@
         }
       }
     },
+    "switch": {
+      "force_single_phase": {
+        "default": "mdi:power-cycle"
+      }
+    },
     "update": {
       "customization": {
         "default": "mdi:palette"

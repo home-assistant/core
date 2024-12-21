@@ -20,6 +20,18 @@
       'PowerTotal': 3185,
       'VoltagePhase1': 223,
     }),
+    'system': dict({
+      'ActiveErrorCodes': list([
+      ]),
+      'ActiveWarningCodes': list([
+      ]),
+      'FirmwareVersion': '1.6.1+1+WL-1',
+      'Force1PhaseAllowed': True,
+      'PhaseCount': 3,
+      'ProductPn': '6004-2300-8002',
+      'ProductSn': '23-45-A4O-MOF',
+      'Uptime': 322094,
+    }),
     'system_information': dict({
       'BopCalIGainA': 264625,
       'BopCalIGainB': 267139,

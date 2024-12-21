@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 from peblar import (
     PeblarEVInterface,
     PeblarMeter,
+    PeblarSystem,
     PeblarSystemInformation,
     PeblarUserConfiguration,
     PeblarVersions,
@@ -70,6 +71,9 @@ def mock_peblar() -> Generator[MagicMock]:
         )
         api.meter.return_value = PeblarMeter.from_json(
             load_fixture("meter.json", DOMAIN)
+        )
+        api.system.return_value = PeblarSystem.from_json(
+            load_fixture("system.json", DOMAIN)
         )
 
         yield peblar
