@@ -157,5 +157,21 @@
         }
       }
     }
+  },
+  "services": {
+    "execute_command": {
+      "name": "Execute custom command",
+      "description": "Execute a custom command on the selected device.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Name of the command"
+        },
+        "args": {
+          "name": "Arguments",
+          "description": "List of arguments"
+        }
+      }
+    }
   }
 }
