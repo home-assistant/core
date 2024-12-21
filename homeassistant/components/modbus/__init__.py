@@ -466,13 +466,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await hubs[name].async_close()
         reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
-            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
+            _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
             await reset_platform.async_reset()
-        _LOGGER.debug("Modbus reloading")
         reload_config = await async_integration_yaml_config(hass, DOMAIN)
         if not reload_config:
             _LOGGER.debug("Modbus not present anymore")
             return
+        _LOGGER.debug("Modbus reloading")
         await async_modbus_setup(hass, reload_config)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
