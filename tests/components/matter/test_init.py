@@ -7,6 +7,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import PartialBackupOptions
 from matter_server.client.exceptions import (
     CannotConnect,
     NotConnected,
@@ -16,7 +17,6 @@ from matter_server.client.exceptions import (
 from matter_server.common.errors import MatterError
 import pytest
 
-from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -377,7 +377,7 @@ async def test_addon_info_failure(
         "update_calls",
         "backup_calls",
         "update_addon_side_effect",
-        "create_backup_side_effect",
+        "create_partial_backup_side_effect",
         "connect_side_effect",
     ),
     [
@@ -399,7 +399,7 @@ async def test_addon_info_failure(
             0,
             1,
             None,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             ServerVersionTooOld("Invalid version"),
         ),
     ],
@@ -411,7 +411,7 @@ async def test_update_addon(
     addon_info: AsyncMock,
     install_addon: AsyncMock,
     start_addon: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
     matter_client: MagicMock,
     addon_version: str,
@@ -419,13 +419,13 @@ async def test_update_addon(
     update_calls: int,
     backup_calls: int,
     update_addon_side_effect: Exception | None,
-    create_backup_side_effect: Exception | None,
+    create_partial_backup_side_effect: Exception | None,
     connect_side_effect: Exception,
 ) -> None:
     """Test update the Matter add-on during entry setup."""
     addon_info.return_value.version = addon_version
     addon_info.return_value.update_available = update_available
-    create_backup.side_effect = create_backup_side_effect
+    create_partial_backup.side_effect = create_partial_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     matter_client.connect.side_effect = connect_side_effect
     entry = MockConfigEntry(
@@ -442,7 +442,7 @@ async def test_update_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert create_backup.call_count == backup_calls
+    assert create_partial_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
 
 
@@ -548,7 +548,7 @@ async def test_remove_entry(
     hass: HomeAssistant,
     addon_installed: AsyncMock,
     stop_addon: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     uninstall_addon: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -581,18 +581,17 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        )
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
-    create_backup.reset_mock()
+    create_partial_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on stop failure
@@ -604,38 +603,37 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
-    assert create_backup.call_count == 0
+    assert create_partial_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Matter Server add-on" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
-    create_backup.reset_mock()
+    create_partial_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_backup.side_effect = HassioAPIError()
+    create_partial_backup.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        )
     )
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to create a backup of the Matter Server add-on" in caplog.text
-    create_backup.side_effect = None
+    create_partial_backup.side_effect = None
     stop_addon.reset_mock()
-    create_backup.reset_mock()
+    create_partial_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on uninstall failure
@@ -647,11 +645,10 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_matter_server")
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass,
-        {"name": "addon_core_matter_server_1.0.0", "addons": ["core_matter_server"]},
-        partial=True,
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(
+            name="addon_core_matter_server_1.0.0", addons={"core_matter_server"}
+        )
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call("core_matter_server")
