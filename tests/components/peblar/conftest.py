@@ -6,7 +6,12 @@ from collections.abc import Generator
 from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
-from peblar import PeblarMeter, PeblarSystemInformation, PeblarVersions
+from peblar import (
+    PeblarMeter,
+    PeblarSystemInformation,
+    PeblarUserConfiguration,
+    PeblarVersions,
+)
 import pytest
 
 from homeassistant.components.peblar.const import DOMAIN
@@ -50,6 +55,9 @@ def mock_peblar() -> Generator[MagicMock]:
         )
         peblar.current_versions.return_value = PeblarVersions.from_json(
             load_fixture("current_versions.json", DOMAIN)
+        )
+        peblar.user_configuration.return_value = PeblarUserConfiguration.from_json(
+            load_fixture("user_configuration.json", DOMAIN)
         )
         peblar.system_information.return_value = PeblarSystemInformation.from_json(
             load_fixture("system_information.json", DOMAIN)

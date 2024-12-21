@@ -24,10 +24,12 @@ from .coordinator import (
     PeblarConfigEntry,
     PeblarMeterDataUpdateCoordinator,
     PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
 
 PLATFORMS = [
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
@@ -56,16 +58,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
 
     # Setup the data coordinators
     meter_coordinator = PeblarMeterDataUpdateCoordinator(hass, entry, api)
+    user_configuration_coordinator = PeblarUserConfigurationDataUpdateCoordinator(
+        hass, entry, peblar
+    )
     version_coordinator = PeblarVersionDataUpdateCoordinator(hass, entry, peblar)
     await asyncio.gather(
         meter_coordinator.async_config_entry_first_refresh(),
+        user_configuration_coordinator.async_config_entry_first_refresh(),
         version_coordinator.async_config_entry_first_refresh(),
     )
 
     # Store the runtime data
     entry.runtime_data = PeblarRuntimeData(
-        system_information=system_information,
         meter_coordinator=meter_coordinator,
+        system_information=system_information,
+        user_configuraton_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
     )
 
