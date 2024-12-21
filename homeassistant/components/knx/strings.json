@@ -385,7 +385,7 @@
     },
     "event_register": {
       "name": "Register knx_event",
-      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -403,7 +403,7 @@
     },
     "exposure_register": {
       "name": "Expose to KNX bus",
-      "description": "Adds or removes exposures to KNX bus. Only exposures added with this service can be removed.",
+      "description": "Adds or removes exposures to KNX bus. Only exposures added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
