@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "active_error_codes": {
+        "default": "mdi:alert"
+      },
+      "active_warning_codes": {
+        "default": "mdi:alert"
+      }
+    },
     "number": {
       "charge_current_limit": {
         "default": "mdi:speedometer"
