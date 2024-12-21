@@ -1,6 +1,13 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'ev': dict({
+      'ChargeCurrentLimit': 16000,
+      'ChargeCurrentLimitActual': 6000,
+      'ChargeCurrentLimitSource': 'Current limiter',
+      'CpState': 'State C',
+      'Force1Phase': False,
+    }),
     'meter': dict({
       'CurrentPhase1': 14242,
       'CurrentPhase2': 0,
