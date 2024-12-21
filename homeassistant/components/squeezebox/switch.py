@@ -6,7 +6,7 @@ from typing import Any
 
 from pysqueezebox.player import Alarm
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -24,6 +24,7 @@ from .const import (
     ATTR_URL,
     ATTR_VOLUME,
     SIGNAL_ALARM_DISCOVERED,
+    SIGNAL_PLAYER_DISCOVERED,
 )
 from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 
@@ -53,6 +54,19 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, SIGNAL_ALARM_DISCOVERED, _alarm_discovered)
     )
 
+    # create a new alarm enabled entity upon player discovery
+    async def _player_discovered(
+        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+    ) -> None:
+        _LOGGER.debug(
+            "Setting up alarm enabled entity for player %s", coordinator.player
+        )
+        async_add_entities([SqueezeBoxAlarmsEnabledEntity(coordinator)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+    )
+
 
 class SqueezeBoxAlarmEntity(
     CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], SwitchEntity
@@ -61,6 +75,7 @@ class SqueezeBoxAlarmEntity(
 
     _attr_icon = "mdi:alarm"
     _attr_has_entity_name = True
+    _attr_translation_key = "alarm"
 
     def __init__(
         self, alarm: Alarm, coordinator: SqueezeBoxPlayerUpdateCoordinator
@@ -72,9 +87,7 @@ class SqueezeBoxAlarmEntity(
         self._attr_unique_id: str = (
             f"{coordinator.player.player_id}-alarm-{alarm["id"]}"
         )
-        self.entity_id: str = ENTITY_ID_FORMAT.format(
-            f"squeezebox_alarm_{self.alarm["id"]}"
-        )
+        self._attr_device_info = coordinator.device_info
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -149,7 +162,7 @@ class SqueezeBoxAlarmEntity(
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self.coordinator.player.name} Alarm {self.alarm["time"]}"
+        return "Alarm"
 
     @property
     def _is_today(self) -> bool:
@@ -167,4 +180,44 @@ class SqueezeBoxAlarmEntity(
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.player.async_update_alarm(self.alarm["id"], enabled=True)
+        await self.coordinator.async_request_refresh()
+
+
+class SqueezeBoxAlarmsEnabledEntity(
+    CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], SwitchEntity
+):
+    """Representation of a Squeezebox players alarms enabled master switch."""
+
+    _attr_icon = "mdi:alarm"
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
+        """Initialize the Squeezebox alarm switch."""
+        super().__init__(coordinator)
+        self._attr_available = True
+        self._attr_unique_id: str = f"{coordinator.player.player_id}-alarms-enabled"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    @property
+    def name(self) -> str:
+        """Return the name of the switch."""
+        return f"{self.coordinator.player.name} Alarms Enabled"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return self.coordinator.player.alarms_enabled is True
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        await self.coordinator.player.async_set_alarms_enabled(False)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        await self.coordinator.player.async_set_alarms_enabled(True)
         await self.coordinator.async_request_refresh()

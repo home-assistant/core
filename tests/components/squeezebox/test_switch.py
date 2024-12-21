@@ -35,19 +35,19 @@ async def test_switch_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the state of the switch."""
-    assert hass.states.get("switch.squeezebox_alarm_1").state == "on"
+    assert hass.states.get("switch.test_player_alarm").state == "on"
 
     mock_alarms_player.alarms[0]["enabled"] = False
     freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("switch.squeezebox_alarm_1").state == "off"
+    assert hass.states.get("switch.test_player_alarm").state == "off"
 
     mock_alarms_player.connected = False
     freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("switch.squeezebox_alarm_1").state == "unavailable"
+    assert hass.states.get("switch.test_player_alarm").state == "unavailable"
 
 
 async def test_daily_update(
@@ -57,17 +57,17 @@ async def test_daily_update(
 ) -> None:
     """Test daily update of the switch."""
     assert (
-        hass.states.get("switch.squeezebox_alarm_1").attributes[ATTR_SCHEDULED_TODAY]
+        hass.states.get("switch.test_player_alarm").attributes[ATTR_SCHEDULED_TODAY]
         is True
     )
-    tomorrow = datetime.today().weekday() + 1
+    tomorrow = (datetime.today().weekday() + 1) % 7
     mock_alarms_player.alarms[0]["dow"].remove(tomorrow)
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert (
-        hass.states.get("switch.squeezebox_alarm_1").attributes[ATTR_SCHEDULED_TODAY]
+        hass.states.get("switch.test_player_alarm").attributes[ATTR_SCHEDULED_TODAY]
         is False
     )
 
@@ -78,13 +78,13 @@ async def test_switch_deleted(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test detecting switch deleted."""
-    assert hass.states.get("switch.squeezebox_alarm_1").state == "on"
+    assert hass.states.get("switch.test_player_alarm").state == "on"
 
     mock_alarms_player.alarms = []
     freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("switch.squeezebox_alarm_1") is None
+    assert hass.states.get("switch.test_player_alarm") is None
 
 
 async def test_turn_on(
@@ -95,7 +95,7 @@ async def test_turn_on(
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.squeezebox_alarm_1"},
+        {"entity_id": "switch.test_player_alarm"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -111,9 +111,54 @@ async def test_turn_off(
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.squeezebox_alarm_1"},
+        {"entity_id": "switch.test_player_alarm"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
         TEST_ALARM_ID, enabled=False
     )
+
+
+async def test_alarms_enabled_state(
+    hass: HomeAssistant,
+    mock_alarms_player: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the alarms enabled switch."""
+
+    assert hass.states.get("switch.test_player_alarms_enabled").state == "on"
+
+    mock_alarms_player.alarms_enabled = False
+    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_player_alarms_enabled").state == "off"
+
+
+async def test_alarms_enabled_turn_on(
+    hass: HomeAssistant,
+    mock_alarms_player: MagicMock,
+) -> None:
+    """Test turning on the alarms enabled switch."""
+    await hass.services.async_call(
+        "switch",
+        "turn_on",
+        {"entity_id": "switch.test_player_alarms_enabled"},
+        blocking=True,
+    )
+    mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(True)
+
+
+async def test_alarms_enabled_turn_off(
+    hass: HomeAssistant,
+    mock_alarms_player: MagicMock,
+) -> None:
+    """Test turning off the alarms enabled switch."""
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.test_player_alarms_enabled"},
+        blocking=True,
+    )
+    mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(False)
