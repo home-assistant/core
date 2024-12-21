@@ -78,7 +78,7 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
 
 def _state_attrs_exist(attr: int | None) -> Select:
     """Check if a state attributes id exists in the states table."""
-    return select(func.min(States.attributes_id)).where(States.attributes_id == attr)
+    return select(States.attributes_id).where(States.attributes_id == attr).limit(1)
 
 
 def attributes_ids_exist_in_states_with_fast_in_distinct(
@@ -315,7 +315,7 @@ def data_ids_exist_in_events_with_fast_in_distinct(
 
 def _event_data_id_exist(data_id: int | None) -> Select:
     """Check if a event data id exists in the events table."""
-    return select(func.min(Events.data_id)).where(Events.data_id == data_id)
+    return select(Events.data_id).where(Events.data_id == data_id).limit(1)
 
 
 def data_ids_exist_in_events(
