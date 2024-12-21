@@ -200,14 +200,14 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if light_module.is_variable_color_temp:
+        if light_module.has_feature("color_temp"):
             modes.add(ColorMode.COLOR_TEMP)
             temp_range = light_module.valid_temperature_range
             self._attr_min_color_temp_kelvin = temp_range.min
             self._attr_max_color_temp_kelvin = temp_range.max
-        if light_module.is_color:
+        if light_module.has_feature("hsv"):
             modes.add(ColorMode.HS)
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(modes)
         if len(self._attr_supported_color_modes) == 1:
@@ -325,8 +325,11 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
             # The light supports only a single color mode, return it
             return self._fixed_color_mode
 
-        # The light supports both color temp and color, determine which on is active
-        if self._light_module.is_variable_color_temp and self._light_module.color_temp:
+        # The light supports both color temp and color, determine which one is active
+        if (
+            self._light_module.has_feature("color_temp")
+            and self._light_module.color_temp
+        ):
             return ColorMode.COLOR_TEMP
         return ColorMode.HS
 
@@ -335,7 +338,7 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         """Update the entity's attributes."""
         light_module = self._light_module
         self._attr_is_on = light_module.state.light_on is True
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             self._attr_brightness = round((light_module.brightness * 255.0) / 100.0)
         color_mode = self._determine_color_mode()
         self._attr_color_mode = color_mode
