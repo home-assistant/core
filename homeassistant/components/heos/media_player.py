@@ -160,7 +160,11 @@ class HeosMediaPlayer(MediaPlayerEntity):
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
-        self._group_manager.entity_id_map[self._player.player_id] = self.entity_id
+        self.async_on_remove(
+            self._group_manager.register_media_player(
+                self._player.player_id, self.entity_id
+            )
+        )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
     @log_command_error("clear playlist")
@@ -171,7 +175,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("join_players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self._group_manager.async_join_players(self.entity_id, group_members)
+        await self._group_manager.async_join_players(
+            self._player.player_id, self.entity_id, group_members
+        )
 
     @log_command_error("pause")
     async def async_media_pause(self) -> None:
@@ -294,7 +300,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(self.entity_id)
+        await self._group_manager.async_unjoin_player(
+            self._player.player_id, self.entity_id
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""
