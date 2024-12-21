@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
@@ -25,6 +26,7 @@ GH_DEVICE_ATTRS = {
 class GeniusEntity(Entity):
     """Base for all Genius Hub entities."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(self) -> None:
@@ -56,6 +58,16 @@ class GeniusDevice(GeniusEntity):
         self._unique_id = f"{broker.hub_uid}_device_{device.id}"
         self._last_comms: datetime | None = None
         self._state_attr = None
+        device_name = device.type
+        if device_name[:21] == "Dual Channel Receiver":
+            device_name = "Dual Channel Receiver"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{broker.hub_uid}_{device.id}")},
+            model=device.type,
+            name=f"{device_name} {device.id}",
+            suggested_area=device.data["assignedZones"][0]["name"],
+            via_device=(DOMAIN, broker.hub_uid),
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -86,12 +98,20 @@ class GeniusDevice(GeniusEntity):
 class GeniusZone(GeniusEntity):
     """Base for all Genius Hub zones."""
 
+    _attr_name = None
+
     def __init__(self, broker, zone) -> None:
         """Initialize the Zone."""
         super().__init__()
 
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{broker.hub_uid}_{zone.id}")},
+            name=zone.name,
+            suggested_area=zone.name,
+            via_device=(DOMAIN, broker.hub_uid),
+        )
 
     async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
@@ -117,11 +137,6 @@ class GeniusZone(GeniusEntity):
             )
 
         await self._zone.set_mode(mode)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return self._zone.name
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
