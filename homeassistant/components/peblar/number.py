@@ -48,7 +48,7 @@ DESCRIPTIONS = [
         native_max_value_fn=lambda x: x.system_information.hardware_max_current,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         set_value_fn=lambda x, v: x.ev_interface(charge_current_limit=int(v) * 1000),
-        value_fn=lambda x: round(x.ev.charge_current_limit_actual / 1000),
+        value_fn=lambda x: round(x.ev.charge_current_limit / 1000),
     ),
 ]
 
