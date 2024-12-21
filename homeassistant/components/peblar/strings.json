@@ -33,6 +33,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "active_error_codes": {
+        "name": "Active errors"
+      },
+      "active_warning_codes": {
+        "name": "Active warnings"
+      }
+    },
     "number": {
       "charge_current_limit": {
         "name": "Charge limit"
