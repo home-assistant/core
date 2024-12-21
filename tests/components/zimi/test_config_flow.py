@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from zcc import ControlPoint, ControlPointDescription, ControlPointError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
@@ -84,7 +85,7 @@ async def test_config_success(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ZIMI Controller"
     assert result["data"] == {
         "host": INPUT_HOST,
@@ -116,7 +117,7 @@ async def test_config_success_with_input_failures(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "mismatched_mac"}
 
     result = await hass.config_entries.flow.async_configure(
@@ -128,7 +129,7 @@ async def test_config_success_with_input_failures(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ZIMI Controller"
     assert result["data"] == {
         "host": INPUT_HOST,
@@ -165,7 +166,7 @@ async def test_discovery_success(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["host"] == INPUT_HOST
     assert result["data"]["port"] == INPUT_PORT
 
@@ -188,7 +189,7 @@ async def test_discovery_failure(hass: HomeAssistant, discovery_mock) -> None:
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "discovery_failure"}
 
 
@@ -219,7 +220,7 @@ async def test_api_failure(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -242,7 +243,7 @@ async def test_gethostbyname_failure(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -278,7 +279,7 @@ async def test_mac_failures(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == error_expected
 
 
@@ -312,5 +313,5 @@ async def test_socket_exceptions(
         },
     )
 
-    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == error_expected
