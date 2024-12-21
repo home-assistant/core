@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
