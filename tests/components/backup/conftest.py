@@ -71,7 +71,7 @@ def mock_create_backup() -> Generator[AsyncMock]:
     mock_written_backup.backup.backup_id = "abc123"
     mock_written_backup.open_stream = AsyncMock()
     mock_written_backup.release_stream = AsyncMock()
-    fut = Future()
+    fut: Future[MagicMock] = Future()
     fut.set_result(mock_written_backup)
     with patch(
         "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"

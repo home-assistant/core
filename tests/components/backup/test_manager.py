@@ -682,7 +682,7 @@ async def test_create_backup_success_clears_issue(
     assert set(issue_registry.issues) == issues_after_create_backup
 
 
-async def delayed_boom(*args, **kwargs) -> None:
+async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
     """Raise an exception after a delay."""
 
     async def delayed_boom() -> None:
