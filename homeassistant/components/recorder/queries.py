@@ -144,23 +144,21 @@ def data_ids_exist_in_events(
     This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
-        lambda: lambda_stmt(
-            lambda: select(EventData.data_id)
-            .select_from(EventData)
-            .join(
-                Events,
-                and_(
-                    Events.data_id == EventData.data_id,
-                    Events.time_fired_ts
-                    == select(Events.time_fired_ts)
-                    .where(Events.data_id == EventData.data_id)
-                    .limit(1)
-                    .scalar_subquery()
-                    .correlate(EventData),
-                ),
-            )
-            .where(EventData.data_id.in_(data_ids))
+        lambda: select(EventData.data_id)
+        .select_from(EventData)
+        .join(
+            Events,
+            and_(
+                Events.data_id == EventData.data_id,
+                Events.time_fired_ts
+                == select(Events.time_fired_ts)
+                .where(Events.data_id == EventData.data_id)
+                .limit(1)
+                .scalar_subquery()
+                .correlate(EventData),
+            ),
         )
+        .where(EventData.data_id.in_(data_ids))
     )
 
 
