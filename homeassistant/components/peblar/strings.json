@@ -85,6 +85,11 @@
         "name": "Voltage phase 3"
       }
     },
+    "switch": {
+      "force_single_phase": {
+        "name": "Force single phase"
+      }
+    },
     "update": {
       "customization": {
         "name": "Customization"

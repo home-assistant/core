@@ -11,6 +11,7 @@ from peblar import (
     PeblarError,
     PeblarEVInterface,
     PeblarMeter,
+    PeblarSystem,
     PeblarUserConfiguration,
     PeblarVersions,
 )
@@ -55,6 +56,7 @@ class PeblarData:
 
     ev: PeblarEVInterface
     meter: PeblarMeter
+    system: PeblarSystem
 
 
 class PeblarVersionDataUpdateCoordinator(
@@ -108,6 +110,7 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
             return PeblarData(
                 ev=await self.api.ev_interface(),
                 meter=await self.api.meter(),
+                system=await self.api.system(),
             )
         except PeblarError as err:
             raise UpdateFailed(err) from err
