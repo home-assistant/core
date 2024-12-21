@@ -279,6 +279,7 @@ FLOWS = {
         "idasen_desk",
         "ifttt",
         "imap",
+        "imeon_inverter",
         "imgw_pib",
         "improv_ble",
         "incomfort",
