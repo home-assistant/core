@@ -8,7 +8,7 @@ from .context import (
     ulid_to_bytes_or_none,
     uuid_hex_to_bytes_or_none,
 )
-from .database import DatabaseEngine, UnsupportedDialect
+from .database import DatabaseEngine, DatabaseOptimizer, UnsupportedDialect
 from .event import extract_event_type_ids
 from .state import LazyState, extract_metadata_ids, row_to_compressed_state
 from .statistics import (
@@ -31,6 +31,7 @@ from .time import (
 __all__ = [
     "CalendarStatisticPeriod",
     "DatabaseEngine",
+    "DatabaseOptimizer",
     "FixedStatisticPeriod",
     "LazyState",
     "RollingWindowStatisticPeriod",

@@ -52,6 +52,7 @@ from .db_schema import (
 )
 from .models import (
     DatabaseEngine,
+    DatabaseOptimizer,
     StatisticPeriod,
     UnsupportedDialect,
     process_timestamp,
@@ -502,6 +503,7 @@ def setup_connection_for_dialect(
 ) -> DatabaseEngine | None:
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
+    slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
         max_bind_vars = SQLITE_MAX_BIND_VARS
         if first_connection:
@@ -586,10 +588,24 @@ def setup_connection_for_dialect(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
 
+            slow_range_in_select = bool(
+                not version
+                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+            )
+
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         max_bind_vars = DEFAULT_MAX_BIND_VARS
+        # PostgreSQL does not support a skip/loose index scan so its
+        # also slow for large distinct queries:
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # https://github.com/home-assistant/core/issues/126084
+        # so we set slow_range_in_select to True
+        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -609,6 +625,7 @@ def setup_connection_for_dialect(
     return DatabaseEngine(
         dialect=SupportedDialect(dialect_name),
         version=version,
+        optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
         max_bind_vars=max_bind_vars,
     )
 

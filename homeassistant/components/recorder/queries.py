@@ -76,6 +76,17 @@ def find_states_metadata_ids(entity_ids: Iterable[str]) -> StatementLambdaElemen
     )
 
 
+def attributes_ids_exist_in_states_with_fast_in_distinct(
+    attributes_ids: Iterable[int],
+) -> StatementLambdaElement:
+    """Find attributes ids that exist in the states table."""
+    return lambda_stmt(
+        lambda: select(distinct(States.attributes_id)).filter(
+            States.attributes_id.in_(attributes_ids)
+        )
+    )
+
+
 def attributes_ids_exist_in_states(
     attributes_ids: Iterable[int],
 ) -> StatementLambdaElement:
@@ -88,7 +99,7 @@ def attributes_ids_exist_in_states(
     for each attributes_id. This is then used to filter out the attributes_id
     that no longer exist in the States table.
 
-    This query is fast for SQLite, MariaDB, MySQL, and PostgreSQL.
+    This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
         lambda: select(StateAttributes.attributes_id)
@@ -109,6 +120,15 @@ def attributes_ids_exist_in_states(
     )
 
 
+def data_ids_exist_in_events_with_fast_in_distinct(
+    data_ids: Iterable[int],
+) -> StatementLambdaElement:
+    """Find data ids that exist in the events table."""
+    return lambda_stmt(
+        lambda: select(distinct(Events.data_id)).filter(Events.data_id.in_(data_ids))
+    )
+
+
 def data_ids_exist_in_events(
     data_ids: Iterable[int],
 ) -> StatementLambdaElement:
@@ -121,24 +141,26 @@ def data_ids_exist_in_events(
     for each data_id. This is then used to filter out the data_id
     that no longer exist in the Events table.
 
-    This query is fast for SQLite, MariaDB, MySQL, and PostgreSQL.
+    This query is fast for older MariaDB, older MySQL, and PostgreSQL.
     """
     return lambda_stmt(
-        lambda: select(EventData.data_id)
-        .select_from(EventData)
-        .join(
-            Events,
-            and_(
-                Events.data_id == EventData.data_id,
-                Events.time_fired_ts
-                == select(Events.time_fired_ts)
-                .where(Events.data_id == EventData.data_id)
-                .limit(1)
-                .scalar_subquery()
-                .correlate(EventData),
-            ),
+        lambda: lambda_stmt(
+            lambda: select(EventData.data_id)
+            .select_from(EventData)
+            .join(
+                Events,
+                and_(
+                    Events.data_id == EventData.data_id,
+                    Events.time_fired_ts
+                    == select(Events.time_fired_ts)
+                    .where(Events.data_id == EventData.data_id)
+                    .limit(1)
+                    .scalar_subquery()
+                    .correlate(EventData),
+                ),
+            )
+            .where(EventData.data_id.in_(data_ids))
         )
-        .where(EventData.data_id.in_(data_ids))
     )
 
 

@@ -13,9 +13,12 @@ from sqlalchemy.orm.session import Session
 from homeassistant.util.collection import chunked_or_all
 
 from .db_schema import Events, States, StatesMeta
+from .models import DatabaseEngine
 from .queries import (
     attributes_ids_exist_in_states,
+    attributes_ids_exist_in_states_with_fast_in_distinct,
     data_ids_exist_in_events,
+    data_ids_exist_in_events_with_fast_in_distinct,
     delete_event_data_rows,
     delete_event_rows,
     delete_event_types_rows,
@@ -181,6 +184,8 @@ def _purge_states_and_attributes_ids(
 
     Returns true if there are more states to purge.
     """
+    database_engine = instance.database_engine
+    assert database_engine is not None
     has_remaining_state_ids_to_purge = True
     # There are more states relative to attributes_ids so
     # we purge enough state_ids to try to generate a full
@@ -283,18 +288,25 @@ def _select_unused_attributes_ids(
     instance: Recorder,
     session: Session,
     attributes_ids: set[int],
+    database_engine: DatabaseEngine,
 ) -> set[int]:
     """Return a set of attributes ids that are not used by any states in the db."""
     if not attributes_ids:
         return set()
 
     seen_ids: set[int] = set()
+    if not database_engine.optimizer.slow_range_in_select:
+        query = attributes_ids_exist_in_states_with_fast_in_distinct
+        # SQLite has a superior query optimizer for the distinct query below as it uses
+        # the covering index without having to examine the rows directly for both of the
+        # queries below.
+    else:
+        query = attributes_ids_exist_in_states
+        # This branch is for DBMS that cannot optimize the distinct query well and has
+        # to examine all the rows that match.
     for attributes_ids_chunk in chunked_or_all(attributes_ids, instance.max_bind_vars):
         seen_ids.update(
-            state[0]
-            for state in session.execute(
-                attributes_ids_exist_in_states(attributes_ids_chunk)
-            ).all()
+            state[0] for state in session.execute(query(attributes_ids_chunk)).all()
         )
     to_remove = attributes_ids - seen_ids
     _LOGGER.debug(
@@ -310,8 +322,10 @@ def _purge_unused_attributes_ids(
     attributes_ids_batch: set[int],
 ) -> None:
     """Purge unused attributes ids."""
+    database_engine = instance.database_engine
+    assert database_engine is not None
     if unused_attribute_ids_set := _select_unused_attributes_ids(
-        instance, session, attributes_ids_batch
+        instance, session, attributes_ids_batch, database_engine
     ):
         _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
 
@@ -320,16 +334,22 @@ def _select_unused_event_data_ids(
     instance: Recorder,
     session: Session,
     data_ids: set[int],
+    database_engine: DatabaseEngine,
 ) -> set[int]:
     """Return a set of event data ids that are not used by any events in the db."""
     if not data_ids:
         return set()
 
     seen_ids: set[int] = set()
+    # See _select_unused_attributes_ids for why this function
+    # branches for non-sqlite databases.
+    if not database_engine.optimizer.slow_range_in_select:
+        query = data_ids_exist_in_events_with_fast_in_distinct
+    else:
+        query = data_ids_exist_in_events
     for data_ids_chunk in chunked_or_all(data_ids, instance.max_bind_vars):
         seen_ids.update(
-            state[0]
-            for state in session.execute(data_ids_exist_in_events(data_ids_chunk)).all()
+            state[0] for state in session.execute(query(data_ids_chunk)).all()
         )
     to_remove = data_ids - seen_ids
     _LOGGER.debug("Selected %s shared event data to remove", len(to_remove))
@@ -339,8 +359,10 @@ def _select_unused_event_data_ids(
 def _purge_unused_data_ids(
     instance: Recorder, session: Session, data_ids_batch: set[int]
 ) -> None:
+    database_engine = instance.database_engine
+    assert database_engine is not None
     if unused_data_ids_set := _select_unused_event_data_ids(
-        instance, session, data_ids_batch
+        instance, session, data_ids_batch, database_engine
     ):
         _purge_batch_data_ids(instance, session, unused_data_ids_set)
 
@@ -559,6 +581,8 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     Returns true if all states and events are purged.
     """
     _LOGGER.debug("Cleanup filtered data")
+    database_engine = instance.database_engine
+    assert database_engine is not None
     now_timestamp = time.time()
 
     # Check if excluded entity_ids are in database
@@ -573,7 +597,7 @@ def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
     ]
     if excluded_metadata_ids:
         has_more_to_purge |= not _purge_filtered_states(
-            instance, session, excluded_metadata_ids, now_timestamp
+            instance, session, excluded_metadata_ids, database_engine, now_timestamp
         )
 
     # Check if excluded event_types are in database
@@ -600,6 +624,7 @@ def _purge_filtered_states(
     instance: Recorder,
     session: Session,
     metadata_ids_to_purge: list[str],
+    database_engine: DatabaseEngine,
     purge_before_timestamp: float,
 ) -> bool:
     """Remove filtered states and linked events.
@@ -632,6 +657,7 @@ def _purge_filtered_states(
         instance,
         session,
         {id_ for id_ in attributes_ids if id_ is not None},
+        database_engine,
     )
     _purge_batch_attributes_ids(instance, session, unused_attribute_ids_set)
     return False
@@ -647,6 +673,8 @@ def _purge_filtered_events(
 
     Return true if all events are purged.
     """
+    database_engine = instance.database_engine
+    assert database_engine is not None
     to_purge = list(
         session.query(Events.event_id, Events.data_id)
         .filter(Events.event_type_id.in_(excluded_event_type_ids))
@@ -676,7 +704,7 @@ def _purge_filtered_events(
         _purge_state_ids(instance, session, state_ids)
     _purge_event_ids(session, event_ids_set)
     if unused_data_ids_set := _select_unused_event_data_ids(
-        instance, session, set(data_ids)
+        instance, session, set(data_ids), database_engine
     ):
         _purge_batch_data_ids(instance, session, unused_data_ids_set)
     return False
@@ -689,6 +717,8 @@ def purge_entity_data(
     purge_before: datetime,
 ) -> bool:
     """Purge states and events of specified entities."""
+    database_engine = instance.database_engine
+    assert database_engine is not None
     purge_before_timestamp = purge_before.timestamp()
     with session_scope(session=instance.get_session()) as session:
         selected_metadata_ids: list[str] = [
@@ -708,6 +738,7 @@ def purge_entity_data(
             instance,
             session,
             selected_metadata_ids,
+            database_engine,
             purge_before_timestamp,
         ):
             _LOGGER.debug("Purging entity data hasn't fully completed yet")
