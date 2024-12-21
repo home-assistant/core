@@ -8,8 +8,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-
 TO_REDACT = [
     "username",
     "Password",
@@ -27,7 +25,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client = hass.data[DOMAIN][config_entry.entry_id].client
+    client = config_entry.runtime_data.client
 
     data: dict[str, Any] = {}
     data["client"] = {
