@@ -190,12 +190,14 @@ class SqueezeBoxAlarmsEnabledEntity(
 
     _attr_icon = "mdi:alarm"
     _attr_has_entity_name = True
+    _attr_translation_key = "alarms_enabled"
 
     def __init__(self, coordinator: SqueezeBoxPlayerUpdateCoordinator) -> None:
         """Initialize the Squeezebox alarm switch."""
         super().__init__(coordinator)
         self._attr_available = True
         self._attr_unique_id: str = f"{coordinator.player.player_id}-alarms-enabled"
+        self._attr_device_info = coordinator.device_info
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -205,7 +207,7 @@ class SqueezeBoxAlarmsEnabledEntity(
     @property
     def name(self) -> str:
         """Return the name of the switch."""
-        return f"{self.coordinator.player.name} Alarms Enabled"
+        return "Alarms Enabled"
 
     @property
     def is_on(self) -> bool:
