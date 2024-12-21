@@ -107,7 +107,7 @@ def attributes_ids_exist_in_states(
         .join(
             States,
             and_(
-                States.metadata_id == StateAttributes.attributes_id,
+                States.attributes_id == StateAttributes.attributes_id,
                 States.last_updated_ts
                 == select(States.last_updated_ts)
                 .where(States.attributes_id == StateAttributes.attributes_id)
