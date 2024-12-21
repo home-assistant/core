@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.twinkly import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 
-from . import TEST_MAC, TEST_MODEL, TEST_NAME
+from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 
 from tests.common import (
     MockConfigEntry,
