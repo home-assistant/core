@@ -26,7 +26,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Charge limit',
     'platform': 'peblar',
@@ -40,6 +40,7 @@
 # name: test_entities[number][number.peblar_ev_charger_charge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'current',
       'friendly_name': 'Peblar EV Charger Charge limit',
       'max': 16,
       'min': 6,
