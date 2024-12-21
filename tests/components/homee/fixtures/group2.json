@@ -1,0 +1,13 @@
+{
+  "id": 3,
+  "name": "Testgroup2",
+  "image": "groupicon_doubleplug_value_1_1",
+  "order": 2,
+  "added": 1693999785,
+  "state": 1,
+  "category": 0,
+  "phonetic_name": "",
+  "note": "Another test group",
+  "services": 1,
+  "owner": 2
+}
