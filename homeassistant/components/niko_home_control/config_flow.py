@@ -33,7 +33,7 @@ async def test_connection(host: str) -> str | None:
 class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
-    VERSION = 2
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
