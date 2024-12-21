@@ -93,6 +93,50 @@ async def test_config_success(
     }
 
 
+async def test_config_success_with_input_failures(
+    hass: HomeAssistant,
+    api_mock: MagicMock,
+    socket_mock: MagicMock,
+) -> None:
+    """Test successful configuration with manual host entry when user first entered wrong mac."""
+
+    api_mock.return_value.mac = INPUT_MAC
+    api_mock.return_value.ready = True
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: INPUT_HOST,
+            CONF_PORT: INPUT_PORT,
+            CONF_MAC: MISMATCHED_INPUT_MAC,
+        },
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {"base": "mismatched_mac"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: INPUT_HOST,
+            CONF_PORT: INPUT_PORT,
+            CONF_MAC: INPUT_MAC,
+        },
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ZIMI Controller"
+    assert result["data"] == {
+        "host": INPUT_HOST,
+        "port": INPUT_PORT,
+        "mac": format_mac(INPUT_MAC),
+    }
+
+
 async def test_discovery_success(
     hass: HomeAssistant,
     api_mock: MagicMock,
