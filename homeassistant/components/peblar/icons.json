@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "charge_current_limit": {
+        "default": "mdi:speedometer"
+      }
+    },
     "select": {
       "smart_charging": {
         "default": "mdi:lightning-bolt",

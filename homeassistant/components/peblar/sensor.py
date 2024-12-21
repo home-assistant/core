@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from peblar import PeblarMeter, PeblarUserConfiguration
+from peblar import PeblarUserConfiguration
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,15 +26,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PeblarConfigEntry, PeblarMeterDataUpdateCoordinator
+from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
 class PeblarSensorDescription(SensorEntityDescription):
-    """Describe an Peblar sensor."""
+    """Describe a Peblar sensor."""
 
     has_fn: Callable[[PeblarUserConfiguration], bool] = lambda _: True
-    value_fn: Callable[[PeblarMeter], int | None]
+    value_fn: Callable[[PeblarData], int | None]
 
 
 DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
@@ -48,7 +48,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda x: x.current_phase_1,
+        value_fn=lambda x: x.meter.current_phase_1,
     ),
     PeblarSensorDescription(
         key="current_phase_1",
@@ -61,7 +61,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda x: x.current_phase_1,
+        value_fn=lambda x: x.meter.current_phase_1,
     ),
     PeblarSensorDescription(
         key="current_phase_2",
@@ -74,7 +74,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda x: x.current_phase_2,
+        value_fn=lambda x: x.meter.current_phase_2,
     ),
     PeblarSensorDescription(
         key="current_phase_3",
@@ -87,7 +87,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda x: x.current_phase_3,
+        value_fn=lambda x: x.meter.current_phase_3,
     ),
     PeblarSensorDescription(
         key="energy_session",
@@ -97,7 +97,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda x: x.energy_session,
+        value_fn=lambda x: x.meter.energy_session,
     ),
     PeblarSensorDescription(
         key="energy_total",
@@ -108,14 +108,14 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda x: x.energy_total,
+        value_fn=lambda x: x.meter.energy_total,
     ),
     PeblarSensorDescription(
         key="power_total",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.power_total,
+        value_fn=lambda x: x.meter.power_total,
     ),
     PeblarSensorDescription(
         key="power_phase_1",
@@ -126,7 +126,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases >= 2,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.power_phase_1,
+        value_fn=lambda x: x.meter.power_phase_1,
     ),
     PeblarSensorDescription(
         key="power_phase_2",
@@ -137,7 +137,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases >= 2,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.power_phase_2,
+        value_fn=lambda x: x.meter.power_phase_2,
     ),
     PeblarSensorDescription(
         key="power_phase_3",
@@ -148,7 +148,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases == 3,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.power_phase_3,
+        value_fn=lambda x: x.meter.power_phase_3,
     ),
     PeblarSensorDescription(
         key="voltage",
@@ -158,7 +158,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases == 1,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.voltage_phase_1,
+        value_fn=lambda x: x.meter.voltage_phase_1,
     ),
     PeblarSensorDescription(
         key="voltage_phase_1",
@@ -169,7 +169,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases >= 2,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.voltage_phase_1,
+        value_fn=lambda x: x.meter.voltage_phase_1,
     ),
     PeblarSensorDescription(
         key="voltage_phase_2",
@@ -180,7 +180,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases >= 2,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.voltage_phase_2,
+        value_fn=lambda x: x.meter.voltage_phase_2,
     ),
     PeblarSensorDescription(
         key="voltage_phase_3",
@@ -191,7 +191,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         has_fn=lambda x: x.connected_phases == 3,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda x: x.voltage_phase_3,
+        value_fn=lambda x: x.meter.voltage_phase_3,
     ),
 )
 
@@ -209,9 +209,7 @@ async def async_setup_entry(
     )
 
 
-class PeblarSensorEntity(
-    CoordinatorEntity[PeblarMeterDataUpdateCoordinator], SensorEntity
-):
+class PeblarSensorEntity(CoordinatorEntity[PeblarDataUpdateCoordinator], SensorEntity):
     """Defines a Peblar sensor."""
 
     entity_description: PeblarSensorDescription
@@ -224,7 +222,7 @@ class PeblarSensorEntity(
         description: PeblarSensorDescription,
     ) -> None:
         """Initialize the Peblar entity."""
-        super().__init__(entry.runtime_data.meter_coordinator)
+        super().__init__(entry.runtime_data.data_coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self._attr_device_info = DeviceInfo(

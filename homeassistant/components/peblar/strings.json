@@ -33,6 +33,11 @@
     }
   },
   "entity": {
+    "number": {
+      "charge_current_limit": {
+        "name": "Charge limit"
+      }
+    },
     "select": {
       "smart_charging": {
         "name": "Smart charging",
