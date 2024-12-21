@@ -10,10 +10,7 @@ rules:
       This integration does not use polling.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - use mock_desk_api
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
