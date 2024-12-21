@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.54.0
+PySwitchbot==0.55.2
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -246,7 +246,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b2
+aiohasupervisor==0.2.2b4
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -966,7 +966,7 @@ holidays==0.63
 home-assistant-frontend==20241127.8
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.12.9
+home-assistant-intents==2024.12.20
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1770,7 +1770,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.15
 
 # homeassistant.components.lcn
-pypck==0.7.24
+pypck==0.8.1
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -1948,7 +1948,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.8.1
+python-roborock==2.8.4
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38

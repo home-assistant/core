@@ -1,26 +1,20 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
-      No explicit event subscriptions.
+      Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -29,59 +23,55 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
     status: exempt
     comment: |
-      No custom actions are defined.
-  config-entry-unloading: done
-  docs-configuration-parameters: done
+      This integration does not have any configuration parameters.
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: |
-      Handled by coordinator.
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: done
-  discovery:
-    status: done
-    comment: |
-      DHCP & Bluetooth discovery.
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations: done
-  docs-supported-devices: done
+  docs-known-limitations: todo
+  docs-supported-devices: todo
   docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices:
     status: done
     comment: |
-      Device type integration, only possible for addon scale
+      The integration adds new todo lists on runtime.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration does not have any irrelevant entities.
   entity-translations: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: done
     comment: |
-      Device type integration, only possible for addon scale
+      The integration removes removed todo lists on runtime.
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: done
-    comment: |
-      Uses `httpx` session.
+  inject-websession: done
   strict-typing: done
