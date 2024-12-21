@@ -1,7 +1,6 @@
 """Test BMW coordinator for general availability/unavailability of entities and raising issues."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import patch
 
 from bimmer_connected.models import (
@@ -13,7 +12,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
-from homeassistant.components.bmw_connected_drive.const import CONF_REFRESH_TOKEN
+from homeassistant.components.bmw_connected_drive.const import (
+    CONF_REFRESH_TOKEN,
+    SCAN_INTERVALS,
+)
+from homeassistant.const import CONF_REGION
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -29,6 +32,7 @@ FIXTURE_ENTITY_STATES = {
     "sensor.ix_xdrive50_rear_left_tire_pressure": "2.61",
     "sensor.ix_xdrive50_rear_right_tire_pressure": "2.69",
 }
+FIXTURE_DEFAULT_REGION = FIXTURE_CONFIG_ENTRY["data"][CONF_REGION]
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -77,7 +81,7 @@ async def test_update_failed(
         assert hass.states.get(entity_id).state == state
 
     # On API error, entities should be unavailable
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     with patch(
         BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAPIError("Test error"),
@@ -89,7 +93,7 @@ async def test_update_failed(
         assert hass.states.get(entity_id).state == "unavailable"
 
     # And should recover on next update
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -114,7 +118,7 @@ async def test_auth_failed_as_update_failed(
         assert hass.states.get(entity_id).state == state
 
     # Due to flaky API, we allow one retry on AuthError and raise as UpdateFailed
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     with patch(
         BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
@@ -126,7 +130,7 @@ async def test_auth_failed_as_update_failed(
         assert hass.states.get(entity_id).state == "unavailable"
 
     # And should recover on next update
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -154,7 +158,7 @@ async def test_auth_failed_init_reauth(
     assert len(issue_registry.issues) == 0
 
     # Due to flaky API, we allow one retry on AuthError and raise as UpdateFailed
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     with patch(
         BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
@@ -167,7 +171,7 @@ async def test_auth_failed_init_reauth(
     assert len(issue_registry.issues) == 0
 
     # On second failure, we should initialize reauth flow
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     with patch(
         BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWAuthError("Test error"),
@@ -204,7 +208,7 @@ async def test_captcha_reauth(
         assert hass.states.get(entity_id).state == state
 
     # If library decides a captcha is needed, we should initialize reauth flow
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(SCAN_INTERVALS[FIXTURE_DEFAULT_REGION])
     with patch(
         BIMMER_CONNECTED_VEHICLE_PATCH,
         side_effect=MyBMWCaptchaMissingError("Missing hCaptcha token"),
