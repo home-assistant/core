@@ -1,5 +1,6 @@
 """Test the Hue BLE config flow."""
 
+from contextlib import nullcontext as does_not_raise
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -31,7 +32,7 @@ from tests.components.bluetooth import generate_ble_device
         "authenticated_result",
         "connected_result",
         "poll_state_result",
-        "expected_error",
+        "expected_result",
     ),
     [
         (
@@ -41,7 +42,7 @@ from tests.components.bluetooth import generate_ble_device
             True,
             True,
             (True, []),
-            None,
+            does_not_raise(),
         ),
         (
             None,
@@ -50,7 +51,7 @@ from tests.components.bluetooth import generate_ble_device
             True,
             True,
             (True, []),
-            ScannerNotAvailable,
+            pytest.raises(ScannerNotAvailable),
         ),
         (
             None,
@@ -59,7 +60,7 @@ from tests.components.bluetooth import generate_ble_device
             True,
             True,
             (True, []),
-            NotFound,
+            pytest.raises(NotFound),
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -68,7 +69,7 @@ from tests.components.bluetooth import generate_ble_device
             False,
             True,
             (True, []),
-            InvalidAuth,
+            pytest.raises(InvalidAuth),
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -77,7 +78,7 @@ from tests.components.bluetooth import generate_ble_device
             None,
             True,
             (True, []),
-            None,
+            does_not_raise(),
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -86,7 +87,7 @@ from tests.components.bluetooth import generate_ble_device
             True,
             False,
             (True, []),
-            CannotConnect,
+            pytest.raises(CannotConnect),
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -95,7 +96,7 @@ from tests.components.bluetooth import generate_ble_device
             True,
             True,
             (True, ["Error :P"]),
-            CannotConnect,
+            pytest.raises(CannotConnect),
         ),
     ],
     ids=[
@@ -117,7 +118,7 @@ async def test_validation(
     authenticated_result,
     connected_result,
     poll_state_result,
-    expected_error,
+    expected_result,
 ) -> None:
     """Test input validation."""
     with (
@@ -142,12 +143,8 @@ async def test_validation(
         client.connected = connected_result
         client.poll_state.return_value = poll_state_result
 
-        if expected_error is None:
+        with expected_result:
             await validate_input(hass, TEST_DEVICE_MAC)
-
-        else:
-            with pytest.raises(expected_error):
-                await validate_input(hass, TEST_DEVICE_MAC)
 
 
 async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
