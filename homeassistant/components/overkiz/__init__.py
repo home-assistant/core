@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -178,7 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def handle_execute_command(service: ServiceCall) -> ServiceResponse:
+    async def handle_execute_command(service: ServiceCall) -> None:
         """Handle execute command service."""
         entity_registry = er.async_get(hass)
 
