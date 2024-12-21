@@ -502,7 +502,6 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -583,7 +582,6 @@ def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> N
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
 
 
 @pytest.mark.parametrize(
@@ -675,7 +673,6 @@ async def test_issue_for_mariadb_with_MDEV_25020(
     assert issue.translation_placeholders == {"min_version": min_version}
 
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -731,7 +728,6 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert issue is None
 
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
 
 
 async def test_issue_for_old_sqlite(
