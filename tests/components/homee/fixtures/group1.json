@@ -1,0 +1,13 @@
+{
+  "id": 1,
+  "name": "Group1",
+  "image": "groupicon_sectionaldoor_value_4",
+  "order": 1,
+  "added": 1676464568,
+  "state": 1,
+  "category": 0,
+  "phonetic_name": "",
+  "note": "1st test group",
+  "services": 1,
+  "owner": 2
+}
