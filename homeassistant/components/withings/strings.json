@@ -151,6 +151,9 @@
       "fat_mass_for_segments_right_leg": {
         "name": "Fat mass in right leg"
       },
+      "basal_metabolic_rate": {
+        "name": "Basal metabolic rate"
+      },
       "breathing_disturbances_intensity": {
         "name": "Breathing disturbances intensity"
       },
