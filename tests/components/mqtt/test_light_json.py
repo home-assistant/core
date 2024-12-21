@@ -727,12 +727,12 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":155}')
 
     light_state = hass.states.get("light.test")
-    assert light_state.attributes.get("color_temp") == 155
+    assert light_state.attributes.get("color_temp_kelvin") == 6451  # 155 mired
 
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":null}')
 
     light_state = hass.states.get("light.test")
-    assert light_state.attributes.get("color_temp") is None
+    assert light_state.attributes.get("color_temp_kelvin") is None
 
     async_fire_mqtt_message(
         hass, "test_light_rgb", '{"state":"ON", "effect":"colorloop"}'
@@ -763,11 +763,26 @@ async def test_controlling_state_via_topic(
     assert light_state.state == STATE_OFF
     assert light_state.attributes.get("brightness") is None
 
+    # Simulate the lights color temp has been changed
+    # while it was switched off
+    async_fire_mqtt_message(
+        hass,
+        "test_light_rgb",
+        '{"state":"OFF","color_temp":201}',
+    )
+    light_state = hass.states.get("light.test")
+    assert light_state.state == STATE_OFF
+    # Color temp attribute is not exposed while the lamp is off
+    assert light_state.attributes.get("color_temp_kelvin") is None
+
     # test previous zero brightness received was ignored and brightness is restored
+    # see if the latest color_temp value received is restored
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON"}')
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("brightness") == 128
+    assert light_state.attributes.get("color_temp_kelvin") == 4975  # 201 mired
 
+    # A `0` brightness value is ignored when a light is turned on
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON","brightness":0}')
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("brightness") == 128
