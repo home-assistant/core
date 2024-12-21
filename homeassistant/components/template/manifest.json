@@ -2,7 +2,7 @@
   "domain": "template",
   "name": "Template",
   "after_dependencies": ["group"],
-  "codeowners": ["@PhracturedBlue", "@tetienne", "@home-assistant/core"],
+  "codeowners": ["@PhracturedBlue", "@home-assistant/core"],
   "config_flow": true,
   "dependencies": ["blueprint"],
   "documentation": "https://www.home-assistant.io/integrations/template",

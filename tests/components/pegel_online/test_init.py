@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
+import pytest
 
 from homeassistant.components.pegel_online.const import (
     CONF_STATION,
@@ -23,7 +24,9 @@ from .const import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_update_error(hass: HomeAssistant) -> None:
+async def test_update_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Tests error during update entity."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -43,9 +46,11 @@ async def test_update_error(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.dresden_elbe_water_level")
     assert state
 
-    pegelonline().override_side_effect(ClientError)
+    pegelonline().override_side_effect(ClientError("Boom"))
     async_fire_time_changed(hass, utcnow() + MIN_TIME_BETWEEN_UPDATES)
     await hass.async_block_till_done()
+
+    assert "Failed to communicate with API: Boom" in caplog.text
 
     state = hass.states.get("sensor.dresden_elbe_water_level")
     assert state.state == STATE_UNAVAILABLE

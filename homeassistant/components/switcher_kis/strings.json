@@ -59,6 +59,9 @@
       },
       "auto_shutdown": {
         "name": "Auto shutdown"
+      },
+      "temperature": {
+        "name": "Current temperature"
       }
     }
   },

@@ -274,60 +274,60 @@
       "fields": {
         "addon": {
           "name": "Add-on",
-          "description": "The add-on slug."
+          "description": "The add-on to start."
         }
       }
     },
     "addon_restart": {
-      "name": "Restart add-on.",
+      "name": "Restart add-on",
       "description": "Restarts an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to restart."
         }
       }
     },
     "addon_stdin": {
-      "name": "Write data to add-on stdin.",
-      "description": "Writes data to add-on stdin.",
+      "name": "Write data to add-on stdin",
+      "description": "Writes data to the add-on's standard input.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to write to."
         }
       }
     },
     "addon_stop": {
-      "name": "Stop add-on.",
+      "name": "Stop add-on",
       "description": "Stops an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to stop."
         }
       }
     },
     "addon_update": {
-      "name": "Update add-on.",
+      "name": "Update add-on",
       "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to update."
         }
       }
     },
     "host_reboot": {
-      "name": "Reboot the host system.",
+      "name": "Reboot the host system",
       "description": "Reboots the host system."
     },
     "host_shutdown": {
-      "name": "Power off the host system.",
+      "name": "Power off the host system",
       "description": "Powers off the host system."
     },
     "backup_full": {
-      "name": "Create a full backup.",
+      "name": "Create a full backup",
       "description": "Creates a full backup.",
       "fields": {
         "name": {
@@ -353,7 +353,7 @@
       }
     },
     "backup_partial": {
-      "name": "Create a partial backup.",
+      "name": "Create a partial backup",
       "description": "Creates a partial backup.",
       "fields": {
         "homeassistant": {
@@ -391,7 +391,7 @@
       }
     },
     "restore_full": {
-      "name": "Restore from full backup.",
+      "name": "Restore from full backup",
       "description": "Restores from full backup.",
       "fields": {
         "slug": {
@@ -405,7 +405,7 @@
       }
     },
     "restore_partial": {
-      "name": "Restore from partial backup.",
+      "name": "Restore from partial backup",
       "description": "Restores from a partial backup.",
       "fields": {
         "slug": {

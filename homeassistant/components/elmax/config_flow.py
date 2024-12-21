@@ -203,7 +203,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_direct(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the direct setup step."""
-        self._selected_mode = CONF_ELMAX_MODE_CLOUD
+        self._selected_mode = CONF_ELMAX_MODE_DIRECT
         if user_input is None:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,

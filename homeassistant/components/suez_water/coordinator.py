@@ -1,6 +1,11 @@
 """Suez water update coordinator."""
 
-from pysuez import AggregatedData, PySuezError, SuezClient
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
+from typing import Any
+
+from pysuez import PySuezError, SuezClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -11,13 +16,37 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 
-class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
+@dataclass
+class SuezWaterAggregatedAttributes:
+    """Class containing aggregated sensor extra attributes."""
+
+    this_month_consumption: dict[date, float]
+    previous_month_consumption: dict[date, float]
+    last_year_overall: dict[str, float]
+    this_year_overall: dict[str, float]
+    history: dict[date, float]
+    highest_monthly_consumption: float
+
+
+@dataclass
+class SuezWaterData:
+    """Class used to hold all fetch data from suez api."""
+
+    aggregated_value: float
+    aggregated_attr: Mapping[str, Any]
+    price: float
+
+
+type SuezWaterConfigEntry = ConfigEntry[SuezWaterCoordinator]
+
+
+class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
     """Suez water coordinator."""
 
     _suez_client: SuezClient
-    config_entry: ConfigEntry
+    config_entry: SuezWaterConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SuezWaterConfigEntry) -> None:
         """Initialize suez water coordinator."""
         super().__init__(
             hass,
@@ -37,10 +66,22 @@ class SuezWaterCoordinator(DataUpdateCoordinator[AggregatedData]):
         if not await self._suez_client.check_credentials():
             raise ConfigEntryError("Invalid credentials for suez water")
 
-    async def _async_update_data(self) -> AggregatedData:
+    async def _async_update_data(self) -> SuezWaterData:
         """Fetch data from API endpoint."""
         try:
-            data = await self._suez_client.fetch_aggregated_data()
+            aggregated = await self._suez_client.fetch_aggregated_data()
+            data = SuezWaterData(
+                aggregated_value=aggregated.value,
+                aggregated_attr={
+                    "this_month_consumption": aggregated.current_month,
+                    "previous_month_consumption": aggregated.previous_month,
+                    "highest_monthly_consumption": aggregated.highest_monthly_consumption,
+                    "last_year_overall": aggregated.previous_year,
+                    "this_year_overall": aggregated.current_year,
+                    "history": aggregated.history,
+                },
+                price=(await self._suez_client.get_price()).price,
+            )
         except PySuezError as err:
             _LOGGER.exception(err)
             raise UpdateFailed(

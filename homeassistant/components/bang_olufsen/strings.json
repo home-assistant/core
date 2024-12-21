@@ -1,4 +1,8 @@
 {
+  "common": {
+    "jid_options_name": "JID options",
+    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity."
+  },
   "config": {
     "error": {
       "api_exception": "[%key:common::config_flow::error::cannot_connect%]",
@@ -7,7 +11,7 @@
       "invalid_ip": "Invalid IPv4 address"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "flow_title": "{name}",
@@ -22,6 +26,88 @@
       "zeroconf_confirm": {
         "title": "Setup Bang & Olufsen device",
         "description": "Confirm the configuration of the {model}-{serial_number} @ {host}."
+      }
+    }
+  },
+  "selector": {
+    "source_ids": {
+      "options": {
+        "beoradio": "ASE Beoradio",
+        "deezer": "ASE / Mozart Deezer",
+        "spotify": "ASE / Mozart Spotify",
+        "tidal": "Mozart Tidal",
+        "aux_a": "Beolink Converter NL/ML AUX_A",
+        "cd": "Beolink Converter NL/ML CD",
+        "ph": "Beolink Converter NL/ML PH",
+        "radio": "Beolink Converter NL/ML RADIO",
+        "tp1": "Beolink Converter NL/ML TP1",
+        "tp2": "Beolink Converter NL/ML TP2"
+      }
+    }
+  },
+  "services": {
+    "beolink_allstandby": {
+      "name": "Beolink all standby",
+      "description": "Set all Connected Beolink devices to standby."
+    },
+    "beolink_expand": {
+      "name": "Beolink expand",
+      "description": "Expand current Beolink experience.",
+      "fields": {
+        "all_discovered": {
+          "name": "All discovered",
+          "description": "Expand Beolink experience to all discovered devices."
+        },
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will join current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_join": {
+      "name": "Beolink join",
+      "description": "Join a Beolink experience.",
+      "fields": {
+        "beolink_jid": {
+          "name": "Beolink JID",
+          "description": "Manually specify Beolink JID to join."
+        },
+        "source_id": {
+          "name": "Source",
+          "description": "Specify which source to join, behavior varies between hardware platforms. Source names prefaced by a platform name can only be used when connecting to that platform. For example \"ASE Beoradio\" can only be used when joining an ASE device, while ”ASE / Mozart Deezer” can be used with ASE or Mozart devices. A defined Beolink JID is required."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
+      }
+    },
+    "beolink_leave": {
+      "name": "Beolink leave",
+      "description": "Leave a Beolink experience."
+    },
+    "beolink_unexpand": {
+      "name": "Beolink unexpand",
+      "description": "Unexpand from current Beolink experience.",
+      "fields": {
+        "beolink_jids": {
+          "name": "Beolink JIDs",
+          "description": "Specify which Beolink JIDs will leave from current Beolink experience."
+        }
+      },
+      "sections": {
+        "jid_options": {
+          "name": "[%key:component::bang_olufsen::common::jid_options_name%]",
+          "description": "[%key:component::bang_olufsen::common::jid_options_description%]"
+        }
       }
     }
   },

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.2
+    rev: v0.8.3
     hooks:
       - id: ruff
         args:
@@ -12,13 +12,13 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
+          - --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json, html]
         exclude: ^tests/fixtures/|homeassistant/generated/|tests/components/.*/snapshots/
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: check-executables-have-shebangs
         stages: [manual]
@@ -83,14 +83,14 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/brands/.*\.json|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements.+\.txt)$
+        files: ^(homeassistant/.+/(icons|manifest|strings)\.json|homeassistant/.+/(quality_scale)\.yaml|homeassistant/brands/.*\.json|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py|requirements.+\.txt)$
       - id: hassfest-metadata
         name: hassfest-metadata
         entry: script/run-in-env.sh python3 -m script.hassfest -p metadata,docker
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|pyproject\.toml)$
+        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|pyproject\.toml|homeassistant/components/go2rtc/const\.py)$
       - id: hassfest-mypy-config
         name: hassfest-mypy-config
         entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config
