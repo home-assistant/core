@@ -163,8 +163,3 @@ class HaHueBLE(LightEntity):
             return ColorMode.ONOFF
 
         return ColorMode.UNKNOWN
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll if light offline to trigger auto retry."""
-        return not self.available
