@@ -46,9 +46,12 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -451,18 +454,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
         return True
+
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Modbus."""
+        if DOMAIN not in hass.data:
+            _LOGGER.error("Modbus cannot reload, because it was never loaded")
+            return
+        hubs = hass.data[DOMAIN]
+        for name in hubs:
+            await hubs[name].async_close()
+        _LOGGER.debug("Modbus reloading")
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        if not reload_config:
+            return
+        await async_modbus_setup(hass, reload_config)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     return await async_modbus_setup(
         hass,
         config,
     )
-
-
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Release modbus resources."""
-    if DOMAIN not in hass.data:
-        _LOGGER.error("Modbus cannot reload, because it was never loaded")
-        return
-    _LOGGER.debug("Modbus reloading")
-    hubs = hass.data[DOMAIN]
-    for name in hubs:
-        await hubs[name].async_close()

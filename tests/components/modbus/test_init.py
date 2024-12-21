@@ -25,7 +25,6 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.modbus import async_reset_platform
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -1227,9 +1226,3 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
-
-
-async def test_reset_platform(hass: HomeAssistant) -> None:
-    """Run test for async_reset_platform."""
-    await async_reset_platform(hass, "modbus")
-    assert DOMAIN not in hass.data
