@@ -49,6 +49,7 @@ async def test_form(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy 1234",
@@ -80,6 +81,7 @@ async def test_user_no_serial_number(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy"
+    assert result["result"].unique_id is None
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy",
@@ -100,6 +102,8 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -131,6 +135,8 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -634,6 +640,8 @@ async def test_reauth(
     """Test we reauth auth."""
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
