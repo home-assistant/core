@@ -29,6 +29,8 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
             CONF_MODEL: TEST_MODEL,
         },
         entry_id=device_id,
+        unique_id=TEST_MAC,
+        minor_version=2,
     )
 
     config_entry.add_to_hass(hass)
