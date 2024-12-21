@@ -1,6 +1,6 @@
 """Tests of the initialization of the twinkly integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError
 
@@ -11,14 +11,8 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    TEST_HOST,
-    TEST_MAC,
-    TEST_MODEL,
-    TEST_NAME_ORIGINAL,
-    ClientMock,
-    setup_integration,
-)
+from . import setup_integration
+from .const import TEST_MAC, TEST_MODEL
 
 from tests.common import MockConfigEntry
 
@@ -59,16 +53,14 @@ async def test_mac_migration(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Validate that the unique_id is migrated to the MAC address."""
-    client = ClientMock()
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         minor_version=1,
         unique_id="unique_id",
         data={
-            CONF_HOST: TEST_HOST,
+            CONF_HOST: "192.168.0.123",
             CONF_ID: id,
-            CONF_NAME: TEST_NAME_ORIGINAL,
+            CONF_NAME: "Tree 1",
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -83,8 +75,7 @@ async def test_mac_migration(
         identifiers={(DOMAIN, config_entry.unique_id)},
     )
 
-    with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED
 

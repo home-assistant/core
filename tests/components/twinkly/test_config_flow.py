@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_MAC, TEST_MODEL, TEST_NAME
+from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 
 from tests.common import MockConfigEntry
 

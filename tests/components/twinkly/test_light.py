@@ -30,7 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import TEST_MAC, setup_integration
+from . import setup_integration
+from .const import TEST_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
