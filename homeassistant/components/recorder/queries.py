@@ -5,7 +5,16 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 
-from sqlalchemy import delete, distinct, func, lambda_stmt, select, union_all, update
+from sqlalchemy import (
+    and_,
+    delete,
+    distinct,
+    func,
+    lambda_stmt,
+    select,
+    union_all,
+    update,
+)
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
@@ -838,16 +847,33 @@ def get_migration_changes() -> StatementLambdaElement:
 
 
 def find_event_types_to_purge() -> StatementLambdaElement:
-    """Find event_type_ids to purge."""
+    """Find event_type_ids to purge.
+
+    PostgreSQL does not support skip/loose index scan
+    https://wiki.postgresql.org/wiki/Loose_indexscan
+
+    To avoid using distinct, we use a subquery to get the latest time_fired_ts
+    for each event_type. This is then used to filter out the event_type_ids
+    that no longer exist in the Events table.
+
+    This query is fast for SQLite, MariaDB, MySQL, and PostgreSQL.
+    """
     return lambda_stmt(
         lambda: select(EventTypes.event_type_id, EventTypes.event_type).where(
             EventTypes.event_type_id.not_in(
-                select(EventTypes.event_type_id).join(
-                    used_event_type_ids := select(
-                        distinct(Events.event_type_id).label("used_event_type_id")
-                    ).subquery(),
-                    EventTypes.event_type_id
-                    == used_event_type_ids.c.used_event_type_id,
+                select(EventTypes.event_type_id)
+                .select_from(EventTypes)
+                .join(
+                    Events,
+                    and_(
+                        EventTypes.event_type_id == Events.event_type_id,
+                        Events.time_fired_ts
+                        == select(Events.time_fired_ts)
+                        .where(Events.event_type_id == EventTypes.event_type_id)
+                        .limit(1)
+                        .scalar_subquery()
+                        .correlate(EventTypes),
+                    ),
                 )
             )
         )
@@ -855,16 +881,33 @@ def find_event_types_to_purge() -> StatementLambdaElement:
 
 
 def find_entity_ids_to_purge() -> StatementLambdaElement:
-    """Find entity_ids to purge."""
+    """Find metadata_ids for each entity_id to purge.
+
+    PostgreSQL does not support skip/loose index scan
+    https://wiki.postgresql.org/wiki/Loose_indexscan
+
+    To avoid using distinct, we use a subquery to get the latest last_updated_ts
+    for each entity_id. This is then used to filter out the metadata_ids
+    that no longer exist in the States table.
+
+    This query is fast for SQLite, MariaDB, MySQL, and PostgreSQL.
+    """
     return lambda_stmt(
         lambda: select(StatesMeta.metadata_id, StatesMeta.entity_id).where(
             StatesMeta.metadata_id.not_in(
-                select(StatesMeta.metadata_id).join(
-                    used_states_metadata_id := select(
-                        distinct(States.metadata_id).label("used_states_metadata_id")
-                    ).subquery(),
-                    StatesMeta.metadata_id
-                    == used_states_metadata_id.c.used_states_metadata_id,
+                select(StatesMeta.metadata_id)
+                .select_from(StatesMeta)
+                .join(
+                    States,
+                    and_(
+                        StatesMeta.metadata_id == States.metadata_id,
+                        States.last_updated_ts
+                        == select(States.last_updated_ts)
+                        .where(States.metadata_id == StatesMeta.metadata_id)
+                        .limit(1)
+                        .scalar_subquery()
+                        .correlate(StatesMeta),
+                    ),
                 )
             )
         )
