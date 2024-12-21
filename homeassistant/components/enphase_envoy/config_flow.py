@@ -168,7 +168,46 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        host = reauth_entry.data[CONF_HOST]
+
+        if user_input is not None:
+            username: str = user_input[CONF_USERNAME]
+            password: str = user_input[CONF_PASSWORD]
+            envoy = await validate_input(
+                self.hass,
+                host,
+                username,
+                password,
+                errors,
+                description_placeholders,
+            )
+            if envoy and not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data=reauth_entry.data | user_input,
+                )
+
+        self.context["title_placeholders"] = {
+            CONF_SERIAL: reauth_entry.unique_id or "-",
+            CONF_HOST: reauth_entry.data[CONF_HOST],
+        }
+        description_placeholders["serial"] = reauth_entry.unique_id or "-"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self._async_generate_schema(),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
 
     def _async_envoy_name(self) -> str:
         """Return the name of the envoy."""
@@ -180,11 +219,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
-        if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            host = reauth_entry.data[CONF_HOST]
-        else:
-            host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
+        host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
 
         if user_input is not None:
             envoy = await validate_input(
@@ -195,14 +230,8 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors,
                 description_placeholders,
             )
-            if not errors and envoy:
+            if envoy and not errors:
                 name = self._async_envoy_name()
-
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        reauth_entry,
-                        data=reauth_entry.data | user_input,
-                    )
 
                 if not self.unique_id:
                     await self.async_set_unique_id(envoy.serial_number)
@@ -257,7 +286,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors,
                 description_placeholders,
             )
-            if not errors and envoy:
+            if envoy and not errors:
                 await self.async_set_unique_id(envoy.serial_number)
                 self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
@@ -273,6 +302,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: reconfigure_entry.unique_id or "-",
             CONF_HOST: reconfigure_entry.data[CONF_HOST],
         }
+        description_placeholders["serial"] = reconfigure_entry.unique_id or "-"
 
         suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
         return self.async_show_form(

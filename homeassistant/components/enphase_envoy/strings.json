@@ -14,7 +14,7 @@
         }
       },
       "reconfigure": {
-        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "description": "Re-configure Envoy {serial}\n[%key:component::enphase_envoy::config::step::user::description%]",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
@@ -22,6 +22,13 @@
         },
         "data_description": {
           "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Re-Authorize for Envoy {serial}\n[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
