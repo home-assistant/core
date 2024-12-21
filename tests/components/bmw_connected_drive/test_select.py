@@ -16,7 +16,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 
@@ -105,7 +110,10 @@ async def test_service_call_invalid_input(
     old_value = hass.states.get(entity_id).state
 
     # Test
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Option {value} is not valid for entity {entity_id}",
+    ):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -118,17 +126,32 @@ async def test_service_call_invalid_input(
 
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
-    ("raised", "expected"),
+    ("raised", "expected", "exc_translation"),
     [
-        (MyBMWRemoteServiceError, HomeAssistantError),
-        (MyBMWAPIError, HomeAssistantError),
-        (ServiceValidationError, ServiceValidationError),
+        (
+            MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            MyBMWAPIError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            ServiceValidationError(
+                "Option 17 is not valid for entity select.i4_edrive40_ac_charging_limit"
+            ),
+            ServiceValidationError,
+            "Option 17 is not valid for entity select.i4_edrive40_ac_charging_limit",
+        ),
     ],
 )
 async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
+    exc_translation: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""
@@ -146,7 +169,7 @@ async def test_service_call_fail(
     )
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=exc_translation):
         await hass.services.async_call(
             "select",
             "select_option",

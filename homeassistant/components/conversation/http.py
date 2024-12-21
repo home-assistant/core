@@ -24,7 +24,7 @@ from .agent_manager import (
     get_agent_manager,
 )
 from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY
-from .default_agent import METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE, DefaultAgent
+from .default_agent import METADATA_CUSTOM_FILE, METADATA_CUSTOM_SENTENCE
 from .entity import ConversationEntity
 from .models import ConversationInput
 
@@ -162,8 +162,7 @@ async def websocket_list_sentences(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List custom registered sentences."""
-    agent = hass.data.get(DATA_DEFAULT_ENTITY)
-    assert isinstance(agent, DefaultAgent)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
 
     sentences = []
     for trigger_data in agent.trigger_sentences:
@@ -185,8 +184,7 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    agent = hass.data.get(DATA_DEFAULT_ENTITY)
-    assert isinstance(agent, DefaultAgent)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
 
     # Return results for each sentence in the same order as the input.
     result_dicts: list[dict[str, Any] | None] = []

@@ -13,7 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 
@@ -75,17 +80,25 @@ async def test_service_call_success(
 
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.parametrize(
-    ("raised", "expected"),
+    ("raised", "expected", "exc_translation"),
     [
-        (MyBMWRemoteServiceError, HomeAssistantError),
-        (MyBMWAPIError, HomeAssistantError),
-        (ValueError, ValueError),
+        (
+            MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
+        (
+            MyBMWAPIError(REMOTE_SERVICE_EXC_REASON),
+            HomeAssistantError,
+            REMOTE_SERVICE_EXC_TRANSLATION,
+        ),
     ],
 )
 async def test_service_call_fail(
     hass: HomeAssistant,
     raised: Exception,
     expected: Exception,
+    exc_translation: str,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test exception handling."""
@@ -107,7 +120,7 @@ async def test_service_call_fail(
     assert hass.states.get(entity_id).state == old_value
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=exc_translation):
         await hass.services.async_call(
             "switch",
             "turn_on",
@@ -122,7 +135,7 @@ async def test_service_call_fail(
     assert hass.states.get(entity_id).state == old_value
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=exc_translation):
         await hass.services.async_call(
             "switch",
             "turn_off",

@@ -15,6 +15,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RokuConfigEntry
 from .entity import RokuEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RokuSensorEntityDescription(SensorEntityDescription):

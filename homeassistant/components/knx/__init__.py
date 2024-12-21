@@ -401,6 +401,9 @@ class KNXModule:
             )
         return ConnectionConfig(
             auto_reconnect=True,
+            individual_address=self.entry.data.get(
+                CONF_KNX_TUNNEL_ENDPOINT_IA,  # may be configured at knxkey upload
+            ),
             secure_config=SecureConfig(
                 knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                 knxkeys_file_path=_knxkeys_file,

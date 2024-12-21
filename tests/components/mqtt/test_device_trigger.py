@@ -2,6 +2,7 @@
 
 import json
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_unordered import unordered
@@ -1692,14 +1693,19 @@ async def test_trigger_debug_info(
     assert debug_info_data["triggers"][0]["discovery_data"]["payload"] == config2
 
 
-@pytest.mark.usefixtures("mqtt_mock")
+@patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.INITIAL_SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0)
+@patch("homeassistant.components.mqtt.client.UNSUBSCRIBE_COOLDOWN", 0.0)
 async def test_unload_entry(
     hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
     service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test unloading the MQTT entry."""
 
+    await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
@@ -1733,6 +1739,7 @@ async def test_unload_entry(
             ]
         },
     )
+    await hass.async_block_till_done()
 
     # Fake short press 1
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")

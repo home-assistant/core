@@ -12,6 +12,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
 )
@@ -52,6 +54,9 @@ async def async_setup_entry(
 
 class HomeKitLight(HomeKitEntity, LightEntity):
     """Representation of a Homekit light."""
+
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -98,24 +103,24 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         if not self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            return super().max_color_temp_kelvin
+            return DEFAULT_MAX_KELVIN
         min_value_mireds = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
         return (
             color_util.color_temperature_mired_to_kelvin(min_value_mireds)
             if min_value_mireds
-            else super().max_color_temp_kelvin
+            else DEFAULT_MAX_KELVIN
         )
 
     @cached_property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         if not self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            return super().min_color_temp_kelvin
+            return DEFAULT_MIN_KELVIN
         max_value_mireds = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
         return (
             color_util.color_temperature_mired_to_kelvin(max_value_mireds)
             if max_value_mireds
-            else super().min_color_temp_kelvin
+            else DEFAULT_MIN_KELVIN
         )
 
     @property

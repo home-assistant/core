@@ -5,6 +5,7 @@ from __future__ import annotations
 from contextlib import suppress
 import os
 import shutil
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -12,6 +13,9 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
+
+if TYPE_CHECKING:
+    from . import VelbusConfigEntry
 
 from .const import (
     CONF_INTERFACE,
@@ -35,20 +39,32 @@ def setup_services(hass: HomeAssistant) -> None:
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
+    def get_config_entry(interface: str) -> VelbusConfigEntry | None:
+        for config_entry in hass.config_entries.async_entries(DOMAIN):
+            if "port" in config_entry.data and config_entry.data["port"] == interface:
+                return config_entry
+        return None
+
     async def scan(call: ServiceCall) -> None:
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].scan()
+        """Handle a scan service call."""
+        entry = get_config_entry(call.data[CONF_INTERFACE])
+        if entry:
+            await entry.runtime_data.controller.scan()
 
     async def syn_clock(call: ServiceCall) -> None:
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].sync_clock()
+        """Handle a sync clock service call."""
+        entry = get_config_entry(call.data[CONF_INTERFACE])
+        if entry:
+            await entry.runtime_data.controller.sync_clock()
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
-        memo_text = call.data[CONF_MEMO_TEXT]
-        await (
-            hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
-            .get_module(call.data[CONF_ADDRESS])
-            .set_memo_text(memo_text.async_render())
-        )
+        entry = get_config_entry(call.data[CONF_INTERFACE])
+        if entry:
+            memo_text = call.data[CONF_MEMO_TEXT]
+            module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
+            if module:
+                await module.set_memo_text(memo_text.async_render())
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""

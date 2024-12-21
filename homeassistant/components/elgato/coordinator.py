@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type ElgatoConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
+
 
 @dataclass
 class ElgatoData:
@@ -26,10 +28,10 @@ class ElgatoData:
 class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
     """Class to manage fetching Elgato data."""
 
-    config_entry: ConfigEntry
+    config_entry: ElgatoConfigEntry
     has_battery: bool | None = None
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ElgatoConfigEntry) -> None:
         """Initialize the coordinator."""
         self.config_entry = entry
         self.client = Elgato(
@@ -39,6 +41,7 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL,
         )
