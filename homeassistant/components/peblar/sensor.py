@@ -103,6 +103,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
         key="energy_total",
         translation_key="energy_total",
         device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
