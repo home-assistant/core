@@ -1,17 +1,23 @@
 rules:
   # Bronze
-  action-setup: todo
+  action-setup:
+    status: todo
+    comment: move actions to entity services
   appropriate-polling: done
   brands: done
   common-modules:
     status: exempt
     comment: The integration does not use common patterns.
   config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow:
+    status: todo
+    comment: test_form - remove duplicated async_init, make sure tests ends with CREATE_ENTRY or ABORT, remove legacy uuid migration, remove name parameter, use hass.config_entries.async_setup instead of async_setup_component, snapshot in diagnostics (and other tests when possible), test_client_disconnected validate no error in log, make reauth flow more graceful
   dependency-transparency: done
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
+  docs-actions:
+    status: todo
+    comment: add description for parameters
+  docs-high-level-description: done
+  docs-installation-instructions: done
   docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
@@ -32,6 +38,7 @@ rules:
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: todo
+
   # Gold
   devices: done
   diagnostics: done
@@ -71,5 +78,9 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
-  strict-typing: todo
+  inject-websession:
+    status: todo
+    comment: need to check if it is needed for websockets or migrate to aiohttp
+  strict-typing:
+    status: todo
+    comment: aiowebostv is not fully typed
