@@ -19,8 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsType
+from . import ADS_TYPEMAP, CONF_ADS_TYPE
+from .const import CONF_ADS_FACTOR, CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsType
 from .entity import AdsEntity
 from .hub import AdsHub
 
