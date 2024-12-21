@@ -75,11 +75,11 @@
       "cp_state": {
         "name": "State",
         "state": {
-          "charging": "Charging",
+          "charging": "[%key:common::action::charging%]",
           "error": "Error",
           "fault": "Fault",
           "invalid": "Invalid",
-          "no_ev_connected": "No EV Connected",
+          "no_ev_connected": "No EV connected",
           "suspended": "Suspended"
         }
       },
