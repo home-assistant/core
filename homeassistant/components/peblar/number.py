@@ -8,8 +8,11 @@ from typing import Any
 
 from peblar import PeblarApi
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,6 +41,7 @@ DESCRIPTIONS = [
     PeblarNumberEntityDescription(
         key="charge_current_limit",
         translation_key="charge_current_limit",
+        device_class=NumberDeviceClass.CURRENT,
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=6,
@@ -51,7 +55,7 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PeblarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Peblar number based on a config entry."""
