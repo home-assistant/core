@@ -30,6 +30,7 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import device_registry as dr, intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import ulid
+from homeassistant.util.json import JsonObjectType
 
 from . import OpenAIConfigEntry
 from .const import (
@@ -292,6 +293,8 @@ class OpenAIConversationEntity(
             if not tool_calls or not llm_api:
                 break
 
+            aborting = False
+
             for tool_call in tool_calls:
                 tool_input = llm.ToolInput(
                     tool_name=tool_call.function.name,
@@ -301,12 +304,25 @@ class OpenAIConversationEntity(
                     "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
                 )
 
-                try:
-                    tool_response = await llm_api.async_call_tool(tool_input)
-                except (HomeAssistantError, vol.Invalid) as e:
-                    tool_response = {"error": type(e).__name__}
-                    if str(e):
-                        tool_response["error_text"] = str(e)
+                # OpenAI requires a tool response for every tool call in history
+                if aborting:
+                    tool_response: JsonObjectType = {
+                        "error": "Aborted",
+                        "error_text": "Abort conversation requested",
+                    }
+                if not aborting:
+                    try:
+                        tool_response = await llm_api.async_call_tool(tool_input)
+                    except llm.AbortConversation as e:
+                        aborting = True
+                        tool_response = {
+                            "error": "Aborted",
+                            "error_text": str(e) or "Abort conversation requested",
+                        }
+                    except (HomeAssistantError, vol.Invalid) as e:
+                        tool_response = {"error": type(e).__name__}
+                        if str(e):
+                            tool_response["error_text"] = str(e)
 
                 LOGGER.debug("Tool response: %s", tool_response)
                 messages.append(
@@ -316,6 +332,9 @@ class OpenAIConversationEntity(
                         content=json.dumps(tool_response),
                     )
                 )
+
+            if aborting:
+                break
 
         self.history[conversation_id] = messages
 
