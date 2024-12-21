@@ -698,6 +698,8 @@ build.json @home-assistant/supervisor
 /tests/components/imap/ @jbouwh
 /homeassistant/components/imgw_pib/ @bieniu
 /tests/components/imgw_pib/ @bieniu
+/homeassistant/components/imou_life/ @Imou-OpenPlatform
+/tests/components/imou_life/ @Imou-OpenPlatform
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
