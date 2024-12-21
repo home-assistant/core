@@ -650,7 +650,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_all_addons": True},
-            replace(DEFAULT_BACKUP_OPTIONS, addons="all"),
+            replace(DEFAULT_BACKUP_OPTIONS, addons="ALL"),
         ),
         (
             {"include_database": False},

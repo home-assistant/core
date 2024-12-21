@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -157,3 +158,39 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
+    """Test user flow can continue after discovery happened."""
+    client = ClientMock()
+    with (
+        patch(
+            "homeassistant.components.twinkly.config_flow.Twinkly", return_value=client
+        ),
+        patch("homeassistant.components.twinkly.async_setup_entry", return_value=True),
+    ):
+        await hass.config_entries.flow.async_init(
+            TWINKLY_DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                hostname="Twinkly_XYZ",
+                ip="1.2.3.4",
+                macaddress="aabbccddeeff",
+            ),
+        )
+        result = await hass.config_entries.flow.async_init(
+            TWINKLY_DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        assert len(hass.config_entries.flow.async_progress(TWINKLY_DOMAIN)) == 2
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "10.0.0.131"},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        # Verify the discovery flow was aborted
+        assert not hass.config_entries.flow.async_progress(TWINKLY_DOMAIN)
