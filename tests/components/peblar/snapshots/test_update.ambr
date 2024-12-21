@@ -1,0 +1,118 @@
+# serializer version: 1
+# name: test_entities[update][update.peblar_ev_charger_customization-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.peblar_ev_charger_customization',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Customization',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'customization',
+    'unique_id': '23-45-A4O-MOF_customization',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[update][update.peblar_ev_charger_customization-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'friendly_name': 'Peblar EV Charger Customization',
+      'in_progress': False,
+      'installed_version': 'Peblar-1.9',
+      'latest_version': 'Peblar-1.9',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.peblar_ev_charger_customization',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[update][update.peblar_ev_charger_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.peblar_ev_charger_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '23-45-A4O-MOF_firmware',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[update][update.peblar_ev_charger_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'friendly_name': 'Peblar EV Charger Firmware',
+      'in_progress': False,
+      'installed_version': '1.6.1+1+WL-1',
+      'latest_version': '1.6.2+1+WL-1',
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.peblar_ev_charger_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

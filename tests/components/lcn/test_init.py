@@ -2,7 +2,13 @@
 
 from unittest.mock import Mock, patch
 
-from pypck.connection import PchkAuthenticationError, PchkLicenseError
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionRefusedError,
+    PchkLcnNotConnectedError,
+    PchkLicenseError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -84,21 +90,30 @@ async def test_async_setup_entry_update(
 
 
 @pytest.mark.parametrize(
-    "exception", [PchkAuthenticationError, PchkLicenseError, TimeoutError]
+    "exception",
+    [
+        PchkAuthenticationError,
+        PchkLicenseError,
+        PchkConnectionRefusedError,
+        PchkConnectionFailedError,
+        PchkLcnNotConnectedError,
+    ],
 )
-async def test_async_setup_entry_raises_authentication_error(
+async def test_async_setup_entry_fails(
     hass: HomeAssistant, entry: MockConfigEntry, exception: Exception
 ) -> None:
-    """Test that an authentication error is handled properly."""
-    with patch(
-        "homeassistant.components.lcn.PchkConnectionManager.async_connect",
-        side_effect=exception,
+    """Test that an error is handled properly."""
+    with (
+        patch(
+            "homeassistant.components.lcn.PchkConnectionManager.async_connect",
+            side_effect=exception,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
