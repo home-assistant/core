@@ -727,7 +727,6 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":155}')
 
     light_state = hass.states.get("light.test")
-
     assert light_state.attributes.get("color_temp_kelvin") == 6451  # 155 mired
 
     async_fire_mqtt_message(hass, "test_light_rgb", '{"state":"ON", "color_temp":null}')
