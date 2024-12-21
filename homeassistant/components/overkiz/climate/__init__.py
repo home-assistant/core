@@ -7,14 +7,12 @@ from enum import StrEnum, unique
 from pyoverkiz.enums import Protocol
 from pyoverkiz.enums.ui import UIWidget
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import HomeAssistantOverkizData
-from ..const import DOMAIN
+from .. import OverkizDataConfigEntry
 from .atlantic_electrical_heater import AtlanticElectricalHeater
 from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
     AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint,
@@ -79,11 +77,11 @@ WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz climate from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     # Match devices based on the widget.
     entities_based_on_widget: list[Entity] = [
@@ -96,7 +94,7 @@ async def async_setup_entry(
     # ie Atlantic APC
     entities_based_on_widget_and_controllable: list[Entity] = [
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
-            device.controllable_name  # type: ignore[index]
+            device.controllable_name
         ](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY
