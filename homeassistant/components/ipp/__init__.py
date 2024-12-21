@@ -12,7 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BASE_PATH
+from .const import CONF_BASE_PATH, CONF_PROTO_LEGACY
 from .coordinator import IPPDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IPPConfigEntry) -> bool:
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         base_path=entry.data[CONF_BASE_PATH],
+        proto_legacy=entry.data[CONF_PROTO_LEGACY],
         tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         device_id=device_id,
