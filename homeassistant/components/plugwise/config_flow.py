@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Self
 
 from plugwise import Smile
@@ -40,6 +41,8 @@ from .const import (
     STRETCH_USERNAME,
     ZEROCONF_MAP,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 SMILE_RECONF_SCHEMA = vol.Schema(
     {
@@ -103,6 +106,9 @@ async def verify_connection(
     except UnsupportedDeviceError:
         errors[CONF_BASE] = "unsupported"
     except Exception:  # noqa: BLE001
+        _LOGGER.exception(
+            "Unknown exception while verifying connection with your Plugwise Smile"
+        )
         errors[CONF_BASE] = "unknown"
     return (None, errors)
 
