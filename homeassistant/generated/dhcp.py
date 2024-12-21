@@ -1120,6 +1120,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "B87424*",
     },
     {
+        "domain": "withings",
+        "macaddress": "0024E4*",
+    },
+    {
         "domain": "wiz",
         "registered_devices": True,
     },
