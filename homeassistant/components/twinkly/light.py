@@ -19,21 +19,14 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_ID,
-    CONF_MODEL,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TwinklyConfigEntry
 from .const import (
-    DATA_CLIENT,
-    DATA_DEVICE_INFO,
     DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
@@ -48,14 +41,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TwinklyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]
-    software_version = hass.data[DOMAIN][config_entry.entry_id][ATTR_SW_VERSION]
+    client = config_entry.runtime_data.client
+    device_info = config_entry.runtime_data.device_info
+    software_version = config_entry.runtime_data.sw_version
 
     entity = TwinklyLight(config_entry, client, device_info, software_version)
 
