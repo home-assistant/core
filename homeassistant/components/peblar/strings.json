@@ -75,7 +75,7 @@
       "cp_state": {
         "name": "State",
         "state": {
-          "charging": "[%key:common::action::charging%]",
+          "charging": "Charging",
           "error": "Error",
           "fault": "Fault",
           "invalid": "Invalid",
