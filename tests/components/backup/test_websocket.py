@@ -571,6 +571,7 @@ async def test_restore_local_agent(
     with (
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.write_text"),
+        patch("homeassistant.components.backup.manager.validate_password"),
     ):
         await client.send_json_auto_id(
             {
@@ -606,7 +607,11 @@ async def test_restore_remote_agent(
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch("pathlib.Path.write_text"), patch("pathlib.Path.open"):
+    with (
+        patch("pathlib.Path.write_text"),
+        patch("pathlib.Path.open"),
+        patch("homeassistant.components.backup.manager.validate_password"),
+    ):
         await client.send_json_auto_id(
             {
                 "type": "backup/restore",
@@ -616,6 +621,39 @@ async def test_restore_remote_agent(
         )
         assert await client.receive_json() == snapshot
     assert len(restart_calls) == snapshot
+
+
+async def test_restore_wrong_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test calling the restore command."""
+    await setup_backup_integration(
+        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    )
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.write_text"),
+        patch(
+            "homeassistant.components.backup.manager.validate_password",
+            return_value=False,
+        ),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+            }
+        )
+        assert await client.receive_json() == snapshot
+    assert len(restart_calls) == 0
 
 
 @pytest.mark.parametrize(
@@ -992,6 +1030,18 @@ async def test_config_update(
             "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": "someday",
         },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent", "test-agent"]},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"include_addons": ["my-addon", "my-addon"]},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"include_folders": ["media", "media"]},
+        },
     ],
 )
 async def test_config_update_errors(
@@ -1306,6 +1356,35 @@ async def test_config_schedule_logic(
                 "backup-4": MagicMock(
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            0,
+            [],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test.test-agent"]},
+                "retention": {"copies": 3, "days": None},
+                "schedule": "daily",
+            },
+            {
+                "backup-1": MagicMock(
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
             },

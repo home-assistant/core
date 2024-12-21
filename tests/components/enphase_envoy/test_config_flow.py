@@ -49,6 +49,7 @@ async def test_form(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy 1234",
@@ -80,6 +81,7 @@ async def test_user_no_serial_number(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy"
+    assert result["result"].unique_id is None
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy",
@@ -100,6 +102,8 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -131,6 +135,8 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -625,6 +631,88 @@ async def test_zero_conf_old_blank_entry(
     assert entry.title == "Envoy 1234"
 
 
+async def test_zero_conf_old_blank_entry_standard_title(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test re-using old blank entry was Envoy as title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_NAME: "unknown",
+        },
+        unique_id=None,
+        title="Envoy",
+    )
+    entry.add_to_hass(hass)
+    # test if shorthand title Envoy gets serial appended
+    hass.config_entries.async_update_entry(entry, title="Envoy")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id == "1234"
+    assert entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_old_blank_entry_user_title(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test re-using old blank entry with user title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_NAME: "unknown",
+        },
+        unique_id=None,
+        title="Envoy",
+    )
+    entry.add_to_hass(hass)
+    # set user title on entry
+    hass.config_entries.async_update_entry(entry, title="Envoy Backyard")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id == "1234"
+    assert entry.title == "Envoy Backyard"
+
+
 async def test_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -634,6 +722,8 @@ async def test_reauth(
     """Test we reauth auth."""
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

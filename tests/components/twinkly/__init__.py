@@ -7,6 +7,7 @@ from homeassistant.components.twinkly.const import DEV_NAME
 TEST_HOST = "test.twinkly.com"
 TEST_ID = "twinkly_test_device_id"
 TEST_UID = "4c8fccf5-e08a-4173-92d5-49bf479252a2"
+TEST_MAC = "aa:bb:cc:dd:ee:ff"
 TEST_NAME = "twinkly_test_device_name"
 TEST_NAME_ORIGINAL = "twinkly_test_original_device_name"  # the original (deprecated) name stored in the conf
 TEST_MODEL = "twinkly_test_device_model"
@@ -31,6 +32,7 @@ class ClientMock:
         self.device_info = {
             "uuid": self.id,
             "device_name": TEST_NAME,
+            "mac": TEST_MAC,
             "product_code": TEST_MODEL,
         }
 

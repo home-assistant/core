@@ -3,7 +3,7 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.2.2b3
+aiohasupervisor==0.2.2b5
 aiohttp-fast-zlib==0.2.0
 aiohttp==3.11.11
 aiohttp_cors==0.7.0
@@ -35,7 +35,7 @@ hass-nabucasa==0.87.0
 hassil==2.0.5
 home-assistant-bluetooth==1.13.0
 home-assistant-frontend==20241127.8
-home-assistant-intents==2024.12.9
+home-assistant-intents==2024.12.20
 httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
