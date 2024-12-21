@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import instance_id
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -57,6 +58,27 @@ async def test_agents_info(
         "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
     }
 
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agents": [{"agent_id": "backup.local"}]}
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+    }
+
 
 async def test_agents_list_backups(
     hass: HomeAssistant,
@@ -83,7 +105,7 @@ async def test_agents_list_backups(
             "name": "Kitchen sink syncer",
             "protected": False,
             "size": 1234,
-            "with_strategy_settings": False,
+            "with_automatic_settings": None,
         }
     ]
 
@@ -116,6 +138,10 @@ async def test_agents_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={
+            "instance_id": await instance_id.async_get(hass),
+            "with_automatic_settings": False,
+        },
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -162,7 +188,7 @@ async def test_agents_upload(
         "name": "Test",
         "protected": False,
         "size": 0.0,
-        "with_strategy_settings": False,
+        "with_automatic_settings": False,
     }
 
 

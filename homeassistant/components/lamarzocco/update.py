@@ -59,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Create update entities."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.firmware_coordinator
     async_add_entities(
         LaMarzoccoUpdateEntity(coordinator, description)
         for description in ENTITIES

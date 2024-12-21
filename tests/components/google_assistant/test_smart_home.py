@@ -1450,7 +1450,7 @@ async def test_sync_message_recovery(
         "light.bad_light",
         "on",
         {
-            "min_mireds": "badvalue",
+            "max_color_temp_kelvin": "badvalue",
             "supported_color_modes": ["color_temp"],
         },
     )

@@ -68,7 +68,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     entities: list[SwitchEntity] = []
     entities.extend(

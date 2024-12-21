@@ -47,6 +47,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
+    "strict_bytes": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",

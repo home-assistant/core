@@ -2,13 +2,23 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect to Heos",
-        "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
+        "title": "Connect to HEOS",
+        "description": "Please enter the host name or IP address of a HEOS-capable product to access your HEOS System.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your HEOS device."
+          "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure HEOS",
+        "description": "Change the host name or IP address of the HEOS-capable product used to access your HEOS System.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::heos::config::step::user::data_description::host%]"
         }
       }
     },
@@ -16,13 +26,15 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "services": {
     "sign_in": {
       "name": "Sign in",
-      "description": "Signs the controller in to a HEOS account.",
+      "description": "Signs in to a HEOS account.",
       "fields": {
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
@@ -36,7 +48,7 @@
     },
     "sign_out": {
       "name": "Sign out",
-      "description": "Signs the controller out of the HEOS account."
+      "description": "Signs out of the HEOS account."
     }
   }
 }

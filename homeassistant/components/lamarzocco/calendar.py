@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch entities and services."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     async_add_entities(
         LaMarzoccoCalendarEntity(coordinator, CALENDAR_KEY, wake_up_sleep_entry)
         for wake_up_sleep_entry in coordinator.device.config.wake_up_sleep_entries.values()

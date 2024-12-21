@@ -8,7 +8,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.backup import AddonInfo, AgentBackup, BackupAgent, Folder
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+
+from . import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,11 +19,34 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        LOGGER.info("No config entry found or entry is not loaded")
+        return []
     return [KitchenSinkBackupAgent("syncer")]
+
+
+@callback
+def async_register_backup_agents_listener(
+    hass: HomeAssistant,
+    *,
+    listener: Callable[[], None],
+    **kwargs: Any,
+) -> Callable[[], None]:
+    """Register a listener to be called when agents are added or removed."""
+    hass.data.setdefault(DATA_BACKUP_AGENT_LISTENERS, []).append(listener)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove the listener."""
+        hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+
+    return remove_listener
 
 
 class KitchenSinkBackupAgent(BackupAgent):
     """Kitchen sink backup agent."""
+
+    domain = DOMAIN
 
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
@@ -33,6 +58,7 @@ class KitchenSinkBackupAgent(BackupAgent):
                 backup_id="abc123",
                 database_included=False,
                 date="1970-01-01T00:00:00Z",
+                extra_metadata={},
                 folders=[Folder.MEDIA, Folder.SHARE],
                 homeassistant_included=True,
                 homeassistant_version="2024.12.0",

@@ -52,9 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         about = await client.get_about()
         version = create_version(about.version)
     except MealieAuthenticationError as error:
-        raise ConfigEntryAuthFailed from error
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
     except MealieError as error:
-        raise ConfigEntryNotReady(error) from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        ) from error
 
     if not version.valid:
         LOGGER.warning(

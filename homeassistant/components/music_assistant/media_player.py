@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from music_assistant_models.enums import (
     EventType,
@@ -102,14 +102,14 @@ ATTR_AUTO_PLAY = "auto_play"
 
 
 def catch_musicassistant_error[_R, **P](
-    func: Callable[..., Awaitable[_R]],
-) -> Callable[..., Coroutine[Any, Any, _R | None]]:
+    func: Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[MusicAssistantPlayer, P], Coroutine[Any, Any, _R]]:
     """Check and log commands to players."""
 
     @functools.wraps(func)
     async def wrapper(
         self: MusicAssistantPlayer, *args: P.args, **kwargs: P.kwargs
-    ) -> _R | None:
+    ) -> _R:
         """Catch Music Assistant errors and convert to Home Assistant error."""
         try:
             return await func(self, *args, **kwargs)
@@ -565,17 +565,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._attr_media_position = int(player.elapsed_time)
+            self._attr_media_position = int(player.elapsed_time or 0)
             self._attr_media_position_updated_at = (
                 utc_from_timestamp(player.elapsed_time_last_updated)
                 if player.elapsed_time_last_updated
                 else None
             )
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._prev_time = player.elapsed_time
+            self._prev_time = player.elapsed_time or 0
             return
 
         if queue is None:

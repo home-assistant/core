@@ -346,6 +346,10 @@ def _select_unused_attributes_ids(
         # We now break the query into groups of 100 and use a lambda_stmt to ensure
         # that the query is only cached once.
         #
+        # PostgreSQL also suffers from the same issue as older MariaDB with the distinct query
+        # when the database gets large because it doesn't support skip/loose index scan.
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # https://github.com/home-assistant/core/issues/126084
         groups = [iter(attributes_ids)] * 100
         for attr_ids in zip_longest(*groups, fillvalue=None):
             seen_ids |= {

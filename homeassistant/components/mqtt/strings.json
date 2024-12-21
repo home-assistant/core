@@ -101,6 +101,7 @@
       "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
@@ -114,7 +115,7 @@
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configurered together"
+      "invalid_inclusion": "The client certificate and private key must be configured together"
     }
   },
   "device_automation": {

@@ -615,6 +615,66 @@
           'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
           'value': 10,
         }),
+        dict({
+          '_id': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
+          'attribute': 'str',
+          'byHabitica': False,
+          'challenge': dict({
+          }),
+          'checklist': list([
+          ]),
+          'collapseChecklist': False,
+          'completed': False,
+          'createdAt': '2024-10-10T15:57:14.304Z',
+          'daysOfMonth': list([
+          ]),
+          'everyX': 1,
+          'frequency': 'monthly',
+          'group': dict({
+            'assignedUsers': list([
+            ]),
+            'completedBy': dict({
+            }),
+          }),
+          'history': list([
+          ]),
+          'id': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
+          'isDue': False,
+          'nextDue': list([
+            '2024-12-14T23:00:00.000Z',
+            '2025-01-18T23:00:00.000Z',
+            '2025-02-15T23:00:00.000Z',
+            '2025-03-15T23:00:00.000Z',
+            '2025-04-19T23:00:00.000Z',
+            '2025-05-17T23:00:00.000Z',
+          ]),
+          'notes': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+          'priority': 1,
+          'reminders': list([
+          ]),
+          'repeat': dict({
+            'f': False,
+            'm': False,
+            's': False,
+            'su': True,
+            't': False,
+            'th': False,
+            'w': False,
+          }),
+          'startDate': '2024-09-20T23:00:00.000Z',
+          'streak': 1,
+          'tags': list([
+          ]),
+          'text': 'Arbeite an einem kreativen Projekt',
+          'type': 'daily',
+          'updatedAt': '2024-11-27T23:47:29.986Z',
+          'userId': '5f359083-ef78-4af0-985a-0b2c6d05797c',
+          'value': -0.9215181434950852,
+          'weeksOfMonth': list([
+            3,
+          ]),
+          'yesterDaily': True,
+        }),
       ]),
       'user': dict({
         'api_user': 'test-api-user',
@@ -695,6 +755,7 @@
             '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
             'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
             '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+            '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
           ]),
           'habits': list([
             '1d147de6-5c02-4740-8e2f-71d3015a37f4',

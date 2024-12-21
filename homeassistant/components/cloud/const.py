@@ -18,6 +18,8 @@ DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
 DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
+EVENT_CLOUD_EVENT = "cloud_event"
+
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -88,3 +90,5 @@ DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
 
 STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
 TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"
+
+LOGIN_MFA_TIMEOUT = 60

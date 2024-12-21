@@ -19,6 +19,16 @@ def create_receiver_info(id: int) -> ReceiverInfo:
     )
 
 
+def create_connection(id: int) -> Mock:
+    """Create an mock connection object for testing."""
+    connection = Mock()
+    connection.host = f"host {id}"
+    connection.port = 0
+    connection.name = f"type {id}"
+    connection.identifier = f"id{id}"
+    return connection
+
+
 def create_config_entry_from_info(info: ReceiverInfo) -> MockConfigEntry:
     """Create a config entry from receiver info."""
     data = {CONF_HOST: info.host}

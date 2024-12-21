@@ -21,6 +21,7 @@ from .entity import NiceGOEntity
 DEVICE_CLASSES = {
     "WallStation": CoverDeviceClass.GARAGE,
     "Mms100": CoverDeviceClass.GATE,
+    "WallStation_ESP32": CoverDeviceClass.GARAGE,
 }
 PARALLEL_UPDATES = 1
 

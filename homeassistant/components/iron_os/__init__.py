@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from aiogithubapi import GitHubAPI
-from pynecil import Pynecil
+from pynecil import IronOSUpdate, Pynecil
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -29,6 +28,7 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.UPDATE,
 ]
@@ -48,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up IronOS firmware update coordinator."""
 
     session = async_get_clientsession(hass)
-    github = GitHubAPI(session=session)
+    github = IronOSUpdate(session)
 
     hass.data[IRON_OS_KEY] = IronOSFirmwareUpdateCoordinator(hass, github)
     await hass.data[IRON_OS_KEY].async_request_refresh()

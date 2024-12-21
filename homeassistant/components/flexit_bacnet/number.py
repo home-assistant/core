@@ -23,13 +23,36 @@ from . import FlexitCoordinator
 from .const import DOMAIN
 from .entity import FlexitEntity
 
+_MAX_FAN_SETPOINT = 100
+_MIN_FAN_SETPOINT = 30
+
 
 @dataclass(kw_only=True, frozen=True)
 class FlexitNumberEntityDescription(NumberEntityDescription):
     """Describes a Flexit number entity."""
 
     native_value_fn: Callable[[FlexitBACnet], float]
+    native_max_value_fn: Callable[[FlexitBACnet], int]
+    native_min_value_fn: Callable[[FlexitBACnet], int]
     set_native_value_fn: Callable[[FlexitBACnet], Callable[[int], Awaitable[None]]]
+
+
+# Setpoints for Away, Home and High are dependent of each other. Fireplace and Cooker Hood
+# have setpoints between 0 (MIN_FAN_SETPOINT) and 100 (MAX_FAN_SETPOINT).
+# See the table below for all the setpoints.
+#
+# | Mode        | Setpoint | Min                   | Max                   |
+# |:------------|----------|:----------------------|:----------------------|
+# | HOME        | Supply   | AWAY Supply setpoint  | 100                   |
+# | HOME        | Extract  | AWAY Extract setpoint | 100                   |
+# | AWAY        | Supply   | 30                    | HOME Supply setpoint  |
+# | AWAY        | Extract  | 30                    | HOME Extract setpoint |
+# | HIGH        | Supply   | HOME Supply setpoint  | 100                   |
+# | HIGH        | Extract  | HOME Extract setpoint | 100                   |
+# | COOKER_HOOD | Supply   | 30                    | 100                   |
+# | COOKER_HOOD | Extract  | 30                    | 100                   |
+# | FIREPLACE   | Supply   | 30                    | 100                   |
+# | FIREPLACE   | Extract  | 30                    | 100                   |
 
 
 NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
@@ -37,121 +60,121 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         key="away_extract_fan_setpoint",
         translation_key="away_extract_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_away,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="away_supply_fan_setpoint",
         translation_key="away_supply_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_away,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_extract_fan_setpoint",
         translation_key="cooker_hood_extract_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_cooker,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_supply_fan_setpoint",
         translation_key="cooker_hood_supply_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_cooker,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="fireplace_extract_fan_setpoint",
         translation_key="fireplace_extract_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_fire,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="fireplace_supply_fan_setpoint",
         translation_key="fireplace_supply_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_fire,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda _: _MIN_FAN_SETPOINT,
     ),
     FlexitNumberEntityDescription(
         key="high_extract_fan_setpoint",
         translation_key="high_extract_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_high,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_home),
     ),
     FlexitNumberEntityDescription(
         key="high_supply_fan_setpoint",
         translation_key="high_supply_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_high,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_home),
     ),
     FlexitNumberEntityDescription(
         key="home_extract_fan_setpoint",
         translation_key="home_extract_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_home,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda device: int(device.fan_setpoint_extract_air_away),
     ),
     FlexitNumberEntityDescription(
         key="home_supply_fan_setpoint",
         translation_key="home_supply_fan_setpoint",
         device_class=NumberDeviceClass.POWER_FACTOR,
-        native_min_value=0,
-        native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_home,
         native_unit_of_measurement=PERCENTAGE,
+        native_max_value_fn=lambda _: _MAX_FAN_SETPOINT,
+        native_min_value_fn=lambda device: int(device.fan_setpoint_supply_air_away),
     ),
 )
 
@@ -191,6 +214,16 @@ class FlexitNumber(FlexitEntity, NumberEntity):
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.native_value_fn(self.coordinator.device)
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the native max value of the number."""
+        return self.entity_description.native_max_value_fn(self.coordinator.device)
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the native min value of the number."""
+        return self.entity_description.native_min_value_fn(self.coordinator.device)
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

@@ -8,6 +8,7 @@ import tempfile
 from unittest.mock import ANY, patch
 import wave
 
+import hass_nabucasa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -1173,3 +1174,43 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             mock_async_converse.call_args_list[0].kwargs.get("language")
             == pipeline.language
         )
+
+
+async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream but the cloud authentication fails."""
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data():
+        yield b"audio"
+
+    with patch.object(
+        mock_stt_provider_entity,
+        "async_process_audio_stream",
+        side_effect=hass_nabucasa.auth.Unauthenticated,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert process_events(events) == snapshot
+    assert len(events) == 4  # run start, stt start, error, run end
+    assert events[2].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[2].data["code"] == "cloud-auth-failed"
