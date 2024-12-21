@@ -57,7 +57,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -109,24 +108,19 @@ async def test_availability(
     error: RokuError,
 ) -> None:
     """Test entity availability."""
-    now = dt_util.utcnow()
-    future = now + timedelta(minutes=1)
-
     mock_config_entry.add_to_hass(hass)
-    freezer.move_to(now)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    freezer.move_to(future)
+    freezer.tick(timedelta(minutes=1))
     mock_roku.update.side_effect = error
-    async_fire_time_changed(hass, future)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(MAIN_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    future += timedelta(minutes=1)
-    freezer.move_to(future)
+    freezer.tick(timedelta(minutes=1))
     mock_roku.update.side_effect = None
-    async_fire_time_changed(hass, future)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get(MAIN_ENTITY_ID).state == STATE_IDLE
 
