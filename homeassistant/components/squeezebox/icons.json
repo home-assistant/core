@@ -27,6 +27,15 @@
     },
     "call_query": {
       "service": "mdi:database"
+    },
+    "add_alarm": {
+      "service": "mdi:alarm-plus"
+    },
+    "update_alarm": {
+      "service": "mdi:alarm"
+    },
+    "delete_alarm": {
+      "service": "mdi:alarm-off"
     }
   }
 }
