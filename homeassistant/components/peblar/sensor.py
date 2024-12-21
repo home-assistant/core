@@ -15,10 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import PeblarConfigEntry
-from .entity import PeblarEntity
+from .const import DOMAIN
+from .coordinator import PeblarConfigEntry, PeblarMeterDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,7 +30,7 @@ class PeblarSensorDescription(SensorEntityDescription):
     value_fn: Callable[[PeblarMeter], int | None]
 
 
-SENSORS: tuple[PeblarSensorDescription, ...] = (
+DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
     PeblarSensorDescription(
         key="energy_total",
         device_class=SensorDeviceClass.ENERGY,
@@ -48,14 +50,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Peblar sensors based on a config entry."""
     async_add_entities(
-        PeblarSensorEntity(entry, description) for description in SENSORS
+        PeblarSensorEntity(entry, description) for description in DESCRIPTIONS
     )
 
 
-class PeblarSensorEntity(PeblarEntity, SensorEntity):
+class PeblarSensorEntity(
+    CoordinatorEntity[PeblarMeterDataUpdateCoordinator], SensorEntity
+):
     """Defines a Peblar sensor."""
 
     entity_description: PeblarSensorDescription
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -63,9 +69,14 @@ class PeblarSensorEntity(PeblarEntity, SensorEntity):
         description: PeblarSensorDescription,
     ) -> None:
         """Initialize the Peblar entity."""
-        super().__init__(entry)
+        super().__init__(entry.runtime_data.meter_coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
+            },
+        )
 
     @property
     def native_value(self) -> int | None:

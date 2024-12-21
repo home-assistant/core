@@ -45,7 +45,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (TimeoutError, ClientError):
                 errors[CONF_HOST] = "cannot_connect"
             else:
-                await self.async_set_unique_id(device_info[DEV_ID])
+                await self.async_set_unique_id(
+                    device_info[DEV_ID], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
 
                 return self._create_entry_from_device(device_info, host)
