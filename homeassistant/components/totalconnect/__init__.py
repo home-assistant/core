@@ -13,8 +13,12 @@ from .coordinator import TotalConnectDataUpdateCoordinator
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
 
+type TotalConnectConfigEntry = ConfigEntry[TotalConnectDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TotalConnectConfigEntry
+) -> bool:
     """Set up upon config entry in user interface."""
     conf = entry.data
     username = conf[CONF_USERNAME]
