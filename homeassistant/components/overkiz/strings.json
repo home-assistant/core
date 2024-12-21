@@ -27,8 +27,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "The username of your account.",
-          "password": "The password of your account."
+          "username": "The username of your cloud account (app).",
+          "password": "The password of your cloud account (app)."
         }
       },
       "local": {
@@ -41,8 +41,8 @@
         },
         "data_description": {
           "host": "The hostname or IP address of your Overkiz hub.",
-          "username": "The username of your account.",
-          "password": "The password of your account.",
+          "username": "The username of your cloud account (app).",
+          "password": "The password of your cloud account (app).",
           "verify_ssl": "Verify the SSL certificate. Select this only if you are connecting via the hostname."
         }
       }
