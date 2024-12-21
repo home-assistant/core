@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from peblar import PeblarMeter
+from peblar import PeblarMeter, PeblarUserConfiguration
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,18 +33,165 @@ from .coordinator import PeblarConfigEntry, PeblarMeterDataUpdateCoordinator
 class PeblarSensorDescription(SensorEntityDescription):
     """Describe an Peblar sensor."""
 
+    has_fn: Callable[[PeblarUserConfiguration], bool] = lambda _: True
     value_fn: Callable[[PeblarMeter], int | None]
 
 
 DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
     PeblarSensorDescription(
-        key="energy_total",
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases == 1,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda x: x.current_phase_1,
+    ),
+    PeblarSensorDescription(
+        key="current_phase_1",
+        translation_key="current_phase_1",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda x: x.current_phase_1,
+    ),
+    PeblarSensorDescription(
+        key="current_phase_2",
+        translation_key="current_phase_2",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda x: x.current_phase_2,
+    ),
+    PeblarSensorDescription(
+        key="current_phase_3",
+        translation_key="current_phase_3",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases == 3,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_fn=lambda x: x.current_phase_3,
+    ),
+    PeblarSensorDescription(
+        key="energy_session",
+        translation_key="energy_session",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda x: x.energy_session,
+    ),
+    PeblarSensorDescription(
+        key="energy_total",
+        translation_key="energy_total",
+        device_class=SensorDeviceClass.ENERGY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda x: x.energy_total,
+    ),
+    PeblarSensorDescription(
+        key="power_total",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.power_total,
+    ),
+    PeblarSensorDescription(
+        key="power_phase_1",
+        translation_key="power_phase_1",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.power_phase_1,
+    ),
+    PeblarSensorDescription(
+        key="power_phase_2",
+        translation_key="power_phase_2",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.power_phase_2,
+    ),
+    PeblarSensorDescription(
+        key="power_phase_3",
+        translation_key="power_phase_3",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases == 3,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.power_phase_3,
+    ),
+    PeblarSensorDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases == 1,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.voltage_phase_1,
+    ),
+    PeblarSensorDescription(
+        key="voltage_phase_1",
+        translation_key="voltage_phase_1",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.voltage_phase_1,
+    ),
+    PeblarSensorDescription(
+        key="voltage_phase_2",
+        translation_key="voltage_phase_2",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases >= 2,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.voltage_phase_2,
+    ),
+    PeblarSensorDescription(
+        key="voltage_phase_3",
+        translation_key="voltage_phase_3",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=lambda x: x.connected_phases == 3,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.voltage_phase_3,
     ),
 )
 
@@ -50,7 +203,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Peblar sensors based on a config entry."""
     async_add_entities(
-        PeblarSensorEntity(entry, description) for description in DESCRIPTIONS
+        PeblarSensorEntity(entry, description)
+        for description in DESCRIPTIONS
+        if description.has_fn(entry.runtime_data.user_configuraton_coordinator.data)
     )
 
 
