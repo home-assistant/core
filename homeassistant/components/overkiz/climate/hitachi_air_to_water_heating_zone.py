@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from pyoverkiz.enums import OverkizCommand, OverkizState
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import (
     PRESET_COMFORT,
@@ -18,27 +18,12 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ..const import DOMAIN
 from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
 
-MODBUS_YUTAKI_TARGET_MODE_STATE = "modbus:YutakiTargetModeState"
-MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1_STATE = (
-    "modbus:RoomAmbientTemperatureStatusZone1State"
-)
-MODBUS_THERMOSTAT_SETTING_STATUS_ZONE_1_STATE = (
-    "modbus:ThermostatSettingStatusZone1State"
-)
-MODBUS_AUTO_MANU_MODE_ZONE_1_STATE = "modbus:AutoManuModeZone1State"
-MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1_STATE = (
-    "modbus:ThermostatSettingControlZone1State"
-)
-
-HVAC_STATE_MANU = "manu"
-HVAC_STATE_AUTO = "auto"
-
 PRESET_STATE_ECO = "eco"
 PRESET_STATE_COMFORT = "comfort"
 
 OVERKIZ_TO_HVAC_MODE = {
-    HVAC_STATE_MANU: HVACMode.HEAT,
-    HVAC_STATE_AUTO: HVACMode.AUTO,
+    OverkizCommandParam.MANU: HVACMode.HEAT,
+    OverkizCommandParam.AUTO: HVACMode.AUTO,
 }
 
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
@@ -127,7 +112,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1, int(temperature)
