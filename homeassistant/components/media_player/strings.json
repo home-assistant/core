@@ -260,6 +260,20 @@
         }
       }
     },
+    "browse_media": {
+      "name": "Browse media",
+      "description": "Browse Media.",
+      "fields": {
+        "media_content_id": {
+          "name": "Content ID",
+          "description": "The ID of the content to browse. Platform dependent."
+        },
+        "media_content_type": {
+          "name": "Content type",
+          "description": "The type of the content to browse. Such as image, music, tv show, video, episode, channel, or playlist."
+        }
+      }
+    },
     "select_source": {
       "name": "Select source",
       "description": "Sends the media player the command to change input source.",
