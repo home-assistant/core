@@ -55,8 +55,7 @@ SUPPORTED_CORE_SENSORS = [
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.CLEANER_DELAY,
-        translation_key="circuit_delay",
-        translation_placeholders={"circuit": "Cleaner"},
+        translation_key="cleaner_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
@@ -68,15 +67,13 @@ SUPPORTED_CORE_SENSORS = [
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.POOL_DELAY,
-        translation_key="circuit_delay",
-        translation_placeholders={"circuit": "Pool"},
+        translation_key="pool_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.SPA_DELAY,
-        translation_key="circuit_delay",
-        translation_placeholders={"circuit": "Spa"},
+        translation_key="spa_delay",
     ),
 ]
 

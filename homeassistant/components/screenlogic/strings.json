@@ -88,8 +88,14 @@
       "active_alert": {
         "name": "Active alert"
       },
-      "circuit_delay": {
-        "name": "{circuit} delay"
+      "pool_delay": {
+        "name": "Pool delay"
+      },
+      "spa_delay": {
+        "name": "Spa delay"
+      },
+      "cleaner_delay": {
+        "name": "Cleaner delay"
       },
       "freeze_mode": {
         "name": "Freeze mode"
