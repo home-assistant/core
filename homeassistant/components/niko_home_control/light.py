@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from nhc.light import NHCLight
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -22,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import NikoHomeControlConfigEntry
+from . import NikoHomeControlConfigEntry, NikoHomeController
 from .const import DOMAIN
 
 # delete after 2025.7.0
@@ -84,34 +85,37 @@ async def async_setup_entry(
     """Set up the Niko Home Control light entry."""
     controller = entry.runtime_data
 
-    entities = []
-    for light in controller.lights:
-        entity = NikoHomeControlLight(light, controller, entry)
-        controller.register_callback(entity.async_update_callback)
-        entities.append(entity)
-    return async_add_entities(entities)
+    async_add_entities(
+        NikoHomeControlLight(light, controller, entry.entry_id)
+        for light in controller.lights
+    )
 
 
 class NikoHomeControlLight(LightEntity):
-    """Representation of an Niko Light."""
+    """Representation of a Niko Light."""
 
-    def __init__(self, action, controller, entry: NikoHomeControlConfigEntry) -> None:
+    def __init__(
+        self, action: NHCLight, controller: NikoHomeController, unique_id: str
+    ) -> None:
         """Set up the Niko Home Control light platform."""
         self._controller = controller
         self._action = action
-        self._attr_unique_id = f"{entry.entry_id}.niko_home_control_{action.id}"
+        self._attr_unique_id = f"{unique_id}-{action.id}"
         self._attr_name = action.name
         self._attr_is_on = action.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if action.type == 2:
+        if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    @property
-    def action_id(self):
-        """Return action id."""
-        return self._action.id
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        self.async_on_remove(
+            self._controller.register_callback(
+                self._action.id, self.async_update_callback
+            )
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -121,11 +125,10 @@ class NikoHomeControlLight(LightEntity):
         """Instruct the light to turn off."""
         self._action.turn_off()
 
-    async def async_update_callback(self, action_id: str, state) -> None:
+    async def async_update_callback(self, state: int) -> None:
         """Handle updates from the controller."""
-        if action_id == self._action.id:
-            self._action.update_state(state)
-            self._attr_is_on = state > 0
-            if brightness_supported(self.supported_color_modes):
-                self._attr_brightness = state * 2.55
-            self.async_write_ha_state()
+        self._action.update_state(state)
+        self._attr_is_on = state > 0
+        if brightness_supported(self.supported_color_modes):
+            self._attr_brightness = round(state * 2.55)
+        self.async_write_ha_state()
