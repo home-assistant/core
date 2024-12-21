@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
-from peblar import PeblarSystemInformation, PeblarMeter, PeblarVersions
+from peblar import PeblarMeter, PeblarSystemInformation, PeblarVersions
 import pytest
 
-from homeassistant.core import HomeAssistant
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
