@@ -22,13 +22,14 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
-    PeblarMeterDataUpdateCoordinator,
+    PeblarDataUpdateCoordinator,
     PeblarRuntimeData,
     PeblarUserConfigurationDataUpdateCoordinator,
     PeblarVersionDataUpdateCoordinator,
 )
 
 PLATFORMS = [
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.UPDATE,
@@ -57,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         ) from err
 
     # Setup the data coordinators
-    meter_coordinator = PeblarMeterDataUpdateCoordinator(hass, entry, api)
+    meter_coordinator = PeblarDataUpdateCoordinator(hass, entry, api)
     user_configuration_coordinator = PeblarUserConfigurationDataUpdateCoordinator(
         hass, entry, peblar
     )
@@ -70,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
 
     # Store the runtime data
     entry.runtime_data = PeblarRuntimeData(
-        meter_coordinator=meter_coordinator,
+        data_coordinator=meter_coordinator,
         system_information=system_information,
         user_configuraton_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
