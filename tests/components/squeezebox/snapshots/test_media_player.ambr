@@ -11,7 +11,7 @@
       ),
     }),
     'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'entry_type': None,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
