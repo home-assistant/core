@@ -10,7 +10,16 @@ import json
 from pathlib import Path
 import tarfile
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, mock_open, patch
+from unittest.mock import (
+    ANY,
+    DEFAULT,
+    AsyncMock,
+    MagicMock,
+    Mock,
+    call,
+    mock_open,
+    patch,
+)
 
 import pytest
 
@@ -2031,6 +2040,188 @@ async def test_receive_backup_read_tar_error(
 
     assert resp.status == 500
     assert read_backup.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    (
+        "open_call_count",
+        "open_exception",
+        "read_call_count",
+        "read_exception",
+        "close_call_count",
+        "close_exception",
+        "unlink_call_count",
+        "unlink_exception",
+        "final_state",
+        "response_status",
+    ),
+    [
+        (
+            2,
+            [DEFAULT, OSError("Boom!")],
+            0,
+            None,
+            1,
+            [DEFAULT, DEFAULT],
+            1,
+            None,
+            ReceiveBackupState.COMPLETED,
+            201,
+        ),
+        (
+            2,
+            [DEFAULT, DEFAULT],
+            1,
+            OSError("Boom!"),
+            2,
+            [DEFAULT, DEFAULT],
+            1,
+            None,
+            ReceiveBackupState.COMPLETED,
+            201,
+        ),
+        (
+            2,
+            [DEFAULT, DEFAULT],
+            1,
+            None,
+            2,
+            [DEFAULT, OSError("Boom!")],
+            1,
+            None,
+            ReceiveBackupState.COMPLETED,
+            201,
+        ),
+        (
+            2,
+            [DEFAULT, DEFAULT],
+            1,
+            None,
+            2,
+            [DEFAULT, DEFAULT],
+            1,
+            OSError("Boom!"),
+            ReceiveBackupState.FAILED,
+            500,
+        ),
+    ],
+)
+async def test_receive_backup_file_read_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    path_glob: MagicMock,
+    open_call_count: int,
+    open_exception: list[Exception | None],
+    read_call_count: int,
+    read_exception: Exception | None,
+    close_call_count: int,
+    close_exception: list[Exception | None],
+    unlink_call_count: int,
+    unlink_exception: Exception | None,
+    final_state: ReceiveBackupState,
+    response_status: int,
+) -> None:
+    """Test file read error during backup receive."""
+    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
+    remote_agent = BackupAgentTest("remote", backups=[])
+    with patch(
+        "homeassistant.components.backup.backup.async_get_backup_agents"
+    ) as core_get_backup_agents:
+        core_get_backup_agents.return_value = [local_agent]
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        await setup_backup_platform(
+            hass,
+            domain="test",
+            platform=Mock(
+                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+                spec_set=BackupAgentPlatformProtocol,
+            ),
+        )
+
+    client = await hass_client()
+    ws_client = await hass_ws_client(hass)
+
+    path_glob.return_value = []
+
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+    assert result["result"] == {
+        "backups": [],
+        "agent_errors": {},
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+    }
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
+
+    open_mock.side_effect = open_exception
+    open_mock.return_value.read.side_effect = read_exception
+    open_mock.return_value.close.side_effect = close_exception
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch("pathlib.Path.unlink", side_effect=unlink_exception) as unlink_mock,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=test.remote",
+            data={"file": StringIO(upload_data)},
+        )
+        await hass.async_block_till_done()
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": None,
+        "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": ReceiveBackupStage.RECEIVE_FILE,
+        "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
+        "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": None,
+        "state": final_state,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    assert resp.status == response_status
+    assert open_mock.call_count == open_call_count
+    assert open_mock.return_value.read.call_count == read_call_count
+    assert open_mock.return_value.close.call_count == close_call_count
+    assert unlink_mock.call_count == unlink_call_count
 
 
 @pytest.mark.parametrize(
