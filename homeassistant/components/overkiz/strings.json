@@ -43,7 +43,7 @@
           "host": "The hostname or IP address of your Overkiz hub.",
           "username": "The username of your account.",
           "password": "The password of your account.",
-          "verify_ssl": "Only select this if you connect via the hostname."
+          "verify_ssl": "Verify the SSL certificate. Select this only if you are connecting via the hostname."
         }
       }
     },
