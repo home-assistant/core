@@ -53,10 +53,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up lawn mower platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
-    )
 
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            [AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in mower_ids]
+        )
+
+    _async_add_new_devices(set(coordinator.data))
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         "override_schedule",
