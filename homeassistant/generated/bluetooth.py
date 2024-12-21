@@ -305,6 +305,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
     },
     {
+        "connectable": True,
+        "domain": "hue_ble",
+        "service_data_uuid": "0000fe0f-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "ibeacon",
         "manufacturer_data_start": [
             2,
