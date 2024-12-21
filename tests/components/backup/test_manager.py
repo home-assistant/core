@@ -1429,8 +1429,12 @@ async def test_receive_backup_busy_manager(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    create_backup: AsyncMock,
 ) -> None:
     """Test receive backup with a busy manager."""
+    new_backup = NewBackup(backup_job_id="time-123")
+    backup_task: asyncio.Future[WrittenBackup] = asyncio.Future()
+    create_backup.return_value = (new_backup, backup_task)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
@@ -1445,24 +1449,18 @@ async def test_receive_backup_busy_manager(
     result = await ws_client.receive_json()
     assert result["success"] is True
 
-    new_backup = NewBackup(backup_job_id="time-123")
-    backup_task: asyncio.Future[WrittenBackup] = asyncio.Future()
-    with patch(
-        "homeassistant.components.backup.manager.CoreBackupReaderWriter.async_create_backup",
-        return_value=(new_backup, backup_task),
-    ) as create_backup:
-        await ws_client.send_json_auto_id(
-            {"type": "backup/generate", "agent_ids": ["backup.local"]}
-        )
-        result = await ws_client.receive_json()
-        assert result["event"] == {
-            "manager_state": "create_backup",
-            "stage": None,
-            "state": "in_progress",
-        }
-        result = await ws_client.receive_json()
-        assert result["success"] is True
-        assert result["result"] == {"backup_job_id": "time-123"}
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": ["backup.local"]}
+    )
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": "create_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {"backup_job_id": "time-123"}
 
     assert create_backup.call_count == 1
 
