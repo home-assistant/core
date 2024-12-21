@@ -5,7 +5,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from peblar import Peblar, PeblarApi, PeblarError, PeblarMeter, PeblarVersions
+from peblar import (
+    Peblar,
+    PeblarApi,
+    PeblarError,
+    PeblarMeter,
+    PeblarUserConfiguration,
+    PeblarVersions,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,8 +26,9 @@ from .const import LOGGER
 class PeblarRuntimeData:
     """Class to hold runtime data."""
 
-    system_information: PeblarSystemInformation
     meter_coordinator: PeblarMeterDataUpdateCoordinator
+    system_information: PeblarSystemInformation
+    user_configuraton_coordinator: PeblarUserConfigurationDataUpdateCoordinator
     version_coordinator: PeblarVersionDataUpdateCoordinator
 
 
@@ -84,5 +92,31 @@ class PeblarMeterDataUpdateCoordinator(DataUpdateCoordinator[PeblarMeter]):
         """Fetch data from the Peblar device."""
         try:
             return await self.api.meter()
+        except PeblarError as err:
+            raise UpdateFailed(err) from err
+
+
+class PeblarUserConfigurationDataUpdateCoordinator(
+    DataUpdateCoordinator[PeblarUserConfiguration]
+):
+    """Class to manage fetching Peblar user configuration data."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: PeblarConfigEntry, peblar: Peblar
+    ) -> None:
+        """Initialize the coordinator."""
+        self.peblar = peblar
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"Peblar {entry.title} user configuration",
+            update_interval=timedelta(minutes=5),
+        )
+
+    async def _async_update_data(self) -> PeblarUserConfiguration:
+        """Fetch data from the Peblar device."""
+        try:
+            return await self.peblar.user_configuration()
         except PeblarError as err:
             raise UpdateFailed(err) from err

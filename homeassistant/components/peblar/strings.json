@@ -33,6 +33,53 @@
     }
   },
   "entity": {
+    "select": {
+      "smart_charging": {
+        "name": "Smart charging",
+        "state": {
+          "default": "Default",
+          "fast_solar": "Fast solar",
+          "pure_solar": "Pure solar",
+          "scheduled": "Scheduled",
+          "smart_solar": "Smart solar"
+        }
+      }
+    },
+    "sensor": {
+      "current_phase_1": {
+        "name": "Current phase 1"
+      },
+      "current_phase_2": {
+        "name": "Current phase 2"
+      },
+      "current_phase_3": {
+        "name": "Current phase 3"
+      },
+      "energy_session": {
+        "name": "Session energy"
+      },
+      "energy_total": {
+        "name": "Lifetime energy"
+      },
+      "power_phase_1": {
+        "name": "Power phase 1"
+      },
+      "power_phase_2": {
+        "name": "Power phase 2"
+      },
+      "power_phase_3": {
+        "name": "Power phase 3"
+      },
+      "voltage_phase_1": {
+        "name": "Voltage phase 1"
+      },
+      "voltage_phase_2": {
+        "name": "Voltage phase 2"
+      },
+      "voltage_phase_3": {
+        "name": "Voltage phase 3"
+      }
+    },
     "update": {
       "customization": {
         "name": "Customization"
