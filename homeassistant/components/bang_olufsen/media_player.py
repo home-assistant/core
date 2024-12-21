@@ -74,6 +74,8 @@ from .const import (
     BANG_OLUFSEN_REPEAT_FROM_HA,
     BANG_OLUFSEN_REPEAT_TO_HA,
     BANG_OLUFSEN_STATES,
+    BEOLINK_JOIN_SOURCES,
+    BEOLINK_JOIN_SOURCES_TO_UPPER,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
     DOMAIN,
@@ -85,6 +87,8 @@ from .const import (
 )
 from .entity import BangOlufsenEntity
 from .util import get_serial_number_from_jid
+
+PARALLEL_UPDATES = 0
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -133,7 +137,10 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         name="beolink_join",
-        schema={vol.Optional("beolink_jid"): jid_regex},
+        schema={
+            vol.Optional("beolink_jid"): jid_regex,
+            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
+        },
         func="async_beolink_join",
     )
 
@@ -180,7 +187,6 @@ async def async_setup_entry(
 class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     """Representation of a media player."""
 
-    _attr_icon = "mdi:speaker-wireless"
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
@@ -984,12 +990,23 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self.async_beolink_leave()
 
     # Custom actions:
-    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
+    async def async_beolink_join(
+        self, beolink_jid: str | None = None, source_id: str | None = None
+    ) -> None:
         """Join a Beolink multi-room experience."""
+        # Touch to join
         if beolink_jid is None:
             await self._client.join_latest_beolink_experience()
-        else:
+        # Join a peer
+        elif beolink_jid and source_id is None:
             await self._client.join_beolink_peer(jid=beolink_jid)
+        # Join a peer and select specific source
+        elif beolink_jid and source_id:
+            # Beolink Converter NL/ML sources need to be in upper case
+            if source_id in BEOLINK_JOIN_SOURCES_TO_UPPER:
+                source_id = source_id.upper()
+
+            await self._client.join_beolink_peer(jid=beolink_jid, source=source_id)
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False

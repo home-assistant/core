@@ -61,10 +61,6 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.flume.config.error.invalid_auth"],
-)
 @pytest.mark.usefixtures("access_token")
 async def test_form_invalid_auth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we handle invalid auth."""
@@ -93,10 +89,6 @@ async def test_form_invalid_auth(hass: HomeAssistant, requests_mock: Mocker) -> 
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.flume.config.error.cannot_connect"],
-)
 @pytest.mark.usefixtures("access_token", "device_list_timeout")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -118,16 +110,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    [
-        [
-            "component.flume.config.abort.reauth_successful",
-            "component.flume.config.error.cannot_connect",
-            "component.flume.config.error.invalid_auth",
-        ]
-    ],
-)
 @pytest.mark.usefixtures("access_token")
 async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we can reauth."""
@@ -208,10 +190,6 @@ async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     assert result4["reason"] == "reauth_successful"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.flume.config.error.cannot_connect"],
-)
 @pytest.mark.usefixtures("access_token")
 async def test_form_no_devices(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test a device list response that contains no values will raise an error."""

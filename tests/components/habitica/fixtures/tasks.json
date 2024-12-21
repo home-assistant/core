@@ -345,7 +345,12 @@
       "daysOfMonth": [],
       "weeksOfMonth": [],
       "checklist": [],
-      "reminders": [],
+      "reminders": [
+        {
+          "id": "1491d640-6b21-4d0c-8940-0b7aa61c8836",
+          "time": "2024-09-22T20:00:00.0000Z"
+        }
+      ],
       "createdAt": "2024-07-07T17:51:53.266Z",
       "updatedAt": "2024-09-21T22:51:41.756Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
@@ -527,6 +532,56 @@
       "updatedAt": "2024-07-07T17:51:53.266Z",
       "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "id": "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+    },
+    {
+      "repeat": {
+        "m": false,
+        "t": false,
+        "w": false,
+        "th": false,
+        "f": false,
+        "s": false,
+        "su": true
+      },
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef",
+      "frequency": "monthly",
+      "everyX": 1,
+      "streak": 1,
+      "nextDue": [
+        "2024-12-14T23:00:00.000Z",
+        "2025-01-18T23:00:00.000Z",
+        "2025-02-15T23:00:00.000Z",
+        "2025-03-15T23:00:00.000Z",
+        "2025-04-19T23:00:00.000Z",
+        "2025-05-17T23:00:00.000Z"
+      ],
+      "yesterDaily": true,
+      "history": [],
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "Arbeite an einem kreativen Projekt",
+      "notes": "Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!",
+      "tags": [],
+      "value": -0.9215181434950852,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "startDate": "2024-09-20T23:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [3],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-10-10T15:57:14.304Z",
+      "updatedAt": "2024-11-27T23:47:29.986Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "isDue": false,
+      "id": "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
     }
   ],
   "notifications": [

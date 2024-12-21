@@ -6,7 +6,14 @@ from functools import partial
 import logging
 
 import pypck
-from pypck.connection import PchkConnectionManager
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionManager,
+    PchkConnectionRefusedError,
+    PchkLcnNotConnectedError,
+    PchkLicenseError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,7 +27,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ADD_ENTITIES_CALLBACKS,
@@ -30,6 +39,7 @@ from .const import (
     CONF_SK_NUM_TRIES,
     CONF_TRANSITION,
     CONNECTION,
+    DEVICE_CONNECTIONS,
     DOMAIN,
     PLATFORMS,
 )
@@ -41,15 +51,26 @@ from .helpers import (
     register_lcn_address_devices,
     register_lcn_host_device,
 )
-from .services import SERVICES
+from .services import register_services
 from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the LCN component."""
+    hass.data.setdefault(DOMAIN, {})
+
+    await register_services(hass)
+    await register_panel_and_ws_api(hass)
+
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
 
@@ -68,30 +89,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         settings=settings,
         connection_id=config_entry.entry_id,
     )
+
     try:
         # establish connection to PCHK server
         await lcn_connection.async_connect(timeout=15)
-    except pypck.connection.PchkAuthenticationError:
-        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
-        return False
-    except pypck.connection.PchkLicenseError:
-        _LOGGER.warning(
-            (
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required"
-            ),
-            config_entry.title,
-        )
-        return False
-    except TimeoutError:
-        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
-        return False
+    except (
+        PchkAuthenticationError,
+        PchkLicenseError,
+        PchkConnectionRefusedError,
+        PchkConnectionFailedError,
+        PchkLcnNotConnectedError,
+    ) as ex:
+        await lcn_connection.async_close()
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {config_entry.title}: {ex}"
+        ) from ex
 
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
+        DEVICE_CONNECTIONS: {},
         ADD_ENTITIES_CALLBACKS: {},
     }
+
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
 
@@ -107,16 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     input_received = partial(
         async_host_input_received, hass, config_entry, device_registry
     )
+
     lcn_connection.register_for_inputs(input_received)
-
-    # register service calls
-    for service_name, service in SERVICES:
-        if not hass.services.has_service(DOMAIN, service_name):
-            hass.services.async_register(
-                DOMAIN, service_name, service(hass).async_call_service, service.schema
-            )
-
-    await register_panel_and_ws_api(hass)
 
     return True
 
@@ -167,11 +179,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok and config_entry.entry_id in hass.data[DOMAIN]:
         host = hass.data[DOMAIN].pop(config_entry.entry_id)
         await host[CONNECTION].async_close()
-
-    # unregister service calls
-    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
-        for service_name, _ in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
 

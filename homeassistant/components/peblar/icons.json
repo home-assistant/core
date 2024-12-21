@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "select": {
+      "smart_charging": {
+        "default": "mdi:lightning-bolt",
+        "state": {
+          "fast_solar": "mdi:solar-power",
+          "pure_solar": "mdi:solar-power-variant",
+          "scheduled": "mdi:calendar-clock",
+          "smart_solar": "mdi:solar-power"
+        }
+      }
+    },
+    "update": {
+      "customization": {
+        "default": "mdi:palette"
+      }
+    }
+  }
+}

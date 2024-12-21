@@ -11,7 +11,12 @@ from typing import Any, cast
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_NAMES, MODEL_VALVE
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+    RpcCallError,
+)
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from propcache import cached_property
 
@@ -173,7 +178,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         try:
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             LOGGER.debug(
                 "Error connecting to Shelly device %s, error: %r", self.name, err
             )
@@ -450,7 +455,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
             await self.device.update_shelly()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()

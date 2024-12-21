@@ -47,6 +47,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_project_file_process)
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
+    websocket_api.async_register_command(hass, ws_group_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
     websocket_api.async_register_command(hass, ws_validate_entity)
@@ -284,6 +285,27 @@ def ws_group_monitor_info(
             "project_loaded": knx.project.loaded,
             "recent_telegrams": recent_telegrams,
         },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/group_telegrams",
+    }
+)
+@provide_knx
+@callback
+def ws_group_telegrams(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get group telegrams command."""
+    connection.send_result(
+        msg["id"],
+        knx.telegrams.last_ga_telegrams,
     )
 
 

@@ -5,37 +5,37 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import PureAQI, SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo sensor."""
 
-    state1 = hass.states.get("sensor.hallway_motion_sensor_battery_voltage")
-    state2 = hass.states.get("sensor.kitchen_pure_aqi")
-    state3 = hass.states.get("sensor.kitchen_pure_sensitivity")
-    state4 = hass.states.get("sensor.hallway_climate_react_low_temperature_threshold")
-    assert state1.state == "3000"
-    assert state2.state == "good"
-    assert state3.state == "n"
-    assert state4.state == "0.0"
-    assert state2.attributes == snapshot
-    assert state4.attributes == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pm25_pure", PureAQI(2))
 

@@ -1,12 +1,14 @@
 """Fixtures for Palazzetti integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from pypalazzetti.temperature import TemperatureDefinition, TemperatureDescriptionKey
 import pytest
 
 from homeassistant.components.palazzetti.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -50,18 +52,33 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.name = "Stove"
         mock_client.sw_version = "0.0.0"
         mock_client.hw_version = "1.1.1"
+        mock_client.to_dict.return_value = {
+            "host": "XXXXXXXXXX",
+            "connected": True,
+            "properties": {},
+            "attributes": {},
+        }
         mock_client.fan_speed_min = 1
         mock_client.fan_speed_max = 5
         mock_client.has_fan_silent = True
         mock_client.has_fan_high = True
         mock_client.has_fan_auto = True
         mock_client.has_on_off_switch = True
+        mock_client.has_pellet_level = False
         mock_client.connected = True
+        mock_client.status = 6
         mock_client.is_heating = True
         mock_client.room_temperature = 18
+        mock_client.T1 = 21.5
+        mock_client.T2 = 25.1
+        mock_client.T3 = 45
+        mock_client.T4 = 0
+        mock_client.T5 = 0
         mock_client.target_temperature = 21
         mock_client.target_temperature_min = 5
         mock_client.target_temperature_max = 50
+        mock_client.pellet_quantity = 1248
+        mock_client.pellet_level = 0
         mock_client.fan_speed = 3
         mock_client.connect.return_value = True
         mock_client.update_state.return_value = True
@@ -71,4 +88,50 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.set_fan_silent.return_value = True
         mock_client.set_fan_high.return_value = True
         mock_client.set_fan_auto.return_value = True
+        mock_client.set_power_mode.return_value = True
+        mock_client.power_mode = 3
+        mock_client.list_temperatures.return_value = [
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.ROOM_TEMP,
+                state_property="T1",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.RETURN_WATER_TEMP,
+                state_property="T4",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.TANK_WATER_TEMP,
+                state_property="T5",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.WOOD_COMBUSTION_TEMP,
+                state_property="T3",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.AIR_OUTLET_TEMP,
+                state_property="T2",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.T1_HYDRO_TEMP,
+                state_property="T1",
+            ),
+            TemperatureDefinition(
+                description_key=TemperatureDescriptionKey.T2_HYDRO_TEMP,
+                state_property="T2",
+            ),
+        ]
         yield mock_client
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_palazzetti_client: MagicMock,
+) -> MockConfigEntry:
+    """Set up the Palazzetti integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry

@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -21,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_COUNTER_ID, DOMAIN
-from .coordinator import SuezWaterCoordinator, SuezWaterData
+from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,11 +52,11 @@ SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SuezWaterConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     counter_id = entry.data[CONF_COUNTER_ID]
 
     async_add_entities(

@@ -27,7 +27,6 @@ from .common import (
     TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
     NestTestConfig,
-    PlatformSetup,
 )
 
 from tests.common import MockConfigEntry
@@ -350,11 +349,11 @@ def mock_pubsub_api_responses(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_app_credentials(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Check full flow."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -389,12 +388,8 @@ async def test_app_credentials(
     ("sdm_managed_topic", "device_access_project_id", "cloud_project_id"),
     [(True, "new-project-id", "new-cloud-project-id")],
 )
-async def test_config_flow_restart(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
-) -> None:
+async def test_config_flow_restart(hass: HomeAssistant, oauth, subscriber) -> None:
     """Check with auth implementation is re-initialized when aborting the flow."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -447,11 +442,11 @@ async def test_config_flow_restart(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_flow_wrong_project_id(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Check the case where the wrong project ids are entered."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -506,12 +501,9 @@ async def test_config_flow_wrong_project_id(
 async def test_config_flow_pubsub_configuration_error(
     hass: HomeAssistant,
     oauth,
-    setup_platform,
     mock_subscriber,
 ) -> None:
     """Check full flow fails with configuration error."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -554,11 +546,9 @@ async def test_config_flow_pubsub_configuration_error(
     [(True, HTTPStatus.INTERNAL_SERVER_ERROR)],
 )
 async def test_config_flow_pubsub_subscriber_error(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+    hass: HomeAssistant, oauth, mock_subscriber
 ) -> None:
     """Check full flow with a subscriber error."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -707,11 +697,9 @@ async def test_reauth_multiple_config_entries(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_pubsub_subscription_strip_whitespace(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant, oauth, subscriber
 ) -> None:
     """Check that project id has whitespace stripped on entry."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -742,11 +730,9 @@ async def test_pubsub_subscription_strip_whitespace(
     [(True, HTTPStatus.UNAUTHORIZED)],
 )
 async def test_pubsub_subscription_auth_failure(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+    hass: HomeAssistant, oauth, mock_subscriber
 ) -> None:
     """Check flow that creates a pub/sub subscription."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -819,7 +805,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_entry_title_from_home(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
+    hass: HomeAssistant, oauth, subscriber
 ) -> None:
     """Test that the Google Home name is used for the config entry title."""
 
@@ -836,8 +822,6 @@ async def test_config_entry_title_from_home(
             }
         )
     )
-
-    await setup_platform()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -864,7 +848,7 @@ async def test_config_entry_title_from_home(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_entry_title_multiple_homes(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
+    hass: HomeAssistant, oauth, subscriber
 ) -> None:
     """Test handling of multiple Google Homes authorized."""
 
@@ -894,8 +878,6 @@ async def test_config_entry_title_multiple_homes(
         )
     )
 
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -911,11 +893,9 @@ async def test_config_entry_title_multiple_homes(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_title_failure_fallback(
-    hass: HomeAssistant, oauth, setup_platform, mock_subscriber
+    hass: HomeAssistant, oauth, mock_subscriber
 ) -> None:
     """Test exception handling when determining the structure names."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -943,9 +923,7 @@ async def test_title_failure_fallback(
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
-async def test_structure_missing_trait(
-    hass: HomeAssistant, oauth, setup_platform, subscriber
-) -> None:
+async def test_structure_missing_trait(hass: HomeAssistant, oauth, subscriber) -> None:
     """Test handling the case where a structure has no name set."""
 
     device_manager = await subscriber.async_get_device_manager()
@@ -958,8 +936,6 @@ async def test_structure_missing_trait(
             }
         )
     )
-
-    await setup_platform()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -996,11 +972,11 @@ async def test_dhcp_discovery(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_dhcp_discovery_with_creds(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Exercise discovery dhcp with no config present (can't run)."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
@@ -1054,13 +1030,10 @@ async def test_token_error(
     hass: HomeAssistant,
     oauth: OAuthFixture,
     subscriber: FakeSubscriber,
-    setup_platform: PlatformSetup,
     status_code: HTTPStatus,
     error_reason: str,
 ) -> None:
     """Check full flow."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1090,11 +1063,11 @@ async def test_token_error(
     ],
 )
 async def test_existing_topic_and_subscription(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1129,11 +1102,11 @@ async def test_existing_topic_and_subscription(
 
 
 async def test_no_eligible_topics(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Test the case where there are no eligible pub/sub topics."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1153,11 +1126,11 @@ async def test_no_eligible_topics(
     ],
 )
 async def test_list_topics_failure(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1177,11 +1150,11 @@ async def test_list_topics_failure(
     ],
 )
 async def test_list_subscriptions_failure(
-    hass: HomeAssistant, oauth, subscriber, setup_platform
+    hass: HomeAssistant,
+    oauth,
+    subscriber,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
-    await setup_platform()
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

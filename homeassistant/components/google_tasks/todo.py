@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -11,17 +11,15 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .api import AsyncConfigEntryAuth
-from .const import DOMAIN
 from .coordinator import TaskUpdateCoordinator
+from .types import GoogleTasksConfigEntry
 
-SCAN_INTERVAL = timedelta(minutes=15)
+PARALLEL_UPDATES = 0
 
 TODO_STATUS_MAP = {
     "needsAction": TodoItemStatus.NEEDS_ACTION,
@@ -39,8 +37,10 @@ def _convert_todo_item(item: TodoItem) -> dict[str, str | None]:
     else:
         result["status"] = TodoItemStatus.NEEDS_ACTION
     if (due := item.due) is not None:
-        # due API field is a timestamp string, but with only date resolution
-        result["due"] = dt_util.start_of_local_day(due).isoformat()
+        # due API field is a timestamp string, but with only date resolution.
+        # The time portion of the date is always discarded by the API, so we
+        # always set to UTC.
+        result["due"] = dt_util.start_of_local_day(due).replace(tzinfo=UTC).isoformat()
     else:
         result["due"] = None
     result["notes"] = item.description
@@ -51,6 +51,8 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
     """Convert tasks API items into a TodoItem."""
     due: date | None = None
     if (due_str := item.get("due")) is not None:
+        # Due dates are returned always in UTC so we only need to
+        # parse the date portion which will be interpreted as a a local date.
         due = datetime.fromisoformat(due_str).date()
     return TodoItem(
         summary=item["title"],
@@ -65,22 +67,21 @@ def _convert_api_item(item: dict[str, str]) -> TodoItem:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GoogleTasksConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Google Tasks todo platform."""
-    api: AsyncConfigEntryAuth = hass.data[DOMAIN][entry.entry_id]
-    task_lists = await api.list_task_lists()
     async_add_entities(
         (
             GoogleTaskTodoListEntity(
-                TaskUpdateCoordinator(hass, api, task_list["id"]),
-                task_list["title"],
+                coordinator,
+                coordinator.task_list_title,
                 entry.entry_id,
-                task_list["id"],
+                coordinator.task_list_id,
             )
-            for task_list in task_lists
+            for coordinator in entry.runtime_data
         ),
-        True,
     )
 
 
@@ -115,8 +116,6 @@ class GoogleTaskTodoListEntity(
     @property
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of To-do items."""
-        if self.coordinator.data is None:
-            return None
         return [_convert_api_item(item) for item in _order_tasks(self.coordinator.data)]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:

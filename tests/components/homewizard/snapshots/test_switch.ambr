@@ -41,7 +41,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -53,7 +53,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -63,7 +63,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -123,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -135,7 +135,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -145,7 +145,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -206,7 +206,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
@@ -218,7 +218,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -228,7 +228,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -288,7 +288,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -300,7 +300,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -310,7 +310,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -370,7 +370,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': 'aabbccddeeff_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -382,7 +382,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -392,7 +392,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -453,7 +453,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'aabbccddeeff_power_on',
+    'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
     'unit_of_measurement': None,
   })
 # ---
@@ -465,7 +465,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -475,7 +475,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -535,7 +535,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -547,7 +547,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -557,7 +557,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -617,7 +617,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
-    'unique_id': 'aabbccddeeff_switch_lock',
+    'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -629,7 +629,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -639,7 +639,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -699,7 +699,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -711,7 +711,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -721,7 +721,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -781,7 +781,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -793,7 +793,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -803,7 +803,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -863,7 +863,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
-    'unique_id': 'aabbccddeeff_cloud_connection',
+    'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
     'unit_of_measurement': None,
   })
 # ---
@@ -875,7 +875,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -885,7 +885,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,

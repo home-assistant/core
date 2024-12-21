@@ -222,6 +222,9 @@
       "hdr": {
         "default": "mdi:hdr"
       },
+      "binning_mode": {
+        "default": "mdi:code-block-brackets"
+      },
       "hub_alarm_ringtone": {
         "default": "mdi:music-note",
         "state": {
@@ -263,6 +266,18 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "main_frame_rate": {
+        "default": "mdi:play-speed"
+      },
+      "sub_frame_rate": {
+        "default": "mdi:play-speed"
+      },
+      "main_bit_rate": {
+        "default": "mdi:play-speed"
+      },
+      "sub_bit_rate": {
+        "default": "mdi:play-speed"
       }
     },
     "sensor": {

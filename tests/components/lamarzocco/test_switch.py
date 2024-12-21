@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import WAKE_UP_SLEEP_ENTRY_IDS, async_init_integration
 
@@ -86,30 +86,6 @@ async def test_switches(
 
     assert len(control_fn.mock_calls) == 2
     control_fn.assert_called_with(enabled=True, **kwargs)
-
-
-async def test_device(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the device for one switch."""
-
-    await async_init_integration(hass, mock_config_entry)
-
-    state = hass.states.get(f"switch.{mock_lamarzocco.serial_number}")
-    assert state
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry.device_id
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device == snapshot
 
 
 async def test_auto_on_off_switches(

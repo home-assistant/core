@@ -13,7 +13,6 @@ from pyheos import HeosError, const as heos_const
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -22,7 +21,6 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -32,14 +30,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import (
-    DATA_ENTITY_ID_MAP,
-    DATA_GROUP_MANAGER,
-    DATA_SOURCE_MANAGER,
-    DOMAIN as HEOS_DOMAIN,
-    SIGNAL_HEOS_PLAYER_ADDED,
-    SIGNAL_HEOS_UPDATED,
-)
+from . import GroupManager, HeosConfigEntry, SourceManager
+from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -80,11 +72,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add media players for a config entry."""
-    players = hass.data[HEOS_DOMAIN][MEDIA_PLAYER_DOMAIN]
-    devices = [HeosMediaPlayer(player) for player in players.values()]
+    players = entry.runtime_data.players
+    devices = [
+        HeosMediaPlayer(
+            player, entry.runtime_data.source_manager, entry.runtime_data.group_manager
+        )
+        for player in players.values()
+    ]
     async_add_entities(devices, True)
 
 
@@ -120,13 +117,15 @@ class HeosMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, player):
+    def __init__(
+        self, player, source_manager: SourceManager, group_manager: GroupManager
+    ) -> None:
         """Initialize."""
         self._media_position_updated_at = None
         self._player = player
-        self._signals = []
-        self._source_manager = None
-        self._group_manager = None
+        self._signals: list = []
+        self._source_manager = source_manager
+        self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(HEOS_DOMAIN, player.player_id)},
@@ -161,8 +160,10 @@ class HeosMediaPlayer(MediaPlayerEntity):
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
-        self.hass.data[HEOS_DOMAIN][DATA_ENTITY_ID_MAP][self._player.player_id] = (
-            self.entity_id
+        self.async_on_remove(
+            self._group_manager.register_media_player(
+                self._player.player_id, self.entity_id
+            )
         )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
@@ -174,7 +175,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @log_command_error("join_players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self._group_manager.async_join_players(self.entity_id, group_members)
+        await self._group_manager.async_join_players(
+            self._player.player_id, self.entity_id, group_members
+        )
 
     @log_command_error("pause")
     async def async_media_pause(self) -> None:
@@ -294,16 +297,12 @@ class HeosMediaPlayer(MediaPlayerEntity):
             ior, current_support, BASE_SUPPORTED_FEATURES
         )
 
-        if self._group_manager is None:
-            self._group_manager = self.hass.data[HEOS_DOMAIN][DATA_GROUP_MANAGER]
-
-        if self._source_manager is None:
-            self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
-
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(self.entity_id)
+        await self._group_manager.async_unjoin_player(
+            self._player.player_id, self.entity_id
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect the device when removed."""

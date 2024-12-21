@@ -27,7 +27,23 @@ from .entity import NordpoolBaseEntity
 PARALLEL_UPDATES = 0
 
 
-def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]]:
+def validate_prices(
+    func: Callable[
+        [DeliveryPeriodData], dict[str, tuple[float | None, float, float | None]]
+    ],
+    data: DeliveryPeriodData,
+    area: str,
+    index: int,
+) -> float | None:
+    """Validate and return."""
+    if result := func(data)[area][index]:
+        return result / 1000
+    return None
+
+
+def get_prices(
+    data: DeliveryPeriodData,
+) -> dict[str, tuple[float | None, float, float | None]]:
     """Return previous, current and next prices.
 
     Output: {"SE3": (10.0, 10.5, 12.1)}
@@ -39,6 +55,7 @@ def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]
     previous_time = current_time - timedelta(hours=1)
     next_time = current_time + timedelta(hours=1)
     price_data = data.entries
+    LOGGER.debug("Price data: %s", price_data)
     for entry in price_data:
         if entry.start <= current_time <= entry.end:
             current_price_entries = entry.entry
@@ -46,12 +63,42 @@ def get_prices(data: DeliveryPeriodData) -> dict[str, tuple[float, float, float]
             last_price_entries = entry.entry
         if entry.start <= next_time <= entry.end:
             next_price_entries = entry.entry
+    LOGGER.debug(
+        "Last price %s, current price %s, next price %s",
+        last_price_entries,
+        current_price_entries,
+        next_price_entries,
+    )
 
     result = {}
     for area, price in current_price_entries.items():
-        result[area] = (last_price_entries[area], price, next_price_entries[area])
+        result[area] = (
+            last_price_entries.get(area),
+            price,
+            next_price_entries.get(area),
+        )
     LOGGER.debug("Prices: %s", result)
     return result
+
+
+def get_min_max_price(
+    data: DeliveryPeriodData,
+    area: str,
+    func: Callable[[float, float], float],
+) -> tuple[float, datetime, datetime]:
+    """Get the lowest price from the data."""
+    price_data = data.entries
+    price: float = price_data[0].entry[area]
+    start: datetime = price_data[0].start
+    end: datetime = price_data[0].end
+    for entry in price_data:
+        for _area, _price in entry.entry.items():
+            if _area == area and _price == func(price, _price):
+                price = _price
+                start = entry.start
+                end = entry.end
+
+    return (price, start, end)
 
 
 def get_blockprices(
@@ -90,7 +137,8 @@ class NordpoolDefaultSensorEntityDescription(SensorEntityDescription):
 class NordpoolPricesSensorEntityDescription(SensorEntityDescription):
     """Describes Nord Pool prices sensor entity."""
 
-    value_fn: Callable[[tuple[float, float, float]], float | None]
+    value_fn: Callable[[DeliveryPeriodData, str], float | None]
+    extra_fn: Callable[[DeliveryPeriodData, str], dict[str, str] | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,20 +177,43 @@ PRICES_SENSOR_TYPES: tuple[NordpoolPricesSensorEntityDescription, ...] = (
     NordpoolPricesSensorEntityDescription(
         key="current_price",
         translation_key="current_price",
-        value_fn=lambda data: data[1] / 1000,
+        value_fn=lambda data, area: validate_prices(get_prices, data, area, 1),
+        extra_fn=lambda data, area: None,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
     ),
     NordpoolPricesSensorEntityDescription(
         key="last_price",
         translation_key="last_price",
-        value_fn=lambda data: data[0] / 1000,
+        value_fn=lambda data, area: validate_prices(get_prices, data, area, 0),
+        extra_fn=lambda data, area: None,
         suggested_display_precision=2,
     ),
     NordpoolPricesSensorEntityDescription(
         key="next_price",
         translation_key="next_price",
-        value_fn=lambda data: data[2] / 1000,
+        value_fn=lambda data, area: validate_prices(get_prices, data, area, 2),
+        extra_fn=lambda data, area: None,
+        suggested_display_precision=2,
+    ),
+    NordpoolPricesSensorEntityDescription(
+        key="lowest_price",
+        translation_key="lowest_price",
+        value_fn=lambda data, area: get_min_max_price(data, area, min)[0] / 1000,
+        extra_fn=lambda data, area: {
+            "start": get_min_max_price(data, area, min)[1].isoformat(),
+            "end": get_min_max_price(data, area, min)[2].isoformat(),
+        },
+        suggested_display_precision=2,
+    ),
+    NordpoolPricesSensorEntityDescription(
+        key="highest_price",
+        translation_key="highest_price",
+        value_fn=lambda data, area: get_min_max_price(data, area, max)[0] / 1000,
+        extra_fn=lambda data, area: {
+            "start": get_min_max_price(data, area, max)[1].isoformat(),
+            "end": get_min_max_price(data, area, max)[2].isoformat(),
+        },
         suggested_display_precision=2,
     ),
 )
@@ -272,9 +343,12 @@ class NordpoolPriceSensor(NordpoolBaseEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return value of sensor."""
-        return self.entity_description.value_fn(
-            get_prices(self.coordinator.data)[self.area]
-        )
+        return self.entity_description.value_fn(self.coordinator.data, self.area)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the extra state attributes."""
+        return self.entity_description.extra_fn(self.coordinator.data, self.area)
 
 
 class NordpoolBlockPriceSensor(NordpoolBaseEntity, SensorEntity):

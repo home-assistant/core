@@ -4,7 +4,6 @@ import json
 from unittest.mock import patch
 
 from pygti.exceptions import CannotConnect, InvalidAuth
-import pytest
 
 from homeassistant.components.hvv_departures.const import (
     CONF_FILTER,
@@ -313,10 +312,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         }
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.hvv_departures.options.error.invalid_auth"],
-)
 async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
     """Test that options flow works."""
 
@@ -360,10 +355,6 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant) -> None:
         assert result["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.hvv_departures.options.error.cannot_connect"],
-)
 async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test that options flow works."""
 

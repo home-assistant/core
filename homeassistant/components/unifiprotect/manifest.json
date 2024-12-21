@@ -1,7 +1,7 @@
 {
   "domain": "unifiprotect",
   "name": "UniFi Protect",
-  "codeowners": [],
+  "codeowners": ["@RaHehl"],
   "config_flow": true,
   "dependencies": ["http", "repairs"],
   "dhcp": [
@@ -40,7 +40,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["uiprotect", "unifi_discovery"],
-  "requirements": ["uiprotect==6.4.0", "unifi-discovery==1.2.0"],
+  "requirements": ["uiprotect==7.1.0", "unifi-discovery==1.2.0"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",

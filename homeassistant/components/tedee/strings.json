@@ -66,11 +66,20 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed. Local access token is invalid"
+    },
     "lock_failed": {
       "message": "Failed to lock the door. Lock {lock_id}"
     },
     "unlock_failed": {
       "message": "Failed to unlock the door. Lock {lock_id}"
+    },
+    "update_failed": {
+      "message": "Error while updating data"
     },
     "open_failed": {
       "message": "Failed to unlatch the door. Lock {lock_id}"

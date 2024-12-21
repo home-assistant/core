@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -358,7 +359,7 @@ async def async_api_set_color_temperature(
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_KELVIN: kelvin},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
         blocking=False,
         context=context,
     )
@@ -375,14 +376,14 @@ async def async_api_decrease_color_temp(
 ) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    max_mireds = int(entity.attributes[light.ATTR_MAX_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    min_kelvin = int(entity.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN])
 
-    value = min(max_mireds, current + 50)
+    value = max(min_kelvin, current - 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -399,14 +400,14 @@ async def async_api_increase_color_temp(
 ) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    min_mireds = int(entity.attributes[light.ATTR_MIN_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    max_kelvin = int(entity.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN])
 
-    value = max(min_mireds, current - 50)
+    value = min(max_kelvin, current + 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -526,6 +527,7 @@ async def async_api_unlock(
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }:
         msg = (
@@ -764,9 +766,25 @@ async def async_api_stop(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
-    )
+    if entity.domain == cover.DOMAIN:
+        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        feature_services: dict[int, str] = {
+            cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
+            cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
+        }
+        await asyncio.gather(
+            *(
+                hass.services.async_call(
+                    entity.domain, service, data, blocking=False, context=context
+                )
+                for feature, service in feature_services.items()
+                if feature & supported
+            )
+        )
+    else:
+        await hass.services.async_call(
+            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        )
 
     return directive.response()
 

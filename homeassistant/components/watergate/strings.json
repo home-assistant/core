@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "title": "Configure Watergate device",
+        "data_description": {
+          "ip_address": "Provide an IP address of your Watergate device."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "water_meter_volume": {
+        "name": "Water meter volume"
+      },
+      "water_meter_duration": {
+        "name": "Water meter duration"
+      },
+      "wifi_up_since": {
+        "name": "Wi-Fi up since"
+      },
+      "mqtt_up_since": {
+        "name": "MQTT up since"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "up_since": {
+        "name": "Up since"
+      },
+      "power_supply_mode": {
+        "name": "Power supply mode",
+        "state": {
+          "battery": "Battery",
+          "external": "Mains",
+          "battery_external": "Battery and mains"
+        }
+      }
+    }
+  }
+}

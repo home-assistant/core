@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["nice_go"],
-  "requirements": ["nice-go==0.3.10"]
+  "requirements": ["nice-go==1.0.0"]
 }

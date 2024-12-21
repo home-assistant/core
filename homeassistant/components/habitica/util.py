@@ -174,7 +174,7 @@ def get_attribute_points(
     )
 
     return {
-        "level": min(round(user["stats"]["lvl"] / 2), 50),
+        "level": min(floor(user["stats"]["lvl"] / 2), 50),
         "equipment": equipment,
         "class": class_bonus,
         "allocated": user["stats"][attribute],

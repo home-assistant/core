@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.feedreader.const import DOMAIN
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from . import async_setup_config_entry, create_mock_entry
@@ -357,3 +358,23 @@ async def test_feed_errors(
         freezer.tick(timedelta(hours=1, seconds=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_feed_atom_htmlentities(
+    hass: HomeAssistant, feed_atom_htmlentities, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test ATOM feed author with HTML Entities."""
+
+    entry = create_mock_entry(VALID_CONFIG_DEFAULT)
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.feedreader.coordinator.feedparser.http.get",
+        side_effect=[feed_atom_htmlentities],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, entry.entry_id)}
+        )
+        assert device_entry.manufacturer == "Juan Pérez"

@@ -8,11 +8,7 @@ from pyheos.error import HeosError
 import pytest
 
 from homeassistant.components.heos import media_player
-from homeassistant.components.heos.const import (
-    DATA_SOURCE_MANAGER,
-    DOMAIN,
-    SIGNAL_HEOS_UPDATED,
-)
+from homeassistant.components.heos.const import DOMAIN, SIGNAL_HEOS_UPDATED
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -55,6 +51,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -106,7 +103,7 @@ async def test_state_attributes(
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+        == config_entry.runtime_data.source_manager.source_list
     )
 
 
@@ -219,7 +216,7 @@ async def test_updates_from_sources_updated(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 2
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -318,7 +315,7 @@ async def test_updates_from_user_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 1
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -1055,3 +1052,34 @@ async def test_media_player_unjoin_group(
         blocking=True,
     )
     assert "Failed to ungroup media_player.test_player" in caplog.text
+
+
+async def test_media_player_group_fails_when_entity_removed(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping fails when entity removed."""
+    await setup_platform(hass, config_entry, config)
+
+    # Remove one of the players
+    entity_registry.async_remove("media_player.test_player_2")
+
+    # Attempt to group
+    with pytest.raises(
+        HomeAssistantError,
+        match="The group member media_player.test_player_2 could not be resolved to a HEOS player.",
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            },
+            blocking=True,
+        )
+    controller.create_group.assert_not_called()

@@ -115,7 +115,7 @@ async def test_cover(
 
     # Test set position
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -136,7 +136,7 @@ async def test_cover(
 
     # Test open
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -156,7 +156,7 @@ async def test_cover(
 
     # Test close
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -176,7 +176,7 @@ async def test_cover(
 
     # Test stop
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop_shutter"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.stop_shutter"
     ) as mock_control_device:
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -232,7 +232,7 @@ async def test_cover_control_fail(
 
     # Test exception during set position
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):
@@ -257,7 +257,7 @@ async def test_cover_control_fail(
 
     # Test error response during set position
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_position",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):

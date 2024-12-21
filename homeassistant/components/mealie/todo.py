@@ -20,6 +20,7 @@ from .const import DOMAIN
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
 from .entity import MealieEntity
 
+PARALLEL_UPDATES = 0
 TODO_STATUS_MAP = {
     False: TodoItemStatus.NEEDS_ACTION,
     True: TodoItemStatus.COMPLETED,
@@ -147,29 +148,19 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         """Update an item on the list."""
         list_items = self.shopping_items
 
-        for items in list_items:
-            if items.item_id == item.uid:
-                position = items.position
-                break
-
         list_item: ShoppingItem | None = next(
             (x for x in list_items if x.item_id == item.uid), None
         )
+        assert list_item is not None
+        position = list_item.position
 
-        if not list_item:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="item_not_found_error",
-                translation_placeholders={"shopping_list_item": item.uid or ""},
-            )
-
-        udpdate_shopping_item = MutateShoppingItem(
+        update_shopping_item = MutateShoppingItem(
             item_id=list_item.item_id,
             list_id=list_item.list_id,
             note=list_item.note,
             display=list_item.display,
             checked=item.status == TodoItemStatus.COMPLETED,
-            position=list_item.position,
+            position=position,
             is_food=list_item.is_food,
             disable_amount=list_item.disable_amount,
             quantity=list_item.quantity,
@@ -181,16 +172,16 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         stripped_item_summary = item.summary.strip() if item.summary else item.summary
 
         if list_item.display.strip() != stripped_item_summary:
-            udpdate_shopping_item.note = stripped_item_summary
-            udpdate_shopping_item.position = position
-            udpdate_shopping_item.is_food = False
-            udpdate_shopping_item.food_id = None
-            udpdate_shopping_item.quantity = 0.0
-            udpdate_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+            update_shopping_item.note = stripped_item_summary
+            update_shopping_item.position = position
+            update_shopping_item.is_food = False
+            update_shopping_item.food_id = None
+            update_shopping_item.quantity = 0.0
+            update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
 
         try:
             await self.coordinator.client.update_shopping_item(
-                list_item.item_id, udpdate_shopping_item
+                list_item.item_id, update_shopping_item
             )
         except MealieError as exception:
             raise HomeAssistantError(

@@ -9,7 +9,7 @@ from pyrituals import Diffuser
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import AREA_SQUARE_METERS, EntityCategory
+from homeassistant.const import EntityCategory, UnitOfArea
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -30,7 +30,7 @@ ENTITY_DESCRIPTIONS = (
     RitualsSelectEntityDescription(
         key="room_size_square_meter",
         translation_key="room_size_square_meter",
-        unit_of_measurement=AREA_SQUARE_METERS,
+        unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],
         current_fn=lambda diffuser: str(diffuser.room_size_square_meter),

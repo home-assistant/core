@@ -23,7 +23,7 @@ class ToloSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_host: str | None = None
+    _discovered_host: str
 
     @staticmethod
     def _check_device_availability(host: str) -> bool:

@@ -3,12 +3,11 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError, StaticState
+from bsblan import BSBLANError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -27,37 +26,19 @@ import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "climate.bsb_lan"
 
 
-@pytest.mark.parametrize(
-    ("static_file"),
-    [
-        ("static.json"),
-        ("static_F.json"),
-    ],
-)
 async def test_celsius_fahrenheit(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    static_file: str,
 ) -> None:
     """Test Celsius and Fahrenheit temperature units."""
-
-    static_data = load_json_object_fixture(static_file, DOMAIN)
-
-    mock_bsblan.static_values.return_value = StaticState.from_dict(static_data)
-
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -75,21 +56,9 @@ async def test_climate_entity_properties(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # Test when current_temperature is "---"
-    mock_current_temp = MagicMock()
-    mock_current_temp.value = "---"
-    mock_bsblan.state.return_value.current_temperature = mock_current_temp
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes["current_temperature"] is None
-
     # Test target_temperature
     mock_target_temp = MagicMock()
-    mock_target_temp.value = "23.5"
+    mock_target_temp.value = 23.5
     mock_bsblan.state.return_value.target_temperature = mock_target_temp
 
     freezer.tick(timedelta(minutes=1))

@@ -1,7 +1,6 @@
 """Config flow for solarlog integration."""
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 from urllib.parse import ParseResult, urlparse
 
@@ -14,12 +13,9 @@ from solarlog_cli.solarlog_exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
-from homeassistant.util import slugify
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from .const import CONF_HAS_PWD, DEFAULT_HOST, DEFAULT_NAME, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_HAS_PWD, DEFAULT_HOST, DOMAIN
 
 
 class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -84,24 +80,21 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
-            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
-
             if await self._test_connection(user_input[CONF_HOST]):
                 if user_input[CONF_HAS_PWD]:
                     self._user_input = user_input
                     return await self.async_step_password()
 
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_HOST], data=user_input
                 )
         else:
-            user_input = {CONF_NAME: DEFAULT_NAME, CONF_HOST: DEFAULT_HOST}
+            user_input = {CONF_HOST: DEFAULT_HOST}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(CONF_HAS_PWD, default=False): bool,
                 }
@@ -120,7 +113,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 self._user_input |= user_input
                 return self.async_create_entry(
-                    title=self._user_input[CONF_NAME], data=self._user_input
+                    title=self._user_input[CONF_HOST], data=self._user_input
                 )
         else:
             user_input = {CONF_PASSWORD: ""}

@@ -19,6 +19,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
+from .helper import offset_opendata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +58,12 @@ class SwissPublicTransportDataUpdateCoordinator(
 
     config_entry: SwissPublicTransportConfigEntry
 
-    def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        opendata: OpendataTransport,
+        time_offset: dict[str, int] | None,
+    ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
         super().__init__(
             hass,
@@ -66,6 +72,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
+        self._time_offset = time_offset
 
     def remaining_time(self, departure) -> timedelta | None:
         """Calculate the remaining time for the departure."""
@@ -81,6 +88,9 @@ class SwissPublicTransportDataUpdateCoordinator(
     async def fetch_connections(self, limit: int) -> list[DataConnection]:
         """Fetch connections using the opendata api."""
         self._opendata.limit = limit
+        if self._time_offset:
+            offset_opendata(self._opendata, self._time_offset)
+
         try:
             await self._opendata.async_get_data()
         except OpendataTransportConnectionError as e:

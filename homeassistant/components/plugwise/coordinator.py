@@ -64,30 +64,41 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
         version = await self.api.connect()
         self._connected = isinstance(version, Version)
         if self._connected:
-            self.api.get_all_devices()
+            self.api.get_all_gateway_entities()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
-        data = PlugwiseData({}, {})
         try:
             if not self._connected:
                 await self._connect()
             data = await self.api.async_update()
         except ConnectionFailedError as err:
-            raise UpdateFailed("Failed to connect") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_connect",
+            ) from err
         except InvalidAuthentication as err:
-            raise ConfigEntryError("Authentication failed") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                "Invalid XML data, or error indication received from the Plugwise Adam/Smile/Stretch"
+                translation_domain=DOMAIN,
+                translation_key="invalid_xml_data",
             ) from err
         except PlugwiseError as err:
-            raise UpdateFailed("Data incomplete or missing") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_incomplete_or_missing",
+            ) from err
         except UnsupportedDeviceError as err:
-            raise ConfigEntryError("Device with unsupported firmware") from err
-        else:
-            self._async_add_remove_devices(data, self.config_entry)
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_firmware",
+            ) from err
 
+        self._async_add_remove_devices(data, self.config_entry)
         return data
 
     def _async_add_remove_devices(self, data: PlugwiseData, entry: ConfigEntry) -> None:

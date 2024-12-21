@@ -94,10 +94,10 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     async def _async_setup(self) -> None:
         """Initiate stations."""
         try:
-            self.to_station = await self._train_api.async_get_train_station(
+            self.to_station = await self._train_api.async_search_train_station(
                 self.config_entry.data[CONF_TO]
             )
-            self.from_station = await self._train_api.async_get_train_station(
+            self.from_station = await self._train_api.async_search_train_station(
                 self.config_entry.data[CONF_FROM]
             )
         except InvalidAuthentication as error:

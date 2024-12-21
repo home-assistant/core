@@ -557,7 +557,7 @@ pytestmark = pytest.mark.usefixtures()
     ("language", "holiday"),
     [
         ("de", "Weihnachtstag"),
-        ("en", "Christmas"),
+        ("en_US", "Christmas"),
     ],
 )
 async def test_language(
@@ -652,4 +652,49 @@ async def test_form_with_categories(hass: HomeAssistant) -> None:
         "remove_holidays": [],
         "language": "de",
         "category": ["half_day"],
+    }
+
+
+async def test_options_form_removes_subdiv(hass: HomeAssistant) -> None:
+    """Test we get the form in options when removing a configured subdivision."""
+
+    entry = await init_integration(
+        hass,
+        {
+            "name": "Workday Sensor",
+            "country": "DE",
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": [],
+            "remove_holidays": [],
+            "language": "de",
+            "province": "BW",
+        },
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "excludes": ["sat", "sun", "holiday"],
+            "days_offset": 0,
+            "workdays": ["mon", "tue", "wed", "thu", "fri"],
+            "add_holidays": [],
+            "remove_holidays": [],
+            "language": "de",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        "name": "Workday Sensor",
+        "country": "DE",
+        "excludes": ["sat", "sun", "holiday"],
+        "days_offset": 0,
+        "workdays": ["mon", "tue", "wed", "thu", "fri"],
+        "add_holidays": [],
+        "remove_holidays": [],
+        "language": "de",
     }

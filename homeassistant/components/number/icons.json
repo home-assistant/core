@@ -9,6 +9,9 @@
     "aqi": {
       "default": "mdi:air-filter"
     },
+    "area": {
+      "default": "mdi:texture-box"
+    },
     "atmospheric_pressure": {
       "default": "mdi:thermometer-lines"
     },

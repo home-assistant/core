@@ -4,6 +4,7 @@
     "condition_type": {
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
+      "is_area": "Current {entity_name} area",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
       "is_blood_glucose_concentration": "Current {entity_name} blood glucose concentration",
@@ -55,6 +56,7 @@
     "trigger_type": {
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
+      "area": "{entity_name} area changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
       "blood_glucose_concentration": "{entity_name} blood glucose concentration changes",
@@ -144,6 +146,9 @@
     },
     "aqi": {
       "name": "Air quality index"
+    },
+    "area": {
+      "name": "Area"
     },
     "atmospheric_pressure": {
       "name": "Atmospheric pressure"

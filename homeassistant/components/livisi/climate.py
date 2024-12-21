@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiolivisi.const import CAPABILITY_CONFIG
+from livisi.const import CAPABILITY_CONFIG
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -68,7 +68,6 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

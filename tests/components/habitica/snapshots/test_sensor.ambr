@@ -101,7 +101,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 20,
+      'equipment': 42,
       'friendly_name': 'test-user Constitution',
       'level': 19,
       'unit_of_measurement': 'CON',
@@ -111,7 +111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '80',
+    'state': '102',
   })
 # ---
 # name: test_sensors[sensor.test_user_dailies-entry]
@@ -226,6 +226,45 @@
         'value': -2.9663035443712333,
         'yester_daily': True,
       }),
+      '6e53f1f5-a315-4edd-984d-8d762e4a08ef': dict({
+        'created_at': '2024-10-10T15:57:14.304Z',
+        'every_x': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'next_due': list([
+          '2024-12-14T23:00:00.000Z',
+          '2025-01-18T23:00:00.000Z',
+          '2025-02-15T23:00:00.000Z',
+          '2025-03-15T23:00:00.000Z',
+          '2025-04-19T23:00:00.000Z',
+          '2025-05-17T23:00:00.000Z',
+        ]),
+        'notes': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'start_date': '2024-09-20T23:00:00.000Z',
+        'streak': 1,
+        'text': 'Arbeite an einem kreativen Projekt',
+        'type': 'daily',
+        'value': -0.9215181434950852,
+        'weeks_of_month': list([
+          3,
+        ]),
+        'yester_daily': True,
+      }),
       'f2c85972-1a19-4426-bc6d-ce3337b9d99f': dict({
         'created_at': '2024-07-07T17:51:53.266Z',
         'every_x': 1,
@@ -270,7 +309,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_sensors[sensor.test_user_display_name-entry]
@@ -405,6 +444,7 @@
 # name: test_sensors[sensor.test_user_gems-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_gem.png',
       'friendly_name': 'test-user Gems',
       'unit_of_measurement': 'gems',
     }),
@@ -664,7 +704,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 0,
+      'equipment': 12,
       'friendly_name': 'test-user Intelligence',
       'level': 19,
       'unit_of_measurement': 'INT',
@@ -674,7 +714,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '72',
   })
 # ---
 # name: test_sensors[sensor.test_user_level-entry]
@@ -906,6 +946,7 @@
 # name: test_sensors[sensor.test_user_mystic_hourglasses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
       'friendly_name': 'test-user Mystic hourglasses',
       'unit_of_measurement': '⧖',
     }),
@@ -1006,7 +1047,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 8,
+      'equipment': 15,
       'friendly_name': 'test-user Perception',
       'level': 19,
       'unit_of_measurement': 'PER',
@@ -1016,7 +1057,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '68',
+    'state': '75',
   })
 # ---
 # name: test_sensors[sensor.test_user_rewards-entry]
@@ -1122,7 +1163,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 27,
+      'equipment': 44,
       'friendly_name': 'test-user Strength',
       'level': 19,
       'unit_of_measurement': 'STR',
@@ -1132,7 +1173,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '104',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]

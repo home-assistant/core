@@ -82,11 +82,11 @@
         },
         "end_date_time": {
           "name": "End time",
-          "description": "Returns active events before this time (exclusive). Cannot be used with 'duration'."
+          "description": "Returns active events before this time (exclusive). Cannot be used with Duration."
         },
         "duration": {
           "name": "Duration",
-          "description": "Returns active events from start_date_time until the specified duration."
+          "description": "Returns active events from Start time for the specified duration."
         }
       }
     }

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiolivisi.const import CAPABILITY_MAP
+from livisi.const import CAPABILITY_MAP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback

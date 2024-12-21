@@ -145,6 +145,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is None:
+            assert self._name is not None
             return self.async_show_form(
                 step_id="discovery_confirm",
                 description_placeholders={"name": self._name},

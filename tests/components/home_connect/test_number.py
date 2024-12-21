@@ -24,7 +24,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import get_all_appliances
 
@@ -162,7 +162,7 @@ async def test_number_entity_error(
         getattr(problematic_appliance, mock_attr)()
 
     with pytest.raises(
-        ServiceValidationError, match=r"Error.*assign.*value.*to.*setting.*"
+        HomeAssistantError, match=r"Error.*assign.*value.*to.*setting.*"
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

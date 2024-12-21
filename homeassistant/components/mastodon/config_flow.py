@@ -8,7 +8,7 @@ from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -53,7 +53,6 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
-    config_entry: ConfigEntry
 
     def check_connection(
         self,

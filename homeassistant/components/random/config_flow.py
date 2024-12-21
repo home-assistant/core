@@ -106,8 +106,12 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (units := DEVICE_CLASS_UNITS.get(device_class))
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still (sorted() is guaranteed stable).
         sorted_units = sorted(
-            [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
             key=str.casefold,
         )
         if len(sorted_units) == 1:

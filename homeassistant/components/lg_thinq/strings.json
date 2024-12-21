@@ -5,6 +5,12 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
+      "invalid_token": "The token is not valid.",
+      "not_acceptable_terms": "The service terms are not accepted.",
+      "not_allowed_api_again": "The user does NOT have permission on the API call.",
+      "not_supported_country": "The country is not supported.",
+      "exceeded_api_calls": "The number of API calls has been exceeded.",
+      "exceeded_user_api_calls": "The number of User API calls has been exceeded.",
       "token_unauthorized": "The token is invalid or unauthorized."
     },
     "step": {

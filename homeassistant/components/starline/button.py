@@ -16,6 +16,20 @@ BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
         key="poke",
         translation_key="horn",
     ),
+    ButtonEntityDescription(
+        key="panic",
+        translation_key="panic",
+        entity_registry_enabled_default=False,
+    ),
+    *[
+        ButtonEntityDescription(
+            key=f"flex_{i}",
+            translation_key="flex",
+            translation_placeholders={"num": str(i)},
+            entity_registry_enabled_default=False,
+        )
+        for i in range(1, 10)
+    ],
 )
 
 

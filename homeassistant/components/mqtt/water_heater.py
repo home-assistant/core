@@ -72,6 +72,8 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Water Heater"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(

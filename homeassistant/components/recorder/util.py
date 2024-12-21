@@ -107,6 +107,8 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 # Retry when one of the following MySQL errors occurred:
 RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# The error codes are hard coded because the PyMySQL library may not be
+# installed when using database engines other than MySQL or MariaDB.
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
@@ -598,6 +600,12 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         max_bind_vars = DEFAULT_MAX_BIND_VARS
+        # PostgreSQL does not support a skip/loose index scan so its
+        # also slow for large distinct queries:
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # https://github.com/home-assistant/core/issues/126084
+        # so we set slow_range_in_select to True
+        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -892,17 +900,16 @@ def resolve_period(
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":
-            start_time = start_of_day.replace(day=28)
-            # This works for up to 48 months of offset
-            start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
+            month_now = start_of_day.month
+            new_month = (month_now - 1 + cal_offset) % 12 + 1
+            new_year = start_of_day.year + (month_now - 1 + cal_offset) // 12
+            start_time = start_of_day.replace(year=new_year, month=new_month, day=1)
             end_time = (start_time + timedelta(days=31)).replace(day=1)
         else:  # calendar_period = "year"
-            start_time = start_of_day.replace(month=12, day=31)
-            # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
-                month=1, day=1
+            start_time = start_of_day.replace(
+                year=start_of_day.year + cal_offset, month=1, day=1
             )
-            end_time = (start_time + timedelta(days=365)).replace(day=1)
+            end_time = (start_time + timedelta(days=366)).replace(day=1)
 
         start_time = dt_util.as_utc(start_time)
         end_time = dt_util.as_utc(end_time)
