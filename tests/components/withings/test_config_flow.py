@@ -305,7 +305,7 @@ async def test_dhcp(
     """Check DHCP discovery."""
 
     service_info = DhcpServiceInfo(
-        hostname="FYTA HUB",
+        hostname="device",
         ip="192.168.0.1",
         macaddress="0024e4bd30de",
     )
