@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from contextlib import nullcontext
 from unittest.mock import MagicMock, patch
 
 from peblar import PeblarMeter, PeblarSystemInformation, PeblarVersions
@@ -67,11 +68,17 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_peblar: MagicMock,
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Set up the Peblar integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    context = nullcontext()
+    if platform := getattr(request, "param", None):
+        context = patch("homeassistant.components.peblar.PLATFORMS", [platform])
+
+    with context:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry
