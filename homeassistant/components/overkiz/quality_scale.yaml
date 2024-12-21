@@ -1,23 +1,25 @@
 rules:
   # Bronze
-  config-flow: todo
-  brands: todo
-  dependency-transparency: todo
-  common-modules: todo
-  has-entity-name: todo
+  config-flow:
+    status: todo
+    comment: Fields are missing a data_description
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
   action-setup:
     status: exempt
     comment: The integration does not register actions.
-  appropriate-polling: todo
-  test-before-configure: todo
-  entity-event-setup: todo
-  unique-config-entry: todo
-  entity-unique-id: todo
-  docs-installation-instructions: todo
+  appropriate-polling: done
+  test-before-configure: done
+  entity-event-setup: done
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup: todo
-  docs-high-level-description: todo
-  config-flow-test-coverage: todo
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
   docs-actions:
     status: exempt
     comment: The integration does not register actions.
