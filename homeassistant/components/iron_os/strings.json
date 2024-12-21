@@ -214,6 +214,32 @@
       "estimated_power": {
         "name": "Estimated power"
       }
+    },
+    "switch": {
+      "animation_loop": {
+        "name": "Animation loop"
+      },
+      "cooling_temp_blink": {
+        "name": "Cool down screen flashing"
+      },
+      "idle_screen_details": {
+        "name": "Detailed idle screen"
+      },
+      "solder_screen_details": {
+        "name": "Detailed solder screen"
+      },
+      "invert_buttons": {
+        "name": "Swap +/- buttons"
+      },
+      "display_invert": {
+        "name": "Invert screen"
+      },
+      "calibrate_cjc": {
+        "name": "Calibrate CJC"
+      },
+      "usb_pd_mode": {
+        "name": "PPS & EPR PD mode"
+      }
     }
   },
   "exceptions": {
