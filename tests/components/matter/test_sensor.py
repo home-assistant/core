@@ -333,3 +333,95 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+
+@pytest.mark.parametrize("node_fixture", ["evse_charging"])
+async def test_evse_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test evse sensor."""
+    # EnergyEvseState
+    state = hass.states.get("sensor.evse_state")
+    assert state
+    assert state.state == "PluggedIn, Charging"
+
+    set_node_attribute(matter_node, 1, 153, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_state")
+    assert state
+    assert state.state == "PluggedIn, NoDemand"
+
+    # EnergyEvseSupplyState
+    state = hass.states.get("sensor.evse_supply_state")
+    assert state
+    assert state.state == "Charging Enabled"
+
+    set_node_attribute(matter_node, 1, 153, 1, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_supply_state")
+    assert state
+    assert state.state == "Disabled"
+
+    # EnergyEvseFaultState
+    state = hass.states.get("sensor.evse_fault_state")
+    assert state
+    assert state.state == "No Error"
+
+    set_node_attribute(matter_node, 1, 153, 2, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_fault_state")
+    assert state
+    assert state.state == "Over Current"
+
+    # EnergyEvseCircuitCapacity
+    state = hass.states.get("sensor.evse_current_2")
+    assert state
+    assert state.state == "32.0"
+
+    set_node_attribute(matter_node, 1, 153, 5, 63000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_current_2")
+    assert state
+    assert state.state == "63.0"
+
+    # EnergyEvseMinimumChargeCurrent
+    state = hass.states.get("sensor.evse_current_3")
+    assert state
+    assert state.state == "2.0"
+
+    set_node_attribute(matter_node, 1, 153, 6, 5000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_current_3")
+    assert state
+    assert state.state == "5.0"
+
+    # EnergyEvseMaximumChargeCurrent
+    state = hass.states.get("sensor.evse_current_4")
+    assert state
+    assert state.state == "30.0"
+
+    set_node_attribute(matter_node, 1, 153, 7, 20000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_current_4")
+    assert state
+    assert state.state == "20.0"
+
+    # EnergyEvseMaximumChargeCurrent
+    state = hass.states.get("sensor.evse_current_5")
+    assert state
+    assert state.state == "32.0"
+
+    set_node_attribute(matter_node, 1, 153, 9, 63000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.evse_current_5")
+    assert state
+    assert state.state == "63.0"

@@ -93,6 +93,12 @@
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
+      },
+      "enable_charging": {
+        "name": "Enable charging"
+      },
+      "disable_charging": {
+        "name": "Disable charging"
       }
     },
     "climate": {
@@ -248,6 +254,27 @@
       },
       "battery_replacement_description": {
         "name": "Battery type"
+      },
+      "evse_state": {
+        "name": "State"
+      },
+      "evse_supply_state": {
+        "name": "Supply state"
+      },
+      "evse_fault_state": {
+        "name": "Fault state"
+      },
+      "evse_circuit_capacity": {
+        "name": "Circuit capacity"
+      },
+      "evse_charge_current": {
+        "name": "Charge current"
+      },
+      "evse_max_charge_current": {
+        "name": "Max charge current"
+      },
+      "evse_user_max_charge_current": {
+        "name": "User max charge current"
       }
     },
     "switch": {
