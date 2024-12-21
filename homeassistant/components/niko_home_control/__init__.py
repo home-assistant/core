@@ -17,7 +17,7 @@ from .const import _LOGGER
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
-type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
+type NikoHomeControlConfigEntry = ConfigEntry[NikoHomeController]
 
 
 async def event_handler(self, event) -> None:
