@@ -37,7 +37,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: NikoHomeControlConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug(
         "Migrating configuration from version %s.%s",
