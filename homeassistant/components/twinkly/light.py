@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -97,6 +97,7 @@ class TwinklyLight(LightEntity):
         # They are expected to be updated using the device_info.
         self._name = conf.data[CONF_NAME] or "Twinkly light"
         self._model = conf.data[CONF_MODEL]
+        self._mac = device_info["mac"]
 
         self._client = client
 
@@ -114,6 +115,7 @@ class TwinklyLight(LightEntity):
         """Get device specific attributes."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
             manufacturer="LEDWORKS",
             model=self._model,
             name=self._name,
