@@ -99,6 +99,86 @@
           "description": "Start playing the queue on the target player. Omit to use the default behavior."
         }
       }
+    },
+    "get_queue": {
+      "name": "Get playerQueue details (advanced)",
+      "description": "Get the details of the currently active queue of a Music Assistant player."
+    },
+    "search": {
+      "name": "Search Music Assistant",
+      "description": "Perform a global search on the Music Assistant library and all providers.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Music Assistant instance",
+          "description": "Select the Music Assistant instance to perform the search on."
+        },
+        "name": {
+          "name": "Search name",
+          "description": "The name/title to search for."
+        },
+        "media_type": {
+          "name": "Media type(s)",
+          "description": "The type of the content to search. Such as artist, album, track, radio, or playlist. All types if omitted."
+        },
+        "artist": {
+          "name": "Artist name",
+          "description": "When specifying a track or album name in the name field, you can optionally restrict results by this artist name."
+        },
+        "album": {
+          "name": "Album name",
+          "description": "When specifying a track name in the name field, you can optionally restrict results by this album name."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of items to return (per media type)."
+        },
+        "library_only": {
+          "name": "Only library items",
+          "description": "Only include results that are in the library."
+        }
+      }
+    },
+    "get_library": {
+      "name": "Get Library items",
+      "description": "Get items from a Music Assistant library.",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::music_assistant::services::search::fields::config_entry_id::name%]",
+          "description": "[%key:component::music_assistant::services::search::fields::config_entry_id::description%]"
+        },
+        "media_type": {
+          "name": "Media type",
+          "description": "The media type for which to request details for."
+        },
+        "favorite": {
+          "name": "Favorites only",
+          "description": "Filter items so only favorites items are returned."
+        },
+        "search": {
+          "name": "Search",
+          "description": "Optional search string to search through this library."
+        },
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of items to return."
+        },
+        "offset": {
+          "name": "Offset",
+          "description": "Offset to start the list from."
+        },
+        "order_by": {
+          "name": "Order By",
+          "description": "Sort the list by this field."
+        },
+        "album_type": {
+          "name": "Album type filter (albums library only)",
+          "description": "Filter albums by type."
+        },
+        "album_artists_only": {
+          "name": "Enable album artists filter (only for artist library)",
+          "description": "Only return Album Artists when listing the Artists library items."
+        }
+      }
     }
   },
   "selector": {
@@ -118,6 +198,37 @@
         "track": "Track",
         "playlist": "Playlist",
         "radio": "Radio"
+      }
+    },
+    "order_by": {
+      "options": {
+        "name": "Name",
+        "name_desc": "Name (desc)",
+        "sort_name": "Sort name",
+        "sort_name_desc": "Sort name (desc)",
+        "timestamp_added": "Added",
+        "timestamp_added_desc": "Added (desc)",
+        "last_played": "Last played",
+        "last_played_desc": "Last played (desc)",
+        "play_count": "Play count",
+        "play_count_desc": "Play count (desc)",
+        "year": "Year",
+        "year_desc": "Year (desc)",
+        "position": "Position",
+        "position_desc": "Position (desc)",
+        "artist_name": "Artist name",
+        "artist_name_desc": "Artist name (desc)",
+        "random": "Random",
+        "random_play_count": "Random + least played"
+      }
+    },
+    "album_type": {
+      "options": {
+        "album": "Album",
+        "single": "Single",
+        "ep": "EP",
+        "compilation": "Compilation",
+        "unknown": "Unknown"
       }
     }
   }

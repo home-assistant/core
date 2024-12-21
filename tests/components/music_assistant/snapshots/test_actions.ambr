@@ -1,0 +1,202 @@
+# serializer version: 1
+# name: test_get_library_action
+  dict({
+    'items': list([
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Traveller',
+          'uri': 'library://album/463',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Chris Stapleton',
+            'uri': 'library://artist/433',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Tennessee Whiskey',
+        'uri': 'library://track/456',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Thelma + Louise',
+          'uri': 'library://album/471',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Thelma + Louise',
+        'uri': 'library://track/467',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'HIStory - PAST, PRESENT AND FUTURE - BOOK I',
+          'uri': 'library://album/486',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Michael Jackson',
+            'uri': 'library://artist/30',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': "They Don't Care About Us",
+        'uri': 'library://track/485',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Better Dayz',
+          'uri': 'library://album/487',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': '2Pac',
+            'uri': 'library://artist/159',
+            'version': '',
+          }),
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'The Outlawz',
+            'uri': 'library://artist/451',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': "They Don't Give A F**** About Us",
+        'uri': 'library://track/486',
+        'version': '',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Things We Lost In The Fire',
+          'uri': 'library://album/488',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Things We Lost In The Fire',
+        'uri': 'library://track/487',
+        'version': 'TORN Remix',
+      }),
+      dict({
+        'album': dict({
+          'image': None,
+          'media_type': <MediaType.ALBUM: 'album'>,
+          'name': 'Doom Days',
+          'uri': 'library://album/489',
+          'version': '',
+        }),
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Bastille',
+            'uri': 'library://artist/81',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.TRACK: 'track'>,
+        'name': 'Those Nights',
+        'uri': 'library://track/488',
+        'version': '',
+      }),
+    ]),
+    'limit': 25,
+    'media_type': <MediaType.TRACK: 'track'>,
+    'offset': 0,
+    'order_by': 'name',
+  })
+# ---
+# name: test_search_action
+  dict({
+    'albums': list([
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'A Space Love Adventure',
+            'uri': 'library://artist/289',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synth Punk EP',
+        'uri': 'library://album/396',
+        'version': '',
+      }),
+      dict({
+        'artists': list([
+          dict({
+            'image': None,
+            'media_type': <MediaType.ARTIST: 'artist'>,
+            'name': 'Various Artists',
+            'uri': 'library://artist/96',
+            'version': '',
+          }),
+        ]),
+        'image': None,
+        'media_type': <MediaType.ALBUM: 'album'>,
+        'name': 'Synthwave (The 80S Revival)',
+        'uri': 'library://album/95',
+        'version': 'The 80S Revival',
+      }),
+    ]),
+    'artists': list([
+    ]),
+    'playlists': list([
+    ]),
+    'radio': list([
+    ]),
+    'tracks': list([
+    ]),
+  })
+# ---
