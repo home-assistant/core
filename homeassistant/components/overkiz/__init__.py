@@ -55,7 +55,6 @@ from .const import (
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
 )
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizEntity
 
 SERVICE_EXECUTE_COMMAND = "execute_command"
 ATTR_COMMAND = "command"
@@ -184,21 +183,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         entity_registry = er.async_get(hass)
 
         for entity_id in service.data[ATTR_ENTITY_ID]:
-            registry_entity = entity_registry.async_get(entity_id)
-            entity: OverkizEntity = [
-                e
-                for e in hass.data["entity_components"][registry_entity.domain].entities
-                if e.unique_id == registry_entity.unique_id
-            ][0]
+            entity = entity_registry.async_get(entity_id)
 
-            try:
-                await entity.coordinator.client.execute_command(
-                    entity.unique_id,
-                    Command(service.data[ATTR_COMMAND], service.data.get(ATTR_ARGS)),
-                    "Home Assistant Service",
-                )
-            except InvalidCommandException as exception:
-                raise HomeAssistantError(exception) from exception
+            if entity:
+                data: HomeAssistantOverkizData = hass.data[DOMAIN][
+                    entity.config_entry_id
+                ]
+
+                try:
+                    await data.coordinator.client.execute_command(
+                        entity.unique_id,
+                        Command(
+                            service.data[ATTR_COMMAND], service.data.get(ATTR_ARGS)
+                        ),
+                        "Home Assistant Service",
+                    )
+                except InvalidCommandException as exception:
+                    raise HomeAssistantError(exception) from exception
 
     async_register_admin_service(
         hass,
