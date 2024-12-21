@@ -42,16 +42,36 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure TPLink entry",
+        "description": "Update your configuration for device {mac}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "camera_auth_confirm": {
+        "title": "Set camera account credentials",
+        "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
+        "data": {
+          "live_view": "Enable camera live view",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Invalid authentication: {error}"
+      "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_camera_auth": "Camera stream authentication failed",
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+      "camera_creds": "You have to set both username and password"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
@@ -100,6 +120,11 @@
       },
       "stop_alarm": {
         "name": "Stop alarm"
+      }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
       }
     },
     "select": {

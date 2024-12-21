@@ -47,10 +47,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AES_KEYS,
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
+    CONF_LIVE_VIEW,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -226,7 +228,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             for child in device.children
         ]
 
-    entry.runtime_data = TPLinkData(parent_coordinator, child_coordinators)
+    camera_creds: Credentials | None = None
+    if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
+        camera_creds = Credentials(
+            camera_creds_dict[CONF_USERNAME], camera_creds_dict[CONF_PASSWORD]
+        )
+    live_view = entry.data.get(CONF_LIVE_VIEW)
+
+    entry.runtime_data = TPLinkData(
+        parent_coordinator, child_coordinators, camera_creds, live_view
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
