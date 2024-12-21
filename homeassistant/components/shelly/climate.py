@@ -544,6 +544,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -553,11 +554,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
         self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
-        self._thermostat_type = self._config.get("type", "heating")
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT,
-        ]
         device_id: str = self._config["addr"]
         self._attr_unique_id = f"{device_id}-{self.key}"
         model_id = self._config.get("local_name")
@@ -602,7 +598,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         if self.target_temperature == self._attr_min_temp:
             return HVACMode.OFF
 
-        return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
+        return HVACMode.HEAT
 
     @property
     def hvac_action(self) -> HVACAction:
@@ -610,11 +606,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         if not self.status["pos"]:
             return HVACAction.IDLE
 
-        return (
-            HVACAction.COOLING
-            if self._thermostat_type == "cooling"
-            else HVACAction.HEATING
-        )
+        return HVACAction.HEATING
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
