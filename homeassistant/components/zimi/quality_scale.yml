@@ -1,0 +1,26 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: >
+      There are no service actions.
+  appropriate-polling:
+    status: done
+    comment: >
+      There is no polling of the entities.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
