@@ -1702,6 +1702,125 @@ async def test_receive_backup_agent_error(
     assert delete_backup.call_count == 0
 
 
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    (
+        "open_call_count",
+        "open_exception",
+        "write_call_count",
+        "write_exception",
+        "close_call_count",
+        "close_exception",
+    ),
+    [
+        (1, OSError("Boom!"), 0, None, 0, None),
+        (1, None, 1, OSError("Boom!"), 1, None),
+        (1, None, 1, None, 1, OSError("Boom!")),
+    ],
+)
+async def test_receive_backup_file_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    path_glob: MagicMock,
+    open_call_count: int,
+    open_exception: Exception | None,
+    write_call_count: int,
+    write_exception: Exception | None,
+    close_call_count: int,
+    close_exception: Exception | None,
+) -> None:
+    """Test file write error during backup receive."""
+    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
+    remote_agent = BackupAgentTest("remote", backups=[])
+    with patch(
+        "homeassistant.components.backup.backup.async_get_backup_agents"
+    ) as core_get_backup_agents:
+        core_get_backup_agents.return_value = [local_agent]
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        await setup_backup_platform(
+            hass,
+            domain="test",
+            platform=Mock(
+                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+                spec_set=BackupAgentPlatformProtocol,
+            ),
+        )
+
+    client = await hass_client()
+    ws_client = await hass_ws_client(hass)
+
+    path_glob.return_value = []
+
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+    assert result["result"] == {
+        "backups": [],
+        "agent_errors": {},
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+    }
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    upload_data = "test"
+    open_mock = mock_open(read_data=upload_data.encode(encoding="utf-8"))
+    open_mock.side_effect = open_exception
+    open_mock.return_value.write.side_effect = write_exception
+    open_mock.return_value.close.side_effect = close_exception
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=test.remote",
+            data={"file": StringIO(upload_data)},
+        )
+        await hass.async_block_till_done()
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": None,
+        "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": ReceiveBackupStage.RECEIVE_FILE,
+        "state": ReceiveBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "stage": None,
+        "state": ReceiveBackupState.FAILED,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    assert resp.status == 500
+    assert open_mock.call_count == open_call_count
+    assert open_mock.return_value.write.call_count == write_call_count
+    assert open_mock.return_value.close.call_count == close_call_count
+
+
 @pytest.mark.parametrize(
     ("agent_id", "password", "restore_database", "restore_homeassistant", "dir"),
     [
