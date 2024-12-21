@@ -51,10 +51,6 @@ from .store import BackupStore
 from .util import make_backup_dir, read_backup, validate_password
 
 
-class IncorrectPasswordError(HomeAssistantError):
-    """Raised when the password is incorrect."""
-
-
 @dataclass(frozen=True, kw_only=True, slots=True)
 class NewBackup:
     """New backup class."""
@@ -247,6 +243,10 @@ class BackupReaderWriter(abc.ABC):
 
 class BackupReaderWriterError(HomeAssistantError):
     """Backup reader/writer error."""
+
+
+class IncorrectPasswordError(BackupReaderWriterError):
+    """Raised when the password is incorrect."""
 
 
 class BackupManager:
