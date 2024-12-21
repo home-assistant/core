@@ -7,12 +7,7 @@ rules:
     status: done
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      In coordinator.py, you set self.entry = entry, while after the super constructor,
-      you can access the entry via self.config_entry (you would have to overwrite the
-      type to make sure you don't have to assert not None every time)done
+  common-modules: done
   config-flow-test-coverage:
     status: todo
     comment: |
