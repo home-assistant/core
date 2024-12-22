@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
-from itertools import zip_longest
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -297,68 +296,18 @@ def _select_unused_attributes_ids(
 
     seen_ids: set[int] = set()
     if not database_engine.optimizer.slow_range_in_select:
-        #
+        query = attributes_ids_exist_in_states_with_fast_in_distinct
         # SQLite has a superior query optimizer for the distinct query below as it uses
         # the covering index without having to examine the rows directly for both of the
         # queries below.
-        #
-        # We use the distinct query for SQLite since the query in the other branch can
-        # generate more than 500 unions which SQLite does not support.
-        #
-        # How MariaDB's query optimizer handles this query:
-        # > explain select distinct attributes_id from states where attributes_id in
-        #   (136723);
-        # ...Using index
-        #
-        for attributes_ids_chunk in chunked_or_all(
-            attributes_ids, instance.max_bind_vars
-        ):
-            seen_ids.update(
-                state[0]
-                for state in session.execute(
-                    attributes_ids_exist_in_states_with_fast_in_distinct(
-                        attributes_ids_chunk
-                    )
-                ).all()
-            )
     else:
-        #
+        query = attributes_ids_exist_in_states
         # This branch is for DBMS that cannot optimize the distinct query well and has
         # to examine all the rows that match.
-        #
-        # This branch uses a union of simple queries, as each query is optimized away
-        # as the answer to the query can be found in the index.
-        #
-        # The below query works for SQLite as long as there are no more than 500
-        # attributes_id to be selected. We currently do not have MySQL or PostgreSQL
-        # servers running in the test suite; we test this path using SQLite when there
-        # are less than 500 attributes_id.
-        #
-        # How MariaDB's query optimizer handles this query:
-        # > explain select min(attributes_id) from states where attributes_id = 136723;
-        # ...Select tables optimized away
-        #
-        # We used to generate a query based on how many attribute_ids to find but
-        # that meant sqlalchemy Transparent SQL Compilation Caching was working against
-        # us by cached up to max_bind_vars different statements which could be
-        # up to 500MB for large database due to the complexity of the ORM objects.
-        #
-        # We now break the query into groups of 100 and use a lambda_stmt to ensure
-        # that the query is only cached once.
-        #
-        # PostgreSQL also suffers from the same issue as older MariaDB with the distinct query
-        # when the database gets large because it doesn't support skip/loose index scan.
-        # https://wiki.postgresql.org/wiki/Loose_indexscan
-        # https://github.com/home-assistant/core/issues/126084
-        groups = [iter(attributes_ids)] * 100
-        for attr_ids in zip_longest(*groups, fillvalue=None):
-            seen_ids |= {
-                attrs_id[0]
-                for attrs_id in session.execute(
-                    attributes_ids_exist_in_states(*attr_ids)  # type: ignore[arg-type]
-                ).all()
-                if attrs_id[0] is not None
-            }
+    for attributes_ids_chunk in chunked_or_all(attributes_ids, instance.max_bind_vars):
+        seen_ids.update(
+            state[0] for state in session.execute(query(attributes_ids_chunk)).all()
+        )
     to_remove = attributes_ids - seen_ids
     _LOGGER.debug(
         "Selected %s shared attributes to remove",
@@ -395,23 +344,13 @@ def _select_unused_event_data_ids(
     # See _select_unused_attributes_ids for why this function
     # branches for non-sqlite databases.
     if not database_engine.optimizer.slow_range_in_select:
-        for data_ids_chunk in chunked_or_all(data_ids, instance.max_bind_vars):
-            seen_ids.update(
-                state[0]
-                for state in session.execute(
-                    data_ids_exist_in_events_with_fast_in_distinct(data_ids_chunk)
-                ).all()
-            )
+        query = data_ids_exist_in_events_with_fast_in_distinct
     else:
-        groups = [iter(data_ids)] * 100
-        for data_ids_group in zip_longest(*groups, fillvalue=None):
-            seen_ids |= {
-                data_id[0]
-                for data_id in session.execute(
-                    data_ids_exist_in_events(*data_ids_group)  # type: ignore[arg-type]
-                ).all()
-                if data_id[0] is not None
-            }
+        query = data_ids_exist_in_events
+    for data_ids_chunk in chunked_or_all(data_ids, instance.max_bind_vars):
+        seen_ids.update(
+            state[0] for state in session.execute(query(data_ids_chunk)).all()
+        )
     to_remove = data_ids - seen_ids
     _LOGGER.debug("Selected %s shared event data to remove", len(to_remove))
     return to_remove

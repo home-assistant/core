@@ -9,7 +9,9 @@ from peblar import (
     Peblar,
     PeblarApi,
     PeblarError,
+    PeblarEVInterface,
     PeblarMeter,
+    PeblarSystem,
     PeblarUserConfiguration,
     PeblarVersions,
 )
@@ -26,9 +28,9 @@ from .const import LOGGER
 class PeblarRuntimeData:
     """Class to hold runtime data."""
 
-    meter_coordinator: PeblarMeterDataUpdateCoordinator
+    data_coordinator: PeblarDataUpdateCoordinator
     system_information: PeblarSystemInformation
-    user_configuraton_coordinator: PeblarUserConfigurationDataUpdateCoordinator
+    user_configuration_coordinator: PeblarUserConfigurationDataUpdateCoordinator
     version_coordinator: PeblarVersionDataUpdateCoordinator
 
 
@@ -41,6 +43,20 @@ class PeblarVersionInformation:
 
     current: PeblarVersions
     available: PeblarVersions
+
+
+@dataclass(kw_only=True)
+class PeblarData:
+    """Class to hold active charging related information of Peblar.
+
+    This is data that needs to be polled and updated at a relatively high
+    frequency in order for this integration to function correctly.
+    All this data is updated at the same time by a single coordinator.
+    """
+
+    ev: PeblarEVInterface
+    meter: PeblarMeter
+    system: PeblarSystem
 
 
 class PeblarVersionDataUpdateCoordinator(
@@ -72,8 +88,8 @@ class PeblarVersionDataUpdateCoordinator(
             raise UpdateFailed(err) from err
 
 
-class PeblarMeterDataUpdateCoordinator(DataUpdateCoordinator[PeblarMeter]):
-    """Class to manage fetching Peblar meter data."""
+class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
+    """Class to manage fetching Peblar active data."""
 
     def __init__(
         self, hass: HomeAssistant, entry: PeblarConfigEntry, api: PeblarApi
@@ -88,10 +104,14 @@ class PeblarMeterDataUpdateCoordinator(DataUpdateCoordinator[PeblarMeter]):
             update_interval=timedelta(seconds=10),
         )
 
-    async def _async_update_data(self) -> PeblarMeter:
+    async def _async_update_data(self) -> PeblarData:
         """Fetch data from the Peblar device."""
         try:
-            return await self.api.meter()
+            return PeblarData(
+                ev=await self.api.ev_interface(),
+                meter=await self.api.meter(),
+                system=await self.api.system(),
+            )
         except PeblarError as err:
             raise UpdateFailed(err) from err
 

@@ -11,6 +11,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.freeze_time("2024-12-21 21:45:00")
 @pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(

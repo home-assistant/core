@@ -30,7 +30,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     code_required = entry.options.get(CODE_REQUIRED, False)
 
     async_add_entities(
