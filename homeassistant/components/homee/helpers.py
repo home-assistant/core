@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_imported_nodes(config_entry) -> list[HomeeNode]:
     """Get a list of nodes that should be imported."""
-    homee: Homee = config_entry.runtime_data.homee
+    homee: Homee = config_entry.runtime_data
     return homee.nodes
 
 

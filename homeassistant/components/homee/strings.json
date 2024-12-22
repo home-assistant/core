@@ -22,39 +22,6 @@
         "data_description": {
           "host": "The IP address your Homee."
         }
-      },
-      "groups": {
-        "title": "Group Configuration",
-        "description": "Configure the groups. You can still change window & door groups later.",
-        "data": {
-          "window_groups": "Groups that contain window sensors:",
-          "door_groups": "Groups that contain door sensors:"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure homee",
-        "description": "Change settings of homee.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "add_homee_data": "Add (debug) information about the homee node and attributes to each entity"
-        },
-        "data_description": {
-          "host": "The IP address your Homee."
-        }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure the homee integration.",
-        "data": {
-          "window_groups": "Groups that contain window sensors:",
-          "door_groups": "Groups that contain door sensors:",
-          "add_homee_data": "Add (debug) information about the homee node and attributes to each entity."
-        }
       }
     }
   }

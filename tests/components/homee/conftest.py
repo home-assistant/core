@@ -51,7 +51,7 @@ def mock_config_entry() -> MockConfigEntry:
         },
         options={CONF_ADD_HOMEE_DATA: False},
         unique_id=HOMEE_ID,
-        version=3,
+        version=1,
         minor_version=1,
     )
 
