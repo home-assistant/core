@@ -70,7 +70,7 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
-        switch_only_hvac_mode=HVACMode.HEAT,
+        switch_only_hvac_mode=HVACMode.HEAT_COOL,
     ),
     # Thermostatic Radiator Valve
     # Not documented
@@ -206,10 +206,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if (not self._is_thermostat) and (
-            enum_type := self.find_dpcode(
-                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
-            )
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
@@ -217,7 +215,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if tuya_mode in TUYA_HVAC_TO_HA:
                     ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
-                    self._attr_hvac_modes.append(ha_mode)
+                    if ha_mode not in self._attr_hvac_modes:
+                        self._attr_hvac_modes.append(ha_mode)
                 else:
                     unknown_hvac_modes.append(tuya_mode)
 
@@ -230,12 +229,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 HVACMode.OFF,
                 description.switch_only_hvac_mode,
             ]
-
-        # Determine dpcode to use for checking thermostat current operation
-        if (self._is_thermostat) and self.find_dpcode(
-            DPCode.VALVE_STATE, dptype=DPType.ENUM
-        ):
-            self._attr_hvac_action = HVACAction.OFF
 
         # Determine dpcode to use for setting the humidity
         if int_type := self.find_dpcode(
@@ -450,16 +443,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current hvac action."""
-        if self._attr_hvac_action:
-            if self.device.status.get(DPCode.SWITCH, True):
-                valve = self.device.status.get(DPCode.VALVE_STATE)
-                if valve == "open":
-                    self._attr_hvac_action = HVACAction.HEATING
-                else:
-                    self._attr_hvac_action = HVACAction.IDLE
+        res: HVACAction | None = None
+        if self.device.status.get(DPCode.SWITCH, True):
+            valve: str = self.device.status.get(DPCode.VALVE_STATE)
+            if valve == "open":
+                res = HVACAction.HEATING
             else:
-                self._attr_hvac_action = HVACAction.OFF
-        return self._attr_hvac_action
+                res = HVACAction.IDLE
+        else:
+            res = HVACAction.OFF
+        return res
 
     @property
     def preset_mode(self) -> str | None:
