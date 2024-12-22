@@ -33,12 +33,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="albums",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ARTISTS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="artists",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_DURATION,
@@ -49,12 +47,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="genres",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_SONGS,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="songs",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_LASTSCAN,
@@ -63,13 +59,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="players",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_OTHER_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
         entity_registry_visible_default=False,
-        native_unit_of_measurement="players",
     ),
 )
 

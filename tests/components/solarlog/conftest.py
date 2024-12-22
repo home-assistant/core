@@ -10,9 +10,9 @@ from homeassistant.components.solarlog.const import (
     CONF_HAS_PWD,
     DOMAIN as SOLARLOG_DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 
-from .const import HOST, NAME
+from .const import HOST
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -38,7 +38,6 @@ def mock_config_entry() -> MockConfigEntry:
         title="solarlog",
         data={
             CONF_HOST: HOST,
-            CONF_NAME: NAME,
             CONF_HAS_PWD: True,
             CONF_PASSWORD: "pwd",
         },

@@ -2,11 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import CONF_ADDRESS, CONF_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,6 +53,17 @@ class LaMarzoccoBaseEntity(
             serial_number=device.serial_number,
             sw_version=device.firmware[FirmwareType.MACHINE].current_version,
         )
+        connections: set[tuple[str, str]] = set()
+        if coordinator.config_entry.data.get(CONF_ADDRESS):
+            connections.add(
+                (CONNECTION_NETWORK_MAC, coordinator.config_entry.data[CONF_ADDRESS])
+            )
+        if coordinator.config_entry.data.get(CONF_MAC):
+            connections.add(
+                (CONNECTION_BLUETOOTH, coordinator.config_entry.data[CONF_MAC])
+            )
+        if connections:
+            self._attr_device_info.update(DeviceInfo(connections=connections))
 
 
 class LaMarzoccoEntity(LaMarzoccoBaseEntity):
@@ -69,3 +86,26 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         """Initialize the entity."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
+
+
+class LaMarzoccScaleEntity(LaMarzoccoEntity):
+    """Common class for scale."""
+
+    def __init__(
+        self,
+        coordinator: LaMarzoccoUpdateCoordinator,
+        entity_description: LaMarzoccoEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description)
+        scale = coordinator.device.config.scale
+        if TYPE_CHECKING:
+            assert scale
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, scale.address)},
+            name=scale.name,
+            manufacturer="Acaia",
+            model="Lunar",
+            model_id="Y.301",
+            via_device=(DOMAIN, coordinator.device.serial_number),
+        )

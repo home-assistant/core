@@ -29,19 +29,19 @@
   "services": {
     "decrement": {
       "name": "Decrement",
-      "description": "Decrements a counter."
+      "description": "Decrements a counter by its step size."
     },
     "increment": {
       "name": "Increment",
-      "description": "Increments a counter."
+      "description": "Increments a counter by its step size."
     },
     "reset": {
       "name": "Reset",
-      "description": "Resets a counter."
+      "description": "Resets a counter to its initial value."
     },
     "set_value": {
       "name": "Set",
-      "description": "Sets the counter value.",
+      "description": "Sets the counter to a specific value.",
       "fields": {
         "value": {
           "name": "Value",

@@ -48,7 +48,7 @@
   "services": {
     "see": {
       "name": "See",
-      "description": "Records a seen tracked device.",
+      "description": "Manually update the records of a seen legacy device tracker in the known_devices.yaml file.",
       "fields": {
         "mac": {
           "name": "MAC address",
