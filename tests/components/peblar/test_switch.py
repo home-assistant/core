@@ -56,10 +56,9 @@ async def test_entities(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_select(
+async def test_switch(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
-    mock_config_entry: MockConfigEntry,
     service: str,
     force_single_phase: bool,
 ) -> None:
@@ -68,7 +67,7 @@ async def test_select(
     mocked_method = mock_peblar.rest_api.return_value.ev_interface
     mocked_method.reset_mock()
 
-    # Test normal happy path for changing the select option
+    # Test normal happy path for changing the switch state
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
@@ -81,14 +80,47 @@ async def test_select(
         {"force_single_phase": force_single_phase}
     )
 
-    # Test connection error handling
-    mocked_method.side_effect = PeblarConnectionError("Could not connect")
+
+@pytest.mark.parametrize(
+    ("error", "error_match", "translation_key", "translation_placeholders"),
+    [
+        (
+            PeblarConnectionError("Could not connect"),
+            (
+                r"An error occurred while communicating "
+                r"with the Peblar device: Could not connect"
+            ),
+            "communication_error",
+            {"error": "Could not connect"},
+        ),
+        (
+            PeblarError("Unknown error"),
+            (
+                r"An unknown error occurred while communicating "
+                r"with the Peblar device: Unknown error"
+            ),
+            "unknown_error",
+            {"error": "Unknown error"},
+        ),
+    ],
+)
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_communication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    error: Exception,
+    error_match: str,
+    translation_key: str,
+    translation_placeholders: dict,
+    service: str,
+) -> None:
+    """Test the Peblar EV charger when a communication error occurs."""
+    entity_id = "switch.peblar_ev_charger_force_single_phase"
+    mock_peblar.rest_api.return_value.ev_interface.side_effect = error
     with pytest.raises(
         HomeAssistantError,
-        match=(
-            r"An error occurred while communicating "
-            r"with the Peblar device: Could not connect"
-        ),
+        match=error_match,
     ) as excinfo:
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -98,32 +130,24 @@ async def test_select(
         )
 
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "communication_error"
-    assert excinfo.value.translation_placeholders == {"error": "Could not connect"}
+    assert excinfo.value.translation_key == translation_key
+    assert excinfo.value.translation_placeholders == translation_placeholders
 
-    # Test unknown error handling
-    mocked_method.side_effect = PeblarError("Unknown error")
-    with pytest.raises(
-        HomeAssistantError,
-        match=(
-            r"An unknown error occurred while communicating "
-            r"with the Peblar device: Unknown error"
-        ),
-    ) as excinfo:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
 
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "unknown_error"
-    assert excinfo.value.translation_placeholders == {"error": "Unknown error"}
-
-    # Test authentication error handling
-    mocked_method.side_effect = PeblarAuthenticationError("Authentication error")
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+async def test_switch_authentication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Test the Peblar EV charger when an authentication error occurs."""
+    entity_id = "switch.peblar_ev_charger_force_single_phase"
+    mock_peblar.rest_api.return_value.ev_interface.side_effect = (
+        PeblarAuthenticationError("Authentication error")
+    )
     mock_peblar.login.side_effect = PeblarAuthenticationError("Authentication error")
+
     with pytest.raises(
         HomeAssistantError,
         match=(
