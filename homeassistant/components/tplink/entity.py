@@ -73,13 +73,6 @@ EXCLUDED_FEATURES = {
     "check_latest_firmware",
     # siren
     "alarm",
-    # camera
-    "pan_left",
-    "pan_right",
-    "pan_step",
-    "tilt_up",
-    "tilt_down",
-    "tilt_step",
 }
 
 
