@@ -2554,18 +2554,13 @@ async def test_restore_backup_agent_error(
     assert result["success"] is True
 
     with (
-        patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.open"),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
-        patch(
-            "homeassistant.components.backup.manager.validate_password"
-        ) as validate_password_mock,
         patch.object(
             remote_agent, "async_download_backup", side_effect=exception
         ) as download_mock,
     ):
-        validate_password_mock.return_value = False
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
@@ -2598,4 +2593,155 @@ async def test_restore_backup_agent_error(
 
     assert download_mock.call_count == 1
     assert mocked_write_text.call_count == 0
+    assert mocked_service_call.call_count == 0
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    (
+        "open_call_count",
+        "open_exception",
+        "write_call_count",
+        "write_exception",
+        "close_call_count",
+        "close_exception",
+        "write_text_call_count",
+        "write_text_exception",
+        "validate_password_call_count",
+    ),
+    [
+        (
+            1,
+            OSError("Boom!"),
+            0,
+            None,
+            0,
+            None,
+            0,
+            None,
+            0,
+        ),
+        (
+            1,
+            None,
+            1,
+            OSError("Boom!"),
+            1,
+            None,
+            0,
+            None,
+            0,
+        ),
+        (
+            1,
+            None,
+            1,
+            None,
+            1,
+            OSError("Boom!"),
+            0,
+            None,
+            0,
+        ),
+        (
+            1,
+            None,
+            1,
+            None,
+            1,
+            None,
+            1,
+            OSError("Boom!"),
+            1,
+        ),
+    ],
+)
+async def test_restore_backup_file_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    open_call_count: int,
+    open_exception: list[Exception | None],
+    write_call_count: int,
+    write_exception: Exception | None,
+    close_call_count: int,
+    close_exception: list[Exception | None],
+    write_text_call_count: int,
+    write_text_exception: Exception | None,
+    validate_password_call_count: int,
+) -> None:
+    """Test restore backup with file error."""
+    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    open_mock = mock_open()
+    open_mock.side_effect = open_exception
+    open_mock.return_value.write.side_effect = write_exception
+    open_mock.return_value.close.side_effect = close_exception
+
+    with (
+        patch("pathlib.Path.open", open_mock),
+        patch(
+            "pathlib.Path.write_text", side_effect=write_text_exception
+        ) as mocked_write_text,
+        patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
+        patch(
+            "homeassistant.components.backup.manager.validate_password"
+        ) as validate_password_mock,
+        patch.object(remote_agent, "async_download_backup") as download_mock,
+    ):
+        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
+        await ws_client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "agent_id": remote_agent.agent_id,
+            }
+        )
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.IN_PROGRESS,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.FAILED,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+        result = await ws_client.receive_json()
+        assert not result["success"]
+        assert result["error"]["code"] == "unknown_error"
+        assert result["error"]["message"] == "Unknown error"
+
+    assert download_mock.call_count == 1
+    assert validate_password_mock.call_count == validate_password_call_count
+    assert open_mock.call_count == open_call_count
+    assert open_mock.return_value.write.call_count == write_call_count
+    assert open_mock.return_value.close.call_count == close_call_count
+    assert mocked_write_text.call_count == write_text_call_count
     assert mocked_service_call.call_count == 0
