@@ -11,16 +11,14 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarVersionDataUpdateCoordinator,
     PeblarVersionInformation,
 )
+from .entity import PeblarEntity
 
 PARALLEL_UPDATES = 1
 
@@ -56,33 +54,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Peblar update based on a config entry."""
     async_add_entities(
-        PeblarUpdateEntity(entry, description) for description in DESCRIPTIONS
+        PeblarUpdateEntity(
+            entry=entry,
+            coordinator=entry.runtime_data.version_coordinator,
+            description=description,
+        )
+        for description in DESCRIPTIONS
     )
 
 
 class PeblarUpdateEntity(
-    CoordinatorEntity[PeblarVersionDataUpdateCoordinator], UpdateEntity
+    PeblarEntity[PeblarVersionDataUpdateCoordinator],
+    UpdateEntity,
 ):
     """Defines a Peblar update entity."""
 
     entity_description: PeblarUpdateEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarUpdateEntityDescription,
-    ) -> None:
-        """Initialize the update entity."""
-        super().__init__(entry.runtime_data.version_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     @property
     def installed_version(self) -> str | None:

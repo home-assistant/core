@@ -15,12 +15,10 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
+from .entity import PeblarEntity
 
 PARALLEL_UPDATES = 1
 
@@ -59,6 +57,7 @@ async def async_setup_entry(
     async_add_entities(
         PeblarButtonEntity(
             entry=entry,
+            coordinator=entry.runtime_data.user_configuration_coordinator,
             description=description,
         )
         for description in DESCRIPTIONS
@@ -66,28 +65,12 @@ async def async_setup_entry(
 
 
 class PeblarButtonEntity(
-    CoordinatorEntity[PeblarUserConfigurationDataUpdateCoordinator], ButtonEntity
+    PeblarEntity[PeblarUserConfigurationDataUpdateCoordinator],
+    ButtonEntity,
 ):
     """Defines an Peblar button."""
 
     entity_description: PeblarButtonEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarButtonEntityDescription,
-    ) -> None:
-        """Initialize the button entity."""
-        super().__init__(coordinator=entry.runtime_data.user_configuraton_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     async def async_press(self) -> None:
         """Trigger button press on the Peblar device."""

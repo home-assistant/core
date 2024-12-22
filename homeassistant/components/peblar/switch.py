@@ -11,17 +11,15 @@ from peblar import PeblarApi
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarData,
     PeblarDataUpdateCoordinator,
     PeblarRuntimeData,
 )
+from .entity import PeblarEntity
 
 PARALLEL_UPDATES = 1
 
@@ -42,7 +40,7 @@ DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         has_fn=lambda x: (
             x.data_coordinator.data.system.force_single_phase_allowed
-            and x.user_configuraton_coordinator.data.connected_phases > 1
+            and x.user_configuration_coordinator.data.connected_phases > 1
         ),
         is_on_fn=lambda x: x.ev.force_single_phase,
         set_fn=lambda x, on: x.ev_interface(force_single_phase=on),
@@ -59,6 +57,7 @@ async def async_setup_entry(
     async_add_entities(
         PeblarSwitchEntity(
             entry=entry,
+            coordinator=entry.runtime_data.data_coordinator,
             description=description,
         )
         for description in DESCRIPTIONS
@@ -66,27 +65,13 @@ async def async_setup_entry(
     )
 
 
-class PeblarSwitchEntity(CoordinatorEntity[PeblarDataUpdateCoordinator], SwitchEntity):
+class PeblarSwitchEntity(
+    PeblarEntity[PeblarDataUpdateCoordinator],
+    SwitchEntity,
+):
     """Defines a Peblar switch entity."""
 
     entity_description: PeblarSwitchEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarSwitchEntityDescription,
-    ) -> None:
-        """Initialize the select entity."""
-        super().__init__(entry.runtime_data.data_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     @property
     def is_on(self) -> bool:
