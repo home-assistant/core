@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
 from .entity import PeblarEntity
+from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -72,6 +73,7 @@ class PeblarButtonEntity(
 
     entity_description: PeblarButtonEntityDescription
 
+    @peblar_exception_handler
     async def async_press(self) -> None:
         """Trigger button press on the Peblar device."""
         await self.entity_description.press_fn(self.coordinator.peblar)
