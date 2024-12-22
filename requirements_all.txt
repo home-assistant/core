@@ -1475,6 +1475,10 @@ nice-go==1.0.0
 # homeassistant.components.nilu
 niluclient==0.1.2
 
+# homeassistant.components.compensation
+# homeassistant.components.stream
+ninja==1.11.1.3
+
 # homeassistant.components.noaa_tides
 noaa-coops==0.1.9
 
