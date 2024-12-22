@@ -49,7 +49,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         """Return the current temperature."""
         current_temperature = self.device.states[OverkizState.CORE_DHW_TEMPERATURE]
 
-        if current_temperature:
+        if current_temperature and current_temperature.value_as_int:
             return float(current_temperature.value_as_int)
 
         return None
@@ -61,7 +61,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
         ]
 
-        if target_temperature:
+        if target_temperature and target_temperature.value_as_int:
             return float(target_temperature.value_as_int)
 
         return None
