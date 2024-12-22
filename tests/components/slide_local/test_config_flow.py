@@ -300,7 +300,6 @@ async def test_reconfigure(
         result["flow_id"],
         {
             CONF_HOST: "127.0.0.3",
-            CONF_PASSWORD: "pwd2",
         },
     )
 
@@ -311,7 +310,6 @@ async def test_reconfigure(
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry
     assert entry.data[CONF_HOST] == "127.0.0.3"
-    assert entry.data[CONF_PASSWORD] == "pwd2"
 
 
 async def test_zeroconf(

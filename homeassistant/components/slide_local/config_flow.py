@@ -165,7 +165,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Schema(
                     {
                         vol.Required(CONF_HOST): str,
-                        vol.Optional(CONF_PASSWORD): str,
                     }
                 ),
                 {
