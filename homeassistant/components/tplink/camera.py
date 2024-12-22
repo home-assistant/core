@@ -2,8 +2,8 @@
 
 import asyncio
 from dataclasses import dataclass
-import datetime
 import logging
+import time
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigFlowContext
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import CONF_CAMERA_CREDENTIALS
@@ -76,7 +75,7 @@ async def async_setup_entry(
 class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
     """Representation of a TPLink camera."""
 
-    IMAGE_INTERVAL = datetime.timedelta(minutes=5)
+    IMAGE_INTERVAL = 5 * 60
 
     _attr_supported_features = CameraEntityFeature.STREAM | CameraEntityFeature.ON_OFF
 
@@ -102,7 +101,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         Camera.__init__(self)
         self._ffmpeg_manager = ffmpeg_manager
         self._image_lock = asyncio.Lock()
-        self._last_update = datetime.datetime.min
+        self._last_update: float = 0
         self._camera_credentials = camera_credentials
         self._can_stream = True
         self._http_mpeg_stream_running = False
@@ -143,7 +142,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        now = dt_util.utcnow()
+        now = time.monotonic()
 
         if self._image and now - self._last_update < self.IMAGE_INTERVAL:
             return self._image
@@ -155,7 +154,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         if self._can_stream and (video_url := self._video_url):
             # Sometimes the front end makes multiple image requests
             async with self._image_lock:
-                if self._image and now - self._last_update < self.IMAGE_INTERVAL:
+                if self._image and (now - self._last_update) < self.IMAGE_INTERVAL:
                     return self._image
 
                 _LOGGER.debug("Updating camera image for %s", self._device.host)
