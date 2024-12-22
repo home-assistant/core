@@ -9,6 +9,7 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -63,9 +64,12 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return OVERKIZ_TO_HVAC_MODE[
-            self.executor.select_state(OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1_STATE)
-        ]
+        if (
+            state := self.device.states[OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1_STATE]
+        ) and state.value_as_str:
+            return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
+
+        return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -76,9 +80,12 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return OVERKIZ_TO_PRESET_MODE[
-            self.executor.select_state(OverkizState.MODBUS_YUTAKI_TARGET_MODE_STATE)
-        ]
+        if (
+            state := self.device.states[OverkizState.MODBUS_YUTAKI_TARGET_MODE_STATE]
+        ) and state.value_as_str:
+            return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
+
+        return PRESET_NONE
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
