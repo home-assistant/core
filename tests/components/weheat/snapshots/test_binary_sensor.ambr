@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump_state-entry]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,9 +21,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Indoor unit auxilary water pump state',
+    'original_name': 'Indoor unit auxilary water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -32,20 +32,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump_state-state]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxilary_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Indoor unit auxilary water pump state',
+      'device_class': 'running',
+      'friendly_name': 'Test Model Indoor unit auxilary water pump',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_auxilary_water_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state-entry]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -57,7 +58,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -67,9 +68,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Indoor unit DHW valve or water pump state',
+    'original_name': 'Indoor unit DHW valve or water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -78,20 +79,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state-state]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Indoor unit DHW valve or water pump state',
+      'device_class': 'running',
+      'friendly_name': 'Test Model Indoor unit DHW valve or water pump',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_dhw_valve_or_water_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater_state-entry]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -103,7 +105,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_electric_heater_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_electric_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -113,9 +115,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Indoor unit electric heater state',
+    'original_name': 'Indoor unit electric heater',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -124,13 +126,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater_state-state]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Indoor unit electric heater state',
+      'device_class': 'running',
+      'friendly_name': 'Test Model Indoor unit electric heater',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_electric_heater_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_electric_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -183,7 +186,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump_state-entry]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -195,7 +198,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_water_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -205,9 +208,9 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Indoor unit water pump state',
+    'original_name': 'Indoor unit water pump',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -216,13 +219,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump_state-state]
+# name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Indoor unit water pump state',
+      'device_class': 'running',
+      'friendly_name': 'Test Model Indoor unit water pump',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_model_indoor_unit_water_pump_state',
+    'entity_id': 'binary_sensor.test_model_indoor_unit_water_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

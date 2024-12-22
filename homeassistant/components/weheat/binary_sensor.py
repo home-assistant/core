@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -29,16 +30,19 @@ BINARY_SENSORS = [
     WeHeatBinarySensorEntityDescription(
         translation_key="indoor_unit_water_pump_state",
         key="indoor_unit_water_pump_state",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda status: status.indoor_unit_water_pump_state,
     ),
     WeHeatBinarySensorEntityDescription(
         translation_key="indoor_unit_auxiliary_pump_state",
         key="indoor_unit_auxiliary_pump_state",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda status: status.indoor_unit_auxiliary_pump_state,
     ),
     WeHeatBinarySensorEntityDescription(
         translation_key="indoor_unit_dhw_valve_or_pump_state",
         key="indoor_unit_dhw_valve_or_pump_state",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda status: status.indoor_unit_dhw_valve_or_pump_state,
     ),
     WeHeatBinarySensorEntityDescription(
@@ -49,6 +53,7 @@ BINARY_SENSORS = [
     WeHeatBinarySensorEntityDescription(
         translation_key="indoor_unit_electric_heater_state",
         key="indoor_unit_electric_heater_state",
+        device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=lambda status: status.indoor_unit_electric_heater_state,
     ),
 ]
