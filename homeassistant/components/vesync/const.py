@@ -8,6 +8,7 @@ VS_SWITCHES = "switches"
 VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
+VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
 
 DEV_TYPE_TO_HA = {

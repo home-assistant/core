@@ -3,6 +3,8 @@
 import logging
 from typing import Any
 
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -13,9 +15,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import color as color_util
 
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_LIGHTS
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,27 +33,33 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights."""
 
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+
     @callback
     def discover(devices):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_LIGHTS), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities, coordinator)
 
 
 @callback
-def _setup_entities(devices, async_add_entities):
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities,
+    coordinator: DataUpdateCoordinator,
+):
     """Check if device is online and add entity."""
-    entities = []
+    entities: list[VeSyncBaseLight] = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
-            entities.append(VeSyncDimmableLightHA(dev))
+            entities.append(VeSyncDimmableLightHA(dev, coordinator))
         elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
-            entities.append(VeSyncTunableWhiteLightHA(dev))
+            entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
         else:
             _LOGGER.debug(
                 "%s - Unknown device type - %s", dev.device_name, dev.device_type
