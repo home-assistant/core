@@ -6,7 +6,14 @@ from functools import partial
 import logging
 
 import pypck
-from pypck.connection import PchkConnectionManager
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionManager,
+    PchkConnectionRefusedError,
+    PchkLcnNotConnectedError,
+    PchkLicenseError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,6 +27,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -81,24 +89,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         settings=settings,
         connection_id=config_entry.entry_id,
     )
+
     try:
         # establish connection to PCHK server
         await lcn_connection.async_connect(timeout=15)
-    except pypck.connection.PchkAuthenticationError:
-        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
-        return False
-    except pypck.connection.PchkLicenseError:
-        _LOGGER.warning(
-            (
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required"
-            ),
-            config_entry.title,
-        )
-        return False
-    except TimeoutError:
-        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
-        return False
+    except (
+        PchkAuthenticationError,
+        PchkLicenseError,
+        PchkConnectionRefusedError,
+        PchkConnectionFailedError,
+        PchkLcnNotConnectedError,
+    ) as ex:
+        await lcn_connection.async_close()
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {config_entry.title}: {ex}"
+        ) from ex
 
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -106,6 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         DEVICE_CONNECTIONS: {},
         ADD_ENTITIES_CALLBACKS: {},
     }
+
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
 
@@ -121,6 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     input_received = partial(
         async_host_input_received, hass, config_entry, device_registry
     )
+
     lcn_connection.register_for_inputs(input_received)
 
     return True

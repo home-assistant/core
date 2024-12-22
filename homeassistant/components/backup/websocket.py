@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import ManagerStateEvent
+from .manager import IncorrectPasswordError, ManagerStateEvent
 from .models import Folder
 
 
@@ -131,16 +131,20 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(
-        msg["backup_id"],
-        agent_id=msg["agent_id"],
-        password=msg.get("password"),
-        restore_addons=msg.get("restore_addons"),
-        restore_database=msg["restore_database"],
-        restore_folders=msg.get("restore_folders"),
-        restore_homeassistant=msg["restore_homeassistant"],
-    )
-    connection.send_result(msg["id"])
+    try:
+        await hass.data[DATA_MANAGER].async_restore_backup(
+            msg["backup_id"],
+            agent_id=msg["agent_id"],
+            password=msg.get("password"),
+            restore_addons=msg.get("restore_addons"),
+            restore_database=msg["restore_database"],
+            restore_folders=msg.get("restore_folders"),
+            restore_homeassistant=msg["restore_homeassistant"],
+        )
+    except IncorrectPasswordError:
+        connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    else:
+        connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
@@ -291,11 +295,15 @@ async def handle_config_info(
         vol.Required("type"): "backup/config/update",
         vol.Optional("create_backup"): vol.Schema(
             {
-                vol.Optional("agent_ids"): vol.All(list[str]),
-                vol.Optional("include_addons"): vol.Any(list[str], None),
+                vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
+                vol.Optional("include_addons"): vol.Any(
+                    vol.All([str], vol.Unique()), None
+                ),
                 vol.Optional("include_all_addons"): bool,
                 vol.Optional("include_database"): bool,
-                vol.Optional("include_folders"): vol.Any([vol.Coerce(Folder)], None),
+                vol.Optional("include_folders"): vol.Any(
+                    vol.All([vol.Coerce(Folder)], vol.Unique()), None
+                ),
                 vol.Optional("name"): vol.Any(str, None),
                 vol.Optional("password"): vol.Any(str, None),
             },

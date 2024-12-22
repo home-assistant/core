@@ -458,6 +458,24 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    # HitachiHeatingSystem/HitachiAirToWaterHeatingZone
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1,
+        name="Room ambient temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # HitachiHeatingSystem/HitachiAirToWaterMainComponent
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_OUTDOOR_AMBIENT_TEMPERATURE,
+        name="Outdoor ambient temperature",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}

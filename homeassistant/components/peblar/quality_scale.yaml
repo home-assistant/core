@@ -36,11 +36,11 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
   # Gold
   devices: todo
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: todo
   discovery: todo
   docs-data-update: todo
