@@ -14,9 +14,7 @@ rules:
   action-setup:
     status: exempt
     comment: Plugwise integration has no custom actions
-  common-modules:
-    status: todo
-    comment: Verify entity for async_added_to_hass usage (discard?)
+  common-modules: done
   docs-high-level-description:
     status: todo
     comment: Rewrite top section, docs PR prepared waiting for 36087 merge
@@ -34,12 +32,8 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The hubs have a hardcoded `Smile ID` printed on the sticker used as password, it can not be changed
-  parallel-updates:
-    status: todo
-    comment: Using coordinator, but required due to mutable platform
-  test-coverage:
-    status: todo
-    comment: Consider using snapshots + consistency in setup calls + add numerical tests + use fixtures
+  parallel-updates: done
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters:
     status: todo
@@ -58,9 +52,7 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: This integration does not have any reconfiguration steps (yet) investigate how/why
+  reconfiguration-flow: done
   dynamic-devices: done
   discovery-update-info: done
   repair-issues:

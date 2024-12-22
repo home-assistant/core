@@ -15,7 +15,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -30,7 +29,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from .const import ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
+from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
 from .coordinator import LIFXUpdateCoordinator, Light
 from .util import convert_8_to_16, find_hsbk
 
@@ -126,7 +125,8 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
+        # _ATTR_COLOR_TEMP deprecated - to be removed in 2026.1
+        vol.Exclusive(_ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),

@@ -24,6 +24,7 @@
           'fr',
           'gl',
           'he',
+          'hi',
           'hr',
           'hu',
           'id',
@@ -35,6 +36,7 @@
           'lt',
           'lv',
           'ml',
+          'mn',
           'ms',
           'nb',
           'nl',
@@ -47,6 +49,7 @@
           'sl',
           'sr',
           'sv',
+          'sw',
           'te',
           'th',
           'tr',
@@ -693,6 +696,14 @@
   })
 # ---
 # name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'trigger_sentences': list([
+      'hello',
+      'hello[ world]',
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger.1
   dict({
     'results': list([
       dict({
