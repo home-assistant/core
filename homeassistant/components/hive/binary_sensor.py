@@ -113,14 +113,14 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
         self.attributes = self.device.get("attributes", {})
-        self._attr_is_on = self.device["status"]["state"]
-        if "status" in self.device:
-            self._attr_is_on = self.device["status"].get("state")
 
         if self.device["hiveType"] != "Connectivity":
             self._attr_available = self.device["deviceData"].get("online")
         else:
             self._attr_available = True
+
+        if self._attr_available:
+            self._attr_is_on = self.device["status"].get("state")
 
 
 class HiveSensorEntity(HiveEntity, BinarySensorEntity):
