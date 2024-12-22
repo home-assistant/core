@@ -61,7 +61,7 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
             return OVERKIZ_TO_HVAC_MODES[operating_mode]
 
         if operating_mode in OVERKIZ_TO_PRESET_MODES:
-            return HVACMode.HEAT
+            return HVACMode.OFF
 
         return HVACMode.OFF
 
