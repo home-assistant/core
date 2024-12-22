@@ -1,5 +1,7 @@
 """Base class for Niko Home Control entities."""
 
+from abc import abstractmethod
+
 from nhc.action import NHCAction
 from nhc.controller import NHCController
 
@@ -43,5 +45,6 @@ class NikoHomeControlEntity(Entity):
         self.update_state()
         self.async_write_ha_state()
 
+    @abstractmethod
     def update_state(self) -> None:
         """Update the state of the entity."""
