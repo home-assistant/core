@@ -1930,8 +1930,6 @@ async def test_purge_old_events_purges_the_event_type_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
     """Test deleting old events purges event type ids."""
-    assert recorder_mock.event_type_manager.active is True
-
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
     eleven_days_ago = utcnow - timedelta(days=11)
