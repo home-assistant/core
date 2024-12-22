@@ -26,7 +26,7 @@ def mock_niko_home_control_connection() -> Generator[AsyncMock]:
     """Mock a NHC client."""
     with (
         patch(
-            "homeassistant.components.niko_home_control.config_flow.NikoHomeControlConnection",
+            "homeassistant.components.niko_home_control.config_flow.NHCController",
             autospec=True,
         ) as mock_client,
     ):

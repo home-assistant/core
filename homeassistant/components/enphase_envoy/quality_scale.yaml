@@ -7,27 +7,15 @@ rules:
     status: done
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      In coordinator.py, you set self.entry = entry, while after the super constructor,
-      you can access the entry via self.config_entry (you would have to overwrite the
-      type to make sure you don't have to assert not None every time)done
+  common-modules: done
   config-flow-test-coverage:
     status: todo
     comment: |
-      - test_form is missing an assertion for the unique id of the resulting entry
-      - Let's also have test_user_no_serial_number assert the unique_id (as in, it can't be set to the serial_number since we dont have one, so let's assert what it will result in)
-      - Let's have every test result in either CREATE_ENTRY or ABORT (like test_form_invalid_auth or test_form_cannot_connect, they can be parametrized)
-      - test_zeroconf_token_firmware and test_zeroconf_pre_token_firmware can also be parametrized I think
       - test_zero_conf_malformed_serial_property - with pytest.raises(KeyError) as ex::
       I don't believe this should be able to raise a KeyError Shouldn't we abort the flow?
-      test_reauth -> Let's also assert result before we start with the async_configure part
   config-flow:
     status: todo
     comment: |
-      - async_step_zeroconf -> a config entry title is considered userland,
-      so if someone renamed their entry, it will be reverted back with the code at L146.
       - async_step_reaut L160: I believe that the unique is already set when starting a reauth flow
       - The config flow is missing data descriptions for the other fields
   dependency-transparency: done
