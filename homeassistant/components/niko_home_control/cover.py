@@ -30,7 +30,7 @@ class NikoHomeControlCover(NikoHomeControlEntity, CoverEntity):
     """Representation of a Niko Cover."""
 
     _attr_name = None
-    _action = NHCCover
+    _action: NHCCover
 
     def __init__(
         self, action: NHCCover, controller: NHCController, unique_id: str
