@@ -30,7 +30,7 @@ class PeblarRuntimeData:
 
     data_coordinator: PeblarDataUpdateCoordinator
     system_information: PeblarSystemInformation
-    user_configuraton_coordinator: PeblarUserConfigurationDataUpdateCoordinator
+    user_configuration_coordinator: PeblarUserConfigurationDataUpdateCoordinator
     version_coordinator: PeblarVersionDataUpdateCoordinator
 
 
