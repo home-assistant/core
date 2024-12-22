@@ -311,7 +311,7 @@ async def test_already_exists(
     test_fn: Callable[[HomeAssistant, _TestFnUserInput], Awaitable[dict[str, Any]]],
     test_fn_user_input: _TestFnUserInput,
 ) -> None:
-    """Test we only don't allow duplicated config entries."""
+    """Test we don't allow duplicated config entries."""
     MockConfigEntry(domain=DOMAIN, data=test_fn_user_input.auth).add_to_hass(hass)
 
     result = await test_fn(
