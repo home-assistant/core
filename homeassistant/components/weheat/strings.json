@@ -101,6 +101,15 @@
       },
       "electricity_used": {
         "name": "Electricity used"
+      },
+      "energy_output": {
+        "name": "Total energy output"
+      },
+      "compressor_rpm": {
+        "name": "Compressor speed"
+      },
+      "compressor_percentage": {
+        "name": "Compressor usage"
       }
     }
   }

@@ -44,6 +44,12 @@
       },
       "electricity_used": {
         "default": "mdi:flash"
+      },
+      "compressor_rpm": {
+        "default": "mdi:fan"
+      },
+      "compressor_percentage": {
+        "default": "mdi:fan"
       }
     }
   }
