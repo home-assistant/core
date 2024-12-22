@@ -123,8 +123,8 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.energy_total = 12345
     mock_heat_pump_instance.indoor_unit_water_pump_state = False
     mock_heat_pump_instance.indoor_unit_auxiliary_pump_state = False
-    mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = False
-    mock_heat_pump_instance.indoor_unit_gas_boiler_state = None
+    mock_heat_pump_instance.indoor_unit_dhw_valve_or_pump_state = None
+    mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
 
     return mock_heat_pump_instance
