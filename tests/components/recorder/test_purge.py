@@ -112,6 +112,9 @@ async def test_purge_big_database(hass: HomeAssistant, recorder_mock: Recorder) 
 
 async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) -> None:
     """Test deleting old states."""
+    assert recorder_mock.states_manager.oldest_ts is None
+    oldest_ts = recorder_mock.states_manager.oldest_ts
+
     await _add_test_states(hass)
 
     # make sure we start with 6 states
@@ -127,6 +130,10 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 0
 
+        assert recorder_mock.states_manager.oldest_ts != oldest_ts
+        assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
+        oldest_ts = recorder_mock.states_manager.oldest_ts
+
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
     purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -140,6 +147,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         repack=False,
     )
     assert not finished
+    # states_manager.oldest_ts is not updated until after the purge is complete
+    assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
@@ -162,12 +171,18 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
 
     finished = purge_old_data(recorder_mock, purge_before, repack=False)
     assert finished
+    # states_manager.oldest_ts should now be updated
+    assert recorder_mock.states_manager.oldest_ts != oldest_ts
 
     with session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
         assert states.count() == 2
         assert state_attributes.count() == 1
+
+        assert recorder_mock.states_manager.oldest_ts != oldest_ts
+        assert recorder_mock.states_manager.oldest_ts == states[0].last_updated_ts
+        oldest_ts = recorder_mock.states_manager.oldest_ts
 
     assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
@@ -181,6 +196,8 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         repack=False,
     )
     assert not finished
+    # states_manager.oldest_ts is not updated until after the purge is complete
+    assert recorder_mock.states_manager.oldest_ts == oldest_ts
 
     with session_scope(hass=hass) as session:
         assert states.count() == 0

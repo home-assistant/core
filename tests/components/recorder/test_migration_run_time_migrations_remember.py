@@ -1,6 +1,6 @@
 """Test run time migrations are remembered in the migration_changes table."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import importlib
 import sys
 from unittest.mock import Mock, patch
@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from sqlalchemy.schema import Index
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import core, migration, statistics
@@ -87,138 +88,165 @@ def _create_engine_test(
 
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 @pytest.mark.parametrize(
-    ("initial_version", "expected_migrator_calls"),
+    ("initial_version", "expected_migrator_calls", "expected_created_indices"),
+    # expected_migrator_calls is a dict of
+    # migrator_id: (needs_migrate_calls, migrate_data_calls)
     [
         (
             27,
             {
-                "state_context_id_as_binary": 1,
-                "event_context_id_as_binary": 1,
-                "event_type_id_migration": 1,
-                "entity_id_migration": 1,
-                "event_id_post_migration": 1,
-                "entity_id_post_migration": 1,
+                "state_context_id_as_binary": (0, 1),
+                "event_context_id_as_binary": (0, 1),
+                "event_type_id_migration": (2, 1),
+                "entity_id_migration": (2, 1),
+                "event_id_post_migration": (1, 1),
+                "entity_id_post_migration": (0, 1),
             },
+            [
+                "ix_states_context_id",
+                "ix_events_context_id",
+                "ix_states_entity_id_last_updated_ts",
+            ],
         ),
         (
             28,
             {
-                "state_context_id_as_binary": 1,
-                "event_context_id_as_binary": 1,
-                "event_type_id_migration": 1,
-                "entity_id_migration": 1,
-                "event_id_post_migration": 0,
-                "entity_id_post_migration": 1,
+                "state_context_id_as_binary": (0, 1),
+                "event_context_id_as_binary": (0, 1),
+                "event_type_id_migration": (2, 1),
+                "entity_id_migration": (2, 1),
+                "event_id_post_migration": (0, 0),
+                "entity_id_post_migration": (0, 1),
             },
+            [
+                "ix_states_context_id",
+                "ix_events_context_id",
+                "ix_states_entity_id_last_updated_ts",
+            ],
         ),
         (
             36,
             {
-                "state_context_id_as_binary": 0,
-                "event_context_id_as_binary": 0,
-                "event_type_id_migration": 1,
-                "entity_id_migration": 1,
-                "event_id_post_migration": 0,
-                "entity_id_post_migration": 1,
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (2, 1),
+                "entity_id_migration": (2, 1),
+                "event_id_post_migration": (0, 0),
+                "entity_id_post_migration": (0, 1),
             },
+            ["ix_states_entity_id_last_updated_ts"],
         ),
         (
             37,
             {
-                "state_context_id_as_binary": 0,
-                "event_context_id_as_binary": 0,
-                "event_type_id_migration": 0,
-                "entity_id_migration": 1,
-                "event_id_post_migration": 0,
-                "entity_id_post_migration": 1,
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (0, 0),
+                "entity_id_migration": (2, 1),
+                "event_id_post_migration": (0, 0),
+                "entity_id_post_migration": (0, 1),
             },
+            ["ix_states_entity_id_last_updated_ts"],
         ),
         (
             38,
             {
-                "state_context_id_as_binary": 0,
-                "event_context_id_as_binary": 0,
-                "event_type_id_migration": 0,
-                "entity_id_migration": 0,
-                "event_id_post_migration": 0,
-                "entity_id_post_migration": 0,
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (0, 0),
+                "entity_id_migration": (0, 0),
+                "event_id_post_migration": (0, 0),
+                "entity_id_post_migration": (0, 0),
             },
+            [],
         ),
         (
             SCHEMA_VERSION,
             {
-                "state_context_id_as_binary": 0,
-                "event_context_id_as_binary": 0,
-                "event_type_id_migration": 0,
-                "entity_id_migration": 0,
-                "event_id_post_migration": 0,
-                "entity_id_post_migration": 0,
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (0, 0),
+                "entity_id_migration": (0, 0),
+                "event_id_post_migration": (0, 0),
+                "entity_id_post_migration": (0, 0),
             },
+            [],
         ),
     ],
 )
-async def test_data_migrator_new_database(
+async def test_data_migrator_logic(
     async_test_recorder: RecorderInstanceGenerator,
     initial_version: int,
-    expected_migrator_calls: dict[str, int],
+    expected_migrator_calls: dict[str, tuple[int, int]],
+    expected_created_indices: list[str],
 ) -> None:
-    """Test that the data migrators are not executed on a new database."""
+    """Test the data migrator logic.
+
+    - The data migrators should not be executed on a new database.
+    - Indices needed by the migrators should be created if missing.
+    """
     config = {recorder.CONF_COMMIT_INTERVAL: 1}
 
-    def needs_migrate_mock() -> Mock:
-        return Mock(
-            spec_set=[],
-            return_value=migration.DataMigrationStatus(
-                needs_migrate=False, migration_done=True
+    def migrator_mock() -> dict[str, Mock]:
+        return {
+            "needs_migrate": Mock(
+                spec_set=[],
+                return_value=migration.DataMigrationStatus(
+                    needs_migrate=True, migration_done=False
+                ),
             ),
-        )
+            "migrate_data": Mock(spec_set=[], return_value=True),
+        }
 
     migrator_mocks = {
-        "state_context_id_as_binary": needs_migrate_mock(),
-        "event_context_id_as_binary": needs_migrate_mock(),
-        "event_type_id_migration": needs_migrate_mock(),
-        "entity_id_migration": needs_migrate_mock(),
-        "event_id_post_migration": needs_migrate_mock(),
-        "entity_id_post_migration": needs_migrate_mock(),
+        "state_context_id_as_binary": migrator_mock(),
+        "event_context_id_as_binary": migrator_mock(),
+        "event_type_id_migration": migrator_mock(),
+        "entity_id_migration": migrator_mock(),
+        "event_id_post_migration": migrator_mock(),
+        "entity_id_post_migration": migrator_mock(),
     }
 
+    def patch_check(
+        migrator_id: str, migrator_class: type[migration.BaseMigration]
+    ) -> Generator[None]:
+        return patch.object(
+            migrator_class,
+            "needs_migrate_impl",
+            side_effect=migrator_mocks[migrator_id]["needs_migrate"],
+        )
+
+    def patch_migrate(
+        migrator_id: str, migrator_class: type[migration.BaseMigration]
+    ) -> Generator[None]:
+        return patch.object(
+            migrator_class,
+            "migrate_data",
+            side_effect=migrator_mocks[migrator_id]["migrate_data"],
+        )
+
     with (
-        patch.object(
-            migration.StatesContextIDMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["state_context_id_as_binary"],
-        ),
-        patch.object(
-            migration.EventsContextIDMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["event_context_id_as_binary"],
-        ),
-        patch.object(
-            migration.EventTypeIDMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["event_type_id_migration"],
-        ),
-        patch.object(
-            migration.EntityIDMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["entity_id_migration"],
-        ),
-        patch.object(
-            migration.EventIDPostMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["event_id_post_migration"],
-        ),
-        patch.object(
-            migration.EntityIDPostMigration,
-            "needs_migrate_impl",
-            side_effect=migrator_mocks["entity_id_post_migration"],
-        ),
+        patch_check("state_context_id_as_binary", migration.StatesContextIDMigration),
+        patch_check("event_context_id_as_binary", migration.EventsContextIDMigration),
+        patch_check("event_type_id_migration", migration.EventTypeIDMigration),
+        patch_check("entity_id_migration", migration.EntityIDMigration),
+        patch_check("event_id_post_migration", migration.EventIDPostMigration),
+        patch_check("entity_id_post_migration", migration.EntityIDPostMigration),
+        patch_migrate("state_context_id_as_binary", migration.StatesContextIDMigration),
+        patch_migrate("event_context_id_as_binary", migration.EventsContextIDMigration),
+        patch_migrate("event_type_id_migration", migration.EventTypeIDMigration),
+        patch_migrate("entity_id_migration", migration.EntityIDMigration),
+        patch_migrate("event_id_post_migration", migration.EventIDPostMigration),
+        patch_migrate("entity_id_post_migration", migration.EntityIDPostMigration),
         patch(
             CREATE_ENGINE_TARGET,
             new=_create_engine_test(
                 SCHEMA_MODULE_CURRENT, initial_version=initial_version
             ),
         ),
+        patch(
+            "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+        ) as wrapped_idx_create,
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -231,8 +259,15 @@ async def test_data_migrator_new_database(
             await hass.async_block_till_done()
             await hass.async_stop()
 
+    index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
+    assert index_names == expected_created_indices
+
+    # Check each data migrator's needs_migrate_impl and migrate_data methods were called
+    # the expected number of times.
     for migrator, mock in migrator_mocks.items():
-        assert len(mock.mock_calls) == expected_migrator_calls[migrator]
+        needs_migrate_calls, migrate_data_calls = expected_migrator_calls[migrator]
+        assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls
+        assert len(mock["migrate_data"].mock_calls) == migrate_data_calls
 
 
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])

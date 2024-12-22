@@ -589,6 +589,7 @@ class UnitOfApparentPower(StrEnum):
 class UnitOfPower(StrEnum):
     """Power units."""
 
+    MILLIWATT = "mW"
     WATT = "W"
     KILO_WATT = "kW"
     MEGA_WATT = "MW"
