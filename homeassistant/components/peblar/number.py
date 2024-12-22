@@ -15,17 +15,15 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import (
     PeblarConfigEntry,
     PeblarData,
     PeblarDataUpdateCoordinator,
     PeblarRuntimeData,
 )
+from .entity import PeblarEntity
 
 PARALLEL_UPDATES = 1
 
@@ -64,33 +62,29 @@ async def async_setup_entry(
     async_add_entities(
         PeblarNumberEntity(
             entry=entry,
+            coordinator=entry.runtime_data.data_coordinator,
             description=description,
         )
         for description in DESCRIPTIONS
     )
 
 
-class PeblarNumberEntity(CoordinatorEntity[PeblarDataUpdateCoordinator], NumberEntity):
+class PeblarNumberEntity(
+    PeblarEntity[PeblarDataUpdateCoordinator],
+    NumberEntity,
+):
     """Defines a Peblar number."""
 
     entity_description: PeblarNumberEntityDescription
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         entry: PeblarConfigEntry,
+        coordinator: PeblarDataUpdateCoordinator,
         description: PeblarNumberEntityDescription,
     ) -> None:
         """Initialize the Peblar entity."""
-        super().__init__(entry.runtime_data.data_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
+        super().__init__(entry=entry, coordinator=coordinator, description=description)
         self._attr_native_max_value = description.native_max_value_fn(
             entry.runtime_data
         )
