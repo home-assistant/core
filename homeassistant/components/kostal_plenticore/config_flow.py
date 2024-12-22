@@ -21,6 +21,8 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Optional("Master Key"): str,
+        vol.Optional("Service Code"): str,
     }
 )
 
