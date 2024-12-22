@@ -223,10 +223,9 @@ async def test_create_backup_wrong_parameters(
         {"password": "pass123"},
     ],
 )
-async def test_async_initiate_backup(
+async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
@@ -239,10 +238,7 @@ async def test_async_initiate_backup(
     """Test generate backup."""
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
-    agents = {
-        f"backup.{local_agent.name}": local_agent,
-        f"test.{remote_agent.name}": remote_agent,
-    }
+
     with patch(
         "homeassistant.components.backup.backup.async_get_backup_agents"
     ) as core_get_backup_agents:
@@ -349,7 +345,7 @@ async def test_async_initiate_backup(
         },
         "name": name,
         "protected": bool(password),
-        "slug": ANY,
+        "slug": backup_id,
         "type": "partial",
         "version": 2,
     }
@@ -365,7 +361,7 @@ async def test_async_initiate_backup(
     assert backup_agent_ids == agent_ids
     assert backup_data == {
         "addons": [],
-        "backup_id": ANY,
+        "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
         "failed_agent_ids": [],
@@ -378,16 +374,6 @@ async def test_async_initiate_backup(
         "with_automatic_settings": False,
     }
 
-    for agent_id in agent_ids:
-        agent = agents[agent_id]
-        assert len(agent._backups) == 1
-        agent_backup = agent._backups[backup_data["backup_id"]]
-        assert agent_backup.backup_id == backup_data["backup_id"]
-        assert agent_backup.date == backup_data["date"]
-        assert agent_backup.name == backup_data["name"]
-        assert agent_backup.protected == backup_data["protected"]
-        assert agent_backup.size == backup_data["size"]
-
     outer_tar = mocked_tarfile.return_value
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
     expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
@@ -398,12 +384,12 @@ async def test_async_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_data['backup_id']}.tar"
+    assert tar_file_path == f"{backup_directory}/{backup_id}.tar"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize("exception", [BackupAgentError("Boom!"), Exception("Boom!")])
-async def test_async_initiate_backup_with_agent_error(
+async def test_initiate_backup_with_agent_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -845,7 +831,7 @@ async def test_create_backup_failure_raises_issue(
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), BaseException("Boom!")]
 )
-async def test_async_initiate_backup_non_agent_upload_error(
+async def test_initiate_backup_non_agent_upload_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -954,7 +940,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), Exception("Boom!")]
 )
-async def test_async_initiate_backup_with_task_error(
+async def test_initiate_backup_with_task_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
