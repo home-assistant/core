@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
+from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -16,6 +17,7 @@ from homeassistant.components.light import (
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
@@ -356,6 +358,34 @@ async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(
         color_primary=(255, 255, 255, 255),
+        on=True,
+        segment_id=0,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["rgbww"])
+async def test_rgbww_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
+    """Test RGBW support for WLED."""
+    assert (state := hass.states.get("light.wled_rgbww_light"))
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.RGBWW]
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBWW
+    assert state.attributes.get(ATTR_RGBWW_COLOR) == (255, 0, 0, 0, 0)
+
+    new_color = (2, 0, 191, 255, 255)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgbww_light",
+            ATTR_RGBWW_COLOR: new_color,
+        },
+        blocking=True,
+    )
+
+    assert mock_wled.segment.call_count == 1
+    mock_wled.segment.assert_called_with(
+        color_primary=util.color.color_rgbww_to_rgb(*new_color, 2000, 6535),
         on=True,
         segment_id=0,
     )

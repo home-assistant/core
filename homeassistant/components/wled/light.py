@@ -5,12 +5,14 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, cast
 
+from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -173,6 +175,19 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         return cast(tuple[int, int, int, int], color.primary)
 
     @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return the color value."""
+        if not (color := self.coordinator.data.state.segments[self._segment].color):
+            return None
+        return util.color.color_rgb_to_rgbww(
+            color.primary[0],
+            color.primary[1],
+            color.primary[2],
+            COLOR_TEMP_K_MIN,
+            COLOR_TEMP_K_MAX,
+        )
+
+    @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in K."""
         cct = self.coordinator.data.state.segments[self._segment].cct
@@ -246,6 +261,11 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
 
         if ATTR_RGBW_COLOR in kwargs:
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
+
+        if ATTR_RGBWW_COLOR in kwargs:
+            data[ATTR_COLOR_PRIMARY] = util.color.color_rgbww_to_rgb(
+                *(kwargs[ATTR_RGBWW_COLOR] + (COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX))
+            )
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             data[ATTR_CCT] = kelvin_to_255(
