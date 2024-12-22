@@ -48,6 +48,7 @@ class PeblarEntity[_DataUpdateCoordinatorT: DataUpdateCoordinator[Any]](
             },
             manufacturer=system_information.product_vendor_name,
             model=system_information.product_model_name,
+            model_id=system_information.product_number,
             name="Peblar EV Charger",
             serial_number=system_information.product_serial_number,
             sw_version=entry.runtime_data.version_coordinator.data.current.firmware,
