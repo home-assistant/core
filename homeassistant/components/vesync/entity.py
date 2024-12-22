@@ -6,17 +6,24 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
 
-class VeSyncBaseEntity(Entity):
+class VeSyncBaseEntity(CoordinatorEntity, Entity):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: VeSyncBaseDevice) -> None:
+    def __init__(
+        self, device: VeSyncBaseDevice, coordinator: DataUpdateCoordinator
+    ) -> None:
         """Initialize the VeSync device."""
+        super().__init__(coordinator)
         self.device = device
         self._attr_unique_id = self.base_unique_id
 
@@ -46,9 +53,12 @@ class VeSyncBaseEntity(Entity):
             sw_version=self.device.current_firm_version,
         )
 
-    def update(self) -> None:
-        """Update vesync device."""
-        self.device.update()
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
 
 
 class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
