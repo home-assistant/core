@@ -1888,10 +1888,18 @@ async def test_mqtt_subscribes_and_unsubscribes_in_chunks(
     assert len(mqtt_client_mock.unsubscribe.mock_calls[1][1][0]) == 2
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        OSError,
+        paho_mqtt.WebsocketConnectionError,
+    ],
+)
 async def test_auto_reconnect(
     hass: HomeAssistant,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
     """Test reconnection is automatically done."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
@@ -1902,7 +1910,7 @@ async def test_auto_reconnect(
     mqtt_client_mock.on_disconnect(None, None, 0)
     await hass.async_block_till_done()
 
-    mqtt_client_mock.reconnect.side_effect = OSError("foo")
+    mqtt_client_mock.reconnect.side_effect = exception("foo")
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=RECONNECT_INTERVAL_SECONDS)
     )

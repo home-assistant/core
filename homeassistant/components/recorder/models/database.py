@@ -32,4 +32,8 @@ class DatabaseOptimizer:
     #
     # https://jira.mariadb.org/browse/MDEV-25020
     #
+    # PostgreSQL does not support a skip/loose index scan so its
+    # also slow for large distinct queries:
+    # https://wiki.postgresql.org/wiki/Loose_indexscan
+    # https://github.com/home-assistant/core/issues/126084
     slow_range_in_select: bool
