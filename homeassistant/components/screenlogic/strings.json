@@ -191,7 +191,12 @@
         "name": "[%key:component::screenlogic::entity::number::salt_tds_ppm::name%]"
       },
       "chem_dose_state": {
-        "name": "{chem} dosing state"
+        "name": "{chem} dosing state",
+        "state": {
+          "dosing": "Dosing",
+          "mixing": "Mixing",
+          "monitoring": "Monitoring"
+        }
       },
       "chem_last_dose_time": {
         "name": "{chem} last dose time"
