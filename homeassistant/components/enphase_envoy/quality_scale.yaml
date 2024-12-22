@@ -17,7 +17,6 @@ rules:
     status: todo
     comment: |
       - async_step_reaut L160: I believe that the unique is already set when starting a reauth flow
-      - The config flow is missing data descriptions for the other fields
   dependency-transparency: done
   docs-actions:
     status: done
