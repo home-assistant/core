@@ -39,11 +39,14 @@ def _add_ulp_user_infos(
     bootstrap: Bootstrap, event_data: dict[str, str], ulp_id: str
 ) -> None:
     """Add ULP user information to the event data."""
-    ulp_usr = bootstrap.ulp_users.by_ulp_id(ulp_id)
-    if ulp_usr:
-        event_data[KEYRINGS_ULP_ID] = ulp_usr.ulp_id
-        event_data[KEYRINGS_USER_FULL_NAME] = ulp_usr.full_name
-        event_data[KEYRINGS_USER_STATUS] = ulp_usr.status
+    if ulp_usr := bootstrap.ulp_users.by_ulp_id(ulp_id):
+        event_data.update(
+            {
+                KEYRINGS_ULP_ID: ulp_usr.ulp_id,
+                KEYRINGS_USER_FULL_NAME: ulp_usr.full_name,
+                KEYRINGS_USER_STATUS: ulp_usr.status,
+            }
+        )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -99,11 +102,13 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
             and not self._event_already_ended(prev_event, prev_event_end)
             and event.type is EventType.NFC_CARD_SCANNED
         ):
-            event_data = {ATTR_EVENT_ID: event.id}
-            event_data[KEYRINGS_USER_FULL_NAME] = ""
-            event_data[KEYRINGS_ULP_ID] = ""
-            event_data[KEYRINGS_USER_STATUS] = ""
-            event_data[KEYRINGS_KEY_TYPE_ID_NFC] = ""
+            event_data = {
+                ATTR_EVENT_ID: event.id,
+                KEYRINGS_USER_FULL_NAME: "",
+                KEYRINGS_ULP_ID: "",
+                KEYRINGS_USER_STATUS: "",
+                KEYRINGS_KEY_TYPE_ID_NFC: "",
+            }
 
             if event.metadata and event.metadata.nfc and event.metadata.nfc.nfc_id:
                 nfc_id = event.metadata.nfc.nfc_id
@@ -141,10 +146,12 @@ class ProtectDeviceFingerprintEventEntity(
             and not self._event_already_ended(prev_event, prev_event_end)
             and event.type is EventType.FINGERPRINT_IDENTIFIED
         ):
-            event_data = {ATTR_EVENT_ID: event.id}
+            event_data = {
+                ATTR_EVENT_ID: event.id,
+                KEYRINGS_USER_FULL_NAME: "",
+                KEYRINGS_ULP_ID: "",
+            }
             event_identified = EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED
-            event_data[KEYRINGS_USER_FULL_NAME] = ""
-            event_data[KEYRINGS_ULP_ID] = ""
             if (
                 event.metadata
                 and event.metadata.fingerprint
