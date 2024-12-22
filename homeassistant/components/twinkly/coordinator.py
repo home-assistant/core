@@ -67,7 +67,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             brightness = await self.client.get_brightness()
             is_on = await self.client.is_on()
             if self.supports_effects:
-                movies = await self.client.get_saved_movies()
+                movies = (await self.client.get_saved_movies())["movies"]
                 current_movie = await self.client.get_current_movie()
         except (TimeoutError, ClientError) as exception:
             raise UpdateFailed from exception
