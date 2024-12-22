@@ -234,7 +234,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors,
                 description_placeholders,
             )
-            if envoy and not errors:
+            if not errors:
                 name = self._async_envoy_name()
 
                 if not self.unique_id:
