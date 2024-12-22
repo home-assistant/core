@@ -161,5 +161,16 @@
         "name": "Customization"
       }
     }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "An authentication failure occurred while communicating with the Peblar device."
+    },
+    "communication_error": {
+      "message": "An error occurred while communicating with the Peblar device: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Peblar device: {error}"
+    }
   }
 }
