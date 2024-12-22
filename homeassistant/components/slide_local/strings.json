@@ -27,7 +27,39 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Slide",
+        "description": "Reconfigure the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Invert the position of your slide cover."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      }
+    },
+    "switch": {
+      "touchgo": {
+        "name": "TouchGo"
+      }
+    }
+  },
   "exceptions": {
+    "calibration_error": {
+      "message": "Error while sending the calibration request to the device."
+    },
+    "touchgo_error": {
+      "message": "Error while sending the request setting Touch&Go to {state} to the device."
+    },
     "update_error": {
       "message": "Error while updating data from the API."
     }

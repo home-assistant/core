@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
-from aiogithubapi import GitHubException
+from pynecil import UpdateException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,7 +26,7 @@ async def update_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_githubapi")
+@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_ironosupdate")
 async def test_update(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -60,11 +60,11 @@ async def test_update(
 async def test_update_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_githubapi: AsyncMock,
+    mock_ironosupdate: AsyncMock,
 ) -> None:
     """Test update entity unavailable on error."""
 
-    mock_githubapi.repos.releases.latest.side_effect = GitHubException
+    mock_ironosupdate.latest_release.side_effect = UpdateException
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)

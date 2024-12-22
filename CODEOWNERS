@@ -1053,6 +1053,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480
+/homeassistant/components/ohme/ @dan-r
+/tests/components/ohme/ @dan-r
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
@@ -1064,8 +1066,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onewire/ @garbled1 @epenet
 /tests/components/onewire/ @garbled1 @epenet
-/homeassistant/components/onkyo/ @arturpragacz
-/tests/components/onkyo/ @arturpragacz
+/homeassistant/components/onkyo/ @arturpragacz @eclair4151
+/tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @hunterjm
 /tests/components/onvif/ @hunterjm
 /homeassistant/components/open_meteo/ @frenck
@@ -1111,6 +1113,8 @@ build.json @home-assistant/supervisor
 /tests/components/palazzetti/ @dotvav
 /homeassistant/components/panel_custom/ @home-assistant/frontend
 /tests/components/panel_custom/ @home-assistant/frontend
+/homeassistant/components/peblar/ @frenck
+/tests/components/peblar/ @frenck
 /homeassistant/components/peco/ @IceBotYT
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
@@ -1738,6 +1742,7 @@ build.json @home-assistant/supervisor
 /tests/components/youless/ @gjong
 /homeassistant/components/youtube/ @joostlek
 /tests/components/youtube/ @joostlek
+/homeassistant/components/zabbix/ @kruton
 /homeassistant/components/zamg/ @killer0071234
 /tests/components/zamg/ @killer0071234
 /homeassistant/components/zengge/ @emontnemery

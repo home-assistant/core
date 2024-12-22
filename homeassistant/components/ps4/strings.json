@@ -21,7 +21,7 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "code": "On your PlayStation 4 console, go to **Settings**. Then, go to **Mobile App Connection Settings** and select **Add Device** to get the pin."
+          "code": "On your PlayStation 4 console, go to **Settings**. Then, go to **Mobile App Connection Settings** and select **Add Device** to get the PIN."
         }
       }
     },
