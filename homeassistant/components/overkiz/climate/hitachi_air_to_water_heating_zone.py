@@ -21,7 +21,7 @@ from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
 PRESET_STATE_ECO = "eco"
 PRESET_STATE_COMFORT = "comfort"
 
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.MANU: HVACMode.HEAT,
     OverkizCommandParam.AUTO: HVACMode.AUTO,
 }
