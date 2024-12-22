@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizCommand, OverkizState
+from pyoverkiz.models import State
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -35,20 +36,20 @@ class HeatingSetPoint(OverkizEntity, ClimateEntity):
             self.device.attributes
             and OverkizAttribute.CORE_MEASURED_VALUE_TYPE in self.device.attributes
         ):
-            attribute = self.device.attributes[
-                OverkizAttribute.CORE_MEASURED_VALUE_TYPE
-            ]
+            attribute = cast(
+                State, self.device.attributes[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]
+            )
 
             self._attr_temperature_unit = OVERKIZ_UNIT_TO_HA[attribute.value_as_str]
         else:
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-        self._attr_min_temp = self.device.attributes[
-            OverkizAttribute.CORE_MIN_SETTABLE_VALUE
-        ].value_as_float
-        self._attr_max_temp = self.device.attributes[
-            OverkizAttribute.CORE_MAX_SETTABLE_VALUE
-        ].value_as_float
+        self._attr_min_temp = cast(
+            State, self.device.attributes[OverkizAttribute.CORE_MIN_SETTABLE_VALUE]
+        ).value_as_float
+        self._attr_max_temp = cast(
+            State, self.device.attributes[OverkizAttribute.CORE_MAX_SETTABLE_VALUE]
+        ).value_as_float
 
         if self._attr_device_info:
             self._attr_device_info["manufacturer"] = "EvoHome"
