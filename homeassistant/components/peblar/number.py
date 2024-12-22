@@ -24,6 +24,7 @@ from .coordinator import (
     PeblarRuntimeData,
 )
 from .entity import PeblarEntity
+from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -94,6 +95,7 @@ class PeblarNumberEntity(
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @peblar_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(self.coordinator.api, value)
