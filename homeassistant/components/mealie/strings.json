@@ -229,8 +229,8 @@
           "description": "The type of dish to set the recipe to."
         },
         "recipe_id": {
-          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
-          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+          "name": "Recipe ID",
+          "description": "The recipe ID or the slug of the recipe to get."
         },
         "note_title": {
           "name": "Meal note title",
