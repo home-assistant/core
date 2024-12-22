@@ -42,8 +42,6 @@ class InverterStatusCodeOption(StrEnum):
     IDLE = "idle"
     READY = "ready"
     SLEEPING = "sleeping"
-    UNKNOWN = "unknown"
-    INVALID = "invalid"
 
 
 _INVERTER_STATUS_CODES: Final[dict[int, InverterStatusCodeOption]] = {
@@ -61,13 +59,13 @@ _INVERTER_STATUS_CODES: Final[dict[int, InverterStatusCodeOption]] = {
     11: InverterStatusCodeOption.IDLE,
     12: InverterStatusCodeOption.READY,
     13: InverterStatusCodeOption.SLEEPING,
-    255: InverterStatusCodeOption.UNKNOWN,
+    # 255: "Unknown" is handled by `None` state - same as the invalid codes.
 }
 
 
-def get_inverter_status_message(code: StateType) -> InverterStatusCodeOption:
+def get_inverter_status_message(code: StateType) -> InverterStatusCodeOption | None:
     """Return a status message for a given status code."""
-    return _INVERTER_STATUS_CODES.get(code, InverterStatusCodeOption.INVALID)  # type: ignore[arg-type]
+    return _INVERTER_STATUS_CODES.get(code)  # type: ignore[arg-type]
 
 
 class MeterLocationCodeOption(StrEnum):

@@ -1,57 +1,28 @@
-"""Tests for myuplink sensor module."""
+"""Tests for myuplink binary sensor module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-# Test one entity from each of binary_sensor classes.
-@pytest.mark.parametrize(
-    ("entity_id", "friendly_name", "test_attributes", "expected_state"),
-    [
-        (
-            "binary_sensor.gotham_city_pump_heating_medium_gp1",
-            "Gotham City Pump: Heating medium (GP1)",
-            True,
-            STATE_ON,
-        ),
-        (
-            "binary_sensor.gotham_city_connectivity",
-            "Gotham City Connectivity",
-            False,
-            STATE_ON,
-        ),
-        (
-            "binary_sensor.gotham_city_alarm",
-            "Gotham City Pump: Alarm",
-            False,
-            STATE_OFF,
-        ),
-    ],
-)
-async def test_sensor_states(
+async def test_binary_sensor_states(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    friendly_name: str,
-    test_attributes: bool,
-    expected_state: str,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor state."""
-    await setup_integration(hass, mock_config_entry)
+    """Test binary sensor state."""
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == expected_state
-    if test_attributes:
-        assert state.attributes == {
-            "friendly_name": friendly_name,
-        }
+    with patch("homeassistant.components.myuplink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
