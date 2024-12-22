@@ -183,8 +183,6 @@ jobs:
             echo "NPY_DISABLE_SVML=1" >> .env_file
           fi
 
-          # Do not pin numpy in wheels building
-          sed -i "/numpy/d" homeassistant/package_constraints.txt
           # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
