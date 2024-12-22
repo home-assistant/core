@@ -19,9 +19,6 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from ..const import DOMAIN
 from ..entity import OverkizDataUpdateCoordinator, OverkizEntity
 
-PRESET_STATE_ECO = "eco"
-PRESET_STATE_COMFORT = "comfort"
-
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.MANU: HVACMode.HEAT,
     OverkizCommandParam.AUTO: HVACMode.AUTO,
@@ -30,8 +27,8 @@ OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
 OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
-    PRESET_STATE_COMFORT: PRESET_COMFORT,
-    PRESET_STATE_ECO: PRESET_ECO,
+    OverkizCommandParam.COMFORT: PRESET_COMFORT,
+    OverkizCommandParam.ECO: PRESET_ECO,
 }
 
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
@@ -65,7 +62,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states[OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1_STATE]
+            state := self.device.states[OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1]
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
 
@@ -81,7 +78,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.MODBUS_YUTAKI_TARGET_MODE_STATE]
+            state := self.device.states[OverkizState.MODBUS_YUTAKI_TARGET_MODE]
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
 
@@ -97,7 +94,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states[
-            OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1_STATE
+            OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
         ]
 
         if current_temperature:
@@ -109,7 +106,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states[
-            OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1_STATE
+            OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
         ]
 
         if target_temperature:
