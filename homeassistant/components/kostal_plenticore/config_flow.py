@@ -12,7 +12,7 @@ from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_CODE
 from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional("Service Code"): str,
+        vol.Optional(SERVICE_CODE): str,
     }
 )
 
@@ -34,7 +34,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
 
     session = async_get_clientsession(hass)
     async with ApiClient(session, data["host"]) as client:
-        await client.login(data["password"], service_code=data.get("Service Code"))
+        await client.login(data[CONF_PASSWORD], service_code=data.get(SERVICE_CODE))
         hostname_id = await get_hostname_id(client)
         values = await client.get_setting_values("scb:network", hostname_id)
 

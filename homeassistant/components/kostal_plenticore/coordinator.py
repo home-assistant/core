@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_CODE
 from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class Plenticore:
         try:
             await self._client.login(
                 self.config_entry.data[CONF_PASSWORD],
-                service_code=self.config_entry.data.get("Service Code"),
+                service_code=self.config_entry.data.get(SERVICE_CODE),
             )
         except AuthenticationException as err:
             _LOGGER.error(
