@@ -160,23 +160,19 @@ async def test_leak_sensor(hass: HomeAssistant) -> None:
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, LEAK_SERVICE_INFO)
 
-    with patch(
-        "switchbot.SwitchbotRelaySwitch.update",
-        return_value=None,
-    ):
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-                CONF_NAME: "test-name",
-                CONF_SENSOR_TYPE: "leak",
-            },
-            unique_id="aabbccddeeaa",
-        )
-        entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            CONF_NAME: "test-name",
+            CONF_SENSOR_TYPE: "leak",
+        },
+        unique_id="aabbccddeeaa",
+    )
+    entry.add_to_hass(hass)
 
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     battery_sensor = hass.states.get("sensor.test_name_battery")
     battery_sensor_attrs = battery_sensor.attributes
