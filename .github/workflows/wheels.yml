@@ -47,7 +47,7 @@ jobs:
           . venv/bin/activate
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install -r requirements.txt
+          uv pip install -r requirements.txt ninja
 
       - name: Get information
         id: info
