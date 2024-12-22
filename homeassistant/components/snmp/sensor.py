@@ -66,6 +66,7 @@ from .const import (
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
+    DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
@@ -175,7 +176,7 @@ async def async_setup_platform(
 
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
 
-    data = SnmpData(request_args, baseoid, accept_errors, default_value)
+    data = SnmpData(request_args, host, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])
 
 
@@ -196,6 +197,12 @@ class SnmpSensor(ManualTriggerSensorEntity):
         self.data = data
         self._state = None
         self._value_template = value_template
+        self._attr_unique_id = f"{DOMAIN}_sensor_{data.uid}"
+
+    @property
+    def unique_id(self):
+        """The unique id of the sensor."""
+        return self._attr_unique_id
 
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
@@ -222,12 +229,15 @@ class SnmpSensor(ManualTriggerSensorEntity):
 class SnmpData:
     """Get the latest data and update the states."""
 
-    def __init__(self, request_args, baseoid, accept_errors, default_value) -> None:
+    def __init__(
+        self, request_args, host, baseoid, accept_errors, default_value
+    ) -> None:
         """Initialize the data object."""
         self._request_args = request_args
         self._baseoid = baseoid
         self._accept_errors = accept_errors
         self._default_value = default_value
+        self.uid = f"{host}_{baseoid}"
         self.value = None
 
     async def async_update(self):

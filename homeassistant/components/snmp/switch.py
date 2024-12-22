@@ -64,6 +64,7 @@ from .const import (
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_VARTYPE,
     DEFAULT_VERSION,
+    DOMAIN,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
     SNMP_VERSIONS,
@@ -231,6 +232,7 @@ class SnmpSwitch(SwitchEntity):
         self._target = UdpTransportTarget((host, port))
         self._request_args = request_args
         self._command_args = command_args
+        self._attr_unique_id = f"{DOMAIN}_switch_{host}_{port}_{self._commandoid}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

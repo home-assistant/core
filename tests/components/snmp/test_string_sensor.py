@@ -56,14 +56,16 @@ async def test_entity_config(
             "icon": "{{'mdi:one_two_three'}}",
             "picture": "{{'blabla.png'}}",
             "name": "{{'SNMP' + ' ' + 'Sensor'}}",
-            "unique_id": "very_unique",
         },
     }
 
     assert await async_setup_component(hass, SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("sensor.snmp_sensor").unique_id == "very_unique"
+    assert (
+        entity_registry.async_get("sensor.snmp_sensor").unique_id
+        == "SNMP_sensor_192.168.1.32_1.3.6.1.4.1.2021.10.1.3.1"
+    )
 
     state = hass.states.get("sensor.snmp_sensor")
     assert state.state == "98F"

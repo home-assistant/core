@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_PRIV_PROTOCOL,
     DEFAULT_TIMEOUT,
     DEFAULT_VERSION,
+    DOMAIN,
     SNMP_VERSIONS,
 )
 from .util import RequestArgsType, async_create_request_cmd_args
@@ -114,6 +115,7 @@ class SnmpScanner(DeviceScanner):
         self.baseoid = baseoid
         self.last_results = []
         self.success_init = False
+        self._attr_unique_id = f"{DOMAIN}_tracker_{host}_{baseoid}"
 
     async def async_init(self, hass: HomeAssistant) -> None:
         """Make a one-off read to check if the target device is reachable and readable."""
