@@ -89,10 +89,10 @@
         "name": "Total energy output"
       },
       "compressor_rpm": {
-        "name": "Compressor RPM"
+        "name": "Compressor speed"
       },
       "compressor_percentage": {
-        "name": "Compressor percentage"
+        "name": "Compressor usage"
       }
     }
   }

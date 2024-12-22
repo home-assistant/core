@@ -123,7 +123,7 @@
     'state': '33',
   })
 # ---
-# name: test_all_entities[sensor.test_model_compressor_percentage-entry]
+# name: test_all_entities[sensor.test_model_compressor_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -137,7 +137,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_model_compressor_percentage',
+    'entity_id': 'sensor.test_model_compressor_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -149,57 +149,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Compressor percentage',
-    'platform': 'weheat',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'compressor_percentage',
-    'unique_id': '0000-1111-2222-3333_compressor_percentage',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_compressor_percentage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Compressor percentage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_model_compressor_percentage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_all_entities[sensor.test_model_compressor_rpm-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_model_compressor_rpm',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Compressor RPM',
+    'original_name': 'Compressor speed',
     'platform': 'weheat',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -208,19 +158,69 @@
     'unit_of_measurement': 'rpm',
   })
 # ---
-# name: test_all_entities[sensor.test_model_compressor_rpm-state]
+# name: test_all_entities[sensor.test_model_compressor_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Compressor RPM',
+      'friendly_name': 'Test Model Compressor speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'rpm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_model_compressor_rpm',
+    'entity_id': 'sensor.test_model_compressor_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4500',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_compressor_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_compressor_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor usage',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_percentage',
+    'unique_id': '0000-1111-2222-3333_compressor_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_compressor_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Compressor usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_compressor_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
   })
 # ---
 # name: test_all_entities[sensor.test_model_cop-entry]
