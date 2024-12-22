@@ -27,7 +27,6 @@ from homeassistant.components.backup import (
     DOMAIN,
     AgentBackup,
     BackupAgentPlatformProtocol,
-    BackupManager,
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
@@ -38,8 +37,6 @@ from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     BackupManagerError,
     BackupManagerState,
-    CoreBackupReaderWriter,
-    CreateBackupEvent,
     CreateBackupStage,
     CreateBackupState,
     NewBackup,
@@ -140,23 +137,31 @@ async def test_async_create_backup(
     )
 
 
-async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
-    """Test generate backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.last_event = CreateBackupEvent(
-        stage=None, state=CreateBackupState.IN_PROGRESS
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_create_backup_when_busy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test generate backup with busy manager."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]}
     )
-    with pytest.raises(HomeAssistantError, match="Backup manager busy"):
-        await manager.async_create_backup(
-            agent_ids=[LOCAL_AGENT_ID],
-            include_addons=[],
-            include_all_addons=False,
-            include_database=True,
-            include_folders=[],
-            include_homeassistant=True,
-            name=None,
-            password=None,
-        )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]}
+    )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is False
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == "Backup manager busy: create_backup"
 
 
 @pytest.mark.parametrize(
