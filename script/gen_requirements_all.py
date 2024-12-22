@@ -141,7 +141,7 @@ uuid==1000000000.0.0
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.6.2.post1
 h11==0.14.0
-httpcore==1.0.5
+httpcore==1.0.7
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
