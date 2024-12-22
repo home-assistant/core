@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
-from ttls.client import Twinkly
+from ttls.client import Twinkly, TwinklyError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -68,9 +68,13 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             is_on = await self.client.is_on()
             if self.supports_effects:
                 movies = (await self.client.get_saved_movies())["movies"]
-                current_movie = await self.client.get_current_movie()
         except (TimeoutError, ClientError) as exception:
             raise UpdateFailed from exception
+        if self.supports_effects:
+            try:
+                current_movie = await self.client.get_current_movie()
+            except TwinklyError as exception:
+                _LOGGER.debug("Error fetching current movie: %s", exception)
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
         )
