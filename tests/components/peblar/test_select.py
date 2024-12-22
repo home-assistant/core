@@ -54,10 +54,9 @@ async def test_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_select(
+async def test_select_option(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Peblar EV charger selects."""
     entity_id = "select.peblar_ev_charger_smart_charging"
@@ -78,14 +77,47 @@ async def test_select(
     assert len(mocked_method.mock_calls) == 1
     mocked_method.assert_called_with(SmartChargingMode.DEFAULT)
 
-    # Test connection error handling
-    mocked_method.side_effect = PeblarConnectionError("Could not connect")
+
+@pytest.mark.parametrize(
+    ("error", "error_match", "translation_key", "translation_placeholders"),
+    [
+        (
+            PeblarConnectionError("Could not connect"),
+            (
+                r"An error occurred while communicating "
+                r"with the Peblar device: Could not connect"
+            ),
+            "communication_error",
+            {"error": "Could not connect"},
+        ),
+        (
+            PeblarError("Unknown error"),
+            (
+                r"An unknown error occurred while communicating "
+                r"with the Peblar device: Unknown error"
+            ),
+            "unknown_error",
+            {"error": "Unknown error"},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_option_communication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+    error_match: str,
+    translation_key: str,
+    translation_placeholders: dict,
+) -> None:
+    """Test the Peblar EV charger when a communication error occurs."""
+    entity_id = "select.peblar_ev_charger_smart_charging"
+    mock_peblar.smart_charging.side_effect = error
+
     with pytest.raises(
         HomeAssistantError,
-        match=(
-            r"An error occurred while communicating "
-            r"with the Peblar device: Could not connect"
-        ),
+        match=error_match,
     ) as excinfo:
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -98,35 +130,22 @@ async def test_select(
         )
 
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "communication_error"
-    assert excinfo.value.translation_placeholders == {"error": "Could not connect"}
+    assert excinfo.value.translation_key == translation_key
+    assert excinfo.value.translation_placeholders == translation_placeholders
 
-    # Test unknown error handling
-    mocked_method.side_effect = PeblarError("Unknown error")
-    with pytest.raises(
-        HomeAssistantError,
-        match=(
-            r"An unknown error occurred while communicating "
-            r"with the Peblar device: Unknown error"
-        ),
-    ) as excinfo:
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: "default",
-            },
-            blocking=True,
-        )
 
-    assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "unknown_error"
-    assert excinfo.value.translation_placeholders == {"error": "Unknown error"}
-
-    # Test authentication error handling
-    mocked_method.side_effect = PeblarAuthenticationError("Authentication error")
+async def test_select_option_authentication_error(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Peblar EV charger when an authentication error occurs."""
+    entity_id = "select.peblar_ev_charger_smart_charging"
+    mock_peblar.smart_charging.side_effect = PeblarAuthenticationError(
+        "Authentication error"
+    )
     mock_peblar.login.side_effect = PeblarAuthenticationError("Authentication error")
+
     with pytest.raises(
         HomeAssistantError,
         match=(
