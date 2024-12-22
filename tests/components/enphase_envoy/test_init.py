@@ -263,7 +263,7 @@ async def test_config_different_unique_id(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title="Envoy 1234",
-        unique_id=4321,
+        unique_id="4321",
         data={
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
