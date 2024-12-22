@@ -103,7 +103,6 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
     ) -> None:
         """Set up the Niko Home Control light platform."""
         super().__init__(action, controller, unique_id)
-        self._attr_is_on = action.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if action.is_dimmable:
@@ -118,9 +117,9 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
         """Instruct the light to turn off."""
         self._action.turn_off()
 
-    async def async_update_callback(self, state: int) -> None:
+    def update_state(self) -> None:
         """Handle updates from the controller."""
+        state = self._action.state
         self._attr_is_on = state > 0
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = round(state * 2.55)
-        self.async_write_ha_state()

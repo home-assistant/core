@@ -28,6 +28,7 @@ class NikoHomeControlEntity(Entity):
             name=action.name,
             suggested_area=action.suggested_area,
         )
+        self.update_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -39,3 +40,8 @@ class NikoHomeControlEntity(Entity):
 
     async def async_update_callback(self, state: int) -> None:
         """Handle updates from the controller."""
+        self.update_state()
+        self.async_write_ha_state()
+
+    def update_state(self) -> None:
+        """Update the state of the entity."""
