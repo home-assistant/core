@@ -68,6 +68,7 @@ SUPPORTED_CORE_SENSORS = [
         options=["Unknown", "Ready", "Sync", "Service"],
         value_mod=lambda val: CONTROLLER_STATE(val).title,
         entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="controller_state",
     ),
 ]
 

@@ -163,6 +163,9 @@
       "air_temperature": {
         "name": "Air temperature"
       },
+      "controller_state": {
+        "name": "Controller state"
+      },
       "chem_now": {
         "name": "{chem} now"
       },
