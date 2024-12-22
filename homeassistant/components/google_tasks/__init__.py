@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.const import Platform
@@ -11,8 +13,9 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
+from .coordinator import TaskUpdateCoordinator
 from .exceptions import GoogleTasksApiError
-from .types import GoogleTasksConfigEntry, GoogleTasksData
+from .types import GoogleTasksConfigEntry
 
 __all__ = [
     "DOMAIN",
@@ -46,7 +49,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleTasksConfigEntry) 
     except GoogleTasksApiError as err:
         raise ConfigEntryNotReady from err
 
-    entry.runtime_data = GoogleTasksData(auth, task_lists)
+    coordinators = [
+        TaskUpdateCoordinator(
+            hass,
+            auth,
+            task_list["id"],
+            task_list["title"],
+        )
+        for task_list in task_lists
+    ]
+    # Refresh all coordinators in parallel
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators
+        )
+    )
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

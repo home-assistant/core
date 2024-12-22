@@ -31,7 +31,7 @@ def mock_async_client() -> Generator[AsyncMock]:
     client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
     client_mock.models.get_all.return_value = MOCK_MODELS
     with patch(
-        "elevenlabs.client.AsyncElevenLabs", return_value=client_mock
+        "elevenlabs.AsyncElevenLabs", return_value=client_mock
     ) as mock_async_client:
         yield mock_async_client
 

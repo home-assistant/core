@@ -15,10 +15,12 @@ from goslideapi.goslideapi import (
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
+from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +35,14 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: SlideConfigEntry,
+    ) -> SlideOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SlideOptionsFlowHandler()
 
     async def async_test_connection(
         self, user_input: dict[str, str | int]
@@ -93,7 +103,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if not (errors := await self.async_test_connection(user_input)):
                 await self.async_set_unique_id(self._mac)
@@ -122,6 +132,45 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 {CONF_HOST: self._host},
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if not (errors := await self.async_test_connection(user_input)):
+                await self.async_set_unique_id(self._mac)
+                self._abort_if_unique_id_mismatch(
+                    description_placeholders={CONF_MAC: self._mac}
+                )
+                user_input |= {
+                    CONF_API_VERSION: self._api_version,
+                }
+
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+
+        entry: SlideConfigEntry = self._get_reconfigure_entry()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                    }
+                ),
+                {
+                    CONF_HOST: entry.data[CONF_HOST],
+                    CONF_PASSWORD: entry.data.get(CONF_PASSWORD, ""),
+                },
             ),
             errors=errors,
         )
@@ -180,4 +229,27 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "host": self._host,
             },
+        )
+
+
+class SlideOptionsFlowHandler(OptionsFlow):
+    """Handle a options flow for slide_local."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_INVERT_POSITION): bool,
+                    }
+                ),
+                {CONF_INVERT_POSITION: self.config_entry.options[CONF_INVERT_POSITION]},
+            ),
         )
