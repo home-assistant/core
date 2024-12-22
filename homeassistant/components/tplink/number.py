@@ -51,6 +51,10 @@ NUMBER_DESCRIPTIONS: Final = (
         key="temperature_offset",
         mode=NumberMode.BOX,
     ),
+    TPLinkNumberEntityDescription(
+        key="power_protection_threshold",
+        mode=NumberMode.BOX,
+    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
