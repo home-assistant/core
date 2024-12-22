@@ -319,3 +319,75 @@ async def test_user_flow_with_zeroconf_in_progress(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("mock_peblar")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication configuration flow."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_PASSWORD] == "OMGSPIDERS"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "OMGPUPPIES"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data == {
+        CONF_HOST: "127.0.0.127",
+        CONF_PASSWORD: "OMGPUPPIES",
+    }
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (PeblarConnectionError, {"base": "cannot_connect"}),
+        (PeblarAuthenticationError, {CONF_PASSWORD: "invalid_auth"}),
+        (Exception, {"base": "unknown"}),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_peblar: MagicMock,
+    side_effect: Exception,
+    expected_error: dict[str, str],
+) -> None:
+    """Test we show form on a error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_peblar.login.side_effect = side_effect
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: "OMGPUPPIES",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == expected_error
+
+    mock_peblar.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: "OMGPUPPIES",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

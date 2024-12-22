@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import CookieJar
@@ -120,6 +121,56 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle initiation of re-authentication with a Peblar device."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication with a Peblar device."""
+        errors = {}
+
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            peblar = Peblar(
+                host=reauth_entry.data[CONF_HOST],
+                session=async_create_clientsession(
+                    self.hass, cookie_jar=CookieJar(unsafe=True)
+                ),
+            )
+            try:
+                await peblar.login(password=user_input[CONF_PASSWORD])
+            except PeblarAuthenticationError:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except PeblarConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={
+                        CONF_HOST: reauth_entry.data[CONF_HOST],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): TextSelector(
