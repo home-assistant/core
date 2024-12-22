@@ -3,4 +3,5 @@
 import logging
 
 DOMAIN = "niko_home_control"
+PRESET_MODES = ["low", "medium", "high", "boost"]
 _LOGGER = logging.getLogger(__name__)

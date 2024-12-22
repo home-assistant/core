@@ -13,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import _LOGGER
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.FAN, Platform.LIGHT]
 
 type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
 
