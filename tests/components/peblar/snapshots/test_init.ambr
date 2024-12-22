@@ -29,7 +29,7 @@
     }),
     'manufacturer': 'Peblar',
     'model': 'WLAC1-H11R0WE0ICR00',
-    'model_id': None,
+    'model_id': '6004-2300-8002',
     'name': 'Peblar EV Charger',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
