@@ -197,7 +197,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data=reauth_entry.data | user_input,
+                    data_updates=user_input,
                 )
 
         self.context["title_placeholders"] = {
