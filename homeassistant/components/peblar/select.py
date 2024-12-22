@@ -11,12 +11,12 @@ from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
+from .entity import PeblarEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,6 +54,7 @@ async def async_setup_entry(
     async_add_entities(
         PeblarSelectEntity(
             entry=entry,
+            coordinator=entry.runtime_data.user_configuration_coordinator,
             description=description,
         )
         for description in DESCRIPTIONS
@@ -61,28 +62,12 @@ async def async_setup_entry(
 
 
 class PeblarSelectEntity(
-    CoordinatorEntity[PeblarUserConfigurationDataUpdateCoordinator], SelectEntity
+    PeblarEntity[PeblarUserConfigurationDataUpdateCoordinator],
+    SelectEntity,
 ):
-    """Defines a peblar select entity."""
+    """Defines a Peblar select entity."""
 
     entity_description: PeblarSelectEntityDescription
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        entry: PeblarConfigEntry,
-        description: PeblarSelectEntityDescription,
-    ) -> None:
-        """Initialize the select entity."""
-        super().__init__(entry.runtime_data.user_configuraton_coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, entry.runtime_data.system_information.product_serial_number)
-            },
-        )
 
     @property
     def current_option(self) -> str | None:
