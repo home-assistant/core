@@ -1,7 +1,6 @@
 """Tests for the diagnostics of the twinkly component."""
 
-from unittest.mock import AsyncMock
-
+import pytest
 from syrupy import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,11 +13,11 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
-    mock_twinkly_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""

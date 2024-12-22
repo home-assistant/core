@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError
+import pytest
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.twinkly.const import DOMAIN
@@ -17,10 +18,9 @@ from .const import TEST_MAC, TEST_MODEL
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_load_unload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_twinkly_client: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Validate that setup entry also configure the client."""
 
@@ -46,11 +46,11 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_mac_migration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_twinkly_client: AsyncMock,
 ) -> None:
     """Validate that the unique_id is migrated to the MAC address."""
     config_entry = MockConfigEntry(

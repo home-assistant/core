@@ -36,10 +36,10 @@ from .const import TEST_MAC
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_twinkly_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

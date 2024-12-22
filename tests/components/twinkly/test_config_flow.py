@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components import dhcp
 from homeassistant.components.twinkly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
@@ -14,11 +16,8 @@ from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_twinkly_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -43,11 +42,8 @@ async def test_full_flow(
     assert result["result"].unique_id == TEST_MAC
 
 
-async def test_exceptions(
-    hass: HomeAssistant,
-    mock_twinkly_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_exceptions(hass: HomeAssistant, mock_twinkly_client: AsyncMock) -> None:
     """Test the failure when raising exceptions."""
     mock_twinkly_client.get_details.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
@@ -72,11 +68,9 @@ async def test_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
 async def test_already_configured(
-    hass: HomeAssistant,
-    mock_twinkly_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the device is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -95,11 +89,8 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_full_flow(
-    hass: HomeAssistant,
-    mock_twinkly_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
+async def test_dhcp_full_flow(hass: HomeAssistant) -> None:
     """Test DHCP discovery flow can confirm right away."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -126,11 +117,9 @@ async def test_dhcp_full_flow(
     assert result["result"].unique_id == TEST_MAC
 
 
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
 async def test_dhcp_already_configured(
-    hass: HomeAssistant,
-    mock_twinkly_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test DHCP discovery flow that fails to connect."""
     mock_config_entry.add_to_hass(hass)
@@ -151,9 +140,8 @@ async def test_dhcp_already_configured(
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
 
 
-async def test_user_flow_works_discovery(
-    hass: HomeAssistant, mock_twinkly_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
+async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
     """Test user flow can continue after discovery happened."""
     await hass.config_entries.flow.async_init(
         DOMAIN,
