@@ -50,8 +50,8 @@ async def validate_input(
     description_placeholders: dict[str, str],
 ) -> Envoy:
     """Validate the user input allows us to connect."""
+    envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
     try:
-        envoy = Envoy(host, get_async_client(hass, verify_ssl=False))
         await envoy.setup()
         await envoy.authenticate(username=username, password=password)
     except INVALID_AUTH_ERRORS as e:
@@ -186,7 +186,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username: str = user_input[CONF_USERNAME]
             password: str = user_input[CONF_PASSWORD]
-            envoy = await validate_input(
+            await validate_input(
                 self.hass,
                 host,
                 username,
