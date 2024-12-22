@@ -66,7 +66,7 @@ rules:
     comment: |
       The coordinator needs translation when the update failed.
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
