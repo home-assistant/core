@@ -780,6 +780,7 @@ DISCOVERY_SCHEMAS = [
             key="EnergyEvseFaultState",
             translation_key="evse_fault_state",
             device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
             options=list(EVSE_FAULT_STATE_MAP.values()),
             measurement_to_ha=EVSE_FAULT_STATE_MAP.get,
         ),
