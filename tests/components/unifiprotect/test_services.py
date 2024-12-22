@@ -9,7 +9,15 @@ from uiprotect.data import Camera, Chime, Color, Light, ModelType
 from uiprotect.data.devices import CameraZone
 from uiprotect.exceptions import BadRequest
 
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    ATTR_MESSAGE,
+    DOMAIN,
+    KEYRINGS_KEY_TYPE,
+    KEYRINGS_KEY_TYPE_ID_NFC,
+    KEYRINGS_ULP_ID,
+    KEYRINGS_USER_FULL_NAME,
+    KEYRINGS_USER_STATUS,
+)
 from homeassistant.components.unifiprotect.services import (
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_GET_USER_KEYRING_INFO,
@@ -261,13 +269,13 @@ async def test_get_doorbell_user(
 ) -> None:
     """Test get_doorbell_user service."""
 
-    ulp_user = Mock(full_name="Test User", status="active")
+    ulp_user = Mock(full_name="Test User", status="active", ulp_id="user_ulp_id")
     keyring = Mock(
         registry_type="nfc",
         registry_id="123456",
         ulp_user="user_ulp_id",
     )
-    ufp.api.bootstrap.ulp_users.by_ulp_id = Mock(return_value=ulp_user)
+    ufp.api.bootstrap.ulp_users.as_list = Mock(return_value=[ulp_user])
     ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[keyring])
 
     await init_entry(hass, ufp, [doorbell])
@@ -283,11 +291,17 @@ async def test_get_doorbell_user(
     )
 
     assert response == {
-        "1": {
-            "full_name": "Test User",
-            "user_status": "active",
-            "key_type": "nfc",
-            "nfc_id": "123456",
-            "user_ulp_id": "user_ulp_id",
-        }
+        "users": [
+            {
+                KEYRINGS_USER_FULL_NAME: "Test User",
+                "keys": [
+                    {
+                        KEYRINGS_KEY_TYPE: "nfc",
+                        KEYRINGS_KEY_TYPE_ID_NFC: "123456",
+                    },
+                ],
+                KEYRINGS_USER_STATUS: "active",
+                KEYRINGS_ULP_ID: "user_ulp_id",
+            },
+        ],
     }
