@@ -59,6 +59,7 @@ from . import (
     _patch_discovery,
     _patch_single_discovery,
 )
+from .conftest import override_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -70,6 +71,7 @@ async def test_configuring_tplink_causes_discovery(
     with (
         patch("homeassistant.components.tplink.Discover.discover") as discover,
         patch("homeassistant.components.tplink.Discover.discover_single"),
+        patch("homeassistant.components.tplink.Device.connect"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -221,8 +223,12 @@ async def test_config_entry_with_stored_credentials(
 
     hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.tplink.async_create_clientsession", return_value="Foo"
+    with (
+        patch(
+            "homeassistant.components.tplink.async_create_clientsession",
+            return_value="Foo",
+        ),
+        override_side_effect(mock_discovery["discover"], lambda *_, **__: {}),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_entities(
+async def test_binary_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_weheat_discover: AsyncMock,
@@ -26,7 +26,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
@@ -34,23 +34,19 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 15), (True, 17)])
-async def test_create_entities(
+async def test_create_binary_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,
     mock_weheat_heat_pump: AsyncMock,
     mock_heat_pump_info: HeatPumpDiscovery.HeatPumpInfo,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    has_dhw: bool,
-    nr_of_entities: int,
 ) -> None:
     """Test creating entities."""
-    mock_heat_pump_info.has_dhw = has_dhw
     mock_weheat_discover.return_value = [mock_heat_pump_info]
 
-    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.weheat.PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == nr_of_entities
+    assert len(hass.states.async_all()) == 4
