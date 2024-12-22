@@ -42,7 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up TotalConnect buttons based on a config entry."""
     buttons: list = []
-    coordinator: TotalConnectDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     for location_id, location in coordinator.client.locations.items():
         buttons.extend(
