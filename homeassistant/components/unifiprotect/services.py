@@ -29,7 +29,16 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import ATTR_MESSAGE, DOMAIN
+from .const import (
+    ATTR_MESSAGE,
+    DOMAIN,
+    KEYRINGS_KEY_TYPE,
+    KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
+    KEYRINGS_KEY_TYPE_ID_NFC,
+    KEYRINGS_ULP_ID,
+    KEYRINGS_USER_FULL_NAME,
+    KEYRINGS_USER_STATUS,
+)
 from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
@@ -225,18 +234,39 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
 async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     """Get the user keyring info."""
     camera = _async_get_ufp_camera(call)
-    ulp_users = camera.api.bootstrap.ulp_users
-    return {
-        str(index + 1): {
-            "full_name": user.full_name,
-            "user_status": user.status,
-            "key_type": key.registry_type,
-            **({"nfc_id": key.registry_id} if key.registry_type == "nfc" else {}),
-            "user_ulp_id": key.ulp_user,
+    ulp_users = camera.api.bootstrap.ulp_users.as_list()
+    user_keyrings = [
+        {
+            KEYRINGS_USER_FULL_NAME: user.full_name,
+            KEYRINGS_USER_STATUS: user.status,
+            KEYRINGS_ULP_ID: user.ulp_id,
+            "keys": [
+                {
+                    KEYRINGS_KEY_TYPE: key.registry_type,
+                    **(
+                        {KEYRINGS_KEY_TYPE_ID_FINGERPRINT: key.registry_id}
+                        if key.registry_type == "fingerprint"
+                        else {}
+                    ),
+                    **(
+                        {KEYRINGS_KEY_TYPE_ID_NFC: key.registry_id}
+                        if key.registry_type == "nfc"
+                        else {}
+                    ),
+                }
+                for key in camera.api.bootstrap.keyrings.as_list()
+                if key.ulp_user == user.ulp_id
+            ],
         }
-        for index, key in enumerate(camera.api.bootstrap.keyrings.as_list())
-        if (user := ulp_users.by_ulp_id(key.ulp_user))
-    }
+        for user in ulp_users
+    ]
+
+    return cast(
+        ServiceResponse,
+        {
+            "users": user_keyrings,
+        },
+    )
 
 
 SERVICES = [
