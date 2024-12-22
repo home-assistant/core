@@ -34,6 +34,8 @@ from .const import (
 )
 from .coordinator import PeblarConfigEntry, PeblarData, PeblarDataUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PeblarSensorDescription(SensorEntityDescription):
