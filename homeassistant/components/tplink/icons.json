@@ -20,6 +20,18 @@
       },
       "stop_alarm": {
         "default": "mdi:bell-cancel"
+      },
+      "pan_left": {
+        "default": "mdi:chevron-left"
+      },
+      "pan_right": {
+        "default": "mdi:chevron-right"
+      },
+      "tilt_up": {
+        "default": "mdi:chevron-up"
+      },
+      "tilt_down": {
+        "default": "mdi:chevron-down"
       }
     },
     "select": {
@@ -117,6 +129,12 @@
       },
       "target_temperature": {
         "default": "mdi:thermometer"
+      },
+      "pan_step": {
+        "default": "mdi:unfold-more-vertical"
+      },
+      "tilt_step": {
+        "default": "mdi:unfold-more-horizontal"
       }
     }
   },
