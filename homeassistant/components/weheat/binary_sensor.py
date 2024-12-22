@@ -1,4 +1,4 @@
-"""Platform for binary sensor integration."""
+"""Binary sensor platform for Weheat integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
