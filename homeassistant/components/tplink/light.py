@@ -200,11 +200,10 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if light_module.has_feature("color_temp"):
+        if color_temp_feat := light_module.get_feature("color_temp"):
             modes.add(ColorMode.COLOR_TEMP)
-            temp_range = light_module.valid_temperature_range
-            self._attr_min_color_temp_kelvin = temp_range.min
-            self._attr_max_color_temp_kelvin = temp_range.max
+            self._attr_min_color_temp_kelvin = color_temp_feat.minimum_value
+            self._attr_max_color_temp_kelvin = color_temp_feat.maximum_value
         if light_module.has_feature("hsv"):
             modes.add(ColorMode.HS)
         if light_module.has_feature("brightness"):
@@ -270,15 +269,17 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         light_module = self._light_module
-        valid_temperature_range = light_module.valid_temperature_range
+        color_temp_feat = light_module.get_feature("color_temp")
+        assert color_temp_feat
+
         requested_color_temp = round(color_temp)
         # Clamp color temp to valid range
         # since if the light in a group we will
         # get requests for color temps for the range
         # of the group and not the light
         clamped_color_temp = min(
-            valid_temperature_range.max,
-            max(valid_temperature_range.min, requested_color_temp),
+            color_temp_feat.maximum_value,
+            max(color_temp_feat.minimum_value, requested_color_temp),
         )
         await light_module.set_color_temp(
             clamped_color_temp,
