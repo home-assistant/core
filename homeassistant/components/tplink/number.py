@@ -51,6 +51,14 @@ NUMBER_DESCRIPTIONS: Final = (
         key="temperature_offset",
         mode=NumberMode.BOX,
     ),
+    TPLinkNumberEntityDescription(
+        key="pan_step",
+        mode=NumberMode.BOX,
+    ),
+    TPLinkNumberEntityDescription(
+        key="tilt_step",
+        mode=NumberMode.BOX,
+    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
