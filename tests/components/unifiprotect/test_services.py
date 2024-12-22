@@ -13,6 +13,7 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_MESSAGE,
     DOMAIN,
     KEYRINGS_KEY_TYPE,
+    KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
     KEYRINGS_KEY_TYPE_ID_NFC,
     KEYRINGS_ULP_ID,
     KEYRINGS_USER_FULL_NAME,
@@ -275,8 +276,13 @@ async def test_get_doorbell_user(
         registry_id="123456",
         ulp_user="user_ulp_id",
     )
+    keyring_2 = Mock(
+        registry_type="fingerprint",
+        registry_id="2",
+        ulp_user="user_ulp_id",
+    )
     ufp.api.bootstrap.ulp_users.as_list = Mock(return_value=[ulp_user])
-    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[keyring])
+    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[keyring, keyring_2])
 
     await init_entry(hass, ufp, [doorbell])
 
@@ -298,6 +304,10 @@ async def test_get_doorbell_user(
                     {
                         KEYRINGS_KEY_TYPE: "nfc",
                         KEYRINGS_KEY_TYPE_ID_NFC: "123456",
+                    },
+                    {
+                        KEYRINGS_KEY_TYPE_ID_FINGERPRINT: "2",
+                        KEYRINGS_KEY_TYPE: "fingerprint",
                     },
                 ],
                 KEYRINGS_USER_STATUS: "active",
