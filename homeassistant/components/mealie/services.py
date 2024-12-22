@@ -73,7 +73,7 @@ SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = vol.Schema(
 )
 
 SERVICE_SET_MEALPLAN = "set_mealplan"
-SERVICE_SET_MEALPLAN_SCHEMA = vol.All(
+SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
     vol.Schema(
         {
             vol.Required(ATTR_CONFIG_ENTRY_ID): str,
@@ -81,17 +81,19 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.All(
             vol.Required(ATTR_ENTRY_TYPE): vol.In(
                 [x.lower() for x in MealplanEntryType]
             ),
-            vol.Exclusive(ATTR_RECIPE_ID, "abc"): str,
-            vol.Exclusive(ATTR_NOTE_TITLE, "abc"): str,
-            vol.Optional(ATTR_NOTE_TEXT): str,
+            vol.Required(ATTR_RECIPE_ID): str,
         }
     ),
     vol.Schema(
         {
-            vol.Inclusive(ATTR_NOTE_TITLE, "abcd"): str,
-            vol.Inclusive(ATTR_NOTE_TEXT, "abcd"): str,
-        },
-        extra=vol.ALLOW_EXTRA,
+            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Required(ATTR_DATE): cv.date,
+            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            vol.Required(ATTR_NOTE_TITLE): str,
+            vol.Optional(ATTR_NOTE_TEXT): str,
+        }
     ),
 )
 
