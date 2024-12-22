@@ -81,20 +81,18 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of a Peblar device."""
         errors = {}
-
         reconfigure_entry = self._get_reconfigure_entry()
-        host = reconfigure_entry.data[CONF_HOST]
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
             peblar = Peblar(
-                host=host,
+                host=user_input[CONF_HOST],
                 session=async_create_clientsession(
                     self.hass, cookie_jar=CookieJar(unsafe=True)
                 ),
             )
             try:
                 await peblar.login(password=user_input[CONF_PASSWORD])
+                info = await peblar.system_information()
             except PeblarAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_auth"
             except PeblarConnectionError:
@@ -103,10 +101,16 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(info.product_serial_number)
+                self._abort_if_unique_id_mismatch(reason="different_device")
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
                     data_updates=user_input,
                 )
+
+        host = reconfigure_entry.data[CONF_HOST]
+        if user_input is not None:
+            host = user_input[CONF_HOST]
 
         return self.async_show_form(
             step_id="reconfigure",

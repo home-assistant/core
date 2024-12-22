@@ -151,6 +151,31 @@ async def test_reconfigure_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_peblar")
+async def test_reconfigure_to_different_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring to a different device doesn't work."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Change the unique ID of the entry, so we have a mismatch
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="mismatch")
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_PASSWORD: "OMGPUPPIES",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
