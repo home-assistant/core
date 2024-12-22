@@ -236,6 +236,9 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     """Get the user keyring info."""
     camera = _async_get_ufp_camera(call)
     ulp_users = camera.api.bootstrap.ulp_users.as_list()
+    if not ulp_users:
+        raise HomeAssistantError("No users found, please check Protect permissions.")
+
     user_keyrings: list[JsonValueType] = [
         {
             KEYRINGS_USER_FULL_NAME: user.full_name,
