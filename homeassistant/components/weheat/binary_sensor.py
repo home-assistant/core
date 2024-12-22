@@ -69,6 +69,7 @@ async def async_setup_entry(
         WeheatHeatPumpBinarySensor(coordinator, entity_description)
         for entity_description in BINARY_SENSORS
         for coordinator in entry.runtime_data
+        if entity_description.value_fn(coordinator.data) is not None
     ]
 
     async_add_entities(entities)

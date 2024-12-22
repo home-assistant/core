@@ -49,4 +49,4 @@ async def test_create_binary_entities(
         await setup_integration(hass, mock_config_entry)
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 4
