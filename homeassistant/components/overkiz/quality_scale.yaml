@@ -61,6 +61,6 @@ rules:
   docs-use-cases: todo
 
   # Platinum
-  async-dependency: todo
-  strict-typing: todo
-  inject-websession: todo
+  async-dependency: done
+  strict-typing: done
+  inject-websession: done
