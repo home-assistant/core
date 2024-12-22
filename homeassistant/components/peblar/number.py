@@ -27,6 +27,8 @@ from .coordinator import (
     PeblarRuntimeData,
 )
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class PeblarNumberEntityDescription(NumberEntityDescription):
