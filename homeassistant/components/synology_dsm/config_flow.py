@@ -118,7 +118,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SynologyDSMOptionsFlowHandler(config_entry)
+        return SynologyDSMOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the synology_dsm config flow."""
@@ -375,10 +375,6 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

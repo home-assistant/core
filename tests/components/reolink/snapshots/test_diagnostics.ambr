@@ -118,8 +118,8 @@
         'null': 2,
       }),
       'GetPtzCurPos': dict({
-        '0': 1,
-        'null': 1,
+        '0': 2,
+        'null': 2,
       }),
       'GetPtzGuard': dict({
         '0': 2,

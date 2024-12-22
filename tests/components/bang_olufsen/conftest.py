@@ -35,13 +35,13 @@ from .const import (
     TEST_DATA_CREATE_ENTRY,
     TEST_DATA_CREATE_ENTRY_2,
     TEST_FRIENDLY_NAME,
-    TEST_FRIENDLY_NAME_2,
     TEST_FRIENDLY_NAME_3,
-    TEST_HOST_2,
+    TEST_FRIENDLY_NAME_4,
     TEST_HOST_3,
+    TEST_HOST_4,
     TEST_JID_1,
-    TEST_JID_2,
     TEST_JID_3,
+    TEST_JID_4,
     TEST_NAME,
     TEST_NAME_2,
     TEST_SERIAL_NUMBER,
@@ -124,7 +124,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_available_sources = AsyncMock()
         client.get_available_sources.return_value = SourceArray(
             items=[
-                # Is in the HIDDEN_SOURCE_IDS constant, so should not be user selectable
+                # Is not playable, so should not be user selectable
                 Source(
                     name="AirPlay",
                     id="airPlay",
@@ -137,14 +137,16 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
+                    is_playable=True,
                 ),
                 Source(
                     name="Line-In",
                     id="lineIn",
                     is_enabled=True,
                     is_multiroom_available=False,
+                    is_playable=True,
                 ),
-                # Is disabled, so should not be user selectable
+                # Is disabled and not playable, so should not be user selectable
                 Source(
                     name="Powerlink",
                     id="pl",
@@ -266,27 +268,27 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_beolink_peers = AsyncMock()
         client.get_beolink_peers.return_value = [
             BeolinkPeer(
-                friendly_name=TEST_FRIENDLY_NAME_2,
-                jid=TEST_JID_2,
-                ip_address=TEST_HOST_2,
-            ),
-            BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
             ),
         ]
         client.get_beolink_listeners = AsyncMock()
         client.get_beolink_listeners.return_value = [
             BeolinkPeer(
-                friendly_name=TEST_FRIENDLY_NAME_2,
-                jid=TEST_JID_2,
-                ip_address=TEST_HOST_2,
-            ),
-            BeolinkPeer(
                 friendly_name=TEST_FRIENDLY_NAME_3,
                 jid=TEST_JID_3,
                 ip_address=TEST_HOST_3,
+            ),
+            BeolinkPeer(
+                friendly_name=TEST_FRIENDLY_NAME_4,
+                jid=TEST_JID_4,
+                ip_address=TEST_HOST_4,
             ),
         ]
 

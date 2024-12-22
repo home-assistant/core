@@ -535,6 +535,7 @@ class SqueezeBoxMediaPlayerEntity(
             all_params.extend(parameters)
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
+        self.async_write_ha_state()
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.

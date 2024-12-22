@@ -1,0 +1,48 @@
+# serializer version: 1
+# name: test_binary_sensors[binary_sensor.lunar_ddeeff_timer_running-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.lunar_ddeeff_timer_running',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Timer running',
+    'platform': 'acaia',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_running',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_timer_running',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lunar_ddeeff_timer_running-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'LUNAR-DDEEFF Timer running',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lunar_ddeeff_timer_running',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

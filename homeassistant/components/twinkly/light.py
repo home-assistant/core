@@ -7,7 +7,6 @@ from typing import Any
 
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
-from ttls.client import Twinkly
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,22 +17,14 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_ID,
-    CONF_MODEL,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import TwinklyConfigEntry
 from .const import (
-    DATA_CLIENT,
-    DATA_DEVICE_INFO,
     DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
@@ -48,16 +39,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TwinklyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
-
-    client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][DATA_DEVICE_INFO]
-    software_version = hass.data[DOMAIN][config_entry.entry_id][ATTR_SW_VERSION]
-
-    entity = TwinklyLight(config_entry, client, device_info, software_version)
+    entity = TwinklyLight(config_entry)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -71,14 +57,12 @@ class TwinklyLight(LightEntity):
 
     def __init__(
         self,
-        conf: ConfigEntry,
-        client: Twinkly,
-        device_info,
-        software_version: str | None = None,
+        entry: TwinklyConfigEntry,
     ) -> None:
         """Initialize a TwinklyLight entity."""
-        self._attr_unique_id: str = conf.data[CONF_ID]
-        self._conf = conf
+        device_info = entry.runtime_data.device_info
+        self._attr_unique_id: str = device_info["mac"]
+        self._conf = entry
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -95,17 +79,18 @@ class TwinklyLight(LightEntity):
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
-        self._name = conf.data[CONF_NAME] or "Twinkly light"
-        self._model = conf.data[CONF_MODEL]
+        self._name = entry.data[CONF_NAME] or "Twinkly light"
+        self._model = entry.data[CONF_MODEL]
+        self._mac = device_info["mac"]
 
-        self._client = client
+        self._client = entry.runtime_data.client
 
         # Set default state before any update
         self._attr_is_on = False
         self._attr_available = False
         self._current_movie: dict[Any, Any] = {}
         self._movies: list[Any] = []
-        self._software_version = software_version
+        self._software_version = entry.runtime_data.sw_version
         # We guess that most devices are "new" and support effects
         self._attr_supported_features = LightEntityFeature.EFFECT
 
@@ -113,7 +98,8 @@ class TwinklyLight(LightEntity):
     def device_info(self) -> DeviceInfo | None:
         """Get device specific attributes."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, self._mac)},
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
             manufacturer="LEDWORKS",
             model=self._model,
             name=self._name,

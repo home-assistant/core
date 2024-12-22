@@ -15,6 +15,8 @@ from . import IRON_OS_KEY, IronOSConfigEntry, IronOSLiveDataCoordinator
 from .coordinator import IronOSFirmwareUpdateCoordinator
 from .entity import IronOSBaseEntity
 
+PARALLEL_UPDATES = 0
+
 UPDATE_DESCRIPTION = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
@@ -28,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up IronOS update platform."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.live_data
 
     async_add_entities(
         [IronOSUpdate(coordinator, hass.data[IRON_OS_KEY], UPDATE_DESCRIPTION)]
@@ -92,4 +94,7 @@ class IronOSUpdate(IronOSBaseEntity, UpdateEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.firmware_update.last_update_success
+        return (
+            self.installed_version is not None
+            and self.firmware_update.last_update_success
+        )

@@ -7,6 +7,7 @@ from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import camera
 from homeassistant.components.camera import (
@@ -24,9 +25,9 @@ from homeassistant.components.camera.const import (
 )
 from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_PLATFORM,
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
@@ -37,18 +38,12 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, WEBRTC_ANSWER, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
-    MockConfigEntry,
-    MockModule,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
-    mock_config_flow,
-    mock_integration,
-    mock_platform,
-    setup_test_component_platform,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -807,30 +802,11 @@ async def test_use_stream_for_stills(
 
 @pytest.mark.parametrize(
     "module",
-    [camera, camera.const],
+    [camera],
 )
 def test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "enum",
-    list(camera.const.StreamType),
-)
-@pytest.mark.parametrize(
-    "module",
-    [camera, camera.const],
-)
-def test_deprecated_stream_type_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: camera.const.StreamType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "STREAM_TYPE_", "2025.1"
-    )
 
 
 @pytest.mark.parametrize(
@@ -848,40 +824,6 @@ def test_deprecated_state_constants(
 ) -> None:
     """Test deprecated stream type constants."""
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
-
-
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(camera.CameraEntityFeature),
-)
-def test_deprecated_support_constants(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: camera.CameraEntityFeature,
-) -> None:
-    """Test deprecated support constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, camera, entity_feature, "SUPPORT_", "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockCamera(camera.Camera):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
-
-    entity = MockCamera()
-    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
-    assert "MockCamera" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "CameraEntityFeature.ON_OFF" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera")
@@ -960,7 +902,7 @@ async def _test_capabilities(
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
-            self, session_id: str, candidate: str
+            self, session_id: str, candidate: RTCIceCandidateInit
         ) -> None:
             """Handle the WebRTC candidate."""
 
@@ -985,62 +927,102 @@ async def test_camera_capabilities_hls(
     )
 
 
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_camera_capabilities_webrtc(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test WebRTC camera capabilities."""
 
-    # Cannot use the fixture mock_camera_web_rtc as it's mocking Camera.async_handle_web_rtc_offer
-    # Camera capabilities are determined by by checking if the function was overwritten(implemented) or not
-    class MockCamera(camera.Camera):
-        """Mock Camera Entity."""
-
-        _attr_name = "Test"
-        _attr_supported_features: camera.CameraEntityFeature = (
-            camera.CameraEntityFeature.STREAM
-        )
-
-        async def stream_source(self) -> str | None:
-            return STREAM_SOURCE
-
-        async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
-            return WEBRTC_ANSWER
-
-    domain = "test"
-
-    entry = MockConfigEntry(domain=domain)
-    entry.add_to_hass(hass)
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_unload_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Unload test config entry."""
-        await hass.config_entries.async_forward_entry_unload(config_entry, DOMAIN)
-        return True
-
-    mock_integration(
-        hass,
-        MockModule(
-            domain,
-            async_setup_entry=async_setup_entry_init,
-            async_unload_entry=async_unload_entry_init,
-        ),
+    await _test_capabilities(
+        hass, hass_ws_client, "camera.sync", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
     )
-    setup_test_component_platform(hass, DOMAIN, [MockCamera()], from_config_entry=True)
-    mock_platform(hass, f"{domain}.config_flow", Mock())
 
-    with mock_config_flow(domain, ConfigFlow):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+
+@pytest.mark.parametrize(
+    ("entity_id", "expect_native_async_webrtc"),
+    [("camera.sync", False), ("camera.async", True)],
+)
+@pytest.mark.usefixtures("mock_test_webrtc_cameras", "register_test_provider")
+async def test_webrtc_provider_not_added_for_native_webrtc(
+    hass: HomeAssistant, entity_id: str, expect_native_async_webrtc: bool
+) -> None:
+    """Test that a WebRTC provider is not added to a camera when the camera has native WebRTC support."""
+    camera_obj = get_camera_from_entity_id(hass, entity_id)
+    assert camera_obj
+    assert camera_obj._webrtc_provider is None
+    assert camera_obj._supports_native_sync_webrtc is not expect_native_async_webrtc
+    assert camera_obj._supports_native_async_webrtc is expect_native_async_webrtc
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_camera_capabilities_changing_non_native_support(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test WebRTC camera capabilities."""
+    cam = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert (
+        cam.supported_features
+        == camera.CameraEntityFeature.ON_OFF | camera.CameraEntityFeature.STREAM
+    )
 
     await _test_capabilities(
-        hass, hass_ws_client, "camera.test", {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
+        hass,
+        hass_ws_client,
+        cam.entity_id,
+        {StreamType.HLS},
+        {StreamType.HLS, StreamType.WEB_RTC},
     )
+
+    cam._attr_supported_features = camera.CameraEntityFeature(0)
+    cam.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    await _test_capabilities(hass, hass_ws_client, cam.entity_id, set(), set())
+
+
+@pytest.mark.usefixtures("mock_test_webrtc_cameras")
+@pytest.mark.parametrize(("entity_id"), ["camera.sync", "camera.async"])
+async def test_camera_capabilities_changing_native_support(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_id: str,
+) -> None:
+    """Test WebRTC camera capabilities."""
+    cam = get_camera_from_entity_id(hass, entity_id)
+    assert cam.supported_features == camera.CameraEntityFeature.STREAM
+
+    await _test_capabilities(
+        hass, hass_ws_client, cam.entity_id, {StreamType.WEB_RTC}, {StreamType.WEB_RTC}
+    )
+
+    cam._attr_supported_features = camera.CameraEntityFeature(0)
+    cam.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    await _test_capabilities(hass, hass_ws_client, cam.entity_id, set(), set())
+
+
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_deprecated_frontend_stream_type_logs(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test using (_attr_)frontend_stream_type will log."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    for entity_id in (
+        "camera.property_frontend_stream_type",
+        "camera.attr_frontend_stream_type",
+    ):
+        camera_obj = get_camera_from_entity_id(hass, entity_id)
+        assert camera_obj.frontend_stream_type == StreamType.WEB_RTC
+
+    assert (
+        "Detected that custom integration 'test' is overwriting the 'frontend_stream_type' property in the PropertyFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
+    ) in caplog.text
+    assert (
+        "Detected that custom integration 'test' is setting the '_attr_frontend_stream_type' attribute in the AttrFrontendStreamTypeCamera class, which is deprecated and will be removed in Home Assistant 2025.6,"
+    ) in caplog.text

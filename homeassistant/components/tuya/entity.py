@@ -283,9 +283,14 @@ class TuyaEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{self.device.id}",
-                self.async_write_ha_state,
+                self._handle_state_update,
             )
         )
+
+    async def _handle_state_update(
+        self, updated_status_properties: list[str] | None
+    ) -> None:
+        self.async_write_ha_state()
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""
