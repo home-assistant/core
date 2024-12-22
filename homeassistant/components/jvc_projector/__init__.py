@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: JVCConfigEntry) -> bool:
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         password=entry.data[CONF_PASSWORD],
+        timeout=1,
     )
 
     try:

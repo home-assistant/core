@@ -25,6 +25,7 @@ class JVCBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe JVC binary sensor entity."""
 
     value_fn: Callable[[str | None], bool | None] = lambda x: x == "on"
+    enabled_default: bool | Callable[[JvcProjectorEntity], bool] = True
 
 
 JVC_BINARY_SENSORS = (
@@ -46,6 +47,7 @@ JVC_BINARY_SENSORS = (
         translation_key="jvc_eshift",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda x: x == const.ON if x is not None else None,
+        enabled_default=JvcProjectorEntity.has_eshift,
     ),
     JVCBinarySensorEntityDescription(
         key=const.KEY_SOURCE,
@@ -80,6 +82,11 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+        self._attr_entity_registry_enabled_default = (
+            description.enabled_default(self)
+            if callable(description.enabled_default)
+            else description.enabled_default
+        )
 
     @property
     def is_on(self) -> bool | None:
