@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 async def test_load_unload_entry(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Validate that setup entry also configure the client."""
+    """Test the load/unload of the config entry."""
 
     await setup_integration(hass, mock_config_entry)
 

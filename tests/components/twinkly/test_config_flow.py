@@ -117,11 +117,11 @@ async def test_dhcp_full_flow(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == TEST_MAC
 
 
-@pytest.mark.usefixtures("mock_twinkly_client", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_twinkly_client")
 async def test_dhcp_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test DHCP discovery flow that fails to connect."""
+    """Test DHCP discovery flow aborts if entry already setup."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
