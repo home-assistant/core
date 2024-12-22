@@ -2483,3 +2483,34 @@ async def test_restore_backup_wrong_parameters(
 
     mocked_write_text.assert_not_called()
     mocked_service_call.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_restore_backup_when_busy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test restore backup with busy manager."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]}
+    )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/restore",
+            "backup_id": TEST_BACKUP_ABC123.backup_id,
+            "agent_id": LOCAL_AGENT_ID,
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is False
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == "Backup manager busy: create_backup"
