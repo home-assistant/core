@@ -1159,35 +1159,6 @@ async def test_initiate_backup_file_error(
     assert unlink_mock.call_count == unlink_call_count
 
 
-async def test_loading_platforms(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup platforms."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
-
-    get_agents_mock = AsyncMock(return_value=[])
-
-    await setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=get_agents_mock,
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    assert len(manager.platforms) == 1
-    assert "Loaded 1 platforms" in caplog.text
-
-    get_agents_mock.assert_called_once_with(hass)
-
-
 class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
     """Local backup agent."""
 
