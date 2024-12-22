@@ -156,7 +156,7 @@ async def test_relay_switch_1pm_power_sensor(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_leak_sensor(hass: HomeAssistant) -> None:
-    """Test setting up creates the power sensor."""
+    """Test setting up the leak detector."""
     await async_setup_component(hass, DOMAIN, {})
     inject_bluetooth_service_info(hass, LEAK_SERVICE_INFO)
 
