@@ -76,6 +76,53 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a Peblar device."""
+        errors = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        host = reconfigure_entry.data[CONF_HOST]
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            peblar = Peblar(
+                host=host,
+                session=async_create_clientsession(
+                    self.hass, cookie_jar=CookieJar(unsafe=True)
+                ),
+            )
+            try:
+                await peblar.login(password=user_input[CONF_PASSWORD])
+            except PeblarAuthenticationError:
+                errors[CONF_PASSWORD] = "invalid_auth"
+            except PeblarConnectionError:
+                errors[CONF_HOST] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=host): TextSelector(
+                        TextSelectorConfig(autocomplete="off")
+                    ),
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+        )
+
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
