@@ -15,6 +15,8 @@ from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
 
+from homeassistant.helpers.system_info import is_official_image
+
 _LOGGER = logging.getLogger(__name__)
 
 
