@@ -294,6 +294,10 @@ async def test_update_name(
 
     await setup_integration(hass, mock_config_entry)
 
+    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
+
+    assert dev_entry.name == "Tree 1"
+
     mock_twinkly_client.get_details.return_value["device_name"] = "new_device_name"
 
     freezer.tick(timedelta(seconds=30))
