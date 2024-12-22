@@ -1226,14 +1226,14 @@ nextcord==2.6.0
 # homeassistant.components.nextdns
 nextdns==4.0.0
 
+# homeassistant.components.niko_home_control
+nhc==0.3.2
+
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.0
-
-# homeassistant.components.niko_home_control
-niko-home-control==0.2.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1327,7 +1327,7 @@ panasonic-viera==0.4.2
 pdunehd==1.3.2
 
 # homeassistant.components.peblar
-peblar==0.2.1
+peblar==0.3.0
 
 # homeassistant.components.peco
 peco==0.0.30
@@ -1758,7 +1758,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.3
+pyoverkiz==1.15.4
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1911,7 +1911,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.8.1
+python-kasa[speedups]==0.9.0
 
 # homeassistant.components.linkplay
 python-linkplay==0.1.1

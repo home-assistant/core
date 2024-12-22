@@ -1,4 +1,4 @@
-"""Tests for the Peblar sensor platform."""
+"""Tests for the Peblar switch platform."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,9 +11,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.freeze_time("2024-12-21 21:45:00")
-@pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize("init_integration", [Platform.SWITCH], indirect=True)
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -21,7 +20,7 @@ async def test_entities(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the sensor entities."""
+    """Test the switch entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Ensure all entities are correctly assigned to the Peblar device
