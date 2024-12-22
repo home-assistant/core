@@ -1,4 +1,4 @@
-"""The Playstation Network integration."""
+"""The PlayStation Network integration."""
 
 from __future__ import annotations
 

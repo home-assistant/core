@@ -1,4 +1,4 @@
-"""Coordinator for the Playstation Network Integration."""
+"""Coordinator for the PlayStation Network Integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEVICE_SCAN_INTERVAL = timedelta(seconds=30)
 
 type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkCoordinator]
 
@@ -35,7 +34,7 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             hass,
             name=DOMAIN,
             logger=_LOGGER,
-            update_interval=DEVICE_SCAN_INTERVAL,
+            update_interval=timedelta(seconds=30),
         )
 
         self.hass = hass
@@ -47,12 +46,16 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
         try:
             return await self.hass.async_add_executor_job(self.psn.get_data)
         except PSNAWPAuthenticationError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                DOMAIN,
+                "update_failed",
+            ) from error
 
     async def _async_setup(self) -> None:
         try:
             await self.hass.async_add_executor_job(self.psn.validate_connection)
         except PSNAWPAuthenticationError as error:
-            raise ConfigEntryNotReady(error) from error
-        except Exception as ex:
-            raise ConfigEntryNotReady(ex) from ex
+            raise ConfigEntryNotReady(
+                DOMAIN,
+                "not_ready",
+            ) from error

@@ -8,7 +8,7 @@
         "data_description": {
           "npsso": "Please supply the NPSSO token generated during successful login of your PlayStation Network Account"
         },
-        "description": "To obtain the NPSSO Token, first login to your playstation account at playstation.com. Then [click here]({npsso_link}) to retrieve your npsso token."
+        "description": "To obtain your NPSSO Token, login to your [PlayStation account]({psn_link}) first. Then [click here]({npsso_link}) to retrieve the token."
       }
     },
     "error": {
@@ -23,6 +23,9 @@
   "exceptions": {
     "not_ready": {
       "message": "Authentication to the Playstation Network failed."
+    },
+    "update_failed": {
+      "message": "Data retrieval failed when trying to access the PlayStation Network."
     }
   }
 }
