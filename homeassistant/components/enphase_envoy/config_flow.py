@@ -194,7 +194,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors,
                 description_placeholders,
             )
-            if envoy and not errors:
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data=reauth_entry.data | user_input,
