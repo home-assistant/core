@@ -21,7 +21,6 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional("Master Key"): str,
         vol.Optional("Service Code"): str,
     }
 )
@@ -35,7 +34,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
 
     session = async_get_clientsession(hass)
     async with ApiClient(session, data["host"]) as client:
-        await client.login(data["password"])
+        await client.login(data["password"], service_code=data.get("Service Code"))
         hostname_id = await get_hostname_id(client)
         values = await client.get_setting_values("scb:network", hostname_id)
 

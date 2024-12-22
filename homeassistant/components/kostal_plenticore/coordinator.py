@@ -59,16 +59,10 @@ class Plenticore:
             async_get_clientsession(self.hass), host=self.host
         )
         try:
-            if (
-                "Master Key" in self.config_entry.data
-                and "Service Code" in self.config_entry.data
-            ):
-                await self._client.login(
-                    self.config_entry.data["Master Key"],
-                    service_code=self.config_entry.data["Service Code"],
-                )
-            else:
-                await self._client.login(self.config_entry.data[CONF_PASSWORD])
+            await self._client.login(
+                self.config_entry.data[CONF_PASSWORD],
+                service_code=self.config_entry.data.get("Service Code"),
+            )
         except AuthenticationException as err:
             _LOGGER.error(
                 "Authentication exception connecting to %s: %s", self.host, err
