@@ -431,6 +431,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: un,
             CONF_PASSWORD: pw,
         }
+        _LOGGER.debug("Creating camera account entry for device %s", device.host)
         return self._async_create_or_update_entry_from_device(
             device, camera_data=entry_data
         )
@@ -461,20 +462,30 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             rtsp_url = camera_module.stream_rtsp_url(camera_creds)
             assert rtsp_url
 
+            # If camera fails to create HLS stream via 'stream' then try
+            # ffmpeg.async_get_image as some cameras do not work with HLS
+            # and the frontend will fallback to mpeg on error
             try:
                 await stream.async_check_stream_client_error(self.hass, rtsp_url)
             except stream.StreamOpenClientError as ex:
                 if ex.stream_client_error is stream.StreamClientError.Unauthorized:
                     errors["base"] = "invalid_camera_auth"
                 else:
-                    # If camera fails to create HLS stream but can create the
-                    # mpeg stream, we know it's authorised ok and will fallback
-                    # to mpeg in the frontend
+                    _LOGGER.debug(
+                        "Device %s client error checking stream: %s", device.host, ex
+                    )
                     if await ffmpeg.async_get_image(self.hass, rtsp_url):
                         return self._create_camera_entry(device, un, pw)
 
                     errors["base"] = "cannot_connect_camera"
                     placeholders["error"] = str(ex)
+            except Exception as ex:  # noqa: BLE001
+                _LOGGER.debug("Device %s error checking stream: %s", device.host, ex)
+                if await ffmpeg.async_get_image(self.hass, rtsp_url):
+                    return self._create_camera_entry(device, un, pw)
+
+                errors["base"] = "cannot_connect_camera"
+                placeholders["error"] = str(ex)
             else:
                 return self._create_camera_entry(device, un, pw)
 
