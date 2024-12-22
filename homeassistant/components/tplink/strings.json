@@ -221,6 +221,18 @@
       },
       "pir_enabled": {
         "name": "Motion sensor"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "person_detection": {
+        "name": "Person detection"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      },
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
       }
     },
     "number": {
