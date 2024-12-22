@@ -29,9 +29,11 @@ rules:
   log-when-unavailable: todo
   config-entry-unloading: todo
   reauthentication-flow: todo
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register actions.
   docs-installation-parameters: todo
-  integration-owner: todo
+  integration-owner: done
   parallel-updates: todo
   test-coverage: todo
   docs-configuration-parameters: todo
