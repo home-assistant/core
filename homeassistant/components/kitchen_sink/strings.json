@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "step": {
       "reauth_confirm": {
         "description": "Select **Submit** to reauthenticate"
@@ -17,6 +20,9 @@
             "data": {
               "bool": "Optional boolean",
               "int": "Numeric input"
+            },
+            "data_description": {
+              "int": "A longer description for the numeric input"
             },
             "description": "This section allows input of some extra data",
             "name": "Collapsible section"

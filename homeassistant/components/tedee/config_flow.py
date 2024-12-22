@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pytedee_async import (
+from aiotedee import (
     TedeeAuthException,
     TedeeClient,
     TedeeClientException,
@@ -17,7 +17,6 @@ from homeassistant.components.webhook import async_generate_id as webhook_genera
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -35,9 +34,6 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    reauth_entry: ConfigEntry
-    reconfigure_entry: ConfigEntry
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -46,7 +42,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if self.source == SOURCE_REAUTH:
-                host = self.reauth_entry.data[CONF_HOST]
+                host = self._get_reauth_entry().data[CONF_HOST]
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
@@ -65,19 +61,17 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error during local bridge discovery: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(local_bridge.serial)
                 if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        self.reauth_entry,
-                        data={**self.reauth_entry.data, **user_input},
-                        reason="reauth_successful",
+                        self._get_reauth_entry(), data_updates=user_input
                     )
                 if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
                     return self.async_update_reload_and_abort(
-                        self.reconfigure_entry,
-                        data={**self.reconfigure_entry.data, **user_input},
-                        reason="reconfigure_successful",
+                        self._get_reconfigure_entry(), data_updates=user_input
                     )
-                await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=NAME,
@@ -103,7 +97,6 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self._get_reauth_entry()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -117,7 +110,9 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
-                            default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN],
+                            default=self._get_reauth_entry().data[
+                                CONF_LOCAL_ACCESS_TOKEN
+                            ],
                         ): str,
                     }
                 ),
@@ -128,26 +123,18 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
-        self.reconfigure_entry = self._get_reconfigure_entry()
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Add reconfigure step to allow to reconfigure a config entry."""
         if not user_input:
+            reconfigure_entry = self._get_reconfigure_entry()
             return self.async_show_form(
-                step_id="reconfigure_confirm",
+                step_id="reconfigure",
                 data_schema=vol.Schema(
                     {
                         vol.Required(
-                            CONF_HOST, default=self.reconfigure_entry.data[CONF_HOST]
+                            CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                         ): str,
                         vol.Required(
                             CONF_LOCAL_ACCESS_TOKEN,
-                            default=self.reconfigure_entry.data[
-                                CONF_LOCAL_ACCESS_TOKEN
-                            ],
+                            default=reconfigure_entry.data[CONF_LOCAL_ACCESS_TOKEN],
                         ): str,
                     }
                 ),

@@ -378,7 +378,17 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(key="island_status", device_class=SensorDeviceClass.ENUM),
+    SensorEntityDescription(
+        key="island_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "on_grid",
+            "off_grid",
+            "off_grid_intentional",
+            "off_grid_unintentional",
+            "island_status_unknown",
+        ],
+    ),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
@@ -472,8 +482,7 @@ async def async_setup_entry(
                 TeslemetryEnergyHistorySensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_HISTORY_DESCRIPTIONS
-                if energysite.info_coordinator.data.get("components_battery")
-                or energysite.info_coordinator.data.get("components_solar")
+                if energysite.history_coordinator
             ),
         )
     )

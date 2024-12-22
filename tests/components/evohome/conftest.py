@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 from datetime import datetime, timedelta, timezone
 from http import HTTPMethod
 from typing import Any
@@ -11,12 +11,15 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientSession
 from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
+from evohomeasync2.controlsystem import ControlSystem
+from evohomeasync2.zone import Zone
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
@@ -112,16 +115,16 @@ def config() -> dict[str, str]:
 
 async def setup_evohome(
     hass: HomeAssistant,
-    test_config: dict[str, str],
+    config: dict[str, str],
     install: str = "default",
-) -> MagicMock:
+) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
     # set the time zone as for the active evohome location
-    loc_idx: int = test_config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
 
     try:
         locn = user_locations_config_fixture(install)[loc_idx]
@@ -138,18 +141,68 @@ async def setup_evohome(
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
         patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
     ):
-        mock_client.side_effect = EvohomeClient
+        evo: EvohomeClient | None = None
 
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
+        def evohome_client(*args, **kwargs) -> EvohomeClient:
+            nonlocal evo
+            evo = EvohomeClient(*args, **kwargs)
+            return evo
+
+        mock_client.side_effect = evohome_client
+
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
         mock_client.assert_called_once()
 
-        assert mock_client.call_args.args[0] == test_config[CONF_USERNAME]
-        assert mock_client.call_args.args[1] == test_config[CONF_PASSWORD]
+        assert mock_client.call_args.args[0] == config[CONF_USERNAME]
+        assert mock_client.call_args.args[1] == config[CONF_PASSWORD]
 
         assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
-        assert mock_client.account_info is not None
+        assert evo and evo.account_info is not None
 
-        return mock_client
+        mock_client.return_value = evo
+        yield mock_client
+
+
+@pytest.fixture
+async def evohome(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+) -> AsyncGenerator[MagicMock]:
+    """Return the mocked evohome client for this install fixture."""
+
+    async for mock_client in setup_evohome(hass, config, install=install):
+        yield mock_client
+
+
+@pytest.fixture
+async def ctl_id(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: MagicMock,
+) -> AsyncGenerator[str]:
+    """Return the entity_id of the evohome integration's controller."""
+
+    async for mock_client in setup_evohome(hass, config, install=install):
+        evo: EvohomeClient = mock_client.return_value
+        ctl: ControlSystem = evo._get_single_tcs()
+
+        yield f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
+
+
+@pytest.fixture
+async def zone_id(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: MagicMock,
+) -> AsyncGenerator[str]:
+    """Return the entity_id of the evohome integration's first zone."""
+
+    async for mock_client in setup_evohome(hass, config, install=install):
+        evo: EvohomeClient = mock_client.return_value
+        zone: Zone = list(evo._get_single_tcs().zones.values())[0]
+
+        yield f"{Platform.CLIMATE}.{slugify(zone.name)}"

@@ -34,8 +34,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

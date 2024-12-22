@@ -10,7 +10,7 @@ from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -73,7 +73,9 @@ async def async_setup_entry(
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+            translation_placeholders={"host": host.api.host, "err": str(err)},
         ) from err
     except BaseException:
         await host.stop()
@@ -82,6 +84,24 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
+
+    # update the port info if needed for the next time
+    if (
+        host.api.port != config_entry.data[CONF_PORT]
+        or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
+    ):
+        _LOGGER.warning(
+            "HTTP(s) port of Reolink %s, changed from %s to %s",
+            host.api.nvr_name,
+            config_entry.data[CONF_PORT],
+            host.api.port,
+        )
+        data = {
+            **config_entry.data,
+            CONF_PORT: host.api.port,
+            CONF_USE_HTTPS: host.api.use_https,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
@@ -134,6 +154,7 @@ async def async_setup_entry(
     device_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
         update_interval=DEVICE_UPDATE_INTERVAL,
@@ -141,6 +162,7 @@ async def async_setup_entry(
     firmware_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}.firmware",
         update_method=async_check_firmware_update,
         update_interval=FIRMWARE_UPDATE_INTERVAL,
@@ -306,7 +328,19 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             new_identifiers = {(DOMAIN, new_device_id)}
-            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            if existing_device is None:
+                device_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
+            else:
+                _LOGGER.warning(
+                    "Reolink device with uid %s already exists, "
+                    "removing device with uid %s",
+                    new_device_id,
+                    device_uid,
+                )
+                device_reg.async_remove_device(device.id)
 
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
@@ -332,4 +366,18 @@ def migrate_entity_ids(
             id_parts = entity.unique_id.split("_", 2)
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
-                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+                existing_entity = entity_reg.async_get_entity_id(
+                    entity.domain, entity.platform, new_id
+                )
+                if existing_entity is None:
+                    entity_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=new_id
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Reolink entity with unique_id %s already exists, "
+                        "removing device with unique_id %s",
+                        new_id,
+                        entity.unique_id,
+                    )
+                    entity_reg.async_remove(entity.entity_id)

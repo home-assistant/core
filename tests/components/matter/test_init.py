@@ -67,7 +67,7 @@ async def test_entry_setup_unload(
     assert matter_client.connect.call_count == 1
     assert matter_client.set_default_fabric_label.call_count == 1
     assert entry.state is ConfigEntryState.LOADED
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state != STATE_UNAVAILABLE
 
@@ -75,13 +75,11 @@ async def test_entry_setup_unload(
 
     assert matter_client.disconnect.call_count == 1
     assert entry.state is ConfigEntryState.NOT_LOADED
-    entity_state = hass.states.get("light.mock_onoff_light_light")
+    entity_state = hass.states.get("light.mock_onoff_light")
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_home_assistant_stop(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -248,10 +246,10 @@ async def test_raise_addon_task_in_progress(
 
     install_addon_original_side_effect = install_addon.side_effect
 
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
+    async def install_addon_side_effect(slug: str) -> None:
         """Mock install add-on."""
         await install_event.wait()
-        await install_addon_original_side_effect(hass, slug)
+        await install_addon_original_side_effect(slug)
 
     install_addon.side_effect = install_addon_side_effect
 
@@ -339,7 +337,7 @@ async def test_install_addon(
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert addon_store_info.call_count == 3
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_matter_server")
+    assert install_addon.call_args == call("core_matter_server")
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_matter_server")
 
@@ -391,7 +389,7 @@ async def test_addon_info_failure(
             True,
             1,
             1,
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             None,
             ServerVersionTooOld("Invalid version"),
         ),
@@ -448,8 +446,6 @@ async def test_update_addon(
     assert update_addon.call_count == update_calls
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize(
     (
         "connect_side_effect",
@@ -664,8 +660,6 @@ async def test_remove_entry(
     assert "Failed to uninstall the Matter Server add-on" in caplog.text
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -682,7 +676,7 @@ async def test_remove_config_entry_device(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )[0]
-    entity_id = "light.m5stamp_lighting_app_light"
+    entity_id = "light.m5stamp_lighting_app"
 
     assert device_entry
     assert entity_registry.async_get(entity_id)
@@ -698,8 +692,6 @@ async def test_remove_config_entry_device(
     assert not hass.states.get(entity_id)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_remove_config_entry_device_no_node(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

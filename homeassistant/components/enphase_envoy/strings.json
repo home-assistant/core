@@ -13,7 +13,7 @@
           "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "[%key:component::enphase_envoy::config::step::user::description%]",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -28,12 +28,13 @@
     "error": {
       "cannot_connect": "Cannot connect: {reason}",
       "invalid_auth": "Invalid authentication: {reason}",
-      "unexpected_envoy": "Unexpected Envoy: {reason}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number"
     }
   },
   "options": {
@@ -41,7 +42,8 @@
       "init": {
         "title": "Envoy {serial} {host} options",
         "data": {
-          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again."
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again.",
+          "disable_keep_alive": "Always use a new connection when requesting data from the Envoy. May resolve communication issues with some Envoy firmwares."
         }
       }
     }
@@ -335,6 +337,30 @@
       },
       "configured_reserve_soc": {
         "name": "Configured reserve battery level"
+      },
+      "acb_battery_state": {
+        "name": "Battery state",
+        "state": {
+          "discharging": "Discharging",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "Charging",
+          "full": "Full"
+        }
+      },
+      "acb_available_energy": {
+        "name": "Available ACB battery energy"
+      },
+      "acb_max_capacity": {
+        "name": "ACB Battery capacity"
+      },
+      "aggregated_available_energy": {
+        "name": "Aggregated available battery energy"
+      },
+      "aggregated_max_capacity": {
+        "name": "Aggregated Battery capacity"
+      },
+      "aggregated_soc": {
+        "name": "Aggregated battery soc"
       }
     },
     "switch": {
@@ -344,6 +370,17 @@
       "grid_enabled": {
         "name": "Grid enabled"
       }
+    }
+  },
+  "exceptions": {
+    "unexpected_device": {
+      "message": "Unexpected Envoy serial-number found at {host}; expected {expected_serial}, found {actual_serial}"
+    },
+    "authentication_error": {
+      "message": "Envoy authentication failure on {host}: {args}"
+    },
+    "envoy_error": {
+      "message": "Error communicating with Envoy API on {host}: {args}"
     }
   }
 }

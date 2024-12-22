@@ -6,7 +6,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import CloudDevice, Device
-from pydantic import parse_raw_as  # pylint: disable=no-name-in-module
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -18,7 +17,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -50,8 +49,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.lametric.async_setup_entry", return_value=True
-    ) as mock_setup:
-        yield mock_setup
+    ):
+        yield
 
 
 @pytest.fixture
@@ -61,9 +60,10 @@ def mock_lametric_cloud() -> Generator[MagicMock]:
         "homeassistant.components.lametric.config_flow.LaMetricCloud", autospec=True
     ) as lametric_mock:
         lametric = lametric_mock.return_value
-        lametric.devices.return_value = parse_raw_as(
-            list[CloudDevice], load_fixture("cloud_devices.json", DOMAIN)
-        )
+        lametric.devices.return_value = [
+            CloudDevice.from_dict(cloud_device)
+            for cloud_device in load_json_array_fixture("cloud_devices.json", DOMAIN)
+        ]
         yield lametric
 
 
@@ -89,7 +89,7 @@ def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
         lametric = lametric_mock.return_value
         lametric.api_key = "mock-api-key"
         lametric.host = "127.0.0.1"
-        lametric.device.return_value = Device.parse_raw(
+        lametric.device.return_value = Device.from_json(
             load_fixture(f"{device_fixture}.json", DOMAIN)
         )
         yield lametric

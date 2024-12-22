@@ -44,7 +44,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "CO2 Signal"
+    assert result2["title"] == "Electricity Maps"
     assert result2["data"] == {
         "api_key": "api_key",
     }
@@ -185,7 +185,7 @@ async def test_form_error_handling(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "CO2 Signal"
+    assert result["title"] == "Electricity Maps"
     assert result["data"] == {
         "api_key": "api_key",
     }

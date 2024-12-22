@@ -12,6 +12,8 @@ from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+    OPTION_DISABLE_KEEP_ALIVE,
+    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -47,6 +49,7 @@ async def test_form(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy 1234"
+    assert result["result"].unique_id == "1234"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy 1234",
@@ -78,6 +81,7 @@ async def test_user_no_serial_number(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Envoy"
+    assert result["result"].unique_id is None
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_NAME: "Envoy",
@@ -98,6 +102,8 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -129,6 +135,8 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -623,6 +631,88 @@ async def test_zero_conf_old_blank_entry(
     assert entry.title == "Envoy 1234"
 
 
+async def test_zero_conf_old_blank_entry_standard_title(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test re-using old blank entry was Envoy as title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_NAME: "unknown",
+        },
+        unique_id=None,
+        title="Envoy",
+    )
+    entry.add_to_hass(hass)
+    # test if shorthand title Envoy gets serial appended
+    hass.config_entries.async_update_entry(entry, title="Envoy")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id == "1234"
+    assert entry.title == "Envoy 1234"
+
+
+async def test_zero_conf_old_blank_entry_user_title(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test re-using old blank entry with user title."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_NAME: "unknown",
+        },
+        unique_id=None,
+        title="Envoy",
+    )
+    entry.add_to_hass(hass)
+    # set user title on entry
+    hass.config_entries.async_update_entry(entry, title="Envoy Backyard")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"serialnum": "1234", "protovers": "7.1.2"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.unique_id == "1234"
+    assert entry.title == "Envoy Backyard"
+
+
 async def test_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -632,6 +722,8 @@ async def test_reauth(
     """Test we reauth auth."""
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -656,14 +748,12 @@ async def test_options_default(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
-        },
+        result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+        OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
     }
 
 
@@ -680,10 +770,17 @@ async def test_options_set(
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+            OPTION_DISABLE_KEEP_ALIVE: True,
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True}
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+        OPTION_DISABLE_KEEP_ALIVE: True,
+    }
 
 
 async def test_reconfigure(
@@ -696,7 +793,7 @@ async def test_reconfigure(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -732,7 +829,7 @@ async def test_reconfigure_nochange(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry
@@ -768,7 +865,7 @@ async def test_reconfigure_otherenvoy(
     await setup_integration(hass, config_entry)
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # let mock return different serial from first time, sim it's other one on changed ip
@@ -783,33 +880,13 @@ async def test_reconfigure_otherenvoy(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unexpected_envoy"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
 
     # entry should still be original entry
     assert config_entry.data[CONF_HOST] == "1.1.1.1"
     assert config_entry.data[CONF_USERNAME] == "test-username"
     assert config_entry.data[CONF_PASSWORD] == "test-password"
-
-    # set serial back to original to finsich flow
-    mock_envoy.serial_number = "1234"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "new-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    # updated original entry
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
-    assert config_entry.data[CONF_USERNAME] == "test-username"
-    assert config_entry.data[CONF_PASSWORD] == "new-password"
 
 
 @pytest.mark.parametrize(
@@ -902,7 +979,7 @@ async def test_reconfigure_change_ip_to_existing(
 
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
     assert result["errors"] == {}
 
     # original entry

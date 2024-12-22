@@ -35,10 +35,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
-      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
@@ -55,7 +51,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -162,6 +159,9 @@
       "device_time": {
         "name": "Device time"
       },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      },
       "auto_off_at": {
         "name": "Auto off at"
       },
@@ -190,6 +190,12 @@
       },
       "fan_sleep_mode": {
         "name": "Fan sleep mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "pir_enabled": {
+        "name": "Motion sensor"
       }
     },
     "number": {

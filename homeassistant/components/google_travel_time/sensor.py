@@ -7,6 +7,7 @@ import logging
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
+from googlemaps.exceptions import ApiError, Timeout, TransportError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -172,9 +173,13 @@ class GoogleTravelTimeSensor(SensorEntity):
             self._resolved_destination,
         )
         if self._resolved_destination is not None and self._resolved_origin is not None:
-            self._matrix = distance_matrix(
-                self._client,
-                self._resolved_origin,
-                self._resolved_destination,
-                **options_copy,
-            )
+            try:
+                self._matrix = distance_matrix(
+                    self._client,
+                    self._resolved_origin,
+                    self._resolved_destination,
+                    **options_copy,
+                )
+            except (ApiError, TransportError, Timeout) as ex:
+                _LOGGER.error("Error getting travel time: %s", ex)
+                self._matrix = None

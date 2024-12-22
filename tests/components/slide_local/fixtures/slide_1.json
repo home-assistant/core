@@ -1,0 +1,11 @@
+{
+  "slide_id": "slide_1234567890ab",
+  "mac": "1234567890ab",
+  "board_rev": 1,
+  "device_name": "slide bedroom",
+  "zone_name": "bedroom",
+  "curtain_type": 0,
+  "calib_time": 10239,
+  "pos": 0.0,
+  "touch_go": true
+}
