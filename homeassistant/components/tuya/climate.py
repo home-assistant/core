@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
@@ -69,7 +70,7 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": TuyaClimateEntityDescription(
         key="wk",
-        switch_only_hvac_mode=HVACMode.HEAT_COOL,
+        switch_only_hvac_mode=HVACMode.HEAT,
     ),
     # Thermostatic Radiator Valve
     # Not documented
@@ -120,6 +121,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
+    _is_thermostat: bool
 
     def __init__(
         self,
@@ -131,6 +133,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
         self.entity_description = description
+        self._is_thermostat = device.category == "wk"
 
         super().__init__(device, device_manager)
 
@@ -203,8 +206,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if (not self._is_thermostat) and (
+            enum_type := self.find_dpcode(
+                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+            )
         ):
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
@@ -225,6 +230,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 HVACMode.OFF,
                 description.switch_only_hvac_mode,
             ]
+
+        # Determine dpcode to use for checking thermostat current operation
+        if (self._is_thermostat) and self.find_dpcode(
+            DPCode.VALVE_STATE, dptype=DPType.ENUM
+        ):
+            self._attr_hvac_action = HVACAction.OFF
 
         # Determine dpcode to use for setting the humidity
         if int_type := self.find_dpcode(
@@ -288,7 +299,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         commands = [{"code": DPCode.MODE, "value": preset_mode}]
         self._send_command(commands)
@@ -420,7 +431,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if not self.device.status.get(DPCode.SWITCH, True):
             return HVACMode.OFF
 
-        if DPCode.MODE not in self.device.function:
+        if (self._is_thermostat) or (DPCode.MODE not in self.device.function):
             if self.device.status.get(DPCode.SWITCH, False):
                 return self.entity_description.switch_only_hvac_mode
             return HVACMode.OFF
@@ -435,6 +446,20 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return self.entity_description.switch_only_hvac_mode
 
         return HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current hvac action."""
+        if self._attr_hvac_action:
+            if self.device.status.get(DPCode.SWITCH, True):
+                valve = self.device.status.get(DPCode.VALVE_STATE)
+                if valve == "open":
+                    self._attr_hvac_action = HVACAction.HEATING
+                else:
+                    self._attr_hvac_action = HVACAction.IDLE
+            else:
+                self._attr_hvac_action = HVACAction.OFF
+        return self._attr_hvac_action
 
     @property
     def preset_mode(self) -> str | None:
@@ -477,5 +502,5 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._send_command([{"code": DPCode.SWITCH, "value": True}])
 
     def turn_off(self) -> None:
-        """Turn the device on, retaining current HVAC (if supported)."""
+        """Turn the device off, retaining current HVAC (if supported)."""
         self._send_command([{"code": DPCode.SWITCH, "value": False}])
