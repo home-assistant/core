@@ -30,7 +30,8 @@ def light() -> NHCLight:
     mock.type = 1
     mock.is_dimmable = False
     mock.name = "light"
-    mock.location = "room"
+    mock.suggested_area = "room"
+    mock.state = 100
     return mock
 
 
@@ -42,7 +43,7 @@ def dimmable_light() -> NHCLight:
     mock.type = 2
     mock.is_dimmable = True
     mock.name = "dimmable light"
-    mock.location = "room"
+    mock.suggested_area = "room"
     mock.state = 100
     return mock
 
