@@ -3,7 +3,8 @@
 import logging
 from typing import Any
 
-from aioswitcher.api import SwitcherApi, SwitcherBaseResponse
+from aioswitcher.api import SwitcherApi
+from aioswitcher.api.messages import SwitcherBaseResponse
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -27,7 +28,7 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
-    async def _async_call_api(self, api: str, *args: Any) -> None:
+    async def _async_call_api(self, api: str, *args: Any, **kwargs: Any) -> None:
         """Call Switcher API."""
         _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
         response: SwitcherBaseResponse | None = None
@@ -41,7 +42,7 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
                 self.coordinator.data.device_key,
                 self.coordinator.token,
             ) as swapi:
-                response = await getattr(swapi, api)(*args)
+                response = await getattr(swapi, api)(*args, **kwargs)
         except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 

@@ -280,7 +280,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
+    Unit of measurement: `mW`, `W`, `kW`, `MW`, `GW`, `TW`, `BTU/h`
     """
 
     PRECIPITATION = "precipitation"

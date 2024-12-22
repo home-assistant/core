@@ -96,7 +96,10 @@ async def validate_connection(data: ConfigType) -> str | None:
             host_name,
         )
         error = "license_error"
-    except (TimeoutError, ConnectionRefusedError):
+    except (
+        pypck.connection.PchkConnectionFailedError,
+        pypck.connection.PchkConnectionRefusedError,
+    ):
         _LOGGER.warning('Connection to PCHK "%s" failed', host_name)
         error = "connection_refused"
 

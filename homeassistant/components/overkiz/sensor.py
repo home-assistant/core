@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -34,7 +33,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HomeAssistantOverkizData
+from . import OverkizDataConfigEntry
 from .const import (
     DOMAIN,
     IGNORED_OVERKIZ_DEVICES,
@@ -423,7 +422,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_REMAINING_HOT_WATER,
         name="Warm water remaining",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolume.LITERS,
     ),
@@ -458,6 +457,24 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    # HitachiHeatingSystem/HitachiAirToWaterHeatingZone
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1,
+        name="Room ambient temperature",
+        native_value=lambda value: cast(float, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # HitachiHeatingSystem/HitachiAirToWaterMainComponent
+    OverkizSensorDescription(
+        key=OverkizState.MODBUS_OUTDOOR_AMBIENT_TEMPERATURE,
+        name="Outdoor ambient temperature",
+        native_value=lambda value: cast(int, value),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCRIPTIONS}
@@ -465,11 +482,11 @@ SUPPORTED_STATES = {description.key: description for description in SENSOR_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz sensors from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[SensorEntity] = []
 
     for device in data.coordinator.data.values():

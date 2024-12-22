@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: data_description is missing.
+  config-flow: done
   test-before-configure: done
   unique-config-entry:
     status: todo

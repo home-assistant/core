@@ -684,7 +684,7 @@ async def _check_step_or_section_translations(
                 description_placeholders,
                 data_value.schema,
             )
-            return
+            continue
         iqs_config_flow = _get_integration_quality_scale_rule(
             integration, "config-flow"
         )

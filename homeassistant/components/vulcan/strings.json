@@ -10,7 +10,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "expired_token": "Expired token - please generate a new token",
-      "invalid_pin": "Invalid pin",
+      "invalid_pin": "Invalid PIN",
       "invalid_symbol": "Invalid symbol",
       "expired_credentials": "Expired credentials - please create new on Vulcan mobile app registration page",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"

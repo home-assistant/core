@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DEVICE_UPDATE_INTERVAL
+from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -196,7 +197,9 @@ class ReolinkUpdateBaseEntity(
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
             raise HomeAssistantError(
-                f"Error trying to update Reolink firmware: {err}"
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"err": str(err)},
             ) from err
         finally:
             self.async_write_ha_state()
