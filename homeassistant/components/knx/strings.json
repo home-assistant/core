@@ -15,6 +15,13 @@
           "gateway": "KNX Tunnel Connection"
         }
       },
+      "tcp_tunnel_endpoint": {
+        "title": "[%key:component::knx::config::step::knxkeys_tunnel_select::title%]",
+        "description": "[%key:component::knx::config::step::knxkeys_tunnel_select::description%]",
+        "data": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::knxkeys_tunnel_select::data::user_id%]"
+        }
+      },
       "manual_tunnel": {
         "title": "Tunnel settings",
         "description": "Please enter the connection information of your tunneling device.",
@@ -61,9 +68,9 @@
       },
       "knxkeys_tunnel_select": {
         "title": "Tunnel endpoint",
-        "description": "Select the tunnel used for connection.",
+        "description": "Select the tunnel endpoint used for the connection.",
         "data": {
-          "user_id": "`Automatic` will use the first free tunnel endpoint."
+          "user_id": "'Automatic' selects a free tunnel endpoint for you when connecting. If you're unsure, this is the best option."
         }
       },
       "secure_tunnel_manual": {
@@ -157,6 +164,13 @@
         "description": "[%key:component::knx::config::step::tunnel::description%]",
         "data": {
           "gateway": "[%key:component::knx::config::step::tunnel::data::gateway%]"
+        }
+      },
+      "tcp_tunnel_endpoint": {
+        "title": "[%key:component::knx::config::step::knxkeys_tunnel_select::title%]",
+        "description": "[%key:component::knx::config::step::knxkeys_tunnel_select::description%]",
+        "data": {
+          "tunnel_endpoint_ia": "[%key:component::knx::config::step::knxkeys_tunnel_select::data::user_id%]"
         }
       },
       "manual_tunnel": {
@@ -371,7 +385,7 @@
     },
     "event_register": {
       "name": "Register knx_event",
-      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed.",
+      "description": "Adds or removes group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
@@ -389,7 +403,7 @@
     },
     "exposure_register": {
       "name": "Expose to KNX bus",
-      "description": "Adds or removes exposures to KNX bus. Only exposures added with this service can be removed.",
+      "description": "Adds or removes exposures to KNX bus. Only exposures added with this action can be removed.",
       "fields": {
         "address": {
           "name": "[%key:component::knx::services::send::fields::address::name%]",
