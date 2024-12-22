@@ -124,7 +124,7 @@ async def async_setup_entry(
     """Set up TotalConnect device sensors based on a config entry."""
     sensors: list = []
 
-    coordinator: TotalConnectDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     client_locations = coordinator.client.locations
 
