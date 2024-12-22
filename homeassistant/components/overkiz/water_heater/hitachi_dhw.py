@@ -60,6 +60,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         target_temperature = self.device.states[
             OverkizState.MODBUS_CONTROL_DHW_SETTING_TEMPERATURE
         ]
+
         if target_temperature:
             return float(target_temperature.value_as_int)
 
