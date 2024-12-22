@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+import re
+from typing import Any, cast
 
 from requests import HTTPError
 import voluptuous as vol
@@ -12,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -38,9 +40,16 @@ from .const import (
     SERVICE_SELECT_PROGRAM,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
+    SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 
+type HomeConnectConfigEntry = ConfigEntry[api.ConfigEntryAuth]
+
 _LOGGER = logging.getLogger(__name__)
+
+RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -83,26 +92,96 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
 ]
 
 
-def _get_appliance_by_device_id(
+def _get_appliance(
+    hass: HomeAssistant,
+    device_id: str | None = None,
+    device_entry: dr.DeviceEntry | None = None,
+    entry: HomeConnectConfigEntry | None = None,
+) -> api.HomeConnectAppliance:
+    """Return a Home Connect appliance instance given a device id or a device entry."""
+    if device_id is not None and device_entry is None:
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(device_id)
+    assert device_entry, "Either a device id or a device entry must be provided"
+
+    ha_id = next(
+        (
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        ),
+        None,
+    )
+    assert ha_id
+
+    def find_appliance(
+        entry: HomeConnectConfigEntry,
+    ) -> api.HomeConnectAppliance | None:
+        for device in entry.runtime_data.devices:
+            appliance = device.appliance
+            if appliance.haId == ha_id:
+                return appliance
+        return None
+
+    if entry is None:
+        for entry_id in device_entry.config_entries:
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            if entry.domain == DOMAIN:
+                entry = cast(HomeConnectConfigEntry, entry)
+                if (appliance := find_appliance(entry)) is not None:
+                    return appliance
+    elif (appliance := find_appliance(entry)) is not None:
+        return appliance
+    raise ValueError(f"Appliance for device id {device_entry.id} not found")
+
+
+def _get_appliance_or_raise_service_validation_error(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice:
-    """Return a Home Connect appliance instance given an device_id."""
-    for hc_api in hass.data[DOMAIN].values():
-        for device in hc_api.devices:
-            if device.device_id == device_id:
-                return device.appliance
-    raise ValueError(f"Appliance for device id {device_id} not found")
+) -> api.HomeConnectAppliance:
+    """Return a Home Connect appliance instance or raise a service validation error."""
+    try:
+        return _get_appliance(hass, device_id)
+    except (ValueError, AssertionError) as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="appliance_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        ) from err
+
+
+async def _run_appliance_service[*_Ts](
+    hass: HomeAssistant,
+    appliance: api.HomeConnectAppliance,
+    method: str,
+    *args: *_Ts,
+    error_translation_key: str,
+    error_translation_placeholders: dict[str, str],
+) -> None:
+    try:
+        await hass.async_add_executor_job(getattr(appliance, method), args)
+    except api.HomeConnectError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=error_translation_key,
+            translation_placeholders={
+                **get_dict_from_home_connect_error(err),
+                **error_translation_placeholders,
+            },
+        ) from err
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Connect component."""
-    hass.data[DOMAIN] = {}
 
     async def _async_service_program(call, method):
         """Execute calls to services taking a program."""
@@ -120,16 +199,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 option[ATTR_UNIT] = option_unit
 
             options.append(option)
-
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(getattr(appliance, method), program, options)
+        await _run_appliance_service(
+            hass,
+            _get_appliance_or_raise_service_validation_error(hass, device_id),
+            method,
+            program,
+            options,
+            error_translation_key=method,
+            error_translation_placeholders={
+                SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program,
+            },
+        )
 
     async def _async_service_command(call, command):
         """Execute calls to services executing a command."""
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        await hass.async_add_executor_job(appliance.execute_command, command)
+        appliance = _get_appliance_or_raise_service_validation_error(hass, device_id)
+        await _run_appliance_service(
+            hass,
+            appliance,
+            "execute_command",
+            command,
+            error_translation_key="execute_command",
+            error_translation_placeholders={"command": command},
+        )
 
     async def _async_service_key_value(call, method):
         """Execute calls to services taking a key and value."""
@@ -138,20 +232,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         unit = call.data.get(ATTR_UNIT)
         device_id = call.data[ATTR_DEVICE_ID]
 
-        appliance = _get_appliance_by_device_id(hass, device_id)
-        if unit is not None:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-                unit,
-            )
-        else:
-            await hass.async_add_executor_job(
-                getattr(appliance, method),
-                key,
-                value,
-            )
+        await _run_appliance_service(
+            hass,
+            _get_appliance_or_raise_service_validation_error(hass, device_id),
+            method,
+            *((key, value) if unit is None else (key, value, unit)),
+            error_translation_key=method,
+            error_translation_placeholders={
+                SVE_TRANSLATION_PLACEHOLDER_KEY: key,
+                SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
+            },
+        )
 
     async def async_service_option_active(call):
         """Service for setting an option for an active program."""
@@ -224,7 +315,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -232,9 +323,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hc_api = api.ConfigEntryAuth(hass, entry, implementation)
-
-    hass.data[DOMAIN][entry.entry_id] = hc_api
+    entry.runtime_data = api.ConfigEntryAuth(hass, entry, implementation)
 
     await update_all_devices(hass, entry)
 
@@ -243,45 +332,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @Throttle(SCAN_INTERVAL)
-async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_all_devices(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> None:
     """Update all the devices."""
-    data = hass.data[DOMAIN]
-    hc_api = data[entry.entry_id]
+    hc_api = entry.runtime_data
 
-    device_registry = dr.async_get(hass)
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
         for device in hc_api.devices:
-            device_entry = device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                identifiers={(DOMAIN, device.appliance.haId)},
-                name=device.appliance.name,
-                manufacturer=device.appliance.brand,
-                model=device.appliance.vib,
-            )
-
-            device.device_id = device_entry.id
-
             await hass.async_add_executor_job(device.initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-    if config_entry.version == 1 and config_entry.minor_version == 1:
+    if entry.version == 1 and entry.minor_version == 1:
 
         @callback
         def update_unique_id(
@@ -297,20 +376,31 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     }
             return None
 
-        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+        await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
 
 
 def get_dict_from_home_connect_error(err: api.HomeConnectError) -> dict[str, Any]:
     """Return a dict from a Home Connect error."""
-    return (
-        err.args[0]
+    return {
+        "description": cast(dict[str, Any], err.args[0]).get("description", "?")
         if len(err.args) > 0 and isinstance(err.args[0], dict)
-        else {"description": err.args[0]}
+        else err.args[0]
         if len(err.args) > 0 and isinstance(err.args[0], str)
-        else {}
-    )
+        else "?",
+    }
+
+
+def bsh_key_to_translation_key(bsh_key: str) -> str:
+    """Convert a BSH key to a translation key format.
+
+    This function takes a BSH key, such as `Dishcare.Dishwasher.Program.Eco50`,
+    and converts it to a translation key format, such as `dishcare_dishwasher_bsh_key_eco50`.
+    """
+    return "_".join(
+        RE_CAMEL_CASE.sub("_", split) for split in bsh_key.split(".")
+    ).lower()

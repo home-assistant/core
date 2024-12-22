@@ -521,7 +521,7 @@
       "message": "{name} is already inactive."
     },
     "incorrect_pin": {
-      "message": "Incorrect pin for {name}."
+      "message": "Incorrect PIN for {name}."
     },
     "no_cable": {
       "message": "Insert cable to lock"

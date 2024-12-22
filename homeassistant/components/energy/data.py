@@ -331,7 +331,7 @@ class EnergyManager:
             "device_consumption",
         ):
             if key in update:
-                data[key] = update[key]  # type: ignore[literal-required]
+                data[key] = update[key]
 
         self.data = data
         self._store.async_delay_save(lambda: data, 60)

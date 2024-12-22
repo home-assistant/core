@@ -34,7 +34,7 @@ def mock_called_with(
         (
             call
             for call in mock_client.mock_calls
-            if call[0] == method.upper() and call[1] == URL(url)
+            if call[0].upper() == method.upper() and call[1] == URL(url)
         ),
         None,
     )
@@ -55,6 +55,20 @@ def mock_habitica(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     aioclient_mock.get(
         f"{DEFAULT_URL}/api/v3/tasks/user",
         json=load_json_object_fixture("tasks.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/content",
+        params={"language": "en"},
+        json=load_json_object_fixture("content.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user/anonymized",
+        json={
+            "data": {
+                "user": load_json_object_fixture("user.json", DOMAIN)["data"],
+                "tasks": load_json_object_fixture("tasks.json", DOMAIN)["data"],
+            }
+        },
     )
 
     return aioclient_mock

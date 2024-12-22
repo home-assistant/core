@@ -64,7 +64,7 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(data, "media")
         self.scoped = scoped
-        if not scoped and data.signing:
+        if not scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
 
     def _async_update_attrs(self) -> None:

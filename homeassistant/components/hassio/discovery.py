@@ -131,11 +131,11 @@ class HassIODiscovery(HomeAssistantView):
                 config=data.config,
                 name=addon_info.name,
                 slug=data.addon,
-                uuid=str(data.uuid),
+                uuid=data.uuid.hex,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,
-                key=str(data.uuid),
+                key=data.uuid.hex,
                 version=1,
             ),
         )

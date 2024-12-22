@@ -1,0 +1,482 @@
+# serializer version: 1
+# name: test_async_get_config_entry_diagnostics
+  dict({
+    'BOSCH-000000000-000000000000': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000001': dict({
+      'connected': True,
+      'programs': list([
+        'LaundryCare.WasherDryer.Program.Mix',
+        'LaundryCare.Washer.Option.Temperature',
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000002': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000003': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000004': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Setting.AmbientLightBrightness': dict({
+          'type': 'Double',
+          'unit': '%',
+          'value': 70,
+        }),
+        'BSH.Common.Setting.AmbientLightColor': dict({
+          'type': 'BSH.Common.EnumType.AmbientLightColor',
+          'value': 'BSH.Common.EnumType.AmbientLightColor.Color43',
+        }),
+        'BSH.Common.Setting.AmbientLightCustomColor': dict({
+          'type': 'String',
+          'value': '#4a88f8',
+        }),
+        'BSH.Common.Setting.AmbientLightEnabled': dict({
+          'type': 'Boolean',
+          'value': True,
+        }),
+        'BSH.Common.Setting.ColorTemperature': dict({
+          'type': 'BSH.Common.EnumType.ColorTemperature',
+          'value': 'Cooking.Hood.EnumType.ColorTemperature.warmToNeutral',
+        }),
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Cooking.Common.Setting.Lighting': dict({
+          'type': 'Boolean',
+          'value': True,
+        }),
+        'Cooking.Common.Setting.LightingBrightness': dict({
+          'type': 'Double',
+          'unit': '%',
+          'value': 70,
+        }),
+        'Cooking.Hood.Setting.ColorTemperaturePercent': dict({
+          'type': 'Double',
+          'unit': '%',
+          'value': 70,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000005': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS000000-D00000000006': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS01OVN1-43E0065FE245': dict({
+      'connected': True,
+      'programs': list([
+        'Cooking.Oven.Program.HeatingMode.HotAir',
+        'Cooking.Oven.Program.HeatingMode.TopBottomHeating',
+        'Cooking.Oven.Program.HeatingMode.PizzaSetting',
+      ]),
+      'status': dict({
+        'BSH.Common.Root.ActiveProgram': dict({
+          'value': 'Cooking.Oven.Program.HeatingMode.HotAir',
+        }),
+        'BSH.Common.Setting.PowerState': dict({
+          'type': 'BSH.Common.EnumType.PowerState',
+          'value': 'BSH.Common.EnumType.PowerState.On',
+        }),
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS04DYR1-831694AE3C5A': dict({
+      'connected': True,
+      'programs': list([
+        'LaundryCare.Dryer.Program.Cotton',
+        'LaundryCare.Dryer.Program.Synthetic',
+        'LaundryCare.Dryer.Program.Mix',
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'BOSCH-HCS06COM1-D70390681C2C': dict({
+      'connected': True,
+      'programs': list([
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso',
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoMacchiato',
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.Coffee',
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.Cappuccino',
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.LatteMacchiato',
+        'ConsumerProducts.CoffeeMaker.Program.Beverage.CaffeLatte',
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'SIEMENS-HCS02DWH1-6BE58C26DCC1': dict({
+      'connected': True,
+      'programs': list([
+        'Dishcare.Dishwasher.Program.Auto1',
+        'Dishcare.Dishwasher.Program.Auto2',
+        'Dishcare.Dishwasher.Program.Auto3',
+        'Dishcare.Dishwasher.Program.Eco50',
+        'Dishcare.Dishwasher.Program.Quick45',
+      ]),
+      'status': dict({
+        'BSH.Common.Setting.AmbientLightBrightness': dict({
+          'type': 'Double',
+          'unit': '%',
+          'value': 70,
+        }),
+        'BSH.Common.Setting.AmbientLightColor': dict({
+          'type': 'BSH.Common.EnumType.AmbientLightColor',
+          'value': 'BSH.Common.EnumType.AmbientLightColor.Color43',
+        }),
+        'BSH.Common.Setting.AmbientLightCustomColor': dict({
+          'type': 'String',
+          'value': '#4a88f8',
+        }),
+        'BSH.Common.Setting.AmbientLightEnabled': dict({
+          'type': 'Boolean',
+          'value': True,
+        }),
+        'BSH.Common.Setting.ChildLock': dict({
+          'type': 'Boolean',
+          'value': False,
+        }),
+        'BSH.Common.Setting.PowerState': dict({
+          'type': 'BSH.Common.EnumType.PowerState',
+          'value': 'BSH.Common.EnumType.PowerState.On',
+        }),
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'SIEMENS-HCS03WCH1-7BC6383CF794': dict({
+      'connected': True,
+      'programs': list([
+        'LaundryCare.Washer.Program.Cotton',
+        'LaundryCare.Washer.Program.EasyCare',
+        'LaundryCare.Washer.Program.Mix',
+        'LaundryCare.Washer.Program.DelicatesSilk',
+        'LaundryCare.Washer.Program.Wool',
+      ]),
+      'status': dict({
+        'BSH.Common.Root.ActiveProgram': dict({
+          'value': 'BSH.Common.Root.ActiveProgram',
+        }),
+        'BSH.Common.Setting.ChildLock': dict({
+          'type': 'Boolean',
+          'value': False,
+        }),
+        'BSH.Common.Setting.PowerState': dict({
+          'type': 'BSH.Common.EnumType.PowerState',
+          'value': 'BSH.Common.EnumType.PowerState.On',
+        }),
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+    }),
+    'SIEMENS-HCS05FRF1-304F4F9E541D': dict({
+      'connected': True,
+      'programs': list([
+      ]),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Setting.Dispenser.Enabled': dict({
+          'constraints': dict({
+            'access': 'readWrite',
+          }),
+          'type': 'Boolean',
+          'value': False,
+        }),
+        'Refrigeration.Common.Setting.Light.External.Brightness': dict({
+          'constraints': dict({
+            'access': 'readWrite',
+            'max': 100,
+            'min': 0,
+          }),
+          'type': 'Double',
+          'unit': '%',
+          'value': 70,
+        }),
+        'Refrigeration.Common.Setting.Light.External.Power': dict({
+          'type': 'Boolean',
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+        'Refrigeration.FridgeFreezer.Setting.SuperModeFreezer': dict({
+          'constraints': dict({
+            'access': 'readWrite',
+          }),
+          'type': 'Boolean',
+          'value': False,
+        }),
+        'Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator': dict({
+          'constraints': dict({
+            'access': 'readWrite',
+          }),
+          'type': 'Boolean',
+          'value': False,
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_async_get_device_diagnostics
+  dict({
+    'connected': True,
+    'programs': list([
+      'Dishcare.Dishwasher.Program.Auto1',
+      'Dishcare.Dishwasher.Program.Auto2',
+      'Dishcare.Dishwasher.Program.Auto3',
+      'Dishcare.Dishwasher.Program.Eco50',
+      'Dishcare.Dishwasher.Program.Quick45',
+    ]),
+    'status': dict({
+      'BSH.Common.Setting.AmbientLightBrightness': dict({
+        'type': 'Double',
+        'unit': '%',
+        'value': 70,
+      }),
+      'BSH.Common.Setting.AmbientLightColor': dict({
+        'type': 'BSH.Common.EnumType.AmbientLightColor',
+        'value': 'BSH.Common.EnumType.AmbientLightColor.Color43',
+      }),
+      'BSH.Common.Setting.AmbientLightCustomColor': dict({
+        'type': 'String',
+        'value': '#4a88f8',
+      }),
+      'BSH.Common.Setting.AmbientLightEnabled': dict({
+        'type': 'Boolean',
+        'value': True,
+      }),
+      'BSH.Common.Setting.ChildLock': dict({
+        'type': 'Boolean',
+        'value': False,
+      }),
+      'BSH.Common.Setting.PowerState': dict({
+        'type': 'BSH.Common.EnumType.PowerState',
+        'value': 'BSH.Common.EnumType.PowerState.On',
+      }),
+      'BSH.Common.Status.DoorState': dict({
+        'value': 'BSH.Common.EnumType.DoorState.Closed',
+      }),
+      'BSH.Common.Status.OperationState': dict({
+        'value': 'BSH.Common.EnumType.OperationState.Ready',
+      }),
+      'BSH.Common.Status.RemoteControlActive': dict({
+        'value': True,
+      }),
+      'BSH.Common.Status.RemoteControlStartAllowed': dict({
+        'value': True,
+      }),
+      'Refrigeration.Common.Status.Door.Refrigerator': dict({
+        'value': 'BSH.Common.EnumType.DoorState.Open',
+      }),
+    }),
+  })
+# ---

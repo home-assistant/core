@@ -119,7 +119,6 @@ from .handler import (  # noqa: F401
     async_create_backup,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_reboot_host,
     async_set_green_settings,
     async_set_yellow_settings,
     async_update_diagnostics,

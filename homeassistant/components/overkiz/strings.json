@@ -22,7 +22,7 @@
         }
       },
       "local": {
-        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network. \n\n After activation, enter your application credentials and change the host to include your gateway-pin or enter the IP address of your gateway.",
+        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network.\n\nAfter activation, enter your application credentials and change the host to include your Gateway PIN or enter the IP address of your gateway.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

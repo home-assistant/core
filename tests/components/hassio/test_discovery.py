@@ -91,7 +91,7 @@ async def test_hassio_discovery_startup(
             },
             name="Mosquitto Test",
             slug="mosquitto",
-            uuid=str(uuid),
+            uuid=uuid.hex,
         )
     )
 
@@ -153,7 +153,7 @@ async def test_hassio_discovery_startup_done(
                 },
                 name="Mosquitto Test",
                 slug="mosquitto",
-                uuid=str(uuid),
+                uuid=uuid.hex,
             )
         )
 
@@ -203,7 +203,7 @@ async def test_hassio_discovery_webhook(
             },
             name="Mosquitto Test",
             slug="mosquitto",
-            uuid=str(uuid),
+            uuid=uuid.hex,
         )
     )
 
@@ -286,7 +286,7 @@ async def test_hassio_rediscover(
     )
 
     expected_context = {
-        "discovery_key": DiscoveryKey(domain="hassio", key=str(uuid), version=1),
+        "discovery_key": DiscoveryKey(domain="hassio", key=uuid.hex, version=1),
         "source": config_entries.SOURCE_HASSIO,
     }
 

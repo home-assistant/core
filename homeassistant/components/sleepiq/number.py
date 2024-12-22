@@ -58,14 +58,14 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
             f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
         )
 
-    return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+    return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"  # type: ignore[unreachable]
 
 
 def _get_actuator_unique_id(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
         return f"{bed.id}_{actuator.side.value}_{actuator.actuator}"
 
-    return f"{bed.id}_{actuator.actuator}"
+    return f"{bed.id}_{actuator.actuator}"  # type: ignore[unreachable]
 
 
 def _get_sleeper_name(bed: SleepIQBed, sleeper: SleepIQSleeper) -> str:

@@ -964,12 +964,17 @@ async def test_recorder_setup_failure(hass: HomeAssistant) -> None:
     hass.stop()
 
 
-async def test_recorder_validate_schema_failure(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "function_to_patch", ["_get_current_schema_version", "_get_initial_schema_version"]
+)
+async def test_recorder_validate_schema_failure(
+    hass: HomeAssistant, function_to_patch: str
+) -> None:
     """Test some exceptions."""
     recorder_helper.async_initialize_recorder(hass)
     with (
         patch(
-            "homeassistant.components.recorder.migration._get_schema_version"
+            f"homeassistant.components.recorder.migration.{function_to_patch}"
         ) as inspect_schema_version,
         patch("homeassistant.components.recorder.core.time.sleep"),
     ):
