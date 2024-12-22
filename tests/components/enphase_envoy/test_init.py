@@ -346,8 +346,10 @@ async def test_option_change_reload(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
+    # By default neither option is available
+    assert config_entry.options == {}
 
-    # option change will take care of COV of init::async_reload_entry
+    # option change will also take care of COV of init::async_reload_entry
     hass.config_entries.async_update_entry(
         config_entry,
         options={
@@ -355,8 +357,23 @@ async def test_option_change_reload(
             OPTION_DISABLE_KEEP_ALIVE: True,
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
         OPTION_DISABLE_KEEP_ALIVE: True,
+    }
+    # flip em
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+        OPTION_DISABLE_KEEP_ALIVE: False,
     }

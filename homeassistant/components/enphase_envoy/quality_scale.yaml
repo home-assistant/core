@@ -64,10 +64,7 @@ rules:
     status: done
     comment: pending https://github.com/home-assistant/core/pull/132373
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      - Apart from the coverage, test_option_change_reload does not verify that the config entry is reloaded
+  test-coverage: done
 
   # Gold
   devices: done
