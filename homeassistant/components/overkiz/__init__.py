@@ -165,13 +165,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_migrate_entries(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: OverkizDataConfigEntry
 ) -> bool:
     """Migrate old entries to new unique IDs."""
     entity_registry = er.async_get(hass)
