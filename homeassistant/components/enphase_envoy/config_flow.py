@@ -62,7 +62,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an envoy flow."""
         self.ip_address: str | None = None
-        self.username: str | None = None
+        self.username = None
         self.protovers: str | None = None
 
     @staticmethod
