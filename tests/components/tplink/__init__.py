@@ -314,20 +314,27 @@ def _mocked_device(
             for module_name in modules
         }
 
+    device_features = {}
     if features:
-        device.features = {
+        device_features = {
             feature_id: _mocked_feature(feature_id, require_fixture=True)
             for feature_id in features
             if isinstance(feature_id, str)
         }
 
-        device.features.update(
+        device_features.update(
             {
                 feature.id: feature
                 for feature in features
                 if isinstance(feature, Feature)
             }
         )
+    device.features = device_features
+
+    for mod in device.modules.values():
+        mod.get_feature.side_effect = device_features.get
+        mod.has_feature.side_effect = lambda id: id in device_features
+
     device.children = []
     if children:
         for child in children:
@@ -346,6 +353,7 @@ def _mocked_device(
     device.protocol = _mock_protocol()
     device.config = device_config
     device.credentials_hash = credentials_hash
+
     return device
 
 
@@ -360,8 +368,8 @@ def _mocked_feature(
     precision_hint=None,
     choices=None,
     unit=None,
-    minimum_value=0,
-    maximum_value=2**16,  # Arbitrary max
+    minimum_value=None,
+    maximum_value=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -391,11 +399,14 @@ def _mocked_feature(
     feature.unit = unit or fixture.get("unit")
 
     # number
-    feature.minimum_value = minimum_value or fixture.get("minimum_value")
-    feature.maximum_value = maximum_value or fixture.get("maximum_value")
+    min_val = minimum_value or fixture.get("minimum_value")
+    feature.minimum_value = 0 if min_val is None else min_val
+    max_val = maximum_value or fixture.get("maximum_value")
+    feature.maximum_value = 2**16 if max_val is None else max_val
 
     # select
     feature.choices = choices or fixture.get("choices")
+
     return feature
 
 
@@ -407,13 +418,7 @@ def _mocked_light_module(device) -> Light:
     light.state = LightState(
         light_on=True, brightness=light.brightness, color_temp=light.color_temp
     )
-    light.is_color = True
-    light.is_variable_color_temp = True
-    light.is_dimmable = True
-    light.is_brightness = True
-    light.has_effects = False
     light.hsv = (10, 30, 5)
-    light.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     light.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
 
     async def _set_state(state, *_, **__):
@@ -446,7 +451,6 @@ def _mocked_light_module(device) -> Light:
 
 def _mocked_light_effect_module(device) -> LightEffect:
     effect = MagicMock(spec=LightEffect, name="Mocked light effect")
-    effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
     effect.effect_list = ["Off", "Effect1", "Effect2"]

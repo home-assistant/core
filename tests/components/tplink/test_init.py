@@ -54,6 +54,7 @@ from . import (
     MAC_ADDRESS,
     MODEL,
     _mocked_device,
+    _mocked_feature,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -341,7 +342,14 @@ async def test_update_attrs_fails_in_init(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
     p = PropertyMock(side_effect=KasaException)
     type(light_module).color_temp = p
@@ -369,7 +377,14 @@ async def test_update_attrs_fails_on_update(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
 
     with _patch_discovery(device=light), _patch_connect(device=light):
