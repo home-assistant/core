@@ -92,6 +92,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Colour": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX DLCOL": {
         "always_discover": True,
         "domain": "lifx",
@@ -140,6 +144,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Permanent Outdoor": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Pls": {
         "always_discover": True,
         "domain": "lifx",
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Tile": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Tube": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -545,6 +557,10 @@ ZEROCONF = {
             "properties": {
                 "manufacturer": "nettigo",
             },
+        },
+        {
+            "domain": "peblar",
+            "name": "pblr-*",
         },
         {
             "domain": "powerfox",

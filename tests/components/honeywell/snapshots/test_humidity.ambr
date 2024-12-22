@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_static_attributes[dehumidifier]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 50,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'device1 Dehumidifier',
+      'humidity': 30,
+      'max_humidity': 55,
+      'min_humidity': 15,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.device1_dehumidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_static_attributes[humidifier]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 50,
+      'device_class': 'humidifier',
+      'friendly_name': 'device1 Humidifier',
+      'humidity': 20,
+      'max_humidity': 60,
+      'min_humidity': 10,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.device1_humidifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

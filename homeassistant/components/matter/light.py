@@ -13,6 +13,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -91,6 +93,8 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color_temperature = False
     _transitions_disabled = False
     _platform_translation_key = "light"
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0

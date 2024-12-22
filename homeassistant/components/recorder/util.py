@@ -107,6 +107,8 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 # Retry when one of the following MySQL errors occurred:
 RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# The error codes are hard coded because the PyMySQL library may not be
+# installed when using database engines other than MySQL or MariaDB.
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
@@ -598,6 +600,12 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         max_bind_vars = DEFAULT_MAX_BIND_VARS
+        # PostgreSQL does not support a skip/loose index scan so its
+        # also slow for large distinct queries:
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # https://github.com/home-assistant/core/issues/126084
+        # so we set slow_range_in_select to True
+        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
