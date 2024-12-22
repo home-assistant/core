@@ -13,7 +13,9 @@ rules:
     comment: |
       - test_zero_conf_malformed_serial_property - with pytest.raises(KeyError) as ex::
       I don't believe this should be able to raise a KeyError Shouldn't we abort the flow?
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: Even though redundant as explained in PR133726, add data-description fields for config-flow steps
   dependency-transparency: done
   docs-actions:
     status: done
