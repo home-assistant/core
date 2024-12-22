@@ -1,97 +1,75 @@
 """Test Qbus switch entities."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
-from qbusmqttapi.const import KEY_OUTPUT_PROPERTIES, KEY_PROPERTIES_VALUE
-from qbusmqttapi.discovery import QbusMqttOutput
-from qbusmqttapi.state import QbusMqttOnOffState
-
-from homeassistant.components.qbus.switch import QbusSwitch
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from .common import qbus_config_entry
+from .common import PAYLOAD_CONFIG, TOPIC_CONFIG
 
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
+_PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
+_PAYLOAD_SWITCH_STATE_OFF = '{"id":"UL10","properties":{"value":false},"type":"state"}'
 
-@pytest.mark.parametrize(
-    ("old_value", "new_value"),
-    [
-        (STATE_OFF, STATE_ON),
-        (STATE_ON, STATE_OFF),
-    ],
-)
-async def test_switch_state_received(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-    qbus_switch_1: QbusSwitch,
-    old_value: str,
-    new_value: str,
-) -> None:
-    """Test receiving state."""
-    entry = qbus_config_entry()
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+_TOPIC_SWITCH_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/state"
 
-    hass.states.async_set(qbus_switch_1.entity_id, old_value)
-
-    # Assert old state
-    entity = hass.states.get(qbus_switch_1.entity_id)
-    assert entity
-    assert entity.state == old_value
-
-    # Test receive new state
-    with (
-        patch.object(
-            qbus_switch_1._message_factory,
-            "parse_output_state",
-            return_value=QbusMqttOnOffState(
-                {KEY_OUTPUT_PROPERTIES: {KEY_PROPERTIES_VALUE: new_value == STATE_ON}}
-            ),
-        ) as mock_output,
-    ):
-        await qbus_switch_1._state_received(MagicMock())
-
-    assert mock_output
-
-    # Assert new state
-    entity = hass.states.get(qbus_switch_1.entity_id)
-    assert entity
-    assert entity.state == new_value
+_SWITCH_ENTITY_ID = "switch.qbus_000001_10"
 
 
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
-    qbus_switch_1: QbusSwitch,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turn on and off."""
-    entry = qbus_config_entry()
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    # Setup entry
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    hass.states.async_set(qbus_switch_1.entity_id, STATE_OFF)
+    # Fire config payload
+    async_fire_mqtt_message(hass, TOPIC_CONFIG, PAYLOAD_CONFIG)
+    await hass.async_block_till_done()
 
+    # Switch ON
     mqtt_mock.async_publish.reset_mock()
-    await qbus_switch_1.async_turn_on()
-    assert qbus_switch_1.state == STATE_ON
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+
+    # Test MQTT publish
     assert len(mqtt_mock.async_publish.mock_calls) == 1
 
+    # Simulate response
+    async_fire_mqtt_message(hass, _TOPIC_SWITCH_STATE, _PAYLOAD_SWITCH_STATE_ON)
+    await hass.async_block_till_done()
+
+    # Test ON
+    assert hass.states.get(_SWITCH_ENTITY_ID).state == STATE_ON
+
+    # Switch OFF
     mqtt_mock.async_publish.reset_mock()
-    await qbus_switch_1.async_turn_off()
-    assert qbus_switch_1.state == STATE_OFF
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+
+    # Test MQTT publish
     assert len(mqtt_mock.async_publish.mock_calls) == 1
 
+    # Simulate response
+    async_fire_mqtt_message(hass, _TOPIC_SWITCH_STATE, _PAYLOAD_SWITCH_STATE_OFF)
+    await hass.async_block_till_done()
 
-async def test_switch_create(hass: HomeAssistant) -> None:
-    """Test create method."""
-    mock_output = MagicMock(spec=QbusMqttOutput)
-    mock_output.ref_id = "000001/10"
-
-    entity = QbusSwitch(mock_output)
-
-    assert isinstance(entity, QbusSwitch)
+    # Test OFF
+    assert hass.states.get(_SWITCH_ENTITY_ID).state == STATE_OFF

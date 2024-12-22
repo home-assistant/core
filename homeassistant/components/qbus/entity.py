@@ -37,8 +37,6 @@ class QbusEntity(Entity, ABC):
         self,
         mqtt_output: QbusMqttOutput,
         entity_id_format: str,
-        *,
-        id_suffix: str | None = None,
     ) -> None:
         """Initialize the Qbus entity."""
 
@@ -47,12 +45,9 @@ class QbusEntity(Entity, ABC):
 
         ref_id = format_ref_id(mqtt_output.ref_id)
 
-        id_suffix = id_suffix or ""
-        self._attr_unique_id = (
-            f"ctd_{mqtt_output.device.serial_number}_{ref_id}{id_suffix}"
-        )
+        self._attr_unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
         self.entity_id = entity_id_format.format(
-            f"qbus_{mqtt_output.device.serial_number}_{ref_id}{id_suffix}"
+            f"qbus_{mqtt_output.device.serial_number}_{ref_id}"
         )
         self._attr_name = mqtt_output.name.title()
 
@@ -63,12 +58,6 @@ class QbusEntity(Entity, ABC):
             suggested_area=mqtt_output.location.title(),
             via_device=(DOMAIN, format_mac(mqtt_output.device.mac)),
         )
-
-        self._attr_extra_state_attributes = {
-            "controller_id": mqtt_output.device.id,
-            "output_id": mqtt_output.id,
-            "ref_id": mqtt_output.ref_id,
-        }
 
         self._mqtt_output = mqtt_output
         self._state_topic = self._topic_factory.get_output_state_topic(

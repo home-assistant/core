@@ -1,15 +1,52 @@
 """Define common test values."""
 
-from homeassistant.components.qbus.const import DOMAIN
+PAYLOAD_CONFIG = """
+{
+    "app": "abc",
+    "devices": [{
+        "id": "UL1",
+        "ip": "192.168.1.123",
+        "mac": "001122334455",
+        "name": "",
+        "serialNr": "000001",
+        "type": "Qbus",
+        "version": "3.14.0",
+        "properties": {
+            "connectable": {
+                "read": true,
+                "type": "boolean",
+                "write": false
+            },
+            "connected": {
+                "read": true,
+                "type": "boolean",
+                "write": false
+            }
+        },
+        "functionBlocks": [{
+            "id": "UL10",
+            "location": "Living",
+            "locationId": 0,
+            "name": "LIVING",
+            "originalName": "LIVING",
+            "refId": "000001/10",
+            "type": "onoff",
+            "variant": [
+                null
+            ],
+            "actions": {
+                "off": null,
+                "on": null
+            },
+            "properties": {
+                "value": {
+                    "read": true,
+                    "type": "boolean",
+                    "write": true
+                }
+            }
+        }]
+    }]
+}"""
 
-from tests.common import MockConfigEntry
-
-
-def qbus_config_entry() -> MockConfigEntry:
-    """Config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="ctd_000001",
-        entry_id="ctd_000001",
-        data={},
-    )
+TOPIC_CONFIG = "cloudapp/QBUSMQTTGW/config"
