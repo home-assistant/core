@@ -170,31 +170,6 @@ SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda status: status.compressor_percentage,
     ),
-    WeHeatSensorEntityDescription(
-        translation_key="indoor_unit_water_pump_state",
-        key="indoor_unit_water_pump_state",
-        value_fn=lambda status: status.indoor_unit_water_pump_state,
-    ),
-    WeHeatSensorEntityDescription(
-        translation_key="indoor_unit_auxiliary_pump_state",
-        key="indoor_unit_auxiliary_pump_state",
-        value_fn=lambda status: status.indoor_unit_auxiliary_pump_state,
-    ),
-    WeHeatSensorEntityDescription(
-        translation_key="indoor_unit_dhw_valve_or_pump_state",
-        key="indoor_unit_dhw_valve_or_pump_state",
-        value_fn=lambda status: status.indoor_unit_dhw_valve_or_pump_state,
-    ),
-    WeHeatSensorEntityDescription(
-        translation_key="indoor_unit_gas_boiler_state",
-        key="indoor_unit_gas_boiler_state",
-        value_fn=lambda status: status.indoor_unit_gas_boiler_state,
-    ),
-    WeHeatSensorEntityDescription(
-        translation_key="indoor_unit_electric_heater_state",
-        key="indoor_unit_electric_heater_state",
-        value_fn=lambda status: status.indoor_unit_electric_heater_state,
-    ),
 ]
 
 

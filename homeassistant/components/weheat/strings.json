@@ -93,21 +93,6 @@
       },
       "compressor_percentage": {
         "name": "Compressor percentage"
-      },
-      "indoor_unit_water_pump_state": {
-        "name": "Indoor unit water pump state"
-      },
-      "indoor_unit_auxiliary_pump_state": {
-        "name": "Indoor unit auxiliary water pump state"
-      },
-      "indoor_unit_dhw_valve_or_pump_state": {
-        "name": "Indoor unit DHW valve or water pump state"
-      },
-      "indoor_unit_gas_boiler_state": {
-        "name": "Indoor unit gas boiler heating allowed"
-      },
-      "indoor_unit_electric_heater_state": {
-        "name": "Indoor unit electric heater state"
       }
     }
   }

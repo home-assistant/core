@@ -33,21 +33,6 @@
       },
       "compressor_percentage": {
         "default": "mdi:fan"
-      },
-      "indoor_unit_water_pump_state": {
-        "default": "mdi:pump"
-      },
-      "indoor_unit_auxiliary_pump_state": {
-        "default": "mdi:pump"
-      },
-      "indoor_unit_dhw_valve_or_pump_state": {
-        "default": "mdi:pump"
-      },
-      "indoor_unit_gas_boiler_state": {
-        "default": "mdi:toggle-switch"
-      },
-      "indoor_unit_electric_heater_state": {
-        "default": "mdi:heating-coil"
       }
     }
   }
