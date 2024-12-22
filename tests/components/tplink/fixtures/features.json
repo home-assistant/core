@@ -267,7 +267,9 @@
   "target_temperature": {
     "value": false,
     "type": "Number",
-    "category": "Primary"
+    "category": "Primary",
+    "minimum_value": 5,
+    "maximum_value": 30
   },
   "fan_speed_level": {
     "value": 2,

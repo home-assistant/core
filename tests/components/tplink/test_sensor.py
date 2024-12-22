@@ -129,7 +129,7 @@ async def test_color_light_no_emeter(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_device(alias="my_bulb", modules=[Module.Light])
-    bulb.has_emeter = False
+
     with _patch_discovery(device=bulb), _patch_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
