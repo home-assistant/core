@@ -11,6 +11,12 @@
     "select": {
       "input": {
         "default": "mdi:hdmi-port"
+      },
+      "anamorphic": {
+        "default": "mdi:stretch-to-page-outline"
+      },
+      "laser_power": {
+        "default": "mdi:brightness-5"
       }
     },
     "sensor": {

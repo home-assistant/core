@@ -38,3 +38,13 @@ class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
     def device(self) -> JvcProjector:
         """Return the device representing the projector."""
         return self.coordinator.device
+
+    @staticmethod
+    def has_eshift(entity: JvcProjectorEntity) -> bool:
+        """Return if device has e-shift."""
+        return "NZ" in entity.device.model
+
+    @staticmethod
+    def has_laser(entity: JvcProjectorEntity) -> bool:
+        """Return if device has laser."""
+        return "NZ" in entity.device.model or "NX9" in entity.device.model
