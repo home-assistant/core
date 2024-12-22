@@ -554,17 +554,19 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
         self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
-        device_id: str = self._config["addr"]
-        self._attr_unique_id = f"{device_id}-{self.key}"
+        ble_addr: str = self._config["addr"]
+        self._attr_unique_id = f"{ble_addr}-{self.key}"
+        name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(":", "")}"
+        self._attr_name = name
         model_id = self._config.get("local_name")
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_BLUETOOTH, device_id)},
-            identifiers={(DOMAIN, device_id)},
+            connections={(CONNECTION_BLUETOOTH, ble_addr)},
+            identifiers={(DOMAIN, ble_addr)},
             via_device=(DOMAIN, self.coordinator.mac),
             manufacturer="Shelly",
             model=BLU_TRV_MODEL_NAME.get(model_id),
             model_id=model_id,
-            name=self._config["name"] or f"shelyblutrv-{device_id.replace(":", "")}",
+            name=name,
         )
         self._humidity_key: str | None = None
         # Check if there is a corresponding humidity key for the thermostat ID
