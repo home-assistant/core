@@ -25,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NHCController, NikoHomeControlConfigEntry
 from .const import DOMAIN
+from .entity import NikoHomeControlEntity
 
 # delete after 2025.7.0
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
@@ -91,33 +92,23 @@ async def async_setup_entry(
     )
 
 
-class NikoHomeControlLight(LightEntity):
+class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
     """Representation of a Niko Light."""
+
+    _attr_name = None
+    _action: NHCLight
 
     def __init__(
         self, action: NHCLight, controller: NHCController, unique_id: str
     ) -> None:
         """Set up the Niko Home Control light platform."""
-        self._controller = controller
-        self._action = action
-        self._attr_unique_id = f"{unique_id}-{action.id}"
-        self._attr_name = action.name
-        self._attr_is_on = action.is_on
+        super().__init__(action, controller, unique_id)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        self._attr_should_poll = False
         if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_brightness = round(action.state * 2.55)
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self._controller.register_callback(
-                self._action.id, self.async_update_callback
-            )
-        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -127,9 +118,9 @@ class NikoHomeControlLight(LightEntity):
         """Instruct the light to turn off."""
         self._action.turn_off()
 
-    async def async_update_callback(self, state: int) -> None:
+    def update_state(self) -> None:
         """Handle updates from the controller."""
+        state = self._action.state
         self._attr_is_on = state > 0
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = round(state * 2.55)
-        self.async_write_ha_state()
