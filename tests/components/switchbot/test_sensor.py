@@ -170,8 +170,6 @@ async def test_leak_sensor(hass: HomeAssistant) -> None:
                 CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
                 CONF_NAME: "test-name",
                 CONF_SENSOR_TYPE: "leak",
-                # CONF_KEY_ID: "ff",
-                # CONF_ENCRYPTION_KEY: "ffffffffffffffffffffffffffffffff",
             },
             unique_id="aabbccddeeaa",
         )
