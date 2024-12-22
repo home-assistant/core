@@ -54,6 +54,18 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="pir_enabled",
     ),
+    TPLinkSwitchEntityDescription(
+        key="motion_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="person_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="tamper_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="baby_cry_detection",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
