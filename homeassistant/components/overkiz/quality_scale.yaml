@@ -23,7 +23,7 @@ rules:
   docs-actions:
     status: exempt
     comment: The integration does not register actions.
-  runtime-data: todo
+  runtime-data: done
 
   # Silver
   log-when-unavailable: todo
