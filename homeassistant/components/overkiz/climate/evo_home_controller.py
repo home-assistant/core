@@ -53,14 +53,14 @@ class EvoHomeController(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        state = self.device.states[OverkizState.RAMSES_RAMSES_OPERATING_MODE]
-        operating_mode = state.value_as_str
+        if state := self.device.states.get(OverkizState.RAMSES_RAMSES_OPERATING_MODE):
+            operating_mode = state.value_as_str
 
-        if operating_mode in OVERKIZ_TO_HVAC_MODES:
-            return OVERKIZ_TO_HVAC_MODES[operating_mode]
+            if operating_mode in OVERKIZ_TO_HVAC_MODES:
+                return OVERKIZ_TO_HVAC_MODES[operating_mode]
 
-        if operating_mode in OVERKIZ_TO_PRESET_MODES:
-            return HVACMode.OFF
+            if operating_mode in OVERKIZ_TO_PRESET_MODES:
+                return HVACMode.OFF
 
         return HVACMode.OFF
 
