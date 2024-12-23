@@ -50,6 +50,18 @@ BUTTON_DESCRIPTIONS: Final = [
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
     ),
+    TPLinkButtonEntityDescription(
+        key="pan_left",
+    ),
+    TPLinkButtonEntityDescription(
+        key="pan_right",
+    ),
+    TPLinkButtonEntityDescription(
+        key="tilt_up",
+    ),
+    TPLinkButtonEntityDescription(
+        key="tilt_down",
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
