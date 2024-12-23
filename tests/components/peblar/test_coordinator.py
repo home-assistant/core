@@ -26,7 +26,7 @@ pytestmark = [
         (
             PeblarConnectionError("Could not connect"),
             (
-                "An error occurred while communicating with the Peblar device: "
+                "An error occurred while communicating with the Peblar EV charger: "
                 "Could not connect"
             ),
         ),
@@ -34,7 +34,7 @@ pytestmark = [
             PeblarError("Unknown error"),
             (
                 "An unknown error occurred while communicating "
-                "with the Peblar device: Unknown error"
+                "with the Peblar EV charger: Unknown error"
             ),
         ),
     ],
