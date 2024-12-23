@@ -25,7 +25,13 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Total Connect needs to re-authenticate your account"
+        "description": "Total Connect needs to re-authenticate your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The Total Connect password"
+        }
       }
     },
     "error": {
