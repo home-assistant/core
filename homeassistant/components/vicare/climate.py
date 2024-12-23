@@ -140,8 +140,8 @@ async def async_setup_entry(
 class ViCareTRV(ViCareEntity, ClimateEntity):
     """Representation of the ViCare TRV device."""
 
-    # _attr_hvac_modes = []
-    # _attr_hvac_mode = None
+    _attr_hvac_modes = []
+    _attr_hvac_mode = None
     _attr_min_temp = 8
     _attr_max_temp = 30
     _attr_precision = PRECISION_TENTHS
