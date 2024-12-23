@@ -102,7 +102,9 @@ class ReolinkVODMediaSource(MediaSource):
             )
 
         if mime_type == "video/mp4":
-            return PlayMedia(url, mime_type)
+            proxy_url = async_generate_playback_proxy_url(config_entry_id, channel, filename, stream_res, vod_type)
+            return PlayMedia(proxy_url, mime_type)
+            
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
