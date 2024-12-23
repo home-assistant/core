@@ -1,0 +1,15 @@
+{
+  "code": 0,
+  "message": "Success",
+  "msgDetails": "None",
+  "requestId": "2960.173975.16505233450290959",
+  "result": {
+    "password": "EjjiKnGpriseC7pFDMMdrlLK",
+    "clientId": "omqt.493dae6e-8488-425a-8123-18e4d965ecb7",
+    "subscribeTopic": "receive_omqt.493dae6e-8488-425a-8123-18e4d965ecb7",
+    "mqttHost": "aiot-mqtt.aqara.cn",
+    "userName": "966710505158103040022ba6",
+    "mqttPort": "1883",
+    "publishTopic": "control_omqt.493dae6e-8488-425a-8123-18e4d965ecb7"
+  }
+}

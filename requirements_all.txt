@@ -478,6 +478,9 @@ aprslib==0.7.2
 # homeassistant.components.apsystems
 apsystems-ez1==2.4.0
 
+# homeassistant.components.aqara
+aqara-iot-py-sdk==1.0.9
+
 # homeassistant.components.aqualogic
 aqualogic==2.6
 
