@@ -164,7 +164,13 @@
         "name": "Air temperature"
       },
       "controller_state": {
-        "name": "Controller state"
+        "name": "Controller state",
+        "state": {
+          "unknown": "Unknown",
+          "ready": "Ready",
+          "sync": "Sync",
+          "service": "Service"
+        }
       },
       "chem_now": {
         "name": "{chem} now"
