@@ -548,7 +548,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -569,6 +568,8 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             model_id=model_id,
             name=name,
         )
+        # Added intentionally to the constructor to avoid double name from base class
+        self._attr_name = None
 
     @property
     def target_temperature(self) -> float | None:
