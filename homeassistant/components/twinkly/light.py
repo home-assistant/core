@@ -167,10 +167,12 @@ class TwinklyLight(CoordinatorEntity[TwinklyCoordinator], LightEntity):
                 self.client.default_mode = "movie"
         if not self._attr_is_on:
             await self.client.turn_on()
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         await self.client.turn_off()
+        await self.coordinator.async_refresh()
 
     def _update_attr(self) -> None:
         """Update the entity attributes."""
