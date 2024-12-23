@@ -1,4 +1,4 @@
-"""Setup NikoHomeControlcover."""
+"""Cover Platform for Niko Home Control."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NHCController, NikoHomeControlConfigEntry
+from . import NikoHomeControlConfigEntry
 from .entity import NikoHomeControlEntity
 
 
@@ -32,20 +32,10 @@ class NikoHomeControlCover(NikoHomeControlEntity, CoverEntity):
     """Representation of a Niko Cover."""
 
     _attr_name = None
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
     _action: NHCCover
-
-    def __init__(
-        self, action: NHCCover, controller: NHCController, unique_id: str
-    ) -> None:
-        """Set up the Niko Home Control cover."""
-        super().__init__(action, controller, unique_id)
-
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        return (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
