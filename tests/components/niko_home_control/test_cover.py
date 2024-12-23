@@ -1,4 +1,4 @@
-"""Tests for the Niko Home Control Light platform."""
+"""Tests for the Niko Home Control cover platform."""
 
 from unittest.mock import AsyncMock, patch
 
