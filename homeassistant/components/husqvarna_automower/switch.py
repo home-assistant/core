@@ -30,6 +30,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch platform."""
     coordinator = entry.runtime_data
+    entities: list[SwitchEntity] = []
+    entities.extend(
+        AutomowerScheduleSwitchEntity(mower_id, coordinator)
+        for mower_id in coordinator.data
+    )
+    for mower_id in coordinator.data:
+        if coordinator.data[mower_id].capabilities.stay_out_zones:
+            _stay_out_zones = coordinator.data[mower_id].stay_out_zones
+            if _stay_out_zones is not None:
+                entities.extend(
+                    StayOutZoneSwitchEntity(coordinator, mower_id, stay_out_zone_uid)
+                    for stay_out_zone_uid in _stay_out_zones.zones
+                )
+        if coordinator.data[mower_id].capabilities.work_areas:
+            _work_areas = coordinator.data[mower_id].work_areas
+            if _work_areas is not None:
+                entities.extend(
+                    WorkAreaSwitchEntity(coordinator, mower_id, work_area_id)
+                    for work_area_id in _work_areas
+                )
+    async_add_entities(entities)
 
     def _async_add_new_stay_out_zones(
         mower_id: str, stay_out_zone_uids: set[str]
@@ -62,8 +83,6 @@ async def async_setup_entry(
                 )
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None:
                 _async_add_new_work_areas(mower_id, set(mower_data.work_areas.keys()))
-
-    _async_add_new_devices(set(coordinator.data))
 
     coordinator.new_devices_callbacks.append(_async_add_new_devices)
     coordinator.new_zones_callbacks.append(_async_add_new_stay_out_zones)
