@@ -85,7 +85,7 @@ async def test_symo_logger(
 
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 27
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 26
     # states are rounded to 4 decimals
     assert_state("sensor.solarnet_grid_export_tariff", 0.078)
     assert_state("sensor.solarnet_co2_factor", 0.53)
