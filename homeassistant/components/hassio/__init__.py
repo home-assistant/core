@@ -61,9 +61,11 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
-# backup, config_flow, diagnostics, system_health, and entity platforms are imported to
+# config_flow, diagnostics, system_health, and entity platforms are imported to
 # ensure other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
+# backup is pre-imported to ensure that the backup integration does not load
+# it from the event loop
 from . import (  # noqa: F401
     backup,
     binary_sensor,
