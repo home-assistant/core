@@ -288,3 +288,87 @@ async def test_process_integration_platforms_no_integrations(
     await hass.async_block_till_done()
 
     assert len(processed) == 0
+
+
+async def test_process_integration_platforms_ignores_self_with_wait(
+    hass: HomeAssistant,
+) -> None:
+    """Test we do not try to load platforms with our name."""
+    platform_to_check_platform = Mock()
+    mock_platform(
+        hass, "platform_to_check.platform_to_check", platform_to_check_platform
+    )
+    hass.config.components.add("platform_to_check")
+
+    event_platform = Mock()
+    mock_platform(hass, "event.platform_to_check", event_platform)
+
+    processed = []
+
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
+        """Process platform."""
+        processed.append((domain, platform))
+
+    await async_process_integration_platforms(
+        hass, "platform_to_check", _process_platform, wait_for_platforms=True
+    )
+    # No block till done here, we want to make sure it waits for the platform
+
+    assert len(processed) == 0  # should not process platform_to_check.platform_to_check
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    assert len(processed) == 1
+    assert processed[0][0] == "event"
+    assert processed[0][1] == event_platform
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    # Firing again should not check again
+    assert len(processed) == 1
+
+
+async def test_process_integration_platforms_ignores_self_without_wait(
+    hass: HomeAssistant,
+) -> None:
+    """Test we do not try to load platforms with our name."""
+    platform_to_check_platform = Mock()
+    mock_platform(
+        hass, "platform_to_check.platform_to_check", platform_to_check_platform
+    )
+    hass.config.components.add("platform_to_check")
+
+    event_platform = Mock()
+    mock_platform(hass, "event.platform_to_check", event_platform)
+
+    processed = []
+
+    async def _process_platform(
+        hass: HomeAssistant, domain: str, platform: Any
+    ) -> None:
+        """Process platform."""
+        processed.append((domain, platform))
+
+    await async_process_integration_platforms(
+        hass, "platform_to_check", _process_platform
+    )
+    await hass.async_block_till_done()
+
+    assert len(processed) == 0  # should not process platform_to_check.platform_to_check
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    assert len(processed) == 1
+    assert processed[0][0] == "event"
+    assert processed[0][1] == event_platform
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    # Firing again should not check again
+    assert len(processed) == 1
