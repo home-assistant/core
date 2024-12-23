@@ -1486,6 +1486,7 @@ async def test_state_change_during_window_rollover(
             ]
         }
 
+    # The test begins at 23:00, and queries from the database that the sensor has been on since 12:00.
     with (
         patch(
             "homeassistant.components.recorder.history.state_changes_during_period",
@@ -1517,6 +1518,7 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.0"
 
+    # Advance 30 minutes
     t1 = start_time + timedelta(minutes=30)
     with freeze_time(t1):
         async_fire_time_changed(hass, t1)
@@ -1524,6 +1526,7 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.5"
 
+    # Advance 29 minutes, to record the last minute update just before midnight, just like a real system would do.
     t2 = t1 + timedelta(minutes=29, microseconds=300)
     with freeze_time(t2):
         async_fire_time_changed(hass, t2)
@@ -1531,15 +1534,40 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.98"
 
+    # One minute has passed and the time has now rolled over into a new day, resetting the recorder window. The sensor will then query the database for updates,
+    # and will see that the sensor is ON starting from midnight.
     t3 = t2 + timedelta(minutes=1)
-    with freeze_time(t3):
+
+    def _fake_states_t3(*args, **kwargs):
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "on",
+                    last_changed=t3.replace(
+                        hours=0, minutes=0, seconds=0, microseconds=0
+                    ),
+                    last_updated=t3.replace(
+                        hours=0, minutes=0, seconds=0, microseconds=0
+                    ),
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states_t3,
+        ),
+        freeze_time(t3),
+    ):
+        # The sensor turns off around this time, before the sensor does its normal polled update.
         hass.states.async_set("binary_sensor.state", "off")
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, t3)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
+    # More time passes, and the history stats does a polled update again. It should be 0 since the sensor has been off since midnight.
     t4 = t3 + timedelta(minutes=10)
     with freeze_time(t4):
         async_fire_time_changed(hass, t4)
@@ -1547,6 +1575,7 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
 
+    # More time passes, and the history stats does a polled update again. It should be 0 since the sensor has been off since midnight.
     t5 = t4 + timedelta(hours=1)
     with freeze_time(t5):
         async_fire_time_changed(hass, t5)
