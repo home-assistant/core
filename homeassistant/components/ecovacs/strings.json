@@ -152,7 +152,7 @@
       "station_state": {
         "name": "Station state",
         "state": {
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "emptying_dustbin": "Emptying dustbin"
         }
       },
