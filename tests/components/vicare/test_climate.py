@@ -28,7 +28,7 @@ async def test_all_entities(
         Fixture({"type:radiator"}, "vicare/TRV.json"),
     ]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         await setup_integration(hass, mock_config_entry)
