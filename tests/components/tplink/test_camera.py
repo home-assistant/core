@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
+    DEVICE_ID,
     IP_ADDRESS3,
     MAC_ADDRESS3,
     SMALLEST_VALID_JPEG_BYTES,
@@ -66,6 +67,33 @@ async def test_states(
         snapshot,
         mock_camera_config_entry.entry_id,
     )
+
+
+async def test_camera_unique_id(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test camera unique id."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+        device_id=DEVICE_ID,
+    )
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_camera_config_entry.entry_id
+    )
+    assert device_entries
+    entity_id = "camera.my_camera_live_view"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == f"{DEVICE_ID}-live_view"
 
 
 async def test_handle_mjpeg_stream(

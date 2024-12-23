@@ -108,7 +108,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        return f"{legacy_device_id(self._device)}-{self.entity_description}"
+        return f"{legacy_device_id(self._device)}-{self.entity_description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:
