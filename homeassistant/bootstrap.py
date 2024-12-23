@@ -70,6 +70,7 @@ from .const import (
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
+from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
@@ -251,6 +252,7 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
+    "backup",
 ]
 
 
@@ -479,7 +481,7 @@ async def async_from_config_dict(
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        await conf_util.async_process_ha_core_config(hass, core_config)
+        await async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
         conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
@@ -514,7 +516,7 @@ async def async_from_config_dict(
         issue_registry.async_create_issue(
             hass,
             core.DOMAIN,
-            "python_version",
+            f"python_version_{required_python_version}",
             is_fixable=False,
             severity=issue_registry.IssueSeverity.WARNING,
             breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,

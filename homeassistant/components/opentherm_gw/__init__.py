@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -46,6 +47,7 @@ from .const import (
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
+    CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
@@ -68,6 +70,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# *_SCHEMA required for deprecated import from configuration.yaml, can be removed in 2025.4.0
 CLIMATE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRECISION): vol.In(
@@ -90,12 +93,20 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
+    gateway.options = entry.options
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
 
 
@@ -153,8 +164,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
+# Deprecated import from configuration.yaml, can be removed in 2025.4.0
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OpenTherm Gateway component."""
+    if DOMAIN in config:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_import_from_configuration_yaml",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_import_from_configuration_yaml",
+        )
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         conf = config[DOMAIN]
         for device_id, device_config in conf.items():
@@ -448,7 +471,7 @@ class OpenThermGatewayHub:
         self.device_path = config_entry.data[CONF_DEVICE]
         self.hub_id = config_entry.data[CONF_ID]
         self.name = config_entry.data[CONF_NAME]
-        self.climate_config = config_entry.options
+        self.options = config_entry.options
         self.config_entry_id = config_entry.entry_id
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_options_update"
@@ -544,3 +567,9 @@ class OpenThermGatewayHub:
     def connected(self):
         """Report whether or not we are connected to the gateway."""
         return self.gateway.connection.connected
+
+    async def set_room_setpoint(self, temp) -> float:
+        """Set the room temperature setpoint on the gateway. Return the new temperature."""
+        return await self.gateway.set_target_temp(
+            temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
+        )

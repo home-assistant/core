@@ -6,12 +6,8 @@ import logging
 import os
 
 from file_read_backwards import FileReadBackwards
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -20,37 +16,12 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DEFAULT_NAME, FILE_ICON
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_FILE_PATH): cv.isfile,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the file sensor from YAML.
-
-    The YAML platform config is automatically
-    imported to a config entry, this method can be removed
-    when YAML support is removed.
-    """
 
 
 async def async_setup_entry(

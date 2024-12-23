@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
 from kasa import Feature
 
@@ -58,6 +58,10 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
         key="water_alert",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
+    TPLinkBinarySensorEntityDescription(
+        key="motion_detected",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
 )
 
 BINARYSENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in BINARY_SENSOR_DESCRIPTIONS}
@@ -75,6 +79,7 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+        hass=hass,
         device=device,
         coordinator=parent_coordinator,
         feature_type=Feature.Type.BinarySensor,
@@ -93,4 +98,4 @@ class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntit
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_is_on = self._feature.value
+        self._attr_is_on = cast(bool | None, self._feature.value)

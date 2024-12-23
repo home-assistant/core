@@ -16,6 +16,9 @@
         }
       }
     },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -57,6 +60,14 @@
             }
           }
         }
+      }
+    },
+    "humidifier": {
+      "humidifier": {
+        "name": "[%key:component::humidifier::title%]"
+      },
+      "dehumidifier": {
+        "name": "[%key:component::humidifier::entity_component::dehumidifier::name%]"
       }
     }
   },

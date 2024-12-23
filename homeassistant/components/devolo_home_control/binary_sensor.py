@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DevoloHomeControlConfigEntry
-from .devolo_device import DevoloDeviceEntity
+from .entity import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
     "Water alarm": BinarySensorDeviceClass.MOISTURE,
@@ -81,14 +81,8 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             or self._binary_sensor_property.sensor_type
         )
 
-        if device_instance.binary_sensor_property[element_uid].sub_type != "":
-            self._attr_name = device_instance.binary_sensor_property[
-                element_uid
-            ].sub_type.capitalize()
-        else:
-            self._attr_name = device_instance.binary_sensor_property[
-                element_uid
-            ].sensor_type.capitalize()
+        if device_instance.binary_sensor_property[element_uid].sub_type == "overload":
+            self._attr_translation_key = "overload"
 
         self._value = self._binary_sensor_property.state
 
@@ -129,7 +123,8 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
 
         self._key = key
         self._attr_is_on = False
-        self._attr_name = f"Button {key}"
+        self._attr_translation_key = "button"
+        self._attr_translation_placeholders = {"key": str(key)}
 
     def _sync(self, message: tuple) -> None:
         """Update the binary sensor state."""

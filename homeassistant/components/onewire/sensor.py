@@ -38,7 +38,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
-from .onewire_entities import OneWireEntity, OneWireEntityDescription
+from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
@@ -233,7 +233,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "1D": tuple(
         OneWireSensorEntityDescription(
             key=f"counter.{device_key}",
-            native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
             state_class=SensorStateClass.TOTAL_INCREASING,
             translation_key="counter_id",

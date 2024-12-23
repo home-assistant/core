@@ -9,8 +9,8 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 65536,
-      'min_temp': None,
+      'max_temp': 30,
+      'min_temp': 5,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -42,17 +42,17 @@
 # name: test_states[climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20,
+      'current_temperature': 20.2,
       'friendly_name': 'thermostat',
       'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 65536,
-      'min_temp': None,
+      'max_temp': 30,
+      'min_temp': 5,
       'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 22,
+      'temperature': 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat',

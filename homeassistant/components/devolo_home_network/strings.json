@@ -6,11 +6,17 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network App on the device dashboard."
         }
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password you protected the device with."
         }
       },
       "zeroconf_confirm": {
@@ -60,6 +66,9 @@
       "connected_wifi_clients": {
         "name": "Connected Wi-Fi clients"
       },
+      "last_restart": {
+        "name": "Last restart of the device"
+      },
       "neighboring_wifi_networks": {
         "name": "Neighboring Wi-Fi networks"
       },
@@ -91,6 +100,9 @@
     },
     "password_wrong": {
       "message": "The used password is wrong"
+    },
+    "update_failed": {
+      "message": "Error while updating the data: {error}"
     }
   }
 }

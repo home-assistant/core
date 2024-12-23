@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -42,7 +42,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_reconfigure(self) -> None:

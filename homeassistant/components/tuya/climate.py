@@ -24,8 +24,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import IntegerTypeData, TuyaEntity
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -77,6 +77,9 @@ CLIMATE_DESCRIPTIONS: dict[str, TuyaClimateEntityDescription] = {
         key="wkf",
         switch_only_hvac_mode=HVACMode.HEAT,
     ),
+    # Electric Fireplace
+    # https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    "dbl": TuyaClimateEntityDescription(key="dbl", switch_only_hvac_mode=HVACMode.HEAT),
 }
 
 
@@ -120,7 +123,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

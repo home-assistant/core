@@ -12,7 +12,7 @@ from screenlogicpy.device_const.pump import PUMP_TYPE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -58,6 +58,7 @@ SUPPORTED_CORE_SENSORS = [
         key=VALUE.AIR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="air_temperature",
     ),
 ]
 
@@ -97,12 +98,16 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         data_root=(DEVICE.INTELLICHEM, GROUP.SENSOR),
         key=VALUE.ORP_NOW,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="chem_now",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.SENSOR),
         key=VALUE.PH_NOW,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="chem_now",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -110,6 +115,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.ORP_SUPPLY_LEVEL,
         state_class=SensorStateClass.MEASUREMENT,
         value_mod=lambda val: int(val) - 1,
+        translation_key="chem_supply_level",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -117,6 +124,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.PH_SUPPLY_LEVEL,
         state_class=SensorStateClass.MEASUREMENT,
         value_mod=lambda val: int(val) - 1,
+        translation_key="chem_supply_level",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -124,46 +133,56 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.PH_PROBE_WATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="ph_probe_water_temp",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.SENSOR),
         key=VALUE.SATURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="saturation",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CALCIUM_HARDNESS,
         entity_registry_enabled_default=False,  # Superseded by number entity
+        translation_key="calcium_hardness",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CYA,
         entity_registry_enabled_default=False,  # Superseded by number entity
+        translation_key="cya",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.ORP_SETPOINT,
+        translation_key="chem_setpoint",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.PH_SETPOINT,
+        translation_key="chem_setpoint",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.TOTAL_ALKALINITY,
         entity_registry_enabled_default=False,  # Superseded by number entity
+        translation_key="total_alkalinity",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.SALT_TDS_PPM,
         entity_registry_enabled_default=False,  # Superseded by number entity
+        translation_key="salt_tds_ppm",
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -172,6 +191,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         device_class=SensorDeviceClass.ENUM,
         options=["Dosing", "Mixing", "Monitoring"],
         value_mod=lambda val: DOSE_STATE(val).title,
+        translation_key="chem_dose_state",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -179,6 +200,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.ORP_LAST_DOSE_TIME,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="chem_last_dose_time",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -186,6 +209,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.ORP_LAST_DOSE_VOLUME,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="chem_last_dose_volume",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -194,6 +219,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         device_class=SensorDeviceClass.ENUM,
         options=["Dosing", "Mixing", "Monitoring"],
         value_mod=lambda val: DOSE_STATE(val).title,
+        translation_key="chem_dose_state",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -201,6 +228,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.PH_LAST_DOSE_TIME,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="chem_last_dose_time",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -208,6 +237,8 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         key=VALUE.PH_LAST_DOSE_VOLUME,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="chem_last_dose_volume",
+        translation_placeholders={"chem": "pH"},
     ),
 ]
 
@@ -216,10 +247,12 @@ SUPPORTED_SCG_SENSORS = [
         data_root=(DEVICE.SCG, GROUP.SENSOR),
         key=VALUE.SALT_PPM,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="salt_ppm",
     ),
     ScreenLogicSensorDescription(
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SUPER_CHLOR_TIMER,
+        translation_key="super_chlor_timer",
     ),
 ]
 
@@ -267,7 +300,7 @@ async def async_setup_entry(
             chem_sensor_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, chem_sensor_data_path)
             continue
         if gateway.get_data(*chem_sensor_data_path):
             chem_sensor_description = dataclasses.replace(
@@ -282,7 +315,7 @@ async def async_setup_entry(
             scg_sensor_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, scg_sensor_data_path)
             continue
         if gateway.get_data(*scg_sensor_data_path):
             scg_sensor_description = dataclasses.replace(

@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import Coordinator, DeviceUnavailable
+from .coordinator import DeviceUnavailable, GardenaBluetoothCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -31,6 +31,8 @@ PLATFORMS: list[Platform] = [
 LOGGER = logging.getLogger(__name__)
 TIMEOUT = 20.0
 DISCONNECT_DELAY = 5
+
+type GardenaBluetoothConfigEntry = ConfigEntry[GardenaBluetoothCoordinator]
 
 
 def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
@@ -47,7 +49,9 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
     return CachedConnection(DISCONNECT_DELAY, _device_lookup)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
+) -> bool:
     """Set up Gardena Bluetooth from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
@@ -75,19 +79,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         model=model,
     )
 
-    coordinator = Coordinator(hass, LOGGER, client, uuids, device, address)
+    coordinator = GardenaBluetoothCoordinator(
+        hass, LOGGER, client, uuids, device, address
+    )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_refresh()
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: Coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.async_shutdown()
+        await entry.runtime_data.async_shutdown()
 
     return unload_ok

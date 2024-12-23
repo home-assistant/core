@@ -1,7 +1,6 @@
 """Tests for the Wallbox integration."""
 
 from http import HTTPStatus
-import json
 
 import requests_mock
 
@@ -121,7 +120,7 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.OK,
         )
 
@@ -144,7 +143,7 @@ async def setup_integration_bidir(hass: HomeAssistant, entry: MockConfigEntry) -
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.OK,
         )
 
@@ -169,7 +168,7 @@ async def setup_integration_connection_error(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=HTTPStatus.FORBIDDEN,
         )
 

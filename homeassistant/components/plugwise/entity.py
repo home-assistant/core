@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from plugwise.constants import DeviceData
+from plugwise.constants import GwEntityData
 
 from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
 from homeassistant.helpers.device_registry import (
@@ -47,6 +47,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             connections=connections,
             manufacturer=data.get("vendor"),
             model=data.get("model"),
+            model_id=data.get("model_id"),
             name=coordinator.data.gateway["smile_name"],
             sw_version=data.get("firmware"),
             hw_version=data.get("hardware"),
@@ -73,11 +74,6 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         )
 
     @property
-    def device(self) -> DeviceData:
+    def device(self) -> GwEntityData:
         """Return data for this device."""
         return self.coordinator.data.devices[self._dev_id]
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        self._handle_coordinator_update()
-        await super().async_added_to_hass()

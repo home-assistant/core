@@ -16,6 +16,9 @@
       "heart_pulse": {
         "default": "mdi:heart-pulse"
       },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
       "hydration": {
         "default": "mdi:water"
       },
@@ -136,6 +139,14 @@
       },
       "workout_duration": {
         "default": "mdi:timer"
+      },
+      "battery": {
+        "default": "mdi:battery-off",
+        "state": {
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50",
+          "high": "mdi:battery"
+        }
       }
     }
   }

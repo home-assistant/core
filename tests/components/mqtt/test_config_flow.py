@@ -8,14 +8,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Discovery
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.addon_manager import AddonError
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import AddonError
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -250,7 +251,7 @@ async def test_user_connection_works(
     assert len(mock_finish_setup.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mqtt_client_mock", "supervisor")
+@pytest.mark.usefixtures("mqtt_client_mock", "supervisor", "supervisor_client")
 async def test_user_connection_works_with_supervisor(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
@@ -417,7 +418,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
@@ -443,7 +444,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("reason") == "single_instance_allowed"
 
 
 async def test_hassio_confirm(
@@ -452,8 +453,6 @@ async def test_hassio_confirm(
     mock_finish_setup: MagicMock,
 ) -> None:
     """Test we can finish a config flow."""
-    mock_try_connection.return_value = True
-
     result = await hass.config_entries.flow.async_init(
         "mqtt",
         data=HassioServiceInfo(
@@ -531,7 +530,19 @@ async def test_hassio_cannot_connect(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_running"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_running(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -573,7 +584,19 @@ async def test_addon_flow_with_supervisor_addon_running(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_installed", "start_addon"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_installed(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -628,7 +651,19 @@ async def test_addon_flow_with_supervisor_addon_installed(
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "supervisor", "addon_info", "addon_running"
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_running_connection_fails(
     hass: HomeAssistant,
     mock_try_connection: MagicMock,
@@ -669,7 +704,7 @@ async def test_addon_not_running_api_error(
 
     Case: The Mosquitto add-on start fails on a API error.
     """
-    start_addon.side_effect = HassioAPIError()
+    start_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -756,7 +791,7 @@ async def test_addon_info_error(
 
     Case: The Mosquitto add-on info could not be retrieved.
     """
-    addon_info.side_effect = AddonError()
+    addon_info.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -783,7 +818,19 @@ async def test_addon_info_error(
     "install_addon",
     "start_addon",
 )
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 async def test_addon_flow_with_supervisor_addon_not_installed(
     hass: HomeAssistant,
     mock_try_connection_success: MagicMock,
@@ -855,7 +902,7 @@ async def test_addon_not_installed_failures(
 
     Case: The Mosquitto add-on install fails.
     """
-    install_addon.side_effect = HassioAPIError()
+    install_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -1024,7 +1071,6 @@ async def test_bad_certificate(
         test_input.pop(mqtt.CONF_CLIENT_KEY)
 
     mqtt_mock = await mqtt_mock_entry()
-    mock_try_connection.return_value = True
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     # Add at least one advanced option to get the full form
     hass.config_entries.async_update_entry(
@@ -1273,7 +1319,7 @@ async def test_invalid_discovery_prefix(
 
 def get_default(schema: vol.Schema, key: str) -> Any | None:
     """Get default value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if schema_key.default == vol.UNDEFINED:
                 return None
@@ -1283,7 +1329,7 @@ def get_default(schema: vol.Schema, key: str) -> Any | None:
 
 def get_suggested(schema: vol.Schema, key: str) -> Any | None:
     """Get suggested value for key in voluptuous schema."""
-    for schema_key in schema:
+    for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
             if (
                 schema_key.description is None
@@ -1580,7 +1626,19 @@ async def test_step_reauth(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize("discovery_info", [{"config": ADD_ON_DISCOVERY_INFO.copy()}])
+@pytest.mark.parametrize(
+    "discovery_info",
+    [
+        [
+            Discovery(
+                addon="core_mosquitto",
+                service="mqtt",
+                uuid=uuid4(),
+                config=ADD_ON_DISCOVERY_INFO.copy(),
+            )
+        ]
+    ],
+)
 @pytest.mark.usefixtures(
     "mqtt_client_mock", "mock_reload_after_entry_update", "supervisor", "addon_running"
 )
@@ -1629,8 +1687,30 @@ async def test_step_hassio_reauth(
 @pytest.mark.parametrize(
     ("discovery_info", "discovery_info_side_effect", "broker"),
     [
-        ({"config": ADD_ON_DISCOVERY_INFO.copy()}, AddonError, "core-mosquitto"),
-        ({"config": ADD_ON_DISCOVERY_INFO.copy()}, None, "broker-not-addon"),
+        (
+            [
+                Discovery(
+                    addon="core_mosquitto",
+                    service="mqtt",
+                    uuid=uuid4(),
+                    config=ADD_ON_DISCOVERY_INFO.copy(),
+                )
+            ],
+            AddonError,
+            "core-mosquitto",
+        ),
+        (
+            [
+                Discovery(
+                    addon="core_mosquitto",
+                    service="mqtt",
+                    uuid=uuid4(),
+                    config=ADD_ON_DISCOVERY_INFO.copy(),
+                )
+            ],
+            None,
+            "broker-not-addon",
+        ),
     ],
 )
 @pytest.mark.usefixtures(
@@ -2082,7 +2162,7 @@ async def test_setup_with_advanced_settings(
 async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
-    """Test option flow setup with websockets transport settings."""
+    """Test reconfiguration flow changing websockets transport settings."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -2098,7 +2178,7 @@ async def test_change_websockets_transport_to_tcp(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["transport"]
@@ -2106,7 +2186,7 @@ async def test_change_websockets_transport_to_tcp(
     assert result["data_schema"].schema["ws_headers"]
 
     # Change transport to tcp
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2116,23 +2196,61 @@ async def test_change_websockets_transport_to_tcp(
             mqtt.CONF_WS_PATH: "/some_path",
         },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     # Check config entry result
     assert config_entry.data == {
         mqtt.CONF_BROKER: "test-broker",
         CONF_PORT: 1234,
         mqtt.CONF_TRANSPORT: "tcp",
-        mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }
+
+
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+            mqtt.CONF_WS_PATH: "/some_path",
+        }
+    ],
+)
+async def test_reconfigure_flow_form(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reconfigure flow."""
+    await mqtt_mock_entry()
+    entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    result = await entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "10.10.10,10",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
+            mqtt.CONF_WS_PATH: "/some_new_path",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        mqtt.CONF_BROKER: "10.10.10,10",
+        CONF_PORT: 1234,
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+        mqtt.CONF_WS_PATH: "/some_new_path",
+    }
+    await hass.async_block_till_done(wait_background_tasks=True)

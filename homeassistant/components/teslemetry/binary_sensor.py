@@ -165,6 +165,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
 ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(key="backup_capable"),
     BinarySensorEntityDescription(key="grid_services_active"),
+    BinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 
@@ -222,15 +223,12 @@ class TeslemetryVehicleBinarySensorEntity(TeslemetryVehicleEntity, BinarySensorE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
-        if self.coordinator.updated_once:
-            if self._value is None:
-                self._attr_available = False
-                self._attr_is_on = None
-            else:
-                self._attr_available = True
-                self._attr_is_on = self.entity_description.is_on(self._value)
-        else:
+        if self._value is None:
+            self._attr_available = False
             self._attr_is_on = None
+        else:
+            self._attr_available = True
+            self._attr_is_on = self.entity_description.is_on(self._value)
 
 
 class TeslemetryEnergyLiveBinarySensorEntity(

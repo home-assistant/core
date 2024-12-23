@@ -1,7 +1,5 @@
 """Test Wallbox Switch component."""
 
-import json
-
 import pytest
 import requests_mock
 
@@ -47,7 +45,7 @@ async def test_wallbox_number_class(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=200,
         )
         state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
@@ -63,7 +61,6 @@ async def test_wallbox_number_class(
             },
             blocking=True,
         )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_bidir(
@@ -76,7 +73,6 @@ async def test_wallbox_number_class_bidir(
     state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
     assert state.attributes["min"] == -25
     assert state.attributes["max"] == 25
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_energy_class(
@@ -95,7 +91,7 @@ async def test_wallbox_number_energy_class(
 
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_ENERGY_PRICE_KEY: 1.1})),
+            json={CHARGER_ENERGY_PRICE_KEY: 1.1},
             status_code=200,
         )
 
@@ -108,7 +104,6 @@ async def test_wallbox_number_energy_class(
             },
             blocking=True,
         )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_connection_error(
@@ -126,7 +121,7 @@ async def test_wallbox_number_class_connection_error(
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_CHARGING_CURRENT_KEY: 20})),
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
             status_code=404,
         )
 
@@ -140,7 +135,6 @@ async def test_wallbox_number_class_connection_error(
                 },
                 blocking=True,
             )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_energy_price_connection_error(
@@ -158,7 +152,7 @@ async def test_wallbox_number_class_energy_price_connection_error(
         )
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_ENERGY_PRICE_KEY: 1.1})),
+            json={CHARGER_ENERGY_PRICE_KEY: 1.1},
             status_code=404,
         )
 
@@ -172,7 +166,6 @@ async def test_wallbox_number_class_energy_price_connection_error(
                 },
                 blocking=True,
             )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_energy_price_auth_error(
@@ -190,7 +183,7 @@ async def test_wallbox_number_class_energy_price_auth_error(
         )
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_ENERGY_PRICE_KEY: 1.1})),
+            json={CHARGER_ENERGY_PRICE_KEY: 1.1},
             status_code=403,
         )
 
@@ -204,7 +197,6 @@ async def test_wallbox_number_class_energy_price_auth_error(
                 },
                 blocking=True,
             )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_platform_not_ready(
@@ -217,8 +209,6 @@ async def test_wallbox_number_class_platform_not_ready(
     state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
 
     assert state is None
-
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_icp_energy(
@@ -250,7 +240,6 @@ async def test_wallbox_number_class_icp_energy(
             },
             blocking=True,
         )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_icp_energy_auth_error(
@@ -282,7 +271,6 @@ async def test_wallbox_number_class_icp_energy_auth_error(
                 },
                 blocking=True,
             )
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_wallbox_number_class_icp_energy_connection_error(
@@ -314,4 +302,3 @@ async def test_wallbox_number_class_icp_energy_connection_error(
                 },
                 blocking=True,
             )
-    await hass.config_entries.async_unload(entry.entry_id)

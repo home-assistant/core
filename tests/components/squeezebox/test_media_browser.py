@@ -16,7 +16,7 @@ from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -30,6 +30,10 @@ async def setup_integration(
     """Fixture for setting up the component."""
     with (
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.MEDIA_PLAYER],
+        ),
         patch(
             "homeassistant.components.squeezebox.media_player.start_server_discovery"
         ),
@@ -68,7 +72,14 @@ async def test_async_browse_media_with_subitems(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test each category with subitems."""
-    for category in ("Favorites", "Artists", "Albums", "Playlists", "Genres"):
+    for category in (
+        "Favorites",
+        "Artists",
+        "Albums",
+        "Playlists",
+        "Genres",
+        "New Music",
+    ):
         with patch(
             "homeassistant.components.squeezebox.browse_media.is_internal_request",
             return_value=False,

@@ -5,13 +5,14 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
+from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import (
@@ -23,16 +24,9 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    STATE_UNLOCKED,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -165,11 +159,11 @@ async def test_api_set_color_temperature(hass: HomeAssistant) -> None:
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["kelvin"] == 7500
+    assert call_light[0].data["color_temp_kelvin"] == 7500
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize(("result", "initial"), [(383, "333"), (500, "500")])
+@pytest.mark.parametrize(("result", "initial"), [(2500, "3000"), (2000, "2000")])
 async def test_api_decrease_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -182,7 +176,11 @@ async def test_api_decrease_color_temp(
     hass.states.async_set(
         "light.test",
         "off",
-        {"friendly_name": "Test light", "color_temp": initial, "max_mireds": 500},
+        {
+            "friendly_name": "Test light",
+            "color_temp_kelvin": initial,
+            "min_color_temp_kelvin": 2000,
+        },
     )
 
     call_light = async_mock_service(hass, "light", "turn_on")
@@ -195,11 +193,11 @@ async def test_api_decrease_color_temp(
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["color_temp"] == result
+    assert call_light[0].data["color_temp_kelvin"] == result
     assert msg["header"]["name"] == "Response"
 
 
-@pytest.mark.parametrize(("result", "initial"), [(283, "333"), (142, "142")])
+@pytest.mark.parametrize(("result", "initial"), [(3500, "3000"), (7000, "7000")])
 async def test_api_increase_color_temp(
     hass: HomeAssistant, result: int, initial: str
 ) -> None:
@@ -212,7 +210,11 @@ async def test_api_increase_color_temp(
     hass.states.async_set(
         "light.test",
         "off",
-        {"friendly_name": "Test light", "color_temp": initial, "min_mireds": 142},
+        {
+            "friendly_name": "Test light",
+            "color_temp_kelvin": initial,
+            "max_color_temp_kelvin": 7000,
+        },
     )
 
     call_light = async_mock_service(hass, "light", "turn_on")
@@ -225,7 +227,7 @@ async def test_api_increase_color_temp(
 
     assert len(call_light) == 1
     assert call_light[0].data["entity_id"] == "light.test"
-    assert call_light[0].data["color_temp"] == result
+    assert call_light[0].data["color_temp_kelvin"] == result
     assert msg["header"]["name"] == "Response"
 
 
@@ -392,11 +394,11 @@ async def test_api_remote_set_power_state(
 
 async def test_report_lock_state(hass: HomeAssistant) -> None:
     """Test LockController implements lockState property."""
-    hass.states.async_set("lock.locked", STATE_LOCKED, {})
-    hass.states.async_set("lock.unlocked", STATE_UNLOCKED, {})
-    hass.states.async_set("lock.unlocking", STATE_UNLOCKING, {})
-    hass.states.async_set("lock.locking", STATE_LOCKING, {})
-    hass.states.async_set("lock.jammed", STATE_JAMMED, {})
+    hass.states.async_set("lock.locked", LockState.LOCKED, {})
+    hass.states.async_set("lock.unlocked", LockState.UNLOCKED, {})
+    hass.states.async_set("lock.unlocking", LockState.UNLOCKING, {})
+    hass.states.async_set("lock.locking", LockState.LOCKING, {})
+    hass.states.async_set("lock.jammed", LockState.JAMMED, {})
     hass.states.async_set("lock.unknown", STATE_UNKNOWN, {})
 
     properties = await reported_properties(hass, "lock.locked")
@@ -1353,15 +1355,23 @@ async def test_temperature_sensor_water_heater(hass: HomeAssistant) -> None:
 
 async def test_report_alarm_control_panel_state(hass: HomeAssistant) -> None:
     """Test SecurityPanelController implements armState property."""
-    hass.states.async_set("alarm_control_panel.armed_away", STATE_ALARM_ARMED_AWAY, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_custom_bypass", STATE_ALARM_ARMED_CUSTOM_BYPASS, {}
+        "alarm_control_panel.armed_away", AlarmControlPanelState.ARMED_AWAY, {}
     )
-    hass.states.async_set("alarm_control_panel.armed_home", STATE_ALARM_ARMED_HOME, {})
     hass.states.async_set(
-        "alarm_control_panel.armed_night", STATE_ALARM_ARMED_NIGHT, {}
+        "alarm_control_panel.armed_custom_bypass",
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        {},
     )
-    hass.states.async_set("alarm_control_panel.disarmed", STATE_ALARM_DISARMED, {})
+    hass.states.async_set(
+        "alarm_control_panel.armed_home", AlarmControlPanelState.ARMED_HOME, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.armed_night", AlarmControlPanelState.ARMED_NIGHT, {}
+    )
+    hass.states.async_set(
+        "alarm_control_panel.disarmed", AlarmControlPanelState.DISARMED, {}
+    )
 
     properties = await reported_properties(hass, "alarm_control_panel.armed_away")
     properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")

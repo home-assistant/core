@@ -9,7 +9,11 @@ from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
-from homeassistant.components.button import DOMAIN, SERVICE_PRESS, ButtonDeviceClass
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS,
+    ButtonDeviceClass,
+)
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -97,7 +101,7 @@ async def test_button(
         return_value=[0x00, zcl_f.Status.SUCCESS],
     ):
         await hass.services.async_call(
-            DOMAIN,
+            BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

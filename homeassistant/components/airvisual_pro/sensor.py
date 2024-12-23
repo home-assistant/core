@@ -22,7 +22,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirVisualProConfigEntry, AirVisualProEntity
+from . import AirVisualProConfigEntry
+from .entity import AirVisualProEntity
 
 
 @dataclass(frozen=True, kw_only=True)

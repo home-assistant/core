@@ -73,13 +73,10 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         # All closed set to closed
         elif CLOSED == fd == fp == rd == rp:
             self._attr_is_closed = True
-        # Otherwise, set to unknown
-        else:
-            self._attr_is_closed = None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Vent windows."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(
             self.api.window_control(command=WindowCommand.VENT)
@@ -89,7 +86,7 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(
             self.api.window_control(command=WindowCommand.CLOSE)
@@ -122,7 +119,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open charge port."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.charge_port_door_open())
         self._attr_is_closed = False
@@ -130,7 +127,7 @@ class TeslemetryChargePortEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close charge port."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.charge_port_door_close())
         self._attr_is_closed = True
@@ -157,7 +154,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.actuate_trunk(Trunk.FRONT))
         self._attr_is_closed = False
@@ -182,18 +179,12 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
 
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        value = self._value
-        if value == CLOSED:
-            self._attr_is_closed = True
-        elif value == OPEN:
-            self._attr_is_closed = False
-        else:
-            self._attr_is_closed = None
+        self._attr_is_closed = self._value == CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
         if self.is_closed is not False:
-            self.raise_for_scope()
+            self.raise_for_scope(Scope.VEHICLE_CMDS)
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = False
@@ -202,7 +193,7 @@ class TeslemetryRearTrunkEntity(TeslemetryVehicleEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
         if self.is_closed is not True:
-            self.raise_for_scope()
+            self.raise_for_scope(Scope.VEHICLE_CMDS)
             await self.wake_up_if_asleep()
             await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = True
@@ -240,7 +231,7 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.VENT))
         self._attr_is_closed = False
@@ -248,7 +239,7 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.CLOSE))
         self._attr_is_closed = True
@@ -256,7 +247,7 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.STOP))
         self._attr_is_closed = False

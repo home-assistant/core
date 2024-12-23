@@ -6,19 +6,18 @@ import asyncio
 import logging
 from typing import Any
 
-from aiorussound import Controller, Russound
+from aiorussound import RussoundClient, RussoundTcpConnectionHandler
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    CONNECT_TIMEOUT,
-    DOMAIN,
-    RUSSOUND_RIO_EXCEPTIONS,
-    NoPrimaryControllerException,
-)
+from .const import CONNECT_TIMEOUT, DOMAIN, RUSSOUND_RIO_EXCEPTIONS
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -28,16 +27,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def find_primary_controller_metadata(
-    controllers: dict[int, Controller],
-) -> tuple[str, str]:
-    """Find the mac address of the primary Russound controller."""
-    if 1 in controllers:
-        c = controllers[1]
-        return c.mac_address, c.controller_type
-    raise NoPrimaryControllerException
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -54,31 +43,43 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            controllers = None
-            russ = Russound(self.hass.loop, host, port)
+            client = RussoundClient(RussoundTcpConnectionHandler(host, port))
             try:
                 async with asyncio.timeout(CONNECT_TIMEOUT):
-                    await russ.connect()
-                    controllers = await russ.enumerate_controllers()
-                    metadata = find_primary_controller_metadata(controllers)
-                    await russ.close()
+                    await client.connect()
+                    controller = client.controllers[1]
+                    await client.disconnect()
             except RUSSOUND_RIO_EXCEPTIONS:
                 _LOGGER.exception("Could not connect to Russound RIO")
                 errors["base"] = "cannot_connect"
-            except NoPrimaryControllerException:
-                _LOGGER.exception(
-                    "Russound RIO device doesn't have a primary controller",
-                )
-                errors["base"] = "no_primary_controller"
             else:
-                await self.async_set_unique_id(metadata[0])
+                await self.async_set_unique_id(controller.mac_address)
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates=user_input,
+                    )
                 self._abort_if_unique_id_configured()
                 data = {CONF_HOST: host, CONF_PORT: port}
-                return self.async_create_entry(title=metadata[1], data=data)
+                return self.async_create_entry(
+                    title=controller.controller_type, data=data
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=DATA_SCHEMA,
+            )
+        return await self.async_step_user(user_input)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Attempt to import the existing configuration."""
@@ -87,25 +88,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         port = import_data.get(CONF_PORT, 9621)
 
         # Connection logic is repeated here since this method will be removed in future releases
-        russ = Russound(self.hass.loop, host, port)
+        client = RussoundClient(RussoundTcpConnectionHandler(host, port))
         try:
             async with asyncio.timeout(CONNECT_TIMEOUT):
-                await russ.connect()
-                controllers = await russ.enumerate_controllers()
-                metadata = find_primary_controller_metadata(controllers)
-                await russ.close()
+                await client.connect()
+                controller = client.controllers[1]
+                await client.disconnect()
         except RUSSOUND_RIO_EXCEPTIONS:
             _LOGGER.exception("Could not connect to Russound RIO")
             return self.async_abort(
                 reason="cannot_connect", description_placeholders={}
             )
-        except NoPrimaryControllerException:
-            _LOGGER.exception("Russound RIO device doesn't have a primary controller")
-            return self.async_abort(
-                reason="no_primary_controller", description_placeholders={}
-            )
         else:
-            await self.async_set_unique_id(metadata[0])
+            await self.async_set_unique_id(controller.mac_address)
             self._abort_if_unique_id_configured()
             data = {CONF_HOST: host, CONF_PORT: port}
-            return self.async_create_entry(title=metadata[1], data=data)
+            return self.async_create_entry(title=controller.controller_type, data=data)

@@ -5,11 +5,13 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import datetime
+from functools import partial
 import logging
 import os
 import re
 from typing import Any, NamedTuple
 
+from aiohasupervisor import SupervisorError
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -37,7 +39,22 @@ from homeassistant.helpers import (
     discovery_flow,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    deprecated_function,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.hassio import (
+    get_supervisor_ip as _get_supervisor_ip,
+    is_hassio as _is_hassio,
+)
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.service_info.hassio import (
+    HassioServiceInfo as _HassioServiceInfo,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -47,7 +64,10 @@ from homeassistant.util.dt import now
 # config_flow, diagnostics, system_health, and entity platforms are imported to
 # ensure other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
+# backup is pre-imported to ensure that the backup integration does not load
+# it from the event loop
 from . import (  # noqa: F401
+    backup,
     binary_sensor,
     config_flow,
     diagnostics,
@@ -92,34 +112,20 @@ from .coordinator import (
     get_info,  # noqa: F401
     get_issues_info,  # noqa: F401
     get_os_info,
-    get_store,  # noqa: F401
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
-from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
+from .discovery import async_setup_discovery_view  # noqa: F401
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
     async_create_backup,
-    async_get_addon_discovery_info,
-    async_get_addon_info,
-    async_get_addon_store_info,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_install_addon,
-    async_reboot_host,
-    async_restart_addon,
-    async_set_addon_options,
     async_set_green_settings,
     async_set_yellow_settings,
-    async_start_addon,
-    async_stop_addon,
-    async_uninstall_addon,
-    async_update_addon,
-    async_update_core,
     async_update_diagnostics,
-    async_update_os,
-    async_update_supervisor,
+    get_supervisor_client,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -128,6 +134,14 @@ from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
+get_supervisor_ip = deprecated_function(
+    "homeassistant.helpers.hassio.get_supervisor_ip", breaks_in_ha_version="2025.11"
+)(_get_supervisor_ip)
+_DEPRECATED_HassioServiceInfo = DeprecatedConstant(
+    _HassioServiceInfo,
+    "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
+    "2025.11",
+)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -283,21 +297,16 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
 
 
 @callback
+@deprecated_function(
+    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
+)
 @bind_hass
 def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 
     Async friendly.
     """
-    return DOMAIN in hass.config.components
-
-
-@callback
-def get_supervisor_ip() -> str | None:
-    """Return the supervisor ip address."""
-    if "SUPERVISOR" not in os.environ:
-        return None
-    return os.environ["SUPERVISOR"].partition(":")[0]
+    return _is_hassio(hass)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
@@ -318,8 +327,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
+    supervisor_client = get_supervisor_client(hass)
 
-    if not await hassio.is_connected():
+    try:
+        await supervisor_client.supervisor.ping()
+    except SupervisorError:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
     store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -399,6 +411,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
+        if service.service == SERVICE_ADDON_UPDATE:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "update_service_deprecated",
+                breaks_in_ha_version="2025.5",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="update_service_deprecated",
+            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()
@@ -428,12 +450,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
+        supervisor_client = get_supervisor_client(hass)
 
         try:
             (
                 hass.data[DATA_INFO],
                 hass.data[DATA_HOST_INFO],
-                hass.data[DATA_STORE],
+                store_info,
                 hass.data[DATA_CORE_INFO],
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
@@ -441,7 +464,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             ) = await asyncio.gather(
                 create_eager_task(hassio.get_info()),
                 create_eager_task(hassio.get_host_info()),
-                create_eager_task(hassio.get_store()),
+                create_eager_task(supervisor_client.store.info()),
                 create_eager_task(hassio.get_core_info()),
                 create_eager_task(hassio.get_supervisor_info()),
                 create_eager_task(hassio.get_os_info()),
@@ -450,6 +473,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         except HassioAPIError as err:
             _LOGGER.warning("Can't read Supervisor data: %s", err)
+        else:
+            hass.data[DATA_STORE] = store_info.to_dict()
 
         async_call_later(
             hass,
@@ -463,9 +488,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
         if restart:
-            await hassio.restart_homeassistant()
+            await supervisor_client.homeassistant.restart()
         else:
-            await hassio.stop_homeassistant()
+            await supervisor_client.homeassistant.stop()
 
     # Set a custom handler for the homeassistant.restart and homeassistant.stop services
     async_set_stop_handler(hass, _async_stop)
@@ -546,3 +571,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

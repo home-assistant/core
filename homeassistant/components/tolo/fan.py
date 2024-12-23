@@ -9,8 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
@@ -28,7 +29,6 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
 
     _attr_translation_key = "fan"
     _attr_supported_features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

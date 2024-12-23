@@ -12,8 +12,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeraDevice
 from .common import ControllerData, get_controller_data
+from .entity import VeraEntity
 
 
 async def async_setup_entry(
@@ -32,14 +32,14 @@ async def async_setup_entry(
     )
 
 
-class VeraCover(VeraDevice[veraApi.VeraCurtain], CoverEntity):
+class VeraCover(VeraEntity[veraApi.VeraCurtain], CoverEntity):
     """Representation a Vera Cover."""
 
     def __init__(
         self, vera_device: veraApi.VeraCurtain, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller_data)
+        VeraEntity.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

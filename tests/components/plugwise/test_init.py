@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
@@ -18,8 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -34,14 +33,18 @@ SECONDARY_ID = (
 TOM = {
     "01234567890abcdefghijklmnopqrstu": {
         "available": True,
-        "dev_class": "thermo_sensor",
+        "dev_class": "thermostatic_radiator_valve",
         "firmware": "2020-11-04T01:00:00+01:00",
         "hardware": "1",
         "location": "f871b8c4d63549319221e294e4f88074",
         "model": "Tom/Floor",
-        "name": "Tom Zolder",
+        "name": "Tom Badkamer 2",
+        "binary_sensors": {
+            "low_battery": False,
+        },
         "sensors": {
             "battery": 99,
+            "setpoint": 18.0,
             "temperature": 18.6,
             "temperature_difference": 2.3,
             "valve_position": 0.0,
@@ -74,7 +77,6 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -105,6 +107,28 @@ async def test_gateway_config_entry_not_ready(
 
     assert len(mock_smile_anna.connect.mock_calls) == 1
     assert mock_config_entry.state is entry_state
+
+
+async def test_device_in_dr(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smile_p1: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test Gateway device registry data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "a455b61e52394b2db5081ce025a430f3")}
+    )
+    assert device_entry.hw_version == "AME Smile 2.0 board"
+    assert device_entry.manufacturer == "Plugwise"
+    assert device_entry.model == "Gateway"
+    assert device_entry.model_id == "smile"
+    assert device_entry.name == "Smile P1"
+    assert device_entry.sw_version == "4.4.2"
 
 
 @pytest.mark.parametrize(
@@ -206,13 +230,13 @@ async def test_update_device(
     mock_smile_adam_2: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a clean-up of the device_registry."""
-    utcnow = dt_util.utcnow()
     data = mock_smile_adam_2.async_update.return_value
 
     mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (
@@ -221,7 +245,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 29
+        == 38
     )
     assert (
         len(
@@ -229,13 +253,22 @@ async def test_update_device(
                 device_registry, mock_config_entry.entry_id
             )
         )
-        == 6
+        == 8
     )
 
     # Add a 2nd Tom/Floor
     data.devices.update(TOM)
+    data.devices["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
+        {
+            "secondary": [
+                "01234567890abcdefghijklmnopqrstu",
+                "1772a4ea304041adb83f357b751341ff",
+            ]
+        }
+    )
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        async_fire_time_changed(hass, utcnow + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert (
@@ -244,7 +277,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 34
+            == 45
         )
         assert (
             len(
@@ -252,7 +285,7 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 7
+            == 9
         )
         item_list: list[str] = []
         for device_entry in list(device_registry.devices.values()):
@@ -260,9 +293,13 @@ async def test_update_device(
         assert "01234567890abcdefghijklmnopqrstu" in item_list
 
     # Remove the existing Tom/Floor
+    data.devices["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
+        {"secondary": ["01234567890abcdefghijklmnopqrstu"]}
+    )
     data.devices.pop("1772a4ea304041adb83f357b751341ff")
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
-        async_fire_time_changed(hass, utcnow + timedelta(minutes=1))
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert (
@@ -271,7 +308,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 29
+            == 38
         )
         assert (
             len(
@@ -279,7 +316,7 @@ async def test_update_device(
                     device_registry, mock_config_entry.entry_id
                 )
             )
-            == 6
+            == 8
         )
         item_list: list[str] = []
         for device_entry in list(device_registry.devices.values()):

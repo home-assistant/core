@@ -57,6 +57,18 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Refresh current status."""
         self.async_set_updated_data(self.data)
 
+    def handle_update_status(self, status: dict[str, Any]) -> None:
+        """Handle the status received from the mqtt connection."""
+        data = self.api.update_status(status)
+        if data is not None:
+            self.async_set_updated_data(data)
+
+    def handle_notification_message(self, message: str | None) -> None:
+        """Handle the status received from the mqtt connection."""
+        data = self.api.update_notification(message)
+        if data is not None:
+            self.async_set_updated_data(data)
+
 
 async def async_setup_device_coordinator(
     hass: HomeAssistant, ha_bridge: HABridge
@@ -65,5 +77,9 @@ async def async_setup_device_coordinator(
     coordinator = DeviceDataUpdateCoordinator(hass, ha_bridge)
     await coordinator.async_refresh()
 
-    _LOGGER.debug("Setup device's coordinator: %s", coordinator.device_name)
+    _LOGGER.debug(
+        "Setup device's coordinator: %s, model:%s",
+        coordinator.device_name,
+        coordinator.api.device.model_name,
+    )
     return coordinator

@@ -1,14 +1,19 @@
 """Tests for the La Marzocco number entities."""
 
+from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock
 
-from lmcloud.const import (
+from freezegun.api import FrozenDateTimeFactory
+from pylamarzocco.const import (
     KEYS_PER_MODEL,
     BoilerType,
     MachineModel,
     PhysicalKey,
     PrebrewMode,
 )
+from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.models import LaMarzoccoScale
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -19,27 +24,49 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coffee_boiler(
+@pytest.mark.parametrize(
+    ("entity_name", "value", "func_name", "kwargs"),
+    [
+        (
+            "coffee_target_temperature",
+            94,
+            "set_temp",
+            {"boiler": BoilerType.COFFEE, "temperature": 94},
+        ),
+        (
+            "smart_standby_time",
+            23,
+            "set_smart_standby",
+            {"enabled": True, "mode": "LastBrewing", "minutes": 23},
+        ),
+    ],
+)
+async def test_general_numbers(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    entity_name: str,
+    value: float,
+    func_name: str,
+    kwargs: dict[str, Any],
 ) -> None:
-    """Test the La Marzocco coffee temperature Number."""
+    """Test the numbers available to all machines."""
 
     await async_init_integration(hass, mock_config_entry)
     serial_number = mock_lamarzocco.serial_number
 
-    state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
+    state = hass.states.get(f"number.{serial_number}_{entity_name}")
 
     assert state
     assert state == snapshot
@@ -57,16 +84,14 @@ async def test_coffee_boiler(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
-            ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
-            ATTR_VALUE: 94,
+            ATTR_ENTITY_ID: f"number.{serial_number}_{entity_name}",
+            ATTR_VALUE: value,
         },
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_temp.mock_calls) == 1
-    mock_lamarzocco.set_temp.assert_called_once_with(
-        boiler=BoilerType.COFFEE, temperature=94
-    )
+    mock_func = getattr(mock_lamarzocco, func_name)
+    mock_func.assert_called_once_with(**kwargs)
 
 
 @pytest.mark.parametrize("device_fixture", [MachineModel.GS3_AV, MachineModel.GS3_MP])
@@ -379,3 +404,134 @@ async def test_not_existing_key_entities(
         for key in range(1, KEYS_PER_MODEL[MachineModel.GS3_AV] + 1):
             state = hass.states.get(f"number.{serial_number}_{entity}_key_{key}")
             assert state is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_number_error(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test number entities raise error on service call."""
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+
+    state = hass.states.get(f"number.{serial_number}_coffee_target_temperature")
+    assert state
+
+    mock_lamarzocco.set_temp.side_effect = RequestNotSuccessful("Boom")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: f"number.{serial_number}_coffee_target_temperature",
+                ATTR_VALUE: 94,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "number_exception"
+
+    state = hass.states.get(f"number.{serial_number}_dose_key_1")
+    assert state
+
+    mock_lamarzocco.set_dose.side_effect = RequestNotSuccessful("Boom")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: f"number.{serial_number}_dose_key_1",
+                ATTR_VALUE: 99,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "number_exception_key"
+
+
+@pytest.mark.parametrize("physical_key", [PhysicalKey.A, PhysicalKey.B])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_set_target(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    physical_key: PhysicalKey,
+) -> None:
+    """Test the La Marzocco set target sensors."""
+
+    await async_init_integration(hass, mock_config_entry)
+
+    entity_name = f"number.lmz_123a45_brew_by_weight_target_{int(physical_key)}"
+
+    state = hass.states.get(entity_name)
+
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry == snapshot
+
+    # service call
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_name,
+            ATTR_VALUE: 42,
+        },
+        blocking=True,
+    )
+
+    mock_lamarzocco.set_bbw_recipe_target.assert_called_once_with(physical_key, 42)
+
+
+@pytest.mark.parametrize(
+    "device_fixture",
+    [MachineModel.GS3_AV, MachineModel.GS3_MP, MachineModel.LINEA_MICRA],
+)
+async def test_other_models_no_scale_set_target(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure the other models don't have a set target numbers."""
+    await async_init_integration(hass, mock_config_entry)
+
+    for i in range(1, 3):
+        state = hass.states.get(f"number.lmz_123a45_brew_by_weight_target_{i}")
+        assert state is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_set_target_on_new_scale_added(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure the set target numbers for a new scale are added automatically."""
+
+    mock_lamarzocco.config.scale = None
+    await async_init_integration(hass, mock_config_entry)
+
+    for i in range(1, 3):
+        state = hass.states.get(f"number.scale_123a45_brew_by_weight_target_{i}")
+        assert state is None
+
+    mock_lamarzocco.config.scale = LaMarzoccoScale(
+        connected=True, name="Scale-123A45", address="aa:bb:cc:dd:ee:ff", battery=50
+    )
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    for i in range(1, 3):
+        state = hass.states.get(f"number.scale_123a45_brew_by_weight_target_{i}")
+        assert state

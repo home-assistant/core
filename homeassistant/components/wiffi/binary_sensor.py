@@ -6,8 +6,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WiffiEntity
 from .const import CREATE_ENTITY_SIGNAL
+from .entity import WiffiEntity
 
 
 async def async_setup_entry(

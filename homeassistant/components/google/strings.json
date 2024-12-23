@@ -19,6 +19,7 @@
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
@@ -44,7 +45,7 @@
     }
   },
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your Calendar:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **TV and Limited Input devices** for the Application Type.\n\n"
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
   },
   "services": {
     "add_event": {
@@ -86,8 +87,8 @@
       }
     },
     "create_event": {
-      "name": "Creates event",
-      "description": "Add a new calendar event.",
+      "name": "Create event",
+      "description": "Adds a new calendar event.",
       "fields": {
         "summary": {
           "name": "Summary",
@@ -121,6 +122,13 @@
           "name": "[%key:common::config_flow::data::location%]",
           "description": "The location of the event. Optional."
         }
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "working_location": {
+        "name": "Working location"
       }
     }
   }

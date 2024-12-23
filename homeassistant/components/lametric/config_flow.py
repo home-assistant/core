@@ -29,7 +29,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_SERIAL,
     SsdpServiceInfo,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -59,7 +59,6 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     discovered_host: str
     discovered_serial: str
     discovered: bool = False
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -113,9 +112,6 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with LaMetric."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_choice_enter_manual_or_fetch_cloud()
 
     async def async_step_choice_enter_manual_or_fetch_cloud(
@@ -138,8 +134,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             if self.discovered:
                 host = self.discovered_host
-            elif self.reauth_entry:
-                host = self.reauth_entry.data[CONF_HOST]
+            elif self.source == SOURCE_REAUTH:
+                host = self._get_reauth_entry().data[CONF_HOST]
             else:
                 host = user_input[CONF_HOST]
 
@@ -162,7 +158,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 TextSelectorConfig(type=TextSelectorType.PASSWORD)
             )
         }
-        if not self.discovered and not self.reauth_entry:
+        if not self.discovered and self.source != SOURCE_REAUTH:
             schema = {vol.Required(CONF_HOST): TextSelector()} | schema
 
         return self.async_show_form(
@@ -195,10 +191,11 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle device selection from devices offered by the cloud."""
         if self.discovered:
             user_input = {CONF_DEVICE: self.discovered_serial}
-        elif self.reauth_entry:
-            if self.reauth_entry.unique_id not in self.devices:
+        elif self.source == SOURCE_REAUTH:
+            reauth_unique_id = self._get_reauth_entry().unique_id
+            if reauth_unique_id not in self.devices:
                 return self.async_abort(reason="reauth_device_not_found")
-            user_input = {CONF_DEVICE: self.reauth_entry.unique_id}
+            user_input = {CONF_DEVICE: reauth_unique_id}
         elif len(self.devices) == 1:
             user_input = {CONF_DEVICE: list(self.devices.values())[0].serial_number}
 
@@ -251,8 +248,11 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         device = await lametric.device()
 
-        if not self.reauth_entry:
-            await self.async_set_unique_id(device.serial_number)
+        if self.source != SOURCE_REAUTH:
+            await self.async_set_unique_id(
+                device.serial_number,
+                raise_on_progress=False,
+            )
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: lametric.host, CONF_API_KEY: lametric.api_key}
             )
@@ -273,19 +273,14 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         )
 
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(
-                self.reauth_entry,
-                data={
-                    **self.reauth_entry.data,
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={
                     CONF_HOST: lametric.host,
                     CONF_API_KEY: lametric.api_key,
                 },
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
             title=device.name,

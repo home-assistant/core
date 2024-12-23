@@ -35,10 +35,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reauth": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]"
-      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "[%key:component::tplink::config::step::user_auth_confirm::description%]",
@@ -46,16 +42,37 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure TPLink entry",
+        "description": "Update your configuration for device {mac}",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "camera_auth_confirm": {
+        "title": "Set camera account credentials",
+        "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
+        "data": {
+          "live_view": "Enable camera live view",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "Connection error: {error}",
-      "invalid_auth": "Invalid authentication: {error}"
+      "invalid_auth": "Unable to authenticate: {error}",
+      "invalid_camera_auth": "Camera stream authentication failed",
+      "cannot_connect_camera": "Unable to access the camera stream, verify that you have set up the camera account: {error}",
+      "camera_creds": "You have to set both username and password"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -103,6 +120,23 @@
       },
       "stop_alarm": {
         "name": "Stop alarm"
+      },
+      "pan_left": {
+        "name": "Pan left"
+      },
+      "pan_right": {
+        "name": "Pan right"
+      },
+      "tilt_up": {
+        "name": "Tilt up"
+      },
+      "tilt_down": {
+        "name": "Tilt down"
+      }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
       }
     },
     "select": {
@@ -162,6 +196,9 @@
       "device_time": {
         "name": "Device time"
       },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      },
       "auto_off_at": {
         "name": "Auto off at"
       },
@@ -190,6 +227,24 @@
       },
       "fan_sleep_mode": {
         "name": "Fan sleep mode"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "pir_enabled": {
+        "name": "Motion sensor"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "person_detection": {
+        "name": "Person detection"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      },
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
       }
     },
     "number": {
@@ -204,6 +259,12 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "pan_step": {
+        "name": "Pan degrees"
+      },
+      "tilt_step": {
+        "name": "Tilt degrees"
       }
     }
   },
@@ -310,6 +371,12 @@
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "Detected deprecated {platform} entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
     }
   }
 }

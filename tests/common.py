@@ -419,7 +419,7 @@ def async_fire_mqtt_message(
     from paho.mqtt.client import MQTTMessage
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt.models import MqttData
+    from homeassistant.components.mqtt import MqttData
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
@@ -491,7 +491,7 @@ _MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = dt_util.utc_to_timestamp(utc_datetime)
+    timestamp = utc_datetime.timestamp()
     for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue
@@ -990,6 +990,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         *,
         data=None,
         disabled_by=None,
+        discovery_keys=None,
         domain="test",
         entry_id=None,
         minor_version=1,
@@ -1004,9 +1005,11 @@ class MockConfigEntry(config_entries.ConfigEntry):
         version=1,
     ) -> None:
         """Initialize a mock config entry."""
+        discovery_keys = discovery_keys or {}
         kwargs = {
             "data": data or {},
             "disabled_by": disabled_by,
+            "discovery_keys": discovery_keys,
             "domain": domain,
             "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
@@ -1061,17 +1064,52 @@ class MockConfigEntry(config_entries.ConfigEntry):
         data: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Start a reauthentication flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError("Config entry must be added to hass to start reauth flow")
+        return await start_reauth_flow(hass, self, context, data)
+
+    async def start_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
         return await hass.config_entries.flow.async_init(
             self.domain,
             context={
-                "source": config_entries.SOURCE_REAUTH,
+                "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
-                "title_placeholders": {"name": self.title},
-                "unique_id": self.unique_id,
-            }
-            | (context or {}),
-            data=self.data | (data or {}),
+                "show_advanced_options": show_advanced_options,
+            },
         )
+
+
+async def start_reauth_flow(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    context: dict[str, Any] | None = None,
+    data: dict[str, Any] | None = None,
+) -> ConfigFlowResult:
+    """Start a reauthentication flow for a config entry.
+
+    This helper method should be aligned with `ConfigEntry._async_init_reauth`.
+    """
+    return await hass.config_entries.flow.async_init(
+        entry.domain,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            "title_placeholders": {"name": entry.title},
+            "unique_id": entry.unique_id,
+        }
+        | (context or {}),
+        data=entry.data | (data or {}),
+    )
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -1777,3 +1815,20 @@ async def snapshot_platform(
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
+    """Reset translation cache for specified components.
+
+    Use this if you are mocking a core component (for example via
+    mock_integration), to ensure that the mocked translations are not
+    persisted in the shared session cache.
+    """
+    translations_cache = translation._async_get_translations_cache(hass)
+    for loaded_components in translations_cache.cache_data.loaded.values():
+        for component_to_unload in components:
+            loaded_components.discard(component_to_unload)
+    for loaded_categories in translations_cache.cache_data.cache.values():
+        for loaded_components in loaded_categories.values():
+            for component_to_unload in components:
+                loaded_components.pop(component_to_unload, None)

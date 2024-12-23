@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -13,13 +11,15 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
+from propcache import cached_property
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
+from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
 
 if TYPE_CHECKING:
@@ -46,6 +46,7 @@ class MatterEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
     _name_postfix: str | None = None
+    _platform_translation_key: str | None = None
 
     def __init__(
         self,
@@ -84,6 +85,8 @@ class MatterEntity(Entity):
             and ep.has_attribute(None, entity_info.primary_attribute)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
+            if self._platform_translation_key and not self.translation_key:
+                self._attr_translation_key = self._platform_translation_key
 
         # prefer the label attribute for the entity name
         # Matter has a way for users and/or vendors to specify a name for an endpoint
@@ -138,6 +141,19 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
+        # subscribe to FeatureMap attribute (as that can dynamically change)
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_featuremap_update,
+                event_filter=EventType.ATTRIBUTE_UPDATED,
+                node_filter=self._endpoint.node.node_id,
+                attr_path_filter=create_attribute_path(
+                    endpoint=self._endpoint.endpoint_id,
+                    cluster_id=self._entity_info.primary_attribute.cluster_id,
+                    attribute_id=FEATUREMAP_ATTRIBUTE_ID,
+                ),
+            )
+        )
 
     @cached_property
     def name(self) -> str | UndefinedType | None:
@@ -158,7 +174,29 @@ class MatterEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    @abstractmethod
+    def _on_featuremap_update(
+        self, event: EventType, data: tuple[int, str, int] | None
+    ) -> None:
+        """Handle FeatureMap attribute updates."""
+        if data is None:
+            return
+        new_value = data[2]
+        # handle edge case where a Feature is removed from a cluster
+        if (
+            self._entity_info.discovery_schema.featuremap_contains is not None
+            and not bool(
+                new_value & self._entity_info.discovery_schema.featuremap_contains
+            )
+        ):
+            # this entity is no longer supported by the device
+            ent_reg = er.async_get(self.hass)
+            ent_reg.async_remove(self.entity_id)
+
+            return
+        # all other cases, just update the entity
+        self._on_matter_event(event, data)
+
+    @callback
     def _update_from_device(self) -> None:
         """Update data from Matter device."""
 

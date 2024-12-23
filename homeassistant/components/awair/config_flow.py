@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Self, cast
 
 from aiohttp.client_exceptions import ClientError
 from python_awair import Awair, AwairLocal, AwairLocalDevice
@@ -26,16 +26,17 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _device: AwairLocalDevice
+    host: str
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
-        host = discovery_info.host
-        LOGGER.debug("Discovered device: %s", host)
+        self.host = discovery_info.host
+        LOGGER.debug("Discovered device: %s", self.host)
 
-        self._device, _ = await self._check_local_connection(host)
+        self._device, _ = await self._check_local_connection(self.host)
 
         if self._device is not None:
             await self.async_set_unique_id(self._device.mac_address)
@@ -45,7 +46,6 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             self.context.update(
                 {
-                    "host": host,
                     "title_placeholders": {
                         "model": self._device.model,
                         "device_id": self._device.device_id,
@@ -119,12 +119,16 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     def _get_discovered_entries(self) -> dict[str, str]:
         """Get discovered entries."""
         entries: dict[str, str] = {}
-        for flow in self._async_in_progress():
-            if flow["context"]["source"] == SOURCE_ZEROCONF:
-                info = flow["context"]["title_placeholders"]
-                entries[flow["context"]["host"]] = (
-                    f"{info['model']} ({info['device_id']})"
-                )
+
+        flows = cast(
+            set[Self],
+            self.hass.config_entries.flow._handler_progress_index.get(DOMAIN) or set(),  # noqa: SLF001
+        )
+        for flow in flows:
+            if flow.source != SOURCE_ZEROCONF:
+                continue
+            info = flow.context["title_placeholders"]
+            entries[flow.host] = f"{info['model']} ({info['device_id']})"
         return entries
 
     async def async_step_local(
@@ -205,10 +209,9 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             _, error = await self._check_cloud_connection(access_token)
 
             if error is None:
-                entry = await self.async_set_unique_id(self.unique_id)
-                assert entry
-                self.hass.config_entries.async_update_entry(entry, data=user_input)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
 
             if error != "invalid_access_token":
                 return self.async_abort(reason=error)

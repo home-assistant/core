@@ -12,7 +12,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
@@ -20,7 +20,7 @@ from .const import (
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     GATEWAY_DEVICE_DESCRIPTION,
-    OpenThermDataSource,
+    THERMOSTAT_DEVICE_DESCRIPTION,
 )
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
@@ -35,6 +35,12 @@ class OpenThermButtonEntityDescription(
 
 
 BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
+    OpenThermButtonEntityDescription(
+        key="cancel_room_setpoint_override",
+        translation_key="cancel_room_setpoint_override",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+        action=lambda hub: hub.set_room_setpoint(0),
+    ),
     OpenThermButtonEntityDescription(
         key="restart_button",
         device_class=ButtonDeviceClass.RESTART,
@@ -62,11 +68,6 @@ class OpenThermButton(OpenThermEntity, ButtonEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermButtonEntityDescription
-
-    @callback
-    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
-        """Handle status updates from the component."""
-        # We don't need any information from the reports here
 
     async def async_press(self) -> None:
         """Perform button action."""

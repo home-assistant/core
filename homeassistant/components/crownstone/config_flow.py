@@ -49,7 +49,7 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
     cloud: CrownstoneCloud
 
     def __init__(
-        self, flow_type: str, create_entry_cb: Callable[..., ConfigFlowResult]
+        self, flow_type: str, create_entry_cb: Callable[[], ConfigFlowResult]
     ) -> None:
         """Set up flow instance."""
         self.flow_type = flow_type
@@ -177,7 +177,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
             elif auth_error.type == "LOGIN_FAILED_EMAIL_NOT_VERIFIED":
                 errors["base"] = "account_not_verified"
         except CrownstoneUnknownError:
-            errors["base"] = "unknown_error"
+            errors["base"] = "unknown"
 
         # show form again, with the errors
         if errors:
@@ -213,18 +213,19 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Crownstone options."""
         super().__init__(OPTIONS_FLOW, self.async_create_new_entry)
-        self.entry = config_entry
-        self.updated_options = config_entry.options.copy()
+        self.options = config_entry.options.copy()
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage Crownstone options."""
-        self.cloud: CrownstoneCloud = self.hass.data[DOMAIN][self.entry.entry_id].cloud
+        self.cloud: CrownstoneCloud = self.hass.data[DOMAIN][
+            self.config_entry.entry_id
+        ].cloud
 
         spheres = {sphere.name: sphere.cloud_id for sphere in self.cloud.cloud_data}
-        usb_path = self.entry.options.get(CONF_USB_PATH)
-        usb_sphere = self.entry.options.get(CONF_USB_SPHERE)
+        usb_path = self.config_entry.options.get(CONF_USB_PATH)
+        usb_sphere = self.config_entry.options.get(CONF_USB_SPHERE)
 
         options_schema = vol.Schema(
             {vol.Optional(CONF_USE_USB_OPTION, default=usb_path is not None): bool}
@@ -243,14 +244,14 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
             if user_input[CONF_USE_USB_OPTION] and usb_path is None:
                 return await self.async_step_usb_config()
             if not user_input[CONF_USE_USB_OPTION] and usb_path is not None:
-                self.updated_options[CONF_USB_PATH] = None
-                self.updated_options[CONF_USB_SPHERE] = None
+                self.options[CONF_USB_PATH] = None
+                self.options[CONF_USB_SPHERE] = None
             elif (
                 CONF_USB_SPHERE_OPTION in user_input
                 and spheres[user_input[CONF_USB_SPHERE_OPTION]] != usb_sphere
             ):
                 sphere_id = spheres[user_input[CONF_USB_SPHERE_OPTION]]
-                self.updated_options[CONF_USB_SPHERE] = sphere_id
+                self.options[CONF_USB_SPHERE] = sphere_id
 
             return self.async_create_new_entry()
 
@@ -260,7 +261,7 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
         """Create a new entry."""
         # these attributes will only change when a usb was configured
         if self.usb_path is not None and self.usb_sphere_id is not None:
-            self.updated_options[CONF_USB_PATH] = self.usb_path
-            self.updated_options[CONF_USB_SPHERE] = self.usb_sphere_id
+            self.options[CONF_USB_PATH] = self.usb_path
+            self.options[CONF_USB_SPHERE] = self.usb_sphere_id
 
-        return super().async_create_entry(title="", data=self.updated_options)
+        return super().async_create_entry(title="", data=self.options)

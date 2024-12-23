@@ -13,14 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import AprilaireCoordinator
+from .coordinator import AprilaireConfigEntry, AprilaireCoordinator
 from .entity import BaseAprilaireEntity
 
 DEHUMIDIFICATION_STATUS_MAP: dict[StateType, str] = {
@@ -76,12 +74,12 @@ def get_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AprilaireConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Aprilaire sensor devices."""
 
-    coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
+    coordinator = config_entry.runtime_data
 
     assert config_entry.unique_id is not None
 

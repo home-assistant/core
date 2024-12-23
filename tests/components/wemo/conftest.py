@@ -65,6 +65,7 @@ def create_pywemo_device(
     device.name = MOCK_NAME
     device.serial_number = MOCK_SERIAL_NUMBER
     device.model_name = pywemo_model.replace("LongPress", "")
+    device.model = device.model_name
     device.udn = f"uuid:{device.model_name}-1_0-{device.serial_number}"
     device.firmware_version = MOCK_FIRMWARE_VERSION
     device.get_state.return_value = 0  # Default to Off

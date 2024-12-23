@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from voip_utils import CallInfo
+from voip_utils.sip import get_sip_endpoint
 
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
@@ -14,6 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.tts.conftest import (
+    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+)
 
 
 @pytest.fixture(autouse=True)
@@ -52,8 +56,7 @@ async def voip_devices(hass: HomeAssistant, setup_voip: None) -> VoIPDevices:
 def call_info() -> CallInfo:
     """Fake call info."""
     return CallInfo(
-        caller_ip="192.168.1.210",
-        caller_sip_port=5060,
+        caller_endpoint=get_sip_endpoint("192.168.1.210", 5060),
         caller_rtp_port=5004,
         server_ip="192.168.1.10",
         headers={

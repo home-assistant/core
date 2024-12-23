@@ -22,5 +22,29 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "play_preset": {
+      "name": "Play preset",
+      "description": "Play the preset number on the device.",
+      "fields": {
+        "preset_number": {
+          "name": "Preset number",
+          "description": "The preset number on the device to play."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "timesync": {
+        "name": "Sync time"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with id {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay mediaplayer?"
+    }
   }
 }

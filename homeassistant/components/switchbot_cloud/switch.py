@@ -36,13 +36,13 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.send_command(CommonCommands.ON)
+        await self.send_api_command(CommonCommands.ON)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.send_command(CommonCommands.OFF)
+        await self.send_api_command(CommonCommands.OFF)
         self._attr_is_on = False
         self.async_write_ha_state()
 
@@ -69,6 +69,18 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
     _attr_device_class = SwitchDeviceClass.OUTLET
 
 
+class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
+    """Representation of a SwitchBot relay switch."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if not self.coordinator.data:
+            return
+        self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
+        self.async_write_ha_state()
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -78,4 +90,9 @@ def _async_make_entity(
         return SwitchBotCloudRemoteSwitch(api, device, coordinator)
     if "Plug" in device.device_type:
         return SwitchBotCloudPlugSwitch(api, device, coordinator)
+    if device.device_type in [
+        "Relay Switch 1PM",
+        "Relay Switch 1",
+    ]:
+        return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")

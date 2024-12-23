@@ -6,6 +6,7 @@ import enum
 from functools import partial
 import logging
 import os
+import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import threading
 from typing import Any
@@ -25,6 +26,7 @@ from homeassistant.helpers import (
     selector,
     template,
 )
+from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
 
 
 def test_boolean() -> None:
@@ -1815,6 +1817,114 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
             "string": [hass.loop_thread_id],
         }
         validator_calls = {}
+
+
+async def test_nested_trigger_list() -> None:
+    """Test triggers within nested lists are flattened."""
+
+    trigger_config = [
+        {
+            "triggers": {
+                "platform": "event",
+                "event_type": "trigger_1",
+            },
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_2",
+        },
+        {"triggers": []},
+        {"triggers": None},
+        {
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_3",
+                },
+                {
+                    "trigger": "event",
+                    "event_type": "trigger_4",
+                },
+            ],
+        },
+    ]
+
+    validated_triggers = TRIGGER_SCHEMA(trigger_config)
+
+    assert validated_triggers == [
+        {
+            "platform": "event",
+            "event_type": "trigger_1",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_2",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_3",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_4",
+        },
+    ]
+
+
+async def test_nested_trigger_list_extra() -> None:
+    """Test triggers key with extra keys is not modified."""
+
+    trigger_config = [
+        {
+            "platform": "other",
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_1",
+                },
+                {
+                    "platform": "event",
+                    "event_type": "trigger_2",
+                },
+            ],
+        },
+    ]
+
+    validated_triggers = TRIGGER_SCHEMA(trigger_config)
+
+    assert validated_triggers == [
+        {
+            "platform": "other",
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_1",
+                },
+                {
+                    "platform": "event",
+                    "event_type": "trigger_2",
+                },
+            ],
+        },
+    ]
+
+
+async def test_trigger_backwards_compatibility() -> None:
+    """Test triggers with backwards compatibility."""
+
+    assert cv._trigger_pre_validator("str") == "str"
+    assert cv._trigger_pre_validator({"platform": "abc"}) == {"platform": "abc"}
+    assert cv._trigger_pre_validator({"trigger": "abc"}) == {"platform": "abc"}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'platform' and 'trigger'. Please use 'trigger' only.",
+    ):
+        cv._trigger_pre_validator({"trigger": "abc", "platform": "def"})
+    with pytest.raises(
+        vol.Invalid,
+        match=re.escape("required key not provided @ data['trigger']"),
+    ):
+        cv._trigger_pre_validator({})
 
 
 async def test_is_entity_service_schema(

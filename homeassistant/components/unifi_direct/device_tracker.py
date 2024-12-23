@@ -9,7 +9,7 @@ from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
-    scanner = UnifiDeviceScanner(config[DOMAIN])
+    scanner = UnifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     return scanner if scanner.update_clients() else None
 
 
@@ -67,11 +67,11 @@ class UnifiDeviceScanner(DeviceScanner):
         """Update the client info from AP."""
         try:
             self.clients = self.ap.get_clients()
-        except UniFiAPConnectionException:
-            _LOGGER.error("Failed to connect to accesspoint")
+        except UniFiAPConnectionException as e:
+            _LOGGER.error("Failed to connect to accesspoint: %s", str(e))
             return False
-        except UniFiAPDataException:
-            _LOGGER.error("Failed to get proper response from accesspoint")
+        except UniFiAPDataException as e:
+            _LOGGER.error("Failed to get proper response from accesspoint: %s", str(e))
             return False
 
         return True

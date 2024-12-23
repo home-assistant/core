@@ -18,8 +18,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 DICT_HA_TO_MYS = {
@@ -48,7 +49,7 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors climate."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.CLIMATE,
             discovery_info,
@@ -67,11 +68,10 @@ async def async_setup_entry(
     )
 
 
-class MySensorsHVAC(mysensors.device.MySensorsChildEntity, ClimateEntity):
+class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

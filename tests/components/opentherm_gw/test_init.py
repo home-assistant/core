@@ -4,13 +4,18 @@ from unittest.mock import MagicMock
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
 
+from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import (
     DOMAIN,
     OpenThermDeviceIdentifier,
 )
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .conftest import MOCK_GATEWAY_ID, VERSION_TEST
 
@@ -147,4 +152,26 @@ async def test_climate_entity_migration(
     assert (
         updated_entry.unique_id
         == f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.THERMOSTAT}-thermostat_entity"
+    )
+
+
+# Deprecation test, can be removed in 2025.4.0
+async def test_configuration_yaml_deprecation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_pyotgw: MagicMock,
+) -> None:
+    """Test that existing configuration in configuration.yaml creates an issue."""
+
+    await setup.async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"legacy_gateway": {"device": "/dev/null"}}}
+    )
+
+    await hass.async_block_till_done()
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, "deprecated_import_from_configuration_yaml"
+        )
+        is not None
     )
