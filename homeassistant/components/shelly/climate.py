@@ -547,6 +547,8 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
@@ -557,7 +559,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
         name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(":", "")}"
-        self._attr_name = name
         model_id = self._config.get("local_name")
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)},
@@ -568,10 +569,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             model_id=model_id,
             name=name,
         )
-        self._humidity_key: str | None = None
-        # Check if there is a corresponding humidity key for the thermostat ID
-        if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
-            self._humidity_key = humidity_key
 
     @property
     def target_temperature(self) -> float | None:
@@ -585,14 +582,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
-
-    @property
-    def current_humidity(self) -> float | None:
-        """Return current humidity."""
-        if self._humidity_key is None:
-            return None
-
-        return cast(float, self.coordinator.device.status[self._humidity_key]["rh"])
 
     @property
     def hvac_mode(self) -> HVACMode:
