@@ -66,9 +66,9 @@ SUPPORTED_CORE_SENSORS = [
         key=VALUE.STATE,
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "sync", "service"],
-        value_mod=lambda val: CONTROLLER_STATE(val).name.lower()
-        if val in [1, 2, 3]
-        else None,
+        value_mod=lambda val: (
+            CONTROLLER_STATE(val).name.lower() if val in [1, 2, 3] else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         translation_key="controller_state",
     ),
