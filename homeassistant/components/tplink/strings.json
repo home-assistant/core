@@ -120,6 +120,18 @@
       },
       "stop_alarm": {
         "name": "Stop alarm"
+      },
+      "pan_left": {
+        "name": "Pan left"
+      },
+      "pan_right": {
+        "name": "Pan right"
+      },
+      "tilt_up": {
+        "name": "Tilt up"
+      },
+      "tilt_down": {
+        "name": "Tilt down"
       }
     },
     "camera": {
@@ -221,6 +233,18 @@
       },
       "pir_enabled": {
         "name": "Motion sensor"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "person_detection": {
+        "name": "Person detection"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      },
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
       }
     },
     "number": {
@@ -235,6 +259,12 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "pan_step": {
+        "name": "Pan degrees"
+      },
+      "tilt_step": {
+        "name": "Tilt degrees"
       }
     }
   },

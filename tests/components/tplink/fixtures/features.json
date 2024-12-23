@@ -44,6 +44,26 @@
     "type": "Switch",
     "category": "Config"
   },
+  "motion_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "person_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "tamper_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "baby_cry_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
   "current_consumption": {
     "value": 5.23,
     "type": "Sensor",

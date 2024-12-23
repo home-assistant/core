@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.55.3
+PySwitchbot==0.55.4
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -997,6 +997,9 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_todo
 ical==8.2.0
 
+# homeassistant.components.caldav
+icalendar==6.1.0
+
 # homeassistant.components.ping
 icmplib==3.0
 
@@ -1654,7 +1657,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.1
+pylamarzocco==1.4.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -1758,7 +1761,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.4
+pyoverkiz==1.15.5
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2486,7 +2489,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.42
+zha==0.0.43
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
