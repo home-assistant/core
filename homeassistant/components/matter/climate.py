@@ -447,6 +447,6 @@ DISCOVERY_SCHEMAS = [
             clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
-        allow_multi=True, # also used for sensor entity
+        allow_multi=True,  # also used for sensor entity
     ),
 ]
