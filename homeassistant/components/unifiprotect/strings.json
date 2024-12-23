@@ -225,6 +225,16 @@
           "description": "The name of the zone to remove."
         }
       }
+    },
+    "get_user_keyring_info": {
+      "name": "Retrieve Keyring Details for Users",
+      "description": "Fetch a detailed list of users with NFC and fingerprint associations for automations.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to retrieve keyring details. This is useful for systems with multiple Protect instances."
+        }
+      }
     }
   }
 }

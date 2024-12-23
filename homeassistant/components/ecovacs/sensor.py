@@ -16,6 +16,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    station,
 )
 from sucks import VacBot
 
@@ -46,7 +47,7 @@ from .entity import (
     EcovacsLegacyEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_name_key, get_options, get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -135,6 +136,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         translation_key="network_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Station
+    EcovacsSensorEntityDescription[station.StationEvent](
+        capability_fn=lambda caps: caps.station.state if caps.station else None,
+        value_fn=lambda e: get_name_key(e.state),
+        key="station_state",
+        translation_key="station_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=get_options(station.State),
     ),
 )
 
