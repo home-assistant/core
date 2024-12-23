@@ -604,23 +604,3 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
                 "params": {"id": 0, "target_C": target_temp},
             },
         )
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set hvac mode."""
-        target_temp = self.target_temperature
-
-        if hvac_mode == HVACMode.OFF:
-            self._last_target_temp = self.target_temperature
-            target_temp = self._attr_min_temp
-
-        if hvac_mode == HVACMode.HEAT:
-            target_temp = self._last_target_temp
-
-        await self.call_rpc(
-            "BluTRV.Call",
-            {
-                "id": self._id,
-                "method": "Trv.SetTarget",
-                "params": {"id": 0, "target_C": target_temp},
-            },
-        )
