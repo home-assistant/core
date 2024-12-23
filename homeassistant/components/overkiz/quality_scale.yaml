@@ -14,7 +14,7 @@ rules:
   unique-config-entry: done
   entity-unique-id: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
