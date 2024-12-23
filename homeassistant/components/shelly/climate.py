@@ -541,11 +541,9 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     _attr_max_temp = BLU_TRV_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = BLU_TRV_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
     )
-    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+    _attr_hvac_modes = [HVACMode.HEAT]
     _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
@@ -569,7 +567,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             model_id=model_id,
             name=name,
         )
-        self._last_target_temp: float | None = BLU_TRV_TEMPERATURE_SETTINGS["default"]
         # Added intentionally to the constructor to avoid double name from base class
         self._attr_name = None
 
@@ -585,14 +582,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return cast(float, self.status["current_C"])
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """HVAC current mode."""
-        if self.target_temperature == self._attr_min_temp:
-            return HVACMode.OFF
-
-        return HVACMode.HEAT
 
     @property
     def hvac_action(self) -> HVACAction:
