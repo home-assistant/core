@@ -114,6 +114,7 @@ class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
         await self._feature.set_value(int(value))
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_native_value = cast(float | None, self._feature.value)
+        return True
