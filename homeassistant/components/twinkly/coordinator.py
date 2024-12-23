@@ -73,7 +73,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
         if self.supports_effects:
             try:
                 current_movie = await self.client.get_current_movie()
-            except TwinklyError as exception:
+            except (TwinklyError, TimeoutError, ClientError) as exception:
                 _LOGGER.debug("Error fetching current movie: %s", exception)
         brightness = (
             int(brightness["value"]) if brightness["mode"] == "enabled" else 100
