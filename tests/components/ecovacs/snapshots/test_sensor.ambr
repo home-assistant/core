@@ -1160,7 +1160,7 @@
     'capabilities': dict({
       'options': list([
         'idle',
-        'emptying',
+        'emptying_dustbin',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1197,7 +1197,7 @@
       'friendly_name': 'Dusty Station state',
       'options': list([
         'idle',
-        'emptying',
+        'emptying_dustbin',
       ]),
     }),
     'context': <ANY>,
@@ -1205,7 +1205,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'emptying',
+    'state': 'emptying_dustbin',
   })
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:entity-registry]
