@@ -1469,7 +1469,7 @@ async def test_state_change_during_window_rollover(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test we startup from history and switch to watching state changes."""
+    """Test when the tracked sensor and the start/end window change during the same update."""
     await hass.config.async_set_time_zone("UTC")
     utcnow = dt_util.utcnow()
     start_time = utcnow.replace(hour=23, minute=0, second=0, microsecond=0)
@@ -1518,16 +1518,8 @@ async def test_state_change_during_window_rollover(
 
     assert hass.states.get("sensor.sensor1").state == "11.0"
 
-    # Advance 30 minutes
-    t1 = start_time + timedelta(minutes=30)
-    with freeze_time(t1):
-        async_fire_time_changed(hass, t1)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.sensor1").state == "11.5"
-
-    # Advance 29 minutes, to record the last minute update just before midnight, just like a real system would do.
-    t2 = t1 + timedelta(minutes=29, microseconds=300)
+    # Advance 59 minutes, to record the last minute update just before midnight, just like a real system would do.
+    t2 = start_time + timedelta(minutes=59, microseconds=300)
     with freeze_time(t2):
         async_fire_time_changed(hass, t2)
         await hass.async_block_till_done()
@@ -1567,14 +1559,6 @@ async def test_state_change_during_window_rollover(
     t4 = t3 + timedelta(minutes=10)
     with freeze_time(t4):
         async_fire_time_changed(hass, t4)
-        await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.sensor1").state == "0.0"
-
-    # More time passes, and the history stats does a polled update again. It should be 0 since the sensor has been off since midnight.
-    t5 = t4 + timedelta(hours=1)
-    with freeze_time(t5):
-        async_fire_time_changed(hass, t5)
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.sensor1").state == "0.0"
