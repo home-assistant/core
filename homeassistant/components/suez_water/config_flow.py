@@ -55,16 +55,16 @@ async def validate_input(data: dict[str, Any]) -> None:
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Suez Water."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle initial setup step."""
         errors: dict[str, str] = {}
+
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self._abort_if_unique_id_configured()
             try:
                 await validate_input(user_input)
             except CannotConnect:
@@ -77,9 +77,10 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
-                )
+                meter_id = str(user_input[CONF_COUNTER_ID])
+                await self.async_set_unique_id(meter_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=meter_id, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -98,4 +99,4 @@ class InvalidAuth(HomeAssistantError):
 
 
 class CounterNotFound(HomeAssistantError):
-    """Error to indicate we cannot automatically found the counter id."""
+    """Error to indicate we failed to automatically find the counter id."""

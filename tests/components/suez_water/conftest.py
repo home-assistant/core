@@ -8,14 +8,15 @@ from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
 
-from homeassistant.components.suez_water.const import DOMAIN
+from homeassistant.components.suez_water.config_flow import SuezWaterConfigFlow
+from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     "username": "test-username",
     "password": "test-password",
-    "counter_id": "test-counter",
+    CONF_COUNTER_ID: "test-counter",
 }
 
 
@@ -23,10 +24,12 @@ MOCK_DATA = {
 def mock_config_entry() -> MockConfigEntry:
     """Create mock config_entry needed by suez_water integration."""
     return MockConfigEntry(
-        unique_id=MOCK_DATA["username"],
+        unique_id=MOCK_DATA[CONF_COUNTER_ID],
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
+        version=SuezWaterConfigFlow.VERSION,
+        minor_version=SuezWaterConfigFlow.MINOR_VERSION,
     )
 
 
