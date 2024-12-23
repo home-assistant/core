@@ -89,6 +89,30 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "motion_detection": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      },
+      "person_detection": {
+        "default": "mdi:account-off",
+        "state": {
+          "on": "mdi:account"
+        }
+      },
+      "tamper_detection": {
+        "default": "mdi:shield-off",
+        "state": {
+          "on": "mdi:shield"
+        }
+      },
+      "baby_cry_detection": {
+        "default": "mdi:baby-face-outline",
+        "state": {
+          "on": "mdi:baby-face"
+        }
       }
     },
     "sensor": {
