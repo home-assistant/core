@@ -1,8 +1,6 @@
 """The twinkly component."""
 
-from dataclasses import dataclass
 import logging
-from typing import Any
 
 from aiohttp import ClientError
 from ttls.client import Twinkly
@@ -10,27 +8,18 @@ from ttls.client import Twinkly
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ATTR_VERSION, DOMAIN
+from .const import DOMAIN
+from .coordinator import TwinklyCoordinator
 
 PLATFORMS = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class TwinklyData:
-    """Data for Twinkly integration."""
-
-    client: Twinkly
-    device_info: dict[str, Any]
-    sw_version: str | None
-
-
-type TwinklyConfigEntry = ConfigEntry[TwinklyData]
+type TwinklyConfigEntry = ConfigEntry[TwinklyCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> bool:
@@ -41,15 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> b
 
     client = Twinkly(host, async_get_clientsession(hass))
 
-    try:
-        device_info = await client.get_details()
-        software_version = await client.get_firmware_version()
-    except (TimeoutError, ClientError) as exception:
-        raise ConfigEntryNotReady from exception
+    coordinator = TwinklyCoordinator(hass, client)
 
-    entry.runtime_data = TwinklyData(
-        client, device_info, software_version.get(ATTR_VERSION)
-    )
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
