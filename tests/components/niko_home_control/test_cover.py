@@ -10,6 +10,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+    STATE_CLOSED,
+    STATE_OPEN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -58,9 +61,7 @@ async def test_open_cover(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_niko_home_control_connection.covers[
-        cover_id
-    ].open_cover().assert_called_once_with(set_position=100)
+    mock_niko_home_control_connection.covers[cover_id].open.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
@@ -85,39 +86,55 @@ async def test_close_cover(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mock_niko_home_control_connection.covers[
-        cover_id
-    ].close_cover.assert_called_once_with()
+    mock_niko_home_control_connection.covers[cover_id].close.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("cover_id", "entity_id"),
+    [
+        (0, "cover.cover"),
+    ],
+)
+async def test_stop_cover(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    cover_id: int,
+    entity_id: str,
+) -> None:
+    """Test closing the cover."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_niko_home_control_connection.covers[cover_id].stop.assert_called_once_with()
 
 
 async def test_updating(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    cover: AsyncMock,
 ) -> None:
-    """Test turning on the light."""
+    """Test closing the cover."""
     await setup_integration(hass, mock_config_entry)
 
-    # assert hass.states.get("light.light").state == STATE_ON
+    assert hass.states.get("cover.cover").state == STATE_OPEN
 
-    # await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](0)
-    # await hass.async_block_till_done()
+    cover.state = 0
+    await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](0)
+    await hass.async_block_till_done()
 
-    # assert hass.states.get("light.light").state == STATE_OFF
+    assert hass.states.get("cover.cover").state == STATE_CLOSED
 
-    # assert hass.states.get("light.dimmable_light").state == STATE_ON
-    # assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 255
+    cover.state = 100
+    await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](
+        100
+    )
+    await hass.async_block_till_done()
 
-    # await mock_niko_home_control_connection.register_callback.call_args_list[1][0][1](
-    #     80
-    # )
-    # await hass.async_block_till_done()
-
-    # assert hass.states.get("light.dimmable_light").state == STATE_ON
-    # assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 204
-
-    # await mock_niko_home_control_connection.register_callback.call_args_list[1][0][1](0)
-    # await hass.async_block_till_done()
-
-    # assert hass.states.get("light.dimmable_light").state == STATE_OFF
-    # assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] is None
+    assert hass.states.get("cover.cover").state == STATE_OPEN
