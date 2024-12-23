@@ -78,6 +78,7 @@ BASE_PRELOAD_PLATFORMS = [
     "repairs",
     "system_health",
     "trigger",
+    "backup",
 ]
 
 

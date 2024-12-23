@@ -35,7 +35,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Try to connect to the velbus with the port specified."""
         try:
             controller = velbusaio.controller.Velbus(prt)
-            await controller.connect(True)
+            await controller.connect()
             await controller.stop()
         except VelbusConnectionFailed:
             self._errors[CONF_PORT] = "cannot_connect"
