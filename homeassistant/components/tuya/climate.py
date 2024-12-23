@@ -449,7 +449,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             valve: str = self.device.status.get(DPCode.VALVE_STATE)
             if valve == "open":
                 res = HVACAction.HEATING
-            else:
+            elif valve == "close":
                 res = HVACAction.IDLE
         else:
             res = HVACAction.OFF
