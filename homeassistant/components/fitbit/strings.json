@@ -38,7 +38,82 @@
       },
       "battery_level": {
         "name": "Battery level"
+      },
+      "activity_calories": {
+        "name": "Activity calories"
+      },
+      "calories": {
+        "name": "Calories"
+      },
+      "calories_bmr": {
+        "name": "Calories BMR"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "floors": {
+        "name": "Floors"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "minutes_fairly_active": {
+        "name": "Minutes fairly active"
+      },
+      "minutes_lightly_active": {
+        "name": "Minutes lightly active"
+      },
+      "minutes_sedentary": {
+        "name": "Minutes sedentary"
+      },
+      "minutes_very_active": {
+        "name": "Minutes very active"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      },
+      "steps": {
+        "name": "Steps"
+      },
+      "bmi": {
+        "name": "BMI"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "awakenings_count": {
+        "name": "Awakenings count"
+      },
+      "sleep_efficiency": {
+        "name": "Sleep efficiency"
+      },
+      "minutes_after_wakeup": {
+        "name": "Minutes after wakeup"
+      },
+      "sleep_minutes_asleep": {
+        "name": "Sleep minutes asleep"
+      },
+      "sleep_minutes_awake": {
+        "name": "Sleep minutes awake"
+      },
+      "sleep_minutes_to_fall_asleep": {
+        "name": "Sleep minutes to fall asleep"
+      },
+      "sleep_time_in_bed": {
+        "name": "Sleep time in bed"
+      },
+      "calories_in": {
+        "name": "Calories in"
+      },
+      "water": {
+        "name": "Water"
       }
+    }
+  },
+
+  "device": {
+    "tracker": {
+      "name": "{display_name} tracker"
     }
   }
 }

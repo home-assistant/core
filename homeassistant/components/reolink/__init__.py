@@ -73,7 +73,9 @@ async def async_setup_entry(
     ) as err:
         await host.stop()
         raise ConfigEntryNotReady(
-            f"Error while trying to setup {host.api.host}:{host.api.port}: {err!s}"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+            translation_placeholders={"host": host.api.host, "err": str(err)},
         ) from err
     except BaseException:
         await host.stop()
@@ -326,7 +328,19 @@ def migrate_entity_ids(
             else:
                 new_device_id = f"{device_uid[0]}_{host.api.camera_uid(ch)}"
             new_identifiers = {(DOMAIN, new_device_id)}
-            device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+            existing_device = device_reg.async_get_device(identifiers=new_identifiers)
+            if existing_device is None:
+                device_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
+            else:
+                _LOGGER.warning(
+                    "Reolink device with uid %s already exists, "
+                    "removing device with uid %s",
+                    new_device_id,
+                    device_uid,
+                )
+                device_reg.async_remove_device(device.id)
 
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
@@ -352,4 +366,18 @@ def migrate_entity_ids(
             id_parts = entity.unique_id.split("_", 2)
             if host.api.supported(ch, "UID") and id_parts[1] != host.api.camera_uid(ch):
                 new_id = f"{host.unique_id}_{host.api.camera_uid(ch)}_{id_parts[2]}"
-                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+                existing_entity = entity_reg.async_get_entity_id(
+                    entity.domain, entity.platform, new_id
+                )
+                if existing_entity is None:
+                    entity_reg.async_update_entity(
+                        entity.entity_id, new_unique_id=new_id
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Reolink entity with unique_id %s already exists, "
+                        "removing device with unique_id %s",
+                        new_id,
+                        entity.unique_id,
+                    )
+                    entity_reg.async_remove(entity.entity_id)

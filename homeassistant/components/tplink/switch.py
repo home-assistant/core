@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 from kasa import Feature
 
@@ -54,6 +54,18 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="pir_enabled",
     ),
+    TPLinkSwitchEntityDescription(
+        key="motion_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="person_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="tamper_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="baby_cry_detection",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
@@ -99,4 +111,4 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_is_on = self._feature.value
+        self._attr_is_on = cast(bool | None, self._feature.value)

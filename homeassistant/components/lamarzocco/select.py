@@ -4,9 +4,15 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from pylamarzocco.const import MachineModel, PrebrewMode, SmartStandbyMode, SteamLevel
+from pylamarzocco.const import (
+    MachineModel,
+    PhysicalKey,
+    PrebrewMode,
+    SmartStandbyMode,
+    SteamLevel,
+)
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.lm_machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -17,7 +23,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
+
+PARALLEL_UPDATES = 1
 
 STEAM_LEVEL_HA_TO_LM = {
     "1": SteamLevel.LEVEL_1,
@@ -50,7 +58,7 @@ class LaMarzoccoSelectEntityDescription(
 ):
     """Description of a La Marzocco select entity."""
 
-    current_option_fn: Callable[[LaMarzoccoMachineConfig], str]
+    current_option_fn: Callable[[LaMarzoccoMachineConfig], str | None]
     select_option_fn: Callable[[LaMarzoccoMachine, str], Coroutine[Any, Any, bool]]
 
 
@@ -98,6 +106,22 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
     ),
 )
 
+SCALE_ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
+    LaMarzoccoSelectEntityDescription(
+        key="active_bbw",
+        translation_key="active_bbw",
+        options=["a", "b"],
+        select_option_fn=lambda machine, option: machine.set_active_bbw_recipe(
+            PhysicalKey[option.upper()]
+        ),
+        current_option_fn=lambda config: (
+            config.bbw_settings.active_dose.name.lower()
+            if config.bbw_settings
+            else None
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -105,13 +129,32 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up select entities."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
-    async_add_entities(
+    entities = [
         LaMarzoccoSelectEntity(coordinator, description)
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    )
+    ]
+
+    if (
+        coordinator.device.model == MachineModel.LINEA_MINI
+        and coordinator.device.config.scale
+    ):
+        entities.extend(
+            LaMarzoccoScaleSelectEntity(coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
+    def _async_add_new_scale() -> None:
+        async_add_entities(
+            LaMarzoccoScaleSelectEntity(coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
+    coordinator.new_device_callback.append(_async_add_new_scale)
+
+    async_add_entities(entities)
 
 
 class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
@@ -120,7 +163,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     entity_description: LaMarzoccoSelectEntityDescription
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the current selected option."""
         return str(
             self.entity_description.current_option_fn(self.coordinator.device.config)
@@ -143,3 +186,9 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                     },
                 ) from exc
             self.async_write_ha_state()
+
+
+class LaMarzoccoScaleSelectEntity(LaMarzoccoSelectEntity, LaMarzoccScaleEntity):
+    """Select entity for La Marzocco scales."""
+
+    entity_description: LaMarzoccoSelectEntityDescription
