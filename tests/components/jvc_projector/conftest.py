@@ -1,6 +1,7 @@
 """Fixtures for JVC Projector integration."""
 
 from collections.abc import Generator
+import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -81,3 +82,9 @@ async def fixture_mock_integration(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
+
+
+@pytest.fixture(autouse=True)
+def configure_logging():
+    """Configure logging for tests."""
+    logging.getLogger().handlers = [logging.NullHandler()]
