@@ -5,7 +5,8 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/c
 
 import ast
 
-from script.hassfest.model import Integration
+from script.hassfest import ast_parse_module
+from script.hassfest.model import Config, Integration
 
 
 def _has_unload_entry_function(module: ast.Module) -> bool:
@@ -16,11 +17,13 @@ def _has_unload_entry_function(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration has a config flow."""
 
     init_file = integration.path / "__init__.py"
-    init = ast.parse(init_file.read_text())
+    init = ast_parse_module(init_file)
 
     if not _has_unload_entry_function(init):
         return [

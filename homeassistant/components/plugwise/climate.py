@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
@@ -23,6 +23,8 @@ from .const import DOMAIN, MASTER_THERMOSTATS
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -186,27 +188,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current running hvac operation if supported."""
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
-
-        # Adam provides the hvac_action for each thermostat
-        if self._gateway["smile_name"] == "Adam":
-            if (control_state := self.device.get("control_state")) == "cooling":
-                return HVACAction.COOLING
-            if control_state == "heating":
-                return HVACAction.HEATING
-            if control_state == "preheating":
-                return HVACAction.PREHEATING
-            if control_state == "off":
-                return HVACAction.IDLE
-
-            return HVACAction.IDLE
-
-        # Anna
-        heater: str = self._gateway["heater_id"]
-        heater_data = self._devices[heater]
-        if heater_data["binary_sensors"]["heating_state"]:
-            return HVACAction.HEATING
-        if heater_data["binary_sensors"].get("cooling_state", False):
-            return HVACAction.COOLING
+        if (action := self.device.get("control_state")) is not None:
+            return HVACAction(action)
 
         return HVACAction.IDLE
 
@@ -226,12 +209,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if ATTR_TARGET_TEMP_LOW in kwargs:
             data["setpoint_low"] = kwargs.get(ATTR_TARGET_TEMP_LOW)
 
-        for temperature in data.values():
-            if temperature is None or not (
-                self._attr_min_temp <= temperature <= self._attr_max_temp
-            ):
-                raise ValueError("Invalid temperature change requested")
-
         if mode := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(mode)
 
@@ -241,7 +218,15 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         if hvac_mode not in self.hvac_modes:
-            raise HomeAssistantError("Unsupported hvac_mode")
+            hvac_modes = ", ".join(self.hvac_modes)
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_hvac_mode_requested",
+                translation_placeholders={
+                    "hvac_mode": hvac_mode,
+                    "hvac_modes": hvac_modes,
+                },
+            )
 
         if hvac_mode == self.hvac_mode:
             return

@@ -13,6 +13,7 @@ import pytest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
+from sqlalchemy.schema import Index
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import (
@@ -120,9 +121,11 @@ def db_schema_32():
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+@pytest.mark.parametrize("indices_to_drop", [[], [("events", "ix_events_context_id")]])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_events_context_ids(
     async_test_recorder: RecorderInstanceGenerator,
+    indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -237,6 +240,13 @@ async def test_migrate_events_context_ids(
             ]
             await _async_wait_migration_done(hass)
 
+            # Remove index
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+            for table, index in indices_to_drop:
+                with session_scope(hass=hass) as session:
+                    assert get_index_by_name(session, table, index) is not None
+                migration._drop_index(instance.get_session, table, index)
+
             await hass.async_stop()
             await hass.async_block_till_done()
 
@@ -266,7 +276,13 @@ async def test_migrate_events_context_ids(
 
     # Run again with new schema, let migration run
     async with async_test_home_assistant() as hass:
-        with freeze_time(now), instrument_migration(hass) as instrumented_migration:
+        with (
+            freeze_time(now),
+            instrument_migration(hass) as instrumented_migration,
+            patch(
+                "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+            ) as wrapped_idx_create,
+        ):
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
             ) as instance:
@@ -296,6 +312,10 @@ async def test_migrate_events_context_ids(
 
                 await hass.async_stop()
                 await hass.async_block_till_done()
+
+    # Check the index we removed was recreated
+    index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
+    assert index_names == [index for _, index in indices_to_drop]
 
     old_uuid_context_id_event = events_by_type["old_uuid_context_id_event"]
     assert old_uuid_context_id_event["context_id"] is None
@@ -482,9 +502,11 @@ async def test_finish_migrate_events_context_ids(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
+@pytest.mark.parametrize("indices_to_drop", [[], [("states", "ix_states_context_id")]])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_states_context_ids(
     async_test_recorder: RecorderInstanceGenerator,
+    indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -577,6 +599,13 @@ async def test_migrate_states_context_ids(
             await async_wait_recording_done(hass)
             await _async_wait_migration_done(hass)
 
+            # Remove index
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+            for table, index in indices_to_drop:
+                with session_scope(hass=hass) as session:
+                    assert get_index_by_name(session, table, index) is not None
+                migration._drop_index(instance.get_session, table, index)
+
             await hass.async_stop()
             await hass.async_block_till_done()
 
@@ -606,7 +635,12 @@ async def test_migrate_states_context_ids(
 
     # Run again with new schema, let migration run
     async with async_test_home_assistant() as hass:
-        with instrument_migration(hass) as instrumented_migration:
+        with (
+            instrument_migration(hass) as instrumented_migration,
+            patch(
+                "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+            ) as wrapped_idx_create,
+        ):
             async with async_test_recorder(
                 hass, wait_recorder=False, wait_recorder_setup=False
             ) as instance:
@@ -636,6 +670,10 @@ async def test_migrate_states_context_ids(
 
                 await hass.async_stop()
                 await hass.async_block_till_done()
+
+    # Check the index we removed was recreated
+    index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
+    assert index_names == [index for _, index in indices_to_drop]
 
     old_uuid_context_id = states_by_entity_id["state.old_uuid_context_id"]
     assert old_uuid_context_id["context_id"] is None
@@ -824,13 +862,13 @@ async def test_finish_migrate_states_context_ids(
         await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
-@pytest.mark.usefixtures("db_schema_32")
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_event_type_ids(
-    hass: HomeAssistant, recorder_mock: Recorder
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Test we can migrate event_types to the EventTypes table."""
-    await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
 
@@ -856,14 +894,24 @@ async def test_migrate_event_type_ids(
                 )
             )
 
-    await recorder_mock.async_add_executor_job(_insert_events)
+    # Create database with old schema
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventTypeIDMigration, "migrate_data"),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            await instance.async_add_executor_job(_insert_events)
 
-    await async_wait_recording_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EventTypeIDMigration(None, None)
-    recorder_mock.queue_task(migrator.task(migrator))
-    await _async_wait_migration_done(hass)
-    await _async_wait_migration_done(hass)
+            await async_wait_recording_done(hass)
+            await _async_wait_migration_done(hass)
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -894,23 +942,38 @@ async def test_migrate_event_type_ids(
                 )
             return result
 
-    events_by_type = await recorder_mock.async_add_executor_job(_fetch_migrated_events)
-    assert len(events_by_type["event_type_one"]) == 2
-    assert len(events_by_type["event_type_two"]) == 1
-
     def _get_many():
         with session_scope(hass=hass, read_only=True) as session:
-            return recorder_mock.event_type_manager.get_many(
+            return instance.event_type_manager.get_many(
                 ("event_type_one", "event_type_two"), session
             )
 
-    mapped = await recorder_mock.async_add_executor_job(_get_many)
+    # Run again with new schema, let migration run
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+
+        events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+        mapped = await instance.async_add_executor_job(_get_many)
+        migration_changes = await instance.async_add_executor_job(
+            _get_migration_id, hass
+        )
+
+        await hass.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(events_by_type["event_type_one"]) == 2
+    assert len(events_by_type["event_type_two"]) == 1
+
     assert mapped["event_type_one"] is not None
     assert mapped["event_type_two"] is not None
 
-    migration_changes = await recorder_mock.async_add_executor_job(
-        _get_migration_id, hass
-    )
     assert (
         migration_changes[migration.EventTypeIDMigration.migration_id]
         == migration.EventTypeIDMigration.migration_version
@@ -1024,9 +1087,13 @@ async def test_migrate_entity_ids(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.parametrize(
+    "indices_to_drop", [[], [("states", "ix_states_entity_id_last_updated_ts")]]
+)
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_post_migrate_entity_ids(
     async_test_recorder: RecorderInstanceGenerator,
+    indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1071,6 +1138,13 @@ async def test_post_migrate_entity_ids(
             await async_wait_recording_done(hass)
             await _async_wait_migration_done(hass)
 
+            # Remove index
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+            for table, index in indices_to_drop:
+                with session_scope(hass=hass) as session:
+                    assert get_index_by_name(session, table, index) is not None
+                migration._drop_index(instance.get_session, table, index)
+
             await hass.async_stop()
             await hass.async_block_till_done()
 
@@ -1084,20 +1158,38 @@ async def test_post_migrate_entity_ids(
             return {state.state: state.entity_id for state in states}
 
     # Run again with new schema, let migration run
-    async with (
-        async_test_home_assistant() as hass,
-        async_test_recorder(hass) as instance,
-    ):
-        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    with patch(
+        "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
+    ) as wrapped_idx_create:
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
-        await hass.async_block_till_done()
-        await async_wait_recording_done(hass)
-        await async_wait_recording_done(hass)
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
 
-        states_by_state = await instance.async_add_executor_job(_fetch_migrated_states)
+            states_by_state = await instance.async_add_executor_job(
+                _fetch_migrated_states
+            )
 
-        await hass.async_stop()
-        await hass.async_block_till_done()
+            # Check the index which will be removed by the migrator no longer exists
+            with session_scope(hass=hass) as session:
+                assert (
+                    get_index_by_name(
+                        session, "states", "ix_states_entity_id_last_updated_ts"
+                    )
+                    is None
+                )
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    # Check the index we removed was recreated
+    index_names = [call[1][0].name for call in wrapped_idx_create.mock_calls]
+    assert index_names == [index for _, index in indices_to_drop]
 
     assert states_by_state["one_1"] is None
     assert states_by_state["two_2"] is None
@@ -1214,13 +1306,13 @@ async def test_migrate_null_entity_ids(
     )
 
 
+@pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
-@pytest.mark.usefixtures("db_schema_32")
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_null_event_type_ids(
-    hass: HomeAssistant, recorder_mock: Recorder
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
-    await async_wait_recording_done(hass)
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
 
@@ -1249,14 +1341,24 @@ async def test_migrate_null_event_type_ids(
                 ),
             )
 
-    await recorder_mock.async_add_executor_job(_insert_events)
+    # Create database with old schema
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventTypeIDMigration, "migrate_data"),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            await instance.async_add_executor_job(_insert_events)
 
-    await _async_wait_migration_done(hass)
-    # This is a threadsafe way to add a task to the recorder
-    migrator = migration.EventTypeIDMigration(None, None)
-    recorder_mock.queue_task(migrator.task(migrator))
-    await _async_wait_migration_done(hass)
-    await _async_wait_migration_done(hass)
+            await async_wait_recording_done(hass)
+            await _async_wait_migration_done(hass)
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
 
     def _fetch_migrated_events():
         with session_scope(hass=hass, read_only=True) as session:
@@ -1287,15 +1389,29 @@ async def test_migrate_null_event_type_ids(
                 )
             return result
 
-    events_by_type = await recorder_mock.async_add_executor_job(_fetch_migrated_events)
-    assert len(events_by_type["event_type_one"]) == 2
-    assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
-
     def _get_migration_id():
         with session_scope(hass=hass, read_only=True) as session:
             return dict(execute_stmt_lambda_element(session, get_migration_changes()))
 
-    migration_changes = await recorder_mock.async_add_executor_job(_get_migration_id)
+    # Run again with new schema, let migration run
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+
+        events_by_type = await instance.async_add_executor_job(_fetch_migrated_events)
+        migration_changes = await instance.async_add_executor_job(_get_migration_id)
+
+        await hass.async_stop()
+        await hass.async_block_till_done()
+
+    assert len(events_by_type["event_type_one"]) == 2
+    assert len(events_by_type[migration._EMPTY_EVENT_TYPE]) == 1000
     assert (
         migration_changes[migration.EventTypeIDMigration.migration_id]
         == migration.EventTypeIDMigration.migration_version

@@ -1,55 +1,70 @@
 """Configure tests for the Twinkly integration."""
 
-from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.components.twinkly import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 
-from . import TEST_MODEL, TEST_NAME, TEST_UID, ClientMock
+from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 
-from tests.common import MockConfigEntry
-
-type ComponentSetup = Callable[[], Awaitable[ClientMock]]
-
-DOMAIN = "twinkly"
-TITLE = "Twinkly"
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-@pytest.fixture(name="config_entry")
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Create Twinkly entry in Home Assistant."""
-    client = ClientMock()
     return MockConfigEntry(
         domain=DOMAIN,
-        title=TITLE,
-        unique_id=TEST_UID,
-        entry_id=TEST_UID,
+        title="Twinkly",
+        unique_id=TEST_MAC,
         data={
-            "host": client.host,
-            "id": client.id,
-            "name": TEST_NAME,
-            "model": TEST_MODEL,
-            "device_name": TEST_NAME,
+            CONF_HOST: "192.168.0.123",
+            CONF_ID: "497dcba3-ecbf-4587-a2dd-5eb0665e6880",
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
         },
+        entry_id="01JFMME2P6RA38V5AMPCJ2JYYV",
+        minor_version=2,
     )
 
 
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Callable[[], Coroutine[Any, Any, ClientMock]]:
-    """Fixture for setting up the component."""
-    config_entry.add_to_hass(hass)
+@pytest.fixture
+def mock_twinkly_client() -> Generator[AsyncMock]:
+    """Mock the Twinkly client."""
+    with (
+        patch(
+            "homeassistant.components.twinkly.Twinkly",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.twinkly.config_flow.Twinkly",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.get_details.return_value = load_json_object_fixture(
+            "get_details.json", DOMAIN
+        )
+        client.get_firmware_version.return_value = load_json_object_fixture(
+            "get_firmware_version.json", DOMAIN
+        )
+        client.get_saved_movies.return_value = load_json_object_fixture(
+            "get_saved_movies.json", DOMAIN
+        )
+        client.get_current_movie.return_value = load_json_object_fixture(
+            "get_current_movie.json", DOMAIN
+        )
+        client.is_on.return_value = True
+        client.get_brightness.return_value = {"mode": "enabled", "value": 10}
+        client.host = "192.168.0.123"
+        yield client
 
-    async def func() -> ClientMock:
-        mock = ClientMock()
-        with patch("homeassistant.components.twinkly.Twinkly", return_value=mock):
-            assert await async_setup_component(hass, DOMAIN, {})
-            await hass.async_block_till_done()
-        return mock
 
-    return func
+@pytest.fixture
+def mock_setup_entry() -> Generator[None]:
+    """Mock setting up a config entry."""
+    with patch("homeassistant.components.twinkly.async_setup_entry", return_value=True):
+        yield
