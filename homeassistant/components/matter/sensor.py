@@ -686,6 +686,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
-        allow_multi=True,
+        allow_multi=True, # also used for climate entity
     ),
 ]
