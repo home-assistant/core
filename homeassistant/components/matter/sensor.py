@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import (
     EveCluster,
     NeoCluster,
