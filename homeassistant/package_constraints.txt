@@ -25,6 +25,7 @@ bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
 certifi>=2021.5.30
 ciso8601==2.3.2
+cronsim==2.6
 cryptography==44.0.0
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
