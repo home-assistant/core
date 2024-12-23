@@ -23,8 +23,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-from .host import ReolinkHost
-from .util import ReolinkConfigEntry
+from .util import get_host, log_vod_url
+from .views import async_generate_playback_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,15 +45,6 @@ def res_name(stream: str) -> str:
             return "Autotrack high res."
         case _:
             return "Low res."
-
-
-def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
-    """Return the Reolink host from the config entry id."""
-    config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
-        config_entry_id
-    )
-    assert config_entry is not None
-    return config_entry.runtime_data.host
 
 
 class ReolinkVODMediaSource(MediaSource):
@@ -88,23 +79,17 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
+        if vod_type == VodRequestType.PLAYBACK:
+            proxy_url = async_generate_playback_proxy_url(
+                config_entry_id, channel, filename, stream_res, vod_type.value
+            )
+            return PlayMedia(proxy_url, "video/mp4")
+
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            url_log = url
-            if "&user=" in url_log:
-                url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-            elif "&token=" in url_log:
-                url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
-            _LOGGER.debug(
-                "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
-            )
-
-        if mime_type == "video/mp4":
-            proxy_url = async_generate_playback_proxy_url(config_entry_id, channel, filename, stream_res, vod_type)
-            return PlayMedia(proxy_url, mime_type)
-            
+            log_vod_url(url, host.api.camera_name(channel))
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)

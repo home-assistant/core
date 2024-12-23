@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any, ParamSpec, TypeVar
 
 from reolink_aio.exceptions import (
@@ -30,6 +31,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 from .host import ReolinkHost
 
+_LOGGER = logging.getLogger(__name__)
+
 type ReolinkConfigEntry = config_entries.ConfigEntry[ReolinkData]
 
 
@@ -49,6 +52,15 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
         and config_entry.state == config_entries.ConfigEntryState.LOADED
         and config_entry.runtime_data.device_coordinator.last_update_success
     )
+
+
+def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
+    """Return the Reolink host from the config entry id."""
+    config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
+        config_entry_id
+    )
+    assert config_entry is not None
+    return config_entry.runtime_data.host
 
 
 def get_device_uid_and_ch(
@@ -71,6 +83,16 @@ def get_device_uid_and_ch(
     else:
         ch = host.api.channel_for_uid(device_uid[1])
     return (device_uid, ch, is_chime)
+
+
+def log_vod_url(url: str, camera_name: str) -> None:
+    """Log a playback URL while hiding credentials."""
+    url_log = url
+    if "&user=" in url_log:
+        url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+    elif "&token=" in url_log:
+        url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
+    _LOGGER.debug("Opening VOD stream from %s: %s", camera_name, url_log)
 
 
 T = TypeVar("T")

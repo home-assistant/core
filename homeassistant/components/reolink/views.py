@@ -2,36 +2,44 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
-from urllib.parse import urlencode
 
-from aiohttp import web
+from aiohttp import ClientTimeout, web
+from reolink_aio.enums import VodRequestType
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import SSLCipherList
+
+from .util import get_host, log_vod_url
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def async_generate_playback_proxy_url(config_entry_id: str, channel: str, filename: str, stream_res: str, vod_type: str) -> str:
+def async_generate_playback_proxy_url(
+    config_entry_id: str, channel: int, filename: str, stream_res: str, vod_type: str
+) -> str:
     """Generate proxy URL for event video."""
 
     url_format = PlaybackProxyView.url
-    return url_format.format(config_entry_id=config_entry_id, channel=channel, filename=filename, stream_res=stream_res, vod_type=vod_type)
+    return url_format.format(
+        config_entry_id=config_entry_id,
+        channel=channel,
+        filename=filename.replace("/", "|"),
+        stream_res=stream_res,
+        vod_type=vod_type,
+    )
 
 
 class PlaybackProxyView(HomeAssistantView):
     """View to proxy playback video from Reolink."""
 
     requires_auth = True
-    url = "/api/reolink/video/{config_entry_id}/{channel}/{filename}/{stream_res}/{vod_type}"
+    url = "/api/reolink/video/{config_entry_id}/{channel}/{stream_res}/{vod_type}/{filename}"
     name = "api:reolink_playback"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -44,19 +52,29 @@ class PlaybackProxyView(HomeAssistantView):
         )
 
     async def get(
-        self, request: web.Request, config_entry_id: str, channel: str, filename: str, stream_res: str, vod_type: str
+        self,
+        request: web.Request,
+        config_entry_id: str,
+        channel: str,
+        stream_res: str,
+        vod_type: str,
+        filename: str,
     ) -> web.StreamResponse:
         """Get Camera Video clip for an event."""
-        _LOGGER.error("YES")
+        filename = filename.replace("|", "/")
+        ch = int(channel)
         host = get_host(self.hass, config_entry_id)
-        
+
         try:
             mime_type, reolink_url = await host.api.get_vod_source(
-                channel, filename, stream_res, vod_type
+                ch, filename, stream_res, VodRequestType(vod_type)
             )
         except ReolinkError as err:
             _LOGGER.warning("Reolink playback proxy error: %s", str(err))
-            web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+            return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            log_vod_url(reolink_url, host.api.camera_name(ch))
 
         response = web.StreamResponse(
             status=200,
@@ -65,15 +83,24 @@ class PlaybackProxyView(HomeAssistantView):
                 "Content-Type": "video/mp4",
             },
         )
-        
+
         reolink_response = await self.session.request(
             "GET",
             reolink_url,
-            timeout=0,
+            timeout=ClientTimeout(connect=30, sock_connect=30, sock_read=5, total=None),
         )
-        
-        _LOGGER.error(reolink_response.status)
-        _LOGGER.error(reolink_response.reason)
-        _LOGGER.error(reolink_response.headers)
-        
-        return reolink_response        
+
+        response.content_length = reolink_response.content_length
+        await response.prepare(request)
+
+        try:
+            async for chunk in reolink_response.content.iter_chunked(65536):
+                await response.write(chunk)
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout while reading Reolink playback from %s, writing EOF",
+                host.api.nvr_name,
+            )
+
+        await response.write_eof()
+        return response
