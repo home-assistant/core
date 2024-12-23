@@ -25,18 +25,11 @@ async def async_setup_entry(
     mac_address = config_entry.data[CONF_MAC]
     ip_addr = config_entry.data[CONF_IP_ADDRESS]
     num_sensors = config_entry.runtime_data.num_sensors
-    is_ac = config_entry.runtime_data.is_ac
+    num_actuators = config_entry.runtime_data.num_actuators
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
-    for i in range(num_sensors + 1):  # Add 1 for battery
-        if i > num_sensors:  # Now we're into actuators
-            continue  # Those will be taken care of by switch.py
-
-        if i == num_sensors and is_ac:
-            # Skipping battery slot for AC hub
-            continue
-
+    for i in range(num_sensors + num_actuators + 1):  # Add 1 for battery
         sensor = VegeHubSensor(
             mac_address=mac_address,
             slot=i + 1,
