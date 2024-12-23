@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector.error import JvcProjectorAuthError, JvcProjectorConnectError
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

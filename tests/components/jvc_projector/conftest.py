@@ -51,7 +51,7 @@ def fixture_mock_device(
             "color_space": "rgb",
             "motion_enhance": "low",
             "clear_motion_drive": "low",
-            "hdr_processing": "static",
+            "hdr_processing": "1",
         }
         yield device
 

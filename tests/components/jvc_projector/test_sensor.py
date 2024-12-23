@@ -40,12 +40,12 @@ async def test_disabled_entity(
     """Tests entity is disabled by default."""
     with patch("homeassistant.components.jvc_projector.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    ANAMORPHIC_ID = "sensor.jvc_projector_anamorphic_mode"
+    DISABLED_ID = "sensor.jvc_projector_color_space"
 
-    assert hass.states.get(ANAMORPHIC_ID) is None
+    assert hass.states.get(DISABLED_ID) is None
 
     # Entity should exist in registry but be disabled
-    entity = entity_registry.async_get(ANAMORPHIC_ID)
+    entity = entity_registry.async_get(DISABLED_ID)
     assert entity
     assert entity.disabled
     assert entity.entity_category == "diagnostic"

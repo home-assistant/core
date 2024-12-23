@@ -21,6 +21,7 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
 
     command: Callable[[JvcProjector, str], Awaitable[None]]
     enabled_default: bool | Callable[[JvcProjectorEntity], bool] = True
+    translation_key_override: str | None | Callable[[JvcProjectorEntity], str] = None
 
 
 # type safe command function for a select
@@ -64,6 +65,9 @@ JVC_SELECTS = (
     JvcProjectorSelectDescription(
         key=const.KEY_LASER_POWER,
         translation_key=const.KEY_LASER_POWER,
+        translation_key_override=lambda entity: const.KEY_LASER_POWER
+        if entity.has_laser
+        else "lamp_power",
         options=const.VAL_LASER_POWER,
         command=create_select_command(const.KEY_LASER_POWER),
     ),
@@ -109,6 +113,14 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
             description.enabled_default(self)
             if callable(description.enabled_default)
             else description.enabled_default
+        )
+        # allow for translation key override with callable
+        self._attr_translation_key = (
+            description.translation_key_override(self)
+            if callable(description.translation_key_override)
+            else description.translation_key_override
+            if description.translation_key_override is not None
+            else description.translation_key
         )
 
     @property

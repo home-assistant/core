@@ -88,10 +88,17 @@
         }
       },
       "laser_power": {
-        "name": "Laser/Lamp Power",
+        "name": "Laser Power",
         "state": {
           "low": "Low",
           "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "lamp_power": {
+        "name": "Lamp Power",
+        "state": {
+          "low": "Low",
           "high": "High"
         }
       },

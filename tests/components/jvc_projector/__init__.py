@@ -8,7 +8,7 @@ MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 20554
 MOCK_PASSWORD = "jvcpasswd"
 MOCK_MAC = "jvcmac"
-MOCK_MODEL = "jvcmodel"
+MOCK_MODEL = "jvcmodelNZ"
 
 
 # used to load a single platform in a test

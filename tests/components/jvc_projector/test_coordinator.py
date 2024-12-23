@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector.error import JvcProjectorAuthError, JvcProjectorConnectError
 
 from homeassistant.components.jvc_projector.coordinator import (
     INTERVAL_FAST,

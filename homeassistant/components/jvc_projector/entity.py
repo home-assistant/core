@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from jvcprojector.projector import JvcProjector
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -11,8 +9,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import JvcProjectorDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
@@ -39,12 +35,14 @@ class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
         """Return the device representing the projector."""
         return self.coordinator.device
 
-    @staticmethod
-    def has_eshift(entity: JvcProjectorEntity) -> bool:
+    @property
+    def has_eshift(self) -> bool:
         """Return if device has e-shift."""
-        return "NZ" in entity.device.model or "NX9" in entity.device.model #nx9 is the only lamp model with eshift
+        return (
+            "NZ" in self.device.model or "NX9" in self.device.model
+        )  # nx9 is the only lamp model with eshift
 
-    @staticmethod
-    def has_laser(entity: JvcProjectorEntity) -> bool:
+    @property
+    def has_laser(self) -> bool:
         """Return if device has laser."""
-        return "NZ" in entity.device.model or "NX9" in entity.device.model
+        return "NZ" in self.device.model
