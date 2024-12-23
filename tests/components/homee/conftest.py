@@ -45,7 +45,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_homee() -> Generator[MagicMock]:
     """Return a mock Homee instance."""
-    with patch("pyHomee.Homee", autospec=True) as mocked_homee:
+    with patch(
+        "homeassistant.components.homee.config_flow.Homee", autospec=True
+    ) as mocked_homee:
         homee = mocked_homee.return_value
 
         homee.host = HOMEE_IP
@@ -56,7 +58,7 @@ def mock_homee() -> Generator[MagicMock]:
         homee.reconnect_interval = 10
 
         homee.get_access_token.return_value = "test_token"
-        homee.wait_until_connected.return_value = True
-        homee.wait_until_disconnected.return_value = True
+        homee.wait_until_connected = AsyncMock()
+        homee.wait_until_disconnected = AsyncMock()
 
         yield homee

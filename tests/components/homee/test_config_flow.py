@@ -20,6 +20,8 @@ from tests.common import MockConfigEntry
 async def test_config_flow(
     hass: HomeAssistant,
     mock_homee: MagicMock,  # pylint: disable=unused-argument
+    mock_config_entry: MockConfigEntry,  # pylint: disable=unused-argument
+    mock_setup_entry: MagicMock,  # pylint: disable=unused-argument
 ) -> None:
     """Test the complete config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -60,7 +62,6 @@ async def test_config_flow(
     }
     assert final_result["options"] == {}
     assert final_result["context"] == {
-        "show_advanced_options": False,
         "source": "user",
         "unique_id": HOMEE_ID,
     }

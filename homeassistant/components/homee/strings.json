@@ -16,11 +16,12 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "add_homee_data": "Add (debug) information about the homee node and attributes to each entity"
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address your Homee."
+          "host": "The IP address ofyour Homee.",
+          "username": "The username for your Homee.",
+          "password": "The password for your user."
         }
       }
     }
