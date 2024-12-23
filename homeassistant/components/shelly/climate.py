@@ -618,10 +618,10 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        target_temp = self.current_temperature
+        target_temp = self.target_temperature
 
         if hvac_mode == HVACMode.OFF:
-            self._last_target_temp = self.current_temperature
+            self._last_target_temp = self.target_temperature
             target_temp = self._attr_min_temp
 
         if hvac_mode == HVACMode.HEAT:
