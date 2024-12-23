@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: Fields are missing a data_description
+  config-flow: done
   brands: done
   dependency-transparency: done
   common-modules: done
