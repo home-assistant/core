@@ -29,7 +29,8 @@ def mock_config_entry() -> MockConfigEntry:
         title="energy",
         domain=DOMAIN,
         data={},
-        unique_id="unique_thingy",
+        unique_id=DOMAIN,
+        entry_id="12345",
     )
 
 
