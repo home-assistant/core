@@ -24,6 +24,9 @@ HATasmota==0.10.0
 # homeassistant.components.mastodon
 Mastodon.py==2.0.1
 
+# homeassistant.components.playstation_network
+PSNAWP-HA==2.3.1
+
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload
