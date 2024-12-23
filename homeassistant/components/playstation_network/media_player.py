@@ -1,6 +1,6 @@
 """Media player entity for the PlayStation Network Integration."""
 
-from enum import Enum
+from enum import StrEnum
 import logging
 
 from homeassistant.components.media_player import (
@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PlaystationNetworkCoordinator
 from .const import DOMAIN
@@ -23,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_MAP = {"PS5": "PlayStation 5", "PS4": "PlayStation 4"}
 
 
-class PlatformType(Enum):
+class PlatformType(StrEnum):
     """PlayStation Platform Enum."""
 
     PS5 = "PS5"
@@ -58,7 +59,7 @@ async def async_setup_entry(
     add_entities()
 
 
-class MediaPlayer(MediaPlayerEntity):
+class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerEntity):
     """Media player entity representing currently playing game."""
 
     _attr_media_image_remotely_accessible = True
@@ -68,8 +69,8 @@ class MediaPlayer(MediaPlayerEntity):
         self, coordinator: PlaystationNetworkCoordinator, platform: str
     ) -> None:
         """Initialize PSN MediaPlayer."""
-        super().__init__()
-        self.coordinator = coordinator
+        super().__init__(coordinator)
+
         self.entity_description = MediaPlayerEntityDescription(
             key=platform,
             translation_key="playstation",

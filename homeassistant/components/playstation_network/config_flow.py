@@ -1,6 +1,5 @@
 """Config flow for the PlayStation Network integration."""
 
-import json
 import logging
 from typing import Any
 
@@ -28,7 +27,9 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                npsso = parse_npsso_token(user_input.get(CONF_NPSSO, ""))
+                npsso = PlaystationNetwork.parse_npsso_token(
+                    user_input.get(CONF_NPSSO, "")
+                )
                 psn = PlaystationNetwork(npsso)
                 user: User = await self.hass.async_add_executor_job(psn.get_user)
             except PSNAWPAuthenticationError:
@@ -55,16 +56,3 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 "psn_link": "https://playstation.com",
             },
         )
-
-
-def parse_npsso_token(user_input: str = "") -> str:
-    """Accept a string from the user that may contain either a valid npsso token or a json string with key "npsso" and value of the npsso token.
-
-    This function either succeeds at extracting the npsso token from the provided input
-    (meaning a valid npsso json string was provided) or it returns the original input.
-    """
-    try:
-        npsso_input = json.loads(user_input)
-        return npsso_input["npsso"]
-    except Exception:  # noqa: BLE001
-        return user_input
