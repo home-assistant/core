@@ -26,7 +26,7 @@ TOTAL_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="todayEnergy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="total_output_power",
