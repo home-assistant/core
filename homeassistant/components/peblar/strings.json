@@ -20,7 +20,7 @@
         "data_description": {
           "password": "[%key:component::peblar::config::step::user::data_description::password%]"
         },
-        "description": "Reauthenticate with your Peblar RV charger.\n\nTo do so, you will need to enter your new password you use to log into Peblar EV charger' web interface."
+        "description": "Reauthenticate with your Peblar EV charger.\n\nTo do so, you will need to enter your new password you use to log into Peblar EV charger' web interface."
       },
       "reconfigure": {
         "data": {
