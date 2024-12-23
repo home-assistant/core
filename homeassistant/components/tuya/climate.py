@@ -121,7 +121,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _set_temperature: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
-    _is_thermostat: bool
 
     def __init__(
         self,
@@ -133,7 +132,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         """Determine which values to use."""
         self._attr_target_temperature_step = 1.0
         self.entity_description = description
-        self._is_thermostat = device.category == "wk"
 
         super().__init__(device, device_manager)
 
@@ -419,12 +417,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac mode."""
-        # If the switch off, hvac mode is off as well. Unless the switch
-        # the switch is on or doesn't exists of course...
+        # If the switch off, hvac mode is off as well.
+        # Unless the switch is on or doesn't exists of course...
         if not self.device.status.get(DPCode.SWITCH, True):
             return HVACMode.OFF
 
-        if (self._is_thermostat) or (DPCode.MODE not in self.device.function):
+        if DPCode.MODE not in self.device.function:
             if self.device.status.get(DPCode.SWITCH, False):
                 return self.entity_description.switch_only_hvac_mode
             return HVACMode.OFF
