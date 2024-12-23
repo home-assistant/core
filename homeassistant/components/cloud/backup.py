@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import hashlib
 from typing import Any, Self
 
@@ -18,9 +18,10 @@ from hass_nabucasa.cloud_api import (
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .client import CloudClient
-from .const import DATA_CLOUD, DOMAIN
+from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
 _STORAGE_BACKUP = "backup"
 
@@ -43,6 +44,31 @@ async def async_get_backup_agents(
         return []
 
     return [CloudBackupAgent(hass=hass, cloud=cloud)]
+
+
+@callback
+def async_register_backup_agents_listener(
+    hass: HomeAssistant,
+    *,
+    listener: Callable[[], None],
+    **kwargs: Any,
+) -> Callable[[], None]:
+    """Register a listener to be called when agents are added or removed."""
+
+    @callback
+    def unsub() -> None:
+        """Unsubscribe from events."""
+        unsub_signal()
+
+    @callback
+    def handle_event(data: Mapping[str, Any]) -> None:
+        """Handle event."""
+        if data["type"] not in ("login", "logout"):
+            return
+        listener()
+
+    unsub_signal = async_dispatcher_connect(hass, EVENT_CLOUD_EVENT, handle_event)
+    return unsub
 
 
 class ChunkAsyncStreamIterator:
@@ -167,7 +193,7 @@ class CloudBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
         if not await self.async_get_backup(backup_id):
-            raise BackupAgentError("Backup not found")
+            return
 
         try:
             await async_files_delete_file(

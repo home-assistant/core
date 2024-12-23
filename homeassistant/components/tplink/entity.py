@@ -91,6 +91,13 @@ class TPLinkFeatureEntityDescription(EntityDescription):
     deprecated_info: DeprecatedInfo | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class TPLinkModuleEntityDescription(EntityDescription):
+    """Base class for a TPLink module based entity description."""
+
+    deprecated_info: DeprecatedInfo | None = None
+
+
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
     func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
