@@ -116,7 +116,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
 
         # Ignore Bravia TVs
-        if "videoScreen" in service_types:
+        if "videoScreen" in service_types or "video" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
         if TYPE_CHECKING:

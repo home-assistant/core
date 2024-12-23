@@ -10,11 +10,7 @@ rules:
       This integration does not use polling.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - use mock_desk_api
-      - merge test_user_step_auth_failed, test_user_step_cannot_connect and test_user_step_unknown_exception.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
