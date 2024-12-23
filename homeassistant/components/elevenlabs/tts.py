@@ -24,6 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElevenLabsConfigEntry
 from .const import (
+    ATTR_MODEL,
     CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
@@ -85,7 +86,7 @@ async def async_setup_entry(
 class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
-    _attr_supported_options = [ATTR_VOICE]
+    _attr_supported_options = [ATTR_VOICE, ATTR_MODEL]
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -141,13 +142,14 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         _LOGGER.debug("Getting TTS audio for %s", message)
         _LOGGER.debug("Options: %s", options)
         voice_id = options.get(ATTR_VOICE, self._default_voice_id)
+        model = options.get(ATTR_MODEL, self._model.model_id)
         try:
             audio = await self._client.generate(
                 text=message,
                 voice=voice_id,
                 optimize_streaming_latency=self._latency,
                 voice_settings=self._voice_settings,
-                model=self._model.model_id,
+                model=model,
             )
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
         except ApiError as exc:
