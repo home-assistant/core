@@ -206,6 +206,7 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     FroniusSensorEntityDescription(
         key="error_message",
