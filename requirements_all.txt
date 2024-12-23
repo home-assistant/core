@@ -1177,6 +1177,9 @@ ibmiotf==0.3.4
 # homeassistant.components.local_todo
 ical==8.2.0
 
+# homeassistant.components.caldav
+icalendar==6.1.0
+
 # homeassistant.components.ping
 icmplib==3.0
 
