@@ -5,20 +5,18 @@ import asyncio.coroutines
 import logging
 from typing import Any
 
-import requests
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
 from . import HubConfigEntry
-from .hub import RollerShutter
+from .hub import AveHub, RollerShutter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +32,7 @@ async def async_setup_entry(
     hub = config_entry.runtime_data
 
     # Add all entities to HA
-    async_add_entities(TapparellaEntity(roller) for roller in hub.devices)
+    async_add_entities(TapparellaEntity(roller, hub) for roller in hub.devices)
 
 
 class TapparellaEntity(CoverEntity):
@@ -46,11 +44,12 @@ class TapparellaEntity(CoverEntity):
     unsub = None
     task: asyncio.Task = None
 
-    def __init__(self, roller: RollerShutter) -> None:
+    def __init__(self, roller: RollerShutter, hub: AveHub) -> None:
         """Initialize the entity."""
         self._name = roller.name
         self._roller = roller
         self._channel = roller.name
+        self._hub = hub
         self._set_current_position(roller.position)
         self.unique_id = f"avebus_{roller.name}"
         self._loop = asyncio.get_event_loop()

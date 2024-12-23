@@ -26,6 +26,7 @@ class AveHub:
             timeout=aiohttp.ClientTimeout(10),
             headers={"x-api-key": apiKey},
         )
+        self._host = host
 
     @property
     def hub_id(self) -> str:
@@ -41,6 +42,11 @@ class AveHub:
     def session(self) -> aiohttp.ClientSession:
         """Http session."""
         return self._session
+
+    @property
+    def host(self) -> str:
+        """Host."""
+        return self._host
 
     async def async_load_entities(self):
         """Load AVE entities."""

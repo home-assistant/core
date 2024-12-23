@@ -1,14 +1,14 @@
 {
-    "domain": "borsmarthome",
-    "name": "BorSmartHome",
-    "codeowners": ["@borile91"],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://www.home-assistant.io/integrations/borsmarthome",
-    "homekit": {},
-    "iot_class": "local_push",
-    "requirements": [],
-    "ssdp": [],
-    "zeroconf": [],
-    "version": "1.0.0"
+  "domain": "borsmarthome",
+  "name": "BorSmartHome",
+  "codeowners": ["@borile91"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/borsmarthome",
+  "homekit": {},
+  "iot_class": "local_push",
+  "requirements": ["paramiko"],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": "1.0.1"
 }

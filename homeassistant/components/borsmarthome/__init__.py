@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 
 from . import hub
 
-PLATFORMS: list[Platform] = [Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER]
 
 type HubConfigEntry = ConfigEntry[hub.AveHub]
 
