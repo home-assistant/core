@@ -40,6 +40,7 @@ CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
     TPLinkCameraEntityDescription(
         key="live_view",
         translation_key="live_view",
+        available_fn=lambda dev: dev.is_on,
     ),
 )
 
@@ -111,9 +112,10 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         return f"{legacy_device_id(self._device)}-{self.entity_description}"
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._camera_module.is_on
+        return self.entity_description.available_fn(self._device)
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
