@@ -89,7 +89,6 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="pipe_leak_detected",
         state_key="alarm",
-        translation_key="pipe_leak_detected",
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda state: state.get("leak") if state is not None else None,
         exists_fn=lambda device: (

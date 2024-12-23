@@ -1,10 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "pipe_leak_detected": {
-        "default": "mdi:pipe-leak"
-      }
-    },
     "number": {
       "config_volume": {
         "default": "mdi:volume-high"
