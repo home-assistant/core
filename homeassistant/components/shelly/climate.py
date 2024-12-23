@@ -35,6 +35,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
+    BLU_TRV_TEMPERATURE_SETTINGS,
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
@@ -537,15 +538,15 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     """Entity that controls a thermostat on RPC based Shelly devices."""
 
-    _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
-    _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
+    _attr_max_temp = BLU_TRV_TEMPERATURE_SETTINGS["max"]
+    _attr_min_temp = BLU_TRV_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
+    _attr_target_temperature_step = BLU_TRV_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
 
@@ -568,6 +569,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
             model_id=model_id,
             name=name,
         )
+        self._last_target_temp: float | None = BLU_TRV_TEMPERATURE_SETTINGS["default"]
         # Added intentionally to the constructor to avoid double name from base class
         self._attr_name = None
 
@@ -616,12 +618,16 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
+        target_temp = self.current_temperature
+        if hvac_mode == HVACMode.OFF:
+            self._last_target_temp = self.current_temperature
+            target_temp = self._attr_min_temp
+
         await self.call_rpc(
             "BluTRV.Call",
             {
                 "id": self._id,
-                "method": "Trv.SetConfig",
-                "params": {"id": 0, "config": {"enable": mode}},
+                "method": "Trv.SetTarget",
+                "params": {"id": 0, "target_C": target_temp},
             },
         )
