@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import find_update_callback, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -126,15 +126,13 @@ async def test_updating(
     assert hass.states.get("cover.cover").state == STATE_OPEN
 
     cover.state = 0
-    await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](0)
+    await find_update_callback(mock_niko_home_control_connection, 3)(0)
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.cover").state == STATE_CLOSED
 
     cover.state = 100
-    await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](
-        100
-    )
+    await find_update_callback(mock_niko_home_control_connection, 3)(100)
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.cover").state == STATE_OPEN
