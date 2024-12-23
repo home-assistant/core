@@ -35,7 +35,8 @@ def _client_mock():
 def mock_async_client() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     with patch(
-        "elevenlabs.AsyncElevenLabs", return_value=_client_mock()
+        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
+        return_value=_client_mock(),
     ) as mock_async_client:
         yield mock_async_client
 
