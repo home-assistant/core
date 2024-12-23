@@ -7,7 +7,7 @@ import time
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from kasa import Credentials, Device, Module
+from kasa import Credentials, Device, Module, StreamResolution
 from kasa.smartcam.modules import Camera as CameraModule
 
 from homeassistant.components import ffmpeg, stream
@@ -95,7 +95,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         """Initialize a TPlink camera."""
         self.entity_description = description
         self._camera_module = camera_module
-        self._video_url = camera_module.stream_rtsp_url(camera_credentials)
+        self._video_url = camera_module.stream_rtsp_url(
+            camera_credentials, stream_resolution=StreamResolution.SD
+        )
         self._image: bytes | None = None
         super().__init__(device, coordinator, parent=parent)
         Camera.__init__(self)
@@ -117,7 +119,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        return self._video_url
+        return self._camera_module.stream_rtsp_url(
+            self._camera_credentials, stream_resolution=StreamResolution.HD
+        )
 
     async def _async_check_stream_auth(self, video_url: str) -> None:
         """Check for an auth error and start reauth flow."""
@@ -148,7 +152,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
             return self._image
 
         # Don't try to capture a new image if a stream is running
-        if (self.stream and self.stream.available) or self._http_mpeg_stream_running:
+        if self._http_mpeg_stream_running:
             return self._image
 
         if self._can_stream and (video_url := self._video_url):
