@@ -71,7 +71,10 @@
         "name": "Inverter state"
       },
       "error_code": {
-        "name": "Error code",
+        "name": "Error code"
+      },
+      "error_message": {
+        "name": "Error message",
         "state": {
           "no_error": "No error",
           "ac_voltage_too_high": "AC voltage too high",
