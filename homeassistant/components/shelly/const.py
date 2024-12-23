@@ -189,7 +189,7 @@ RPC_THERMOSTAT_SETTINGS: Final = {
 
 BLU_TRV_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
-    "max": 35,
+    "max": 30,
     "step": 0.1,
     "default": 20.0,
 }
