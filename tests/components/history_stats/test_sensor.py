@@ -1544,12 +1544,8 @@ async def test_state_change_during_window_rollover(
                 ha.State(
                     "binary_sensor.state",
                     "on",
-                    last_changed=t3.replace(
-                        hours=0, minutes=0, seconds=0, microseconds=0
-                    ),
-                    last_updated=t3.replace(
-                        hours=0, minutes=0, seconds=0, microseconds=0
-                    ),
+                    last_changed=t3.replace(hour=0, minute=0, second=0, microsecond=0),
+                    last_updated=t3.replace(hour=0, minute=0, second=0, microsecond=0),
                 ),
             ]
         }

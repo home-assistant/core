@@ -118,9 +118,7 @@ class HistoryStats:
                     <= current_period_end_timestamp
                 ):
                     self._history_current_period.append(
-                        HistoryState(
-                            new_state.state, new_state.last_changed.timestamp()
-                        )
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
                     new_data = True
             if not new_data and current_period_end_timestamp < now_timestamp:
@@ -138,9 +136,7 @@ class HistoryStats:
                     <= current_period_end_timestamp
                 ):
                     self._history_current_period.append(
-                        HistoryState(
-                            new_state.state, new_state.last_changed.timestamp()
-                        )
+                        HistoryState(new_state.state, new_state.last_changed_timestamp)
                     )
 
             self._previous_run_before_start = False
