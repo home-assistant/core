@@ -1,5 +1,7 @@
 """Test homee covers."""
 
+from unittest.mock import MagicMock
+
 from pyHomee import HomeeNode
 
 from homeassistant.components.homee.const import DOMAIN
@@ -10,17 +12,18 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def test_cover_open(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_homee: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test an open cover."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
 
     # Cover open, tilt open.
     cover_json = load_json_object_fixture("cover1.json", DOMAIN)
     cover_node = HomeeNode(cover_json)
     cover1 = HomeeCover(cover_node, mock_config_entry)
 
-    assert cover1.unique_id == "3-cover"
+    assert cover1.unique_id == "00055511EECC-3-101"
 
     assert cover1.state == "open"
     assert cover1.is_closed is False
@@ -31,10 +34,11 @@ async def test_cover_open(
 
 
 async def test_cover_closed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_homee: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a closed cover."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
 
     # Cover closed, tilt closed.
     cover_json = load_json_object_fixture("cover2.json", DOMAIN)
@@ -50,10 +54,11 @@ async def test_cover_closed(
 
 
 async def test_cover_opening(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_homee: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test an opening cover."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
 
     # opening, 75% homee / 25% HA
     cover_json = load_json_object_fixture("cover3.json", DOMAIN)
@@ -69,10 +74,11 @@ async def test_cover_opening(
 
 
 async def test_cover_closing(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_homee: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a closing cover."""
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_homee
 
     # closing, 25% homee / 75% HA
     cover_json = load_json_object_fixture("cover4.json", DOMAIN)

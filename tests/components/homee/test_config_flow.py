@@ -1,11 +1,12 @@
 """Test the Homee config flow."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
+from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
 
 from homeassistant.components.homee import config_flow
-from homeassistant.components.homee.const import CONF_ADD_HOMEE_DATA, DOMAIN
+from homeassistant.components.homee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,6 @@ from tests.common import MockConfigEntry
 async def test_config_flow(
     hass: HomeAssistant,
     mock_homee: MagicMock,  # pylint: disable=unused-argument
-    mock_setup_entry: AsyncMock,  # pylint: disable=unused-argument
 ) -> None:
     """Test the complete config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -47,35 +47,39 @@ async def test_config_flow(
             CONF_HOST: HOMEE_IP,
             CONF_USERNAME: TESTUSER,
             CONF_PASSWORD: TESTPASS,
-            CONF_ADD_HOMEE_DATA: False,
         },
     )
 
-    expected = {
-        "type": FlowResultType.CREATE_ENTRY,
-        "flow_id": flow_id,
-        "handler": DOMAIN,
-        "data": {"host": HOMEE_IP, "username": TESTUSER, "password": TESTPASS},
-        "description": None,
-        "description_placeholders": None,
-        "context": {"source": "user", "unique_id": HOMEE_ID},
-        "title": f"{HOMEE_ID} ({HOMEE_IP})",
-        "minor_version": 1,
-        "options": {
-            "add_homee_data": False,
-        },
-        "version": 1,
-        "result": ANY,
+    assert final_result["type"] == FlowResultType.CREATE_ENTRY
+    assert final_result["flow_id"] == flow_id
+    assert final_result["handler"] == DOMAIN
+    assert final_result["data"] == {
+        "host": HOMEE_IP,
+        "username": TESTUSER,
+        "password": TESTPASS,
     }
-
-    assert expected == final_result
+    assert final_result["options"] == {}
+    assert final_result["context"] == {
+        "show_advanced_options": False,
+        "source": "user",
+        "unique_id": HOMEE_ID,
+    }
+    assert final_result["title"] == f"{HOMEE_ID} ({HOMEE_IP})"
+    assert final_result["minor_version"] == 1
+    assert final_result["version"] == 1
 
 
 @pytest.mark.parametrize(
     ("side_eff", "error"),
     [
-        (config_flow.InvalidAuth, {"base": "invalid_auth"}),
-        (config_flow.CannotConnect, {"base": "cannot_connect"}),
+        (
+            HomeeConnectionFailedException("connection timed out"),
+            {"base": "cannot_connect"},
+        ),
+        (
+            HomeeAuthFailedException("wrong username or password"),
+            {"base": "invalid_auth"},
+        ),
     ],
 )
 async def test_config_flow_errors(
@@ -91,7 +95,7 @@ async def test_config_flow_errors(
     flow_id = result["flow_id"]
 
     with patch(
-        "homeassistant.components.homee.config_flow.validate_and_connect",
+        "pyHomee.Homee.get_access_token",
         side_effect=side_eff,
     ):
         final_result = await hass.config_entries.flow.async_configure(
@@ -100,7 +104,6 @@ async def test_config_flow_errors(
                 CONF_HOST: HOMEE_IP,
                 CONF_USERNAME: TESTUSER,
                 CONF_PASSWORD: TESTPASS,
-                CONF_ADD_HOMEE_DATA: False,
             },
         )
 
@@ -128,7 +131,6 @@ async def test_flow_already_configured(
             CONF_HOST: HOMEE_IP,
             CONF_USERNAME: TESTUSER,
             CONF_PASSWORD: TESTPASS,
-            CONF_ADD_HOMEE_DATA: False,
         },
     )
     assert result2["type"] is FlowResultType.ABORT

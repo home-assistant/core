@@ -2,16 +2,7 @@
 
 import logging
 
-from pyHomee import Homee
-from pyHomee.model import HomeeNode
-
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_imported_nodes(config_entry) -> list[HomeeNode]:
-    """Get a list of nodes that should be imported."""
-    homee: Homee = config_entry.runtime_data
-    return homee.nodes
 
 
 def get_name_for_enum(att_class, att_id) -> str:

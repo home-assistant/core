@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeeConfigEntry, helpers
+from . import HomeeConfigEntry
 from .entity import HomeeNodeEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,13 +68,12 @@ def get_cover_features(
 
 def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     """Determine the device class a homee node based on the node profile."""
-    if node.profile == NodeProfile.GARAGE_DOOR_OPERATOR:
-        return CoverDeviceClass.GARAGE
+    COVER_DEVICE_PROFILES = {
+        NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
+        NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
+    }
 
-    if node.profile == NodeProfile.SHUTTER_POSITION_SWITCH:
-        return CoverDeviceClass.SHUTTER
-
-    return None
+    return COVER_DEVICE_PROFILES.get(node.profile, None)
 
 
 async def async_setup_entry(
@@ -85,13 +84,16 @@ async def async_setup_entry(
     """Add the homee platform for the cover integration."""
 
     devices: list[HomeeCover] = []
-    nodes = helpers.get_imported_nodes(config_entry)
+    nodes = config_entry.runtime_data.nodes
     devices.extend(
         HomeeCover(node, config_entry) for node in nodes if is_cover_node(node)
     )
 
-    if devices:
-        async_add_devices(devices)
+    async_add_devices(
+        HomeeCover(node, config_entry)
+        for node in config_entry.runtime_data.nodes
+        if is_cover_node(node)
+    )
 
 
 def is_cover_node(node: HomeeNode) -> bool:
@@ -107,22 +109,15 @@ def is_cover_node(node: HomeeNode) -> bool:
 class HomeeCover(HomeeNodeEntity, CoverEntity):
     """Representation of a homee cover device."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
         """Initialize a homee cover entity."""
-        HomeeNodeEntity.__init__(self, node, entry)
+        super().__init__(node, entry)
         self._attr_supported_features, self._open_close_attribute = get_cover_features(
             self
         )
         self._device_class = get_device_class(node)
-
-        self._attr_unique_id = f"{self._node.id}-cover"
-
-    @property
-    def name(self) -> None:
-        """Return the display name of this cover."""
-        return None
+        self._attr_name = None
+        self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{self._node.id}-{self.get_attribute(self._open_close_attribute).id}"
 
     @property
     def current_cover_position(self) -> int | None:
@@ -142,6 +137,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return the cover's tilt position."""
+        # Translate the homee position values to HA's 0-100 scale
         if self.has_attribute(AttributeType.SHUTTER_SLAT_POSITION):
             attribute = self.get_attribute(AttributeType.SHUTTER_SLAT_POSITION)
             homee_min = attribute.minimum

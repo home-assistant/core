@@ -1,7 +1,5 @@
 """Base Entities for Homee integration."""
 
-from typing import Any
-
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -9,14 +7,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
 from . import HomeeConfigEntry
-from .const import ATTR_HOMEE_DATA, CONF_ADD_HOMEE_DATA, DOMAIN
+from .const import DOMAIN
 from .helpers import get_name_for_enum
 
 
 class HomeeNodeEntity(Entity):
     """Representation of a Node in Homee."""
 
-    _unrecorded_attributes = frozenset({ATTR_HOMEE_DATA})
+    _attr_has_entity_name = True
 
     def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
@@ -59,31 +57,12 @@ class HomeeNodeEntity(Entity):
         """Return the raw data of the node."""
         return self._node.raw_data
 
-    @property
-    def extra_state_attributes(self) -> dict[str, dict[str, Any]] | None:
-        """Return entity specific state attributes."""
-        data = {}
-
-        if self._entry.options.get(CONF_ADD_HOMEE_DATA, False):
-            data[ATTR_HOMEE_DATA] = self._homee_data
-
-        return data if data else None
-
     async def async_update(self):
         """Fetch new state data for this node."""
+        # Base class requests the whole node, if only a single attribute is needed
+        # the platform will overwrite this method.
         homee = self._entry.runtime_data
         await homee.update_node(self._node.id)
-
-    def register_listener(self):
-        """Register the on_changed listener on the node."""
-        self._clear_node_listener = self._node.add_on_changed_listener(
-            self._on_node_updated
-        )
-
-    def clear_listener(self):
-        """Clear the on_changed listener on the node."""
-        if self._clear_node_listener is not None:
-            self._clear_node_listener()
 
     def attribute(self, attribute_type):
         """Try to get the current value of the attribute of the given type."""
@@ -105,7 +84,7 @@ class HomeeNodeEntity(Entity):
         elif self.has_attribute(AttributeType.SOFTWARE_REVISION):
             sw_version = self.attribute(AttributeType.SOFTWARE_REVISION)
         else:
-            sw_version = "undefined"
+            sw_version = None
 
         return sw_version
 

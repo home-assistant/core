@@ -4,16 +4,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from typing_extensions import Generator
-import voluptuous as vol
 
-from homeassistant.components.homee.const import (
-    CONF_ADD_HOMEE_DATA,
-    CONF_DOOR_GROUPS,
-    CONF_WINDOW_GROUPS,
-    DOMAIN,
-)
+from homeassistant.components.homee.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
 
 from tests.common import MockConfigEntry
 
@@ -21,21 +14,6 @@ HOMEE_ID = "00055511EECC"
 HOMEE_IP = "192.168.1.11"
 TESTUSER = "testuser"
 TESTPASS = "testpass"
-
-GROUPS_SELECTION = {"1": "Group1 (0)", "3": "Group2 (0)"}
-
-SCHEMA_IMPORT_ALL = vol.Schema(
-    {
-        vol.Required(
-            CONF_WINDOW_GROUPS,
-            default=[],
-        ): cv.multi_select(GROUPS_SELECTION),
-        vol.Required(
-            CONF_DOOR_GROUPS,
-            default=[],
-        ): cv.multi_select(GROUPS_SELECTION),
-    }
-)
 
 
 @pytest.fixture
@@ -49,7 +27,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: TESTUSER,
             CONF_PASSWORD: TESTPASS,
         },
-        options={CONF_ADD_HOMEE_DATA: False},
         unique_id=HOMEE_ID,
         version=1,
         minor_version=1,
@@ -68,14 +45,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_homee() -> Generator[MagicMock]:
     """Return a mock Homee instance."""
-    with patch(
-        "homeassistant.components.homee.config_flow.validate_and_connect", autospec=True
-    ) as mocked_homee:
+    with patch("pyHomee.Homee", autospec=True) as mocked_homee:
         homee = mocked_homee.return_value
 
         homee.host = HOMEE_IP
         homee.user = TESTUSER
         homee.password = TESTPASS
+        homee.settings = MagicMock()
         homee.settings.uid = HOMEE_ID
         homee.reconnect_interval = 10
 

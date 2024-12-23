@@ -36,15 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     hass.loop.create_task(homee.run())
     await homee.wait_until_connected()
 
-    # Log info about nodes, to facilitate recognition of unknown nodes.
-    for node in homee.nodes:
-        _LOGGER.info(
-            "Found node %s, with following Data: %s",
-            node.name,
-            node.raw_data,
-        )
-
     entry.runtime_data = homee
+    entry.async_on_unload(homee.disconnect)
 
     # create device register entry
     device_registry = dr.async_get(hass)
@@ -62,24 +55,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bool:
     """Unload a homee config entry."""
     # Unload platforms
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        # Get Homee object and remove it from data
-        homee: Homee = entry.runtime_data
-
-        # Schedule homee disconnect
-        homee.disconnect()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
