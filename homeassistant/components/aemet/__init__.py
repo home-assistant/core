@@ -1,6 +1,7 @@
 """The AEMET OpenData component."""
 
 import logging
+import shutil
 
 from aemet_opendata.exceptions import AemetError, TownNotFound
 from aemet_opendata.interface import AEMET, ConnectionOptions, UpdateFeature
@@ -10,8 +11,9 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_STATION_UPDATES, PLATFORMS
+from .const import CONF_RADAR_UPDATES, CONF_STATION_UPDATES, DOMAIN, PLATFORMS
 from .coordinator import AemetConfigEntry, AemetData, WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,11 +26,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AemetConfigEntry) -> boo
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
     update_features: int = UpdateFeature.FORECAST
+    if entry.options.get(CONF_RADAR_UPDATES, False):
+        update_features |= UpdateFeature.RADAR
     if entry.options.get(CONF_STATION_UPDATES, True):
         update_features |= UpdateFeature.STATION
 
     options = ConnectionOptions(api_key, update_features)
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
+    aemet.set_api_data_dir(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.unique_id}"))
+
     try:
         await aemet.select_coordinates(latitude, longitude)
     except TownNotFound as err:
@@ -57,3 +63,11 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    await hass.async_add_executor_job(
+        shutil.rmtree,
+        hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.unique_id}"),
+    )
