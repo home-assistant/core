@@ -1085,6 +1085,27 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "energy_ph_a": {
+        "name": "Energy phase A"
+      },
+      "energy_ph_b": {
+        "name": "Energy phase B"
+      },
+      "energy_ph_c": {
+        "name": "Energy phase C"
+      },
+      "energy_produced_ph_a": {
+        "name": "Energy produced phase A"
+      },
+      "energy_produced_ph_b": {
+        "name": "Energy produced phase B"
+      },
+      "energy_produced_ph_c": {
+        "name": "Energy produced phase C"
+      },
+      "energy_produced": {
+        "name": "Energy produced"
+      },
       "summation_received": {
         "name": "Summation received"
       },
