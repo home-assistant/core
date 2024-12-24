@@ -1025,6 +1025,12 @@
       }
     },
     "sensor": {
+      "active_power_ph_b": {
+        "name": "Power phase B"
+      },
+      "active_power_ph_c": {
+        "name": "Power phase C"
+      },
       "analog_input": {
         "name": "Analog input"
       },
@@ -1040,11 +1046,23 @@
       "instantaneous_demand": {
         "name": "Instantaneous demand"
       },
+      "power_factor_ph_b": {
+        "name": "Power factor phase B"
+      },
+      "power_factor_ph_c": {
+        "name": "Power factor phase C"
+      },
       "rms_current_ph_b": {
-        "name": "Current Phase B"
+        "name": "Current phase B"
       },
       "rms_current_ph_c": {
-        "name": "Current Phase C"
+        "name": "Current phase C"
+      },
+      "rms_voltage_ph_b": {
+        "name": "Voltage phase B"
+      },
+      "rms_voltage_ph_c": {
+        "name": "Voltage phase C"
       },
       "summation_delivered": {
         "name": "Summation delivered"
