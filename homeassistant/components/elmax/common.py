@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-import functools
 import ssl
 
 from elmax_api.model.panel import PanelEntry
@@ -18,15 +16,12 @@ def get_direct_api_url(host: str, port: int, use_ssl: bool) -> str:
     return f"{schema}://{host}:{port}/{ELMAX_LOCAL_API_PATH}"
 
 
-async def async_build_direct_ssl_context(cadata: str) -> ssl.SSLContext:
+def build_direct_ssl_context(cadata: str) -> ssl.SSLContext:
     """Create a custom SSL context for direct-api verification."""
     context = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
     context.check_hostname = False
     context.verify_mode = ssl.CERT_REQUIRED
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(
-        None, functools.partial(context.load_verify_locations, cadata=cadata)
-    )
+    context.load_verify_locations(cadata=cadata)
     return context
 
 

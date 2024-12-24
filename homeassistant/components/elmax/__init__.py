@@ -14,7 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .common import DirectPanel, async_build_direct_ssl_context, get_direct_api_url
+from .common import DirectPanel, build_direct_ssl_context, get_direct_api_url
 from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -50,9 +50,7 @@ async def _load_elmax_panel_client(
         custom_ssl_context = None
         custom_ssl_cert = entry.data.get(CONF_ELMAX_MODE_DIRECT_SSL_CERT)
         if custom_ssl_cert:
-            custom_ssl_context = await async_build_direct_ssl_context(
-                cadata=custom_ssl_cert
-            )
+            custom_ssl_context = build_direct_ssl_context(cadata=custom_ssl_cert)
 
         client = ElmaxLocal(
             panel_api_url=client_api_url,

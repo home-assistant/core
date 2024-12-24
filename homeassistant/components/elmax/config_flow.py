@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
-    async_build_direct_ssl_context,
+    build_direct_ssl_context,
     check_local_version_supported,
     get_direct_api_url,
 )
@@ -151,9 +151,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     port=self._panel_direct_port,
                 )
             )
-            ssl_context = await async_build_direct_ssl_context(
-                cadata=self._panel_direct_ssl_cert
-            )
+            ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
 
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
