@@ -115,7 +115,10 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         self.attributes = self.device.get("attributes", {})
 
         if self.device["hiveType"] != "Connectivity":
-            self._attr_available = self.device["deviceData"].get("online")
+            self._attr_available = (
+                self.device["deviceData"].get("online")
+                and "status" in self.device
+            )
         else:
             self._attr_available = True
 
