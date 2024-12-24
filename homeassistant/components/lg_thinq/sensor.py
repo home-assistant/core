@@ -587,8 +587,6 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                 value = self._get_duration(
                     value, self.entity_description.native_unit_of_measurement
                 )
-            else:
-                value = value.strftime("%I:%M %p")
         self._attr_native_value = value
 
         if (data_unit := self._get_unit_of_measurement(self.data.unit)) is not None:
