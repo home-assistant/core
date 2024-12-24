@@ -303,6 +303,9 @@
       "evse_charge_current": {
         "name": "Charge current"
       },
+      "evse_min_charge_current": {
+        "name": "Min charge current"
+      },
       "evse_max_charge_current": {
         "name": "Max charge current"
       },

@@ -379,49 +379,49 @@ async def test_evse_sensor(
     assert state.state == "over_current"
 
     # EnergyEvseCircuitCapacity
-    state = hass.states.get("sensor.evse_current_2")
+    state = hass.states.get("sensor.evse_circuit_capacity")
     assert state
     assert state.state == "32.0"
 
     set_node_attribute(matter_node, 1, 153, 5, 63000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_current_2")
+    state = hass.states.get("sensor.evse_circuit_capacity")
     assert state
     assert state.state == "63.0"
 
     # EnergyEvseMinimumChargeCurrent
-    state = hass.states.get("sensor.evse_current_3")
+    state = hass.states.get("sensor.evse_min_charge_current")
     assert state
     assert state.state == "2.0"
 
     set_node_attribute(matter_node, 1, 153, 6, 5000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_current_3")
+    state = hass.states.get("sensor.evse_min_charge_current")
     assert state
     assert state.state == "5.0"
 
     # EnergyEvseMaximumChargeCurrent
-    state = hass.states.get("sensor.evse_current_4")
+    state = hass.states.get("sensor.evse_max_charge_current")
     assert state
     assert state.state == "30.0"
 
     set_node_attribute(matter_node, 1, 153, 7, 20000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_current_4")
+    state = hass.states.get("sensor.evse_max_charge_current")
     assert state
     assert state.state == "20.0"
 
-    # EnergyEvseMaximumChargeCurrent
-    state = hass.states.get("sensor.evse_current_5")
+    # EnergyEvseUserMaximumChargeCurrent
+    state = hass.states.get("sensor.evse_user_max_charge_current")
     assert state
     assert state.state == "32.0"
 
     set_node_attribute(matter_node, 1, 153, 9, 63000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_current_5")
+    state = hass.states.get("sensor.evse_user_max_charge_current")
     assert state
     assert state.state == "63.0"
