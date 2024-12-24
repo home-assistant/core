@@ -458,64 +458,22 @@ class SqueezeBoxMediaPlayerEntity(
             media_id = play_item.url
 
         if announce:
+            if media_type not in MediaType.MUSIC:
+                raise ValueError(
+                    "Announcements must have media type of 'music'.  Playlists are not supported"
+                )
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
-
-            _announce_volume: str | None = extra.get("announce_volume", None)
-
-            if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
-                # do not process special squeezebox "source" media ids
-                media_id = async_process_play_media_url(self.hass, media_id)
-
-            _LOGGER.debug("Announce URL : %s", media_id)
-
-            # save current settings
-            _repeat: int | None = self._player.repeat
-            _power: int = self._player.power
-            _mixer_volume: str = self._player.volume
-            _mode: str = self._player.mode
-            _time: int = self.media_position
-
-            await self._player.async_command(
-                "playlist",
-                "save",
-                f"tempplaylist_{self._player.player_id.replace(":","")}",
+            cmd = "announce"
+            self._player.set_announce_volume(
+                int(extra["announce_volume"])
+                if extra.get("announce_volume", None)
+                else None
             )
-
-            if not _repeat:
-                _repeat = 0
-
-            if _announce_volume:
-                await (
-                    self._player.async_stop()
-                )  # Stop the current playlist before changing the volume
-                await self._player.async_set_volume(_announce_volume)
-
-            await self._player.async_play_announcement(media_id)
-
-            await self._player.async_command(
-                "playlist",
-                "resume",
-                f"tempplaylist_{self._player.player_id.replace(":","")}",
-                f"noplay:{0 if _mode == "play" else 1}",
-                "wipePlaylist",
+            self._player.set_announce_timeout(
+                int(extra["announce_timeout"])
+                if extra.get("announce_timeout", None)
+                else None
             )
-
-            # restore settings
-            match _repeat:
-                case 2:
-                    await self._player.async_set_repeat("playlist")
-                case 1:
-                    await self._player.async_set_repeat("song")
-                case _:
-                    await self._player.async_set_repeat("none")
-
-            await self._player.async_set_power(_power != 0)
-            if _announce_volume:
-                await self._player.async_set_volume(_mixer_volume)
-            if _time != 0:
-                await self.async_media_seek(_time)
-
-            return
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
