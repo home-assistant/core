@@ -7,6 +7,8 @@ import random
 import string
 from typing import TYPE_CHECKING
 
+from deebot_client.events.station import State
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -47,4 +49,13 @@ def get_supported_entitites(
 @callback
 def get_name_key(enum: Enum) -> str:
     """Return the lower case name of the enum."""
+    if enum is State.EMPTYING:
+        # Will be fixed in the next major release of deebot-client
+        return "emptying_dustbin"
     return enum.name.lower()
+
+
+@callback
+def get_options(enum: type[Enum]) -> list[str]:
+    """Return the options for the enum."""
+    return [get_name_key(option) for option in enum]
