@@ -17,6 +17,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -332,7 +334,7 @@ class TemplateLightEntity(LightEntity):
 
         self._state: bool | None = None
         self._brightness = None
-        self._temperature = None
+        self._temperature: int | None = None
         self._hs_color = None
         self._rgb_color = None
         self._rgbw_color = None
