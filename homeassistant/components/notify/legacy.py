@@ -341,10 +341,10 @@ class BaseNotificationService:
     def ensure_field_descriptions(self, fields: dict) -> dict:
         """Ensure that each field has a description, adding a default one if missing."""
         default_descriptions = {
-            "message": "Message body of the notification.2",
-            "title": "The title of the message.2",
-            "target": "The recipient of the notification.2",
-            "data": "Custom data to be sent with the notification.2",
+            "message": "Message body of the notification.",
+            "title": "The title of the message.",
+            "target": "The recipient of the notification.",
+            "data": "Custom data to be sent with the notification.",
         }
 
         for field, field_data in fields.items():
