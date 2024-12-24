@@ -48,7 +48,11 @@ from .const import (
 )
 from .models import AgentBackup, Folder
 from .store import BackupStore
-from .util import make_backup_dir, read_backup
+from .util import make_backup_dir, read_backup, validate_password
+
+
+class IncorrectPasswordError(HomeAssistantError):
+    """Raised when the password is incorrect."""
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -1268,6 +1272,12 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 await async_add_executor_job(f.close)
 
             remove_after_restore = True
+
+        password_valid = await self._hass.async_add_executor_job(
+            validate_password, path, password
+        )
+        if not password_valid:
+            raise IncorrectPasswordError("The password provided is incorrect.")
 
         def _write_restore_file() -> None:
             """Write the restore file."""
