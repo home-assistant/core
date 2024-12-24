@@ -260,6 +260,52 @@ async def test_snapshot_bad_timestamp(
     ufp.api.request.assert_not_called()
 
 
+async def test_snapshot_client_error(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+    camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test snapshot triggers client error at API."""
+
+    ufp.api.get_camera_snapshot = AsyncMock(side_effect=ClientError())
+
+    tomorrow = fixed_now + timedelta(days=1)
+
+    await init_entry(hass, ufp, [camera])
+    url = async_generate_snapshot_url(ufp.api.bootstrap.nvr.id, camera.id, tomorrow)
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
+    ufp.api.get_camera_snapshot.assert_called_once()
+
+
+async def test_snapshot_notfound(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    ufp: MockUFPFixture,
+    camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test snapshot not found."""
+
+    ufp.api.get_camera_snapshot = AsyncMock(return_value=None)
+
+    tomorrow = fixed_now + timedelta(days=1)
+
+    await init_entry(hass, ufp, [camera])
+    url = async_generate_snapshot_url(ufp.api.bootstrap.nvr.id, camera.id, tomorrow)
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(url))
+
+    assert response.status == 404
+    ufp.api.get_camera_snapshot.assert_called_once()
+
+
 @pytest.mark.parametrize(("width", "height"), [("test", None), (None, "test")])
 async def test_snapshot_bad_params(
     hass: HomeAssistant,
