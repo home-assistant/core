@@ -179,6 +179,9 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={
+                CONF_HOST: self._host,
+            },
             errors=errors,
         )
 
