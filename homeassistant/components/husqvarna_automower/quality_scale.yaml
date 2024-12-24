@@ -68,9 +68,7 @@ rules:
     status: exempt
     comment: no configuration possible
   repair-issues: done
-  stale-devices:
-    status: todo
-    comment: We only remove devices on reload
+  stale-devices: done
 
   # Platinum
   async-dependency: done
