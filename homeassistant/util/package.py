@@ -34,7 +34,7 @@ def is_docker_env() -> bool:
     return (
         Path("/run/.containerenv").exists()
         or Path("/.dockerenv").exists()
-        or os.environ.get("KUBERNETES_SERVICE_HOST")
+        or "KUBERNETES_SERVICE_HOST" in os.environ
         or is_official_image()
     )
 
