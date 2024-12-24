@@ -343,40 +343,40 @@ async def test_evse_sensor(
 ) -> None:
     """Test evse sensor."""
     # EnergyEvseState
-    state = hass.states.get("sensor.evse_none")
+    state = hass.states.get("sensor.evse_state")
     assert state
-    assert state.state == "PluggedIn, Charging"
+    assert state.state == "plugged_in_charging"
 
     set_node_attribute(matter_node, 1, 153, 0, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_none")
+    state = hass.states.get("sensor.evse_state")
     assert state
-    assert state.state == "PluggedIn, NoDemand"
+    assert state.state == "plugged_in_no_demand"
 
     # EnergyEvseSupplyState
-    state = hass.states.get("sensor.evse_none_2")
+    state = hass.states.get("sensor.evse_supply_state")
     assert state
-    assert state.state == "Charging Enabled"
+    assert state.state == "charging_enabled"
 
     set_node_attribute(matter_node, 1, 153, 1, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_none_2")
+    state = hass.states.get("sensor.evse_supply_state")
     assert state
-    assert state.state == "Disabled"
+    assert state.state == "disabled"
 
     # EnergyEvseFaultState
-    state = hass.states.get("sensor.evse_none_3")
+    state = hass.states.get("sensor.evse_fault_state")
     assert state
-    assert state.state == "No Error"
+    assert state.state == "no_error"
 
     set_node_attribute(matter_node, 1, 153, 2, 4)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.evse_none_3")
+    state = hass.states.get("sensor.evse_fault_state")
     assert state
-    assert state.state == "Over Current"
+    assert state.state == "over_current"
 
     # EnergyEvseCircuitCapacity
     state = hass.states.get("sensor.evse_current_2")
