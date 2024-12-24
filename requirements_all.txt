@@ -738,7 +738,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==9.4.0
+deebot-client==10.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1134,7 +1134,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.8
+home-assistant-frontend==20241223.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
