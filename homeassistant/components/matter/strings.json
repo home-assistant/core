@@ -256,13 +256,46 @@
         "name": "Battery type"
       },
       "evse_state": {
-        "name": "State"
+        "name": "State",
+        "state": {
+          "not_plugged_in": "Not plugged in",
+          "plugged_in_no_demand": "Plugged in, no demand",
+          "plugged_in_demand": "Plugged in, demand",
+          "plugged_in_charging": "Plugged in, charging",
+          "plugged_in_discharging": "Plugged in, discharging",
+          "session_ending": "Session ending",
+          "fault": "Fault"
+        }
       },
       "evse_supply_state": {
-        "name": "Supply state"
+        "name": "Supply state",
+        "state": {
+          "disabled": "Disabled",
+          "charging_enabled": "Charging enabled",
+          "discharging_enabled": "Discharging enabled",
+          "disabled_diagnostics": "Disabled diagnostics"
+        }
       },
       "evse_fault_state": {
-        "name": "Fault state"
+        "name": "Fault state",
+        "state": {
+          "no_error": "OK",
+          "meter_failure": "Meter failure",
+          "over_voltage": "Over Voltage",
+          "under_voltage": "Under Voltage",
+          "over_current": "Over current",
+          "contact_wet_failure": "Contact wet failure",
+          "contact_dry_failure": "Contact dry failure",
+          "power_loss": "Power loss",
+          "power_quality": "Power quality",
+          "pilot_short_circuit": "Pilot short circuit",
+          "emergency_stop": "Emergency stop",
+          "ev_disconnected": "EV disconnected",
+          "wrong_power_supply": "Wrong power supply",
+          "live_neutral_swap": "Live neutral swap",
+          "over_temperature": "Over temperature",
+          "other": "Other fault"
+        }
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
