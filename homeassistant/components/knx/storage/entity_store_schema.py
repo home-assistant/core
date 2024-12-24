@@ -5,6 +5,7 @@ from enum import StrEnum, unique
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_NAME,
@@ -25,6 +26,7 @@ from ..const import (
 )
 from ..validation import sync_state_validator
 from .const import (
+    CONF_ALWAYS_CALLBACK,
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
     CONF_DATA,
@@ -42,11 +44,14 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
+    CONF_GA_SENSOR,
     CONF_GA_STATE,
     CONF_GA_SWITCH,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_GA_WRITE,
+    CONF_STATE_CLASS,
+    CONF_VALUE_TYPE,
 )
 from .knx_selector import GASelector
 
@@ -57,6 +62,8 @@ BASE_ENTITY_SCHEMA = vol.All(
         vol.Optional(CONF_ENTITY_CATEGORY, default=None): vol.Any(
             ENTITY_CATEGORIES_SCHEMA, vol.SetTo(None)
         ),
+        vol.Optional(CONF_STATE_CLASS, default=None): vol.Maybe(str),
+        vol.Optional(CONF_DEVICE_CLASS, default=None): vol.Maybe(str),
     },
     vol.Any(
         vol.Schema(
@@ -102,6 +109,18 @@ SWITCH_SCHEMA = vol.Schema(
             vol.Required(CONF_GA_SWITCH): GASelector(write_required=True),
             vol.Optional(CONF_RESPOND_TO_READ, default=False): bool,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+        },
+    }
+)
+
+SENSOR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
+        vol.Required(DOMAIN): {
+            vol.Required(CONF_GA_SENSOR): GASelector(state_required=True),
+            vol.Required(CONF_VALUE_TYPE): str,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Optional(CONF_ALWAYS_CALLBACK, default=False): bool,
         },
     }
 )
@@ -218,6 +237,9 @@ ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
             ),
             Platform.LIGHT: vol.Schema(
                 {vol.Required("data"): LIGHT_SCHEMA}, extra=vol.ALLOW_EXTRA
+            ),
+            Platform.SENSOR: vol.Schema(
+                {vol.Required(CONF_DATA): SENSOR_SCHEMA}, extra=vol.ALLOW_EXTRA
             ),
         },
     ),
