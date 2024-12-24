@@ -26,6 +26,7 @@ TODO_CLEAR = CookidooButtonEntityDescription(
     key="todo_clear",
     translation_key="todo_clear",
     press_fn=lambda client: client.clear_shopping_list(),
+    entity_registry_enabled_default=False,
 )
 
 

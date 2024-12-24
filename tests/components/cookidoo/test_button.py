@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -15,6 +16,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -33,6 +35,7 @@ async def test_all_entities(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_pressing_button(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
