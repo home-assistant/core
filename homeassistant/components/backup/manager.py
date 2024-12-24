@@ -726,7 +726,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
-        backup_name = name or f"Core {HAVERSION}"
+        backup_name = (
+            name
+            or f"{"Automatic" if with_automatic_settings else "Custom"} {HAVERSION}"
+        )
         new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
             backup_name=backup_name,
