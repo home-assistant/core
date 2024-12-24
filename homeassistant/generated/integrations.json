@@ -2475,6 +2475,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "harvey": {
+      "name": "Harvey",
+      "integration_type": "virtual",
+      "supported_by": "aquacell"
+    },
     "hassio": {
       "name": "Home Assistant Supervisor",
       "integration_type": "hub",
@@ -4160,7 +4165,7 @@
       "name": "Niko Home Control",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "nilu": {
       "name": "Norwegian Institute for Air Research (NILU)",
@@ -4617,6 +4622,12 @@
       "name": "PCS Lighting",
       "integration_type": "virtual",
       "supported_by": "upb"
+    },
+    "peblar": {
+      "name": "Peblar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "peco": {
       "name": "PECO Outage Counter",
@@ -7362,7 +7373,6 @@
       "iot_class": "calculated"
     },
     "filter": {
-      "name": "Filter",
       "integration_type": "helper",
       "config_flow": false,
       "iot_class": "local_push"
@@ -7493,6 +7503,7 @@
     "emulated_roku",
     "energenie_power_sockets",
     "filesize",
+    "filter",
     "garages_amsterdam",
     "generic",
     "generic_hygrostat",

@@ -371,5 +371,16 @@
         "name": "Grid enabled"
       }
     }
+  },
+  "exceptions": {
+    "unexpected_device": {
+      "message": "Unexpected Envoy serial-number found at {host}; expected {expected_serial}, found {actual_serial}"
+    },
+    "authentication_error": {
+      "message": "Envoy authentication failure on {host}: {args}"
+    },
+    "envoy_error": {
+      "message": "Error communicating with Envoy API on {host}: {args}"
+    }
   }
 }
