@@ -42,28 +42,6 @@
         }
       }
     },
-    "html5": {
-      "name": "Notifications 'Send a notification with HTML5'",
-      "description": "Sends a notification message using the HTML5 service.",
-      "fields": {
-        "message": {
-          "name": "Message",
-          "description": "Message body of the notification."
-        },
-        "title": {
-          "name": "Title",
-          "description": "The title of the message."
-        },
-        "target": {
-          "name": "Target",
-          "description": "The recipient of the notification."
-        },
-        "data": {
-          "name": "Data",
-          "description": "Custom data to be sent with the notification."
-        }
-      }
-    },
     "persistent_notification": {
       "name": "Send a persistent notification",
       "description": "Sends a notification that is visible in the notifications panel.",

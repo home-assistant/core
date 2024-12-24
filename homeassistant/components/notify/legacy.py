@@ -303,7 +303,9 @@ class BaseNotificationService:
                         "Sends a notification message using the"
                         f" {target_name} integration."
                     ),
-                    CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                    CONF_FIELDS: self.ensure_field_descriptions(
+                        self.services_dict[SERVICE_NOTIFY][CONF_FIELDS]
+                    ),
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
@@ -330,9 +332,26 @@ class BaseNotificationService:
             CONF_DESCRIPTION: (
                 f"Sends a notification message using the {self._service_name} service."
             ),
-            CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+            CONF_FIELDS: self.ensure_field_descriptions(
+                self.services_dict[SERVICE_NOTIFY][CONF_FIELDS]
+            ),
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
+
+    def ensure_field_descriptions(self, fields: dict) -> dict:
+        """Ensure that each field has a description, adding a default one if missing."""
+        default_descriptions = {
+            "message": "Message body of the notification.2",
+            "title": "The title of the message.2",
+            "target": "The recipient of the notification.2",
+            "data": "Custom data to be sent with the notification.2",
+        }
+
+        for field, field_data in fields.items():
+            if field in default_descriptions and "description" not in field_data:
+                field_data["description"] = default_descriptions.get(field)
+
+        return fields
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
