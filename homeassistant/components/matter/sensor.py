@@ -72,39 +72,39 @@ OPERATIONAL_STATE_MAP = {
 }
 
 EVSE_STATE_MAP = {
-    clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: "NotPluggedIn",
-    clusters.EnergyEvse.Enums.StateEnum.kPluggedInNoDemand: "PluggedIn, NoDemand",
-    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDemand: "PluggedIn, Demand",
-    clusters.EnergyEvse.Enums.StateEnum.kPluggedInCharging: "PluggedIn, Charging",
-    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDischarging: "PluggedIn, Discharging",
-    clusters.EnergyEvse.Enums.StateEnum.kSessionEnding: "SessionEnding",
-    clusters.EnergyEvse.Enums.StateEnum.kFault: "Fault",
+    clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: "not_plugged_in",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInNoDemand: "plugged_in_no_demand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDemand: "plugged_in_demand",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInCharging: "plugged_in_charging",
+    clusters.EnergyEvse.Enums.StateEnum.kPluggedInDischarging: "plugged_in_discharging",
+    clusters.EnergyEvse.Enums.StateEnum.kSessionEnding: "session_ending",
+    clusters.EnergyEvse.Enums.StateEnum.kFault: "fault",
 }
 
 EVSE_SUPPLY_STATE_MAP = {
-    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabled: "Disabled",
-    clusters.EnergyEvse.Enums.SupplyStateEnum.kChargingEnabled: "Charging Enabled",
-    clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: "Discharging Enabled",
-    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: "Disabled Diagnostics",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabled: "disabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kChargingEnabled: "charging_enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDischargingEnabled: "discharging_enabled",
+    clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabledDiagnostics: "disabled_diagnostics",
 }
 
 EVSE_FAULT_STATE_MAP = {
-    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "No Error",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "Meter Failure",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "Over Voltage",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "Under Voltage",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "Over Current",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "Contact Wet Failure",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "Contact Dry Failure",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "Power Loss",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "Power Quality",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "Pilot Short Circuit",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "Emergency Stop",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "EV Disconnected",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "Wrong Power Supply",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "Live Neutral Swap",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "Over Temperature",
-    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "Unknown",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kNoError: "no_error",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kMeterFailure: "meter_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverVoltage: "over_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kUnderVoltage: "under_voltage",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverCurrent: "over_current",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactWetFailure: "contact_wet_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kContactDryFailure: "contact_dry_failure",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerLoss: "power_loss",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPowerQuality: "power_quality",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kPilotShortCircuit: "pilot_short_circuit",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEmergencyStop: "emergency_stop",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kEVDisconnected: "ev_disconnected",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kWrongPowerSupply: "wrong_power_supply",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kLiveNeutralSwap: "live_neutral_swap",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOverTemperature: "over_temperature",
+    clusters.EnergyEvse.Enums.FaultStateEnum.kOther: "other",
 }
 
 
