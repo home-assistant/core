@@ -898,6 +898,35 @@ async def test_options_only_stream(
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
 
+async def test_options_still_and_stream_not_provided(
+    hass: HomeAssistant,
+) -> None:
+    """Test we show a suitable error if neither still or stream URL are provided."""
+    data = TESTDATA.copy()
+
+    mock_entry = MockConfigEntry(
+        title="Test Camera",
+        domain=DOMAIN,
+        data={},
+        options=data,
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    data.pop(CONF_STILL_IMAGE_URL)
+    data.pop(CONF_STREAM_SOURCE)
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=data,
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
+
+
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_options_permission_error(
@@ -991,10 +1020,15 @@ async def test_migrate_existing_ids(
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_use_wallclock_as_timestamps_option(
-    hass: HomeAssistant, mock_create_stream: _patch[MagicMock]
+    hass: HomeAssistant,
+    mock_create_stream: _patch[MagicMock],
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test the use_wallclock_as_timestamps option flow."""
 
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     mock_entry = MockConfigEntry(
         title="Test Camera",
         domain=DOMAIN,
@@ -1020,6 +1054,25 @@ async def test_use_wallclock_as_timestamps_option(
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
         )
     assert result2["type"] is FlowResultType.FORM
+
+    ws_client = await hass_ws_client()
+    flow_id = result2["flow_id"]
+    await ws_client.send_json_auto_id(
+        {
+            "type": "generic_camera/start_preview",
+            "flow_id": flow_id,
+            "flow_type": "options_flow",
+        },
+    )
+    json = await ws_client.receive_json()
+
+    client = await hass_client()
+    still_preview_url = json["event"]["attributes"]["still_url"]
+    # Check the preview image works.
+    resp = await client.get(still_preview_url)
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == fakeimgbytes_png
+
     # Test what happens if user rejects the preview
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"], user_input={CONF_CONFIRMED_OK: False}
