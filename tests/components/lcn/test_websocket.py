@@ -7,14 +7,13 @@ import pytest
 
 from homeassistant.components.lcn import AddressType
 from homeassistant.components.lcn.const import CONF_DOMAIN_DATA
-from homeassistant.components.lcn.helpers import get_device_config, get_resource
+from homeassistant.components.lcn.helpers import get_device_config
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_NAME,
-    CONF_RESOURCE,
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
@@ -52,7 +51,7 @@ ENTITIES_DELETE_PAYLOAD = {
     "entry_id": "",
     CONF_ADDRESS: (0, 7, False),
     CONF_DOMAIN: "switch",
-    CONF_RESOURCE: "relay1",
+    CONF_DOMAIN_DATA: {"output": "RELAY1"},
 }
 
 
@@ -184,18 +183,14 @@ async def test_lcn_entities_add_command(
         for key in (CONF_ADDRESS, CONF_NAME, CONF_DOMAIN, CONF_DOMAIN_DATA)
     }
 
-    resource = get_resource(
-        ENTITIES_ADD_PAYLOAD[CONF_DOMAIN], ENTITIES_ADD_PAYLOAD[CONF_DOMAIN_DATA]
-    ).lower()
-
-    assert {**entity_config, CONF_RESOURCE: resource} not in entry.data[CONF_ENTITIES]
+    assert entity_config not in entry.data[CONF_ENTITIES]
 
     await client.send_json_auto_id({**ENTITIES_ADD_PAYLOAD, "entry_id": entry.entry_id})
 
     res = await client.receive_json()
     assert res["success"], res
 
-    assert {**entity_config, CONF_RESOURCE: resource} in entry.data[CONF_ENTITIES]
+    assert entity_config in entry.data[CONF_ENTITIES]
 
 
 async def test_lcn_entities_delete_command(
@@ -213,7 +208,8 @@ async def test_lcn_entities_delete_command(
                 for entity in entry.data[CONF_ENTITIES]
                 if entity[CONF_ADDRESS] == ENTITIES_DELETE_PAYLOAD[CONF_ADDRESS]
                 and entity[CONF_DOMAIN] == ENTITIES_DELETE_PAYLOAD[CONF_DOMAIN]
-                and entity[CONF_RESOURCE] == ENTITIES_DELETE_PAYLOAD[CONF_RESOURCE]
+                and entity[CONF_DOMAIN_DATA]
+                == ENTITIES_DELETE_PAYLOAD[CONF_DOMAIN_DATA]
             ]
         )
         == 1
@@ -233,7 +229,8 @@ async def test_lcn_entities_delete_command(
                 for entity in entry.data[CONF_ENTITIES]
                 if entity[CONF_ADDRESS] == ENTITIES_DELETE_PAYLOAD[CONF_ADDRESS]
                 and entity[CONF_DOMAIN] == ENTITIES_DELETE_PAYLOAD[CONF_DOMAIN]
-                and entity[CONF_RESOURCE] == ENTITIES_DELETE_PAYLOAD[CONF_RESOURCE]
+                and entity[CONF_DOMAIN_DATA]
+                == ENTITIES_DELETE_PAYLOAD[CONF_DOMAIN_DATA]
             ]
         )
         == 0
