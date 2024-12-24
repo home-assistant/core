@@ -126,6 +126,21 @@
     },
     "version_error": {
       "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please reauthenticate."
+    },
+    "update_failed_mealplan": {
+      "message": "Could not fetch mealplan data."
+    },
+    "update_failed_shopping_list": {
+      "message": "Could not fetch shopping list data."
+    },
+    "update_failed_statistics": {
+      "message": "Could not fetch statistics data."
+    },
+    "setup_failed": {
+      "message": "Could not connect to the Mealie instance."
     }
   },
   "services": {
