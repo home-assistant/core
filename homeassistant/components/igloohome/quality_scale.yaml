@@ -35,7 +35,7 @@ rules:
     comment: |
       Integration has no actions and is a read-only platform.
   docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
