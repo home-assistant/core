@@ -4570,6 +4570,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "overseerr": {
+      "name": "Overseerr",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ovo_energy": {
       "name": "OVO Energy",
       "integration_type": "service",
