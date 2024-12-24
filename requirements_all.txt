@@ -2371,7 +2371,7 @@ python-linkplay==0.0.20
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.6.0
+python-matter-server==7.0.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
