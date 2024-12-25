@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from weconnect.elements.range_status import RangeStatus
+from weconnect.elements.vehicle import Vehicle
 
 DOMAIN = "weconnect"
 
@@ -10,8 +11,8 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 
 BRAND_UNKNOWN = "Unknown"
 BRAND_MAPPING = {
-    "V": "Volkswagen",
-    "N": "Volkswagen",
+    Vehicle.BrandCode.V: "Volkswagen",
+    Vehicle.BrandCode.N: "Volkswagen",
 }
 
 CONF_ACCEPT_TERMS = "accept_terms"
