@@ -15,8 +15,15 @@ from tests.typing import MqttMockHAClient
 
 _PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
 _PAYLOAD_SWITCH_STATE_OFF = '{"id":"UL10","properties":{"value":false},"type":"state"}'
+_PAYLOAD_SWITCH_SET_STATE_ON = (
+    '{"id": "UL10", "type": "state", "properties": {"value": true}}'
+)
+_PAYLOAD_SWITCH_SET_STATE_OFF = (
+    '{"id": "UL10", "type": "state", "properties": {"value": false}}'
+)
 
 _TOPIC_SWITCH_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/state"
+_TOPIC_SWITCH_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL10/setState"
 
 _SWITCH_ENTITY_ID = "switch.qbus_000001_10"
 
@@ -26,18 +33,16 @@ async def test_switch_turn_on_off(
     mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test turn on and off."""
+    """Test turning on and off."""
 
-    # Setup entry
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Fire config payload
     async_fire_mqtt_message(hass, TOPIC_CONFIG, PAYLOAD_CONFIG)
     await hass.async_block_till_done()
 
     # Switch ON
-    mqtt_mock.async_publish.reset_mock()
+    mqtt_mock.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -45,18 +50,18 @@ async def test_switch_turn_on_off(
         blocking=True,
     )
 
-    # Test MQTT publish
-    assert len(mqtt_mock.async_publish.mock_calls) == 1
+    mqtt_mock.async_publish.assert_called_once_with(
+        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_ON, 0, False
+    )
 
     # Simulate response
     async_fire_mqtt_message(hass, _TOPIC_SWITCH_STATE, _PAYLOAD_SWITCH_STATE_ON)
     await hass.async_block_till_done()
 
-    # Test ON
     assert hass.states.get(_SWITCH_ENTITY_ID).state == STATE_ON
 
     # Switch OFF
-    mqtt_mock.async_publish.reset_mock()
+    mqtt_mock.reset_mock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -64,12 +69,12 @@ async def test_switch_turn_on_off(
         blocking=True,
     )
 
-    # Test MQTT publish
-    assert len(mqtt_mock.async_publish.mock_calls) == 1
+    mqtt_mock.async_publish.assert_called_once_with(
+        _TOPIC_SWITCH_SET_STATE, _PAYLOAD_SWITCH_SET_STATE_OFF, 0, False
+    )
 
     # Simulate response
     async_fire_mqtt_message(hass, _TOPIC_SWITCH_STATE, _PAYLOAD_SWITCH_STATE_OFF)
     await hass.async_block_till_done()
 
-    # Test OFF
     assert hass.states.get(_SWITCH_ENTITY_ID).state == STATE_OFF

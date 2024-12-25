@@ -4,6 +4,7 @@ import json
 import time
 from unittest.mock import patch
 
+import pytest
 from qbusmqttapi.discovery import QbusDiscovery
 
 from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL_NUMBER, DOMAIN
@@ -15,13 +16,24 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .common import PAYLOAD_CONFIG, TOPIC_CONFIG
 
+_PAYLOAD_DEVICE_STATE = '{"id":"UL1","properties":{"connected":true},"type":"event"}'
 
-async def test_step_mqtt_empty_payload(hass: HomeAssistant) -> None:
+
+@pytest.mark.parametrize(
+    ("topic", "payload"),
+    [
+        ("cloudapp/QBUSMQTTGW/state", b""),
+        ("invalid/topic", b"{}"),
+    ],
+)
+async def test_step_mqtt_invalid(
+    hass: HomeAssistant, topic: str, payload: bytes
+) -> None:
     """Test mqtt discovery with empty payload."""
     discovery = MqttServiceInfo(
-        subscribed_topic="",
-        topic="",
-        payload=b"",
+        subscribed_topic=topic,
+        topic=topic,
+        payload=payload,
         qos=0,
         retain=False,
         timestamp=time.time(),
@@ -35,31 +47,21 @@ async def test_step_mqtt_empty_payload(hass: HomeAssistant) -> None:
     assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_step_mqtt_invalid_topic(hass: HomeAssistant) -> None:
-    """Test mqtt discovery with an invalid topic."""
-    discovery = MqttServiceInfo(
-        subscribed_topic="invalid/topic",
-        topic="",
-        payload=b"{}",
-        qos=0,
-        retain=False,
-        timestamp=time.time(),
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
-    )
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "invalid_discovery_info"
-
-
-async def test_handle_gateway_topic_when_online(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("payload", "mqtt_publish"),
+    [
+        ('{ "online": true }', True),
+        ('{ "online": false }', False),
+    ],
+)
+async def test_handle_gateway_topic_when_online(
+    hass: HomeAssistant, payload: str, mqtt_publish: bool
+) -> None:
     """Test handling of gateway topic with payload indicating online."""
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/state",
         topic="cloudapp/QBUSMQTTGW/state",
-        payload='{ "online": true }',
+        payload=payload,
         qos=0,
         retain=False,
         timestamp=time.time(),
@@ -72,30 +74,7 @@ async def test_handle_gateway_topic_when_online(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
         )
 
-    assert mock_publish.called
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "discovery_in_progress"
-
-
-async def test_handle_gateway_topic_when_offline(hass: HomeAssistant) -> None:
-    """Test handling of gateway topic with payload indicating offline."""
-    discovery = MqttServiceInfo(
-        subscribed_topic="cloudapp/QBUSMQTTGW/state",
-        topic="cloudapp/QBUSMQTTGW/state",
-        payload='{ "online": false }',
-        qos=0,
-        retain=False,
-        timestamp=time.time(),
-    )
-
-    with (
-        patch("homeassistant.components.mqtt.client.async_publish") as mock_publish,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
-        )
-
-    assert mock_publish.called is False
+    assert mock_publish.called is mqtt_publish
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "discovery_in_progress"
 
@@ -132,7 +111,7 @@ async def test_handle_device_topic_missing_config(hass: HomeAssistant) -> None:
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
         topic="cloudapp/QBUSMQTTGW/UL1/state",
-        payload="{ }",
+        payload=_PAYLOAD_DEVICE_STATE,
         qos=0,
         retain=False,
         timestamp=time.time(),
@@ -154,36 +133,12 @@ async def test_handle_device_topic_missing_config(hass: HomeAssistant) -> None:
     assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_handle_device_topic_config_not_ready(hass: HomeAssistant) -> None:
-    """Test handling of device topic when device is not found."""
-    discovery = MqttServiceInfo(
-        subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
-        topic="cloudapp/QBUSMQTTGW/UL1/state",
-        payload='{"id":"UL1","properties":{"connected":true},"type":"event"}',
-        qos=0,
-        retain=False,
-        timestamp=time.time(),
-    )
-
-    with patch.object(
-        QbusConfigCoordinator,
-        "async_get_or_request_config",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
-        )
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "invalid_discovery_info"
-
-
 async def test_handle_device_topic_device_not_found(hass: HomeAssistant) -> None:
     """Test handling of device topic when device is not found."""
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
-        topic="cloudapp/QBUSMQTTGW/UL1/state",
-        payload='{"id":"UL1","properties":{"connected":true},"type":"event"}',
+        topic="cloudapp/QBUSMQTTGW/UL2/state",
+        payload='{"id":"UL2","properties":{"connected":true},"type":"event"}',
         qos=0,
         retain=False,
         timestamp=time.time(),
@@ -192,7 +147,7 @@ async def test_handle_device_topic_device_not_found(hass: HomeAssistant) -> None
     with patch.object(
         QbusConfigCoordinator,
         "async_get_or_request_config",
-        return_value=QbusDiscovery(json.loads(PAYLOAD_CONFIG.replace("UL1", "UL2"))),
+        return_value=QbusDiscovery(json.loads(PAYLOAD_CONFIG)),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
@@ -203,11 +158,11 @@ async def test_handle_device_topic_device_not_found(hass: HomeAssistant) -> None
 
 
 async def test_step_discovery_confirm_create_entry(hass: HomeAssistant) -> None:
-    """Test mqtt confirm creating the entry."""
+    """Test mqtt confirm step and entry creation."""
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
         topic="cloudapp/QBUSMQTTGW/UL1/state",
-        payload='{"id":"UL1","properties":{"connected":true},"type":"event"}',
+        payload=_PAYLOAD_DEVICE_STATE,
         qos=0,
         retain=False,
         timestamp=time.time(),
