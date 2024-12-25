@@ -3,12 +3,14 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from cookidoo_api import Cookidoo
+from cookidoo_api import Cookidoo, CookidooException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .entity import CookidooBaseEntity
 
@@ -58,5 +60,11 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.press_fn(self.coordinator.cookidoo)
+        try:
+            await self.entity_description.press_fn(self.coordinator.cookidoo)
+        except CookidooException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="button_clear_todo_failed",
+            ) from e
         await self.coordinator.async_refresh()

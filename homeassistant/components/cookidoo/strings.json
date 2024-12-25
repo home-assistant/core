@@ -63,6 +63,9 @@
     }
   },
   "exceptions": {
+    "button_clear_todo_failed": {
+      "message": "Failed to clear all items from the Cookidoo shopping list"
+    },
     "todo_save_item_failed": {
       "message": "Failed to save {name} to Cookidoo shopping list"
     },
