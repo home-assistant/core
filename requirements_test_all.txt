@@ -1941,6 +1941,9 @@ python-opensky==1.0.1
 # homeassistant.components.thread
 python-otbr-api==2.6.0
 
+# homeassistant.components.overseerr
+python-overseerr==0.1.1
+
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
