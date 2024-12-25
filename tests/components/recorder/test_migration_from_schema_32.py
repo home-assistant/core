@@ -2241,7 +2241,7 @@ async def test_cleanup_unmigrated_state_timestamps(
         with session_scope(hass=hass) as session:
             states = session.query(States).all()
             assert len(states) == 3
-            return {state.metadata_id: _object_as_dict(state) for state in states}
+            return {state.state_id: _object_as_dict(state) for state in states}
 
     # Run again with new schema, let migration run
     async with async_test_home_assistant() as hass:
@@ -2268,5 +2268,6 @@ async def test_cleanup_unmigrated_state_timestamps(
                 await hass.async_stop()
                 await hass.async_block_till_done()
 
+    assert len(states_by_metadata_id) == 3
     for state in states_by_metadata_id.values():
         assert state["last_updated_ts"] is not None
