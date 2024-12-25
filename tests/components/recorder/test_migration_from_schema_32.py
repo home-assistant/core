@@ -2158,57 +2158,58 @@ async def test_cleanup_unmigrated_state_timestamps(
 
     def _insert_states():
         with session_scope(hass=hass) as session:
-            session.add_all(
-                (
-                    old_db_schema.States(
-                        entity_id="state.test_state1",
-                        last_updated=datetime.datetime(
-                            2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
-                        ),
-                        last_updated_ts=None,
-                        last_changed=datetime.datetime(
-                            2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
-                        ),
-                        last_changed_ts=None,
-                        context_id=uuid_hex,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
-                    ),
-                    old_db_schema.States(
-                        entity_id="state.test_state2",
-                        last_updated=datetime.datetime(
-                            2016, 10, 28, 20, 13, 52, 552529, tzinfo=datetime.UTC
-                        ),
-                        last_updated_ts=None,
-                        last_changed=datetime.datetime(
-                            2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
-                        ),
-                        last_changed_ts=None,
-                        context_id=None,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
-                    ),
-                    old_db_schema.States(
-                        entity_id="state.already_migrated",
-                        last_updated=None,
-                        last_updated_ts=1477685632.452529,
-                        last_changed=None,
-                        last_changed_ts=1477685632.452529,
-                        context_id=uuid_hex,
-                        context_id_bin=None,
-                        context_user_id=None,
-                        context_user_id_bin=None,
-                        context_parent_id=None,
-                        context_parent_id_bin=None,
-                    ),
-                )
+            state1 = old_db_schema.States(
+                entity_id="state.test_state1",
+                last_updated=datetime.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                ),
+                last_updated_ts=None,
+                last_changed=datetime.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                ),
+                last_changed_ts=None,
+                context_id=uuid_hex,
+                context_id_bin=None,
+                context_user_id=None,
+                context_user_id_bin=None,
+                context_parent_id=None,
+                context_parent_id_bin=None,
             )
+            state1.last_updated_ts = None
+            state1.last_changed_ts = None
+            state2 = old_db_schema.States(
+                entity_id="state.test_state2",
+                last_updated=datetime.datetime(
+                    2016, 10, 28, 20, 13, 52, 552529, tzinfo=datetime.UTC
+                ),
+                last_updated_ts=None,
+                last_changed=datetime.datetime(
+                    2016, 10, 28, 20, 13, 52, 452529, tzinfo=datetime.UTC
+                ),
+                last_changed_ts=None,
+                context_id=None,
+                context_id_bin=None,
+                context_user_id=None,
+                context_user_id_bin=None,
+                context_parent_id=None,
+                context_parent_id_bin=None,
+            )
+            state2.last_updated_ts = None
+            state2.last_changed_ts = None
+            state3 = old_db_schema.States(
+                entity_id="state.already_migrated",
+                last_updated=None,
+                last_updated_ts=1477685632.452529,
+                last_changed=None,
+                last_changed_ts=1477685632.452529,
+                context_id=uuid_hex,
+                context_id_bin=None,
+                context_user_id=None,
+                context_user_id_bin=None,
+                context_parent_id=None,
+                context_parent_id_bin=None,
+            )
+            session.add_all((state1, state2, state3))
 
         with session_scope(hass=hass, read_only=True) as session:
             states = session.query(old_db_schema.States).all()
