@@ -1,7 +1,14 @@
 {
   "domain": "geocaching",
   "name": "Geocaching",
-  "codeowners": ["@Sholofly", "@reinder83"],
+  "codeowners": [
+    "@Sholofly",
+    "@reinder83",
+    "@marc7s",
+    "@belgien",
+    "@ClumpyAbbe",
+    "@hulkper"
+  ],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/geocaching",

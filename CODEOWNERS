@@ -532,8 +532,8 @@ build.json @home-assistant/supervisor
 /tests/components/geo_location/ @home-assistant/core
 /homeassistant/components/geo_rss_events/ @exxamalte
 /tests/components/geo_rss_events/ @exxamalte
-/homeassistant/components/geocaching/ @Sholofly @reinder83
-/tests/components/geocaching/ @Sholofly @reinder83
+/homeassistant/components/geocaching/ @Sholofly @reinder83 @marc7s @belgien @ClumpyAbbe @hulkper
+/tests/components/geocaching/ @Sholofly @reinder83 @marc7s @belgien @ClumpyAbbe @hulkper
 /homeassistant/components/geonetnz_quakes/ @exxamalte
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
