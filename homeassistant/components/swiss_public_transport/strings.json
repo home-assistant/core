@@ -22,9 +22,9 @@
           "time_mode": "Select a time mode"
         },
         "data_description": {
-          "from": "The departure station for the start of the connection.",
-          "to": "The arrival station for the end of the connection.",
-          "via": "List of up to 5 via stations",
+          "from": "The station where the connection starts",
+          "to": "The station where the connection ends",
+          "via": "List of up to 5 stations the route must go through",
           "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
