@@ -53,6 +53,8 @@ async def test_create_entity(
             "name": test_name,
             "device_info": None,
             "entity_category": None,
+            "device_class": None,
+            "state_class": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "state": None, "passive": []},
@@ -300,7 +302,7 @@ async def test_delete_entity_error(
     assert res["error"]["message"].startswith("Entity not found")
 
 
-async def test_get_entity_config(
+async def test_get_entity_config1(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
@@ -330,6 +332,8 @@ async def test_get_entity_config(
             "name": "Test",
             "device_info": None,
             "entity_category": None,
+            "device_class": None,
+            "state_class": None,
         },
         "knx": {
             "ga_switch": {"write": "1/2/3", "passive": [], "state": None},
