@@ -73,51 +73,57 @@ class GrowattSwitch(CoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        res = await self.hass.async_add_executor_job(
-            self.coordinator.api.update_tlx_inverter_setting,
-            self.coordinator.device_id,
-            self.entity_description.api_key,
-            "1",
-        )
-        _LOGGER.debug(
-            "Turn the switch on: %s, res: %s", self.entity_description.key, res
-        )
-        if res.get("success"):
-            # If success, update single parameter value in coordinator instead of
-            # fetching all data with coordinator.async_refresh() to off-load the API
-            self.coordinator.set_value(self.entity_description, "1")
-            self.async_write_ha_state()
-        else:
-            _LOGGER.error(
-                "Turn on switch %d failed, msg: %s, error: %s",
-                self.entity_description.key,
-                res.get("msg"),
-                res.get("error"),
+        try:
+            res = await self.hass.async_add_executor_job(
+                self.coordinator.api.update_tlx_inverter_setting,
+                self.coordinator.device_id,
+                self.entity_description.api_key,
+                "1",
             )
+            _LOGGER.debug(
+                "Turn the switch on: %s, res: %s", self.entity_description.key, res
+            )
+            if res.get("success"):
+                # If success, update single parameter value in coordinator instead of
+                # fetching all data with coordinator.async_refresh() to off-load the API
+                self.coordinator.set_value(self.entity_description, "1")
+                self.async_write_ha_state()
+            else:
+                _LOGGER.error(
+                    "Turn on switch %s failed, msg: %s, error: %s",
+                    self.entity_description.key,
+                    res.get("msg"),
+                    res.get("error"),
+                )
+        except (KeyError, ValueError) as e:
+            _LOGGER.error("Error while turning off switch: %s", e)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        res = await self.hass.async_add_executor_job(
-            self.coordinator.api.update_tlx_inverter_setting,
-            self.coordinator.device_id,
-            self.entity_description.api_key,
-            "0",
-        )
-        _LOGGER.debug(
-            "Turn the switch off: %s, res: %s", self.entity_description.key, res
-        )
-        if res.get("success"):
-            # If success, update single parameter value in coordinator instead of
-            # fetching all data with coordinator.async_refresh() to off-load the API
-            self.coordinator.set_value(self.entity_description, "0")
-            self.async_write_ha_state()
-        else:
-            _LOGGER.error(
-                "Turn off switch %d failed, msg: %s, error: %s",
-                self.entity_description.key,
-                res.get("msg"),
-                res.get("error"),
+        try:
+            res = await self.hass.async_add_executor_job(
+                self.coordinator.api.update_tlx_inverter_setting,
+                self.coordinator.device_id,
+                self.entity_description.api_key,
+                "0",
             )
+            _LOGGER.debug(
+                "Turn the switch off: %s, res: %s", self.entity_description.key, res
+            )
+            if res.get("success"):
+                # If success, update single parameter value in coordinator instead of
+                # fetching all data with coordinator.async_refresh() to off-load the API
+                self.coordinator.set_value(self.entity_description, "0")
+                self.async_write_ha_state()
+            else:
+                _LOGGER.error(
+                    "Turn off switch %s failed, msg: %s, error: %s",
+                    self.entity_description.key,
+                    res.get("msg"),
+                    res.get("error"),
+                )
+        except (KeyError, ValueError) as e:
+            _LOGGER.error("Error while turning off switch: %s", e)
 
     @callback
     def _handle_coordinator_update(self) -> None:
