@@ -1504,7 +1504,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.0
+numpy==2.2.1
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
