@@ -521,6 +521,9 @@ azure-kusto-ingest==4.5.1
 # homeassistant.components.azure_storage
 azure-storage-blob==12.24.0
 
+# homeassistant.components.backblaze
+b2sdk==2.7.0
+
 # homeassistant.components.holiday
 babel==2.15.0
 
