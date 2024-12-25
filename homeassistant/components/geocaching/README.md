@@ -66,12 +66,14 @@ cards:
 
       |---|---|---|---|
 
-      {% for log in state_attr(sensor_id, 'travel_log')[-logs_to_display:] |
-      reverse -%}
+      {% if state_attr(sensor_id, 'travel_log') %}
+        {% for log in state_attr(sensor_id, 'travel_log')[-logs_to_display:] |
+        reverse -%}
 
-      |{{log.date}}|{{log.username}}|{{log.location_name}}|{{log.distance_travelled}}|
+        |{{log.date}}|{{log.username}}|{{log.location_name}}|{{log.distance_travelled}}|
 
-      {% endfor %}
+        {% endfor %}
+      {% endif %}
     title: Travel log
 ```
 
