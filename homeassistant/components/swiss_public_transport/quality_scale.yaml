@@ -14,7 +14,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: No events implemented
@@ -40,7 +40,7 @@ rules:
   parallel-updates: done
   test-coverage: todo
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: no options flow
