@@ -156,7 +156,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WeConnect sensor entities."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities = []
     sensor_categories = [GENERIC_SENSORS, FUEL_SENSORS, BATTERY_SENSORS]
