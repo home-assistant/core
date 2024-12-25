@@ -30,7 +30,6 @@ from .const import (
     NEARBY_CACHES_COUNT_TITLE,
     NEARBY_CACHES_RADIUS_TITLE,
     UPDATE_INTERVAL,
-    USE_TEST_CONFIG,
 )
 
 
@@ -63,36 +62,18 @@ class GeocachingDataUpdateCoordinator(DataUpdateCoordinator[GeocachingStatus]):
                         "longitude": hass.config.longitude,
                     }
                 ),
-                radiusKm=3
-                if USE_TEST_CONFIG
-                else self.entry.data[
-                    NEARBY_CACHES_RADIUS_TITLE
-                ],  # TODO: Remove the hardcoded default when development is done | pylint: disable=fixme
-                maxCount=3
-                if USE_TEST_CONFIG
-                else self.entry.data[
-                    NEARBY_CACHES_COUNT_TITLE
-                ],  # TODO: Remove the hardcoded default when development is done | pylint: disable=fixme
+                radiusKm=self.entry.data[NEARBY_CACHES_RADIUS_TITLE],
+                maxCount=self.entry.data[NEARBY_CACHES_COUNT_TITLE],
             )
         )
 
-        # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
-        trackable_codes: list[str] = (
-            ["TB89YPV"]
-            if USE_TEST_CONFIG
-            else self.entry.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]
+        settings.set_tracked_trackables(
+            set(self.entry.data[CONFIG_FLOW_TRACKABLES_SECTION_ID])
         )
 
-        settings.set_tracked_trackables(set(trackable_codes))
-
-        # TODO: Remove the hardcoded codes when development is done | pylint: disable=fixme
-        geocache_codes: list[str] = (
-            ["GC1DQPM", "GC9P6FN", "GCAKTTQ"]
-            if USE_TEST_CONFIG
-            else self.entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]
+        settings.set_tracked_caches(
+            set(self.entry.data[CONFIG_FLOW_GEOCACHES_SECTION_ID])
         )
-
-        settings.set_tracked_caches(set(geocache_codes))
 
         self.geocaching = GeocachingApi(
             environment=ENVIRONMENT,

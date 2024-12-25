@@ -33,7 +33,6 @@ from .const import (
     NEARBY_CACHES_COUNT_TITLE,
     NEARBY_CACHES_RADIUS_TITLE,
     TRACKABLES_SINGLE_TITLE,
-    USE_TEST_CONFIG,
 )
 
 
@@ -105,10 +104,6 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     )
                 }
             )
-
-        # TODO: Remove this temporary override, only used during development | pylint: disable=fixme
-        if USE_TEST_CONFIG:
-            user_input = {}
 
         if user_input is None:
             # Show the form to collect additional input

@@ -59,7 +59,3 @@ TRACKABLES_SINGLE_TITLE = "tracked_trackable_ref_code"
 
 NEARBY_CACHES_COUNT_TITLE = "nearby_caches_max_count"
 NEARBY_CACHES_RADIUS_TITLE = "nearby_caches_radius"
-
-# TODO: Remove this temporary variable, only used during development | pylint: disable=fixme
-# Enabling this will skip the entire tracked objects configuration process and use predefined codes
-USE_TEST_CONFIG: bool = True
