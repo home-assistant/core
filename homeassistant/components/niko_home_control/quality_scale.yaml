@@ -1,0 +1,41 @@
+rules:
+  # Bronze
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-installation-instructions: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  discovery: todo
+  docs-supported-devices: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-translations: todo
+  exception-translations: done
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: done
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  strict-typing: todo
