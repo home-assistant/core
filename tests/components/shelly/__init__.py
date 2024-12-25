@@ -149,7 +149,7 @@ def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
 
 
 def get_entity_attribute(hass: HomeAssistant, entity_id: str, attribute: str) -> str:
-    """Return entity state."""
+    """Return entity attribute."""
     entity = hass.states.get(entity_id)
     assert entity
     return entity.attributes[attribute]
