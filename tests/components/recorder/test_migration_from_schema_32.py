@@ -2273,3 +2273,12 @@ async def test_cleanup_unmigrated_state_timestamps(
     assert len(states_by_metadata_id) == 3
     for state in states_by_metadata_id.values():
         assert state["last_updated_ts"] is not None
+
+    by_entity_id = {
+        state["entity_id"]: state for state in states_by_metadata_id.values()
+    }
+    assert by_entity_id["state.test_state1"]["last_updated_ts"] == 1477685632.452529
+    assert by_entity_id["state.test_state2"]["last_updated_ts"] == 1477685632.552529
+    assert (
+        by_entity_id["state.already_migrated"]["last_updated_ts"] == 1477685632.452529
+    )
