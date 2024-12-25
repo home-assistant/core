@@ -807,6 +807,9 @@ gcal-sync==6.2.0
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
 
+# homeassistant.components.geocaching
+geocachingapi==0.3.0
+
 # homeassistant.components.aprs
 geopy==2.3.0
 
@@ -2036,9 +2039,6 @@ renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
 reolink-aio==0.10.1
-
-# homeassistant.components.geocaching
-reverse_geocode==1.6.5
 
 # homeassistant.components.rflink
 rflink==0.0.66
