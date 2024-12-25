@@ -12,8 +12,10 @@ vacuum_goto:
       required: true
       selector:
         text:
+          type: number
     y_coord:
       example: 32000
       required: true
       selector:
         text:
+          type: number
