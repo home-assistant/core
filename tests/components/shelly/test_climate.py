@@ -807,3 +807,45 @@ async def test_blu_trv_climate_set_temperature(
     )
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28
+
+
+async def test_blu_trv_climate_disabled(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV disabled."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
+
+    monkeypatch.setitem(
+        mock_blu_trv.config[f"{BLU_TRV_IDENTIFIER}:200"], "enable", False
+    )
+    mock_blu_trv.mock_update()
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) is None
+
+
+async def test_blu_trv_climate_hvac_action(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV is heating."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.IDLE
+
+    monkeypatch.setitem(mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "pos", 10)
+    mock_blu_trv.mock_update()
+
+    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.HEATING
