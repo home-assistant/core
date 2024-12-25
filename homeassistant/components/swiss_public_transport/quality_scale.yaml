@@ -9,7 +9,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: todo
+  config-flow: done
   dependency-transparency: todo
   docs-actions: done
   docs-high-level-description: done
