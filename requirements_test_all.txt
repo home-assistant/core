@@ -1261,7 +1261,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.0
+numpy==2.2.1
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -2231,7 +2231,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.11
+subarulink==0.7.13
 
 # homeassistant.components.sunweg
 sunweg==3.0.2
