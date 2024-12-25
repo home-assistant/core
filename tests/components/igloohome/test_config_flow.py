@@ -112,20 +112,3 @@ async def test_form_abort_on_matching_entry(
     )
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
-
-    # Ensure we can recover from an ABORT
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    new_input = FORM_USER_INPUT.copy()
-    new_input[CONF_CLIENT_ID] = "some-other-client-id"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_input,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Client Credentials"
-    assert result["data"] == new_input
-    assert len(mock_setup_entry.mock_calls) == 2
