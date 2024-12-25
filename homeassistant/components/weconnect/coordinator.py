@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SPIN, DOMAIN, UPDATE_INTERVAL
+from .const import CONF_ACCEPT_TERMS, CONF_SPIN, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ class WeConnectCoordinator(DataUpdateCoordinator):
             spin=config_entry.data[CONF_SPIN],
             loginOnInit=False,
             updateAfterLogin=False,
+            acceptTermsOnLogin=config_entry.data[CONF_ACCEPT_TERMS],
         )
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)

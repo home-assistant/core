@@ -10,13 +10,14 @@ from weconnect.errors import APIError, AuthentificationError
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_SPIN, DOMAIN
+from .const import CONF_ACCEPT_TERMS, CONF_SPIN, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_SPIN, default=""): str,
+        vol.Optional(CONF_ACCEPT_TERMS, default=False): bool,
     }
 )
 
@@ -39,6 +40,7 @@ class WeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             spin=user_input[CONF_SPIN],
             loginOnInit=False,
             updateAfterLogin=False,
+            acceptTermsOnLogin=user_input[CONF_ACCEPT_TERMS],
         )
 
         try:

@@ -6,7 +6,11 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "spin": "S-PIN"
+          "spin": "S-PIN",
+          "accept_terms": "Automatically accept new terms and conditions"
+        },
+        "data_description": {
+          "spin": "WeConnect S-PIN is required to do some actions like unlocking the car."
         }
       }
     },
