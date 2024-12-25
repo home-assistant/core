@@ -1982,7 +1982,8 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
         # https://github.com/home-assistant/core/issues/134002
         # If the system has unmigrated states rows, we need to
         # ensure they are migrated now so the new optimized
-        # queries can be used.
+        # queries can be used. For most systems, this should
+        # be very fast and nothing will be migrated.
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
 
 
