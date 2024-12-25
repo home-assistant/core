@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/freebox",
   "iot_class": "local_polling",
   "loggers": ["freebox_api"],
-  "requirements": ["freebox-api==1.1.0"],
+  "requirements": ["freebox-api==1.2.1"],
   "zeroconf": ["_fbx-api._tcp.local."]
 }

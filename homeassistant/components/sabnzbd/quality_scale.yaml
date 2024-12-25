@@ -1,9 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: |
-      Do not remove services when all config entries are removed.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -38,7 +35,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional options.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done

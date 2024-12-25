@@ -559,6 +559,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "peblar",
+            "name": "pblr-*",
+        },
+        {
             "domain": "powerfox",
             "name": "powerfox*",
         },

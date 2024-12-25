@@ -6,14 +6,12 @@ import logging
 from typing import Any, Final
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DeskData, IdasenDeskCoordinator
-from .const import DOMAIN
+from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
+from .entity import IdasenDeskEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,43 +43,38 @@ BUTTONS: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IdasenDeskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        IdasenDeskButton(data.address, data.device_info, data.coordinator, button)
-        for button in BUTTONS
-    )
+    coordinator = entry.runtime_data
+    async_add_entities(IdasenDeskButton(coordinator, button) for button in BUTTONS)
 
 
-class IdasenDeskButton(ButtonEntity):
+class IdasenDeskButton(IdasenDeskEntity, ButtonEntity):
     """Defines a IdasenDesk button."""
 
     entity_description: IdasenDeskButtonDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
-        address: str,
-        device_info: DeviceInfo,
         coordinator: IdasenDeskCoordinator,
         description: IdasenDeskButtonDescription,
     ) -> None:
         """Initialize the IdasenDesk button entity."""
+        super().__init__(f"{description.key}-{coordinator.address}", coordinator)
         self.entity_description = description
-
-        self._attr_unique_id = f"{description.key}-{address}"
-        self._attr_device_info = device_info
-        self._address = address
-        self._coordinator = coordinator
 
     async def async_press(self) -> None:
         """Triggers the IdasenDesk button press service."""
         _LOGGER.debug(
             "Trigger %s for %s",
             self.entity_description.key,
-            self._address,
+            self.coordinator.address,
         )
-        await self.entity_description.press_action(self._coordinator)()
+        await self.entity_description.press_action(self.coordinator)()
+
+    @property
+    def available(self) -> bool:
+        """Connect/disconnect buttons should always be available."""
+        return True

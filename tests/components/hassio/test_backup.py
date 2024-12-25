@@ -12,7 +12,7 @@ from datetime import datetime
 from io import StringIO
 import os
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
@@ -341,7 +341,7 @@ async def test_agent_info(
                 "name": "Test",
                 "protected": False,
                 "size": 1048576,
-                "with_strategy_settings": False,
+                "with_automatic_settings": None,
             },
         ),
         (
@@ -362,7 +362,7 @@ async def test_agent_info(
                 "name": "Test",
                 "protected": False,
                 "size": 1048576,
-                "with_strategy_settings": False,
+                "with_automatic_settings": None,
             },
         ),
     ],
@@ -445,6 +445,7 @@ async def test_agent_upload(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
@@ -622,6 +623,10 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
     addons=None,
     background=True,
     compressed=True,
+    extra={
+        "instance_id": ANY,
+        "with_automatic_settings": False,
+    },
     folders=None,
     homeassistant_exclude_database=False,
     homeassistant=True,
@@ -645,7 +650,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_all_addons": True},
-            replace(DEFAULT_BACKUP_OPTIONS, addons="all"),
+            replace(DEFAULT_BACKUP_OPTIONS, addons="ALL"),
         ),
         (
             {"include_database": False},
@@ -876,6 +881,7 @@ async def test_agent_receive_remote_backup(
         backup_id=backup_id,
         database_included=True,
         date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
         folders=[Folder.MEDIA, Folder.SHARE],
         homeassistant_included=True,
         homeassistant_version="2024.12.0",
