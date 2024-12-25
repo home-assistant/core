@@ -30,7 +30,7 @@ def load_and_parse_fixture(fixture: str) -> dict[str, Any]:
 async def setup_integration_from_fixtures(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-) -> None:
+) -> MockConfigEntry:
     """Set up MusicAssistant integration with fixture data."""
     players = create_players_from_fixture()
     music_assistant_client.players._players = {x.player_id: x for x in players}
@@ -65,6 +65,7 @@ async def setup_integration_from_fixtures(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    return config_entry
 
 
 def create_players_from_fixture() -> list[Player]:

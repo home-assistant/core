@@ -335,7 +335,7 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         return ColorMode.HS
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
         self._attr_is_on = light_module.state.light_on is True
@@ -348,6 +348,8 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         elif color_mode is ColorMode.HS:
             hue, saturation, _ = light_module.hsv
             self._attr_hs_color = hue, saturation
+
+        return True
 
 
 class TPLinkLightEffectEntity(TPLinkLightEntity):
@@ -368,7 +370,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
         effect_module = self._effect_module
@@ -381,6 +383,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             self._attr_effect_list = effect_list
         else:
             self._attr_effect_list = None
+        return True
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

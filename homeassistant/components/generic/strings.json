@@ -77,7 +77,7 @@
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_with_details": "[%key:common::config_flow::error::unknown_with_details]",
+      "unknown_with_details": "[%key:component::generic::config::error::unknown_with_details%]",
       "already_exists": "[%key:component::generic::config::error::already_exists%]",
       "unable_still_load": "[%key:component::generic::config::error::unable_still_load%]",
       "unable_still_load_auth": "[%key:component::generic::config::error::unable_still_load_auth%]",

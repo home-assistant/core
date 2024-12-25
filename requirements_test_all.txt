@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.55.3
+PySwitchbot==0.55.4
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -443,7 +443,7 @@ anthropic==0.31.2
 apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
-apprise==1.9.0
+apprise==1.9.1
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -628,7 +628,7 @@ dbus-fast==2.24.3
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==9.4.0
+deebot-client==10.0.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -963,7 +963,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241127.8
+home-assistant-frontend==20241224.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
@@ -996,6 +996,9 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 ical==8.2.0
+
+# homeassistant.components.caldav
+icalendar==6.1.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1997,7 +2000,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.15
 
 # homeassistant.components.vesync
-pyvesync==2.1.12
+pyvesync==2.1.14
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2364,7 +2367,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.2
+velbus-aio==2024.12.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2486,7 +2489,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.42
+zha==0.0.43
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0

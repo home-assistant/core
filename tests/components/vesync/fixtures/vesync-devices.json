@@ -9,7 +9,8 @@
         "subDeviceNo": null,
         "deviceStatus": "on",
         "connectionStatus": "online",
-        "uuid": "00000000-1111-2222-3333-444444444444"
+        "uuid": "00000000-1111-2222-3333-444444444444",
+        "configModule": "configModule"
       },
       {
         "cid": "600s-humidifier",
@@ -30,7 +31,8 @@
         "deviceName": "Air Purifier 131s",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55",
@@ -39,7 +41,8 @@
         "subDeviceNo": null,
         "deviceStatus": "on",
         "type": "wifi-air",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "400s-purifier",
@@ -48,7 +51,8 @@
         "subDeviceNo": null,
         "deviceStatus": "on",
         "type": "wifi-air",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "600s-purifier",
@@ -57,7 +61,8 @@
         "subDeviceNo": null,
         "type": "wifi-air",
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "dimmable-bulb",
@@ -65,7 +70,8 @@
         "deviceName": "Dimmable Light",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "tunable-bulb",
@@ -73,7 +79,8 @@
         "deviceName": "Temperature Light",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "outlet",
@@ -81,7 +88,8 @@
         "deviceName": "Outlet",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "switch",
@@ -89,7 +97,8 @@
         "deviceName": "Wall Switch",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       },
       {
         "cid": "dimmable-switch",
@@ -97,7 +106,8 @@
         "deviceName": "Dimmer Switch",
         "subDeviceNo": null,
         "deviceStatus": "on",
-        "connectionStatus": "online"
+        "connectionStatus": "online",
+        "configModule": "configModule"
       }
     ]
   }
