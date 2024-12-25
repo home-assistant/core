@@ -443,7 +443,7 @@ anthropic==0.31.2
 apple_weatherkit==1.1.3
 
 # homeassistant.components.apprise
-apprise==1.9.0
+apprise==1.9.1
 
 # homeassistant.components.aprs
 aprslib==0.7.2
@@ -963,7 +963,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241223.1
+home-assistant-frontend==20241224.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
@@ -1258,7 +1258,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.0
+numpy==2.2.1
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -2000,7 +2000,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.15
 
 # homeassistant.components.vesync
-pyvesync==2.1.12
+pyvesync==2.1.14
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2228,7 +2228,7 @@ streamlabswater==1.0.1
 stringcase==1.2.0
 
 # homeassistant.components.subaru
-subarulink==0.7.11
+subarulink==0.7.13
 
 # homeassistant.components.sunweg
 sunweg==3.0.2
@@ -2367,7 +2367,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.2
+velbus-aio==2024.12.3
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
