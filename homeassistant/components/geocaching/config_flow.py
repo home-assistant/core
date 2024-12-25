@@ -27,6 +27,9 @@ from .const import (
     CONFIG_FLOW_TRACKABLES_SECTION_ID,
     DOMAIN,
     ENVIRONMENT,
+    MAX_NEARBY_CACHES,
+    MAX_TRACKABLES,
+    MAX_TRACKED_CACHES,
     NEARBY_CACHES_COUNT_TITLE,
     NEARBY_CACHES_RADIUS_TITLE,
     TRACKABLES_SINGLE_TITLE,
@@ -123,7 +126,7 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                                     ): NumberSelector(
                                         {
                                             "min": 0,
-                                            "max": 50,
+                                            "max": MAX_NEARBY_CACHES,
                                             "step": 1,
                                             "unit_of_measurement": "count",
                                             "mode": NumberSelectorMode.SLIDER,
@@ -185,10 +188,14 @@ class GeocachingFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID] = get_or_default(
             [CONFIG_FLOW_GEOCACHES_SECTION_ID, CACHES_SINGLE_TITLE], []
         )
+        if len(self.data[CONFIG_FLOW_GEOCACHES_SECTION_ID]) > MAX_TRACKED_CACHES:
+            raise ValueError(f"Cannot track more than {MAX_TRACKED_CACHES} caches")
 
         # Store the provided tracked trackables
         self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID] = get_or_default(
             [CONFIG_FLOW_TRACKABLES_SECTION_ID, TRACKABLES_SINGLE_TITLE], []
         )
+        if len(self.data[CONFIG_FLOW_TRACKABLES_SECTION_ID]) > MAX_TRACKABLES:
+            raise ValueError(f"Cannot track more than {MAX_TRACKABLES} trackables")
 
         return self.async_create_entry(title=self.title, data=self.data)

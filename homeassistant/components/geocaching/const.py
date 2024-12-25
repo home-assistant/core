@@ -49,6 +49,11 @@ CONFIG_FLOW_GEOCACHES_SECTION_ID = "tracked_geocache_ids"
 CONFIG_FLOW_TRACKABLES_SECTION_ID = "tracked_trackable_ids"
 CONFIG_FLOW_NEARBY_SETTINGS_SECTION_ID = "nearby_settings"
 
+# Configuration limits
+MAX_NEARBY_CACHES = 25
+MAX_TRACKED_CACHES = 25
+MAX_TRACKABLES = 10
+
 CACHES_SINGLE_TITLE = "tracked_cache_ref_code"
 TRACKABLES_SINGLE_TITLE = "tracked_trackable_ref_code"
 
