@@ -22,6 +22,9 @@ from .coordinator import WeConnectCoordinator
 from .entity import WeConnectEntity
 from .utils import get_domain, get_electric_engine, get_fuel_engine
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class WeConnectSensorDescription(SensorEntityDescription):
