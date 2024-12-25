@@ -80,6 +80,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._create_entry_from_device(device_info, host)
 
         self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            "name": device_info[DEV_NAME],
+        }
         placeholders = {
             "model": device_info[DEV_MODEL],
             "name": device_info[DEV_NAME],

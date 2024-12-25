@@ -578,8 +578,8 @@ build.json @home-assistant/supervisor
 /tests/components/google_tasks/ @allenporter
 /homeassistant/components/google_travel_time/ @eifinger
 /tests/components/google_travel_time/ @eifinger
-/homeassistant/components/govee_ble/ @bdraco @PierreAronnax
-/tests/components/govee_ble/ @bdraco @PierreAronnax
+/homeassistant/components/govee_ble/ @bdraco
+/tests/components/govee_ble/ @bdraco
 /homeassistant/components/govee_light_local/ @Galorhallen
 /tests/components/govee_light_local/ @Galorhallen
 /homeassistant/components/gpsd/ @fabaff @jrieger
@@ -1103,8 +1103,8 @@ build.json @home-assistant/supervisor
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117 @alexfp14
+/homeassistant/components/overkiz/ @imicknl
+/tests/components/overkiz/ @imicknl
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1135,8 +1135,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
-/homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
-/tests/components/plugwise/ @CoMPaTech @bouwew @frenck
+/homeassistant/components/plugwise/ @CoMPaTech @bouwew
+/tests/components/plugwise/ @CoMPaTech @bouwew
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
 /tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
@@ -1575,8 +1575,8 @@ build.json @home-assistant/supervisor
 /tests/components/triggercmd/ @rvmey
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
-/homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
-/tests/components/tuya/ @Tuya @zlinoliver @frenck
+/homeassistant/components/tuya/ @Tuya @zlinoliver
+/tests/components/tuya/ @Tuya @zlinoliver
 /homeassistant/components/twentemilieu/ @frenck
 /tests/components/twentemilieu/ @frenck
 /homeassistant/components/twinkly/ @dr1rrb @Robbie1221 @Olen

@@ -188,3 +188,88 @@
     'state': 'off',
   })
 # ---
+# name: test_media_player_get_queue_action
+  dict({
+    'media_player.test_group_player_1': dict({
+      'active': True,
+      'current_index': 26,
+      'current_item': dict({
+        'duration': 536,
+        'media_item': dict({
+          'album': dict({
+            'image': None,
+            'media_type': <MediaType.ALBUM: 'album'>,
+            'name': 'Use Your Illusion I',
+            'uri': 'spotify://album/0CxPbTRARqKUYighiEY9Sz',
+            'version': '',
+          }),
+          'artists': list([
+            dict({
+              'image': None,
+              'media_type': <MediaType.ARTIST: 'artist'>,
+              'name': "Guns N' Roses",
+              'uri': 'spotify://artist/3qm84nBOXUEQ2vnTfUTTFC',
+              'version': '',
+            }),
+          ]),
+          'image': None,
+          'media_type': <MediaType.TRACK: 'track'>,
+          'name': 'November Rain',
+          'uri': 'spotify://track/3YRCqOhFifThpSRFJ1VWFM',
+          'version': '',
+        }),
+        'name': "Guns N' Roses - November Rain",
+        'queue_item_id': '5d95dc5be77e4f7eb4939f62cfef527b',
+        'stream_details': dict({
+          'bit_depth': 16,
+          'content_type': 'ogg',
+          'item_id': '3YRCqOhFifThpSRFJ1VWFM',
+          'provider': 'spotify',
+          'sample_rate': 44100,
+        }),
+        'stream_title': None,
+      }),
+      'items': 1094,
+      'name': 'Test Group Player 1',
+      'next_item': dict({
+        'duration': 207,
+        'media_item': dict({
+          'album': dict({
+            'image': None,
+            'media_type': <MediaType.ALBUM: 'album'>,
+            'name': 'La Folie',
+            'uri': 'qobuz://album/0724353468859',
+            'version': '',
+          }),
+          'artists': list([
+            dict({
+              'image': None,
+              'media_type': <MediaType.ARTIST: 'artist'>,
+              'name': 'The Stranglers',
+              'uri': 'qobuz://artist/26779',
+              'version': '',
+            }),
+          ]),
+          'image': None,
+          'media_type': <MediaType.TRACK: 'track'>,
+          'name': 'Golden Brown',
+          'uri': 'qobuz://track/1004735',
+          'version': '',
+        }),
+        'name': 'The Stranglers - Golden Brown',
+        'queue_item_id': '990ae8f29cdf4fb588d679b115621f55',
+        'stream_details': dict({
+          'bit_depth': 16,
+          'content_type': 'flac',
+          'item_id': '1004735',
+          'provider': 'qobuz',
+          'sample_rate': 44100,
+        }),
+        'stream_title': None,
+      }),
+      'queue_id': 'test_group_player_1',
+      'repeat_mode': 'all',
+      'shuffle_enabled': True,
+    }),
+  })
+# ---
