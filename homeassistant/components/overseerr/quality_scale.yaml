@@ -35,14 +35,15 @@ rules:
     status: exempt
     comment: No options to configure
   docs-installation-parameters: todo
-  entity-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: Handled by the coordinator
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the coordinator
   parallel-updates: todo
-  reauthentication-flow:
-    status: exempt
-    comment: |
-      This integration does not require authentication.
+  reauthentication-flow: todo
   test-coverage: todo
   # Gold
   devices: done

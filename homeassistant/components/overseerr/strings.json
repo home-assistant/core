@@ -21,8 +21,26 @@
   },
   "entity": {
     "sensor": {
-      "total_volatile_organic_component_index": {
-        "name": "VOC index"
+      "total_requests": {
+        "name": "Total requests"
+      },
+      "movie_requests": {
+        "name": "Movie requests"
+      },
+      "tv_requests": {
+        "name": "TV requests"
+      },
+      "pending_requests": {
+        "name": "Pending requests"
+      },
+      "declined_requests": {
+        "name": "Declined requests"
+      },
+      "processing_requests": {
+        "name": "Processing requests"
+      },
+      "available_requests": {
+        "name": "Available requests"
       }
     }
   }
