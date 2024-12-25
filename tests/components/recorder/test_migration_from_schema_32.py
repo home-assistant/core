@@ -2194,12 +2194,25 @@ async def test_cleanup_unmigrated_state_timestamps(
                         context_parent_id=None,
                         context_parent_id_bin=None,
                     ),
+                    old_db_schema.States(
+                        entity_id="state.already_migrated",
+                        last_updated=None,
+                        last_updated_ts=1477685632.452529,
+                        last_changed=None,
+                        last_changed_ts=1477685632.452529,
+                        context_id=uuid_hex,
+                        context_id_bin=None,
+                        context_user_id=None,
+                        context_user_id_bin=None,
+                        context_parent_id=None,
+                        context_parent_id_bin=None,
+                    ),
                 )
             )
 
         with session_scope(hass=hass, read_only=True) as session:
             states = session.query(old_db_schema.States).all()
-            assert len(states) == 2
+            assert len(states) == 3
 
     # Create database with old schema
     with (
@@ -2227,7 +2240,7 @@ async def test_cleanup_unmigrated_state_timestamps(
     def _fetch_migrated_states():
         with session_scope(hass=hass) as session:
             states = session.query(States).all()
-            assert len(states) == 2
+            assert len(states) == 3
             return {state.metadata_id: _object_as_dict(state) for state in states}
 
     # Run again with new schema, let migration run
