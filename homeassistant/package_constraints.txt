@@ -116,7 +116,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.0
+numpy==2.2.1
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
