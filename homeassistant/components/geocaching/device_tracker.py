@@ -45,7 +45,7 @@ class GeoEntityTrackableLocation(GeoEntityBaseTrackable, TrackerEntity):
     @property
     def location_name(self) -> str | None:
         """Return the location of the cache."""
-        # TODO: Figure out another way of displaying the code as label in the map, rather than this with `label_mode: state` in the map | pylint: disable=fixme
+        # The location name is set to the reference code, so the code can be displayed as a label in the map using `label_mode: state`
         return self.trackable.reference_code
 
     def _format_travel_log_entry(
@@ -109,7 +109,7 @@ class GeoEntityCacheLocation(GeoEntityBaseCache, TrackerEntity):
     @property
     def location_name(self) -> str | None:
         """Return the location of the cache."""
-        # TODO: Figure out another way of displaying the code as label in the map, rather than this with `label_mode: state` in the map | pylint: disable=fixme
+        # The location name is set to the reference code, so the code can be displayed as a label in the map using `label_mode: state`
         return self.cache.reference_code
 
     @property
