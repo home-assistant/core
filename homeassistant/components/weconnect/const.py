@@ -14,6 +14,7 @@ BRAND_MAPPING = {
     "N": "Volkswagen",
 }
 
+CONF_ACCEPT_TERMS = "accept_terms"
 CONF_SPIN = "spin"
 
 FUEL_ENGINES = [
