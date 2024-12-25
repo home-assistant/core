@@ -492,3 +492,49 @@ def async_translate_state(
         return translations[localize_key]
 
     return state
+
+
+def convert_to_nested_dict(input_dict: dict[str, str]) -> dict[str, Any]:
+    """Convert a flat translation dictionary into nested format."""
+    nested_dict: dict[str, Any] = {}
+    for key, value in input_dict.items():
+        keys = key.split(".")
+        d = nested_dict
+
+        for part in keys[:-1]:
+            if part not in d:
+                d[part] = {}
+            d = d[part]
+
+        d[keys[-1]] = value
+
+    return nested_dict
+
+
+def get_from_nested_dict(nested_dict: dict[str, Any], path: str) -> Any:
+    """Fetch specific translation paths from the nested dictionary using a dot-separated path."""
+    keys = path.split(".")
+    for key in keys:
+        if isinstance(nested_dict, dict) and key in nested_dict:
+            nested_dict = nested_dict[key]
+        else:
+            return None
+    return nested_dict
+
+
+def translation_fields(
+    fields: dict[str, dict[str, str]], fields_schema: dict[str, dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    """Update a schema with translated field names and descriptions from the provided translations."""
+    updated_schema = {}
+    for field_name, field_info in fields_schema.items():
+        translation = fields.get(field_name, {})
+        updated_field = field_info.copy()
+        updated_field.update(
+            {
+                "name": translation.get("name", ""),
+                "description": translation.get("description", ""),
+            }
+        )
+        updated_schema[field_name] = updated_field
+    return updated_schema

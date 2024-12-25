@@ -13,6 +13,12 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callba
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.translation import (
+    async_get_translations,
+    convert_to_nested_dict,
+    get_from_nested_dict,
+    translation_fields,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import (
@@ -42,6 +48,11 @@ NOTIFY_SERVICES: HassKey[dict[str, list[BaseNotificationService]]] = HassKey(
 NOTIFY_DISCOVERY_DISPATCHER: HassKey[CALLBACK_TYPE | None] = HassKey(
     f"{DOMAIN}_discovery_dispatcher"
 )
+
+TRANSLATION_KEYS = {
+    "send_via_target": "component.notify.services.send_via_target",
+    "send_with_service": "component.notify.services.send_with_service",
+}
 
 
 class LegacyNotifyPlatform(Protocol):
@@ -277,6 +288,12 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
+        # Fetch translations for the service dynamically based on the current active language
+        current_language = self.hass.config.language
+        translations = await async_get_translations(
+            self.hass, current_language, "services"
+        )
+        nested_translations = convert_to_nested_dict(translations)
         if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
@@ -297,14 +314,17 @@ class BaseNotificationService:
                     schema=NOTIFY_SERVICE_SCHEMA,
                 )
                 # Register the service description
+                send_via_target = get_from_nested_dict(
+                    nested_translations, TRANSLATION_KEYS["send_via_target"]
+                )
                 service_desc = {
-                    CONF_NAME: f"Send a notification via {target_name}",
-                    CONF_DESCRIPTION: (
-                        "Sends a notification message using the"
-                        f" {target_name} integration."
+                    CONF_NAME: send_via_target["name"].format(target_name=target_name),
+                    CONF_DESCRIPTION: send_via_target["description"].format(
+                        target_name=target_name
                     ),
-                    CONF_FIELDS: self.ensure_field_descriptions(
-                        self.services_dict[SERVICE_NOTIFY][CONF_FIELDS]
+                    CONF_FIELDS: translation_fields(
+                        send_via_target[CONF_FIELDS],
+                        self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
                     ),
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
@@ -327,31 +347,22 @@ class BaseNotificationService:
         )
 
         # Register the service description
+        send_with_service = get_from_nested_dict(
+            nested_translations, TRANSLATION_KEYS["send_with_service"]
+        )
         service_desc = {
-            CONF_NAME: f"Send a notification with {self._service_name}",
-            CONF_DESCRIPTION: (
-                f"Sends a notification message using the {self._service_name} service."
+            CONF_NAME: send_with_service["name"].format(
+                service_name=self._service_name
             ),
-            CONF_FIELDS: self.ensure_field_descriptions(
-                self.services_dict[SERVICE_NOTIFY][CONF_FIELDS]
+            CONF_DESCRIPTION: send_with_service["description"].format(
+                service_name=self._service_name
+            ),
+            CONF_FIELDS: translation_fields(
+                send_with_service[CONF_FIELDS],
+                self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
             ),
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
-
-    def ensure_field_descriptions(self, fields: dict) -> dict:
-        """Ensure that each field has a description, adding a default one if missing."""
-        default_descriptions = {
-            "message": "Message body of the notification.",
-            "title": "The title of the message.",
-            "target": "The recipient of the notification.",
-            "data": "Custom data to be sent with the notification.",
-        }
-
-        for field, field_data in fields.items():
-            if field in default_descriptions and "description" not in field_data:
-                field_data["description"] = default_descriptions.get(field)
-
-        return fields
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
