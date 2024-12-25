@@ -2156,6 +2156,9 @@ async def test_cleanup_unmigrated_state_timestamps(
     test_uuid = uuid.uuid4()
     uuid_hex = test_uuid.hex
 
+    def _object_as_dict(obj):
+        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
     def _insert_states():
         with session_scope(hass=hass) as session:
             state1 = old_db_schema.States(
@@ -2175,8 +2178,6 @@ async def test_cleanup_unmigrated_state_timestamps(
                 context_parent_id=None,
                 context_parent_id_bin=None,
             )
-            state1.last_updated_ts = None
-            state1.last_changed_ts = None
             state2 = old_db_schema.States(
                 entity_id="state.test_state2",
                 last_updated=datetime.datetime(
@@ -2194,8 +2195,11 @@ async def test_cleanup_unmigrated_state_timestamps(
                 context_parent_id=None,
                 context_parent_id_bin=None,
             )
-            state2.last_updated_ts = None
-            state2.last_changed_ts = None
+            session.add_all((state1, state2))
+            # There is a default of now() for last_updated_ts so make sure it's not set
+            session.query(old_db_schema.States).update(
+                {old_db_schema.States.last_updated_ts: None}
+            )
             state3 = old_db_schema.States(
                 entity_id="state.already_migrated",
                 last_updated=None,
@@ -2209,7 +2213,7 @@ async def test_cleanup_unmigrated_state_timestamps(
                 context_parent_id=None,
                 context_parent_id_bin=None,
             )
-            session.add_all((state1, state2, state3))
+            session.add_all((state3,))
 
         with session_scope(hass=hass, read_only=True) as session:
             states = session.query(old_db_schema.States).all()
@@ -2234,9 +2238,6 @@ async def test_cleanup_unmigrated_state_timestamps(
 
             await hass.async_stop()
             await hass.async_block_till_done()
-
-    def _object_as_dict(obj):
-        return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
 
     def _fetch_migrated_states():
         with session_scope(hass=hass) as session:
