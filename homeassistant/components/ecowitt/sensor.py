@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
+import logging
 from typing import Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -39,6 +40,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
+_LOGGER = logging.getLogger(__name__)
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
     EcoWittSensorTypes.RAIN_COUNT_MM,
@@ -264,7 +266,7 @@ async def async_setup_entry(
         _new_sensor(sensor)
 
 
-class EcowittSensorEntity(EcowittEntity, SensorEntity):
+class EcowittSensorEntity(EcowittEntity, RestoreSensor):
     """Representation of a Ecowitt Sensor."""
 
     def __init__(
@@ -278,3 +280,14 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.ecowitt.value
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity about to be added to hass."""
+        # If not None, we got an initial value.
+        await super().async_added_to_hass()
+        if self._attr_native_value is not None:
+            return
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            _LOGGER.debug("sensor_data: %s", sensor_data)
+            self._attr_native_value = sensor_data.native_value
