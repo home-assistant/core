@@ -10,7 +10,10 @@ from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.components.roborock.const import GET_MAPS_SERVICE_NAME
+from homeassistant.components.roborock.const import (
+    GET_MAPS_SERVICE_NAME,
+    GOTO_SERVICE_NAME,
+)
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -181,3 +184,27 @@ async def test_get_maps(
         return_response=True,
     )
     assert response == snapshot
+
+
+async def test_goto(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test sending the vacuum to specific coordinates."""
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "x_coord": 25500, "y_coord": 25500}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            DOMAIN,
+            GOTO_SERVICE_NAME,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.APP_GOTO_TARGET
+        assert mock_send_command.call_args[0][1] == [25500, 25500]

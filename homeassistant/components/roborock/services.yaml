@@ -2,3 +2,18 @@ get_maps:
   target:
     entity:
       domain: vacuum
+vacuum_goto:
+  target:
+    entity:
+      domain: vacuum
+  fields:
+    x_coord:
+      example: 27500
+      required: true
+      selector:
+        text:
+    y_coord:
+      example: 32000
+      required: true
+      selector:
+        text:

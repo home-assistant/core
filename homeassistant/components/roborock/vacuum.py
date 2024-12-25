@@ -6,6 +6,7 @@ from typing import Any
 from roborock.code_mappings import RoborockStateCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -13,11 +14,11 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
-from .const import DOMAIN, GET_MAPS_SERVICE_NAME
+from .const import DOMAIN, GET_MAPS_SERVICE_NAME, GOTO_SERVICE_NAME
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
@@ -67,6 +68,18 @@ async def async_setup_entry(
         None,
         RoborockVacuum.get_maps.__name__,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        GOTO_SERVICE_NAME,
+        cv.make_entity_service_schema(
+            {
+                vol.Required("x_coord"): vol.Coerce(int),
+                vol.Required("y_coord"): vol.Coerce(int),
+            },
+        ),
+        RoborockVacuum.async_goto.__name__,
+        supports_response=SupportsResponse.NONE,
     )
 
 
@@ -157,6 +170,10 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             RoborockCommand.SET_CUSTOM_MODE,
             [self._device_status.get_fan_speed_code(fan_speed)],
         )
+
+    async def async_goto(self, x_coord: int, y_coord: int) -> None:
+        """Send vacuum to a specific target point."""
+        await self.send(RoborockCommand.APP_GOTO_TARGET, [x_coord, y_coord])
 
     async def async_send_command(
         self,

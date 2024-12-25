@@ -428,6 +428,20 @@
     "get_maps": {
       "name": "Get maps",
       "description": "Get the map and room information of your device."
+    },
+    "vacuum_goto": {
+      "name": "Vacuum go to",
+      "description": "Go to the specified coordinates.",
+      "fields": {
+        "x_coord": {
+          "name": "X coordinate",
+          "description": "X-coordinate."
+        },
+        "y_coord": {
+          "name": "Y coordinate",
+          "description": "Y-coordinate."
+        }
+      }
     }
   }
 }

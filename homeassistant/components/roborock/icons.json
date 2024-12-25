@@ -121,6 +121,9 @@
   "services": {
     "get_maps": {
       "service": "mdi:floor-plan"
+    },
+    "vacuum_goto": {
+      "service": "mdi:map-marker"
     }
   }
 }
