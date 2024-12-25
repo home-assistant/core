@@ -9,6 +9,8 @@ from peblar import ChargeLimiter, CPState
 
 DOMAIN: Final = "peblar"
 
+CONF_HOSTNAME: Final = "hostname"
+
 LOGGER = logging.getLogger(__package__)
 
 PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {

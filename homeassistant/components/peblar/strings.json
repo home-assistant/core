@@ -51,7 +51,7 @@
         "data_description": {
           "password": "[%key:component::peblar::config::step::user::data_description::password%]"
         },
-        "description": "Set up your Peblar EV charger at {host} to integrate with Home Assistant.\n\nTo do so, you will need the password you use to log into the Peblar EV charger' web interface.\n\nHome Assistant will automatically configure your Peblar EV charger for use with Home Assistant."
+        "description": "Set up your Peblar EV charger {hostname}, on IP address {host}, to integrate with Home Assistant\n\nTo do so, you will need the password you use to log into the Peblar EV charger' web interface.\n\nHome Assistant will automatically configure your Peblar EV charger for use with Home Assistant."
       }
     }
   },
