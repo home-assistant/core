@@ -13,9 +13,11 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
+
 FORM_USER_INPUT = {
-    CONF_CLIENT_ID: "test-client-id",
-    CONF_CLIENT_SECRET: "test-client-secret",
+    CONF_CLIENT_ID: "client-id",
+    CONF_CLIENT_SECRET: "client-secret",
 }
 
 
@@ -83,23 +85,13 @@ async def test_form_invalid_input(
 
 
 async def test_form_abort_on_matching_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth: Generator[AsyncMock]
+    hass: HomeAssistant,
+    mock_config_entry: Generator[AsyncMock],
+    mock_auth: Generator[AsyncMock],
 ) -> None:
     """Tests where we handle errors in the config flow."""
     # Create first config flow.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        FORM_USER_INPUT,
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Client Credentials"
-    assert result["data"] == FORM_USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
+    await setup_integration(hass, mock_config_entry)
 
     # Attempt another config flow with the same client credentials
     # and ensure that FlowResultType.ABORT is returned.

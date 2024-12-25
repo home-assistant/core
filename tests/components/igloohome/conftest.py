@@ -7,6 +7,7 @@ from igloohome_api import GetDeviceInfoResponse, GetDevicesResponse
 import pytest
 
 from homeassistant.components.igloohome.const import DOMAIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -49,7 +50,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="Client Credentials",
         domain=DOMAIN,
         version=1,
-        data={"client_id": "client_id", "client_secret": "client_secret"},
+        data={CONF_CLIENT_ID: "client-id", CONF_CLIENT_SECRET: "client-secret"},
     )
 
 
