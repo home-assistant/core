@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, UnitOfPower
@@ -13,9 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, MANUFACTURER
-
-if TYPE_CHECKING:
-    from .coordinator import MillDataUpdateCoordinator
+from .coordinator import MillDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -33,7 +29,7 @@ async def async_setup_entry(
         )
 
 
-class MillNumber(CoordinatorEntity, NumberEntity):
+class MillNumber(CoordinatorEntity[MillDataUpdateCoordinator], NumberEntity):
     """Representation of a Mill number device."""
 
     _attr_device_class = NumberDeviceClass.POWER
@@ -43,7 +39,11 @@ class MillNumber(CoordinatorEntity, NumberEntity):
     _attr_native_step = 1
     _attr_native_unit_of_measurement = UnitOfPower.WATT
 
-    def __init__(self, coordinator: MillDataUpdateCoordinator, mill_device) -> None:
+    def __init__(
+        self,
+        coordinator: MillDataUpdateCoordinator,
+        mill_device,
+    ) -> None:
         """Initialize the number."""
         super().__init__(coordinator)
 
@@ -78,4 +78,4 @@ class MillNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.mill_data_connection.max_heating_power(self._id, value)  # type: ignore[attr-defined]
+        await self.coordinator.mill_data_connection.max_heating_power(self._id, value)
