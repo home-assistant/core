@@ -115,7 +115,7 @@ class AsyncConfigEntryAuth:
         def response_handler(_, response, exception: HttpError) -> None:
             if exception is not None:
                 raise GoogleTasksApiError(
-                    f"Google Tasks API responded with error ({exception.status_code})"
+                    f"Google Tasks API responded with error ({exception.reason or exception.status_code})"
                 ) from exception
             if response:
                 data = json.loads(response)
@@ -152,7 +152,7 @@ class AsyncConfigEntryAuth:
             result = await self._hass.async_add_executor_job(request.execute)
         except HttpError as err:
             raise GoogleTasksApiError(
-                f"Google Tasks API responded with error ({err.status_code})"
+                f"Google Tasks API responded with: {err.reason or err.status_code})"
             ) from err
         if result:
             _raise_if_error(result)

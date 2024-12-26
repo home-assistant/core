@@ -1,7 +1,7 @@
 {
   "domain": "tado",
   "name": "Tado",
-  "codeowners": ["@chiefdragon", "@erwindouna"],
+  "codeowners": ["@erwindouna"],
   "config_flow": true,
   "dhcp": [
     {
