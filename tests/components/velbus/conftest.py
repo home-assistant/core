@@ -1,12 +1,11 @@
 """Fixtures for the Velbus tests."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -32,8 +31,6 @@ ButtonOn = {
 def mock_full_controller() -> MagicMock:
     """Mock a successful velbus controller."""
     with patch("homeassistant.components.velbus.Velbus", autospec=True) as controller:
-        controller.connect = AsyncMock()
-        controller.start = AsyncMock()
         controller.get_all_binary_sensor.return_value = [
             mock_channel("Button", ButtonOn),
         ]
@@ -58,10 +55,6 @@ async def mock_config_entry(
         domain=DOMAIN,
         data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"},
     )
-    config_entry.runtime_data = MagicMock(
-        controller=controller,
-        scan_task=controller.start(),
-    )
     config_entry.add_to_hass(hass)
     return config_entry
 
@@ -74,13 +67,8 @@ async def init_integration(
     """Load the Velbus integration."""
     hass.config.components.add(DOMAIN)
 
-    # setup the Velbus integration
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
-    # setup the config entry
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, ["binary_sensor"]
-    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
