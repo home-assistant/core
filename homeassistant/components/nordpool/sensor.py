@@ -34,7 +34,11 @@ def validate_prices(
     index: int,
 ) -> float | None:
     """Validate and return."""
-    if result := func(entity)[area][index]:
+    try:
+        result = func(entity)[area][index]
+    except (KeyError, IndexError):
+        return None
+    if result:
         return result / 1000
     return None
 
