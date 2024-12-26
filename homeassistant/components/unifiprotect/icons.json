@@ -11,6 +11,9 @@
     },
     "remove_privacy_zone": {
       "service": "mdi:eye-minus"
+    },
+    "get_user_keyring_info": {
+      "service": "mdi:key-chain"
     }
   }
 }

@@ -55,6 +55,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import (
+    CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
@@ -214,33 +215,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     update_callback = SignalUpdateCallback(hass, async_config_reload, entry)
     subscriber.set_update_callback(update_callback.async_handle_event)
     try:
-        await subscriber.start_async()
+        unsub = await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
             f"Subscriber authentication error: {err!s}"
         ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
-        subscriber.stop_async()
         return False
     except SubscriberException as err:
-        subscriber.stop_async()
         raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
-        subscriber.stop_async()
+        unsub()
         raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
 
     @callback
     def on_hass_stop(_: Event) -> None:
         """Close connection when hass stops."""
-        subscriber.stop_async()
+        unsub()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
+
+    entry.async_on_unload(unsub)
     entry.runtime_data = NestData(
         subscriber=subscriber,
         device_manager=device_manager,
@@ -253,12 +254,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if DATA_SDM not in entry.data:
-        # Legacy API
-        return True
-    _LOGGER.debug("Stopping nest subscriber")
-    subscriber = entry.runtime_data.subscriber
-    subscriber.stop_async()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -272,24 +267,25 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         or CONF_SUBSCRIBER_ID_IMPORTED in entry.data
     ):
         return
-
-    subscriber = await api.new_subscriber(hass, entry)
-    if not subscriber:
-        return
-    _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
+    if (subscription_name := entry.data.get(CONF_SUBSCRIPTION_NAME)) is None:
+        subscription_name = entry.data[CONF_SUBSCRIBER_ID]
+    admin_client = api.new_pubsub_admin_client(
+        hass,
+        access_token=entry.data["token"]["access_token"],
+        cloud_project_id=entry.data[CONF_CLOUD_PROJECT_ID],
+    )
+    _LOGGER.debug("Deleting subscription '%s'", subscription_name)
     try:
-        await subscriber.delete_subscription()
-    except (AuthException, SubscriberException) as err:
+        await admin_client.delete_subscription(subscription_name)
+    except ApiException as err:
         _LOGGER.warning(
             (
                 "Unable to delete subscription '%s'; Will be automatically cleaned up"
                 " by cloud console: %s"
             ),
-            subscriber.subscriber_id,
+            subscription_name,
             err,
         )
-    finally:
-        subscriber.stop_async()
 
 
 class NestEventViewBase(HomeAssistantView, ABC):
