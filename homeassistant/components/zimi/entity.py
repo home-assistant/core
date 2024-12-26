@@ -63,5 +63,3 @@ class ZimiEntity(ToggleEntity):
         )
         self.schedule_update_ha_state(force_refresh=True)
 
-    def update(self) -> None:
-        """Fetch new state data for this device."""
