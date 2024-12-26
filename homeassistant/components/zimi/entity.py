@@ -15,7 +15,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ZimiEntity(ToggleEntity):
+class ZimiEntity(Entity):
     """Representation of a Zimi API device."""
 
     _attr_should_poll = False
