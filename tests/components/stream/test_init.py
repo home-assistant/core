@@ -7,16 +7,16 @@ import av
 import pytest
 
 from homeassistant.components.stream import (
-    CONF_PREFER_TCP,
     SOURCE_TIMEOUT,
     StreamClientError,
     StreamOpenClientError,
     __name__ as stream_name,
-    _async_try_open_stream,
     async_check_stream_client_error,
 )
+from homeassistant.components.stream.const import ATTR_PREFER_TCP
 from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 
@@ -66,6 +66,7 @@ async def test_log_levels(
 
 async def test_check_open_stream_params(hass: HomeAssistant) -> None:
     """Test check open stream params."""
+    await async_setup_component(hass, "stream", {"stream": {}})
 
     container_mock = MagicMock()
     source = "rtsp://foobar"
@@ -74,23 +75,18 @@ async def test_check_open_stream_params(hass: HomeAssistant) -> None:
         await async_check_stream_client_error(hass, source)
 
     options = {
-        "rtsp_flags": CONF_PREFER_TCP,
-        "timeout": str(SOURCE_TIMEOUT),
+        "rtsp_flags": ATTR_PREFER_TCP,
+        "stimeout": "5000000",
     }
-    open_mock.assert_called_once_with(source, options=options, timeout=5)
+    open_mock.assert_called_once_with(source, options=options, timeout=SOURCE_TIMEOUT)
     container_mock.close.assert_called_once()
 
     container_mock.reset_mock()
-    with patch("av.open", return_value=container_mock) as open_mock:
+    with (
+        patch("av.open", return_value=container_mock) as open_mock,
+        pytest.raises(HomeAssistantError, match="Invalid stream options"),
+    ):
         await async_check_stream_client_error(hass, source, {"foo": "bar"})
-
-    options = {
-        "rtsp_flags": CONF_PREFER_TCP,
-        "timeout": str(SOURCE_TIMEOUT),
-        "foo": "bar",
-    }
-    open_mock.assert_called_once_with(source, options=options, timeout=5)
-    container_mock.close.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -121,13 +117,11 @@ async def test_try_open_stream_error(
     hass: HomeAssistant, error: av.HTTPClientError, enum_result: StreamClientError
 ) -> None:
     """Test trying to open a stream."""
-    oc_error: StreamOpenClientError | None = None
+    await async_setup_component(hass, "stream", {"stream": {}})
 
-    with patch("av.open", side_effect=error):
-        try:
-            await _async_try_open_stream(hass, "rtsp://foobar")
-        except StreamOpenClientError as ex:
-            oc_error = ex
-
-    assert oc_error
-    assert oc_error.stream_client_error is enum_result
+    with (
+        patch("av.open", side_effect=error),
+        pytest.raises(StreamOpenClientError) as ex,
+    ):
+        await async_check_stream_client_error(hass, "rtsp://foobar")
+    assert ex.value.error_code is enum_result
