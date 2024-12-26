@@ -874,7 +874,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==6.1.5
+google-nest-sdm==7.0.0
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1612,7 +1612,7 @@ pyicloud==1.0.0
 pyinsteon==1.6.3
 
 # homeassistant.components.ipma
-pyipma==3.0.7
+pyipma==3.0.8
 
 # homeassistant.components.ipp
 pyipp==0.17.0
@@ -1657,7 +1657,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.2
+pylamarzocco==1.4.3
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2260,7 +2260,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.8.5
+tesla-fleet-api==0.9.2
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
