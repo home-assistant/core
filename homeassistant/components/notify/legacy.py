@@ -294,6 +294,10 @@ class BaseNotificationService:
             self.hass, current_language, "services"
         )
         nested_translations = convert_to_nested_dict(translations)
+
+        send_via_target_key = TRANSLATION_KEYS.get("send_via_target")
+        send_with_service_key = TRANSLATION_KEYS.get("send_with_service")
+
         if self.targets is not None:
             stale_targets = set(self.registered_targets)
 
@@ -314,19 +318,32 @@ class BaseNotificationService:
                     schema=NOTIFY_SERVICE_SCHEMA,
                 )
                 # Register the service description
-                send_via_target = get_from_nested_dict(
-                    nested_translations, TRANSLATION_KEYS["send_via_target"]
-                )
-                service_desc = {
-                    CONF_NAME: send_via_target["name"].format(target_name=target_name),
-                    CONF_DESCRIPTION: send_via_target["description"].format(
-                        target_name=target_name
-                    ),
-                    CONF_FIELDS: translation_fields(
-                        send_via_target[CONF_FIELDS],
-                        self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
-                    ),
-                }
+                if send_via_target_key and (
+                    send_via_target := get_from_nested_dict(
+                        nested_translations, send_via_target_key
+                    )
+                ):
+                    service_desc = {
+                        CONF_NAME: send_via_target["name"].format(
+                            target_name=target_name
+                        ),
+                        CONF_DESCRIPTION: send_via_target["description"].format(
+                            target_name=target_name
+                        ),
+                        CONF_FIELDS: translation_fields(
+                            send_via_target[CONF_FIELDS],
+                            self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                        ),
+                    }
+                else:
+                    service_desc = {
+                        CONF_NAME: f"Send a notification via {target_name}",
+                        CONF_DESCRIPTION: (
+                            "Sends a notification message using the"
+                            f" {target_name} integration."
+                        ),
+                        CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                    }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
 
             for stale_target_name in stale_targets:
@@ -347,21 +364,31 @@ class BaseNotificationService:
         )
 
         # Register the service description
-        send_with_service = get_from_nested_dict(
-            nested_translations, TRANSLATION_KEYS["send_with_service"]
-        )
-        service_desc = {
-            CONF_NAME: send_with_service["name"].format(
-                service_name=self._service_name
-            ),
-            CONF_DESCRIPTION: send_with_service["description"].format(
-                service_name=self._service_name
-            ),
-            CONF_FIELDS: translation_fields(
-                send_with_service[CONF_FIELDS],
-                self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
-            ),
-        }
+        if send_with_service_key and (
+            send_with_service := get_from_nested_dict(
+                nested_translations, send_with_service_key
+            )
+        ):
+            service_desc = {
+                CONF_NAME: send_with_service["name"].format(
+                    service_name=self._service_name
+                ),
+                CONF_DESCRIPTION: send_with_service["description"].format(
+                    service_name=self._service_name
+                ),
+                CONF_FIELDS: translation_fields(
+                    send_with_service[CONF_FIELDS],
+                    self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+                ),
+            }
+        else:
+            service_desc = {
+                CONF_NAME: f"Send a notification with {self._service_name}",
+                CONF_DESCRIPTION: (
+                    f"Sends a notification message using the {self._service_name} service."
+                ),
+                CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
+            }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
 
     async def async_unregister_services(self) -> None:
