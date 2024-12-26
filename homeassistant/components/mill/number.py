@@ -78,4 +78,4 @@ class MillNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.mill_data_connection.max_heating_power(self._id, value)
+        await self.coordinator.mill_data_connection.max_heating_power(self._id, value)  # type: ignore[attr-defined]
