@@ -442,6 +442,10 @@
           "description": "Y-coordinate."
         }
       }
+    },
+    "get_current_position": {
+      "name": "Get current position",
+      "description": "Get the current position of the vacuum."
     }
   }
 }

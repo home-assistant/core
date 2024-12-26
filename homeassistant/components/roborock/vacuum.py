@@ -18,9 +18,15 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
-from .const import DOMAIN, GET_MAPS_SERVICE_NAME, GOTO_SERVICE_NAME
+from .const import (
+    DOMAIN,
+    GET_CURRENT_POSITION_SERVICE_NAME,
+    GET_MAPS_SERVICE_NAME,
+    GOTO_SERVICE_NAME,
+)
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
+from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
@@ -67,6 +73,13 @@ async def async_setup_entry(
         GET_MAPS_SERVICE_NAME,
         None,
         RoborockVacuum.get_maps.__name__,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        GET_CURRENT_POSITION_SERVICE_NAME,
+        None,
+        RoborockVacuum.get_current_position.__name__,
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -190,4 +203,23 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "maps": [
                 asdict(vacuum_map) for vacuum_map in self.coordinator.maps.values()
             ]
+        }
+
+    async def get_current_position(self) -> ServiceResponse:
+        """Get the current position of the vacuum from the map."""
+
+        map_data = await self.coordinator.cloud_api.get_map_v1()
+        if not isinstance(map_data, bytes):
+            return {"error": "Failed to retrieve map data"}
+
+        parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
+        parsed_map = parser.parse(map_data)
+        robot_position = parsed_map.vacuum_position
+
+        if robot_position is None:
+            return {"error": "Robot position not found"}
+
+        return {
+            "x": robot_position.x,
+            "y": robot_position.y,
         }

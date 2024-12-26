@@ -124,6 +124,9 @@
     },
     "vacuum_goto": {
       "service": "mdi:map-marker"
+    },
+    "get_current_position": {
+      "service": "mdi:map-marker"
     }
   }
 }

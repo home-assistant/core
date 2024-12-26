@@ -8,9 +8,11 @@ import pytest
 from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
+from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import (
+    GET_CURRENT_POSITION_SERVICE_NAME,
     GET_MAPS_SERVICE_NAME,
     GOTO_SERVICE_NAME,
 )
@@ -30,7 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .mock_data import PROP
+from .mock_data import MAP_DATA, PROP
 
 from tests.common import MockConfigEntry
 
@@ -208,3 +210,94 @@ async def test_goto(
         assert mock_send_command.call_count == 1
         assert mock_send_command.call_args[0][0] == RoborockCommand.APP_GOTO_TARGET
         assert mock_send_command.call_args[0][1] == [25500, 25500]
+
+
+async def test_get_current_position(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the service for getting the current position outputs the correct coordinates."""
+    map_data = copy.deepcopy(MAP_DATA)
+    map_data.vacuum_position = Point(x=123, y=456)
+    map_data.image = None
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+            return_value=b"",
+        ),
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=map_data,
+        ),
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            GET_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+        assert response == {
+            "vacuum.roborock_s7_maxv": {
+                "x": 123,
+                "y": 456,
+            },
+        }
+
+
+async def test_get_current_position_no_map_data(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that the service for getting the current position handles no map data error."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+        return_value=None,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            GET_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+        assert response == {
+            "vacuum.roborock_s7_maxv": {
+                "error": "Failed to retrieve map data",
+            }
+        }
+
+
+async def test_get_current_position_no_robot_position(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test that the service for getting the current position handles no robot position error."""
+    map_data = copy.deepcopy(MAP_DATA)
+    map_data.vacuum_position = None
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+            return_value=b"",
+        ),
+        patch(
+            "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+            return_value=map_data,
+        ),
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            GET_CURRENT_POSITION_SERVICE_NAME,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+        assert response == {
+            "vacuum.roborock_s7_maxv": {
+                "error": "Robot position not found",
+            }
+        }

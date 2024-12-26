@@ -50,3 +50,4 @@ MAP_SLEEP = 3
 
 GET_MAPS_SERVICE_NAME = "get_maps"
 GOTO_SERVICE_NAME = "vacuum_goto"
+GET_CURRENT_POSITION_SERVICE_NAME = "get_current_position"

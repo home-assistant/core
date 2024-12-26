@@ -19,3 +19,7 @@ vacuum_goto:
       selector:
         text:
           type: number
+get_current_position:
+  target:
+    entity:
+      domain: vacuum
