@@ -190,10 +190,10 @@ async def build_item_response(
                 can_play = False
 
             if search_type in KNOWN_APPS:
-                if item.get("title") in ["Search", None] or item.get("type") in [
-                    "text",
-                    "actions",
-                ]:
+                if (
+                    item.get("title") in ["Search", None]
+                    or item.get("type") in UNPLAYABLE_TYPES
+                ):
                     # Skip searches in apps as they'd need UI
                     continue
 
