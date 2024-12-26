@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "channel": "DMX Starting Channel",
+          "light_type": "Type of Light:"
+        },
+        "description": "Please enter the following details, including the IP address of your local Axion DMX Controller. It is recommended you set it to a static IP address or configure a DHCP reservation so this address does not change."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
