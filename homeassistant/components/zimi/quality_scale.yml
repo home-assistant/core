@@ -1,8 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: done
-    comment: >
+    status: exempt
+    comment: |
       There are no service actions.
   appropriate-polling:
     status: done
