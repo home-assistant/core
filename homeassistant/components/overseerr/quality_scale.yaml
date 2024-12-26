@@ -14,9 +14,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -34,7 +34,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: done
     comment: Handled by the coordinator
@@ -70,7 +70,7 @@ rules:
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
