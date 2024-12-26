@@ -49,4 +49,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Overseerr",
         data={CONF_URL: "http://overseerr.test", CONF_API_KEY: "test-key"},
+        entry_id="01JG00V55WEVTJ0CJHM0GAD7PC",
     )
