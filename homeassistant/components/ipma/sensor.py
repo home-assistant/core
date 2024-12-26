@@ -69,8 +69,8 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
         value_fn=async_retrieve_uvi,
     ),
     IPMASensorEntityDescription(
-        key="warning",
-        translation_key="warning",
+        key="alert",
+        translation_key="weather_alert",
         value_fn=async_retrieve_warning,
         value_extractor=lambda data: data.awarenessLevelID if data else "green",
     ),
