@@ -1,10 +1,12 @@
 get_maps:
   target:
     entity:
+      integration: roborock
       domain: vacuum
 set_vacuum_goto_position:
   target:
     entity:
+      integration: roborock
       domain: vacuum
   fields:
     x_coord:
@@ -22,4 +24,5 @@ set_vacuum_goto_position:
 get_vacuum_current_position:
   target:
     entity:
+      integration: roborock
       domain: vacuum
