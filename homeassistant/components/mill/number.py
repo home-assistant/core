@@ -47,7 +47,6 @@ class MillNumber(CoordinatorEntity, NumberEntity):
         """Initialize the number."""
         super().__init__(coordinator)
 
-        self.coordinator: MillDataUpdateCoordinator = coordinator
         self._id = mill_device.device_id
         self._available = False
         self._attr_unique_id = f"{mill_device.device_id}_max_heating_power"
