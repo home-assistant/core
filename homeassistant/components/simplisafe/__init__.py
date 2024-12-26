@@ -248,7 +248,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system.system_id)}
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -485,7 +485,7 @@ class SimpliSafe:
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        LOGGER.warning("Reconnecting to websocket")
+        LOGGER.debug("Reconnecting to websocket")
         await self._async_cancel_websocket_loop()
         self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()
