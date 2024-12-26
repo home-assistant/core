@@ -26,7 +26,9 @@ rules:
   brands: done
 
   # Silver
-  config-entry-unloading: done
+  config-entry-unloading:
+    status: todo
+    comment: cleanly close session
   log-when-unavailable: done
   entity-unavailable: done
   action-exceptions:
@@ -49,24 +51,32 @@ rules:
   entity-translations: done
   entity-device-class: done
   devices: done
-  entity-category: todo
-  entity-disabled-by-default: todo
+  entity-category:
+    status: done
+    comment: only data entities
+  entity-disabled-by-default:
+    status: done
+    comment: only two data entities
   discovery:
     status: exempt
     comment: api only, nothing on local network to discover services
   stale-devices:
     status: exempt
-    comment: one device only
+    comment: one permanent device only
   diagnostics: todo
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
+  icon-translations:
+    status: exempt
+    comment: no custom icons
+  reconfiguration-flow:
+    status: exempt
+    comment: no configuration option
   dynamic-devices:
     status: exempt
-    comment: one device only
+    comment: one fixed device only
   discovery-update-info:
     status: exempt
-    comment: fixed api
+    comment: fixed api not discoverable
   repair-issues:
     status: exempt
     comment: No repair issues to be raised
@@ -78,7 +88,7 @@ rules:
     comment: make it clearer
   docs-known-limitations: todo
   docs-troubleshooting: todo
-  docs-examples: done
+  docs-examples: todo
 
   # Platinum
   async-dependency: done
