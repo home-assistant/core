@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 import logging
+from typing import Any
 
 from pyipma.api import IPMA_API
 from pyipma.location import Location
@@ -29,6 +30,7 @@ class IPMASensorEntityDescription(SensorEntityDescription):
     """Describes a IPMA sensor entity."""
 
     value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
+    value_extractor: Callable[[Any], Any] | None = None
 
 
 async def async_retrieve_rcm(location: Location, api: IPMA_API) -> int | None:
@@ -47,6 +49,14 @@ async def async_retrieve_uvi(location: Location, api: IPMA_API) -> int | None:
     return None
 
 
+async def async_retrieve_warning(location: Location, api: IPMA_API) -> int | None:
+    """Retrieve Warning."""
+    warning = await location.warnings(api)
+    if len(warning):
+        return warning[0]
+    return None
+
+
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
@@ -57,6 +67,12 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
         key="uvi",
         translation_key="uv_index",
         value_fn=async_retrieve_uvi,
+    ),
+    IPMASensorEntityDescription(
+        key="warning",
+        translation_key="warning",
+        value_fn=async_retrieve_warning,
+        value_extractor=lambda data: data.awarenessLevelID if data else "green",
     ),
 )
 
@@ -89,11 +105,29 @@ class IPMASensor(SensorEntity, IPMADevice):
         IPMADevice.__init__(self, api, location)
         self.entity_description = description
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
+        self._ipma_data: Any | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update sensors."""
         async with asyncio.timeout(10):
-            self._attr_native_value = await self.entity_description.value_fn(
+            self._ipma_data = await self.entity_description.value_fn(
                 self._location, self._api
             )
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        if self.entity_description.value_extractor is not None:
+            return self.entity_description.value_extractor(self._ipma_data)
+        return self._ipma_data
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if (
+            self.entity_description.value_extractor is not None
+            and self._ipma_data is not None
+        ):
+            return {k: str(v) for k, v in asdict(self._ipma_data).items()}
+        return None

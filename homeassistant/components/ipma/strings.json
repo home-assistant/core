@@ -31,6 +31,15 @@
       },
       "uv_index": {
         "name": "UV index"
+      },
+      "warning": {
+        "name": "Warning",
+        "state": {
+          "red": "Red",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "green": "Green"
+        }
       }
     }
   }
