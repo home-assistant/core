@@ -27,3 +27,68 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      There are no service actions
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no user authentication needed.
+  parallel-updates:
+    status: todo
+    comment: |
+      Test of parallel updates will be done before setting.
+  test-coverage: todo
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations: todo
+  entity-device-class:
+    status: todo
+    comment: |
+      Will set device classes for subsequent entities - not relevant for light.
+  devices: done
+  entity-category: todo
+  entity-disabled-by-default: todo
+  discovery:
+    status: done
+    comment: >
+      Discovery is supported by the Zimi protocol with UDP broadcast on LAN.
+  stale-devices: todo
+  diagnostics: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: todo
+    comment: |
+      New devices will be automatically added - but only when the zcc connection is re-established.
+  discovery-update-info:
+    status: exempt
+    comment: >
+      The Zimi Cloud controller IP address cannot be changed after integration.
+  repair-issues: todo
+  docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not use web sessions.
+  strict-typing:
+    status: todo
