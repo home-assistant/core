@@ -218,6 +218,8 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )
+        mock_player.set_announce_volume = MagicMock(return_value=True)
+        mock_player.set_announce_timeout = MagicMock(return_value=True)
         mock_player.async_play_announcement = AsyncMock(
             side_effect=mock_async_play_announcement
         )
