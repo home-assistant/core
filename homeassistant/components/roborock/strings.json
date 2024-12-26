@@ -430,7 +430,7 @@
       "description": "Get the map and room information of your device."
     },
     "set_vacuum_goto_position": {
-      "name": "Vacuum go to position",
+      "name": "Go to position",
       "description": "Send the vacuum to a specific position.",
       "fields": {
         "x_coord": {
@@ -444,7 +444,7 @@
       }
     },
     "get_vacuum_current_position": {
-      "name": "Get vaccum current position",
+      "name": "Get current position",
       "description": "Get the current position of the vacuum."
     }
   }
