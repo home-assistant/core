@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import BackblazeConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, SEPARATOR
+from .util import BufferedAsyncIteratorToSyncStream
 
 
 async def async_get_backup_agents(
@@ -98,6 +99,8 @@ class BackblazeBackupAgent(BackupAgent):
         """Upload a backup."""
 
         # Prepare file info metadata to store with the backup in Backblaze
+        # Backblaze can only store a mapping of strings to strings, so we need
+        # to serialize the metadata into a string format.
         file_info = {
             "backup_id": backup.backup_id,
             "database_included": str(backup.database_included).lower(),
@@ -119,12 +122,15 @@ class BackblazeBackupAgent(BackupAgent):
         if backup.folders:
             file_info["folders"] = ",".join(folder.value for folder in backup.folders)
 
-        stream: AsyncIterator[bytes] = await open_stream()
-
+        iterator = await open_stream()
+        stream = BufferedAsyncIteratorToSyncStream(
+            iterator,
+            buffer_size=8 * 1024 * 1024,  # Buffer up to 8MB
+        )
         try:
             await self._hass.async_add_executor_job(
-                self._bucket.upload_bytes,
-                b"".join([chunk async for chunk in stream]),
+                self._bucket.upload_unbound_stream,
+                stream,
                 f"{backup.backup_id}.tar",
                 "application/octet-stream",
                 file_info,
