@@ -14,15 +14,16 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
 from .const import (
     DOMAIN,
-    GET_CURRENT_POSITION_SERVICE_NAME,
     GET_MAPS_SERVICE_NAME,
-    GOTO_SERVICE_NAME,
+    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
@@ -77,21 +78,21 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        GET_CURRENT_POSITION_SERVICE_NAME,
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
         None,
-        RoborockVacuum.get_current_position.__name__,
+        RoborockVacuum.get_vacuum_current_position.__name__,
         supports_response=SupportsResponse.ONLY,
     )
 
     platform.async_register_entity_service(
-        GOTO_SERVICE_NAME,
+        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
         cv.make_entity_service_schema(
             {
                 vol.Required("x_coord"): vol.Coerce(int),
                 vol.Required("y_coord"): vol.Coerce(int),
             },
         ),
-        RoborockVacuum.async_goto.__name__,
+        RoborockVacuum.async_set_vacuum_goto_position.__name__,
         supports_response=SupportsResponse.NONE,
     )
 
@@ -184,7 +185,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             [self._device_status.get_fan_speed_code(fan_speed)],
         )
 
-    async def async_goto(self, x_coord: int, y_coord: int) -> None:
+    async def async_set_vacuum_goto_position(self, x_coord: int, y_coord: int) -> None:
         """Send vacuum to a specific target point."""
         await self.send(RoborockCommand.APP_GOTO_TARGET, [x_coord, y_coord])
 
@@ -205,19 +206,18 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             ]
         }
 
-    async def get_current_position(self) -> ServiceResponse:
+    async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
 
         map_data = await self.coordinator.cloud_api.get_map_v1()
         if not isinstance(map_data, bytes):
-            return {"error": "Failed to retrieve map data"}
-
+            raise HomeAssistantError("Failed to retrieve map data.")
         parser = RoborockMapDataParser(ColorsPalette(), Sizes(), [], ImageConfig(), [])
         parsed_map = parser.parse(map_data)
         robot_position = parsed_map.vacuum_position
 
         if robot_position is None:
-            return {"error": "Robot position not found"}
+            raise HomeAssistantError("Robot position not found")
 
         return {
             "x": robot_position.x,

@@ -12,9 +12,9 @@ from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import (
-    GET_CURRENT_POSITION_SERVICE_NAME,
     GET_MAPS_SERVICE_NAME,
-    GOTO_SERVICE_NAME,
+    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
@@ -203,7 +203,7 @@ async def test_goto(
     ) as mock_send_command:
         await hass.services.async_call(
             DOMAIN,
-            GOTO_SERVICE_NAME,
+            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
             data,
             blocking=True,
         )
@@ -234,7 +234,7 @@ async def test_get_current_position(
     ):
         response = await hass.services.async_call(
             DOMAIN,
-            GET_CURRENT_POSITION_SERVICE_NAME,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
@@ -253,22 +253,20 @@ async def test_get_current_position_no_map_data(
     setup_entry: MockConfigEntry,
 ) -> None:
     """Test that the service for getting the current position handles no map data error."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
+            return_value=None,
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to retrieve map data."),
     ):
-        response = await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
-            GET_CURRENT_POSITION_SERVICE_NAME,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
-        assert response == {
-            "vacuum.roborock_s7_maxv": {
-                "error": "Failed to retrieve map data",
-            }
-        }
 
 
 async def test_get_current_position_no_robot_position(
@@ -288,16 +286,12 @@ async def test_get_current_position_no_robot_position(
             "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
             return_value=map_data,
         ),
+        pytest.raises(HomeAssistantError, match="Robot position not found"),
     ):
-        response = await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
-            GET_CURRENT_POSITION_SERVICE_NAME,
+            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
         )
-        assert response == {
-            "vacuum.roborock_s7_maxv": {
-                "error": "Robot position not found",
-            }
-        }

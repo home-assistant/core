@@ -122,10 +122,10 @@
     "get_maps": {
       "service": "mdi:floor-plan"
     },
-    "vacuum_goto": {
+    "set_vacuum_goto_position": {
       "service": "mdi:map-marker"
     },
-    "get_current_position": {
+    "get_vacuum_current_position": {
       "service": "mdi:map-marker"
     }
   }

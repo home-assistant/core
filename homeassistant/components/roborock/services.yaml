@@ -2,7 +2,7 @@ get_maps:
   target:
     entity:
       domain: vacuum
-vacuum_goto:
+set_vacuum_goto_position:
   target:
     entity:
       domain: vacuum
@@ -19,7 +19,7 @@ vacuum_goto:
       selector:
         text:
           type: number
-get_current_position:
+get_vacuum_current_position:
   target:
     entity:
       domain: vacuum
