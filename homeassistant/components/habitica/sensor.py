@@ -35,7 +35,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from .const import ASSETS_URL, DOMAIN
+from .const import ASSETS_URL, DOMAIN, SVG_CLASS, SVG_GP, SVG_HP, SVG_MP, SVG_XP
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
@@ -101,6 +101,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.HEALTH,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.hp,
+        entity_picture=SVG_HP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH_MAX,
@@ -113,21 +114,25 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.MANA,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.mp,
+        entity_picture=SVG_MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MANA_MAX,
         translation_key=HabiticaSensorEntity.MANA_MAX,
         value_fn=lambda user, _: user.stats.maxMP,
+        entity_picture=SVG_MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE,
         translation_key=HabiticaSensorEntity.EXPERIENCE,
         value_fn=lambda user, _: user.stats.exp,
+        entity_picture=SVG_XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE_MAX,
         translation_key=HabiticaSensorEntity.EXPERIENCE_MAX,
         value_fn=lambda user, _: user.stats.toNextLevel,
+        entity_picture=SVG_XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.LEVEL,
@@ -139,6 +144,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.GOLD,
         suggested_display_precision=2,
         value_fn=lambda user, _: user.stats.gp,
+        entity_picture=SVG_GP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.CLASS,
@@ -372,8 +378,19 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
+        if (
+            self.entity_description.key is HabitipySensorEntity.CLASS
+            and self.coordinator.data.user["stats"]["lvl"] >= 10
+        ):
+            return SVG_CLASS[self.coordinator.data.user["stats"]["class"]]
+
         if entity_picture := self.entity_description.entity_picture:
-            return f"{ASSETS_URL}{entity_picture}"
+            return (
+                entity_picture
+                if entity_picture.startswith("data:image")
+                else f"{ASSETS_URL}{entity_picture}"
+            )
+
         return None
 
 
