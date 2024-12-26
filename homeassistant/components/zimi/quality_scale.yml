@@ -12,7 +12,10 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: done
+  dependency-transparency:
+    status: done
+    comment: >
+      https://mark_hannon@bitbucket.org/mark_hannon/zcc.git
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
