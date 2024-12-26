@@ -364,6 +364,7 @@ class DPCode(StrEnum):
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER = "water"
+    WATER_LEVEL = "water_level"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
