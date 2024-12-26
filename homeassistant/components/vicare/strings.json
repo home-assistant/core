@@ -73,6 +73,9 @@
     "climate": {
       "heating": {
         "name": "Heating"
+      },
+      "trv": {
+        "name": "Thermostatic radiator valve"
       }
     },
     "fan": {
