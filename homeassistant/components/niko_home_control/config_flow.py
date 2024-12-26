@@ -44,7 +44,7 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
-        if user_input:
+        if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             error = await test_connection(user_input[CONF_HOST])
             if not error:
