@@ -56,12 +56,11 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Suez Water."""
 
     VERSION = 2
-    MINOR_VERSION = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle initial setup step."""
+        """Handle the initial setup step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -77,10 +76,10 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                meter_id = str(user_input[CONF_COUNTER_ID])
-                await self.async_set_unique_id(meter_id)
+                counter_id = str(user_input[CONF_COUNTER_ID])
+                await self.async_set_unique_id(counter_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=meter_id, data=user_input)
+                return self.async_create_entry(title=counter_id, data=user_input)
 
         return self.async_show_form(
             step_id="user",

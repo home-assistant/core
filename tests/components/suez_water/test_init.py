@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.suez_water.config_flow import SuezWaterConfigFlow
 from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 from homeassistant.components.suez_water.coordinator import PySuezError
 from homeassistant.config_entries import ConfigEntryState
@@ -51,7 +50,7 @@ async def test_migration_version_rollback(
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
-        version=SuezWaterConfigFlow.VERSION + 1,
+        version=3,
     )
     await setup_integration(hass, future_entry)
     assert future_entry.state is ConfigEntryState.MIGRATION_ERROR
@@ -67,7 +66,7 @@ async def test_no_migration_current_version(
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
-        version=SuezWaterConfigFlow.VERSION,
+        version=2,
     )
     await setup_integration(hass, current_entry)
     assert current_entry.state is ConfigEntryState.LOADED
@@ -105,5 +104,27 @@ async def test_migration_version_1_to_2(
 
     await setup_integration(hass, past_entry)
     assert past_entry.state is ConfigEntryState.LOADED
-    assert past_entry.unique_id == str(MOCK_DATA[CONF_COUNTER_ID])
+    assert past_entry.unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert past_entry.title == MOCK_DATA[CONF_USERNAME]
+
+
+async def test_migration_version_1_to_2_int_counter(
+    hass: HomeAssistant,
+    suez_client: AsyncMock,
+) -> None:
+    """Test that a migration from 1 to 2 change use int counter_id as str unique_id."""
+    data = MOCK_DATA.copy()
+    data[CONF_COUNTER_ID] = 1234
+    past_entry = MockConfigEntry(
+        unique_id=data[CONF_USERNAME],
+        domain=DOMAIN,
+        title=data[CONF_USERNAME],
+        data=data,
+        version=1,
+        minor_version=0,
+    )
+
+    await setup_integration(hass, past_entry)
+    assert past_entry.state is ConfigEntryState.LOADED
+    assert past_entry.unique_id == str(data[CONF_COUNTER_ID])
+    assert past_entry.title == data[CONF_USERNAME]

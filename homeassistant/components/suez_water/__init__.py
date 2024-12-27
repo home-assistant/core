@@ -7,7 +7,6 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .config_flow import SuezWaterConfigFlow
 from .const import CONF_COUNTER_ID
 from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator
 
@@ -44,16 +43,12 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > SuezWaterConfigFlow.VERSION:
+    if config_entry.version > 2:
         _LOGGER.error("Suez_water version downgrade not handled")
         return False
-    if config_entry.version == 2:
-        _LOGGER.debug("Suez_water no minor changes in version 2.X")
-        return True
 
-    unique_id = config_entry.unique_id
     if config_entry.version == 1:
-        # Going to 2.X
+        # Migrate to version 2
         counter_id = config_entry.data.get(CONF_COUNTER_ID)
         if not counter_id:
             _LOGGER.error(
@@ -62,12 +57,11 @@ async def async_migrate_entry(
             return False
         unique_id = str(counter_id)
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        unique_id=unique_id,
-        minor_version=SuezWaterConfigFlow.MINOR_VERSION,
-        version=SuezWaterConfigFlow.VERSION,
-    )
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=unique_id,
+            version=2,
+        )
 
     _LOGGER.debug(
         "Migration to configuration version %s.%s successful",
