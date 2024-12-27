@@ -27,7 +27,10 @@
   },
   "exceptions": {
     "account_not_found": {
-      "message": "EStorage account {account_name} not found"
+      "message": "Storage account {account_name} not found"
+    },
+    "cannot_connect": {
+      "message": "Can not connect to storage account {account_name}"
     },
     "invalid_auth": {
       "message": "Authentication failed for storage account {account_name}"

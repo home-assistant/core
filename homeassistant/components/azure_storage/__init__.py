@@ -1,6 +1,10 @@
 """The Azure Storage integration."""
 
-from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
+from azure.core.exceptions import (
+    ClientAuthenticationError,
+    HttpResponseError,
+    ResourceNotFoundError,
+)
 from azure.core.pipeline.transport import (  # pylint: disable=no-name-in-module
     AioHttpTransport,
 )
@@ -8,7 +12,7 @@ from azure.storage.blob.aio import ContainerClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -36,18 +40,24 @@ async def async_setup_entry(
     try:
         if not await container_client.exists():
             await container_client.create_container()
-    except ResourceNotFoundError as ex:
+    except ResourceNotFoundError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="account_not_found",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
-        ) from ex
-    except ClientAuthenticationError as ex:
+        ) from err
+    except ClientAuthenticationError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
-        ) from ex
+        ) from err
+    except HttpResponseError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+        ) from err
 
     entry.runtime_data = container_client
 
