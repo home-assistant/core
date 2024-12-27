@@ -42,7 +42,7 @@ def mock_async_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_async_client_fail() -> Generator[AsyncMock]:
+def mock_async_client_api_error() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     with patch(
         "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
