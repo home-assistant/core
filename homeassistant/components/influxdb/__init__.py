@@ -506,15 +506,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN)
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=conf,
+    if conf is not None:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=conf,
+            )
         )
-    )
+
     return True
 
 
@@ -531,11 +533,15 @@ class InfluxThread(threading.Thread):
         self.event_to_json = event_to_json
         self.max_tries = max_tries
         self.write_errors = 0
-        self.shutdown = False
-        hass.bus.async_listen(EVENT_STATE_CHANGED, self._event_listener)
+        self._shutdown = False
+        self._unsubscribe = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._event_listener
+        )
 
     def shutdown(self):
         """Shutdown the influx thread."""
+        self._unsubscribe()
+
         self.queue.put(None)
         self.join()
         self.influx.close()
@@ -561,13 +567,13 @@ class InfluxThread(threading.Thread):
         dropped = 0
 
         with suppress(queue.Empty):
-            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
+            while len(json) < BATCH_BUFFER_SIZE and not self._shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
                 count += 1
 
                 if item is None:
-                    self.shutdown = True
+                    self._shutdown = True
                 elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
@@ -610,7 +616,7 @@ class InfluxThread(threading.Thread):
 
     def run(self):
         """Process incoming events."""
-        while not self.shutdown:
+        while not self._shutdown:
             _, json = self.get_events_json()
             if json:
                 self.write_to_influxdb(json)
