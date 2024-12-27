@@ -9,6 +9,7 @@ from compit_inext_api import (
     CompitAPI,
     DeviceDefinitionsLoader,
     InvalidAuth,
+    SystemInfo,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
             f"Invalid credentials for {entry.data["email"]}"
         ) from e
 
-    if system_info is False:
+    if system_info is not SystemInfo:
         _LOGGER.error("Authentication API error")
         return False
 

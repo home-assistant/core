@@ -3,7 +3,13 @@
 from datetime import timedelta
 import logging
 
-from compit_inext_api import CompitAPI, DeviceDefinitions, DeviceInstance, Gate
+from compit_inext_api import (
+    CompitAPI,
+    DeviceDefinitions,
+    DeviceInstance,
+    DeviceState,
+    Gate,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -67,6 +73,11 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
                 )
                 try:
                     state = await self.api.get_state(device.id)
+
+                    if state is not DeviceState:
+                        _LOGGER.error("Failed to get state for device %s", device.id)
+                        continue
+
                     self.devices[device.id].state = state
                 except ValueError as exception:
                     raise UpdateFailed from exception

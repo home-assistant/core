@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from compit_inext_api import CannotConnect, CompitAPI, InvalidAuth
+from compit_inext_api import CannotConnect, CompitAPI, InvalidAuth, SystemInfo
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -55,7 +55,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if system_info and system_info.gates:
+            if system_info is SystemInfo and system_info.gates:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
                 if self.source == SOURCE_REAUTH:
