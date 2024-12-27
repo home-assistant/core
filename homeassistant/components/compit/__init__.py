@@ -39,25 +39,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
             f"Invalid credentials for {entry.data["email"]}"
         ) from e
 
-    if system_info is not SystemInfo:
-        _LOGGER.error("Authentication API error")
-        return False
+    if isinstance(system_info, SystemInfo):
+        try:
+            device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
+                hass.config.language
+            )
+        except ValueError as e:
+            _LOGGER.warning("Value error: %s", e)
+            return False
 
-    try:
-        device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
-            hass.config.language
+        coordinator = CompitDataUpdateCoordinator(
+            hass, system_info.gates, api, device_definitions
         )
-    except ValueError as e:
-        _LOGGER.warning("Value error: %s", e)
-        return False
+        await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = coordinator
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        return True
 
-    coordinator = CompitDataUpdateCoordinator(
-        hass, system_info.gates, api, device_definitions
-    )
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
+    _LOGGER.error("Authentication API error")
+    return False
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:

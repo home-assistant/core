@@ -56,7 +56,11 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if system_info and system_info is SystemInfo and system_info.gates:
+            if (
+                system_info
+                and isinstance(system_info, SystemInfo)
+                and system_info.gates
+            ):
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
                 if self.source == SOURCE_REAUTH:
