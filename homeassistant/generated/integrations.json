@@ -612,12 +612,6 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
-    "azure_storage": {
-      "name": "Azure Storage",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "baf": {
       "name": "Big Ass Fans",
       "integration_type": "hub",
@@ -3741,6 +3735,12 @@
           "config_flow": false,
           "iot_class": "cloud_push",
           "name": "Azure Service Bus"
+        },
+        "azure_storage": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Azure Storage"
         },
         "microsoft_face_detect": {
           "integration_type": "hub",
