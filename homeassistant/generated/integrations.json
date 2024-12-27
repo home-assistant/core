@@ -612,6 +612,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "backblaze": {
+      "name": "Backblaze B2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "baf": {
       "name": "Big Ass Fans",
       "integration_type": "hub",

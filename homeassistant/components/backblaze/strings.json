@@ -1,0 +1,33 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "bucket": {
+        "data": {
+          "bucket": "Bucket"
+        },
+        "data_description": {
+          "bucket": "Select the bucked to store backups in."
+        },
+        "description": "Pick the bucket you want to use for backups. Please note, it is best to create a dedicated bucket for Home Assistant backups."
+      },
+      "user": {
+        "data": {
+          "application_key": "Application key",
+          "application_key_id": "Application key ID"
+        },
+        "data_description": {
+          "application_key": "The application key Backblaze B2 generated for you.",
+          "application_key_id": "The ID of the application key you created in the Backblaze B2 web interface. Not: This is not the same as the key name!"
+        },
+        "description": "Set up your Backblaze B2 bucket to store backups.\n\nTo do so, you will need to create an application key in the Backblaze B2 account. This key will be used to access the bucket you want to use for backups."
+      }
+    }
+  }
+}

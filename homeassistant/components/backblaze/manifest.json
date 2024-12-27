@@ -1,0 +1,10 @@
+{
+  "domain": "backblaze",
+  "name": "Backblaze B2",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/backblaze",
+  "integration_type": "service",
+  "iot_class": "local_polling",
+  "requirements": ["b2sdk==2.7.0"]
+}

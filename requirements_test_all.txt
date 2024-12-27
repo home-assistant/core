@@ -502,6 +502,9 @@ azure-kusto-data[aio]==4.5.1
 # homeassistant.components.azure_data_explorer
 azure-kusto-ingest==4.5.1
 
+# homeassistant.components.backblaze
+b2sdk==2.7.0
+
 # homeassistant.components.holiday
 babel==2.15.0
 

@@ -180,6 +180,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_event_hub/ @eavanvalkenburg
 /tests/components/azure_event_hub/ @eavanvalkenburg
 /homeassistant/components/azure_service_bus/ @hfurubotten
+/homeassistant/components/backblaze/ @frenck
+/tests/components/backblaze/ @frenck
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
 /homeassistant/components/baf/ @bdraco @jfroy

@@ -78,6 +78,7 @@ FLOWS = {
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
+        "backblaze",
         "baf",
         "balboa",
         "bang_olufsen",
