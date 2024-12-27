@@ -4,22 +4,16 @@ from __future__ import annotations
 
 import logging
 
-from pytile.tile import Tile
-
-from homeassistant.components.device_tracker import AsyncSeeCallback, TrackerEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc
 
-from . import TileData
+from . import TileCoordinator, TileData
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,55 +37,27 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            TileDeviceTracker(entry, data.coordinators[tile_uuid], tile)
+            TileDeviceTracker(entry, data.coordinators[tile_uuid])
             for tile_uuid, tile in data.tiles.items()
         ]
     )
 
 
-async def async_setup_scanner(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_see: AsyncSeeCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Detect a legacy configuration and import it."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-            },
-        )
-    )
-
-    _LOGGER.debug(
-        "Your Tile configuration has been imported into the UI; "
-        "please remove it from configuration.yaml"
-    )
-
-    return True
-
-
-class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerEntity):
+class TileDeviceTracker(CoordinatorEntity[TileCoordinator], TrackerEntity):
     """Representation of a network infrastructure device."""
 
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "tile"
 
-    def __init__(
-        self, entry: ConfigEntry, coordinator: DataUpdateCoordinator[None], tile: Tile
-    ) -> None:
+    def __init__(self, entry: ConfigEntry, coordinator: TileCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{tile.uuid}"
+        self._tile = coordinator.tile
+        self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{self._tile.uuid}"
         self._entry = entry
-        self._tile = tile
 
     @property
     def available(self) -> bool:

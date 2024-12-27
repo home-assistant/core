@@ -1965,7 +1965,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.7.2
+pyheos==0.8.0
 
 # homeassistant.components.hive
 pyhiveapi==0.5.16
@@ -2363,7 +2363,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.8.0
+python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v7.0.0
@@ -2430,7 +2430,7 @@ python-smarttub==0.0.38
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.17.6
+python-tado==0.18.5
 
 # homeassistant.components.technove
 python-technove==1.3.1
@@ -2445,7 +2445,7 @@ python-vlc==3.0.18122
 pythonegardia==1.0.52
 
 # homeassistant.components.tile
-pytile==2023.12.0
+pytile==2024.12.0
 
 # homeassistant.components.tomorrowio
 pytomorrowio==0.3.6
