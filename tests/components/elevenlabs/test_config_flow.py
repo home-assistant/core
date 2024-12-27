@@ -73,9 +73,27 @@ async def test_invalid_api_key(
         },
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"]
+    assert result["errors"] == {"base": "invalid_api_key"}
 
     mock_setup_entry.assert_not_called()
+
+    # Reset the side effect
+    mock_async_client_fail.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ElevenLabs"
+    assert result["data"] == {
+        "api_key": "api_key",
+    }
+    assert result["options"] == {CONF_MODEL: DEFAULT_MODEL, CONF_VOICE: "voice1"}
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_options_flow_init(
