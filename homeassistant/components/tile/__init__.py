@@ -44,7 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():
-        coordinator = coordinators[tile_uuid] = TileCoordinator(hass, client, tile)
+        coordinator = coordinators[tile_uuid] = TileCoordinator(
+            hass, entry, client, tile
+        )
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_limited_concurrency(
