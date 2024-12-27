@@ -65,10 +65,10 @@
       },
       "secure_knxkeys": {
         "title": "Import KNX Keyring",
-        "description": "The keyring is used to encrypt and decrypt KNX IP Secure communication.",
+        "description": "The Keyring is used to encrypt and decrypt KNX IP Secure communication.",
         "data": {
           "knxkeys_file": "Keyring file",
-          "knxkeys_password": "Password"
+          "knxkeys_password": "Keyring password"
         },
         "data_description": {
           "knxkeys_file": "Select a `.knxkeys` file. This can be exported from ETS.",
@@ -93,7 +93,7 @@
           "device_authentication": "Device authentication password"
         },
         "data_description": {
-          "user_id": "This is usually tunnel number +1. So second tunnel in the list presented in ETS would have User-ID '3'.",
+          "user_id": "This usually is tunnel number +1. So first tunnel in the list presented in ETS would have User-ID `2`.",
           "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS.",
           "device_authentication": "This is set in the 'IP' panel of the interface in ETS."
         }
@@ -107,7 +107,7 @@
         },
         "data_description": {
           "backbone_key": "Can be seen in the 'Security' report of your ETS project. Eg. `00112233445566778899AABBCCDDEEFF`",
-          "sync_latency_tolerance": "Should be equal to the backbone option configuration of your ETS project. Default is `1000`"
+          "sync_latency_tolerance": "Should be equal to the backbone configuration of your ETS project. Default is `1000`"
         }
       },
       "routing": {
