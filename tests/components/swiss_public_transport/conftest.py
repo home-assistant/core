@@ -45,10 +45,10 @@ def mock_swiss_public_transport_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_START: "Zürich",
-            CONF_DESTINATION: "Bern",
+            CONF_START: START,
+            CONF_DESTINATION: DESTINATION,
         },
-        title="Zürich Bern",
+        title=f"{START} {DESTINATION}",
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
     )
 

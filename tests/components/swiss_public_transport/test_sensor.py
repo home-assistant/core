@@ -50,11 +50,8 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    ("raise_error", "state"),
-    [
-        (OpendataTransportConnectionError, ConfigEntryState.SETUP_RETRY),
-        (OpendataTransportError, ConfigEntryState.SETUP_RETRY),
-    ],
+    ("raise_error"),
+    [OpendataTransportConnectionError, OpendataTransportError],
 )
 async def test_fetching_data(
     hass: HomeAssistant,
@@ -62,7 +59,6 @@ async def test_fetching_data(
     mock_opendata_client: AsyncMock,
     swiss_public_transport_config_entry: MockConfigEntry,
     raise_error: Exception,
-    state: ConfigEntryState,
 ) -> None:
     """Test fetching data."""
     await setup_integration(hass, swiss_public_transport_config_entry)
