@@ -109,11 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                (
-                    "%s is not logged in to a HEOS account and will be unable to"
-                    " retrieve HEOS favorites: Use the 'heos.sign_in' service to"
-                    " sign-in to a HEOS account"
-                ),
+                "HEOS System (via %s) is not logged in: enter credentials in the integration options to access favorites and streaming services",
                 host,
             )
         inputs = await controller.get_input_sources()
