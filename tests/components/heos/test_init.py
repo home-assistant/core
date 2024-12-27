@@ -8,7 +8,6 @@ from pyheos import CommandFailedError, HeosError, const
 import pytest
 
 from homeassistant.components.heos import (
-    CONF_PASSWORD,
     ControllerManager,
     HeosOptions,
     HeosRuntimeData,
@@ -17,7 +16,7 @@ from homeassistant.components.heos import (
 )
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
