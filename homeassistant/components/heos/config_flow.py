@@ -160,16 +160,13 @@ class HeosOptionsFlowHandler(OptionsFlow):
                                 heos.signed_in_username,
                             )
                         except CommandFailedError as err:
-                            errors["base"] = "unknown"
-                            log_level = logging.ERROR
-
-                            if err.error_id in (6, 8, 10):
+                            if err.error_id in (6, 8, 10):  # Auth-specific errors
                                 errors["base"] = "invalid_auth"
-                                log_level = logging.INFO
-
-                            _LOGGER.log(
-                                log_level, "Failed to sign-in to HEOS Account: %s", err
-                            )
+                                _LOGGER.info(
+                                    "Failed to sign-in to HEOS Account: %s", err
+                                )
+                            else:
+                                raise  # Re-raise unexpected error
                     else:
                         # Log out
                         await heos.sign_out()
