@@ -18,21 +18,45 @@ import pytest
 import pytest_asyncio
 
 from homeassistant.components import ssdp
-from homeassistant.components.heos import DOMAIN
+from homeassistant.components.heos import (
+    DOMAIN,
+    ControllerManager,
+    GroupManager,
+    HeosRuntimeData,
+    SourceManager,
+)
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture(heos_runtime_data):
     """Create a mock HEOS config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
         unique_id=DOMAIN,
     )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="heos_runtime_data")
+def heos_runtime_data_fixture(controller_manager, players):
+    """Create a mock HeosRuntimeData fixture."""
+    return HeosRuntimeData(
+        controller_manager, Mock(GroupManager), Mock(SourceManager), players
+    )
+
+
+@pytest.fixture(name="controller_manager")
+def controller_manager_fixture(controller):
+    """Create a mock controller manager fixture."""
+    mock_controller_manager = Mock(ControllerManager)
+    mock_controller_manager.controller = controller
+    return mock_controller_manager
 
 
 @pytest.fixture(name="controller")

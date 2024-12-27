@@ -139,9 +139,9 @@ class HeosOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
             if authentication and CONF_USERNAME not in user_input:
-                errors["username"] = "username_missing"
+                errors[CONF_USERNAME] = "username_missing"
             if authentication and CONF_PASSWORD not in user_input:
-                errors["password"] = "password_missing"
+                errors[CONF_PASSWORD] = "password_missing"
 
             if not errors:
                 heos = cast(
@@ -160,12 +160,12 @@ class HeosOptionsFlowHandler(OptionsFlow):
                                 heos.signed_in_username,
                             )
                         except CommandFailedError as err:
-                            log_level = logging.INFO
+                            errors["base"] = "unknown"
+                            log_level = logging.ERROR
+
                             if err.error_id in (6, 8, 10):
                                 errors["base"] = "invalid_auth"
-                            else:
-                                errors["base"] = "unknown"
-                                log_level = logging.ERROR
+                                log_level = logging.INFO
 
                             _LOGGER.log(
                                 log_level, "Failed to sign-in to HEOS Account: %s", err
@@ -175,8 +175,8 @@ class HeosOptionsFlowHandler(OptionsFlow):
                         await heos.sign_out()
                         _LOGGER.info("Successfully signed-out of HEOS Account")
                 except HeosError:
-                    _LOGGER.exception("Unexpected error occurred during sign-in/out")
                     errors["base"] = "unknown"
+                    _LOGGER.exception("Unexpected error occurred during sign-in/out")
 
             if not errors:
                 return self.async_create_entry(data=user_input)
