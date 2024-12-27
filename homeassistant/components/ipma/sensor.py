@@ -31,6 +31,7 @@ class IPMASensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
     value_extractor: Callable[[Any], Any] | None = None
+    extra_attr_fn: Callable[[Any], dict[str, Any]] | None = None
 
 
 async def async_retrieve_rcm(location: Location, api: IPMA_API) -> int | None:
@@ -57,6 +58,11 @@ async def async_retrieve_warning(location: Location, api: IPMA_API) -> int | Non
     return None
 
 
+def get_extra_attr(data: Any) -> dict[str, Any]:
+    """Return the extra attributes."""
+    return {k: str(v) for k, v in asdict(data).items()}
+
+
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
     IPMASensorEntityDescription(
         key="rcm",
@@ -73,6 +79,7 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
         translation_key="weather_alert",
         value_fn=async_retrieve_warning,
         value_extractor=lambda data: data.awarenessLevelID if data else "green",
+        extra_attr_fn=get_extra_attr,
     ),
 )
 
@@ -126,8 +133,8 @@ class IPMASensor(SensorEntity, IPMADevice):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if (
-            self.entity_description.value_extractor is not None
+            self.entity_description.extra_attr_fn is not None
             and self._ipma_data is not None
         ):
-            return {k: str(v) for k, v in asdict(self._ipma_data).items()}
+            return self.entity_description.extra_attr_fn(self._ipma_data)
         return None
