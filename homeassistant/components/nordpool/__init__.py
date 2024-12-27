@@ -29,12 +29,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: NordPoolConfigEntry
+) -> bool:
     """Set up Nord Pool from a config entry."""
 
-    await cleanup_device(hass, entry)
+    await cleanup_device(hass, config_entry)
 
-    coordinator = NordPoolDataUpdateCoordinator(hass, entry)
+    coordinator = NordPoolDataUpdateCoordinator(hass, config_entry)
     await coordinator.fetch_data(dt_util.utcnow())
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady(
@@ -42,31 +44,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> 
             translation_key="initial_update_failed",
             translation_placeholders={"error": str(coordinator.last_exception)},
         )
-    entry.runtime_data = coordinator
+    config_entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: NordPoolConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: NordPoolConfigEntry
+) -> bool:
     """Unload Nord Pool config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def cleanup_device(hass: HomeAssistant, entry: NordPoolConfigEntry) -> None:
+async def cleanup_device(
+    hass: HomeAssistant, config_entry: NordPoolConfigEntry
+) -> None:
     """Cleanup device and entities."""
     device_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    entries = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
-    for area in entry.data[CONF_AREAS]:
-        for _entry in entries:
-            if _entry.identifiers == {(DOMAIN, area)}:
+    entries = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
+    for area in config_entry.data[CONF_AREAS]:
+        for entry in entries:
+            if entry.identifiers == {(DOMAIN, area)}:
                 continue
 
-            LOGGER.debug("Removing device %s", _entry.name)
-            entities = er.async_entries_for_device(entity_reg, _entry.id)
+            LOGGER.debug("Removing device %s", entry.name)
+            entities = er.async_entries_for_device(entity_reg, entry.id)
             for _entity in entities:
                 entity_reg.async_remove(_entity.entity_id)
-            device_reg.async_clear_config_entry(entry.entry_id)
+            device_reg.async_update_device(
+                entry.id, remove_config_entry_id=config_entry.entry_id
+            )
