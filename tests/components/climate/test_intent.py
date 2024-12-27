@@ -15,7 +15,12 @@ from homeassistant.components.homeassistant.exposed_entities import async_expose
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    entity_registry as er,
+    floor_registry as fr,
+    intent,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -113,6 +118,7 @@ async def test_get_temperature(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test HassClimateGetTemperature intent."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -143,6 +149,25 @@ async def test_get_temperature(
     living_room_area = area_registry.async_create(name="Living Room")
     bedroom_area = area_registry.async_create(name="Bedroom")
     office_area = area_registry.async_create(name="Office")
+
+    # Add areas to different floors:
+    # living room => downstairs
+    # bedroom => upstairs
+    # office => basement
+    # nothing in attic
+    downstairs_floor = floor_registry.async_create(name="Downstairs")
+    upstairs_floor = floor_registry.async_create(name="Upstairs")
+    basement_floor = floor_registry.async_create(name="Basement")
+    attic_floor = floor_registry.async_create(name="Attic")
+    living_room_area = area_registry.async_update(
+        living_room_area.id, floor_id=downstairs_floor.floor_id
+    )
+    bedroom_area = area_registry.async_update(
+        bedroom_area.id, floor_id=upstairs_floor.floor_id
+    )
+    office_area = area_registry.async_update(
+        office_area.id, floor_id=basement_floor.floor_id
+    )
 
     entity_registry.async_update_entity(
         climate_1.entity_id, area_id=living_room_area.id
@@ -191,6 +216,20 @@ async def test_get_temperature(
     state = response.matched_states[0]
     assert state.attributes["current_temperature"] == 22.0
 
+    # Select by floor (climate_2)
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_GET_TEMPERATURE,
+        {"floor": {"value": upstairs_floor.name}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert len(response.matched_states) == 1
+    assert response.matched_states[0].entity_id == climate_2.entity_id
+    state = response.matched_states[0]
+    assert state.attributes["current_temperature"] == 22.0
+
     # Check area with no climate entities
     with pytest.raises(intent.MatchFailedError) as error:
         response = await intent.async_handle(
@@ -207,6 +246,46 @@ async def test_get_temperature(
     constraints = error.value.constraints
     assert constraints.name is None
     assert constraints.area_name == office_area.name
+    assert constraints.domains and (set(constraints.domains) == {DOMAIN})
+    assert constraints.device_classes is None
+
+    # Check floor with area with no climate entities
+    with pytest.raises(intent.MatchFailedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"floor": {"value": basement_floor.name}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Exception should contain details of what we tried to match
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.FLOOR
+    constraints = error.value.constraints
+    assert constraints.name is None
+    assert constraints.area_name is None
+    assert constraints.floor_name == basement_floor.name
+    assert constraints.domains and (set(constraints.domains) == {DOMAIN})
+    assert constraints.device_classes is None
+
+    # Check floor with no areas
+    with pytest.raises(intent.MatchFailedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"floor": {"value": attic_floor.name}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Exception should contain details of what we tried to match
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.FLOOR
+    constraints = error.value.constraints
+    assert constraints.name is None
+    assert constraints.area_name is None
+    assert constraints.floor_name == attic_floor.name
     assert constraints.domains and (set(constraints.domains) == {DOMAIN})
     assert constraints.device_classes is None
 

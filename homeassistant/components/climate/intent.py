@@ -23,6 +23,7 @@ class GetTemperatureIntent(intent.IntentHandler):
     slot_schema = {
         vol.Optional("area"): intent.non_empty_string,
         vol.Optional("name"): intent.non_empty_string,
+        vol.Optional("floor"): intent.non_empty_string,
     }
     platforms = {DOMAIN}
 
@@ -39,8 +40,16 @@ class GetTemperatureIntent(intent.IntentHandler):
         if "area" in slots:
             area = slots["area"]["value"]
 
+        floor: str | None = None
+        if "floor" in slots:
+            floor = slots["floor"]["value"]
+
         match_constraints = intent.MatchTargetsConstraints(
-            name=name, area_name=area, domains=[DOMAIN], assistant=intent_obj.assistant
+            name=name,
+            area_name=area,
+            floor_name=floor,
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
         )
         match_result = intent.async_match_targets(hass, match_constraints)
         if not match_result.is_match:
