@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pytile.errors import InvalidAuthError, TileError
 
-from homeassistant.components.tile import DOMAIN
+from homeassistant.components.tile.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
