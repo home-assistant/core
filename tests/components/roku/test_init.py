@@ -3,11 +3,28 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from rokuecp import RokuConnectionError
+from syrupy import SnapshotAssertion
 
+from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test device registry integration."""
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, init_integration.unique_id)}
+    )
+    assert device_entry is not None
+    assert device_entry == snapshot
 
 
 @patch(
