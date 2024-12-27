@@ -1,18 +1,23 @@
 """Tests for the init module."""
 
 import asyncio
+from typing import cast
 from unittest.mock import Mock, patch
 
 from pyheos import CommandFailedError, HeosError, const
 import pytest
 
 from homeassistant.components.heos import (
+    CONF_PASSWORD,
     ControllerManager,
+    HeosOptions,
     HeosRuntimeData,
     async_setup_entry,
     async_unload_entry,
 )
 from homeassistant.components.heos.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
@@ -59,6 +64,32 @@ async def test_async_setup_entry_loads_platforms(
         assert controller.get_favorites.call_count == 1
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
+
+
+async def test_async_setup_entry_with_options_loads_platforms(
+    hass: HomeAssistant,
+    config_entry_options,
+    config,
+    controller,
+    input_sources,
+    favorites,
+) -> None:
+    """Test load connects to heos with options, retrieves players, and loads platforms."""
+    config_entry_options.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Assert options passed and methods called
+    assert config_entry_options.state is ConfigEntryState.LOADED
+    options = cast(HeosOptions, controller.call_args[0][0])
+    assert options.host == config_entry_options.data[CONF_HOST]
+    assert options.credentials.username == config_entry_options.options[CONF_USERNAME]
+    assert options.credentials.password == config_entry_options.options[CONF_PASSWORD]
+    assert controller.connect.call_count == 1
+    assert controller.get_players.call_count == 1
+    assert controller.get_favorites.call_count == 1
+    assert controller.get_input_sources.call_count == 1
+    controller.disconnect.assert_not_called()
 
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(

@@ -19,13 +19,14 @@ import pytest_asyncio
 
 from homeassistant.components import ssdp
 from homeassistant.components.heos import (
+    CONF_PASSWORD,
     DOMAIN,
     ControllerManager,
     GroupManager,
     HeosRuntimeData,
     SourceManager,
 )
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -37,6 +38,20 @@ def config_entry_fixture(heos_runtime_data):
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
+        unique_id=DOMAIN,
+    )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="config_entry_options")
+def config_entry_options_fixture(heos_runtime_data):
+    """Create a mock HEOS config entry with options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         unique_id=DOMAIN,
     )
     entry.runtime_data = heos_runtime_data
@@ -67,6 +82,7 @@ def controller_fixture(
     mock_heos = Mock(Heos)
     for player in players.values():
         player.heos = mock_heos
+    mock_heos.return_value = mock_heos
     mock_heos.dispatcher = dispatcher
     mock_heos.get_players.return_value = players
     mock_heos.players = players
@@ -79,11 +95,10 @@ def controller_fixture(
     mock_heos.connection_state = const.STATE_CONNECTED
     mock_heos.get_groups.return_value = group
     mock_heos.create_group.return_value = None
-    mock = Mock(return_value=mock_heos)
 
     with (
-        patch("homeassistant.components.heos.Heos", new=mock),
-        patch("homeassistant.components.heos.config_flow.Heos", new=mock),
+        patch("homeassistant.components.heos.Heos", new=mock_heos),
+        patch("homeassistant.components.heos.config_flow.Heos", new=mock_heos),
     ):
         yield mock_heos
 
