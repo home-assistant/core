@@ -7,10 +7,23 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyheos import Heos, HeosError, HeosOptions, HeosPlayer, const as heos_const
+from pyheos import (
+    Credentials,
+    Heos,
+    HeosError,
+    HeosOptions,
+    HeosPlayer,
+    const as heos_const,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -56,9 +69,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     host = entry.data[CONF_HOST]
+    credentials: Credentials | None = None
+    if CONF_USERNAME in entry.options and CONF_PASSWORD in entry.options:
+        credentials = Credentials(
+            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
+        )
+
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
-    controller = Heos(HeosOptions(host, all_progress_events=False, auto_reconnect=True))
+    controller = Heos(
+        HeosOptions(
+            host,
+            all_progress_events=False,
+            auto_reconnect=True,
+            credentials=credentials,
+        )
+    )
     try:
         await controller.connect()
     # Auto reconnect only operates if initial connection was successful.
