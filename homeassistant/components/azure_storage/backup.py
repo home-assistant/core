@@ -14,7 +14,6 @@ from . import AzureStorageConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 0
 
 
 async def async_get_backup_agents(

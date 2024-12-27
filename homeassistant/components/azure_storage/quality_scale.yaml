@@ -53,7 +53,10 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  parallel-updates: done
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration does not have platforms.
   reauthentication-flow: todo
   test-coverage: todo
 
