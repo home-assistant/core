@@ -198,7 +198,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
+def _generate_event_to_json(
+    conf: dict,
+) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
@@ -474,18 +476,32 @@ def get_influx_connection(  # noqa: C901
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
+    config = entry.data
+
+    try:
+        influx = await hass.async_add_executor_job(get_influx_connection, config, True)
+    except ConnectionError as err:
+        raise ConfigEntryNotReady(err) from err
+
+    event_to_json = _generate_event_to_json(dict(config.items()))
+    max_tries = config.get(CONF_RETRY_COUNT)
+    influx_thread = hass.data[DOMAIN] = InfluxThread(
+        hass, influx, event_to_json, max_tries
+    )
+    influx_thread.start()
+
+    entry.runtime_data = influx_thread
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    influx_thread = entry.runtime_data
+
+    influx_thread.shutdown()
 
     return True
-
-
-# def _retry_setup(hass: HomeAssistant, config: ConfigType) -> None:
-#     setup(hass, config)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -502,34 +518,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-# def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-#     """Set up the InfluxDB component."""
-#     conf = config[DOMAIN]
-#     try:
-#         influx = get_influx_connection(conf, test_write=True)
-#     except ConnectionError as exc:
-#         _LOGGER.error(RETRY_MESSAGE, exc)
-#         event_helper.call_later(
-#             hass, RETRY_INTERVAL, lambda _: _retry_setup(hass, config)
-#         )
-#         return True
-
-#     event_to_json = _generate_event_to_json(conf)
-#     max_tries = conf.get(CONF_RETRY_COUNT)
-#     instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
-#     instance.start()
-
-#     def shutdown(event):
-#         """Shut down the thread."""
-#         instance.queue.put(None)
-#         instance.join()
-#         influx.close()
-
-#     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
-
-#     return True
-
-
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
@@ -544,7 +532,13 @@ class InfluxThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        hass.bus.async_listen(EVENT_STATE_CHANGED, self._event_listener)
+
+    def shutdown(self):
+        """Shutdown the influx thread."""
+        self.queue.put(None)
+        self.join()
+        self.influx.close()
 
     @callback
     def _event_listener(self, event):
