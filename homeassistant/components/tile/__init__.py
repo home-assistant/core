@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
-from functools import partial
 
 from pytile import async_login
-from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
+from pytile.errors import InvalidAuthError, TileError
 from pytile.tile import Tile
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,16 +13,15 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
+from .coordinator import TileCoordinator
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
 
 DEFAULT_INIT_TASK_LIMIT = 2
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=2)
 
 CONF_SHOW_INACTIVE = "show_inactive"
 
@@ -33,7 +30,7 @@ CONF_SHOW_INACTIVE = "show_inactive"
 class TileData:
     """Define an object to be stored in `hass.data`."""
 
-    coordinators: dict[str, DataUpdateCoordinator[None]]
+    coordinators: dict[str, TileCoordinator]
     tiles: dict[str, Tile]
 
 
@@ -56,30 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
 
-    async def async_update_tile(tile: Tile) -> None:
-        """Update the Tile."""
-        try:
-            await tile.async_update()
-        except InvalidAuthError as err:
-            raise ConfigEntryAuthFailed("Invalid credentials") from err
-        except SessionExpiredError:
-            LOGGER.debug("Tile session expired; creating a new one")
-            await client.async_init()
-        except TileError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}") from err
-
-    coordinators: dict[str, DataUpdateCoordinator[None]] = {}
+    coordinators: dict[str, TileCoordinator] = {}
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():
-        coordinator = coordinators[tile_uuid] = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            config_entry=entry,
-            name=tile.name,
-            update_interval=DEFAULT_UPDATE_INTERVAL,
-            update_method=partial(async_update_tile, tile),
-        )
+        coordinator = coordinators[tile_uuid] = TileCoordinator(hass, client, tile)
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_limited_concurrency(
