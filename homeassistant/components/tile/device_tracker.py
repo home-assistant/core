@@ -6,13 +6,11 @@ import logging
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc
 
-from .const import DOMAIN
 from .coordinator import TileConfigEntry, TileCoordinator
+from .entity import TileEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +35,9 @@ async def async_setup_entry(
     )
 
 
-class TileDeviceTracker(CoordinatorEntity[TileCoordinator], TrackerEntity):
+class TileDeviceTracker(TileEntity, TrackerEntity):
     """Representation of a network infrastructure device."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "tile"
 
@@ -51,16 +48,6 @@ class TileDeviceTracker(CoordinatorEntity[TileCoordinator], TrackerEntity):
         self._attr_extra_state_attributes = {}
         self._tile = coordinator.tile
         self._attr_unique_id = f"{coordinator.username}_{self._tile.uuid}"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and not self._tile.dead
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(identifiers={(DOMAIN, self._tile.uuid)}, name=self._tile.name)
 
     @callback
     def _handle_coordinator_update(self) -> None:
