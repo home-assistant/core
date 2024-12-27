@@ -53,9 +53,7 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
-        self._tile = coordinator.tile
         self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{self._tile.uuid}"
-        self._entry = entry
 
     @callback
     def _handle_coordinator_update(self) -> None:
