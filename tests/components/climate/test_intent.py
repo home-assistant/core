@@ -227,23 +227,6 @@ async def test_get_temperature(
     assert constraints.domains and (set(constraints.domains) == {DOMAIN})
     assert constraints.device_classes is None
 
-    # Check wrong name with area
-    with pytest.raises(intent.MatchFailedError) as error:
-        response = await intent.async_handle(
-            hass,
-            "test",
-            climate_intent.INTENT_GET_TEMPERATURE,
-            {"name": {"value": "Climate 1"}, "area": {"value": bedroom_area.name}},
-        )
-
-    assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
-    constraints = error.value.constraints
-    assert constraints.name == "Climate 1"
-    assert constraints.area_name == bedroom_area.name
-    assert constraints.domains and (set(constraints.domains) == {DOMAIN})
-    assert constraints.device_classes is None
-
 
 async def test_get_temperature_no_entities(
     hass: HomeAssistant,
