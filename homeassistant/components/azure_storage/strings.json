@@ -1,0 +1,28 @@
+{
+  "config": {
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "storage_account_key": "Storage account key",
+          "account_name": "Account name",
+          "container_name": "Container name"
+        },
+        "data_description": {
+          "storage_account_key": "Storage account access key used for authorization",
+          "account_name": "Name of the storage account",
+          "container_name": "Name of the storage container to be used (will be created if it does not exist)"
+        },
+        "description": "Set up an Azure (Blob) storage account to be used for backups.",
+        "title": "Add Azure storage account"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  }
+}
