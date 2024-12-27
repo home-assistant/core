@@ -6,7 +6,7 @@ import pytest
 from pytile.errors import InvalidAuthError, TileError
 
 from homeassistant.components.tile import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -63,19 +63,6 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import_entry(hass: HomeAssistant, config, mock_pytile) -> None:
-    """Test importing an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_USERNAME
-    assert result["data"] == {
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-    }
 
 
 async def test_step_reauth(
