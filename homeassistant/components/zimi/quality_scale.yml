@@ -16,7 +16,10 @@ rules:
     status: done
     comment: >
       https://mark_hannon@bitbucket.org/mark_hannon/zcc.git
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      There are no service actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -77,10 +80,10 @@ rules:
       The Zimi Cloud controller IP address cannot be changed after integration.
   repair-issues: todo
   docs-use-cases: todo
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-known-limitations: done
   docs-troubleshooting: todo
   docs-examples: todo
 
