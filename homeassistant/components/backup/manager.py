@@ -23,7 +23,11 @@ from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import instance_id, integration_platform
+from homeassistant.helpers import (
+    instance_id,
+    integration_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
@@ -44,7 +48,11 @@ from .const import (
 )
 from .models import AgentBackup, Folder
 from .store import BackupStore
-from .util import make_backup_dir, read_backup
+from .util import make_backup_dir, read_backup, validate_password
+
+
+class IncorrectPasswordError(HomeAssistantError):
+    """Raised when the password is incorrect."""
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -691,6 +699,8 @@ class BackupManager:
                 CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
             )
             self.async_on_backup_event(IdleEvent())
+            if with_automatic_settings:
+                self._update_issue_backup_failed()
             raise
 
     async def _async_create_backup(
@@ -716,7 +726,10 @@ class BackupManager:
                 "Cannot include all addons and specify specific addons"
             )
 
-        backup_name = name or f"Core {HAVERSION}"
+        backup_name = (
+            name
+            or f"{"Automatic" if with_automatic_settings else "Custom"} {HAVERSION}"
+        )
         new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
             backup_name=backup_name,
@@ -750,6 +763,8 @@ class BackupManager:
             self.async_on_backup_event(
                 CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
             )
+            if with_automatic_settings:
+                self._update_issue_backup_failed()
         else:
             LOGGER.debug(
                 "Generated new backup with backup_id %s, uploading to agents %s",
@@ -772,6 +787,7 @@ class BackupManager:
                 # create backup was successful, update last_completed_automatic_backup
                 self.config.data.last_completed_automatic_backup = dt_util.now()
                 self.store.save()
+                self._update_issue_after_agent_upload(agent_errors)
             self.known_backups.add(written_backup.backup, agent_errors)
 
             # delete old backups more numerous than copies
@@ -877,6 +893,38 @@ class BackupManager:
 
         self._backup_event_subscriptions.append(on_event)
         return remove_subscription
+
+    def _update_issue_backup_failed(self) -> None:
+        """Update issue registry when a backup fails."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "automatic_backup_failed",
+            is_fixable=False,
+            is_persistent=True,
+            learn_more_url="homeassistant://config/backup",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="automatic_backup_failed_create",
+        )
+
+    def _update_issue_after_agent_upload(
+        self, agent_errors: dict[str, Exception]
+    ) -> None:
+        """Update issue registry after a backup is uploaded to agents."""
+        if not agent_errors:
+            ir.async_delete_issue(self.hass, DOMAIN, "automatic_backup_failed")
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "automatic_backup_failed",
+            is_fixable=False,
+            is_persistent=True,
+            learn_more_url="homeassistant://config/backup",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="automatic_backup_failed_upload_agents",
+            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+        )
 
 
 class KnownBackups:
@@ -1227,6 +1275,12 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 await async_add_executor_job(f.close)
 
             remove_after_restore = True
+
+        password_valid = await self._hass.async_add_executor_job(
+            validate_password, path, password
+        )
+        if not password_valid:
+            raise IncorrectPasswordError("The password provided is incorrect.")
 
         def _write_restore_file() -> None:
             """Write the restore file."""

@@ -20,6 +20,18 @@
       },
       "stop_alarm": {
         "default": "mdi:bell-cancel"
+      },
+      "pan_left": {
+        "default": "mdi:chevron-left"
+      },
+      "pan_right": {
+        "default": "mdi:chevron-right"
+      },
+      "tilt_up": {
+        "default": "mdi:chevron-up"
+      },
+      "tilt_down": {
+        "default": "mdi:chevron-down"
       }
     },
     "select": {
@@ -77,6 +89,30 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
+      },
+      "motion_detection": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      },
+      "person_detection": {
+        "default": "mdi:account-off",
+        "state": {
+          "on": "mdi:account"
+        }
+      },
+      "tamper_detection": {
+        "default": "mdi:shield-off",
+        "state": {
+          "on": "mdi:shield"
+        }
+      },
+      "baby_cry_detection": {
+        "default": "mdi:baby-face-outline",
+        "state": {
+          "on": "mdi:baby-face"
+        }
       }
     },
     "sensor": {
@@ -117,6 +153,12 @@
       },
       "target_temperature": {
         "default": "mdi:thermometer"
+      },
+      "pan_step": {
+        "default": "mdi:unfold-more-vertical"
+      },
+      "tilt_step": {
+        "default": "mdi:unfold-more-horizontal"
       }
     }
   },
