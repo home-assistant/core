@@ -11,14 +11,6 @@
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
-    "payload_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported natively. Update the automation or script to use the `payload` option instead and restart Home Assistant to fix this issue."
-    },
-    "topic_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `topic_template` option used in MQTT publish action call to topic `{topic}` from topic template `{topic_template}`. Use the `topic` option instead. In automations templates are supported natively. Update the automation or script to use the `topic` option instead and restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -101,6 +93,7 @@
       "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
@@ -114,7 +107,7 @@
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configurered together"
+      "invalid_inclusion": "The client certificate and private key must be configured together"
     }
   },
   "device_automation": {
