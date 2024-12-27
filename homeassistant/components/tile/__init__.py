@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
-from pytile.tile import Tile
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
-from .const import DOMAIN
-from .coordinator import TileCoordinator
+from .coordinator import TileConfigEntry, TileCoordinator
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
@@ -26,15 +21,7 @@ DEFAULT_INIT_TASK_LIMIT = 2
 CONF_SHOW_INACTIVE = "show_inactive"
 
 
-@dataclass
-class TileData:
-    """Define an object to be stored in `hass.data`."""
-
-    coordinators: dict[str, TileCoordinator]
-    tiles: dict[str, Tile]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool:
     """Set up Tile as config entry."""
 
     # Tile's API uses cookies to identify a consumer; in order to allow for multiple
@@ -57,24 +44,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator_init_tasks = []
 
     for tile_uuid, tile in tiles.items():
-        coordinator = coordinators[tile_uuid] = TileCoordinator(hass, client, tile)
+        coordinator = coordinators[tile_uuid] = TileCoordinator(
+            hass, entry, client, tile
+        )
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_limited_concurrency(
         DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks
     )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = TileData(coordinators=coordinators, tiles=tiles)
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TileConfigEntry) -> bool:
     """Unload a Tile config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
