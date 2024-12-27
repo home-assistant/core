@@ -261,8 +261,21 @@ async def test_options_flow_signs_out(
     assert result["errors"] == {}
     assert result["type"] is FlowResultType.FORM
 
-    # Clear credentials
+    # Fail to sign-out, show error
     user_input = {}
+    controller.sign_out.side_effect = HeosError()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input
+    )
+    assert controller.sign_in.call_count == 0
+    assert controller.sign_out.call_count == 1
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+
+    # Clear credentials
+    controller.sign_out.reset_mock()
+    controller.sign_out.side_effect = None
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input
     )
