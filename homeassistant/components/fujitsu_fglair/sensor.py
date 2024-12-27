@@ -9,13 +9,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .climate import FGLairConfigEntry
-from .const import DOMAIN
 from .coordinator import FGLairCoordinator
+from .entity import FGLairEntity
 
 
 async def async_setup_entry(
@@ -30,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class FGLairOutsideTemperature(CoordinatorEntity[FGLairCoordinator], SensorEntity):
+class FGLairOutsideTemperature(FGLairEntity, SensorEntity):
     """Entity representing outside temperature sensed by the outside unit of a Fujitsu Heatpump."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -41,22 +39,8 @@ class FGLairOutsideTemperature(CoordinatorEntity[FGLairCoordinator], SensorEntit
 
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
         """Store the representation of the device."""
-        super().__init__(coordinator, context=device.device_serial_number)
-
-        self._attr_unique_id = device.device_serial_number
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_serial_number)},
-            name=device.device_name,
-            manufacturer="Fujitsu",
-            model=device.property_values["model_name"],
-            serial_number=device.device_serial_number,
-            sw_version=device.property_values["mcu_firmware_version"],
-        )
-
-    @property
-    def device(self) -> FujitsuHVAC:
-        """Return the device object from the coordinator data."""
-        return self.coordinator.data[self.coordinator_context]
+        super().__init__(coordinator, device)
+        self._attr_unique_id = f"{device.device_serial_number}_outside_temperature"
 
     @property
     def native_value(self) -> float | None:
