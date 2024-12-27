@@ -72,4 +72,4 @@ class CCLBinarySensorEntity(CCLEntity, BinarySensorEntity):
     @property
     def is_on(self) -> None | bool:
         """Return the state of the sensor."""
-        return bool(self._internal.value)
+        return bool(self.internal.value)
