@@ -67,5 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+    CCLServer.devices.pop(entry.data[CONF_WEBHOOK_ID], None)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
