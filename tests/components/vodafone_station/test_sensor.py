@@ -1,5 +1,6 @@
 """Tests for Vodafone Station sensor platform."""
 
+from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
@@ -58,8 +59,9 @@ async def test_active_connection_type(
         assert state
         assert state.state == "unknown"
 
-        SENSOR_DATA_QUERY[connection_type] = "1.1.1.1"
-        mock_sensor_data.return_value = SENSOR_DATA_QUERY
+        sensor_data = deepcopy(SENSOR_DATA_QUERY)
+        sensor_data[connection_type] = "1.1.1.1"
+        mock_sensor_data.return_value = sensor_data
 
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
@@ -109,8 +111,9 @@ async def test_uptime(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
         assert state
         assert state.state == uptime
 
-        SENSOR_DATA_QUERY["sys_uptime"] = "12:17:23"
-        mock_sensor_data.return_value = SENSOR_DATA_QUERY
+        sensor_data = deepcopy(SENSOR_DATA_QUERY)
+        sensor_data["sys_uptime"] = "12:17:23"
+        mock_sensor_data.return_value = sensor_data
 
         freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
