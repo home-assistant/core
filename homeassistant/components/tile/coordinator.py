@@ -22,17 +22,20 @@ class TileCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: TileConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: API, tile: Tile) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: TileConfigEntry, client: API, tile: Tile
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             LOGGER,
             name=tile.name,
+            config_entry=entry,
             update_interval=timedelta(minutes=2),
         )
         self.tile = tile
         self.client = client
-        self.username = self.config_entry.data[CONF_USERNAME]
+        self.username = entry.data[CONF_USERNAME]
 
     async def _async_update_data(self) -> None:
         """Update data via library."""
