@@ -50,11 +50,6 @@ async def async_migrate_entry(
     if config_entry.version == 1:
         # Migrate to version 2
         counter_id = config_entry.data.get(CONF_COUNTER_ID)
-        if not counter_id:
-            _LOGGER.error(
-                "Failed to migrate to suez_water because no counter_id was previously defined"
-            )
-            return False
         unique_id = str(counter_id)
 
         hass.config_entries.async_update_entry(

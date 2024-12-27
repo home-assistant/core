@@ -78,21 +78,6 @@ async def test_migration_version_1_to_2(
     suez_client: AsyncMock,
 ) -> None:
     """Test that a migration from 1 to 2 change unique_id."""
-
-    broken_data = MOCK_DATA.copy()
-    broken_data.pop(CONF_COUNTER_ID)
-
-    past_entry = MockConfigEntry(
-        unique_id=MOCK_DATA[CONF_USERNAME],
-        domain=DOMAIN,
-        title=MOCK_DATA[CONF_USERNAME],
-        data=broken_data,
-        version=1,
-        minor_version=0,
-    )
-    await setup_integration(hass, past_entry)
-    assert past_entry.state is ConfigEntryState.MIGRATION_ERROR
-
     past_entry = MockConfigEntry(
         unique_id=MOCK_DATA[CONF_USERNAME],
         domain=DOMAIN,
