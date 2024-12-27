@@ -1,6 +1,5 @@
 """The russound_rio component."""
 
-import asyncio
 import logging
 
 from aiorussound import RussoundClient, RussoundTcpConnectionHandler
@@ -11,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONNECT_TIMEOUT, DOMAIN, RUSSOUND_RIO_EXCEPTIONS
+from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -40,8 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     await client.register_state_update_callbacks(_connection_update_callback)
 
     try:
-        async with asyncio.timeout(CONNECT_TIMEOUT):
-            await client.connect()
+        await client.connect()
     except RUSSOUND_RIO_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -58,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.disconnect()

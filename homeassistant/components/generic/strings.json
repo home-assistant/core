@@ -3,6 +3,7 @@
   "config": {
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_with_details": "An unknown error occurred: {error}",
       "already_exists": "A camera with these URL settings already exists.",
       "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
       "unable_still_load_auth": "Unable to load valid image from still image URL: The camera may require a user name and password, or they are not correct.",
@@ -38,11 +39,11 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "user_confirm_still": {
-        "title": "Preview",
-        "description": "![Camera Still Image Preview]({preview_url})",
+      "user_confirm": {
+        "title": "Confirmation",
+        "description": "Please wait for previews to load...",
         "data": {
-          "confirmed_ok": "This image looks good."
+          "confirmed_ok": "Everything looks good."
         }
       }
     }
@@ -67,15 +68,16 @@
         }
       },
       "confirm_still": {
-        "title": "[%key:component::generic::config::step::user_confirm_still::title%]",
-        "description": "[%key:component::generic::config::step::user_confirm_still::description%]",
+        "title": "Preview",
+        "description": "![Camera Still Image Preview]({preview_url})",
         "data": {
-          "confirmed_ok": "[%key:component::generic::config::step::user_confirm_still::data::confirmed_ok%]"
+          "confirmed_ok": "This image looks good."
         }
       }
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unknown_with_details": "[%key:component::generic::config::error::unknown_with_details%]",
       "already_exists": "[%key:component::generic::config::error::already_exists%]",
       "unable_still_load": "[%key:component::generic::config::error::unable_still_load%]",
       "unable_still_load_auth": "[%key:component::generic::config::error::unable_still_load_auth%]",

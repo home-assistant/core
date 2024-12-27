@@ -34,6 +34,8 @@ from . import BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -191,7 +193,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities = [
         BMWSensor(coordinator, vehicle, description)

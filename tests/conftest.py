@@ -510,30 +510,31 @@ def aiohttp_client(
     clients = []
 
     async def go(
-        __param: Application | BaseTestServer,
+        param: Application | BaseTestServer,
+        /,
         *args: Any,
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
-            __param, (Application, BaseTestServer)
+        if isinstance(param, Callable) and not isinstance(  # type: ignore[arg-type]
+            param, (Application, BaseTestServer)
         ):
-            __param = __param(loop, *args, **kwargs)
+            param = param(loop, *args, **kwargs)
             kwargs = {}
         else:
             assert not args, "args should be empty"
 
         client: TestClient
-        if isinstance(__param, Application):
+        if isinstance(param, Application):
             server_kwargs = server_kwargs or {}
-            server = TestServer(__param, loop=loop, **server_kwargs)
+            server = TestServer(param, loop=loop, **server_kwargs)
             # Registering a view after starting the server should still work.
             server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
-        elif isinstance(__param, BaseTestServer):
-            client = TestClient(__param, loop=loop, **kwargs)
+        elif isinstance(param, BaseTestServer):
+            client = TestClient(param, loop=loop, **kwargs)
         else:
-            raise TypeError(f"Unknown argument type: {type(__param)!r}")
+            raise TypeError(f"Unknown argument type: {type(param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -1191,7 +1192,12 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session."""
+    """Only load translations once per session.
+
+    Warning: having this as a session fixture can cause issues with tests that
+    create mock integrations, overriding the real integration translations
+    with empty ones. Translations should be reset after such tests (see #131628)
+    """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1893,7 +1899,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
         return_response: bool = False,
     ) -> ServiceResponse:
         calls.append(
-            ServiceCall(domain, service, service_data, context, return_response)
+            ServiceCall(hass, domain, service, service_data, context, return_response)
         )
         try:
             return await _original_async_call(

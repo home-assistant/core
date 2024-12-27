@@ -7,12 +7,14 @@ from aiostreammagic import StreamMagicClient
 from aiostreammagic.models import DisplayBrightness
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import CambridgeAudioEntity
+from . import CambridgeAudioConfigEntry
+from .entity import CambridgeAudioEntity, command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -51,8 +53,13 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
     CambridgeAudioSelectEntityDescription(
         key="display_brightness",
         translation_key="display_brightness",
-        options=[x.value for x in DisplayBrightness],
+        options=[
+            DisplayBrightness.BRIGHT.value,
+            DisplayBrightness.DIM.value,
+            DisplayBrightness.OFF.value,
+        ],
         entity_category=EntityCategory.CONFIG,
+        load_fn=lambda client: client.display.brightness != DisplayBrightness.NONE,
         value_fn=lambda client: client.display.brightness,
         set_value_fn=lambda client, value: client.set_display_brightness(
             DisplayBrightness(value)
@@ -74,7 +81,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CambridgeAudioConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio select entities based on a config entry."""
@@ -111,6 +118,7 @@ class CambridgeAudioSelect(CambridgeAudioEntity, SelectEntity):
         """Return the state of the select."""
         return self.entity_description.value_fn(self.client)
 
+    @command
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.client, option)

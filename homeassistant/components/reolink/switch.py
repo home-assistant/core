@@ -7,12 +7,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Chime, Host
-from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,7 +23,9 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -428,20 +428,16 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, True)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, False)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
 
 
@@ -464,20 +460,16 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.entity_description.method(self._host.api, True)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.entity_description.method(self._host.api, False)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, False)
         self.async_write_ha_state()
 
 
@@ -501,18 +493,14 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        try:
-            await self.entity_description.method(self._chime, True)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        try:
-            await self.entity_description.method(self._chime, False)
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, False)
         self.async_write_ha_state()

@@ -77,9 +77,15 @@ def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "m_adam_multiple_devices_per_zone"
 
-    with patch(
-        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
-    ) as smile_mock:
+    with (
+        patch(
+            "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+        ) as smile_mock,
+        patch(
+            "homeassistant.components.plugwise.config_flow.Smile",
+            new=smile_mock,
+        ),
+    ):
         smile = smile_mock.return_value
 
         smile.gateway_id = "fe799307f1624099878210aa0b9f1475"
@@ -93,7 +99,7 @@ def mock_smile_adam() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -120,7 +126,7 @@ def mock_smile_adam_2() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.6.4")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -147,7 +153,7 @@ def mock_smile_adam_3() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.6.4")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -174,7 +180,7 @@ def mock_smile_adam_4() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.2.8")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -200,7 +206,7 @@ def mock_smile_anna() -> Generator[MagicMock]:
         smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -226,7 +232,7 @@ def mock_smile_anna_2() -> Generator[MagicMock]:
         smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -252,7 +258,7 @@ def mock_smile_anna_3() -> Generator[MagicMock]:
         smile.connect.return_value = Version("4.0.15")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -278,7 +284,7 @@ def mock_smile_p1() -> Generator[MagicMock]:
         smile.connect.return_value = Version("4.4.2")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -304,7 +310,7 @@ def mock_smile_p1_2() -> Generator[MagicMock]:
         smile.connect.return_value = Version("4.4.2")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -330,7 +336,7 @@ def mock_smile_legacy_anna() -> Generator[MagicMock]:
         smile.connect.return_value = Version("1.8.22")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile
@@ -356,7 +362,7 @@ def mock_stretch() -> Generator[MagicMock]:
         smile.connect.return_value = Version("3.1.11")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
-            all_data["gateway"], all_data["devices"]
+            all_data["devices"], all_data["gateway"]
         )
 
         yield smile

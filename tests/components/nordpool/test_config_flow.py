@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from typing import Any
 from unittest.mock import patch
 
 from pynordpool import (
-    DeliveryPeriodData,
-    NordPoolAuthenticationError,
+    NordPoolClient,
     NordPoolConnectionError,
+    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -23,10 +23,11 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
-async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
+async def test_form(hass: HomeAssistant, get_client: NordPoolClient) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -35,17 +36,11 @@ async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
 
-    with (
-        patch(
-            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-            return_value=get_data,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            ENTRY_CONFIG,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
@@ -55,7 +50,7 @@ async def test_form(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
 
 @pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
 async def test_single_config_entry(
-    hass: HomeAssistant, load_int: None, get_data: DeliveryPeriodData
+    hass: HomeAssistant, load_int: None, get_client: NordPoolClient
 ) -> None:
     """Test abort for single config entry."""
 
@@ -71,14 +66,14 @@ async def test_single_config_entry(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "cannot_connect"),
+        (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),
     ],
 )
 async def test_cannot_connect(
     hass: HomeAssistant,
-    get_data: DeliveryPeriodData,
+    get_client: NordPoolClient,
     error_message: Exception,
     p_error: str,
 ) -> None:
@@ -102,52 +97,10 @@ async def test_cannot_connect(
 
     assert result["errors"] == {"base": p_error}
 
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=get_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=ENTRY_CONFIG,
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Nord Pool"
-    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
-
-
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
-async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> None:
-    """Test empty data error."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG,
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
-
-    invalid_data = replace(get_data, raw={})
-
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=invalid_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=ENTRY_CONFIG,
-        )
-
-    assert result["errors"] == {"base": "no_data"}
-
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=get_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=ENTRY_CONFIG,
-        )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Nord Pool"
@@ -158,25 +111,18 @@ async def test_empty_data(hass: HomeAssistant, get_data: DeliveryPeriodData) -> 
 async def test_reconfigure(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
-    get_data: DeliveryPeriodData,
 ) -> None:
     """Test reconfiguration."""
 
     result = await load_int.start_reconfigure_flow(hass)
 
-    with (
-        patch(
-            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-            return_value=get_data,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_AREAS: ["SE3"],
-                CONF_CURRENCY: "EUR",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_AREAS: ["SE3"],
+            CONF_CURRENCY: "EUR",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -193,7 +139,7 @@ async def test_reconfigure(
     ("error_message", "p_error"),
     [
         (NordPoolConnectionError, "cannot_connect"),
-        (NordPoolAuthenticationError, "cannot_connect"),
+        (NordPoolEmptyResponseError, "no_data"),
         (NordPoolError, "cannot_connect"),
         (NordPoolResponseError, "cannot_connect"),
     ],
@@ -201,7 +147,8 @@ async def test_reconfigure(
 async def test_reconfigure_cannot_connect(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
-    get_data: DeliveryPeriodData,
+    aioclient_mock: AiohttpClientMocker,
+    load_json: list[dict[str, Any]],
     error_message: Exception,
     p_error: str,
 ) -> None:
@@ -223,17 +170,13 @@ async def test_reconfigure_cannot_connect(
 
     assert result["errors"] == {"base": p_error}
 
-    with patch(
-        "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
-        return_value=get_data,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_AREAS: ["SE3"],
-                CONF_CURRENCY: "EUR",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_AREAS: ["SE3"],
+            CONF_CURRENCY: "EUR",
+        },
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

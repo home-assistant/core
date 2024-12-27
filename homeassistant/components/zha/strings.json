@@ -76,7 +76,8 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a zha device",
       "usb_probe_failed": "Failed to probe the usb device",
-      "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this."
+      "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
+      "invalid_zeroconf_data": "The coordinator has invalid zeroconf service info and cannot be identified by ZHA"
     }
   },
   "options": {
@@ -297,7 +298,7 @@
     },
     "reconfigure_device": {
       "name": "Reconfigure device",
-      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this service.",
+      "description": "Reconfigures a ZHA device (heal device). Use this if you are having issues with the device. If the device in question is a battery-powered device, ensure it is awake and accepting commands when you use this action.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -585,6 +586,12 @@
       },
       "preheat_status": {
         "name": "Pre-heat status"
+      },
+      "open_window_detection_status": {
+        "name": "Open window detection status"
+      },
+      "window_detection": {
+        "name": "Open window detection"
       }
     },
     "button": {
@@ -599,6 +606,12 @@
       },
       "self_test": {
         "name": "Self-test"
+      },
+      "reset_summation_delivered": {
+        "name": "Reset summation delivered"
+      },
+      "restart_device": {
+        "name": "Restart device"
       }
     },
     "climate": {
@@ -791,6 +804,81 @@
       },
       "valve_countdown_2": {
         "name": "Irrigation time 2"
+      },
+      "on_led_intensity": {
+        "name": "On LED intensity"
+      },
+      "off_led_intensity": {
+        "name": "Off LED intensity"
+      },
+      "frost_protection_temperature": {
+        "name": "Frost protection temperature"
+      },
+      "valve_opening_degree": {
+        "name": "Valve opening degree"
+      },
+      "valve_closing_degree": {
+        "name": "Valve closing degree"
+      },
+      "siren_time": {
+        "name": "Siren time"
+      },
+      "timer_time_left": {
+        "name": "Timer time left"
+      },
+      "approach_distance": {
+        "name": "Approach distance"
+      },
+      "fixed_load_demand": {
+        "name": "Fixed load demand"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_inactive_brightness": {
+        "name": "Display inactive brightness"
+      },
+      "display_activity_timeout": {
+        "name": "Display activity timeout"
+      },
+      "open_window_detection_threshold": {
+        "name": "Open window detection threshold"
+      },
+      "open_window_event_duration": {
+        "name": "Open window event duration"
+      },
+      "open_window_detection_guard_period": {
+        "name": "Open window detection guard period"
+      },
+      "fallback_timeout": {
+        "name": "Fallback timeout"
+      },
+      "boost_amount": {
+        "name": "Boost amount"
+      },
+      "ambient_sensor_correction": {
+        "name": "Ambient sensor correction"
+      },
+      "external_sensor_correction": {
+        "name": "External sensor correction"
+      },
+      "move_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "detection_distance_min": {
+        "name": "Minimum range"
+      },
+      "detection_distance_max": {
+        "name": "Maximum range"
+      },
+      "presence_sensitivity": {
+        "name": "Presence sensitivity"
+      },
+      "presence_timeout": {
+        "name": "Fade time"
+      },
+      "regulator_set_point": {
+        "name": "Regulator set point"
       }
     },
     "select": {
@@ -886,6 +974,54 @@
       },
       "weather_delay": {
         "name": "Weather delay"
+      },
+      "on_led_color": {
+        "name": "On LED color"
+      },
+      "off_led_color": {
+        "name": "Off LED color"
+      },
+      "external_trigger_mode": {
+        "name": "External trigger mode"
+      },
+      "local_temperature_source": {
+        "name": "Local temperature source"
+      },
+      "control_type": {
+        "name": "Control type"
+      },
+      "thermostat_application": {
+        "name": "Thermostat application"
+      },
+      "heating_fuel": {
+        "name": "Heating fuel"
+      },
+      "heat_transfer_medium": {
+        "name": "Heat transfer medium"
+      },
+      "heating_emitter_type": {
+        "name": "Heating emitter type"
+      },
+      "external_temperature_sensor_type": {
+        "name": "External temperature sensor type"
+      },
+      "preset_mode": {
+        "name": "Preset mode"
+      },
+      "sensor_mode": {
+        "name": "Sensor mode"
+      },
+      "thermostat_mode": {
+        "name": "Thermostat mode"
+      },
+      "regulator_period": {
+        "name": "Regulator period"
+      },
+      "click_mode": {
+        "name": "Click mode"
+      },
+      "operation_mode": {
+        "name": "Operation mode"
       }
     },
     "sensor": {
@@ -1083,6 +1219,24 @@
       },
       "valve_status_2": {
         "name": "Status 2"
+      },
+      "timer_state": {
+        "name": "Timer state"
+      },
+      "last_valve_open_duration": {
+        "name": "Last valve open duration"
+      },
+      "motion_distance": {
+        "name": "Motion distance"
+      },
+      "control_status": {
+        "name": "Control status"
+      },
+      "distance": {
+        "name": "Target distance"
+      },
+      "local_temperature_floor": {
+        "name": "Floor temperature"
       }
     },
     "switch": {
@@ -1193,6 +1347,24 @@
       },
       "valve_on_off_2": {
         "name": "Valve 2"
+      },
+      "double_up_full": {
+        "name": "Double tap on - full"
+      },
+      "open_window": {
+        "name": "Open window"
+      },
+      "turbo_mode": {
+        "name": "Turbo mode"
+      },
+      "detach_relay": {
+        "name": "Detach relay"
+      },
+      "enable_siren": {
+        "name": "Enable siren"
+      },
+      "find_switch": {
+        "name": "Distance switch"
       }
     }
   }

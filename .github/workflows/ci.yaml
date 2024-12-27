@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 11
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 9
-  HA_SHORT_VERSION: "2024.12"
+  HA_SHORT_VERSION: "2025.2"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12', '3.13']"
   # 10.3 is the oldest supported version
@@ -240,7 +240,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: venv
           key: >-
@@ -256,7 +256,7 @@ jobs:
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           lookup-only: true
@@ -286,7 +286,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -295,7 +295,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -326,7 +326,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -335,7 +335,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -366,7 +366,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -375,7 +375,7 @@ jobs:
               needs.info.outputs.pre-commit_cache_key }}
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
           fail-on-cache-miss: true
@@ -482,16 +482,15 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: venv
-          lookup-only: true
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore uv wheel cache
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: ${{ env.UV_CACHE_DIR }}
           key: >-
@@ -531,6 +530,26 @@ jobs:
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
+      - name: Dump pip freeze
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          uv pip freeze >> pip_freeze.txt
+      - name: Upload pip_freeze artifact
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: pip-freeze-${{ matrix.python-version }}
+          path: pip_freeze.txt
+          overwrite: true
+      - name: Remove pip_freeze
+        run: rm pip_freeze.txt
+      - name: Remove generated requirements_all
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: rm requirements_all_pytest.txt requirements_all_wheels_*.txt
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
 
   hassfest:
     name: Check hassfest
@@ -559,7 +578,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -592,7 +611,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -630,7 +649,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -642,7 +661,7 @@ jobs:
           . venv/bin/activate
           python -m script.licenses extract --output-file=licenses-${{ matrix.python-version }}.json
       - name: Upload licenses
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: licenses-${{ github.run_number }}-${{ matrix.python-version }}
           path: licenses-${{ matrix.python-version }}.json
@@ -673,7 +692,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -720,7 +739,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -772,7 +791,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -780,7 +799,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             needs.info.outputs.python_cache_key }}
       - name: Restore mypy cache
-        uses: actions/cache@v4.1.2
+        uses: actions/cache@v4.2.0
         with:
           path: .mypy_cache
           key: >-
@@ -819,6 +838,12 @@ jobs:
     needs:
       - info
       - base
+      - gen-requirements-all
+      - hassfest
+      - lint-other
+      - lint-ruff
+      - lint-ruff-format
+      - mypy
     name: Split tests for full run
     steps:
       - name: Install additional OS dependencies
@@ -840,7 +865,7 @@ jobs:
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -852,7 +877,7 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
@@ -904,7 +929,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -954,14 +979,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1025,7 +1050,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1081,7 +1106,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1089,7 +1114,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1154,7 +1179,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1211,7 +1236,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1219,7 +1244,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1248,12 +1273,11 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.1.2
         with:
           fail_ci_if_error: true
           flags: full-suite
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0
 
   pytest-partial:
     runs-on: ubuntu-24.04
@@ -1301,7 +1325,7 @@ jobs:
           check-latest: true
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache/restore@v4.1.2
+        uses: actions/cache/restore@v4.2.0
         with:
           path: venv
           fail-on-cache-miss: true
@@ -1354,14 +1378,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -1387,8 +1411,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.1.2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          version: v0.6.0

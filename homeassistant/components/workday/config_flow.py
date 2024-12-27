@@ -67,12 +67,14 @@ def add_province_and_language_to_schema(
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
         selectable_languages = _country.supported_languages
-        new_selectable_languages = [lang[:2] for lang in selectable_languages]
+        new_selectable_languages = list(selectable_languages)
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
             ): LanguageSelector(
-                LanguageSelectorConfig(languages=new_selectable_languages)
+                LanguageSelectorConfig(
+                    languages=new_selectable_languages, native_name=True
+                )
             )
         }
 
@@ -134,7 +136,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
-        language = user_input.get(CONF_LANGUAGE)
+        language: str | None = user_input.get(CONF_LANGUAGE)
         province = user_input.get(CONF_PROVINCE)
         obj_holidays = country_holidays(
             country=country,
@@ -143,8 +145,10 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             language=language,
         )
         if (
-            supported_languages := obj_holidays.supported_languages
-        ) and language == "en":
+            (supported_languages := obj_holidays.supported_languages)
+            and language
+            and language.startswith("en")
+        ):
             for lang in supported_languages:
                 if lang.startswith("en"):
                     obj_holidays = country_holidays(
@@ -372,7 +376,7 @@ class WorkdayOptionsFlowHandler(OptionsFlow):
             errors=errors,
             description_placeholders={
                 "name": options[CONF_NAME],
-                "country": options.get(CONF_COUNTRY),
+                "country": options.get(CONF_COUNTRY, "-"),
             },
         )
 

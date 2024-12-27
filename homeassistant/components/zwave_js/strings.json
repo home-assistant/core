@@ -306,7 +306,7 @@
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this service. If an area is specified, all zwave_js devices and entities in that area will be targeted for this service.",
+          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
@@ -314,7 +314,7 @@
           "name": "[%key:component::zwave_js::services::set_value::fields::command_class::name%]"
         },
         "device_id": {
-          "description": "The device(s) to target for this service.",
+          "description": "The device(s) to target for this action.",
           "name": "Device ID(s)"
         },
         "endpoint": {
@@ -322,7 +322,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
         },
         "entity_id": {
-          "description": "The entity ID(s) to target for this service.",
+          "description": "The entity ID(s) to target for this action.",
           "name": "Entity ID(s)"
         },
         "method_name": {
@@ -556,7 +556,7 @@
       "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this service. If an area is specified, all zwave_js devices and entities in that area will be targeted for this service.",
+          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
@@ -564,7 +564,7 @@
           "name": "Command class"
         },
         "device_id": {
-          "description": "The device(s) to target for this service.",
+          "description": "The device(s) to target for this action.",
           "name": "Device ID(s)"
         },
         "endpoint": {
@@ -572,7 +572,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::endpoint::name%]"
         },
         "entity_id": {
-          "description": "The entity ID(s) to target for this service.",
+          "description": "The entity ID(s) to target for this action.",
           "name": "Entity ID(s)"
         },
         "options": {

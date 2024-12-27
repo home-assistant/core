@@ -252,6 +252,7 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
+    "backup",
 ]
 
 
@@ -515,7 +516,7 @@ async def async_from_config_dict(
         issue_registry.async_create_issue(
             hass,
             core.DOMAIN,
-            "python_version",
+            f"python_version_{required_python_version}",
             is_fixable=False,
             severity=issue_registry.IssueSeverity.WARNING,
             breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,

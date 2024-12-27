@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
@@ -41,6 +42,19 @@ _YARD_TO_M = _FOOT_TO_M * 3  # 3 feet = 1 yard (0.9144 m)
 _MILE_TO_M = _YARD_TO_M * 1760  # 1760 yard = 1 mile (1609.344 m)
 
 _NAUTICAL_MILE_TO_M = 1852  # 1 nautical mile = 1852 m
+
+# Area constants to square meters
+_CM2_TO_M2 = _CM_TO_M**2  # 1 cm² = 0.0001 m²
+_MM2_TO_M2 = _MM_TO_M**2  # 1 mm² = 0.000001 m²
+_KM2_TO_M2 = _KM_TO_M**2  # 1 km² = 1,000,000 m²
+
+_IN2_TO_M2 = _IN_TO_M**2  # 1 in² = 0.00064516 m²
+_FT2_TO_M2 = _FOOT_TO_M**2  # 1 ft² = 0.092903 m²
+_YD2_TO_M2 = _YARD_TO_M**2  # 1 yd² = 0.836127 m²
+_MI2_TO_M2 = _MILE_TO_M**2  # 1 mi² = 2,590,000 m²
+
+_ACRE_TO_M2 = 66 * 660 * _FT2_TO_M2  # 1 acre = 4,046.86 m²
+_HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 
 # Duration conversion constants
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
@@ -146,6 +160,25 @@ class DataRateConverter(BaseUnitConverter):
     VALID_UNITS = set(UnitOfDataRate)
 
 
+class AreaConverter(BaseUnitConverter):
+    """Utility to convert area values."""
+
+    UNIT_CLASS = "area"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfArea.SQUARE_METERS: 1,
+        UnitOfArea.SQUARE_CENTIMETERS: 1 / _CM2_TO_M2,
+        UnitOfArea.SQUARE_MILLIMETERS: 1 / _MM2_TO_M2,
+        UnitOfArea.SQUARE_KILOMETERS: 1 / _KM2_TO_M2,
+        UnitOfArea.SQUARE_INCHES: 1 / _IN2_TO_M2,
+        UnitOfArea.SQUARE_FEET: 1 / _FT2_TO_M2,
+        UnitOfArea.SQUARE_YARDS: 1 / _YD2_TO_M2,
+        UnitOfArea.SQUARE_MILES: 1 / _MI2_TO_M2,
+        UnitOfArea.ACRES: 1 / _ACRE_TO_M2,
+        UnitOfArea.HECTARES: 1 / _HECTARE_TO_M2,
+    }
+    VALID_UNITS = set(UnitOfArea)
+
+
 class DistanceConverter(BaseUnitConverter):
     """Utility to convert distance values."""
 
@@ -174,7 +207,7 @@ class DistanceConverter(BaseUnitConverter):
     }
 
 
-class BloodGlugoseConcentrationConverter(BaseUnitConverter):
+class BloodGlucoseConcentrationConverter(BaseUnitConverter):
     """Utility to convert blood glucose concentration values."""
 
     UNIT_CLASS = "blood_glucose_concentration"
@@ -215,10 +248,12 @@ class ElectricPotentialConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
+        UnitOfElectricPotential.MICROVOLT: 1e6,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
         UnitOfElectricPotential.MILLIVOLT,
+        UnitOfElectricPotential.MICROVOLT,
     }
 
 
@@ -231,6 +266,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.KILO_JOULE: _WH_TO_J,
         UnitOfEnergy.MEGA_JOULE: _WH_TO_J / 1e3,
         UnitOfEnergy.GIGA_JOULE: _WH_TO_J / 1e6,
+        UnitOfEnergy.MILLIWATT_HOUR: 1e6,
         UnitOfEnergy.WATT_HOUR: 1e3,
         UnitOfEnergy.KILO_WATT_HOUR: 1,
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1e3,
@@ -304,6 +340,7 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPower.MILLIWATT: 1 * 1000,
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
         UnitOfPower.MEGA_WATT: 1 / 1e6,
@@ -311,6 +348,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,
@@ -631,12 +669,15 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         / (_HRS_TO_MINUTES * _L_TO_CUBIC_METER),
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
+        / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
     VALID_UNITS = {
         UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
         UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 
 

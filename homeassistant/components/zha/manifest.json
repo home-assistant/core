@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["universal-silabs-flasher==0.0.24", "zha==0.0.37"],
+  "requirements": ["universal-silabs-flasher==0.0.25", "zha==0.0.43"],
   "usb": [
     {
       "vid": "10C4",
@@ -130,6 +130,10 @@
     {
       "type": "_czc._tcp.local.",
       "name": "czc*"
+    },
+    {
+      "type": "_zigbee-coordinator._tcp.local.",
+      "name": "*"
     }
   ]
 }
