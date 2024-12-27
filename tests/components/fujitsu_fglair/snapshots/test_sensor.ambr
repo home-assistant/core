@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fglair_outside_temp',
-    'unique_id': 'testserial123',
+    'unique_id': 'testserial123_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -81,7 +81,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'fglair_outside_temp',
-    'unique_id': 'testserial345',
+    'unique_id': 'testserial345_outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
