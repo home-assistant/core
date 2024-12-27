@@ -1902,7 +1902,7 @@ python-fullykiosk==0.0.14
 # python-gammu==3.2.4
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.8.0
+python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v7.0.0
