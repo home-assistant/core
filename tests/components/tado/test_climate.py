@@ -1,11 +1,13 @@
-"""The sensor tests for the tado platform."""
+"""The sensor tests for the Tado platform."""
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
 
-async def test_air_con(hass: HomeAssistant) -> None:
+async def test_air_con(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test creation of aircon climate."""
 
     await async_init_integration(hass)
@@ -13,28 +15,30 @@ async def test_air_con(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.air_conditioning")
     assert state.state == "cool"
 
-    expected_attributes = {
-        "current_humidity": 60.9,
-        "current_temperature": 24.8,
-        "fan_mode": "auto",
-        "fan_modes": ["auto", "high", "medium", "low"],
-        "friendly_name": "Air Conditioning",
-        "hvac_action": "cooling",
-        "hvac_modes": ["off", "auto", "heat", "cool", "heat_cool", "dry", "fan_only"],
-        "max_temp": 31.0,
-        "min_temp": 16.0,
-        "preset_mode": "auto",
-        "preset_modes": ["away", "home", "auto"],
-        "supported_features": 409,
-        "target_temp_step": 1,
-        "temperature": 17.8,
-    }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    expected_keys = [
+        "current_humidity",
+        "current_temperature",
+        "fan_mode",
+        "fan_modes",
+        "friendly_name",
+        "hvac_action",
+        "hvac_modes",
+        "max_temp",
+        "min_temp",
+        "preset_mode",
+        "preset_modes",
+        "supported_features",
+        "target_temp_step",
+        "temperature",
+    ]
+
+    actual_attributes_subset = {key: state.attributes.get(key) for key in expected_keys}
+    assert actual_attributes_subset == snapshot
 
 
-async def test_heater(hass: HomeAssistant) -> None:
+async def test_heater(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test creation of heater climate."""
 
     await async_init_integration(hass)
@@ -42,26 +46,30 @@ async def test_heater(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.baseboard_heater")
     assert state.state == "heat"
 
-    expected_attributes = {
-        "current_humidity": 45.2,
-        "current_temperature": 20.6,
-        "friendly_name": "Baseboard Heater",
-        "hvac_action": "idle",
-        "hvac_modes": ["off", "auto", "heat"],
-        "max_temp": 31.0,
-        "min_temp": 16.0,
-        "preset_mode": "auto",
-        "preset_modes": ["away", "home", "auto"],
-        "supported_features": 401,
-        "target_temp_step": 1,
-        "temperature": 20.5,
-    }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    expected_keys = [
+        "current_humidity",
+        "current_temperature",
+        "friendly_name",
+        "hvac_action",
+        "hvac_modes",
+        "max_temp",
+        "min_temp",
+        "preset_mode",
+        "preset_modes",
+        "supported_features",
+        "target_temp_step",
+        "temperature",
+    ]
+
+    actual_attributes_subset = {key: state.attributes.get(key) for key in expected_keys}
+    assert actual_attributes_subset == snapshot
 
 
-async def test_smartac_with_swing(hass: HomeAssistant) -> None:
+async def test_smartac_with_swing(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test creation of smart ac with swing climate."""
 
     await async_init_integration(hass)
@@ -69,30 +77,32 @@ async def test_smartac_with_swing(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.air_conditioning_with_swing")
     assert state.state == "auto"
 
-    expected_attributes = {
-        "current_humidity": 42.3,
-        "current_temperature": 20.9,
-        "fan_mode": "auto",
-        "fan_modes": ["auto", "high", "medium", "low"],
-        "friendly_name": "Air Conditioning with swing",
-        "hvac_action": "heating",
-        "hvac_modes": ["off", "auto", "heat", "cool", "heat_cool", "dry", "fan_only"],
-        "max_temp": 30.0,
-        "min_temp": 16.0,
-        "preset_mode": "auto",
-        "preset_modes": ["away", "home", "auto"],
-        "swing_modes": ["on", "off"],
-        "supported_features": 441,
-        "target_temp_step": 1.0,
-        "temperature": 20.0,
-    }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    expected_keys = [
+        "current_humidity",
+        "current_temperature",
+        "fan_mode",
+        "fan_modes",
+        "friendly_name",
+        "hvac_action",
+        "hvac_modes",
+        "max_temp",
+        "min_temp",
+        "preset_mode",
+        "preset_modes",
+        "supported_features",
+        "target_temp_step",
+        "temperature",
+        "swing_modes",
+    ]
+
+    actual_attributes_subset = {key: state.attributes.get(key) for key in expected_keys}
+    assert actual_attributes_subset == snapshot
 
 
 async def test_smartac_with_fanlevel_vertical_and_horizontal_swing(
-    hass: HomeAssistant,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test creation of smart ac with swing climate."""
 
@@ -101,23 +111,25 @@ async def test_smartac_with_fanlevel_vertical_and_horizontal_swing(
     state = hass.states.get("climate.air_conditioning_with_fanlevel")
     assert state.state == "heat"
 
-    expected_attributes = {
-        "current_humidity": 70.9,
-        "current_temperature": 24.3,
-        "fan_mode": "high",
-        "fan_modes": ["high", "medium", "auto", "low"],
-        "friendly_name": "Air Conditioning with fanlevel",
-        "hvac_action": "heating",
-        "hvac_modes": ["off", "auto", "heat", "cool", "heat_cool", "dry", "fan_only"],
-        "max_temp": 31.0,
-        "min_temp": 16.0,
-        "preset_mode": "auto",
-        "preset_modes": ["away", "home", "auto"],
-        "swing_modes": ["vertical", "horizontal", "both", "off"],
-        "supported_features": 441,
-        "target_temp_step": 1.0,
-        "temperature": 25.0,
-    }
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
-    assert all(item in state.attributes.items() for item in expected_attributes.items())
+    expected_keys = [
+        "current_humidity",
+        "current_temperature",
+        "fan_mode",
+        "fan_modes",
+        "friendly_name",
+        "hvac_action",
+        "hvac_modes",
+        "max_temp",
+        "min_temp",
+        "preset_mode",
+        "preset_modes",
+        "supported_features",
+        "target_temp_step",
+        "temperature",
+        "swing_modes",
+    ]
+
+    actual_attributes_subset = {key: state.attributes.get(key) for key in expected_keys}
+    assert actual_attributes_subset == snapshot

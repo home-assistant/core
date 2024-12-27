@@ -1,0 +1,81 @@
+# serializer version: 1
+# name: test_air_con_create_binary_sensors
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Air Conditioning Power',
+  })
+# ---
+# name: test_air_con_create_binary_sensors.1
+  ReadOnlyDict({
+    'device_class': 'connectivity',
+    'friendly_name': 'Air Conditioning Connectivity',
+  })
+# ---
+# name: test_air_con_create_binary_sensors.2
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Air Conditioning Overlay',
+    'termination': 'TADO_MODE',
+  })
+# ---
+# name: test_air_con_create_binary_sensors.3
+  ReadOnlyDict({
+    'device_class': 'window',
+    'friendly_name': 'Air Conditioning Window',
+  })
+# ---
+# name: test_heater_create_binary_sensors
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Baseboard Heater Power',
+  })
+# ---
+# name: test_heater_create_binary_sensors.1
+  ReadOnlyDict({
+    'device_class': 'connectivity',
+    'friendly_name': 'Baseboard Heater Connectivity',
+  })
+# ---
+# name: test_heater_create_binary_sensors.2
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Baseboard Heater Early start',
+  })
+# ---
+# name: test_heater_create_binary_sensors.3
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Baseboard Heater Overlay',
+    'termination': 'MANUAL',
+  })
+# ---
+# name: test_heater_create_binary_sensors.4
+  ReadOnlyDict({
+    'device_class': 'window',
+    'friendly_name': 'Baseboard Heater Window',
+  })
+# ---
+# name: test_home_create_binary_sensors
+  ReadOnlyDict({
+    'device_class': 'connectivity',
+    'friendly_name': 'WR1 Connection state',
+  })
+# ---
+# name: test_water_heater_create_binary_sensors
+  ReadOnlyDict({
+    'device_class': 'connectivity',
+    'friendly_name': 'Water Heater Connectivity',
+  })
+# ---
+# name: test_water_heater_create_binary_sensors.1
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Water Heater Overlay',
+  })
+# ---
+# name: test_water_heater_create_binary_sensors.2
+  ReadOnlyDict({
+    'device_class': 'power',
+    'friendly_name': 'Water Heater Power',
+  })
+# ---
