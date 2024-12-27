@@ -356,7 +356,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.1.0
+aiorussound==4.1.1
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1962,7 +1962,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.7.2
+pyheos==0.8.0
 
 # homeassistant.components.hive
 pyhiveapi==0.5.16
