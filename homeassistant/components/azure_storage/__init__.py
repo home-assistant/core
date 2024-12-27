@@ -16,6 +16,7 @@ from .const import (
     CONF_CONTAINER_NAME,
     CONF_STORAGE_ACCOUNT_KEY,
     DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
 )
 
 type AzureStorageConfigEntry = ConfigEntry[ContainerClient]
@@ -36,9 +37,17 @@ async def async_setup_entry(
         if not await container_client.exists():
             await container_client.create_container()
     except ResourceNotFoundError as ex:
-        raise ConfigEntryError("Storage account not found.") from ex
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="account_not_found",
+            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+        ) from ex
     except ClientAuthenticationError as ex:
-        raise ConfigEntryError("Authentication failed.") from ex
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
+        ) from ex
 
     entry.runtime_data = container_client
 

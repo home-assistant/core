@@ -110,7 +110,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

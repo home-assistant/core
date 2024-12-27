@@ -24,5 +24,25 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "exceptions": {
+    "account_not_found": {
+      "message": "EStorage account {account_name} not found"
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for storage account {account_name}"
+    },
+    "backup_download_error": {
+      "message": "Error downloading backup {backup_id} from Azure Blob storage"
+    },
+    "backup_upload_error": {
+      "message": "Error uploading backup {backup_id} to Azure Blob storage"
+    },
+    "backup_delete_error": {
+      "message": "Error deleting backup {backup_id} from Azure Blob storage"
+    },
+    "backup_list_error": {
+      "message": "Error listing backups from Azure Blob storage"
+    }
   }
 }

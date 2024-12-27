@@ -52,7 +52,6 @@ class AzureStorageBackupAgent(BackupAgent):
         """Initialize the Azure storage backup agent."""
         super().__init__()
         self._client = entry.runtime_data
-        self._hass = hass
         self.name = entry.title
 
     async def async_download_backup(
@@ -65,8 +64,13 @@ class AzureStorageBackupAgent(BackupAgent):
             download_stream = await self._client.download_blob(f"{backup_id}.tar")
             return download_stream.chunks()
         except HttpResponseError as err:
+            _LOGGER.debug(
+                "Failed to download backup %s: %s", backup_id, err, exc_info=True
+            )
             raise BackupAgentError(
-                f"Failed to download backup {backup_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="backup_download_error",
+                translation_placeholders={"backup_id": backup_id},
             ) from err
 
     async def async_upload_backup(
@@ -100,8 +104,13 @@ class AzureStorageBackupAgent(BackupAgent):
                 length=backup.size,
             )
         except HttpResponseError as err:
+            _LOGGER.debug(
+                "Failed to upload backup %s: %s", backup.backup_id, err, exc_info=True
+            )
             raise BackupAgentError(
-                f"Failed to upload backup {backup.backup_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="backup_upload_error",
+                translation_placeholders={"backup_id": backup.backup_id},
             ) from err
 
     async def async_delete_backup(
@@ -113,8 +122,13 @@ class AzureStorageBackupAgent(BackupAgent):
         try:
             await self._client.delete_blob(f"{backup_id}.tar")
         except HttpResponseError as err:
+            _LOGGER.debug(
+                "Failed to delete backup %s: %s", backup_id, err, exc_info=True
+            )
             raise BackupAgentError(
-                f"Failed to delete backups {backup_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="backup_delete_error",
+                translation_placeholders={"backup_id": backup_id},
             ) from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -133,7 +147,11 @@ class AzureStorageBackupAgent(BackupAgent):
                     )
                     backups.append(AgentBackup.from_dict(metadata))
         except HttpResponseError as err:
-            raise BackupAgentError(f"Failed to list backups: {err}") from err
+            _LOGGER.debug("Failed to list backups: %s", err, exc_info=True)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="backup_list_error",
+            ) from err
         return backups
 
     async def async_get_backup(
