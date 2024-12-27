@@ -363,9 +363,14 @@ class HomeAssistantScene(Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
+        entity_filter = None
+        if "entity_filter" in kwargs:
+            entity_filter = kwargs.pop("entity_filter")
+
         await async_reproduce_state(
             self.hass,
             self.scene_config.states.values(),
             context=self._context,
             reproduce_options=kwargs,
+            entity_filter=entity_filter,
         )

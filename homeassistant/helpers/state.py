@@ -33,6 +33,7 @@ async def async_reproduce_state(
     *,
     context: Context | None = None,
     reproduce_options: dict[str, Any] | None = None,
+    entity_filter: list[str] | None = None,
 ) -> None:
     """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
@@ -41,7 +42,8 @@ async def async_reproduce_state(
     to_call: dict[str, list[State]] = defaultdict(list)
 
     for state in states:
-        to_call[state.domain].append(state)
+        if entity_filter is None or state.entity_id in entity_filter:
+            to_call[state.domain].append(state)
 
     async def worker(domain: str, states_by_domain: list[State]) -> None:
         try:

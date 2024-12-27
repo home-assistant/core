@@ -88,6 +88,46 @@ async def test_apply_service(hass: HomeAssistant) -> None:
     assert turn_on_calls[0].data.get("brightness") == 50
 
 
+async def test_turn_on_service_with_filter(hass: HomeAssistant) -> None:
+    """Test the turn_on service with entity_filter defined."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {
+                    "name": "lights_off",
+                    "entities": {
+                        "light.kitchen_lights": {"state": "off"},
+                        "light.ceiling_lights": {"state": "off"},
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.kitchen_lights").state == "on"
+    assert hass.states.get("light.ceiling_lights").state == "on"
+
+    await hass.services.async_call(
+        "scene",
+        "turn_on",
+        {
+            "entity_filter": [
+                "light.kitchen_lights",
+            ],
+        },
+        target={"entity_id": "scene.lights_off"},
+        blocking=True,
+    )
+
+    assert hass.states.get("light.kitchen_lights").state == "off"
+    assert hass.states.get("light.ceiling_lights").state == "on"
+
+
 async def test_create_service(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
