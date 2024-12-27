@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.device_tracker import AsyncSeeCallback, TrackerEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -14,8 +14,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import as_utc
 
-from . import TileCoordinator, TileData
 from .const import DOMAIN
+from .coordinator import TileConfigEntry, TileCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,16 +31,12 @@ ATTR_VOIP_STATE = "voip_state"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TileConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Tile device trackers."""
-    data: TileData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            TileDeviceTracker(entry, data.coordinators[tile_uuid])
-            for tile_uuid, tile in data.tiles.items()
-        ]
+        TileDeviceTracker(coordinator) for coordinator in entry.runtime_data.values()
     )
 
 
@@ -77,14 +73,13 @@ class TileDeviceTracker(CoordinatorEntity[TileCoordinator], TrackerEntity):
     _attr_name = None
     _attr_translation_key = "tile"
 
-    def __init__(self, entry: ConfigEntry, coordinator: TileCoordinator) -> None:
+    def __init__(self, coordinator: TileCoordinator) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._attr_extra_state_attributes = {}
         self._tile = coordinator.tile
-        self._attr_unique_id = f"{entry.data[CONF_USERNAME]}_{self._tile.uuid}"
-        self._entry = entry
+        self._attr_unique_id = f"{coordinator.username}_{self._tile.uuid}"
 
     @property
     def available(self) -> bool:

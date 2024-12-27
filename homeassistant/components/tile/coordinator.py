@@ -6,15 +6,21 @@ from pytile.api import API
 from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 from pytile.tile import Tile
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
+type TileConfigEntry = ConfigEntry[dict[str, TileCoordinator]]
+
 
 class TileCoordinator(DataUpdateCoordinator[None]):
     """Define an object to coordinate Tile data retrieval."""
+
+    config_entry: TileConfigEntry
 
     def __init__(self, hass: HomeAssistant, client: API, tile: Tile) -> None:
         """Initialize."""
@@ -26,6 +32,7 @@ class TileCoordinator(DataUpdateCoordinator[None]):
         )
         self.tile = tile
         self.client = client
+        self.username = self.config_entry.data[CONF_USERNAME]
 
     async def _async_update_data(self) -> None:
         """Update data via library."""
