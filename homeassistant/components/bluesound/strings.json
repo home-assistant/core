@@ -25,6 +25,30 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "issues": {
+    "deprecated_service_set_sleep_timer": {
+      "title": "Detected use of deprecated action bluesound.set_sleep_timer",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::bluesound::issues::deprecated_service_set_sleep_timer::title%]",
+            "description": "Use `button.{name}_set_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
+          }
+        }
+      }
+    },
+    "deprecated_service_clear_sleep_timer": {
+      "title": "Detected use of deprecated action bluesound.clear_sleep_timer",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::bluesound::issues::deprecated_service_clear_sleep_timer::title%]",
+            "description": "Use `button.{name}_clear_sleep_timer` instead.\n\nPlease replace this action and adjust your automations and scripts and select **Submit** to close this issue."
+          }
+        }
+      }
+    }
+  },
   "services": {
     "join": {
       "name": "Join",

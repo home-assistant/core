@@ -9,7 +9,6 @@
       'media_artist': 'artist',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'media_duration': 123,
-      'media_position': 2,
       'media_title': 'song',
       'shuffle': False,
       'source_list': list([
