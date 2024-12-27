@@ -140,12 +140,7 @@ class AzureStorageBackupAgent(BackupAgent):
                 metadata = blob.metadata
 
                 if "homeassistant_version" in metadata:
-                    metadata["folders"] = json.loads(metadata.get("folders", "[]"))
-                    metadata["addons"] = json.loads(metadata.get("addons", "[]"))
-                    metadata["extra_metadata"] = json.loads(
-                        metadata.get("extra_metadata", "{}")
-                    )
-                    backups.append(AgentBackup.from_dict(metadata))
+                    backups.append(self._parse_blob_metadata(metadata))
         except HttpResponseError as err:
             _LOGGER.debug("Failed to list backups: %s", err, exc_info=True)
             raise BackupAgentError(
@@ -158,12 +153,23 @@ class AzureStorageBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup | None:
+    ) -> AgentBackup:
         """Return a backup."""
-        backups = await self.async_list_backups()
+        blob_client = self._client.get_blob_client(f"{backup_id}.tar")
+        try:
+            blob_properties = await blob_client.get_blob_properties()
+        except HttpResponseError as err:
+            _LOGGER.debug("Failed to get backup %s: %s", backup_id, err, exc_info=True)
+            raise BackupAgentError(
+                translation_domain=DOMAIN,
+                translation_key="backup_get_error",
+                translation_placeholders={"backup_id": backup_id},
+            ) from err
+        return self._parse_blob_metadata(blob_properties.metadata)
 
-        for backup in backups:
-            if backup.backup_id == backup_id:
-                return backup
-
-        return None
+    def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
+        """Parse backup metadata."""
+        metadata["folders"] = json.loads(metadata.get("folders", "[]"))
+        metadata["addons"] = json.loads(metadata.get("addons", "[]"))
+        metadata["extra_metadata"] = json.loads(metadata.get("extra_metadata", "{}"))
+        return AgentBackup.from_dict(metadata)

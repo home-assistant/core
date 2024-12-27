@@ -43,6 +43,9 @@
     },
     "backup_list_error": {
       "message": "Error listing backups from Azure Blob storage"
+    },
+    "backup_get_error": {
+      "message": "Error getting backup {backup_id} from Azure Blob storage"
     }
   }
 }
