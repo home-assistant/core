@@ -39,8 +39,8 @@ async def async_setup_entry(
                 device_definition.parameters,
                 device_definition.name,
             )
-            for gate in coordinator.gates
-            for device in gate.devices
+            for gates in coordinator.gates
+            for device in gates.devices
             if (
                 device_definition := next(
                     (
@@ -70,8 +70,10 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Initialize the climate device."""
         super().__init__(coordinator)
         self.coordinator = coordinator
-        self.unique_id = f"{device.label}_climate"
-        self.label = f"{device.label} climate"
+        self._attr_unique_id = f"{device.label}_{device.id}"
+        self._attr_name = device.label
+        self._attr_has_entity_name = True
+        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self.parameters = {
             parameter.parameter_code: parameter for parameter in parameters
         }
@@ -148,11 +150,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             "model": self.device_name,
             "sw_version": "1.0",
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the climate device."""
-        return f"{self.label}"
 
     @property
     def current_temperature(self) -> float | None:
@@ -312,11 +309,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             return
         self._fan_mode = value.state
         await self.async_call_api("__trybaero", value.state)
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement used by the platform."""
-        return UnitOfTemperature.CELSIUS
 
     async def async_call_api(self, parameter: str, value: int) -> None:
         """Call the API to set a parameter to a new value."""

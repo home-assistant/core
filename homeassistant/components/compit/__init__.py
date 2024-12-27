@@ -13,7 +13,7 @@ from compit_inext_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
@@ -31,31 +31,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
     api = CompitAPI(entry.data["email"], entry.data["password"], session)
     try:
         system_info = await api.authenticate()
-
-        if system_info is False:
-            _LOGGER.warning("Compit api error")
-            return False
-
-        device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
-            hass.config.language
-        )
-
-        coordinator = CompitDataUpdateCoordinator(
-            hass, system_info.gates, api, device_definitions
-        )
-        await coordinator.async_config_entry_first_refresh()
-        entry.runtime_data = coordinator
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except CannotConnect as e:
-        _LOGGER.warning("Cannot connect: %s", e)
-        return False
+        raise ConfigEntryNotReady(f"Error while connecting to Compit: {e}") from e
     except InvalidAuth as e:
         raise ConfigEntryAuthFailed(
             f"Invalid credentials for {entry.data["email"]}"
         ) from e
+
+    if system_info is False:
+        _LOGGER.error("Authentication API error")
+        return False
+
+    try:
+        device_definitions = await DeviceDefinitionsLoader.get_device_definitions(
+            hass.config.language
+        )
     except ValueError as e:
         _LOGGER.warning("Value error: %s", e)
         return False
+
+    coordinator = CompitDataUpdateCoordinator(
+        hass, system_info.gates, api, device_definitions
+    )
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 

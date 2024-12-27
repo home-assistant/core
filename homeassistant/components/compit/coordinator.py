@@ -34,39 +34,40 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
 
     async def _async_update_data(self) -> dict[int, DeviceInstance]:
         """Update data via library."""
-        try:
-            for gate in self.gates:
-                _LOGGER.debug("Gate: %s, Code: %s", gate.label, gate.code)
-                for device in gate.devices:
-                    if device.id not in self.devices:
-                        device_definition = next(
-                            (
-                                item
-                                for item in self.device_definitions.devices
-                                if item.device_class == device.device_class
-                                and item.code == device.type
-                            ),
-                            None,
-                        )
-                        if device_definition is None:
-                            _LOGGER.warning(
-                                "Device definition not found for device %s, class: %s, type: %s",
-                                device.label,
-                                device.device_class,
-                                device.type,
-                            )
-                            continue
-                        self.devices[device.id] = DeviceInstance(device_definition)
 
-                    _LOGGER.debug(
-                        "Device: %s, id: %s, class: %s, type: %s",
-                        device.label,
-                        device.id,
-                        device.device_class,
-                        device.type,
+        for gate in self.gates:
+            _LOGGER.debug("Gate: %s, Code: %s", gate.label, gate.code)
+            for device in gate.devices:
+                if device.id not in self.devices:
+                    device_definition = next(
+                        (
+                            item
+                            for item in self.device_definitions.devices
+                            if item.device_class == device.device_class
+                            and item.code == device.type
+                        ),
+                        None,
                     )
+                    if device_definition is None:
+                        _LOGGER.warning(
+                            "Device definition not found for device %s, class: %s, type: %s",
+                            device.label,
+                            device.device_class,
+                            device.type,
+                        )
+                        continue
+                    self.devices[device.id] = DeviceInstance(device_definition)
+
+                _LOGGER.debug(
+                    "Device: %s, id: %s, class: %s, type: %s",
+                    device.label,
+                    device.id,
+                    device.device_class,
+                    device.type,
+                )
+                try:
                     state = await self.api.get_state(device.id)
                     self.devices[device.id].state = state
-        except Exception as exception:
-            raise UpdateFailed from exception
+                except ValueError as exception:
+                    raise UpdateFailed from exception
         return self.devices
