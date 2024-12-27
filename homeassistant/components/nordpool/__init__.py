@@ -5,11 +5,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -63,7 +59,6 @@ async def cleanup_device(
 ) -> None:
     """Cleanup device and entities."""
     device_reg = dr.async_get(hass)
-    entity_reg = er.async_get(hass)
 
     entries = dr.async_entries_for_config_entry(device_reg, config_entry.entry_id)
     for area in config_entry.data[CONF_AREAS]:
@@ -72,9 +67,6 @@ async def cleanup_device(
                 continue
 
             LOGGER.debug("Removing device %s", entry.name)
-            entities = er.async_entries_for_device(entity_reg, entry.id)
-            for _entity in entities:
-                entity_reg.async_remove(_entity.entity_id)
             device_reg.async_update_device(
                 entry.id, remove_config_entry_id=config_entry.entry_id
             )
