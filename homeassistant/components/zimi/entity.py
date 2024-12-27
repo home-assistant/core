@@ -8,7 +8,7 @@ from zcc import ControlPoint
 from zcc.device import ControlPointDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -62,4 +62,3 @@ class ZimiEntity(Entity):
             "Received notification() for %s in %s", self._device.name, self._device.room
         )
         self.schedule_update_ha_state(force_refresh=True)
-
