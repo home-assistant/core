@@ -194,6 +194,7 @@
       'arch': 'esp32',
       'brand': 'WLED',
       'core': 'v3.3.6-16-gcc5440f6a2',
+      'cpalcount': 0,
       'freeheap': 198384,
       'fs': dict({
         'pmt': 1718827787.0,
