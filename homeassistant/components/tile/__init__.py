@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pytile import async_login
-from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
+from pytile.errors import InvalidAuthError, TileError
 from pytile.tile import Tile
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .const import DOMAIN, LOGGER
@@ -79,18 +78,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Invalid credentials") from err
     except TileError as err:
         raise ConfigEntryNotReady("Error during integration setup") from err
-
-    async def async_update_tile(tile: Tile) -> None:
-        """Update the Tile."""
-        try:
-            await tile.async_update()
-        except InvalidAuthError as err:
-            raise ConfigEntryAuthFailed("Invalid credentials") from err
-        except SessionExpiredError:
-            LOGGER.debug("Tile session expired; creating a new one")
-            await client.async_init()
-        except TileError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
     coordinators: dict[str, TileCoordinator] = {}
     coordinator_init_tasks = []
