@@ -1,16 +1,26 @@
 """Config flow to configure Heos."""
 
-from typing import TYPE_CHECKING, Any
+import logging
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
-from pyheos import Heos, HeosError, HeosOptions
+from pyheos import CommandFailedError, Heos, HeosError, HeosOptions
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def format_title(host: str) -> str:
@@ -35,6 +45,12 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return HeosOptionsFlowHandler()
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo
@@ -99,4 +115,76 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
             errors=errors,
+        )
+
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
+
+class HeosOptionsFlowHandler(OptionsFlow):
+    """Define HEOS options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
+            if authentication and CONF_USERNAME not in user_input:
+                errors["username"] = "username_missing"
+            if authentication and CONF_PASSWORD not in user_input:
+                errors["password"] = "password_missing"
+
+            if not errors:
+                heos = cast(
+                    Heos, self.config_entry.runtime_data.controller_manager.controller
+                )
+
+                try:
+                    if authentication:
+                        # Attempt to login
+                        try:
+                            await heos.sign_in(
+                                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                            )
+                            _LOGGER.info(
+                                "Successfully signed-in to HEOS Account: %s",
+                                heos.signed_in_username,
+                            )
+                        except CommandFailedError as err:
+                            log_level = logging.INFO
+                            if err.error_id in (6, 8, 10):
+                                errors["base"] = "invalid_auth"
+                            else:
+                                errors["base"] = "unknown"
+                                log_level = logging.ERROR
+
+                            _LOGGER.log(
+                                log_level, "Failed to sign-in to HEOS Account: %s", err
+                            )
+                    else:
+                        # Log out
+                        await heos.sign_out()
+                        _LOGGER.info("Successfully signed-out of HEOS Account")
+                except HeosError:
+                    _LOGGER.exception("Unexpected error occurred during sign-in/out")
+                    errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            errors=errors,
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, user_input or self.config_entry.options
+            ),
         )

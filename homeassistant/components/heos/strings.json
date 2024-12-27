@@ -31,6 +31,27 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "You can sign-in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign-out of your account.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username or e-mail address of your HEOS Account.",
+          "password": "The password to your HEOS Account."
+        }
+      }
+    },
+    "error": {
+      "username_missing": "Username is missing",
+      "password_missing": "Password is missing",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
   "services": {
     "sign_in": {
       "name": "Sign in",
