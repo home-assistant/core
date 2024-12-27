@@ -57,11 +57,11 @@
   "services": {
     "get_gas_prices": {
       "name": "Get gas prices",
-      "description": "Request gas prices from easyEnergy.",
+      "description": "Requests gas prices from easyEnergy.",
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "The config entry to use for this service."
+          "description": "The configuration entry to use for this action."
         },
         "incl_vat": {
           "name": "VAT Included",
@@ -79,7 +79,7 @@
     },
     "get_energy_usage_prices": {
       "name": "Get energy usage prices",
-      "description": "Request usage energy prices from easyEnergy.",
+      "description": "Requests usage energy prices from easyEnergy.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::config_entry::name%]",
@@ -101,7 +101,7 @@
     },
     "get_energy_return_prices": {
       "name": "Get energy return prices",
-      "description": "Request return energy prices from easyEnergy.",
+      "description": "Requests return energy prices from easyEnergy.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::easyenergy::services::get_gas_prices::fields::config_entry::name%]",
