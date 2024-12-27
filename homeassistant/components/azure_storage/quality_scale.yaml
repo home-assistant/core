@@ -88,7 +88,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
