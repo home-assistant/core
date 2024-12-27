@@ -45,6 +45,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             session = async_create_clientsession(self.hass)
             api = CompitAPI(user_input[CONF_EMAIL], user_input[CONF_PASSWORD], session)
+            system_info = None
             try:
                 system_info = await api.authenticate()
             except CannotConnect:
@@ -55,7 +56,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
-            if system_info is SystemInfo and system_info.gates:
+            if system_info and system_info is SystemInfo and system_info.gates:
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
                 if self.source == SOURCE_REAUTH:
