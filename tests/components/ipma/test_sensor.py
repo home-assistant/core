@@ -49,3 +49,5 @@ async def test_ipma_warning_create_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.hometown_weather_alert")
 
     assert state.state == "yellow"
+
+    assert state.attributes["awarenessTypeName"] == "Agitação Marítima"
