@@ -8,7 +8,7 @@
   "homekit": {},
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["aioccl==2024.12"],
+  "requirements": ["aioccl==2024.12.12"],
   "ssdp": [],
   "zeroconf": []
 }

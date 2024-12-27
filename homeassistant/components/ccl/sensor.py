@@ -210,4 +210,4 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
     @property
     def native_value(self) -> None | str | int | float:
         """Return the state of the sensor."""
-        return self._internal.value
+        return self.internal.value

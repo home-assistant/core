@@ -22,8 +22,8 @@ class CCLEntity(Entity):
         device: CCLDevice,
     ) -> None:
         """Initialize a CCL Entity."""
-        self._internal = internal
-        self._device = device
+        self.internal = internal
+        self.device = device
 
         self._attr_unique_id = f"{device.device_id}-{internal.key}"
         self._attr_device_info = DeviceInfo(
@@ -39,16 +39,16 @@ class CCLEntity(Entity):
     @property
     def device_name(self) -> str:
         """Return the device name."""
-        if self._internal.compartment is not None:
-            return self._device.name + " " + self._internal.compartment
-        return self._device.name
+        if self.internal.compartment is not None:
+            return self.device.name + " " + self.internal.compartment
+        return self.device.name
 
     @property
     def device_id(self) -> str:
         """Return the 6-digits device id."""
-        if self._internal.compartment is not None:
+        if self.internal.compartment is not None:
             return (
-                (self.device_name + "_" + self._internal.compartment)
+                (self.device_name + "_" + self.internal.compartment)
                 .replace(" ", "")
                 .replace("-", "_")
                 .lower()
@@ -58,12 +58,12 @@ class CCLEntity(Entity):
     @property
     def available(self) -> bool:
         """Return the availability."""
-        return self._internal.value is not None
+        return self.internal.value is not None
 
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
-        self._device.register_update_cb(self.async_write_ha_state)
+        self.device.register_update_cb(self.internal.key, self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
-        self._device.remove_update_cb(self.async_write_ha_state)
+        self.device.remove_update_cb(self.internal.key, self.async_write_ha_state)

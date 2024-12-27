@@ -32,5 +32,5 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CCL Weather Station"
-    assert len(result["data"]["passkey"]) == 6
+    assert len(result["data"]["passkey"]) == 21
     assert len(mock_setup_entry.mock_calls) == 1
