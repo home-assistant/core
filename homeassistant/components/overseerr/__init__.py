@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) -> bool:
     """Set up Overseerr from a config entry."""
 
-    coordinator = OverseerrCoordinator(hass)
+    coordinator = OverseerrCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

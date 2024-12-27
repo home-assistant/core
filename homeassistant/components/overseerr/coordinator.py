@@ -6,7 +6,7 @@ from python_overseerr import OverseerrClient, RequestCount
 from python_overseerr.exceptions import OverseerrConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,17 +21,20 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
 
     config_entry: OverseerrConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: OverseerrConfigEntry) -> None:
         """Initialize."""
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(minutes=5),
         )
         self.client = OverseerrClient(
-            self.config_entry.data[CONF_URL],
-            self.config_entry.data[CONF_API_KEY],
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            entry.data[CONF_API_KEY],
+            ssl=entry.data[CONF_SSL],
             session=async_get_clientsession(hass),
         )
 

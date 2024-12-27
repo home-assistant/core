@@ -17,6 +17,8 @@ from .const import REQUESTS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class OverseerrSensorEntityDescription(SensorEntityDescription):
@@ -95,9 +97,8 @@ class OverseerrSensor(OverseerrEntity, SensorEntity):
         description: OverseerrSensorEntityDescription,
     ) -> None:
         """Initialize airgradient sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}"
         self._attr_translation_key = description.key
 
     @property

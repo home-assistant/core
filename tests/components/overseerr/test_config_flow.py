@@ -6,7 +6,7 @@ from python_overseerr.exceptions import OverseerrConnectionError
 
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,7 +33,9 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Overseerr"
     assert result["data"] == {
-        CONF_URL: "http://overseerr.test",
+        CONF_HOST: "overseerr.test",
+        CONF_PORT: 80,
+        CONF_SSL: False,
         CONF_API_KEY: "test-key",
     }
 
@@ -70,7 +72,35 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_duplicate(
+async def test_flow_invalid_host(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://", CONF_API_KEY: "test-key"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"url": "invalid_host"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://overseerr.test", CONF_API_KEY: "test-key"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,

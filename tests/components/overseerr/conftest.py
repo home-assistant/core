@@ -7,7 +7,7 @@ import pytest
 from python_overseerr import RequestCount
 
 from homeassistant.components.overseerr.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -48,6 +48,11 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Overseerr",
-        data={CONF_URL: "http://overseerr.test", CONF_API_KEY: "test-key"},
+        data={
+            CONF_HOST: "overseerr.test",
+            CONF_PORT: 80,
+            CONF_SSL: False,
+            CONF_API_KEY: "test-key",
+        },
         entry_id="01JG00V55WEVTJ0CJHM0GAD7PC",
     )

@@ -29,7 +29,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions or actionable entities.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -42,7 +45,7 @@ rules:
   log-when-unavailable:
     status: done
     comment: Handled by the coordinator
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
   # Gold
