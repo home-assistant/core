@@ -225,6 +225,18 @@ async def test_options_flow_signs_in(
         assert result["errors"] == {"base": "invalid_auth"}
         assert result["type"] is FlowResultType.FORM
 
+    # Unknown command error validating credentials shows error
+    controller.sign_in.reset_mock()
+    controller.sign_in.side_effect = CommandFailedError("sign_in", "System error", 12)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input
+    )
+    assert controller.sign_in.call_count == 1
+    assert controller.sign_out.call_count == 0
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+
     # Unknown error validating credentials shows error
     controller.sign_in.reset_mock()
     controller.sign_in.side_effect = HeosError()
