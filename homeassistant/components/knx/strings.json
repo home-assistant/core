@@ -3,7 +3,7 @@
     "step": {
       "connection_type": {
         "title": "KNX connection",
-        "description": "'Automaitc' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.) \n\n 'Tunneling' will connect to a specific KNX IP interface over a tunnel. \n\n 'Routing' will use Multicast to communicate with KNX IP routers.",
+        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.) \n\n 'Tunneling' will connect to a specific KNX IP interface over a tunnel. \n\n 'Routing' will use Multicast to communicate with KNX IP routers.",
         "data": {
           "connection_type": "KNX Connection Type"
         },
