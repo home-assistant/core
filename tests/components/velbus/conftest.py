@@ -69,6 +69,5 @@ async def init_integration(
 
     assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
-
     assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
