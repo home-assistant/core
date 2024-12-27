@@ -20,6 +20,7 @@ import requests.exceptions
 import urllib3.exceptions
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -34,17 +35,12 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    event as event_helper,
-    state as state_helper,
-)
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -97,8 +93,6 @@ from .const import (
     RE_DIGIT_TAIL,
     RESUMED_MESSAGE,
     RETRY_DELAY,
-    RETRY_INTERVAL,
-    RETRY_MESSAGE,
     TEST_QUERY_V1,
     TEST_QUERY_V2,
     TIMEOUT,
@@ -478,36 +472,62 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-def _retry_setup(hass: HomeAssistant, config: ConfigType) -> None:
-    setup(hass, config)
-
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the InfluxDB component."""
-    conf = config[DOMAIN]
-    try:
-        influx = get_influx_connection(conf, test_write=True)
-    except ConnectionError as exc:
-        _LOGGER.error(RETRY_MESSAGE, exc)
-        event_helper.call_later(
-            hass, RETRY_INTERVAL, lambda _: _retry_setup(hass, config)
-        )
-        return True
-
-    event_to_json = _generate_event_to_json(conf)
-    max_tries = conf.get(CONF_RETRY_COUNT)
-    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
-    instance.start()
-
-    def shutdown(event):
-        """Shut down the thread."""
-        instance.queue.put(None)
-        instance.join()
-        influx.close()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up InfluxDB from a config entry."""
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+
+    return True
+
+
+# def _retry_setup(hass: HomeAssistant, config: ConfigType) -> None:
+#     setup(hass, config)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the InfluxDB component."""
+    conf = config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=conf,
+        )
+    )
+    return True
+
+
+# def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+#     """Set up the InfluxDB component."""
+#     conf = config[DOMAIN]
+#     try:
+#         influx = get_influx_connection(conf, test_write=True)
+#     except ConnectionError as exc:
+#         _LOGGER.error(RETRY_MESSAGE, exc)
+#         event_helper.call_later(
+#             hass, RETRY_INTERVAL, lambda _: _retry_setup(hass, config)
+#         )
+#         return True
+
+#     event_to_json = _generate_event_to_json(conf)
+#     max_tries = conf.get(CONF_RETRY_COUNT)
+#     instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
+#     instance.start()
+
+#     def shutdown(event):
+#         """Shut down the thread."""
+#         instance.queue.put(None)
+#         instance.join()
+#         influx.close()
+
+#     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
+
+#     return True
 
 
 class InfluxThread(threading.Thread):
