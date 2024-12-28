@@ -24,7 +24,7 @@
   "services": {
     "join": {
       "name": "Join",
-      "description": "Groups players together under a single group.",
+      "description": "Groups players together in a single group.",
       "fields": {
         "master": {
           "name": "Master",
