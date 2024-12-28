@@ -1,4 +1,4 @@
-"""Tests for the Tile integration."""
+"""Tests for the Overseerr integration."""
 
 from homeassistant.core import HomeAssistant
 

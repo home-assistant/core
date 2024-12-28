@@ -2408,6 +2408,9 @@ python-opensky==1.0.1
 # homeassistant.components.thread
 python-otbr-api==2.6.0
 
+# homeassistant.components.overseerr
+python-overseerr==0.2.0
+
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
 
@@ -3082,7 +3085,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2024.12.13
+yt-dlp[default]==2024.12.23
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.1
