@@ -275,7 +275,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_platform[switch.pinecil_pps_epr_pd_mode-entry]
+# name: test_switch_platform[switch.pinecil_power_delivery_3_1_epr-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -287,7 +287,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.pinecil_pps_epr_pd_mode',
+    'entity_id': 'switch.pinecil_power_delivery_3_1_epr',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -299,7 +299,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'PPS & EPR PD mode',
+    'original_name': 'Power Delivery 3.1 EPR',
     'platform': 'iron_os',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -308,13 +308,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_platform[switch.pinecil_pps_epr_pd_mode-state]
+# name: test_switch_platform[switch.pinecil_power_delivery_3_1_epr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil PPS & EPR PD mode',
+      'friendly_name': 'Pinecil Power Delivery 3.1 EPR',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.pinecil_pps_epr_pd_mode',
+    'entity_id': 'switch.pinecil_power_delivery_3_1_epr',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
