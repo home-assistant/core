@@ -172,6 +172,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         """Parse the html extraction in the executor."""
         raw_data = self.coordinator.data
         value: str | list[str] | None
+        self._attr_available = True
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
@@ -184,11 +185,13 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         except IndexError:
             _LOGGER.warning("Index '%s' not found in %s", self._index, self.entity_id)
             value = None
+            self._attr_available = False
         except KeyError:
             _LOGGER.warning(
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
             value = None
+            self._attr_available = False
         _LOGGER.debug("Parsed value: %s", value)
         return value
 
@@ -224,7 +227,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
         """Return if entity is available."""
         available1 = CoordinatorEntity.available.fget(self)  # type: ignore[attr-defined]
         available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
-        return bool(available1 and available2)
+        return bool(available1 and available2 and self._attr_available)
 
     @callback
     def _handle_coordinator_update(self) -> None:
