@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
     CONF_PORT,
     CONF_USERNAME,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -123,6 +124,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+	vol.Required(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_VARTYPE, default=DEFAULT_VARTYPE): cv.string,
     }
 )
@@ -152,6 +154,7 @@ async def async_setup_platform(
     payload_on: str = config[CONF_PAYLOAD_ON]
     payload_off: str = config[CONF_PAYLOAD_OFF]
     vartype: str = config[CONF_VARTYPE]
+    unique_id: str | None = config[CONF_UNIQUE_ID]
 
     if version == "3":
         if not authkey:
@@ -190,6 +193,7 @@ async def async_setup_platform(
                 vartype,
                 request_args,
                 command_args,
+		unique_id,
             )
         ],
         True,
@@ -213,6 +217,7 @@ class SnmpSwitch(SwitchEntity):
         vartype: str,
         request_args: RequestArgsType,
         command_args: CommandArgsType,
+        unique_id: str | None,
     ) -> None:
         """Initialize the switch."""
 
@@ -231,6 +236,7 @@ class SnmpSwitch(SwitchEntity):
         self._target = UdpTransportTarget((host, port))
         self._request_args = request_args
         self._command_args = command_args
+        self._attr_unique_id = unique_id
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
