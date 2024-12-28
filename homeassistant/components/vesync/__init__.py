@@ -1,6 +1,5 @@
 """VeSync integration."""
 
-from datetime import timedelta
 import logging
 
 from pyvesync import VeSync
@@ -9,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import async_process_devices
 from .const import (
@@ -23,6 +21,7 @@ from .const import (
     VS_SENSORS,
     VS_SWITCHES,
 )
+from .coordinator import VeSyncDataCoordinator
 
 PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
@@ -51,21 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
-    # Create a DataUpdateCoordinator for the manager
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            await hass.async_add_executor_job(manager.update)
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
-    )
+    coordinator = VeSyncDataCoordinator(hass, manager)
 
     # Store coordinator at domain level since only single integration instance is permitted.
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
