@@ -7,16 +7,14 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pynecil import CharSetting, CommunicationError, SettingsDataResponse
+from pynecil import CharSetting, SettingsDataResponse
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IronOSConfigEntry
-from .const import DOMAIN
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -145,27 +143,13 @@ class IronOSSwitchEntity(IronOSBaseEntity, SwitchEntity):
             )
         )
 
-    async def write(self, value: bool) -> None:
-        """Write value to the settings characteristic."""
-
-        try:
-            await self.coordinator.device.write(
-                self.entity_description.characteristic, value
-            )
-        except CommunicationError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="submit_setting_failed",
-            ) from e
-        await self.settings.async_request_refresh()
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.write(True)
+        await self.settings.write(self.entity_description.characteristic, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.write(False)
+        await self.settings.write(self.entity_description.characteristic, False)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
