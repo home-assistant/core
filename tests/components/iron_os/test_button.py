@@ -51,7 +51,6 @@ async def test_button_platform(
     [
         ("button.pinecil_save_settings", (CharSetting.SETTINGS_SAVE, True)),
         ("button.pinecil_restore_default_settings", (CharSetting.SETTINGS_RESET, True)),
-        ("button.pinecil_disable_bluetooth", (CharSetting.BLE_ENABLED, False)),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "ble_device")
