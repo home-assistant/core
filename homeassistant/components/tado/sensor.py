@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -30,7 +31,6 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoHomeEntity, TadoZoneEntity
-from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -232,14 +232,16 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     entity_description: TadoSensorEntityDescription
 
     def __init__(
-        self, tado: TadoConnector, entity_description: TadoSensorEntityDescription
+        self,
+        coordinator: TadoDataUpdateCoordinator,
+        entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        super().__init__(tado)
-        self._tado = tado
+        super().__init__(coordinator)
+        self._tado = coordinator
 
-        self._attr_unique_id = f"{entity_description.key} {tado.home_id}"
+        self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
@@ -287,17 +289,19 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
         entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = tado
-        super().__init__(zone_name, tado.home_id, zone_id)
+        self._tado = coordinator
+        super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
-        self._attr_unique_id = f"{entity_description.key} {zone_id} {tado.home_id}"
+        self._attr_unique_id = (
+            f"{entity_description.key} {zone_id} {coordinator.home_id}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""

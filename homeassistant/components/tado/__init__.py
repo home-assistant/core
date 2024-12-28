@@ -21,6 +21,7 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .services import setup_services
 from .tado_connector import TadoConnector
 
@@ -46,7 +47,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Tado."""
 
     setup_services(hass)
-
     return True
 
 
@@ -62,49 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     password = entry.data[CONF_PASSWORD]
     fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
 
-    tadoconnector = TadoConnector(hass, username, password, fallback)
+    coordinator = TadoDataUpdateCoordinator(hass, username, password, fallback)
 
-    try:
-        await hass.async_add_executor_job(tadoconnector.setup)
-    except KeyError:
-        _LOGGER.error("Failed to login to tado")
-        return False
-    except RuntimeError as exc:
-        _LOGGER.error("Failed to setup tado: %s", exc)
-        return False
-    except requests.exceptions.Timeout as ex:
-        raise ConfigEntryNotReady from ex
-    except requests.exceptions.HTTPError as ex:
-        if ex.response.status_code > 400 and ex.response.status_code < 500:
-            _LOGGER.error("Failed to login to tado: %s", ex)
-            return False
-        raise ConfigEntryNotReady from ex
+    await coordinator.async_config_entry_first_refresh()
 
-    # Do first update
-    await hass.async_add_executor_job(tadoconnector.update)
-
-    # Poll for updates in the background
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            lambda now: tadoconnector.update(),
-            SCAN_INTERVAL,
-        )
-    )
-
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            lambda now: tadoconnector.update_mobile_devices(),
-            SCAN_MOBILE_DEVICE_INTERVAL,
-        )
-    )
-
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
-    entry.runtime_data = tadoconnector
-
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -126,7 +90,7 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: TadoConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

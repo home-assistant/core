@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -30,7 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConfigEntry, TadoConnector
+from . import TadoConfigEntry
 from .const import (
     CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
@@ -106,7 +107,7 @@ async def async_setup_entry(
     """Set up the Tado climate platform."""
 
     tado = entry.runtime_data
-    entities = await hass.async_add_executor_job(_generate_entities, tado)
+    entities = await _generate_entities(tado)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -125,12 +126,12 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def _generate_entities(tado: TadoConnector) -> list[TadoClimate]:
+async def _generate_entities(tado: TadoDataUpdateCoordinator) -> list[TadoClimate]:
     """Create all climate entities."""
     entities = []
     for zone in tado.zones:
         if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
-            entity = create_climate_entity(
+            entity = await create_climate_entity(
                 tado, zone["name"], zone["id"], zone["devices"][0]
             )
             if entity:
@@ -138,11 +139,11 @@ def _generate_entities(tado: TadoConnector) -> list[TadoClimate]:
     return entities
 
 
-def create_climate_entity(
-    tado: TadoConnector, name: str, zone_id: int, device_info: dict
+async def create_climate_entity(
+    tado: TadoDataUpdateCoordinator, name: str, zone_id: int, device_info: dict
 ) -> TadoClimate | None:
     """Create a Tado climate entity."""
-    capabilities = tado.get_capabilities(zone_id)
+    capabilities = await tado.async_get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
@@ -243,6 +244,8 @@ def create_climate_entity(
         cool_max_temp = float(cool_temperatures["celsius"]["max"])
         cool_step = cool_temperatures["celsius"].get("step", PRECISION_TENTHS)
 
+    auto_geofencing_supported = await tado.async_get_auto_geofencing_supported()
+
     return TadoClimate(
         tado,
         name,
@@ -251,6 +254,8 @@ def create_climate_entity(
         supported_hvac_modes,
         support_flags,
         device_info,
+        capabilities,
+        auto_geofencing_supported,
         heat_min_temp,
         heat_max_temp,
         heat_step,
@@ -272,13 +277,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
         zone_type: str,
         supported_hvac_modes: list[HVACMode],
         support_flags: ClimateEntityFeature,
         device_info: dict[str, str],
+        capabilities: dict[str, str],
+        auto_geofencing_supported: bool,
         heat_min_temp: float | None = None,
         heat_max_temp: float | None = None,
         heat_step: float | None = None,
@@ -289,13 +296,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_swing_modes: list[str] | None = None,
     ) -> None:
         """Initialize of Tado climate entity."""
-        self._tado = tado
-        super().__init__(zone_name, tado.home_id, zone_id)
+        self._tado = coordinator
+        super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self.zone_id = zone_id
         self.zone_type = zone_type
 
-        self._attr_unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+        self._attr_unique_id = f"{zone_type} {zone_id} {coordinator.home_id}"
 
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
@@ -327,8 +334,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing = TADO_SWING_OFF
         self._current_tado_horizontal_swing = TADO_SWING_OFF
 
-        capabilities = tado.get_capabilities(zone_id)
         self._current_tado_capabilities = capabilities
+        self._auto_geofencing_supported = auto_geofencing_supported
 
         self._tado_zone_data: PyTado.TadoZone = {}
         self._tado_geofence_data: dict[str, str] | None = None
@@ -425,7 +432,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
-        if self._tado.get_auto_geofencing_supported():
+        if self._auto_geofencing_supported:
             return SUPPORT_PRESET_AUTO
         return SUPPORT_PRESET_MANUAL
 
