@@ -24,6 +24,7 @@ from .const import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+    VACUUM_CLEAN_ROOMS_SERVICE_NAME,
 )
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
@@ -93,6 +94,22 @@ async def async_setup_entry(
             },
         ),
         RoborockVacuum.async_set_vacuum_goto_position.__name__,
+        supports_response=SupportsResponse.NONE,
+    )
+
+    platform.async_register_entity_service(
+        VACUUM_CLEAN_ROOMS_SERVICE_NAME,
+        cv.make_entity_service_schema(
+            {
+                vol.Required("room_ids"): vol.Any(
+                    vol.Coerce(int), [vol.Coerce(int)], vol.Coerce(str)
+                ),
+                vol.Optional("repeat"): vol.All(
+                    vol.Coerce(int), vol.Clamp(min=1, max=3)
+                ),
+            },
+        ),
+        RoborockVacuum.vacuum_clean_rooms.__name__,
         supports_response=SupportsResponse.NONE,
     )
 
@@ -223,3 +240,17 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "x": robot_position.x,
             "y": robot_position.y,
         }
+
+    async def vacuum_clean_rooms(
+        self, room_ids: int | list[int] | str, repeat: int = 1
+    ) -> None:
+        """Clean specific rooms."""
+        if isinstance(room_ids, int):
+            room_ids = [room_ids]
+        elif isinstance(room_ids, str):
+            room_ids = [int(room_id) for room_id in room_ids.split(",")]
+
+        await self.send(
+            RoborockCommand.APP_SEGMENT_CLEAN,
+            [{"segments": room_ids, "repeat": repeat}],
+        )

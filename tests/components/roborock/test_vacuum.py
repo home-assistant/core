@@ -15,6 +15,7 @@ from homeassistant.components.roborock.const import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+    VACUUM_CLEAN_ROOMS_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
@@ -295,3 +296,43 @@ async def test_get_current_position_no_robot_position(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("room_ids", "repeat"),
+    [
+        ([1], 1),
+        ([1, 2, 3], 2),
+        ([4, 5], 3),
+        ("1,2,3", 1),
+        ("4", 2),
+    ],
+)
+async def test_vacuum_clean_rooms(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    room_ids: int | list[int] | str,
+    repeat: int,
+) -> None:
+    """Test cleaning specific rooms."""
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "room_ids": room_ids, "repeat": repeat}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            DOMAIN,
+            VACUUM_CLEAN_ROOMS_SERVICE_NAME,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.APP_SEGMENT_CLEAN
+        if isinstance(room_ids, str):
+            room_ids = [int(room_id) for room_id in room_ids.split(",")]
+        assert mock_send_command.call_args[0][1] == [
+            {"segments": room_ids, "repeat": repeat}
+        ]

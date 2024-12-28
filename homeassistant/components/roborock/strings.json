@@ -446,6 +446,20 @@
     "get_vacuum_current_position": {
       "name": "Get current position",
       "description": "Get the current position of the vacuum."
+    },
+    "vacuum_clean_rooms": {
+      "name": "Clean rooms",
+      "description": "Clean specific rooms.",
+      "fields": {
+        "room_ids": {
+          "name": "Room IDs",
+          "description": "Ids of the Rooms to clean, separated by comma. (retrieve the ids with the service get_maps)"
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "Number of times to repeat the cleaning."
+        }
+      }
     }
   }
 }
