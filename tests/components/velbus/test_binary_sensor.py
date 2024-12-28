@@ -23,7 +23,4 @@ async def test_entities(
     with patch("homeassistant.components.velbus.PLATFORMS", [Platform.BINARY_SENSOR]):
         await init_integration(hass, config_entry)
 
-    state = hass.states.get("binary_sensor.buttonon")
-    assert state
-
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
