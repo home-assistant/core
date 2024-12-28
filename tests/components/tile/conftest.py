@@ -31,6 +31,8 @@ def tile() -> AsyncMock:
     mock.lost_timestamp = datetime(1969, 12, 31, 19, 0, 0)
     mock.ring_state = "STOPPED"
     mock.voip_state = "OFFLINE"
+    mock.hardware_version = "02.09"
+    mock.firmware_version = "01.12.14.0"
     mock.as_dict.return_value = {
         "accuracy": 13.496111,
         "altitude": 0,
