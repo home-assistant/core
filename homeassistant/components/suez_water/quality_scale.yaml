@@ -78,7 +78,7 @@ rules:
     comment: see devices
   discovery-update-info:
     status: exempt
-    comment: devices are not network dependent
+    comment: devices are not network dependent and will not be updated during their lives
   repair-issues:
     status: exempt
     comment: No repair issues to be raised
