@@ -1175,6 +1175,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "cosa": {
+      "name": "Cosa",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cosori": {
       "name": "Cosori",
       "integration_type": "virtual",

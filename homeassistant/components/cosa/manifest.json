@@ -1,0 +1,19 @@
+{
+  "domain": "cosa",
+  "name": "Cosa",
+  "codeowners": [
+    "@onexey"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/cosa",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "integration_type": "device",
+  "loggers": [
+    "custom_components.cosa"
+  ]
+}

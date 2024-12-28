@@ -131,6 +131,7 @@ FLOWS = {
         "control4",
         "cookidoo",
         "coolmaster",
+        "cosa",
         "cpuspeed",
         "crownstone",
         "cync",

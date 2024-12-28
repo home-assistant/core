@@ -320,6 +320,7 @@ build.json @home-assistant/supervisor
 /tests/components/cookidoo/ @miaucl
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
+/homeassistant/components/cosa/ @onexey
 /homeassistant/components/counter/ @fabaff
 /tests/components/counter/ @fabaff
 /homeassistant/components/cover/ @home-assistant/core
