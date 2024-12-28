@@ -5,6 +5,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.azure_storage.const import (
+    CONF_ACCOUNT_NAME,
+    CONF_CONTAINER_NAME,
+    CONF_STORAGE_ACCOUNT_KEY,
+    DOMAIN,
+)
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -31,3 +40,17 @@ def mock_client() -> Generator[MagicMock]:
         client = container_client.return_value
         client.exists.return_value = False
         yield client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="My LaMarzocco",
+        domain=DOMAIN,
+        data={
+            CONF_ACCOUNT_NAME: "test",
+            CONF_CONTAINER_NAME: "test",
+            CONF_STORAGE_ACCOUNT_KEY: "test",
+        },
+    )
