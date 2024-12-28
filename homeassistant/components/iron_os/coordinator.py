@@ -161,10 +161,10 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
                 translation_domain=DOMAIN,
                 translation_key="submit_setting_failed",
             ) from e
-        else:
-            # prevent switch bouncing while waiting for coordinator to finish refresh
-            self.data.update(
-                cast(SettingsDataResponse, {characteristic.name.lower(): value})
-            )
-            self.async_update_listeners()
-            await self.async_request_refresh()
+
+        # prevent switch bouncing while waiting for coordinator to finish refresh
+        self.data.update(
+            cast(SettingsDataResponse, {characteristic.name.lower(): value})
+        )
+        self.async_update_listeners()
+        await self.async_request_refresh()
