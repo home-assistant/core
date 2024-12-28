@@ -32,6 +32,9 @@ class VeSyncDataCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint."""
 
         try:
-            return await self.hass.async_add_executor_job(self._manager.update)
+            # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
+            return await self.hass.async_add_executor_job(
+                self._manager.update_all_devices
+            )
         except Exception as error:
             raise UpdateFailed(error) from error
