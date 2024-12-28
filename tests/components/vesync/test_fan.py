@@ -5,10 +5,15 @@ import requests_mock
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.vesync import DOMAIN, VS_COORDINATOR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, mock_devices_response
+from .common import (
+    ALL_DEVICE_NAMES,
+    mock_air_purifier_400s_update_response,
+    mock_devices_response,
+)
 
 from tests.common import MockConfigEntry
 
@@ -32,6 +37,9 @@ async def test_fan_state(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    assert coordinator
+
     # Check device registry
     devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
     assert devices == snapshot(name="devices")
@@ -49,3 +57,15 @@ async def test_fan_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+    # Test for update via coordinator using entity air_purifier_400s
+    # Update the request mock to return different data
+    mock_air_purifier_400s_update_response(requests_mock)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    for entity in entities:
+        if entity.entity_id == "fan.air_purifier_400s":
+            assert hass.states.get(entity.entity_id) == snapshot(
+                name=f"{entity.entity_id}_updated"
+            )

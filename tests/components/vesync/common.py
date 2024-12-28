@@ -71,6 +71,20 @@ def mock_devices_response(
         )
 
 
+def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) -> None:
+    """Build a response for the Helpers.call_api method for air_purifier_400s with updated data."""
+
+    device_name = "Air Purifier 400s"
+    for fixture in DEVICE_FIXTURES[device_name]:
+        requests_mock.request(
+            fixture[0],
+            f"https://smartapi.vesync.com{fixture[1]}",
+            json=load_json_object_fixture(
+                "air-purifier-400s-detail-updated.json", DOMAIN
+            ),
+        )
+
+
 def call_api_side_effect__no_devices(*args, **kwargs):
     """Build a side_effects method for the Helpers.call_api method."""
     if args[0] == "/cloud/v1/user/login" and args[1] == "post":
