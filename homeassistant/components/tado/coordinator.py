@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
 import PyTado
 import PyTado.exceptions
 from PyTado.interface import Tado
+from requests import RequestException
 
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import (
     ConfigEntryError,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DOMAIN, INSIDE_TEMPERATURE_MEASUREMENT, TEMP_OFFSET
+from .const import DOMAIN, INSIDE_TEMPERATURE_MEASUREMENT, PRESET_AUTO, TEMP_OFFSET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +110,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             raise UpdateFailed(f"Error updating Tado data: {err}") from err
 
+        # TODO: check how the data writes back!
         return self.data
 
     async def _async_update_devices(self) -> None:
@@ -228,20 +232,153 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             self.data["geofence"],
         )
 
-    async def async_get_capabilities(self, zone_id) -> dict:
+    async def update_zone(self, zone_id):
+        """Update the internal data from Tado. Double method to support to non-async."""
+        _LOGGER.debug("Updating zone %s", zone_id)
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.tado.get_zone_state, zone_id
+            )
+        except RequestException as err:
+            raise UpdateFailed(
+                f"Error updating Tado zone {zone_id}, with error: {err}"
+            ) from err
+
+        self.data["zone"][zone_id] = data
+
+    async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
         try:
             return await self.hass.async_add_executor_job(
                 self.tado.get_capabilities, zone_id
             )
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error updating Tado data: {err}") from err
 
-    async def async_get_auto_geofencing_supported(self) -> bool:
+    async def get_auto_geofencing_supported(self) -> bool:
         """Fetch the auto geofencing supported from Tado."""
         try:
             return await self.hass.async_add_executor_job(
                 self.tado.get_auto_geofencing_supported
             )
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error updating Tado data: {err}") from err
+
+    async def reset_zone_overlay(self, zone_id):
+        """Reset the zone back to the default operation."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.tado.reset_zone_overlay, zone_id
+            )
+            # TODO: merge this in later with a private method, or not. Let's check later on!
+            await self.update_zone(zone_id)
+        except RequestException as err:
+            raise UpdateFailed(f"Error resetting Tado data: {err}") from err
+
+    async def set_presence(
+        self,
+        presence=PRESET_HOME,
+    ):
+        """Set the presence to home, away or auto."""
+        if presence == PRESET_AWAY:
+            await self.hass.async_add_executor_job(self.tado.set_away)
+        elif presence == PRESET_HOME:
+            await self.hass.async_add_executor_job(self.tado.set_home)
+        elif presence == PRESET_AUTO:
+            await self.hass.async_add_executor_job(self.tado.set_auto)
+
+        # Update everything when changing modes
+        # await self._async_update_zones()
+        # await self._async_update_home()
+
+    async def set_zone_overlay(
+        self,
+        zone_id=None,
+        overlay_mode=None,
+        temperature=None,
+        duration=None,
+        device_type="HEATING",
+        mode=None,
+        fan_speed=None,
+        swing=None,
+        fan_level=None,
+        vertical_swing=None,
+        horizontal_swing=None,
+    ):
+        """Set a zone overlay."""
+        _LOGGER.debug(
+            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
+            zone_id,
+            overlay_mode,
+            temperature,
+            duration,
+            device_type,
+            mode,
+            fan_speed,
+            swing,
+            fan_level,
+            vertical_swing,
+            horizontal_swing,
+        )
+
+        try:
+            await self.hass.async_add_executor_job(
+                self.tado.set_zone_overlay,
+                zone_id,
+                overlay_mode,
+                temperature,
+                duration,
+                device_type,
+                "ON",
+                mode,
+                fan_speed,
+                swing,
+                fan_level,
+                vertical_swing,
+                horizontal_swing,
+            )
+
+        except RequestException as err:
+            raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
+
+        await self.update_zone(zone_id)
+
+    async def set_zone_off(self, zone_id, overlay_mode, device_type="HEATING"):
+        """Set a zone to off."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.tado.set_zone_overlay,
+                zone_id,
+                overlay_mode,
+                None,
+                None,
+                device_type,
+                "OFF",
+            )
+        except RequestException as err:
+            raise UpdateFailed(f"Error setting Tado overlay: {err}") from err
+
+        # TODO: merge this in later with a private method, or not. Let's check later on!
+        await self.update_zone(zone_id)
+
+    async def set_temperature_offset(self, device_id, offset):
+        """Set temperature offset of device."""
+        try:
+            await self.hass.async_add_executor_job(
+                self.tado.set_temp_offset, device_id, offset
+            )
+        except RequestException as err:
+            raise UpdateFailed(f"Error setting Tado temperature offset: {err}") from err
+
+    async def set_meter_reading(self, reading: int) -> dict[str, Any]:
+        """Send meter reading to Tado."""
+        dt: str = datetime.now().strftime("%Y-%m-%d")
+        if self.tado is None:
+            raise HomeAssistantError("Tado client is not initialized")
+
+        try:
+            return await self.hass.async_add_executor_job(
+                self.tado.set_eiq_meter_readings, date=dt, reading=reading
+            )
+        except RequestException as err:
+            raise UpdateFailed(f"Error setting Tado meter reading: {err}") from err

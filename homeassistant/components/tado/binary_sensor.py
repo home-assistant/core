@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -25,6 +24,7 @@ from .const import (
     TYPE_HOT_WATER,
     TYPE_POWER,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoDeviceEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
