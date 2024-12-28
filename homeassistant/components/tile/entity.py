@@ -19,7 +19,7 @@ class TileEntity(CoordinatorEntity[TileCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._tile.uuid)},
             name=self._tile.name,
-            manufacturer="Tile",
+            manufacturer="Tile Inc.",
             hw_version=self._tile.hardware_version,
             sw_version=self._tile.firmware_version,
         )

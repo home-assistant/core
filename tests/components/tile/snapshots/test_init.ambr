@@ -19,7 +19,7 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Tile',
+    'manufacturer': 'Tile Inc.',
     'model': None,
     'model_id': None,
     'name': 'Wallet',
