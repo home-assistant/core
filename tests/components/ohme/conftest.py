@@ -1,7 +1,7 @@
 """Provide common fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from ohme import ChargerPower, ChargerStatus
 import pytest
@@ -53,6 +53,11 @@ def mock_client():
         client.async_login.return_value = True
         client.status = ChargerStatus.CHARGING
         client.power = ChargerPower(0, 0, 0, 0)
+
+        mock_slot = MagicMock()
+        mock_slot.astimezone().isoformat.return_value = "2024-12-28T12:00:00+00:00"
+        client.next_slot_start = client.next_slot_end = mock_slot
+
         client.battery = 20
         client.serial = "chargerid"
         client.ct_connected = True
