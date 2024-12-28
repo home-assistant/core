@@ -72,6 +72,8 @@ class ReolinkVODMediaSource(MediaSource):
 
         def get_vod_type() -> VodRequestType:
             if filename.endswith(".mp4"):
+                if host.api.is_nvr:
+                    return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK
             if host.api.is_nvr:
                 return VodRequestType.FLV
@@ -79,7 +81,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         vod_type = get_vod_type()
 
-        if vod_type == VodRequestType.PLAYBACK:
+        if vod_type in [VodRequestType.DOWNLOAD, VodRequestType.PLAYBACK]:
             proxy_url = async_generate_playback_proxy_url(
                 config_entry_id, channel, filename, stream_res, vod_type.value
             )
