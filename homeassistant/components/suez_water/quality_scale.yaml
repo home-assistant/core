@@ -71,14 +71,14 @@ rules:
     status: exempt
     comment: no custom icons
   reconfiguration-flow:
-    status: exempt
-    comment: no configuration option
+    status: todo
+    comment: reconfigure every configurations input
   dynamic-devices:
     status: todo
     comment: see devices
   discovery-update-info:
     status: exempt
-    comment: fixed api not discoverable
+    comment: devices are not network dependent
   repair-issues:
     status: exempt
     comment: No repair issues to be raised
