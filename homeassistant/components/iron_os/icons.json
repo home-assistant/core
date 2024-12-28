@@ -152,13 +152,19 @@
     },
     "switch": {
       "animation_loop": {
-        "default": "mdi:play-box"
+        "default": "mdi:play-box",
+        "state": {
+          "on": "mdi:animation-play"
+        }
       },
       "calibrate_cjc": {
         "default": "mdi:tune-vertical"
       },
       "cooling_temp_blink": {
-        "default": "mdi:alarm-light-outline"
+        "default": "mdi:alarm-light-outline",
+        "state": {
+          "off": "mdi:alarm-light-off-outline"
+        }
       },
       "display_invert": {
         "default": "mdi:invert-colors"
@@ -168,6 +174,18 @@
       },
       "usb_pd_mode": {
         "default": "mdi:meter-electric-outline"
+      },
+      "idle_screen_details": {
+        "default": "mdi:card-bulleted-settings-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      },
+      "solder_screen_details": {
+        "default": "mdi:card-bulleted-settings-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
       }
     }
   }

@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 0
 class IronOSSwitchEntityDescription(SwitchEntityDescription):
     """Describes IronOS switch entity."""
 
-    is_on_fn: Callable[[SettingsDataResponse], bool | int | None]
+    is_on_fn: Callable[[SettingsDataResponse], bool | None]
     characteristic: CharSetting
 
 
@@ -84,6 +84,7 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
         translation_key=IronOSSwitch.DISPLAY_INVERT,
         characteristic=CharSetting.DISPLAY_INVERT,
         is_on_fn=lambda x: x.get("display_invert"),
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
     IronOSSwitchEntityDescription(
@@ -99,6 +100,7 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
         translation_key=IronOSSwitch.USB_PD_MODE,
         characteristic=CharSetting.USB_PD_MODE,
         is_on_fn=lambda x: x.get("usb_pd_mode"),
+        entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -137,10 +139,8 @@ class IronOSSwitchEntity(IronOSBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the device."""
-        return bool(
-            self.entity_description.is_on_fn(
-                self.settings.data,
-            )
+        return self.entity_description.is_on_fn(
+            self.settings.data,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

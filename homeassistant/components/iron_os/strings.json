@@ -238,7 +238,7 @@
         "name": "Calibrate CJC"
       },
       "usb_pd_mode": {
-        "name": "PPS & EPR PD mode"
+        "name": "Power Delivery 3.1 EPR"
       }
     }
   },
