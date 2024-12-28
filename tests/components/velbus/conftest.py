@@ -1,7 +1,6 @@
 """Fixtures for the Velbus tests."""
 
 from collections.abc import Generator
-from typing import final
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,18 +14,6 @@ from homeassistant.core import HomeAssistant
 from .const import PORT_TCP
 
 from tests.common import MockConfigEntry
-
-BUTTON: final = {
-    "get_categories.return_value": ["binary_sensor", "led", "button"],
-    "get_name.return_value": "ButtonOn",
-    "get_module_address.return_value": 1,
-    "get_channel_number.return_value": 1,
-    "get_module_type_name.return_value": "VMB4RYLD",
-    "get_full_name.return_value": "Channel full name",
-    "get_module_sw_version.return_value": "1.0.0",
-    "get_module_serial.return_value": "a1b2c3d4e5f6",
-    "is_closed.return_value": True,
-}
 
 
 @pytest.fixture(name="controller")
@@ -48,7 +35,15 @@ def mock_controller(mock_button: AsyncMock) -> Generator[AsyncMock]:
 def mock_button() -> AsyncMock:
     """Mock a successful velbus channel."""
     channel = AsyncMock(spec=Button)
-    channel.configure_mock(**BUTTON)
+    channel.get_categories.return_value = ["binary_sensor", "led", "button"]
+    channel.get_name.return_value = "ButtonOn"
+    channel.get_module_address.return_value = 1
+    channel.get_channel_number.return_value = 1
+    channel.get_module_type_name.return_value = "VMB4RYLD"
+    channel.get_full_name.return_value = "Channel full name"
+    channel.get_module_sw_version.return_value = "1.0.0"
+    channel.get_module_serial.return_value = "a1b2c3d4e5f6"
+    channel.is_closed.return_value = True
     return channel
 
 
