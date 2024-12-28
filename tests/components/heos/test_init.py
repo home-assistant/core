@@ -115,7 +115,7 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
         assert controller.get_input_sources.call_count == 1
         controller.disconnect.assert_not_called()
     assert (
-        "HEOS System (via 127.0.0.1) is not logged in: enter credentials in the integration options to access favorites and streaming services"
+        "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
         in caplog.text
     )
 

@@ -34,6 +34,7 @@
   "options": {
     "step": {
       "init": {
+        "title": "HEOS Options",
         "description": "You can sign-in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign-out of your account.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",

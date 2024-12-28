@@ -33,10 +33,7 @@ rules:
     status: todo
     comment: Actions currently only log and instead should raise exceptions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: done
-    comment: |
-      The integration doesn't provide any additional configuration parameters.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
