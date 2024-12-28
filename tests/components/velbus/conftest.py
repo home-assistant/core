@@ -35,7 +35,7 @@ def mock_controller(mock_button: AsyncMock) -> Generator[AsyncMock]:
     with (
         patch("homeassistant.components.velbus.Velbus", autospec=True) as controller,
         patch(
-            "homeassistant.components.velbus.config_flow.Velbus",
+            "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
             new=controller,
         ),
     ):
