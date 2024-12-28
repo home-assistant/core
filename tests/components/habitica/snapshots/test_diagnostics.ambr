@@ -154,11 +154,17 @@
         }),
         dict({
           '_id': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+          'alias': 'alias_zahnseide_benutzen',
           'attribute': 'str',
           'byHabitica': False,
           'challenge': dict({
           }),
           'checklist': list([
+            dict({
+              'completed': False,
+              'id': 'c8662c16-8cd3-4104-a3b2-b1e54f61b8ca',
+              'text': 'Checklist-item1',
+            }),
           ]),
           'collapseChecklist': False,
           'completed': True,
@@ -254,6 +260,16 @@
           'notes': 'Klicke um Änderungen zu machen!',
           'priority': 1,
           'reminders': list([
+            dict({
+              'id': 'e2c62b7f-2e20-474b-a268-779252b25e8c',
+              'startDate': '',
+              'time': '2024-10-14T20:30:00+00:00',
+            }),
+            dict({
+              'id': '4c472190-efba-4277-9d3e-ce7a9e1262ba',
+              'startDate': '',
+              'time': '2024-10-14T22:30:00+00:00',
+            }),
           ]),
           'repeat': dict({
             'f': True,
@@ -407,6 +423,11 @@
           'challenge': dict({
           }),
           'checklist': list([
+            dict({
+              'completed': True,
+              'id': 'c8662c16-8cd3-4104-a3b2-b1e54f61b8ca',
+              'text': 'Checklist-item1',
+            }),
           ]),
           'collapseChecklist': False,
           'completed': False,
@@ -484,6 +505,8 @@
           'reminders': list([
           ]),
           'tags': list([
+            '20409521-c096-447f-9a90-23e8da615710',
+            '8515e4ae-2f4b-455a-b4a4-8939e04b1bfd',
           ]),
           'text': 'Buch zu Ende lesen',
           'type': 'todo',
@@ -515,8 +538,8 @@
           'priority': 1,
           'reminders': list([
             dict({
-              'id': '91c09432-10ac-4a49-bd20-823081ec29ed',
-              'time': '2024-09-22T02:00:00.0000Z',
+              'id': '30224d1d-705b-4817-9d65-50f0481607f4',
+              'time': '2024-12-20T22:30:00',
             }),
           ]),
           'tags': list([
@@ -747,6 +770,36 @@
           'str': 15,
           'toNextLevel': 880,
         }),
+        'tags': list([
+          dict({
+            'id': '8515e4ae-2f4b-455a-b4a4-8939e04b1bfd',
+            'name': 'Arbeit',
+          }),
+          dict({
+            'id': '6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab',
+            'name': 'Training',
+          }),
+          dict({
+            'id': '20409521-c096-447f-9a90-23e8da615710',
+            'name': 'Gesundheit + Wohlbefinden',
+          }),
+          dict({
+            'id': '2ac458af-0833-4f3f-bf04-98a0c33ef60b',
+            'name': 'Schule',
+          }),
+          dict({
+            'id': '1bcb1a0f-4d05-4087-8223-5ea779e258b0',
+            'name': 'Teams',
+          }),
+          dict({
+            'id': 'b2780f82-b3b5-49a3-a677-48f2c8c7e3bb',
+            'name': 'Hausarbeiten',
+          }),
+          dict({
+            'id': '3450351f-1323-4c7e-9fd2-0cdff25b3ce0',
+            'name': 'Kreativität',
+          }),
+        ]),
         'tasksOrder': dict({
           'dailys': list([
             'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a',
