@@ -25,8 +25,7 @@ BUTTON: final = {
     "get_full_name.return_value": "Channel full name",
     "get_module_sw_version.return_value": "1.0.0",
     "get_module_serial.return_value": "a1b2c3d4e5f6",
-    "is_closed.return_value": False,
-    "is_on.return_value": True,
+    "is_closed.return_value": True,
 }
 
 
