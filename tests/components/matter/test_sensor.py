@@ -213,6 +213,18 @@ async def test_eve_thermo_sensor(
     assert state
     assert state.state == "0"
 
+    # LocalTemperature
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "21.0"
+
+    set_node_attribute(matter_node, 1, 513, 0, 1800)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "18.0"
+
 
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
 async def test_pressure_sensor(
