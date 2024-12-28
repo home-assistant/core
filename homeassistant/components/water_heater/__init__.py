@@ -25,6 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_class
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -131,6 +132,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
+
+
+@deprecated_class("WaterHeaterEntityDescription", breaks_in_ha_version="2026.1")
+class WaterHeaterEntityEntityDescription(
+    WaterHeaterEntityDescription, frozen_or_thawed=True
+):
+    """A (deprecated) class that describes water heater entities."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {

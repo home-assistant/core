@@ -46,9 +46,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -451,18 +455,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
         return True
+
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Modbus."""
+        if DOMAIN not in hass.data:
+            _LOGGER.error("Modbus cannot reload, because it was never loaded")
+            return
+        hubs = hass.data[DOMAIN]
+        for name in hubs:
+            await hubs[name].async_close()
+        reset_platforms = async_get_platforms(hass, DOMAIN)
+        for reset_platform in reset_platforms:
+            _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
+            await reset_platform.async_reset()
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        if not reload_config:
+            _LOGGER.debug("Modbus not present anymore")
+            return
+        _LOGGER.debug("Modbus reloading")
+        await async_modbus_setup(hass, reload_config)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     return await async_modbus_setup(
         hass,
         config,
     )
-
-
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Release modbus resources."""
-    if DOMAIN not in hass.data:
-        _LOGGER.error("Modbus cannot reload, because it was never loaded")
-        return
-    _LOGGER.debug("Modbus reloading")
-    hubs = hass.data[DOMAIN]
-    for name in hubs:
-        await hubs[name].async_close()

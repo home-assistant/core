@@ -3,7 +3,7 @@
   "name": "TP-Link Smart Home",
   "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
-  "dependencies": ["network"],
+  "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {
       "registered_devices": true
