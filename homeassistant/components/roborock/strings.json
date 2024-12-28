@@ -433,11 +433,11 @@
       "name": "Go to position",
       "description": "Send the vacuum to a specific position.",
       "fields": {
-        "x_coord": {
+        "x": {
           "name": "X-coordinate",
           "description": ""
         },
-        "y_coord": {
+        "y": {
           "name": "Y-coordinate",
           "description": ""
         }
