@@ -55,7 +55,7 @@ rules:
     comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
   entity-category:
     status: done
-    comment: only data entities
+    comment: default class is fine
   entity-disabled-by-default:
     status: todo
     comment: price can always be disabled and yesterday usage after https://github.com/home-assistant/core/pull/131166
