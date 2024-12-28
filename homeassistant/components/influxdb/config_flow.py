@@ -1,8 +1,9 @@
 """Config flow for InfluxDB integration."""
+
 import logging
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 
 from . import DOMAIN
 
@@ -15,7 +16,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_import(self, import_config=None) -> FlowResult:
+    async def async_step_import(self, import_config=None) -> ConfigFlowResult:
         """Handle the initial step."""
         host = import_config.get("host")
 
