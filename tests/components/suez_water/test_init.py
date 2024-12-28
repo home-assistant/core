@@ -7,15 +7,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 from homeassistant.components.recorder.statistics import statistics_during_period
-from homeassistant.components.suez_water.const import DATA_REFRESH_INTERVAL
-from homeassistant.components.suez_water.coordinator import (
+from homeassistant.components.suez_water.const import (
     CONF_COUNTER_ID,
+    DATA_REFRESH_INTERVAL,
     DOMAIN,
-    DayDataResult,
-    PySuezError,
 )
+from homeassistant.components.suez_water.coordinator import DayDataResult, PySuezError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
