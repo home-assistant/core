@@ -7,7 +7,7 @@ import time
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from kasa import Credentials, Device, Module
+from kasa import Credentials, Device, Module, StreamResolution
 from kasa.smartcam.modules import Camera as CameraModule
 
 from homeassistant.components import ffmpeg, stream
@@ -40,6 +40,7 @@ CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
     TPLinkCameraEntityDescription(
         key="live_view",
         translation_key="live_view",
+        available_fn=lambda dev: dev.is_on,
     ),
 )
 
@@ -95,7 +96,9 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         """Initialize a TPlink camera."""
         self.entity_description = description
         self._camera_module = camera_module
-        self._video_url = camera_module.stream_rtsp_url(camera_credentials)
+        self._video_url = camera_module.stream_rtsp_url(
+            camera_credentials, stream_resolution=StreamResolution.SD
+        )
         self._image: bytes | None = None
         super().__init__(device, coordinator, parent=parent)
         Camera.__init__(self)
@@ -111,20 +114,23 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         return f"{legacy_device_id(self._device)}-{self.entity_description.key}"
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._camera_module.is_on
+        return self.entity_description.available_fn(self._device)
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-        return self._video_url
+        return self._camera_module.stream_rtsp_url(
+            self._camera_credentials, stream_resolution=StreamResolution.HD
+        )
 
     async def _async_check_stream_auth(self, video_url: str) -> None:
         """Check for an auth error and start reauth flow."""
         try:
             await stream.async_check_stream_client_error(self.hass, video_url)
         except stream.StreamOpenClientError as ex:
-            if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+            if ex.error_code is stream.StreamClientError.Unauthorized:
                 _LOGGER.debug(
                     "Camera stream failed authentication for %s",
                     self._device.host,
@@ -148,7 +154,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
             return self._image
 
         # Don't try to capture a new image if a stream is running
-        if (self.stream and self.stream.available) or self._http_mpeg_stream_running:
+        if self._http_mpeg_stream_running:
             return self._image
 
         if self._can_stream and (video_url := self._video_url):
