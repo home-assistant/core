@@ -77,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 47
+SCHEMA_VERSION = 48
 
 _LOGGER = logging.getLogger(__name__)
 

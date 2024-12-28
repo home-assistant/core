@@ -278,8 +278,19 @@ async def test_stream_timeout_after_stop(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        # pylint: disable-next=c-extension-no-member
+        (av.error.InvalidDataError(-2, "error")),
+        (av.HTTPBadRequestError(500, "error")),
+    ],
+)
 async def test_stream_retries(
-    hass: HomeAssistant, setup_component, should_retry
+    hass: HomeAssistant,
+    setup_component,
+    should_retry,
+    exception,
 ) -> None:
     """Test hls stream is retried on failure."""
     # Setup demo HLS track
@@ -309,8 +320,7 @@ async def test_stream_retries(
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
-        # pylint: disable-next=c-extension-no-member
-        raise av.error.InvalidDataError(-2, "error")
+        raise exception
 
     with (
         patch("av.open") as av_open,

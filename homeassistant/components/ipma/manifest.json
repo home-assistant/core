@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ipma",
   "iot_class": "cloud_polling",
   "loggers": ["geopy", "pyipma"],
-  "requirements": ["pyipma==3.0.7"]
+  "requirements": ["pyipma==3.0.8"]
 }

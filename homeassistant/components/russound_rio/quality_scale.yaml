@@ -68,7 +68,10 @@ rules:
   reconfiguration-flow: done
   dynamic-devices: todo
   discovery-update-info: todo
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: todo

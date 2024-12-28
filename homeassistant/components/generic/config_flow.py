@@ -255,10 +255,6 @@ async def async_test_and_preview_stream(
     """
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return None
-    # Import from stream.worker as stream cannot reexport from worker
-    # without forcing the av dependency on default_config
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.stream.worker import StreamWorkerError
 
     if not isinstance(stream_source, template_helper.Template):
         stream_source = template_helper.Template(stream_source, hass)
@@ -294,8 +290,6 @@ async def async_test_and_preview_stream(
             f"{DOMAIN}.test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
-    except StreamWorkerError as err:
-        raise InvalidStreamException("unknown_with_details", str(err)) from err
     except PermissionError as err:
         raise InvalidStreamException("stream_not_permitted") from err
     except OSError as err:

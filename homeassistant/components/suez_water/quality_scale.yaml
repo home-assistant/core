@@ -27,7 +27,7 @@ rules:
 
   # Silver
   config-entry-unloading: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   entity-unavailable: done
   action-exceptions:
     status: exempt

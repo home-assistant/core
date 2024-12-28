@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import partial
 from ipaddress import IPv4Address
 import logging
-from typing import Self
+from typing import ClassVar, Self
 from urllib.parse import urlparse
 
 from async_upnp_client.search import SsdpSearchListener
@@ -44,11 +44,11 @@ def _set_future_if_not_done(future: asyncio.Future[None]) -> None:
 class YeelightScanner:
     """Scan for Yeelight devices."""
 
-    _scanner: Self | None = None
+    _scanner: ClassVar[Self | None] = None
 
     @classmethod
     @callback
-    def async_get(cls, hass: HomeAssistant) -> YeelightScanner:
+    def async_get(cls, hass: HomeAssistant) -> Self:
         """Get scanner instance."""
         if cls._scanner is None:
             cls._scanner = cls(hass)

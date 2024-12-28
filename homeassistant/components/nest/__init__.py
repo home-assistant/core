@@ -27,7 +27,6 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.camera import Image, img_util
 from homeassistant.components.http import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_CLIENT_ID,
@@ -252,12 +251,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: NestConfigEntry) -> None:
     """Handle removal of pubsub subscriptions created during config flow."""
     if (
         DATA_SDM not in entry.data

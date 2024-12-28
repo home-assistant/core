@@ -1,0 +1,53 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "url": "The URL of the Overseerr instance.",
+          "api_key": "The API key of the Overseerr instance."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "The provided URL is not a valid host."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_requests": {
+        "name": "Total requests"
+      },
+      "movie_requests": {
+        "name": "Movie requests"
+      },
+      "tv_requests": {
+        "name": "TV requests"
+      },
+      "pending_requests": {
+        "name": "Pending requests"
+      },
+      "declined_requests": {
+        "name": "Declined requests"
+      },
+      "processing_requests": {
+        "name": "Processing requests"
+      },
+      "available_requests": {
+        "name": "Available requests"
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error connecting to the Overseerr instance: {error}"
+    }
+  }
+}

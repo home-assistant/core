@@ -428,6 +428,24 @@
     "get_maps": {
       "name": "Get maps",
       "description": "Get the map and room information of your device."
+    },
+    "set_vacuum_goto_position": {
+      "name": "Go to position",
+      "description": "Send the vacuum to a specific position.",
+      "fields": {
+        "x_coord": {
+          "name": "X-coordinate",
+          "description": ""
+        },
+        "y_coord": {
+          "name": "Y-coordinate",
+          "description": ""
+        }
+      }
+    },
+    "get_vacuum_current_position": {
+      "name": "Get current position",
+      "description": "Get the current position of the vacuum."
     }
   }
 }
