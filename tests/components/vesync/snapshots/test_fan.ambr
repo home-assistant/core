@@ -287,6 +287,31 @@
     'state': 'on',
   })
 # ---
+# name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s_updated]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'child_lock': False,
+      'friendly_name': 'Air Purifier 400s',
+      'mode': 'manual',
+      'night_light': 'on',
+      'percentage': 25,
+      'percentage_step': 25.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'auto',
+        'sleep',
+      ]),
+      'screen_status': True,
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.air_purifier_400s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_fan_state[Air Purifier 600s][devices]
   list([
     DeviceRegistryEntrySnapshot({
