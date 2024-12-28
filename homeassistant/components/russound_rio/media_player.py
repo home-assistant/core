@@ -22,7 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RussoundConfigEntry
-from .const import MP_FEATURES_BY_FLAG
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +53,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -69,9 +69,6 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         self._sources = sources
         self._attr_name = _zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
-        for flag, feature in MP_FEATURES_BY_FLAG.items():
-            if flag in self._client.supported_features:
-                self._attr_supported_features |= feature
 
     @property
     def _zone(self) -> ZoneControlSurface:
@@ -150,6 +147,11 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         """
         return self._zone.volume / 50.0
 
+    @property
+    def is_volume_muted(self) -> bool:
+        """Return whether zone is muted."""
+        return self._zone.is_mute
+
     @command
     async def async_turn_off(self) -> None:
         """Turn off the zone."""
@@ -184,3 +186,16 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self._zone.volume_down()
+
+    @command
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the media player."""
+        if FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON in self._client.supported_features:
+            if mute:
+                await self._zone.mute()
+            else:
+                await self._zone.unmute()
+            return
+
+        if mute != self.is_volume_muted:
+            await self._zone.toggle_mute()
