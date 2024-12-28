@@ -7,10 +7,9 @@ pubsub subscriber.
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import AsyncMock
 
 import aiohttp
-from google_nest_sdm.auth import AbstractAuth
-from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components.climate import (
@@ -45,8 +44,8 @@ from .common import (
     DEVICE_COMMAND,
     DEVICE_ID,
     CreateDevice,
-    FakeSubscriber,
     PlatformSetup,
+    create_nest_event,
 )
 from .conftest import FakeAuth
 
@@ -72,14 +71,13 @@ def device_traits() -> dict[str, Any]:
 @pytest.fixture
 async def create_event(
     hass: HomeAssistant,
-    auth: AbstractAuth,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
 ) -> CreateEvent:
     """Fixture to send a pub/sub event."""
 
     async def create_event(traits: dict[str, Any]) -> None:
         await subscriber.async_receive_event(
-            EventMessage.create_event(
+            create_nest_event(
                 {
                     "eventId": EVENT_ID,
                     "timestamp": "2019-01-01T00:00:01Z",
@@ -88,7 +86,6 @@ async def create_event(
                         "traits": traits,
                     },
                 },
-                auth=auth,
             )
         )
         await hass.async_block_till_done()

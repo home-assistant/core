@@ -1478,8 +1478,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
-/homeassistant/components/tado/ @chiefdragon @erwindouna
-/tests/components/tado/ @chiefdragon @erwindouna
+/homeassistant/components/tado/ @erwindouna
+/tests/components/tado/ @erwindouna
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
