@@ -71,8 +71,7 @@ async def async_setup_entry(
                 config_entry.runtime_data.model,
                 voices,
                 default_voice_id,
-                config_entry.entry_id,
-                config_entry.title,
+                config_entry,
                 voice_settings,
                 config_entry.options.get(
                     CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
@@ -94,8 +93,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         model: Model,
         voices: list[ElevenLabsVoice],
         default_voice_id: str,
-        entry_id: str,
-        title: str,
+        config_entry: ElevenLabsConfigEntry,
         voice_settings: VoiceSettings,
         latency: int = 0,
     ) -> None:
@@ -117,10 +115,10 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         self._latency = latency
 
         # Entity attributes
-        self._attr_unique_id = entry_id
-        self._attr_name = title
+        self._attr_unique_id = config_entry.entry_id
+        self._attr_name = config_entry.title
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="ElevenLabs",
             model=model.name,
             entry_type=DeviceEntryType.SERVICE,
@@ -129,6 +127,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             lang.language_id for lang in self._model.languages or []
         ]
         self._attr_default_language = self.supported_languages[0]
+        self._entry = config_entry
 
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
@@ -154,5 +153,8 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
             _LOGGER.warning(
                 "Error during processing of TTS request %s", exc, exc_info=True
             )
+            # 401 if API key is invalid
+            if exc.status_code == 401:
+                self._entry.async_start_reauth(self.hass)
             raise HomeAssistantError(exc) from exc
         return "mp3", bytes_combined
