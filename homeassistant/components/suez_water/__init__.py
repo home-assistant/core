@@ -44,7 +44,6 @@ async def async_migrate_entry(
     )
 
     if config_entry.version > 2:
-        _LOGGER.error("Suez_water version downgrade not handled")
         return False
 
     if config_entry.version == 1:

@@ -84,32 +84,10 @@ async def test_migration_version_1_to_2(
         title=MOCK_DATA[CONF_USERNAME],
         data=MOCK_DATA,
         version=1,
-        minor_version=0,
     )
 
     await setup_integration(hass, past_entry)
     assert past_entry.state is ConfigEntryState.LOADED
     assert past_entry.unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert past_entry.title == MOCK_DATA[CONF_USERNAME]
-
-
-async def test_migration_version_1_to_2_int_counter(
-    hass: HomeAssistant,
-    suez_client: AsyncMock,
-) -> None:
-    """Test that a migration from 1 to 2 change use int counter_id as str unique_id."""
-    data = MOCK_DATA.copy()
-    data[CONF_COUNTER_ID] = 1234
-    past_entry = MockConfigEntry(
-        unique_id=data[CONF_USERNAME],
-        domain=DOMAIN,
-        title=data[CONF_USERNAME],
-        data=data,
-        version=1,
-        minor_version=0,
-    )
-
-    await setup_integration(hass, past_entry)
-    assert past_entry.state is ConfigEntryState.LOADED
-    assert past_entry.unique_id == str(data[CONF_COUNTER_ID])
-    assert past_entry.title == data[CONF_USERNAME]
+    assert past_entry.version == 2
