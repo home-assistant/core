@@ -97,11 +97,11 @@ async def test_flow_errors(
     }
 
 
-async def test_abort_if_already_setup(
+async def test_abort_if_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test we abort if the account is already setup."""
+    """Test we abort if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await __async_start_flow(hass)
