@@ -71,9 +71,7 @@ async def test_form_invalid_auth(
 
 
 async def test_form_already_configured(
-    
-    hass: HomeAssistant, recorder_mock: Recorder
-, suez_client: AsyncMock
+    hass: HomeAssistant, recorder_mock: Recorder, suez_client: AsyncMock
 ) -> None:
     """Test we abort when entry is already configured."""
 
