@@ -11,11 +11,34 @@ from homeassistant.components.azure_storage.const import (
     CONF_STORAGE_ACCOUNT_KEY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {
+    CONF_ACCOUNT_NAME: "test",
+    CONF_CONTAINER_NAME: "test",
+    CONF_STORAGE_ACCOUNT_KEY: "test",
+}
+
+
+async def __async_start_flow(
+    hass: HomeAssistant,
+) -> ConfigFlowResult:
+    """Initialize the  config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
 
 
 async def test_flow(
@@ -24,20 +47,7 @@ async def test_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCOUNT_NAME: "test",
-            CONF_CONTAINER_NAME: "test",
-            CONF_STORAGE_ACCOUNT_KEY: "test",
-        },
-    )
+    result = await __async_start_flow(hass)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
@@ -66,20 +76,7 @@ async def test_flow_errors(
     """Test config flow errors."""
     mock_client.exists.side_effect = exception
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCOUNT_NAME: "test",
-            CONF_CONTAINER_NAME: "test",
-            CONF_STORAGE_ACCOUNT_KEY: "test",
-        },
-    )
+    result = await __async_start_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == errors
@@ -89,11 +86,7 @@ async def test_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_ACCOUNT_NAME: "test",
-            CONF_CONTAINER_NAME: "test",
-            CONF_STORAGE_ACCOUNT_KEY: "test",
-        },
+        USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DOMAIN
@@ -119,18 +112,7 @@ async def test_abort_if_already_setup(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await hass.async_block_till_done()
+    result = await __async_start_flow(hass)
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_ACCOUNT_NAME: "test",
-            CONF_CONTAINER_NAME: "test",
-            CONF_STORAGE_ACCOUNT_KEY: "test",
-        },
-    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
