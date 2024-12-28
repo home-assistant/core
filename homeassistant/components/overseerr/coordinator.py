@@ -43,4 +43,8 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
         try:
             return await self.client.get_request_count()
         except OverseerrConnectionError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

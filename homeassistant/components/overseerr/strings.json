@@ -44,5 +44,10 @@
         "name": "Available requests"
       }
     }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error connecting to the Overseerr instance: {error}"
+    }
   }
 }
