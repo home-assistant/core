@@ -17,7 +17,11 @@ class TileEntity(CoordinatorEntity[TileCoordinator]):
         super().__init__(coordinator)
         self._tile = coordinator.tile
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._tile.uuid)}, name=self._tile.name
+            identifiers={(DOMAIN, self._tile.uuid)},
+            name=self._tile.name,
+            manufacturer="Tile",
+            hw_version=self._tile.hardware_version,
+            sw_version=self._tile.firmware_version,
         )
 
     @property
