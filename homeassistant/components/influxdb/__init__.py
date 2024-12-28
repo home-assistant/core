@@ -334,6 +334,8 @@ def get_influx_connection(  # noqa: C901
     conf, test_write=False, test_read=False
 ) -> InfluxClient:
     """Create the correct influx connection for the API version."""
+    conf = create_influx_url(conf)
+
     kwargs: dict[str, Any] = {
         CONF_TIMEOUT: TIMEOUT,
     }
@@ -476,14 +478,14 @@ def get_influx_connection(  # noqa: C901
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
-    config = entry.data
+    config = dict(entry.data.items())
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, config, True)
     except ConnectionError as err:
         raise ConfigEntryNotReady(err) from err
 
-    event_to_json = _generate_event_to_json(dict(config.items()))
+    event_to_json = _generate_event_to_json(config)
     max_tries = config.get(CONF_RETRY_COUNT)
     influx_thread = hass.data[DOMAIN] = InfluxThread(
         hass, influx, event_to_json, max_tries
