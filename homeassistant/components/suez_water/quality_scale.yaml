@@ -58,7 +58,7 @@ rules:
     comment: only data entities
   entity-disabled-by-default:
     status: todo
-    comment: price can always be disabled and yesterday usage after #131166
+    comment: price can always be disabled and yesterday usage after https://github.com/home-assistant/core/pull/131166
   discovery:
     status: exempt
     comment: api only, nothing on local network to discover services
