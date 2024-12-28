@@ -9,5 +9,5 @@ async def init_integration(
     config_entry: VelbusConfigEntry,
 ) -> None:
     """Load the Velbus integration."""
-    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
