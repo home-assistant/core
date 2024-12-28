@@ -30,7 +30,6 @@ from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
-from homeassistant.components.stream.worker import StreamWorkerError
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import (
     CONF_AUTHENTICATION,
@@ -647,25 +646,6 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
-async def test_form_stream_worker_error(
-    hass: HomeAssistant, user_flow: ConfigFlowResult
-) -> None:
-    """Test we handle a StreamWorkerError and pass the message through."""
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=StreamWorkerError("Some message"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "unknown_with_details"}
-    assert result2["description_placeholders"] == {"error": "Some message"}
-
-
-@respx.mock
 async def test_form_stream_permission_error(
     hass: HomeAssistant, fakeimgbytes_png: bytes, user_flow: ConfigFlowResult
 ) -> None:
@@ -905,23 +885,22 @@ async def test_options_only_stream(
 
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
-async def test_form_options_stream_worker_error(
+async def test_form_options_permission_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test we handle a StreamWorkerError and pass the message through."""
+    """Test we handle a PermissionError and pass the message through."""
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     with patch(
         "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=StreamWorkerError("Some message"),
+        side_effect=PermissionError("Some message"),
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "unknown_with_details"}
-    assert result2["description_placeholders"] == {"error": "Some message"}
+    assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 
 @pytest.mark.usefixtures("fakeimg_png")
