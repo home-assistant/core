@@ -44,7 +44,7 @@ async def test_migration_version_rollback(
     hass: HomeAssistant,
     suez_client: AsyncMock,
 ) -> None:
-    """Test that a version rollback does not impact config."""
+    """Test that downgrading from a future version is not possible."""
     future_entry = MockConfigEntry(
         unique_id=MOCK_DATA[CONF_COUNTER_ID],
         domain=DOMAIN,
@@ -77,7 +77,7 @@ async def test_migration_version_1_to_2(
     hass: HomeAssistant,
     suez_client: AsyncMock,
 ) -> None:
-    """Test that a migration from 1 to 2 change unique_id."""
+    """Test that a migration from 1 to 2 changes the unique_id."""
     past_entry = MockConfigEntry(
         unique_id=MOCK_DATA[CONF_USERNAME],
         domain=DOMAIN,
