@@ -50,6 +50,15 @@
       },
       "ct_current": {
         "name": "CT current"
+      },
+      "slot_list": {
+        "name": "Charge slots"
+      },
+      "next_slot_start": {
+        "name": "Next charge slot start"
+      },
+      "next_slot_end": {
+        "name": "Next charge slot end"
       }
     }
   },

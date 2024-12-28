@@ -13,7 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    UnitOfElectricCurrent,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -60,6 +66,31 @@ SENSOR_CHARGE_SESSION = [
         suggested_display_precision=1,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda client: client.energy,
+    ),
+    OhmeSensorDescription(
+        key="battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        suggested_display_precision=0,
+        value_fn=lambda client: client.battery,
+    ),
+    OhmeSensorDescription(
+        key="slot_list",
+        translation_key="slot_list",
+        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
+        or STATE_UNKNOWN,
+    ),
+    OhmeSensorDescription(
+        key="next_slot_start",
+        translation_key="next_slot_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda client: client.next_slot_start,
+    ),
+    OhmeSensorDescription(
+        key="next_slot_end",
+        translation_key="next_slot_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda client: client.next_slot_end,
     ),
 ]
 

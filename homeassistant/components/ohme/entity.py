@@ -28,7 +28,7 @@ class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
     def __init__(
         self,
         coordinator: OhmeBaseCoordinator,
-        entity_description: EntityDescription,
+        entity_description: OhmeEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
