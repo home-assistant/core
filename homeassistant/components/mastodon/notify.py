@@ -14,14 +14,12 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BASE_URL, DEFAULT_URL, DOMAIN, LOGGER
+from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"
@@ -46,51 +44,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MastodonNotificationService | None:
     """Get the Mastodon notification service."""
-
-    if not discovery_info:
-        # Import config entry
-
-        import_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-
-        if (
-            import_result["type"] == FlowResultType.ABORT
-            and import_result["reason"] != "already_configured"
-        ):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{import_result["reason"]}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{import_result["reason"]}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            return None
-
-        ir.async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-
+    if discovery_info is None:
         return None
 
     client: Mastodon = discovery_info.get("client")
