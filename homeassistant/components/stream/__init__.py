@@ -155,7 +155,7 @@ def _convert_stream_options(
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
     except vol.Invalid as exc:
-        raise HomeAssistantError("Invalid stream options") from exc
+        raise HomeAssistantError(f"Invalid stream options: {exc}") from exc
 
     if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
         stream_settings.hls_part_timeout += extra_wait_time
