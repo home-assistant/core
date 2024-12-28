@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,12 +38,12 @@ async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) 
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
-    assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
-    assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z"
+    assert current_price.state == "0.28914"
+    assert last_price.state == "0.28914"
+    assert next_price.state == STATE_UNKNOWN
 
 
-@pytest.mark.freeze_time("2024-11-06T00:00:00+01:00")
+@pytest.mark.freeze_time("2024-11-05T00:00:00+01:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_no_previous_price(
     hass: HomeAssistant, load_int: ConfigEntry
@@ -56,6 +57,6 @@ async def test_sensor_no_previous_price(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
-    assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
-    assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z
+    assert current_price.state == "0.25073"
+    assert last_price.state == STATE_UNKNOWN
+    assert next_price.state == "0.07636"

@@ -2,7 +2,6 @@
 
 from enum import StrEnum
 
-from deebot_client.commands import StationAction
 from deebot_client.events import LifeSpan
 
 DOMAIN = "ecovacs"
@@ -20,10 +19,7 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.SIDE_BRUSH,
     LifeSpan.UNIT_CARE,
     LifeSpan.ROUND_MOP,
-    LifeSpan.STATION_FILTER,
 )
-
-SUPPORTED_STATION_ACTIONS = (StationAction.EMPTY_DUSTBIN,)
 
 LEGACY_SUPPORTED_LIFESPANS = (
     "main_brush",

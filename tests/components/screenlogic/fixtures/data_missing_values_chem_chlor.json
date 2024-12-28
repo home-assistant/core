@@ -619,7 +619,7 @@
       },
       "heat_mode": {
         "name": "Spa Heat Mode",
-        "value": 3,
+        "value": 0,
         "device_type": "enum",
         "enum_options": [
           "Off",

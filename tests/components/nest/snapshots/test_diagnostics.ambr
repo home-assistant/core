@@ -31,9 +31,6 @@
         }),
       }),
     ]),
-    'subscriber': dict({
-      'start': 1,
-    }),
   })
 # ---
 # name: test_device_diagnostics
@@ -88,8 +85,5 @@
         }),
       }),
     ]),
-    'subscriber': dict({
-      'start': 1,
-    }),
   })
 # ---

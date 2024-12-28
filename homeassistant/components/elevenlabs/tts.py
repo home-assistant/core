@@ -22,7 +22,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElevenLabsConfigEntry
+from . import EleventLabsConfigEntry
 from .const import (
     CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
@@ -56,7 +56,7 @@ def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ElevenLabsConfigEntry,
+    config_entry: EleventLabsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""

@@ -58,7 +58,6 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
                 "data"
             ]
         ]
-        client.login.return_value = None
         yield client
 
 

@@ -22,8 +22,6 @@ from . import InComfortConfigEntry
 from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
-PARALLEL_UPDATES = 0
-
 
 @dataclass(frozen=True, kw_only=True)
 class IncomfortSensorEntityDescription(SensorEntityDescription):

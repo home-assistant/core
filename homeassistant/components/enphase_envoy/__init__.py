@@ -77,7 +77,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator = entry.runtime_data
+    coordinator: EnphaseUpdateCoordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

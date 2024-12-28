@@ -17,9 +17,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: done
+  docs-high-level-description: todo
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

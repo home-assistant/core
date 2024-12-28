@@ -10,7 +10,11 @@ from xbox.webapi.api.provider.smartglass.models import SmartglassConsoleList
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 
 from . import api
 from .const import DOMAIN
@@ -36,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(session)
+    auth = api.AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass), session
+    )
 
     client = XboxLiveClient(auth)
     consoles: SmartglassConsoleList = await client.smartglass.get_console_list()

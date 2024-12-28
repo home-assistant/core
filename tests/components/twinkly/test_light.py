@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
-from ttls.client import TwinklyError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,7 +25,6 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
-    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -280,28 +278,6 @@ async def test_turn_off(
     mock_twinkly_client.turn_off.assert_called_once_with()
 
 
-async def test_no_current_movie(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_twinkly_client: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test handling of missing current movie data."""
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] == "1 Rainbow"
-
-    mock_twinkly_client.get_current_movie.side_effect = TwinklyError
-
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("light.tree_1").state != STATE_UNAVAILABLE
-    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] is None
-
-
 async def test_update_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -317,10 +293,6 @@ async def test_update_name(
     """
 
     await setup_integration(hass, mock_config_entry)
-
-    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
-
-    assert dev_entry.name == "Tree 1"
 
     mock_twinkly_client.get_details.return_value["device_name"] = "new_device_name"
 

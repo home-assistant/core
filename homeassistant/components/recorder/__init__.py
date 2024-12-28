@@ -28,14 +28,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
-# Pre-import backup to avoid it being imported
-# later when the import executor is busy and delaying
-# startup
-from . import (
-    backup,  # noqa: F401
-    entity_registry,
-    websocket_api,
-)
+from . import entity_registry, websocket_api
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,

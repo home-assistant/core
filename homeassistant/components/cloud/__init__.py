@@ -36,14 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
 
-# Pre-import backup to avoid it being imported
-# later when the import executor is busy and delaying
-# startup
-from . import (
-    account_link,
-    backup,  # noqa: F401
-    http_api,
-)
+from . import account_link, http_api
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,

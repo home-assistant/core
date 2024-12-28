@@ -10,7 +10,11 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 
 from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -51,7 +55,7 @@ def mock_twinkly_client() -> Generator[AsyncMock]:
         client.get_firmware_version.return_value = load_json_object_fixture(
             "get_firmware_version.json", DOMAIN
         )
-        client.get_saved_movies.return_value = load_json_object_fixture(
+        client.get_saved_movies.return_value = load_json_array_fixture(
             "get_saved_movies.json", DOMAIN
         )
         client.get_current_movie.return_value = load_json_object_fixture(

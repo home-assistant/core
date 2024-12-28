@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from . import ElevenLabsConfigEntry
+from . import EleventLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
@@ -92,7 +92,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: ElevenLabsConfigEntry,
+        config_entry: EleventLabsConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ElevenLabsOptionsFlow(config_entry)
@@ -101,7 +101,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 class ElevenLabsOptionsFlow(OptionsFlow):
     """ElevenLabs options flow."""
 
-    def __init__(self, config_entry: ElevenLabsConfigEntry) -> None:
+    def __init__(self, config_entry: EleventLabsConfigEntry) -> None:
         """Initialize options flow."""
         self.api_key: str = config_entry.data[CONF_API_KEY]
         # id -> name

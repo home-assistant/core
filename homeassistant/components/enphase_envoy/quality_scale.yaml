@@ -35,7 +35,11 @@ rules:
     comment: no events used.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: done
+    comment: |
+      async_unload_entry- coordinator: EnphaseUpdateCoordinator = entry.runtime_data
+      You can remove the EnphaseUpdateCoordinator as the type can now be inferred thanks to the typed config entry
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done

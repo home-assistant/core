@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import enum
 from typing import Any
 
-from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
@@ -16,7 +15,6 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     PRESET_SLEEP,
 )
-from homeassistant.config_entries import ConfigEntry
 
 
 class HeatingProgram(enum.StrEnum):
@@ -80,17 +78,6 @@ class ViCareDevice:
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
-
-
-@dataclass(frozen=True)
-class ViCareData:
-    """ViCare data class."""
-
-    client: PyViCare
-    devices: list[ViCareDevice]
-
-
-type ViCareConfigEntry = ConfigEntry[ViCareData]
 
 
 @dataclass(frozen=True)

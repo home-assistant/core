@@ -252,7 +252,6 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
-    "backup",
 ]
 
 

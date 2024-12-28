@@ -15,7 +15,6 @@ from pyheos import (
     const,
 )
 import pytest
-import pytest_asyncio
 
 from homeassistant.components import ssdp
 from homeassistant.components.heos import DOMAIN
@@ -143,8 +142,8 @@ def input_sources_fixture() -> Sequence[InputSource]:
     return [source]
 
 
-@pytest_asyncio.fixture(name="dispatcher")
-async def dispatcher_fixture() -> Dispatcher:
+@pytest.fixture(name="dispatcher")
+def dispatcher_fixture() -> Dispatcher:
     """Create a dispatcher for testing."""
     return Dispatcher()
 

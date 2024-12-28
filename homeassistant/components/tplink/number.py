@@ -51,14 +51,6 @@ NUMBER_DESCRIPTIONS: Final = (
         key="temperature_offset",
         mode=NumberMode.BOX,
     ),
-    TPLinkNumberEntityDescription(
-        key="pan_step",
-        mode=NumberMode.BOX,
-    ),
-    TPLinkNumberEntityDescription(
-        key="tilt_step",
-        mode=NumberMode.BOX,
-    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
@@ -114,7 +106,6 @@ class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
         await self._feature.set_value(int(value))
 
     @callback
-    def _async_update_attrs(self) -> bool:
+    def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_native_value = cast(float | None, self._feature.value)
-        return True

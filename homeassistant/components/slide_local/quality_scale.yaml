@@ -50,15 +50,13 @@ rules:
   diagnostics: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   dynamic-devices:
     status: exempt
     comment: |
       Slide_local represents a single physical device, no dynamic changes of devices possible (besides removal of instance itself).
-  discovery-update-info: done
-  repair-issues:
-    status: exempt
-    comment: No issues/repairs.
+  discovery-update-info: todo
+  repair-issues: todo
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

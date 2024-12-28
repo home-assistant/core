@@ -16,12 +16,14 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
+from .types import ViCareDevice, ViCareRequiredKeysMixinWithSet
 from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,14 +67,16 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ViCareConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
+
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            config_entry.runtime_data.devices,
+            device_list,
         )
     )
 

@@ -89,15 +89,6 @@ class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
 
     deprecated_info: DeprecatedInfo | None = None
-    available_fn: Callable[[Device], bool] = lambda _: True
-
-
-@dataclass(frozen=True, kw_only=True)
-class TPLinkModuleEntityDescription(EntityDescription):
-    """Base class for a TPLink module based entity description."""
-
-    deprecated_info: DeprecatedInfo | None = None
-    available_fn: Callable[[Device], bool] = lambda _: True
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -209,18 +200,15 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     @abstractmethod
     @callback
-    def _async_update_attrs(self) -> bool:
-        """Platforms implement this to update the entity internals.
-
-        The return value is used to the set the entity available attribute.
-        """
+    def _async_update_attrs(self) -> None:
+        """Platforms implement this to update the entity internals."""
         raise NotImplementedError
 
     @callback
     def _async_call_update_attrs(self) -> None:
         """Call update_attrs and make entity unavailable on errors."""
         try:
-            available = self._async_update_attrs()
+            self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
             if self._attr_available:
                 _LOGGER.warning(
@@ -231,7 +219,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 )
             self._attr_available = False
         else:
-            self._attr_available = available
+            self._attr_available = True
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyheos import Heos, HeosError, HeosOptions, HeosPlayer, const as heos_const
+from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
@@ -58,9 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
-    controller = Heos(HeosOptions(host, all_progress_events=False, auto_reconnect=True))
+    controller = Heos(host, all_progress_events=False)
     try:
-        await controller.connect()
+        await controller.connect(auto_reconnect=True)
     # Auto reconnect only operates if initial connection was successful.
     except HeosError as error:
         await controller.disconnect()

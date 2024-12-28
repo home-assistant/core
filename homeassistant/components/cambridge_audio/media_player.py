@@ -13,7 +13,6 @@ from aiostreammagic import (
 )
 
 from homeassistant.components.media_player import (
-    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -25,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CambridgeAudioConfigEntry, media_browser
+from . import CambridgeAudioConfigEntry
 from .const import (
     CAMBRIDGE_MEDIA_TYPE_AIRABLE,
     CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO,
@@ -35,8 +34,7 @@ from .const import (
 from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
-    MediaPlayerEntityFeature.BROWSE_MEDIA
-    | MediaPlayerEntityFeature.SELECT_SOURCE
+    MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.TURN_ON
     | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -340,13 +338,3 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
 
         if media_type == CAMBRIDGE_MEDIA_TYPE_INTERNET_RADIO:
             await self.client.play_radio_url("Radio", media_id)
-
-    async def async_browse_media(
-        self,
-        media_content_type: MediaType | str | None = None,
-        media_content_id: str | None = None,
-    ) -> BrowseMedia:
-        """Implement the media browsing helper."""
-        return await media_browser.async_browse_media(
-            self.hass, self.client, media_content_id, media_content_type
-        )

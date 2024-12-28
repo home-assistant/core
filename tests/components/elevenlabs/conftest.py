@@ -24,19 +24,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-def _client_mock():
-    client_mock = AsyncMock()
-    client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
-    client_mock.models.get_all.return_value = MOCK_MODELS
-    return client_mock
-
-
 @pytest.fixture
 def mock_async_client() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
+    client_mock = AsyncMock()
+    client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
+    client_mock.models.get_all.return_value = MOCK_MODELS
     with patch(
-        "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
-        return_value=_client_mock(),
+        "elevenlabs.AsyncElevenLabs", return_value=client_mock
     ) as mock_async_client:
         yield mock_async_client
 
@@ -46,7 +41,7 @@ def mock_async_client_fail() -> Generator[AsyncMock]:
     """Override async ElevenLabs client."""
     with patch(
         "homeassistant.components.elevenlabs.config_flow.AsyncElevenLabs",
-        return_value=_client_mock(),
+        return_value=AsyncMock(),
     ) as mock_async_client:
         mock_async_client.side_effect = ApiError
         yield mock_async_client

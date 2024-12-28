@@ -1,7 +1,6 @@
 """Common fixtures for the Suez Water tests."""
 
 from collections.abc import Generator
-from datetime import date
 from unittest.mock import AsyncMock, patch
 
 from pysuez import AggregatedData, PriceResult
@@ -57,22 +56,22 @@ def mock_suez_client() -> Generator[AsyncMock]:
         result = AggregatedData(
             value=160,
             current_month={
-                date.fromisoformat("2024-01-01"): 130,
-                date.fromisoformat("2024-01-02"): 145,
+                "2024-01-01": 130,
+                "2024-01-02": 145,
             },
             previous_month={
-                date.fromisoformat("2024-12-01"): 154,
-                date.fromisoformat("2024-12-02"): 166,
+                "2024-12-01": 154,
+                "2024-12-02": 166,
             },
             current_year=1500,
             previous_year=1000,
             attribution=ATTRIBUTION,
             highest_monthly_consumption=2558,
             history={
-                date.fromisoformat("2024-01-01"): 130,
-                date.fromisoformat("2024-01-02"): 145,
-                date.fromisoformat("2024-12-01"): 154,
-                date.fromisoformat("2024-12-02"): 166,
+                "2024-01-01": 130,
+                "2024-01-02": 145,
+                "2024-12-01": 154,
+                "2024-12-02": 166,
             },
         )
 

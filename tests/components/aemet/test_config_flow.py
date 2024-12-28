@@ -6,11 +6,7 @@ from aemet_opendata.exceptions import AuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.aemet.const import (
-    CONF_RADAR_UPDATES,
-    CONF_STATION_UPDATES,
-    DOMAIN,
-)
+from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -65,20 +61,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("user_input", "expected"),
-    [
-        ({}, {CONF_RADAR_UPDATES: False, CONF_STATION_UPDATES: True}),
-        (
-            {CONF_RADAR_UPDATES: False, CONF_STATION_UPDATES: False},
-            {CONF_RADAR_UPDATES: False, CONF_STATION_UPDATES: False},
-        ),
-    ],
+    ("user_input", "expected"), [({}, True), ({CONF_STATION_UPDATES: False}, False)]
 )
 async def test_form_options(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     user_input: dict[str, bool],
-    expected: dict[str, bool],
+    expected: bool,
 ) -> None:
     """Test the form options."""
 
@@ -109,8 +98,7 @@ async def test_form_options(
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert entry.options == {
-            CONF_RADAR_UPDATES: expected[CONF_RADAR_UPDATES],
-            CONF_STATION_UPDATES: expected[CONF_STATION_UPDATES],
+            CONF_STATION_UPDATES: expected,
         }
 
         await hass.async_block_till_done()

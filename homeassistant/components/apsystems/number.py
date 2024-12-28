@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from aiohttp import ClientConnectorError
-
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
@@ -47,13 +45,7 @@ class ApSystemsMaxOutputNumber(ApSystemsEntity, NumberEntity):
 
     async def async_update(self) -> None:
         """Set the state with the value fetched from the inverter."""
-        try:
-            status = await self._api.get_max_power()
-        except (TimeoutError, ClientConnectorError):
-            self._attr_available = False
-        else:
-            self._attr_available = True
-            self._attr_native_value = status
+        self._attr_native_value = await self._api.get_max_power()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the desired output power."""

@@ -20,7 +20,6 @@ from .coordinator import (
     PeblarRuntimeData,
 )
 from .entity import PeblarEntity
-from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -79,13 +78,11 @@ class PeblarSwitchEntity(
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
-    @peblar_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator.api, True)
         await self.coordinator.async_request_refresh()
 
-    @peblar_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator.api, False)

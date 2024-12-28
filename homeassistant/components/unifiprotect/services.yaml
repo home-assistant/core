@@ -53,10 +53,3 @@ remove_privacy_zone:
       required: true
       selector:
         text:
-get_user_keyring_info:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: unifiprotect

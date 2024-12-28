@@ -12,7 +12,6 @@ from yolink.const import (
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
-    ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
 
@@ -45,7 +44,6 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ATTR_DEVICE_WATER_METER_CONTROLLER,
 ]
 
 
@@ -85,15 +83,6 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.SMOKE,
         value=lambda state: state.get("smokeAlarm"),
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
-    ),
-    YoLinkBinarySensorEntityDescription(
-        key="pipe_leak_detected",
-        state_key="alarm",
-        device_class=BinarySensorDeviceClass.MOISTURE,
-        value=lambda state: state.get("leak") if state is not None else None,
-        exists_fn=lambda device: (
-            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
-        ),
     ),
 )
 

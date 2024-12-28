@@ -171,8 +171,8 @@ class MaxCubeClimate(ClimateEntity):
         else:
             return None
 
-        # Assume heating when valve is open.
-        if valve:
+        # Assume heating when valve is open
+        if valve > 0:
             return HVACAction.HEATING
 
         return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE

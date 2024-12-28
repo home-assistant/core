@@ -66,7 +66,7 @@ async def async_setup_entry(
 
 
 class EcovacsSelectEntity(
-    EcovacsDescriptionEntity[CapabilitySetTypes[EventT, [str], str]],
+    EcovacsDescriptionEntity[CapabilitySetTypes[EventT, str]],
     SelectEntity,
 ):
     """Ecovacs select entity."""
@@ -77,7 +77,7 @@ class EcovacsSelectEntity(
     def __init__(
         self,
         device: Device,
-        capability: CapabilitySetTypes[EventT, [str], str],
+        capability: CapabilitySetTypes[EventT, str],
         entity_description: EcovacsSelectEntityDescription,
         **kwargs: Any,
     ) -> None:

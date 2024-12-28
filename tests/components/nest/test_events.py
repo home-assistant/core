@@ -9,38 +9,26 @@ from __future__ import annotations
 from collections.abc import Mapping
 import datetime
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import patch
 
-import aiohttp
+from google_nest_sdm.device import Device
+from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from .common import (
-    DEVICE_ID,
-    TEST_CLIP_URL,
-    TEST_IMAGE_URL,
-    CreateDevice,
-    PlatformSetup,
-    create_nest_event,
-)
+from .common import CreateDevice
 
 from tests.common import async_capture_events
 
 DOMAIN = "nest"
+DEVICE_ID = "some-device-id"
 PLATFORM = "camera"
 NEST_EVENT = "nest_event"
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
-GENERATE_IMAGE_URL_RESPONSE = {
-    "results": {
-        "url": TEST_IMAGE_URL,
-        "token": "g.0.eventToken",
-    },
-}
-IMAGE_BYTES_FROM_EVENT = b"test url image bytes"
 
 EVENT_KEYS = {"device_id", "type", "timestamp", "zones"}
 
@@ -116,7 +104,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     """Create an EventMessage for events."""
     if not timestamp:
         timestamp = utcnow()
-    return create_nest_event(
+    return EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -125,6 +113,7 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
                 "events": events,
             },
         },
+        auth=None,
     )
 
 
@@ -178,18 +167,13 @@ async def test_event(
 
     entry = entity_registry.async_get("camera.front")
     assert entry is not None
-    assert entry.unique_id == f"{DEVICE_ID}-camera"
+    assert entry.unique_id == "some-device-id-camera"
     assert entry.domain == "camera"
 
     device = device_registry.async_get(entry.device_id)
     assert device.name == "Front"
     assert device.model == expected_model
     assert device.identifiers == {("nest", DEVICE_ID)}
-
-    auth.responses = [
-        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
-        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
-    ]
 
     timestamp = utcnow()
     await subscriber.async_receive_event(create_event(event_trait, timestamp=timestamp))
@@ -316,11 +300,12 @@ async def test_event_message_without_device_event(
     events = async_capture_events(hass, NEST_EVENT)
     await setup_platform()
     timestamp = utcnow()
-    event = create_nest_event(
+    event = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
         },
+        auth=None,
     )
     await subscriber.async_receive_event(event)
     await hass.async_block_till_done()
@@ -354,7 +339,7 @@ async def test_doorbell_event_thread(
                 },
                 "sdm.devices.events.CameraClipPreview.ClipPreview": {
                     "eventSessionId": EVENT_SESSION_ID,
-                    "previewUrl": TEST_CLIP_URL,
+                    "previewUrl": "image-url-1",
                 },
             },
         },
@@ -371,7 +356,9 @@ async def test_doorbell_event_thread(
             "eventThreadState": "STARTED",
         }
     )
-    await subscriber.async_receive_event(create_nest_event(message_data_1))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_1, auth=None)
+    )
 
     # Publish message #2 that sends a no-op update to end the event thread
     timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
@@ -382,7 +369,9 @@ async def test_doorbell_event_thread(
             "eventThreadState": "ENDED",
         }
     )
-    await subscriber.async_receive_event(create_nest_event(message_data_2))
+    await subscriber.async_receive_event(
+        EventMessage.create_event(message_data_2, auth=None)
+    )
     await hass.async_block_till_done()
 
     # The event is only published once
@@ -426,7 +415,7 @@ async def test_doorbell_event_session_update(
                 },
                 "sdm.devices.events.CameraClipPreview.ClipPreview": {
                     "eventSessionId": EVENT_SESSION_ID,
-                    "previewUrl": TEST_CLIP_URL,
+                    "previewUrl": "image-url-1",
                 },
             },
             timestamp=timestamp1,
@@ -448,7 +437,7 @@ async def test_doorbell_event_session_update(
                 },
                 "sdm.devices.events.CameraClipPreview.ClipPreview": {
                     "eventSessionId": EVENT_SESSION_ID,
-                    "previewUrl": TEST_CLIP_URL,
+                    "previewUrl": "image-url-1",
                 },
             },
             timestamp=timestamp2,
@@ -470,11 +459,7 @@ async def test_doorbell_event_session_update(
 
 
 async def test_structure_update_event(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    subscriber: AsyncMock,
-    setup_platform: PlatformSetup,
-    create_device: CreateDevice,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
 ) -> None:
     """Test a pubsub message for a new device being added."""
     events = async_capture_events(hass, NEST_EVENT)
@@ -483,8 +468,8 @@ async def test_structure_update_event(
     # Entity for first device is registered
     assert entity_registry.async_get("camera.front")
 
-    create_device.create(
-        raw_data={
+    new_device = Device.MakeDevice(
+        {
             "name": "device-id-2",
             "type": "sdm.devices.types.CAMERA",
             "traits": {
@@ -494,13 +479,16 @@ async def test_structure_update_event(
                 "sdm.devices.traits.CameraLiveStream": {},
             },
         },
+        auth=None,
     )
+    device_manager = await subscriber.async_get_device_manager()
+    device_manager.add_device(new_device)
 
     # Entity for new devie has not yet been loaded
     assert not entity_registry.async_get("camera.back")
 
     # Send a message that triggers the device to be loaded
-    message = create_nest_event(
+    message = EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
@@ -510,10 +498,17 @@ async def test_structure_update_event(
                 "object": "enterprise/example/devices/some-device-id2",
             },
         },
+        auth=None,
     )
-
-    await subscriber.async_receive_event(message)
-    await hass.async_block_till_done()
+    with (
+        patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]),
+        patch(
+            "homeassistant.components.nest.api.GoogleNestSubscriber",
+            return_value=subscriber,
+        ),
+    ):
+        await subscriber.async_receive_event(message)
+        await hass.async_block_till_done()
 
     # No home assistant events published
     assert not events

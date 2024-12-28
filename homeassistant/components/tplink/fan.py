@@ -106,7 +106,7 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
         await self.fan_module.set_fan_speed_level(value_in_range)
 
     @callback
-    def _async_update_attrs(self) -> bool:
+    def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         fan_speed = self.fan_module.fan_speed_level
         self._attr_is_on = fan_speed != 0
@@ -114,4 +114,3 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
             self._attr_percentage = ranged_value_to_percentage(SPEED_RANGE, fan_speed)
         else:
             self._attr_percentage = None
-        return True

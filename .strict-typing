@@ -362,7 +362,6 @@ homeassistant.components.openuv.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
-homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*

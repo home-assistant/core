@@ -1976,17 +1976,6 @@ class _SchemaVersion47Migrator(_SchemaVersionMigrator, target_version=47):
         )
 
 
-class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
-    def _apply_update(self) -> None:
-        """Version specific update method."""
-        # https://github.com/home-assistant/core/issues/134002
-        # If the system has unmigrated states rows, we need to
-        # ensure they are migrated now so the new optimized
-        # queries can be used. For most systems, this should
-        # be very fast and nothing will be migrated.
-        _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
-
-
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2120,8 +2109,7 @@ def _migrate_columns_to_timestamp(
             connection.execute(
                 text(
                     'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
-                    "cast(substr(time_fired,-7) AS FLOAT) "
-                    "WHERE time_fired_ts is NULL;"
+                    "cast(substr(time_fired,-7) AS FLOAT);"
                 )
             )
             connection.execute(
@@ -2129,8 +2117,7 @@ def _migrate_columns_to_timestamp(
                     'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
                     "cast(substr(last_updated,-7) AS FLOAT), "
                     'last_changed_ts=strftime("%s",last_changed) + '
-                    "cast(substr(last_changed,-7) AS FLOAT) "
-                    " WHERE last_updated_ts is NULL;"
+                    "cast(substr(last_changed,-7) AS FLOAT);"
                 )
             )
     elif engine.dialect.name == SupportedDialect.MYSQL:

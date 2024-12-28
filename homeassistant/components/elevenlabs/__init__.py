@@ -35,10 +35,10 @@ class ElevenLabsData:
     model: Model
 
 
-type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
+type EleventLabsConfigEntry = ConfigEntry[ElevenLabsData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) -> bool:
     """Set up ElevenLabs text-to-speech from a config entry."""
     entry.add_update_listener(update_listener)
     httpx_client = get_async_client(hass)
@@ -60,13 +60,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: EleventLabsConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(
-    hass: HomeAssistant, config_entry: ElevenLabsConfigEntry
+    hass: HomeAssistant, config_entry: EleventLabsConfigEntry
 ) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

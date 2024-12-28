@@ -447,7 +447,6 @@ FLOWS = {
         "otp",
         "ourgroceries",
         "overkiz",
-        "overseerr",
         "ovo_energy",
         "owntracks",
         "p1_monitor",

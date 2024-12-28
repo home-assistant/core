@@ -13,13 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -27,19 +21,9 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
-from homeassistant.util.json import JsonValueType
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import (
-    ATTR_MESSAGE,
-    DOMAIN,
-    KEYRINGS_KEY_TYPE,
-    KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
-    KEYRINGS_KEY_TYPE_ID_NFC,
-    KEYRINGS_ULP_ID,
-    KEYRINGS_USER_FULL_NAME,
-    KEYRINGS_USER_STATUS,
-)
+from .const import ATTR_MESSAGE, DOMAIN
 from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
@@ -47,14 +31,12 @@ SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
-SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
-    SERVICE_GET_USER_KEYRING_INFO,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.All(
@@ -82,15 +64,6 @@ REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
         {
             **cv.ENTITY_SERVICE_FIELDS,
             vol.Required(ATTR_NAME): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
-)
-
-GET_USER_KEYRING_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
         },
     ),
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
@@ -232,73 +205,26 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     await chime.save_device(data_before_changed)
 
 
-async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
-    """Get the user keyring info."""
-    camera = _async_get_ufp_camera(call)
-    ulp_users = camera.api.bootstrap.ulp_users.as_list()
-    if not ulp_users:
-        raise HomeAssistantError("No users found, please check Protect permissions.")
-
-    user_keyrings: list[JsonValueType] = [
-        {
-            KEYRINGS_USER_FULL_NAME: user.full_name,
-            KEYRINGS_USER_STATUS: user.status,
-            KEYRINGS_ULP_ID: user.ulp_id,
-            "keys": [
-                {
-                    KEYRINGS_KEY_TYPE: key.registry_type,
-                    **(
-                        {KEYRINGS_KEY_TYPE_ID_FINGERPRINT: key.registry_id}
-                        if key.registry_type == "fingerprint"
-                        else {}
-                    ),
-                    **(
-                        {KEYRINGS_KEY_TYPE_ID_NFC: key.registry_id}
-                        if key.registry_type == "nfc"
-                        else {}
-                    ),
-                }
-                for key in camera.api.bootstrap.keyrings.as_list()
-                if key.ulp_user == user.ulp_id
-            ],
-        }
-        for user in ulp_users
-    ]
-
-    response: ServiceResponse = {"users": user_keyrings}
-    return response
-
-
 SERVICES = [
     (
         SERVICE_ADD_DOORBELL_TEXT,
         add_doorbell_text,
         DOORBELL_TEXT_SCHEMA,
-        SupportsResponse.NONE,
     ),
     (
         SERVICE_REMOVE_DOORBELL_TEXT,
         remove_doorbell_text,
         DOORBELL_TEXT_SCHEMA,
-        SupportsResponse.NONE,
     ),
     (
         SERVICE_SET_CHIME_PAIRED,
         set_chime_paired_doorbells,
         CHIME_PAIRED_SCHEMA,
-        SupportsResponse.NONE,
     ),
     (
         SERVICE_REMOVE_PRIVACY_ZONE,
         remove_privacy_zone,
         REMOVE_PRIVACY_ZONE_SCHEMA,
-        SupportsResponse.NONE,
-    ),
-    (
-        SERVICE_GET_USER_KEYRING_INFO,
-        get_user_keyring_info,
-        GET_USER_KEYRING_INFO_SCHEMA,
-        SupportsResponse.ONLY,
     ),
 ]
 
@@ -306,7 +232,5 @@ SERVICES = [
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
 
-    for name, method, schema, supports_response in SERVICES:
-        hass.services.async_register(
-            DOMAIN, name, method, schema=schema, supports_response=supports_response
-        )
+    for name, method, schema in SERVICES:
+        hass.services.async_register(DOMAIN, name, method, schema=schema)

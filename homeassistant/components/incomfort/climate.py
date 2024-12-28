@@ -22,8 +22,6 @@ from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortEntity
 
-PARALLEL_UPDATES = 1
-
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -19,6 +19,7 @@ from PyViCare.PyViCareVentilationDevice import (
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -26,8 +27,9 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareConfigEntry, ViCareDevice
+from .types import ViCareDevice
 from .utils import get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,14 +104,17 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ViCareConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare fan platform."""
+
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
+
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            config_entry.runtime_data.devices,
+            device_list,
         )
     )
 
