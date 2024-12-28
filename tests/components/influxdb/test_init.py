@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
 
@@ -1481,79 +1482,72 @@ async def test_event_listener_attribute_name_conflict(
     assert write_api.call_args == get_mock_call(body)
 
 
-# @pytest.mark.parametrize(
-#     ("mock_client", "config_base", "get_write_api", "get_mock_call", "test_exception"),
-#     [
-#         (
-#             influxdb.DEFAULT_API_VERSION,
-#             BASE_V1_CONFIG,
-#             _get_write_api_mock_v1,
-#             influxdb.DEFAULT_API_VERSION,
-#             ConnectionError("fail"),
-#         ),
-#         (
-#             influxdb.DEFAULT_API_VERSION,
-#             BASE_V1_CONFIG,
-#             _get_write_api_mock_v1,
-#             influxdb.DEFAULT_API_VERSION,
-#             influxdb.exceptions.InfluxDBClientError("fail"),
-#         ),
-#         (
-#             influxdb.DEFAULT_API_VERSION,
-#             BASE_V1_CONFIG,
-#             _get_write_api_mock_v1,
-#             influxdb.DEFAULT_API_VERSION,
-#             influxdb.exceptions.InfluxDBServerError("fail"),
-#         ),
-#         (
-#             influxdb.API_VERSION_2,
-#             BASE_V2_CONFIG,
-#             _get_write_api_mock_v2,
-#             influxdb.API_VERSION_2,
-#             ConnectionError("fail"),
-#         ),
-#         (
-#             influxdb.API_VERSION_2,
-#             BASE_V2_CONFIG,
-#             _get_write_api_mock_v2,
-#             influxdb.API_VERSION_2,
-#             influxdb.ApiException(http_resp=MagicMock()),
-#         ),
-#     ],
-#     indirect=["mock_client", "get_mock_call"],
-# )
-# async def test_connection_failure_on_startup(
-#     hass: HomeAssistant,
-#     caplog: pytest.LogCaptureFixture,
-#     mock_client,
-#     config_base,
-#     get_write_api,
-#     get_mock_call,
-#     test_exception,
-# ) -> None:
-#     """Test the event listener when it fails to connect to Influx on startup."""
-#     config = config_base
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "get_write_api", "get_mock_call", "test_exception"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBClientError("fail"),
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+            influxdb.exceptions.InfluxDBServerError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            ConnectionError("fail"),
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+            influxdb.ApiException(http_resp=MagicMock()),
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_connection_failure_on_startup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client,
+    config_base,
+    get_write_api,
+    get_mock_call,
+    test_exception,
+) -> None:
+    """Test the event listener when it fails to connect to Influx on startup."""
+    config = config_base
 
-#     write_api = get_write_api(mock_client)
-#     write_api.side_effect = test_exception
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
 
-#     mock_entry = MockConfigEntry(
-#         domain="influxdb", unique_id=config["host"], data=config
-#     )
+    mock_entry = MockConfigEntry(
+        domain="influxdb", unique_id=config["host"], data=config
+    )
 
-#     mock_entry.add_to_hass(hass)
+    mock_entry.add_to_hass(hass)
 
-#     with patch(f"{INFLUX_PATH}.event_helper") as event_helper:
-#         await hass.config_entries.async_setup(mock_entry.entry_id)
-#         await hass.async_block_till_done()
-#         # assert await async_setup_component(hass, influxdb.DOMAIN, config_base)
-#         # await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
-#         assert (
-#             len([record for record in caplog.records if record.levelname == "ERROR"])
-#             == 1
-#         )
-#         event_helper.call_later.assert_called_once()
+    assert mock_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
