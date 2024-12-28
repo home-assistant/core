@@ -30,9 +30,6 @@
       }
     },
     "button": {
-      "ble_enabled": {
-        "name": "Disable Bluetooth"
-      },
       "settings_save": {
         "name": "Save settings"
       },

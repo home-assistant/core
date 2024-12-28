@@ -9,12 +9,6 @@
       }
     },
     "button": {
-      "ble_enabled": {
-        "default": "mdi:bluetooth-off",
-        "state": {
-          "unknown": "mdi:bluetooth"
-        }
-      },
       "settings_save": {
         "default": "mdi:content-save-cog"
       },
