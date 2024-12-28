@@ -97,17 +97,16 @@ class PlaybackProxyView(HomeAssistantView):
                 request, config_entry_id, channel, stream_res, vod_type, filename, retry
             )
 
-        if reolink_response.content_type != "video/mp4":
-            return web.Response(
-                body=f"Reolink playback expected video/mp4 but got {reolink_response.content_type}",
-                status=HTTPStatus.BAD_REQUEST,
-            )
+        if reolink_response.content_type not in ["video/mp4", "apolication/octet-stream"]:
+            err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
+            _LOGGER.error(err_str)
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         response = web.StreamResponse(
             status=200,
             reason="OK",
             headers={
-                "Content-Type": reolink_response.content_type,
+                "Content-Type": "video/mp4",
             },
         )
 
