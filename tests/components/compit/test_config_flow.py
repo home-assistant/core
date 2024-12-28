@@ -1,6 +1,6 @@
 """Test the Compit config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from compit_inext_api import Gate, SystemInfo
 import pytest
