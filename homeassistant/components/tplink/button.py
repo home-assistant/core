@@ -50,6 +50,22 @@ BUTTON_DESCRIPTIONS: Final = [
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
     ),
+    TPLinkButtonEntityDescription(
+        key="pan_left",
+        available_fn=lambda dev: dev.is_on,
+    ),
+    TPLinkButtonEntityDescription(
+        key="pan_right",
+        available_fn=lambda dev: dev.is_on,
+    ),
+    TPLinkButtonEntityDescription(
+        key="tilt_up",
+        available_fn=lambda dev: dev.is_on,
+    ),
+    TPLinkButtonEntityDescription(
+        key="tilt_down",
+        available_fn=lambda dev: dev.is_on,
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
@@ -88,5 +104,6 @@ class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):
         """Execute action."""
         await self._feature.set_value(True)
 
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """No need to update anything."""
+        return self.entity_description.available_fn(self._device)

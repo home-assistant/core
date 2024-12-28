@@ -34,7 +34,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -124,8 +123,6 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
-
-    await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])

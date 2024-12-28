@@ -24,6 +24,7 @@ from .coordinator import (
     PeblarRuntimeData,
 )
 from .entity import PeblarEntity
+from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -45,7 +46,7 @@ DESCRIPTIONS = [
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=6,
-        native_max_value_fn=lambda x: x.system_information.hardware_max_current,
+        native_max_value_fn=lambda x: x.user_configuration_coordinator.data.user_defined_charge_limit_current,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         set_value_fn=lambda x, v: x.ev_interface(charge_current_limit=int(v) * 1000),
         value_fn=lambda x: round(x.ev.charge_current_limit / 1000),
@@ -94,6 +95,7 @@ class PeblarNumberEntity(
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @peblar_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(self.coordinator.api, value)
