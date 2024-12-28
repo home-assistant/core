@@ -59,6 +59,7 @@ def mock_apsystems() -> Generator[MagicMock]:
             operating=False,
         )
         mock_api.get_device_power_status.return_value = True
+        mock_api.get_max_power.return_value = 666
         yield mock_api
 
 

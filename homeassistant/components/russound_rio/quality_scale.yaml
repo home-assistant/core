@@ -10,10 +10,7 @@ rules:
       This integration uses a push API. No polling required.
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Missing unique_id check in test_form() and test_import(). Test for adding same device twice missing.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -21,14 +18,12 @@ rules:
     comment: |
       This integration does not provide additional actions.
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: Can use RussoundConfigEntry in async_unload_entry
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -42,10 +37,10 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  parallel-updates: todo
-  test-coverage: todo
+  parallel-updates: done
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: |
@@ -66,17 +61,26 @@ rules:
   stale-devices: todo
   diagnostics: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      There are no entities that require icons.
+  reconfiguration-flow: done
   dynamic-devices: todo
   discovery-update-info: todo
-  repair-issues: done
-  docs-use-cases: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
+  docs-data-update: done
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      There are no known limitations beyond the push API delay noted in Troubleshooting.
+  docs-troubleshooting: done
   docs-examples: todo
 
   # Platinum
@@ -85,4 +89,4 @@ rules:
     status: exempt
     comment: |
       This integration uses telnet exclusively and does not make http calls.
-  strict-typing: todo
+  strict-typing: done
