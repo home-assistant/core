@@ -578,6 +578,7 @@ async def ws_start_preview(
     _LOGGER.debug("Generating websocket handler for generic camera preview")
 
     flow_id = msg["flow_id"]
+    flow: GenericIPCamConfigFlow | GenericOptionsFlowHandler
     if msg.get("flow_type", "config_flow") == "config_flow":
         flow = cast(
             GenericIPCamConfigFlow,
@@ -585,7 +586,7 @@ async def ws_start_preview(
         )
     else:  # (flow type == "options flow")
         flow = cast(
-            GenericIPCamConfigFlow,
+            GenericOptionsFlowHandler,
             hass.config_entries.options._progress.get(flow_id),  # noqa: SLF001
         )
     user_input = flow.preview_cam
