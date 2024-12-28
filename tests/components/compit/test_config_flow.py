@@ -109,22 +109,25 @@ def mock_reauth_entry():
     )
 
 
-async def test_async_step_reauth_confirm_success(hass: HomeAssistant) -> None:
+async def test_async_step_reauth_confirm_success(
+    hass: HomeAssistant, mock_reauth_entry: config_entries.ConfigEntry
+) -> None:
     """Test reauth confirm step with successful authentication."""
-    entry = mock_reauth_entry()
-    hass.config_entries._entries[entry.entry_id] = entry
+    hass.config_entries._entries[mock_reauth_entry.entry_id] = mock_reauth_entry
 
     flow = CompitConfigFlow()
     flow.hass = hass
-    flow._get_reauth_entry = Mock(return_value=entry)
+    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry)
+    flow.context = {"source": config_entries.SOURCE_REAUTH}
 
-    with patch(
-        "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
-        return_value=AsyncMock(
-            return_value=SystemInfo(
-                gates=[Gate(label="Test", code="1", devices=[], id=1)]
-            )
+    with (
+        patch(
+            "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
+            return_value=SystemInfo(gates=[]),
         ),
+        patch.object(flow, "async_set_unique_id", return_value=None),
+        patch.object(flow, "_abort_if_unique_id_mismatch", return_value=None),
+        patch.object(flow, "_abort_if_unique_id_configured", return_value=None),
     ):
         result = await flow.async_step_reauth_confirm(
             {CONF_PASSWORD: "new_password", CONF_EMAIL: "test@example.com"}
@@ -134,11 +137,13 @@ async def test_async_step_reauth_confirm_success(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
 
 
-async def test_async_step_reauth_confirm_invalid_auth(hass: HomeAssistant) -> None:
+async def test_async_step_reauth_confirm_invalid_auth(
+    hass: HomeAssistant, mock_reauth_entry: config_entries.ConfigEntry
+) -> None:
     """Test reauth confirm step with invalid authentication."""
     flow = CompitConfigFlow()
     flow.hass = hass
-    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry())
+    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry)
 
     with patch(
         "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
@@ -150,11 +155,13 @@ async def test_async_step_reauth_confirm_invalid_auth(hass: HomeAssistant) -> No
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_async_step_reauth_confirm_cannot_connect(hass: HomeAssistant) -> None:
+async def test_async_step_reauth_confirm_cannot_connect(
+    hass: HomeAssistant, mock_reauth_entry: config_entries.ConfigEntry
+) -> None:
     """Test reauth confirm step with connection error."""
     flow = CompitConfigFlow()
     flow.hass = hass
-    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry())
+    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry)
 
     with patch(
         "homeassistant.components.compit.config_flow.CompitAPI.authenticate",
@@ -166,11 +173,13 @@ async def test_async_step_reauth_confirm_cannot_connect(hass: HomeAssistant) -> 
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_async_step_reauth_confirm_unknown_error(hass: HomeAssistant) -> None:
+async def test_async_step_reauth_confirm_unknown_error(
+    hass: HomeAssistant, mock_reauth_entry: config_entries.ConfigEntry
+) -> None:
     """Test reauth confirm step with unknown error."""
     flow = CompitConfigFlow()
     flow.hass = hass
-    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry())
+    flow._get_reauth_entry = Mock(return_value=mock_reauth_entry)
 
     with patch(
         "homeassistant.components.compit.config_flow.CompitAPI.authenticate",

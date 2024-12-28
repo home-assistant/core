@@ -59,7 +59,7 @@ class CompitConfigFlow(ConfigFlow, domain=DOMAIN):
             if (
                 system_info
                 and isinstance(system_info, SystemInfo)
-                and system_info.gates
+                and system_info.gates is not None
             ):
                 await self.async_set_unique_id(user_input[CONF_EMAIL])
 
