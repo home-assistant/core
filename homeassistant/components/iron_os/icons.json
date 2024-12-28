@@ -176,13 +176,13 @@
         "default": "mdi:meter-electric-outline"
       },
       "idle_screen_details": {
-        "default": "mdi:card-bulleted-settings-outline",
+        "default": "mdi:card-bulleted-outline",
         "state": {
           "off": "mdi:card-bulleted-off-outline"
         }
       },
       "solder_screen_details": {
-        "default": "mdi:card-bulleted-settings-outline",
+        "default": "mdi:card-bulleted-outline",
         "state": {
           "off": "mdi:card-bulleted-off-outline"
         }
