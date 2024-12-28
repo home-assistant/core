@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 from devialet.const import NORMAL_INPUTS
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
+    async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,12 +27,18 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER, SOUND_MODES
 from .coordinator import DevialetCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 SUPPORT_DEVIALET = (
     MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+)
+
+SUPPORT_MEDIA = (
+    MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 DEVIALET_TO_HA_FEATURE_MAP = {
@@ -41,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Devialet entry."""
     client = hass.data[DOMAIN][entry.entry_id]
-    coordinator = DevialetCoordinator(hass, client)
+    coordinator = DevialetCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([DevialetMediaPlayerEntity(coordinator, entry)])
@@ -119,13 +133,19 @@ class DevialetMediaPlayerEntity(
         """Flag media player features that are supported."""
         features = SUPPORT_DEVIALET
 
+        if (
+            self.coordinator.client.is_system_leader
+            and self.coordinator.client.upnp_available
+        ):
+            features |= SUPPORT_MEDIA  # Only the leader supports media
+
         if self.coordinator.client.source_state is None:
-            return features
+            return features  # No current source, basic features
 
-        if not self.coordinator.client.available_options:
-            return features
+        if not self.coordinator.client.available_operations:
+            return features  # No extra features available
 
-        for option in self.coordinator.client.available_options:
+        for option in self.coordinator.client.available_operations:
             features |= DEVIALET_TO_HA_FEATURE_MAP.get(option, 0)
         return features
 
@@ -153,6 +173,49 @@ class DevialetMediaPlayerEntity(
             if sound_mode == mode:
                 return pretty_name
         return None
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the WebSocket media browsing helper."""
+        return await media_source.async_browse_media(
+            self.hass,
+            media_content_id,
+            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+        )
+
+    async def async_play_media(
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Play media."""
+        _LOGGER.debug("Playing media: %s, %s, %s", media_type, media_id, kwargs)
+
+        if not self.coordinator.client.upnp_available:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="upnp_error"
+            )
+
+        if media_source.is_media_source_id(media_id):
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = sourced_media.url
+            media_type = sourced_media.mime_type
+
+        media_id = async_process_play_media_url(self.hass, media_id)
+
+        if not await self.coordinator.client.async_play_url_source(
+            media_id, media_type, "Home Assistant", True
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="media_error"
+            )
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
