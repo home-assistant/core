@@ -60,12 +60,10 @@ class S3FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        # LOGGER.info("Yeah, we're in the user step: %s", user_input)
         errors = {}
 
         if user_input is not None:
             # Create a session using your credentials
-            # LOGGER.info("Creating a session using the provided credentials")
             session = boto3.Session(
                 aws_access_key_id=user_input.get(CONF_ACCESS_KEY),
                 aws_secret_access_key=user_input.get(CONF_SECRET_KEY),
@@ -73,7 +71,6 @@ class S3FlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 # Create an S3 client
-                # LOGGER.info("Creating an S3 client")
                 s3_client = await self.hass.async_add_executor_job(
                     session.client,
                     "s3",
@@ -84,30 +81,23 @@ class S3FlowHandler(ConfigFlow, domain=DOMAIN):
                     user_input.get(CONF_S3_URL),
                 )
                 # Retrieve the list of buckets
-                # LOGGER.info("Retrieving the list of buckets")
                 response = await self.hass.async_add_executor_job(
                     get_buckets, s3_client
                 )
-                # LOGGER.info("Response: %s", response)
                 self._buckets = response
-                # LOGGER.info("Buckets: %s", self._buckets)
             except ValueError as e:
-                # LOGGER.info("ValueError: %s", e)
                 error_message = str(e)
                 errors["base"] = error_message
             except ClientError as e:
-                # LOGGER.info("ClientError: %s", e)
                 error_message = str(e)
                 errors["base"] = error_message
             except Exception as e:  # noqa: BLE001
-                # LOGGER.info("Exception: %s", e)
                 error_message = str(e)
                 if error_message in (None, ""):
                     errors["base"] = "unknown"
                 else:
                     errors["base"] = error_message
             else:
-                # LOGGER.info("No errors")
                 self._authorization = user_input
                 return await self.async_step_bucket()
         else:
@@ -147,7 +137,6 @@ class S3FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a bucket selection."""
-        # LOGGER.info("Yeah, we're in the bucket step: %s", user_input)
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_BUCKET])
             self._abort_if_unique_id_configured()
@@ -163,7 +152,6 @@ class S3FlowHandler(ConfigFlow, domain=DOMAIN):
                 data=self._authorization | user_input,
             )
 
-        # LOGGER.info("Buckets: %s", self._buckets)
         return self.async_show_form(
             step_id="bucket",
             data_schema=vol.Schema(

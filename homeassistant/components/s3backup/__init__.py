@@ -33,7 +33,6 @@ class S3ConfigEntryData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Set up S3 from a config entry."""
-    LOGGER.info("Entry details: %s", entry)
     # Create a session using your credentials
     session = boto3.Session(
         aws_access_key_id=entry.data[CONF_ACCESS_KEY],
@@ -71,12 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Unload S3 config entry."""
-    LOGGER.info("Unloading S3 config entry")
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
     return True
 
 
 async def _notify_backup_listeners(hass: HomeAssistant) -> None:
-    LOGGER.info("Notifying backup listeners")
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()

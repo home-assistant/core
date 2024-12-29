@@ -25,7 +25,6 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Register the backup agents."""
-    # LOGGER.info("Async_get_backup_agents")
     entries: list[S3ConfigEntry] = hass.config_entries.async_entries(DOMAIN)
     return [S3BackupAgent(hass, entry) for entry in entries]
 
@@ -124,12 +123,6 @@ class S3BackupAgent(BackupAgent):
 
         return ChunkAsyncStreamIterator(downloaded_file["Body"])
 
-        # # Use an executor to avoid blocking the event loop
-        # for chunk in await self._hass.async_add_executor_job(
-        #     downloaded_file["Body"].iter_chunks, 1024
-        # ):
-        #     yield chunk
-
     async def async_upload_backup(
         self,
         *,
@@ -185,7 +178,7 @@ class S3BackupAgent(BackupAgent):
                 file_info,
             )
 
-            LOGGER.info(
+            LOGGER.debug(
                 f"File '{file_path}' uploaded to '{bucket_name}/{file_path}' with metadata."
             )
         except Exception as err:
@@ -278,7 +271,7 @@ class S3BackupAgent(BackupAgent):
                 )
 
         else:
-            LOGGER.info("No objects found in the bucket")
+            LOGGER.debug("No objects found in the bucket")
 
         return backups
 
