@@ -15,6 +15,7 @@ from pyheos import (
     const,
 )
 import pytest
+import pytest_asyncio
 
 from homeassistant.components import ssdp
 from homeassistant.components.heos import DOMAIN
@@ -27,7 +28,10 @@ from tests.common import MockConfigEntry
 def config_entry_fixture():
     """Create a mock HEOS config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, title="Controller (127.0.0.1)"
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        unique_id=DOMAIN,
     )
 
 
@@ -139,8 +143,8 @@ def input_sources_fixture() -> Sequence[InputSource]:
     return [source]
 
 
-@pytest.fixture(name="dispatcher")
-def dispatcher_fixture() -> Dispatcher:
+@pytest_asyncio.fixture(name="dispatcher")
+async def dispatcher_fixture() -> Dispatcher:
     """Create a dispatcher for testing."""
     return Dispatcher()
 
@@ -155,6 +159,25 @@ def discovery_data_fixture() -> dict:
         upnp={
             ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
+            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ssdp.ATTR_UPNP_SERIAL: None,
+            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        },
+    )
+
+
+@pytest.fixture(name="discovery_data_bedroom")
+def discovery_data_fixture_bedroom() -> dict:
+    """Return mock discovery data for testing."""
+    return ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://127.0.0.2:60006/upnp/desc/aios_device/aios_device.xml",
+        upnp={
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
             ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
             ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
             ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",

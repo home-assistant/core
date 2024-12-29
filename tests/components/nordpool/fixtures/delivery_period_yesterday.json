@@ -1,0 +1,272 @@
+{
+  "deliveryDateCET": "2024-11-04",
+  "version": 3,
+  "updatedAt": "2024-11-04T08:09:11.1931991Z",
+  "deliveryAreas": ["SE3", "SE4"],
+  "market": "DayAhead",
+  "multiAreaEntries": [
+    {
+      "deliveryStart": "2024-11-03T23:00:00Z",
+      "deliveryEnd": "2024-11-04T00:00:00Z",
+      "entryPerArea": {
+        "SE3": 66.13,
+        "SE4": 78.59
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T00:00:00Z",
+      "deliveryEnd": "2024-11-04T01:00:00Z",
+      "entryPerArea": {
+        "SE3": 72.54,
+        "SE4": 86.51
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T01:00:00Z",
+      "deliveryEnd": "2024-11-04T02:00:00Z",
+      "entryPerArea": {
+        "SE3": 73.12,
+        "SE4": 84.88
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T02:00:00Z",
+      "deliveryEnd": "2024-11-04T03:00:00Z",
+      "entryPerArea": {
+        "SE3": 171.97,
+        "SE4": 217.26
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T03:00:00Z",
+      "deliveryEnd": "2024-11-04T04:00:00Z",
+      "entryPerArea": {
+        "SE3": 181.05,
+        "SE4": 227.74
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T04:00:00Z",
+      "deliveryEnd": "2024-11-04T05:00:00Z",
+      "entryPerArea": {
+        "SE3": 360.71,
+        "SE4": 414.61
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T05:00:00Z",
+      "deliveryEnd": "2024-11-04T06:00:00Z",
+      "entryPerArea": {
+        "SE3": 917.83,
+        "SE4": 1439.33
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T06:00:00Z",
+      "deliveryEnd": "2024-11-04T07:00:00Z",
+      "entryPerArea": {
+        "SE3": 1426.17,
+        "SE4": 1695.95
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T07:00:00Z",
+      "deliveryEnd": "2024-11-04T08:00:00Z",
+      "entryPerArea": {
+        "SE3": 1350.96,
+        "SE4": 1605.13
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T08:00:00Z",
+      "deliveryEnd": "2024-11-04T09:00:00Z",
+      "entryPerArea": {
+        "SE3": 1195.06,
+        "SE4": 1393.46
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T09:00:00Z",
+      "deliveryEnd": "2024-11-04T10:00:00Z",
+      "entryPerArea": {
+        "SE3": 992.35,
+        "SE4": 1126.71
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T10:00:00Z",
+      "deliveryEnd": "2024-11-04T11:00:00Z",
+      "entryPerArea": {
+        "SE3": 976.63,
+        "SE4": 1107.97
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T11:00:00Z",
+      "deliveryEnd": "2024-11-04T12:00:00Z",
+      "entryPerArea": {
+        "SE3": 952.76,
+        "SE4": 1085.73
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T12:00:00Z",
+      "deliveryEnd": "2024-11-04T13:00:00Z",
+      "entryPerArea": {
+        "SE3": 1029.37,
+        "SE4": 1177.71
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T13:00:00Z",
+      "deliveryEnd": "2024-11-04T14:00:00Z",
+      "entryPerArea": {
+        "SE3": 1043.35,
+        "SE4": 1194.59
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T14:00:00Z",
+      "deliveryEnd": "2024-11-04T15:00:00Z",
+      "entryPerArea": {
+        "SE3": 1359.57,
+        "SE4": 1561.12
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T15:00:00Z",
+      "deliveryEnd": "2024-11-04T16:00:00Z",
+      "entryPerArea": {
+        "SE3": 1848.35,
+        "SE4": 2145.84
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T16:00:00Z",
+      "deliveryEnd": "2024-11-04T17:00:00Z",
+      "entryPerArea": {
+        "SE3": 2812.53,
+        "SE4": 3313.53
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T17:00:00Z",
+      "deliveryEnd": "2024-11-04T18:00:00Z",
+      "entryPerArea": {
+        "SE3": 2351.69,
+        "SE4": 2751.87
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T18:00:00Z",
+      "deliveryEnd": "2024-11-04T19:00:00Z",
+      "entryPerArea": {
+        "SE3": 1553.08,
+        "SE4": 1842.77
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T19:00:00Z",
+      "deliveryEnd": "2024-11-04T20:00:00Z",
+      "entryPerArea": {
+        "SE3": 1165.02,
+        "SE4": 1398.35
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T20:00:00Z",
+      "deliveryEnd": "2024-11-04T21:00:00Z",
+      "entryPerArea": {
+        "SE3": 1007.48,
+        "SE4": 1172.35
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T21:00:00Z",
+      "deliveryEnd": "2024-11-04T22:00:00Z",
+      "entryPerArea": {
+        "SE3": 792.09,
+        "SE4": 920.28
+      }
+    },
+    {
+      "deliveryStart": "2024-11-04T22:00:00Z",
+      "deliveryEnd": "2024-11-04T23:00:00Z",
+      "entryPerArea": {
+        "SE3": 465.38,
+        "SE4": 528.83
+      }
+    }
+  ],
+  "blockPriceAggregates": [
+    {
+      "blockName": "Off-peak 1",
+      "deliveryStart": "2024-11-03T23:00:00Z",
+      "deliveryEnd": "2024-11-04T07:00:00Z",
+      "averagePricePerArea": {
+        "SE3": {
+          "average": 408.69,
+          "min": 66.13,
+          "max": 1426.17
+        },
+        "SE4": {
+          "average": 530.61,
+          "min": 78.59,
+          "max": 1695.95
+        }
+      }
+    },
+    {
+      "blockName": "Peak",
+      "deliveryStart": "2024-11-04T07:00:00Z",
+      "deliveryEnd": "2024-11-04T19:00:00Z",
+      "averagePricePerArea": {
+        "SE3": {
+          "average": 1455.48,
+          "min": 952.76,
+          "max": 2812.53
+        },
+        "SE4": {
+          "average": 1692.2,
+          "min": 1085.73,
+          "max": 3313.53
+        }
+      }
+    },
+    {
+      "blockName": "Off-peak 2",
+      "deliveryStart": "2024-11-04T19:00:00Z",
+      "deliveryEnd": "2024-11-04T23:00:00Z",
+      "averagePricePerArea": {
+        "SE3": {
+          "average": 857.49,
+          "min": 465.38,
+          "max": 1165.02
+        },
+        "SE4": {
+          "average": 1004.95,
+          "min": 528.83,
+          "max": 1398.35
+        }
+      }
+    }
+  ],
+  "currency": "SEK",
+  "exchangeRate": 11.64318,
+  "areaStates": [
+    {
+      "state": "Final",
+      "areas": ["SE3", "SE4"]
+    }
+  ],
+  "areaAverages": [
+    {
+      "areaCode": "SE3",
+      "price": 1006.88
+    },
+    {
+      "areaCode": "SE4",
+      "price": 1190.46
+    }
+  ]
+}

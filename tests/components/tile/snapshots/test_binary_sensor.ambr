@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.wallet_lost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.wallet_lost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lost',
+    'platform': 'tile',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lost',
+    'unique_id': 'user@host.com_19264d2dffdbca32_lost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.wallet_lost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wallet Lost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wallet_lost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id_or_passport": "ID or passport number",
+          "phone_number": "Mobile phone number"
+        },
+        "data_description": {
+          "id_or_passport": "The government ID or passport number provided when registering with Ituran.",
+          "phone_number": "The mobile phone number provided when registering with Ituran. A one-time password will be sent to this mobile number."
+        }
+      },
+      "otp": {
+        "data": {
+          "otp": "OTP"
+        },
+        "data_description": {
+          "otp": "A one-time-password sent as a text message to the mobile phone number provided before."
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "A new one-time password will be sent to {phone_number}."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_otp": "OTP invalid",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "heading": {
+        "name": "Heading"
+      },
+      "last_update_from_vehicle": {
+        "name": "Last update from vehicle"
+      },
+      "mileage": {
+        "name": "Mileage"
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Ituran service."
+    },
+    "auth_error": {
+      "message": "Failed authenticating with the Ituran service, please reauthenticate the integration."
+    }
+  }
+}
