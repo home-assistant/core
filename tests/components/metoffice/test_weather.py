@@ -282,10 +282,10 @@ async def test_forecast_service(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert wavertree_data["wavertree_daily_mock"].call_count == 2
+    assert wavertree_data["wavertree_daily_mock"].call_count == 1
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
 
-    for forecast_type in ("daily", "twice_daily", "hourly"):
+    for forecast_type in ("daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
             service,
@@ -303,7 +303,7 @@ async def test_forecast_service(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    for forecast_type in ("daily", "twice_daily", "hourly"):
+    for forecast_type in ("daily", "hourly"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
             service,

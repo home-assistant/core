@@ -1,4 +1,4 @@
-"""Test the National Weather Service (NWS) config flow."""
+"""Test the MetOffice config flow."""
 
 import datetime
 import json
@@ -13,7 +13,6 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
-from homeassistant.util import utcnow
 
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
@@ -23,7 +22,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -180,9 +179,7 @@ async def test_reauth_flow(
         status_code=401,
     )
 
-    future_time = utcnow() + datetime.timedelta(minutes=40)
-    async_fire_time_changed(hass, future_time)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
