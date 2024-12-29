@@ -19,6 +19,9 @@ async def test_setup(
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     assert mock_entry.state == ConfigEntryState.LOADED
+    # Unload
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+    assert mock_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_connect_error(
