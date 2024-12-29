@@ -60,9 +60,7 @@ rules:
   docs-supported-devices:
     status: todo
     comment: Docs PR 36500
-  docs-supported-functions:
-    status: todo
-    comment: Docs PR 36515
+  docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
   docs-troubleshooting: done
