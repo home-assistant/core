@@ -21,7 +21,13 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device_dict[VS_SENSORS]:
         sensors.extend(device_dict[VS_SENSORS])
         platforms.append(Platform.SENSOR)
+
+    platforms.append(Platform.BINARY_SENSOR)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 

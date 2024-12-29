@@ -43,6 +43,11 @@
         "name": "Current voltage"
       }
     },
+    "binary_sensor": {
+      "screen_status": {
+        "name": "Screen Status"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
