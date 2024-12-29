@@ -49,7 +49,8 @@
         "data_description": {
           "url": "URL of the Habitica installation to connect to. Defaults to `{default_url}`",
           "api_user": "User ID of your Habitica account",
-          "api_key": "API Token of the Habitica account"
+          "api_key": "API Token of the Habitica account",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to a Habitica instance using a self-signed certificate"
         },
         "description": "You can retrieve your `User ID` and `API Token` from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to"
       }
@@ -365,6 +366,9 @@
     },
     "item_not_found": {
       "message": "Unable to use {item}, you don't own this item."
+    },
+    "invalid_auth": {
+      "message": "Authentication failed for {account}."
     }
   },
   "issues": {
