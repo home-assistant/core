@@ -1,6 +1,6 @@
 """Constants for the habitica integration."""
 
-from homeassistant.const import CONF_PATH
+from homeassistant.const import APPLICATION_NAME, CONF_PATH, __version__
 
 CONF_API_USER = "api_user"
 
@@ -44,9 +44,5 @@ SERVICE_SCORE_REWARD = "score_reward"
 SERVICE_TRANSFORMATION = "transformation"
 
 
-WARRIOR = "warrior"
-ROGUE = "rogue"
-HEALER = "healer"
-MAGE = "wizard"
-
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
+X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"

@@ -365,7 +365,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.10.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==5.1.0
+aioswitcher==6.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -929,7 +929,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habitipy==0.3.3
+habiticalib==0.3.1
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
@@ -1065,7 +1065,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2024.11.16.205004
+knx-frontend==2024.12.26.233449
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1945,7 +1945,7 @@ python-opensky==1.0.1
 python-otbr-api==2.6.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.3.0
+python-overseerr==0.4.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
