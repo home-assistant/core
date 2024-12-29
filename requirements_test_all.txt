@@ -1714,7 +1714,7 @@ pymonoprice==0.4
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==2.1.0
+pynecil==3.0.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
@@ -1723,7 +1723,7 @@ pynetgear==0.10.10
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.2.3
+pynordpool==0.2.4
 
 # homeassistant.components.nuki
 pynuki==1.6.3
@@ -1875,7 +1875,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.10.0
+pysqueezebox==0.11.1
 
 # homeassistant.components.suez_water
 pysuezV2==1.3.5
@@ -1943,6 +1943,9 @@ python-opensky==1.0.1
 # homeassistant.components.otbr
 # homeassistant.components.thread
 python-otbr-api==2.6.0
+
+# homeassistant.components.overseerr
+python-overseerr==0.3.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2480,7 +2483,7 @@ youless-api==2.1.2
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2024.12.13
+yt-dlp[default]==2024.12.23
 
 # homeassistant.components.zamg
 zamg==0.3.6

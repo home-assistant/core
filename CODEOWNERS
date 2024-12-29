@@ -1107,6 +1107,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
+/homeassistant/components/overseerr/ @joostlek
+/tests/components/overseerr/ @joostlek
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
