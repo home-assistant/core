@@ -9,6 +9,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionCoordinator
@@ -27,7 +28,7 @@ class OhmeRuntimeData:
     advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
 
 
-async def async_setup(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Ohme integration."""
     async_setup_services(hass)
 
