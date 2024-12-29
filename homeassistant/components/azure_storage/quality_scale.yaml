@@ -65,7 +65,10 @@ rules:
     status: exempt
     comment: |
       This integration connects to a single service.
-  diagnostics: todo
+  diagnostics:
+    status: exempt
+    comment: |
+      There is no data to diagnose.
   discovery-update-info:
     status: exempt
     comment: |
