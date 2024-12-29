@@ -6,7 +6,7 @@
         "description": "Set your account's API keys to enable Home Assistant to poll the status of your devices.",
         "data": {
           "client_id": "Client ID",
-          "client_secret": "Client Secret"
+          "client_secret": "Client secret"
         },
         "data_description": {
           "client_id": "Client ID provided by your iglooaccess account.",
