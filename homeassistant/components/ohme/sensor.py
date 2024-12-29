@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
@@ -73,24 +72,6 @@ SENSOR_CHARGE_SESSION = [
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=0,
         value_fn=lambda client: client.battery,
-    ),
-    OhmeSensorDescription(
-        key="slot_list",
-        translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
-    ),
-    OhmeSensorDescription(
-        key="next_slot_start",
-        translation_key="next_slot_start",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda client: client.next_slot_start,
-    ),
-    OhmeSensorDescription(
-        key="next_slot_end",
-        translation_key="next_slot_end",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda client: client.next_slot_end,
     ),
 ]
 

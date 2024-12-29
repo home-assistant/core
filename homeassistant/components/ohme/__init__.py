@@ -11,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionCoordinator
+from .services import async_setup_services
 
 type OhmeConfigEntry = ConfigEntry[OhmeRuntimeData]
 
@@ -53,6 +54,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
         await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = OhmeRuntimeData(*coordinators)
+
+    async_setup_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
