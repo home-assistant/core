@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfPower,
@@ -65,13 +64,6 @@ SENSOR_CHARGE_SESSION = [
         suggested_display_precision=1,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda client: client.energy,
-    ),
-    OhmeSensorDescription(
-        key="battery",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        suggested_display_precision=0,
-        value_fn=lambda client: client.battery,
     ),
 ]
 
