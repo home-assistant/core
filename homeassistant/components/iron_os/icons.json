@@ -8,6 +8,14 @@
         }
       }
     },
+    "button": {
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      },
+      "settings_reset": {
+        "default": "mdi:refresh"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
