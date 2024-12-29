@@ -67,6 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
         platforms.append(Platform.FAN)
+        platforms.append(Platform.BINARY_SENSOR)
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
@@ -75,8 +76,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device_dict[VS_SENSORS]:
         sensors.extend(device_dict[VS_SENSORS])
         platforms.append(Platform.SENSOR)
-
-    platforms.append(Platform.BINARY_SENSOR)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 

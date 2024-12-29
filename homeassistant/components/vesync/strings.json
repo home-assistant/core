@@ -44,8 +44,11 @@
       }
     },
     "binary_sensor": {
-      "screen_status": {
-        "name": "Screen Status"
+      "water_lacks": {
+        "name": "Low Water"
+      },
+      "online": {
+        "name": "Online"
       }
     },
     "fan": {

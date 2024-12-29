@@ -11,6 +11,7 @@ from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -35,9 +36,16 @@ class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
-        key="screen_status",
-        translation_key="screen_status",
-        is_on=lambda device: device.screen_status == "on",
+        key="water_lacks",
+        translation_key="water_lacks",
+        is_on=lambda device: device.water_lacks == "on",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    VeSyncBinarySensorEntityDescription(
+        key="is_on",
+        translation_key="online",
+        is_on=lambda device: device.is_on,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )
 
