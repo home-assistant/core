@@ -57,3 +57,6 @@ BASE_V2_CONFIG = {
     "component_config_glob": {},
     "component_config_domain": {},
 }
+
+INFLUX_PATH = "homeassistant.components.influxdb"
+INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"

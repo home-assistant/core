@@ -1,26 +1,48 @@
 """Test the influxdb config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.influxdb import DOMAIN
+from homeassistant.components.influxdb import API_VERSION_2, DEFAULT_API_VERSION, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import BASE_V1_CONFIG, BASE_V2_CONFIG
+from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH
 
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(name="mock_client")
+def mock_client_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
+    """Patch the InfluxDBClient object with mock for version under test."""
+    if request.param == API_VERSION_2:
+        client_target = f"{INFLUX_CLIENT_PATH}V2"
+    else:
+        client_target = INFLUX_CLIENT_PATH
+
+    with patch(client_target) as client:
+        yield client
+
+
 @pytest.mark.parametrize(
-    "config_base",
+    ("mock_client", "config_base"),
     [
-        BASE_V1_CONFIG,
-        BASE_V2_CONFIG,
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+        ),
     ],
+    indirect=["mock_client"],
 )
-async def test_import(hass: HomeAssistant, config_base) -> None:
+async def test_import(hass: HomeAssistant, mock_client, config_base) -> None:
     """Test we can import."""
     with patch(
         "homeassistant.components.influxdb.async_setup_entry", return_value=True
