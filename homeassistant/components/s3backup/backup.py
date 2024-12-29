@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any, Self
 
-from aiohttp import StreamReader
+from botocore.response import StreamingBody
 
 from homeassistant.components.backup import (
     AddonInfo,
@@ -57,7 +57,7 @@ class ChunkAsyncStreamIterator:
 
     __slots__ = ("_stream",)
 
-    def __init__(self, stream: StreamReader) -> None:
+    def __init__(self, stream: StreamingBody) -> None:
         """Initialize."""
         self._stream = stream
 
@@ -67,10 +67,14 @@ class ChunkAsyncStreamIterator:
 
     async def __anext__(self) -> bytes:
         """Yield next chunk."""
-        rv = await self._stream.readchunk()
-        if rv == (b"", False):
+        try:
+            rv = self._stream.next()
+        except StopIteration:
+            raise StopAsyncIteration from None
+
+        if rv == b"":
             raise StopAsyncIteration
-        return rv[0]
+        return rv
 
 
 class S3BackupAgent(BackupAgent):
@@ -116,9 +120,9 @@ class S3BackupAgent(BackupAgent):
                 f"Failed to download backup {backup_id}: HTTP {downloaded_file.ResponseMetadata.HTTPStatusCode}"
             )
 
-        LOGGER.debug("Downloading file: %s", downloaded_file["ResponseMetadata"])
+        LOGGER.debug("Downloading file: %s", downloaded_file)
 
-        return ChunkAsyncStreamIterator(downloaded_file["Body"].iter_chunks)
+        return ChunkAsyncStreamIterator(downloaded_file["Body"])
 
         # # Use an executor to avoid blocking the event loop
         # for chunk in await self._hass.async_add_executor_job(
