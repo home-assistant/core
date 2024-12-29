@@ -21,13 +21,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
+type OpenMeteoConfigEntry = ConfigEntry[OpenMeteoDataUpdateCoordinator]
+
 
 class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
     """A Open-Meteo Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenMeteoConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: OpenMeteoConfigEntry) -> None:
         """Initialize the Open-Meteo coordinator."""
         super().__init__(
             hass,
