@@ -60,3 +60,13 @@ BASE_V2_CONFIG = {
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
+
+
+def _get_write_api_mock_v1(mock_influx_client):
+    """Return the write api mock for the V1 client."""
+    return mock_influx_client.return_value.write_points
+
+
+def _get_write_api_mock_v2(mock_influx_client):
+    """Return the write api mock for the V2 client."""
+    return mock_influx_client.return_value.write_api.return_value.write
