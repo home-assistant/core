@@ -8,7 +8,6 @@ from igloohome_api import Api as IgloohomeApi, ApiException, GetDeviceInfoRespon
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IgloohomeConfigEntry
@@ -62,8 +61,8 @@ class IgloohomeBatteryEntity(IgloohomeBaseEntity, SensorEntity):
             response = await self.api.get_device_info(
                 deviceId=self.api_device_info.deviceId
             )
-        except (ApiException, ClientError) as e:
+        except (ApiException, ClientError):
             self._attr_available = False
-            raise HomeAssistantError from e
-        self._attr_available = True
-        self._attr_native_value = response.batteryLevel
+        else:
+            self._attr_available = True
+            self._attr_native_value = response.batteryLevel
