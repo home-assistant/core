@@ -83,16 +83,3 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         if self.entity_description.is_on is not None:
             return self.entity_description.is_on(self.device)
         return None
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        if (
-            self.entity_description.on_icon == self.entity_description.off_icon
-        ) is None:
-            return BinarySensorEntity.icon
-        return (
-            self.entity_description.on_icon
-            if self.is_on
-            else self.entity_description.off_icon
-        )
