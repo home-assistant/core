@@ -28,6 +28,7 @@ def mock_controller(mock_button: AsyncMock) -> Generator[AsyncMock]:
     ):
         cont = controller.return_value
         cont.get_all_binary_sensor.return_value = [mock_button]
+        cont.get_all_button.return_value = [mock_button]
         yield controller
 
 
@@ -47,7 +48,6 @@ def mock_button() -> AsyncMock:
     return channel
 
 
-# moddify this one to set the runtime_data correctly
 @pytest.fixture(name="config_entry")
 async def mock_config_entry(
     hass: HomeAssistant,
