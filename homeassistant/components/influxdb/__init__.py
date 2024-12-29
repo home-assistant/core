@@ -75,6 +75,7 @@ from .const import (
     CONF_TAGS_ATTRIBUTES,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
+    DEFAULT_HOST,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
@@ -511,6 +512,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)
 
     if conf is not None:
+        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
+            conf[CONF_HOST] = DEFAULT_HOST
+
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
