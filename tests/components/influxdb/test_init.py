@@ -91,7 +91,13 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
         (
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
-            {},
+            {
+                "api_version": influxdb.DEFAULT_API_VERSION,
+                "username": "user",
+                "password": "password",
+                "database": "db",
+                "verify_ssl": False,
+            },
             _get_write_api_mock_v1,
         ),
         (
@@ -99,19 +105,27 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
             BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
-                "organization": "org",
                 "token": "token",
+                "organization": "organization",
+                "bucket": "bucket",
             },
             _get_write_api_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
-async def test_setup_minimal_config(
+async def test_setup_config_full(
     hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
 ) -> None:
-    """Test the setup with minimal configuration and defaults."""
-    config = {"influxdb": {}}
+    """Test the setup with full configuration."""
+    config = {
+        "influxdb": {
+            "host": "host",
+            "port": 123,
+            "max_retries": 4,
+            "ssl": False,
+        }
+    }
     config["influxdb"].update(config_ext)
 
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
@@ -125,49 +139,15 @@ async def test_setup_minimal_config(
 
     entry = conf_entries[0]
 
+    full_config = config_base.copy()
+    full_config.update(config["influxdb"])
+    full_config.update(config_ext)
+
+    if "url" in full_config:
+        full_config.update({"url": "http://host:123"})
+
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data == config_base
-
-
-@pytest.mark.parametrize(
-    ("mock_client", "config_base", "config_ext", "get_write_api"),
-    [
-        (
-            influxdb.DEFAULT_API_VERSION,
-            BASE_V1_CONFIG,
-            {
-                "port": 123,
-                "username": "user",
-                "password": "password",
-            },
-            _get_write_api_mock_v1,
-        ),
-        (
-            influxdb.API_VERSION_2,
-            BASE_V2_CONFIG,
-            {"port": 123},
-            _get_write_api_mock_v2,
-        ),
-    ],
-    indirect=["mock_client"],
-)
-async def test_setup_config_full(
-    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
-) -> None:
-    """Test the setup with full configuration."""
-    config = config_base.copy()
-    config.update(config_ext)
-
-    mock_entry = MockConfigEntry(
-        domain="influxdb", unique_id=config["host"], data=config
-    )
-
-    mock_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert get_write_api(mock_client).call_count == 1
+    assert entry.data == full_config
 
 
 @pytest.mark.parametrize(
@@ -307,6 +287,93 @@ async def test_setup_config_ssl(
         await hass.async_block_till_done()
 
         assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "config_ext", "get_write_api"),
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {},
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "organization": "org",
+                "token": "token",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_minimal_config(
+    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
+) -> None:
+    """Test the setup with minimal configuration and defaults."""
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert get_write_api(mock_client).call_count == 2
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+    entry = conf_entries[0]
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data == config_base
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "get_write_api"),
+    [
+        (influxdb.DEFAULT_API_VERSION, {"username": "user"}, _get_write_api_mock_v1),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            {"token": "token", "organization": "organization"},
+            _get_write_api_mock_v1,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {"api_version": influxdb.API_VERSION_2},
+            _get_write_api_mock_v2,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {"api_version": influxdb.API_VERSION_2, "organization": "organization"},
+            _get_write_api_mock_v2,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "token": "token",
+                "organization": "organization",
+                "username": "user",
+                "password": "pass",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_invalid_config(
+    hass: HomeAssistant, mock_client, config_ext, get_write_api
+) -> None:
+    """Test the setup with invalid config or config options specified for wrong version."""
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert not await async_setup_component(hass, influxdb.DOMAIN, config)
 
 
 async def _setup(
