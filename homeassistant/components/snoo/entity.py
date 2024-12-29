@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import SnooCoordinator
 
 
-class SnooDescriptionEntity(CoordinatorEntity[SnooCoordinator], Entity):
+class SnooDescriptionEntity(CoordinatorEntity[SnooCoordinator]):
     """Defines an Snoo entity that uses a description."""
 
     _attr_has_entity_name = True
