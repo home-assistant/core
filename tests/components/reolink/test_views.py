@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 import logging
-from typing import cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from aiohttp import ClientResponse
+from aiohttp import ClientConnectionError, ClientResponse
 import pytest
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
@@ -31,6 +31,29 @@ TEST_URL = "http://test_url&token=test"
 TEST_ERROR = "TestError"
 
 
+def get_mock_session(
+    response: list[Any] | None = None,
+    content_length: int = 8,
+    content_type: str = TEST_MIME_TYPE_MP4,
+) -> Mock:
+    """Get a mock session to mock the camera response."""
+    if response is None:
+        response = [b"test", b"test", StopAsyncIteration()]
+
+    content = Mock()
+    content.__anext__ = AsyncMock(side_effect=response)
+    content.__aiter__ = Mock(return_value=content)
+
+    mock_response = Mock()
+    mock_response.content_length = content_length
+    mock_response.content_type = content_type
+    mock_response.content.iter_chunked = Mock(return_value=content)
+
+    mock_session = Mock()
+    mock_session.get = AsyncMock(return_value=mock_response)
+    return mock_session
+
+
 async def test_playback_proxy(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
@@ -41,16 +64,7 @@ async def test_playback_proxy(
     """Test successful playback proxy URL."""
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
-    content = Mock()
-    content.__anext__ = AsyncMock(side_effect=[b"test", b"test", StopAsyncIteration()])
-    content.__aiter__ = Mock(return_value=content)
-
-    mock_response = Mock()
-    mock_response.content_length = 8
-    mock_response.content.iter_chunked = Mock(return_value=content)
-
-    mock_session = Mock()
-    mock_session.request = AsyncMock(return_value=mock_response)
+    mock_session = get_mock_session()
 
     with patch(
         "homeassistant.components.reolink.views.async_get_clientsession",
@@ -112,16 +126,7 @@ async def test_playback_proxy_timeout(
     """Test playback proxy URL with a timeout in the second chunk."""
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
-    content = Mock()
-    content.__anext__ = AsyncMock(side_effect=[b"test", TimeoutError()])
-    content.__aiter__ = Mock(return_value=content)
-
-    mock_response = Mock()
-    mock_response.content_length = 4
-    mock_response.content.iter_chunked = Mock(return_value=content)
-
-    mock_session = Mock()
-    mock_session.request = AsyncMock(return_value=mock_response)
+    mock_session = get_mock_session([b"test", TimeoutError()], 4)
 
     with patch(
         "homeassistant.components.reolink.views.async_get_clientsession",
@@ -143,3 +148,68 @@ async def test_playback_proxy_timeout(
 
     assert await response.content.read() == b"test"
     assert response.status == 200
+
+
+async def test_playback_wrong_content(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test playback proxy URL with a wrong content type in the response."""
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+
+    mock_session = get_mock_session(content_type="video/x-flv")
+
+    with patch(
+        "homeassistant.components.reolink.views.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_FILE_NAME_MP4,
+        TEST_STREAM,
+        TEST_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_playback_connect_error(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test playback proxy URL with a connection error."""
+    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+
+    mock_session = Mock()
+    mock_session.get = AsyncMock(side_effect=ClientConnectionError(TEST_ERROR))
+
+    with patch(
+        "homeassistant.components.reolink.views.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        config_entry.entry_id,
+        TEST_CHANNEL,
+        TEST_FILE_NAME_MP4,
+        TEST_STREAM,
+        TEST_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = cast(ClientResponse, await http_client.get(proxy_url))
+
+    assert response.status == HTTPStatus.BAD_REQUEST
