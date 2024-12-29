@@ -4,7 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_overseerr import RequestCount
+from python_overseerr import MovieDetails, RequestCount, RequestResponse
+from python_overseerr.models import TVDetails
 
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
@@ -38,6 +39,15 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.get_request_count.return_value = RequestCount.from_json(
             load_fixture("request_count.json", DOMAIN)
+        )
+        client.get_requests.return_value = RequestResponse.from_json(
+            load_fixture("requests.json", DOMAIN)
+        ).results
+        client.get_movie_details.return_value = MovieDetails.from_json(
+            load_fixture("movie.json", DOMAIN)
+        )
+        client.get_tv_details.return_value = TVDetails.from_json(
+            load_fixture("tv.json", DOMAIN)
         )
         yield client
 

@@ -1,9 +1,9 @@
 """Define services for the Overseerr integration."""
 
 from dataclasses import asdict
-from typing import cast
+from typing import Any, cast
 
-from aiomealie import MealieConnectionError
+from python_overseerr import OverseerrClient, OverseerrConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -14,6 +14,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
@@ -54,6 +55,24 @@ def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> OverseerrConfi
     return cast(OverseerrConfigEntry, entry)
 
 
+async def get_media(
+    client: OverseerrClient, media_type: str, identifier: int
+) -> dict[str, Any]:
+    """Get media details."""
+    media = {}
+    try:
+        if media_type == "movie":
+            media = asdict(await client.get_movie_details(identifier))
+        if media_type == "tv":
+            media = asdict(await client.get_tv_details(identifier))
+    except OverseerrConnectionError:
+        return {}
+    if not media:
+        return {}
+    media["media_info"].pop("requests")
+    return media
+
+
 def setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Overseerr integration."""
 
@@ -61,14 +80,30 @@ def setup_services(hass: HomeAssistant) -> None:
         """Get requests made to Overseerr."""
         entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
         client = entry.runtime_data.client
+        kwargs: dict[str, Any] = {}
+        if status := call.data.get(ATTR_STATUS):
+            kwargs["status"] = status
+        if sort_order := call.data.get(ATTR_SORT_ORDER):
+            kwargs["sort"] = sort_order
+        if requested_by := call.data.get(ATTR_REQUESTED_BY):
+            kwargs["requested_by"] = requested_by
         try:
-            requests = await client.get_requests()
-        except MealieConnectionError as err:
+            requests = await client.get_requests(**kwargs)
+        except OverseerrConnectionError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
             ) from err
-        return {"requests": [asdict(x) for x in requests]}
+        result: list[dict[str, Any]] = []
+        for request in requests:
+            req = asdict(request)
+            assert request.media.tmdb_id
+            req["media"] = await get_media(
+                client, request.media.media_type, request.media.tmdb_id
+            )
+            result.append(req)
+
+        return {"requests": cast(list[JsonValueType], result)}
 
     hass.services.async_register(
         DOMAIN,
