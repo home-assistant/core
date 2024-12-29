@@ -32,6 +32,7 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
     Stream,
+    StreamOpenClientError,
     create_stream,
 )
 from homeassistant.config_entries import (
@@ -290,6 +291,8 @@ async def async_test_and_preview_stream(
             f"{DOMAIN}.test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
+    except StreamOpenClientError as err:
+        raise InvalidStreamException("unknown_with_details", str(err)) from err
     except PermissionError as err:
         raise InvalidStreamException("stream_not_permitted") from err
     except OSError as err:
