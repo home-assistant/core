@@ -15,9 +15,7 @@ rules:
     status: exempt
     comment: Plugwise integration has no custom actions
   common-modules: done
-  docs-high-level-description:
-    status: todo
-    comment: Partial in Docs PR 36087 - further work in 36500
+  docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-actions: done
@@ -57,9 +55,7 @@ rules:
   docs-use-cases:
     status: todo
     comment: Docs PR 36518
-  docs-supported-devices:
-    status: todo
-    comment: Docs PR 36500
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
