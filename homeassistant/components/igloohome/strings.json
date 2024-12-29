@@ -2,8 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add API Access Credentials",
-        "description": "Set your account's API keys to enable Home Assistant to poll the status of your devices.",
+        "description": "Copy & paste your [API access credentials](https://access.igloocompany.co/api-access) to give Home Assistant access to your account.",
         "data": {
           "client_id": "Client ID",
           "client_secret": "Client secret"
