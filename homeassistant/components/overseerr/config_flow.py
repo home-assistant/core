@@ -7,8 +7,16 @@ from python_overseerr.exceptions import OverseerrError
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_URL,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -49,6 +57,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_PORT: port,
                             CONF_SSL: url.scheme == "https",
                             CONF_API_KEY: user_input[CONF_API_KEY],
+                            CONF_WEBHOOK_ID: async_generate_id(),
                         },
                     )
         return self.async_show_form(
