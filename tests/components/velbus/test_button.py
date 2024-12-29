@@ -1,6 +1,6 @@
 """Velbus button platform tests."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -33,15 +33,13 @@ async def test_entities(
 async def test_button_press(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_button: AsyncMock,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test button press."""
-    with patch("homeassistant.components.velbus.PLATFORMS", [Platform.BUTTON]):
-        await init_integration(hass, config_entry)
-
-    chan = config_entry.runtime_data.controller.get_all_button()[0]
+    await init_integration(hass, config_entry)
     await hass.services.async_call(
         BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: "button.buttonon"}, blocking=True
     )
-    chan.press.assert_called_once_with()
+    mock_button.press.assert_called_once_with()
