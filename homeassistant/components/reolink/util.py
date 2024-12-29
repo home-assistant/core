@@ -85,16 +85,6 @@ def get_device_uid_and_ch(
     return (device_uid, ch, is_chime)
 
 
-def log_vod_url(url: str, camera_name: str) -> None:
-    """Log a playback URL while hiding credentials."""
-    url_log = url
-    if "&user=" in url_log:
-        url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
-    elif "&token=" in url_log:
-        url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
-    _LOGGER.debug("Opening VOD stream from %s: %s", camera_name, url_log)
-
-
 T = TypeVar("T")
 P = ParamSpec("P")
 

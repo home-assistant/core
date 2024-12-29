@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import SSLCipherList
 
-from .util import get_host, log_vod_url
+from .util import get_host
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,11 @@ class PlaybackProxyView(HomeAssistantView):
             return web.Response(body=str(err), status=HTTPStatus.BAD_REQUEST)
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            log_vod_url(reolink_url, host.api.camera_name(ch))
+            _LOGGER.debug(
+                "Opening VOD stream from %s: %s",
+                host.api.camera_name(ch),
+                host.api.hide_password(reolink_url),
+            )
 
         try:
             reolink_response = await self.session.get(
@@ -87,7 +91,9 @@ class PlaybackProxyView(HomeAssistantView):
                 ),
             )
         except ClientError as err:
-            err_str = f"Reolink playback error while getting mp4: {err!s}"
+            err_str = host.api.hide_password(
+                f"Reolink playback error while getting mp4: {err!s}"
+            )
             if retry <= 0:
                 _LOGGER.warning(err_str)
                 return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
@@ -97,7 +103,10 @@ class PlaybackProxyView(HomeAssistantView):
                 request, config_entry_id, channel, stream_res, vod_type, filename, retry
             )
 
-        if reolink_response.content_type not in ["video/mp4", "apolication/octet-stream"]:
+        if reolink_response.content_type not in [
+            "video/mp4",
+            "apolication/octet-stream",
+        ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
             _LOGGER.error(err_str)
             return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)

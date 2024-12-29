@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
-from .util import get_host, log_vod_url
+from .util import get_host
 from .views import async_generate_playback_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +91,11 @@ class ReolinkVODMediaSource(MediaSource):
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            log_vod_url(url, host.api.camera_name(channel))
+            _LOGGER.debug(
+                "Opening VOD stream from %s: %s",
+                host.api.camera_name(channel),
+                host.api.hide_password(url),
+            )
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
