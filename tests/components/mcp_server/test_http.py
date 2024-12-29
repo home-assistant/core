@@ -6,6 +6,7 @@ from http import HTTPStatus
 import json
 import logging
 
+import aiohttp
 import mcp
 import mcp.client.session
 import mcp.client.sse
@@ -41,10 +42,8 @@ INITIALIZE_MESSAGE = {
         },
     },
 }
-EXPECTED_ENDPOINT_EVENT = "event: endpoint\r\n"
+EVENT_PREFIX = "event: "
 DATA_PREFIX = "data: "
-EXPECTED_ENDPOINT_DATA = f"{DATA_PREFIX}{MESSAGES_API.format(session_id='')}"
-EXPECTED_ENDPOINT_MESSAGE = "event: message\r\n"
 
 
 @pytest.fixture
@@ -75,6 +74,31 @@ async def mock_entities(
     async_expose_entity(hass, CONVERSATION_DOMAIN, TEST_ENTITY, True)
 
 
+async def sse_response_reader(
+    response: aiohttp.ClientResponse,
+) -> AsyncGenerator[tuple[str, str]]:
+    """Read SSE responses from the server and emit event messages.
+
+    SSE responses are formatted as:
+        event: event-name
+        data: event-data
+    and this function emits each event-name and event-data as a tuple.
+    """
+    it = aiter(response.content)
+    while True:
+        line = (await anext(it)).decode()
+        if not line.startswith(EVENT_PREFIX):
+            raise ValueError("Expected event")
+        event = line[len(EVENT_PREFIX) :].strip()
+        line = (await anext(it)).decode()
+        if not line.startswith(DATA_PREFIX):
+            raise ValueError("Expected data")
+        data = line[len(DATA_PREFIX) :].strip()
+        line = (await anext(it)).decode()
+        assert line == "\r\n"
+        yield event, data
+
+
 async def test_http_sse(
     hass: HomeAssistant,
     setup_integration: None,
@@ -87,35 +111,24 @@ async def test_http_sse(
     # Start an SSE session
     response = await client.get(SSE_API)
     assert response.status == HTTPStatus.OK
-    sse_iter = aiter(response.content)
 
     # Decode a single SSE response that sends the messages endpoint
-    # event: endpoint
-    # data: /mcp_server/messages/session-id
-    line = (await anext(sse_iter)).decode()
-    assert line == EXPECTED_ENDPOINT_EVENT
-    line = (await anext(sse_iter)).decode()
-    assert line.startswith(EXPECTED_ENDPOINT_DATA)
-    endpoint_url = line[6:].strip()
-    line = (await anext(sse_iter)).decode()
-    assert line == "\r\n"
+    reader = sse_response_reader(response)
+    event, endpoint_url = await anext(reader)
+    assert event == "endpoint"
 
     # Send an initialize message on the messages endpoint
     response = await client.post(endpoint_url, json=INITIALIZE_MESSAGE)
     assert response.status == HTTPStatus.OK
 
     # Decode the initialize response event message from the SSE stream
-    line = (await anext(sse_iter)).decode()
-    assert line == EXPECTED_ENDPOINT_MESSAGE
-    line = (await anext(sse_iter)).decode()
-    assert line.startswith(DATA_PREFIX)
-    data = json.loads(line[6:])
-    assert data.get("jsonrpc") == "2.0"
-    assert data.get("id") == "request-id-1"
-    assert "serverInfo" in data.get("result", {})
-    assert "protocolVersion" in data.get("result", {})
-    line = (await anext(sse_iter)).decode()
-    assert line == "\r\n"
+    event, data = await anext(reader)
+    assert event == "message"
+    message = json.loads(data)
+    assert message.get("jsonrpc") == "2.0"
+    assert message.get("id") == "request-id-1"
+    assert "serverInfo" in message.get("result", {})
+    assert "protocolVersion" in message.get("result", {})
 
 
 async def test_http_messages_missing_session_id(
@@ -142,12 +155,9 @@ async def test_http_messages_invalid_message_format(
     client = await hass_client()
     response = await client.get(SSE_API)
     assert response.status == HTTPStatus.OK
-    it = aiter(response.content)
-    line = (await anext(it)).decode()
-    assert line == EXPECTED_ENDPOINT_EVENT
-    line = (await anext(it)).decode()
-    assert line.startswith(EXPECTED_ENDPOINT_DATA)
-    endpoint_url = line[6:].strip()
+    reader = sse_response_reader(response)
+    event, endpoint_url = await anext(reader)
+    assert event == "endpoint"
 
     response = await client.post(endpoint_url, json={"invalid": "message"})
     assert response.status == HTTPStatus.BAD_REQUEST
@@ -160,7 +170,11 @@ async def test_http_sse_multiple_config_entries(
     setup_integration: None,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test the SSE endpoint will fail with multiple config entries."""
+    """Test the SSE endpoint will fail with multiple config entries.
+
+    This cannot happen in practice as the integration only supports a single
+    config entry, but this is added for test coverage.
+    """
 
     config_entry = MockConfigEntry(
         domain="mcp_server", data={CONF_LLM_HASS_API: "llm-api-id"}
@@ -210,12 +224,9 @@ async def test_http_messages_no_config_entry(
     # Start an SSE session
     response = await client.get(SSE_API)
     assert response.status == HTTPStatus.OK
-    it = aiter(response.content)
-    line = (await anext(it)).decode()
-    assert line == EXPECTED_ENDPOINT_EVENT
-    line = (await anext(it)).decode()
-    assert line.startswith(EXPECTED_ENDPOINT_DATA)
-    endpoint_url = line[6:].strip()
+    reader = sse_response_reader(response)
+    event, endpoint_url = await anext(reader)
+    assert event == "endpoint"
 
     # Invalidate the session by unloading the config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
