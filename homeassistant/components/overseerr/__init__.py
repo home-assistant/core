@@ -7,6 +7,7 @@ import json
 from aiohttp.hdrs import METH_POST
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
+from python_overseerr import OverseerrConnectionError
 
 from homeassistant.components.webhook import (
     async_generate_url,
@@ -34,7 +35,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) ->
 
     webhook_manager = OverseerrWebhookManager(hass, entry)
 
-    await webhook_manager.register_webhook()
+    try:
+        await webhook_manager.register_webhook()
+    except OverseerrConnectionError:
+        LOGGER.error("Failed to register Overseerr webhook")
 
     entry.async_on_unload(webhook_manager.unregister_webhook)
 
