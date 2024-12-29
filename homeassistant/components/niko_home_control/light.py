@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
 from typing import Any
 
+from nhc.light import NHCLight
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -24,11 +23,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import NikoHomeControlConfigEntry
+from . import NHCController, NikoHomeControlConfigEntry
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=30)
+from .entity import NikoHomeControlEntity
 
 # delete after 2025.7.0
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
@@ -87,43 +84,43 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light entry."""
-    niko_data = entry.runtime_data
+    controller = entry.runtime_data
 
     async_add_entities(
-        NikoHomeControlLight(light, niko_data) for light in niko_data.nhc.list_actions()
+        NikoHomeControlLight(light, controller, entry.entry_id)
+        for light in controller.lights
     )
 
 
-class NikoHomeControlLight(LightEntity):
-    """Representation of an Niko Light."""
+class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
+    """Representation of a Niko Light."""
 
-    def __init__(self, light, data):
+    _attr_name = None
+    _action: NHCLight
+
+    def __init__(
+        self, action: NHCLight, controller: NHCController, unique_id: str
+    ) -> None:
         """Set up the Niko Home Control light platform."""
-        self._data = data
-        self._light = light
-        self._attr_unique_id = f"light-{light.id}"
-        self._attr_name = light.name
-        self._attr_is_on = light.is_on
+        super().__init__(action, controller, unique_id)
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
-        if light._state["type"] == 2:  # noqa: SLF001
+        if action.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_brightness = round(action.state * 2.55)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
+        self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        _LOGGER.debug("Turn off: %s", self.name)
-        self._light.turn_off()
+        self._action.turn_off()
 
-    async def async_update(self) -> None:
-        """Get the latest data from NikoHomeControl API."""
-        await self._data.async_update()
-        state = self._data.get_state(self._light.id)
-        self._attr_is_on = state != 0
+    def update_state(self) -> None:
+        """Handle updates from the controller."""
+        state = self._action.state
+        self._attr_is_on = state > 0
         if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = state * 2.55
+            self._attr_brightness = round(state * 2.55)

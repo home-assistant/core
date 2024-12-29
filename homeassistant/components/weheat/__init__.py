@@ -17,7 +17,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import API_URL, LOGGER
 from .coordinator import WeheatDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator]]
 
