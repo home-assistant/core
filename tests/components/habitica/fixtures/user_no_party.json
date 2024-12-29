@@ -55,8 +55,7 @@
         "e97659e0-2c42-4599-a7bb-00282adc410d",
         "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
         "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
-        "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
-        "6e53f1f5-a315-4edd-984d-8d762e4a08ef"
+        "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1"
       ],
       "habits": ["1d147de6-5c02-4740-8e2f-71d3015a37f4"]
     },
@@ -64,8 +63,7 @@
       "quest": {
         "RSVPNeeded": true,
         "key": "dustbunnies"
-      },
-      "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
+      }
     },
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z",
@@ -83,7 +81,6 @@
           "body": "body_special_aetherAmulet"
         }
       }
-    },
-    "balance": 10
+    }
   }
 }
