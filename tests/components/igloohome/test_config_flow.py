@@ -102,4 +102,5 @@ async def test_form_abort_on_matching_entry(
         result["flow_id"],
         FORM_USER_INPUT,
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
