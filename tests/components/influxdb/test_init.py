@@ -15,7 +15,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
 
-from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH, INFLUX_PATH
+from . import (
+    BASE_V1_CONFIG,
+    BASE_V2_CONFIG,
+    INFLUX_CLIENT_PATH,
+    INFLUX_PATH,
+    _get_write_api_mock_v1,
+    _get_write_api_mock_v2,
+)
 
 from tests.common import MockConfigEntry
 
@@ -75,16 +82,6 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
     return lambda body, precision=None: call(body, time_precision=precision)
-
-
-def _get_write_api_mock_v1(mock_influx_client):
-    """Return the write api mock for the V1 client."""
-    return mock_influx_client.return_value.write_points
-
-
-def _get_write_api_mock_v2(mock_influx_client):
-    """Return the write api mock for the V2 client."""
-    return mock_influx_client.return_value.write_api.return_value.write
 
 
 @pytest.mark.parametrize(
