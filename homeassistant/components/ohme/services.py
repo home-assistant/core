@@ -1,21 +1,16 @@
 """Ohme services."""
 
-from .const import DOMAIN
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    SupportsResponse,
-    ServiceResponse,
-)
-import voluptuous as vol
-from typing import Final
-from homeassistant.helpers import selector
-from homeassistant.exceptions import ServiceValidationError
-from .const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from typing import Any, Final
 
 from ohme import OhmeApiClient
-from homeassistant.config_entries import ConfigEntryState
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import selector
+
+from .const import DOMAIN
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
 SERVICES = [
@@ -61,7 +56,9 @@ def __get_client(call: ServiceCall) -> OhmeApiClient:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services."""
 
-    async def list_charge_slots(service_call: ServiceCall) -> None:
+    async def list_charge_slots(
+        service_call: ServiceCall,
+    ) -> dict[str, list[dict[str, Any]]]:
         """List of charge slots."""
         client = __get_client(service_call)
 

@@ -17,16 +17,12 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
-      },
-      "slot_list": {
-        "default": "mdi:calendar-clock"
-      },
-      "next_slot_start": {
-        "default": "mdi:clock-start"
-      },
-      "next_slot_end": {
-        "default": "mdi:clock-end"
       }
+    }
+  },
+  "services": {
+    "list_charge_slots": {
+      "service": "mdi:clock-start"
     }
   }
 }
