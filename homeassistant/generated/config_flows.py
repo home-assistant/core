@@ -339,6 +339,7 @@ FLOWS = {
         "litejet",
         "litterrobot",
         "livisi",
+        "lk_systems",
         "local_calendar",
         "local_file",
         "local_ip",
