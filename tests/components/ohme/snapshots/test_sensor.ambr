@@ -30,7 +30,7 @@
     'platform': 'ohme',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'vehicle_battery',
     'unique_id': 'chargerid_battery',
     'unit_of_measurement': '%',
   })

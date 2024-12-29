@@ -63,8 +63,8 @@
       "ct_current": {
         "name": "CT current"
       },
-      "car_battery": {
-        "name": "Car battery"
+      "vehicle_battery": {
+        "name": "Vehicle battery"
       }
     }
   },
