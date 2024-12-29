@@ -8,8 +8,8 @@ for the Model Context Protocol. There are two HTTP endpoints:
   to the client.
 - /mcp_server/messages: The endpoint that is used by the client to send
   POST requests with new requests for the MCP server. The request contains
-  a session identifier is passed to reference the SSE s The response
-  to the client is passed over the SSE session started on the other endpoint.
+  a session identifier. The response to the client is passed over the SSE
+  session started on the other endpoint.
 
 See https://modelcontextprotocol.io/docs/concepts/transports
 """
