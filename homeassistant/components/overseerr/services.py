@@ -22,6 +22,7 @@ from .const import (
     ATTR_SORT_ORDER,
     ATTR_STATUS,
     DOMAIN,
+    LOGGER,
 )
 from .coordinator import OverseerrConfigEntry
 
@@ -66,6 +67,7 @@ async def get_media(
         if media_type == "tv":
             media = asdict(await client.get_tv_details(identifier))
     except OverseerrConnectionError:
+        LOGGER.error("Could not find data for %s %s", media_type, identifier)
         return {}
     if not media:
         return {}
