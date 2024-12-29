@@ -2,12 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "description": "The Model Context Protocol (MCP) is an open protocol that standardizes how applications provide context to Large Language Models. The Model Context Protocl Server integration exposes control of Home Assistant to your network. The Home Assistant MCP server requires authentication, such as using long lived access tokens, to use. See the integration documentation for [more info]({more_info_url}) on how to configure clients to use this.",
+        "description": "The Model Context Protocol (MCP) Server  integration exposes the Home Assistant Assist API to LLM clients on your network. MCP is an open protocol that standardizes how applications provide context to Large Language Models.\n\nThe Home Assistant MCP server requires authentication, such as a long lived access token. See the integration documentation for [more info]({more_info_url}).",
         "data": {
           "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
         },
         "data_description": {
-          "llm_hass_api": "The method for controling Home Assistant that will be exposed to over the network with the Model Context Protocol."
+          "llm_hass_api": "The method for controling Home Assistant to expose with the Model Context Protocol."
         }
       }
     },
