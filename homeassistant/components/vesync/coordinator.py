@@ -11,6 +11,8 @@ from pyvesync import VeSync
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import UPDATE_INTERVAL
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -25,7 +27,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="VeSyncDataCoordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
