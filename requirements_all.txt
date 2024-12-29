@@ -2491,7 +2491,7 @@ pyvesync==2.1.12
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.21
+pyvlx==0.2.26
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
