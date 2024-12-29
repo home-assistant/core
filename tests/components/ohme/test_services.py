@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.ohme.const import DOMAIN
 from homeassistant.components.ohme.services import (
     ATTR_CONFIG_ENTRY,
