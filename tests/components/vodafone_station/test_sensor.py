@@ -83,9 +83,7 @@ async def test_uptime(
     assert state
     assert state.state == uptime
 
-    sensor_data = deepcopy(SENSOR_DATA_QUERY)
-    sensor_data["sys_uptime"] = "12:17:23"
-    mock_vodafone_station_router.get_sensor_data = sensor_data
+    mock_vodafone_station_router.get_sensor_data.return_value["sys_uptime"] = "12:17:23"
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
