@@ -133,6 +133,22 @@ async def test_site_cannot_update(
     weather = hass.states.get("weather.met_office_wavertree")
     assert weather.state == STATE_UNAVAILABLE
 
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        status_code=404,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        status_code=404,
+    )
+
+    future_time = utcnow() + timedelta(minutes=40)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    weather = hass.states.get("weather.met_office_wavertree")
+    assert weather.state == STATE_UNAVAILABLE
+
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_one_weather_site_running(

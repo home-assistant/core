@@ -42,9 +42,6 @@ async def validate_input(
             False,
         )
 
-        if forecast is None:
-            errors["base"] = "cannot_connect"
-
     except (HTTPError, APIException) as err:
         if isinstance(err, HTTPError) and err.response.status_code == 401:
             errors["base"] = "invalid_auth"
