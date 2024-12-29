@@ -15,12 +15,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
 
-from . import BASE_V1_CONFIG, BASE_V2_CONFIG
+from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH, INFLUX_PATH
 
 from tests.common import MockConfigEntry
-
-INFLUX_PATH = "homeassistant.components.influxdb"
-INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
 
 
 async def async_wait_for_queue_to_process(hass: HomeAssistant) -> None:
