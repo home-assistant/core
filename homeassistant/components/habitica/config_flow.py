@@ -17,7 +17,6 @@ from habiticalib import (
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.habitica import HabiticaConfigEntry
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
@@ -34,6 +33,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from . import HabiticaConfigEntry
 from .const import (
     CONF_API_USER,
     DEFAULT_URL,
