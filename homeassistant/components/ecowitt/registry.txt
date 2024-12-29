@@ -1,0 +1,35 @@
+RegistryEntry(
+    entity_id="sensor.gw2000a_indoor_dewpoint",
+    unique_id="9835D60D7F0BDF05A99FC269236C3079-dewpointinc",
+    platform="ecowitt",
+    previous_unique_id=None,
+    aliases=set(),
+    area_id=None,
+    categories={},
+    capabilities={"state_class": "measurement"},
+    config_entry_id="01JFZW74N2MK66CZ3QMM18ASYH",
+    created_at=datetime.datetime(
+        2024, 11, 4, 19, 43, 44, 507386, tzinfo=datetime.timezone.utc
+    ),
+    device_class=None,
+    device_id="8b0d14f085f9427e1f99a01559864183",
+    disabled_by=None,
+    entity_category=None,
+    hidden_by=None,
+    icon=None,
+    id="3844998206a27930338548a51a8353e6",
+    has_entity_name=True,
+    labels=set(),
+    modified_at=datetime.datetime(
+        2024, 12, 27, 18, 42, 9, 812071, tzinfo=datetime.timezone.utc
+    ),
+    name=None,
+    options={"conversation": {"should_expose": True}},
+    original_device_class="temperature",
+    original_icon=None,
+    original_name="Indoor Dewpoint",
+    supported_features=0,
+    translation_key=None,
+    unit_of_measurement="°C",
+    _cache={},
+)

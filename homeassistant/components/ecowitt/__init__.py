@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from aioecowitt import EcoWittListener
 from aiohttp import web
 
@@ -15,12 +17,12 @@ from .const import DOMAIN
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type EcowittConfigEntry = ConfigEntry[EcoWittListener]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> bool:
     """Set up the Ecowitt component from UI."""
     ecowitt = entry.runtime_data = EcoWittListener()
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def handle_webhook(

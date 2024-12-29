@@ -1,0 +1,19 @@
+SensorEntityDescription(
+    key='TEMPERATURE_F',
+    device_class=<SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    entity_category=None,
+    entity_registry_enabled_default=True,
+    entity_registry_visible_default=True,
+    force_update=False, icon=None,
+    has_entity_name=False,
+    name=<UndefinedType._singleton: 0>,
+    translation_key=None,
+    translation_placeholders=None,
+    unit_of_measurement=None,
+    last_reset=None,
+    native_unit_of_measurement=<UnitOfTemperature.FAHRENHEIT: '°F'>,
+    options=None,
+    state_class=<SensorStateClass.MEASUREMENT: 'measurement'>,
+    suggested_display_precision=None,
+    suggested_unit_of_measurement=None
+)

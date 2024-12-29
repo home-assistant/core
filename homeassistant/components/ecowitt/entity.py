@@ -21,7 +21,6 @@ class EcowittEntity(Entity):
     def __init__(self, sensor: EcoWittSensor) -> None:
         """Construct the entity."""
         self.ecowitt: EcoWittSensor = sensor
-
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -45,4 +44,5 @@ class EcowittEntity(Entity):
     @property
     def available(self) -> bool:
         """Return whether the state is based on actual reading from device."""
+        return True
         return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()
