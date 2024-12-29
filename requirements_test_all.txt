@@ -929,7 +929,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habitipy==0.3.3
+habiticalib==0.3.1
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
@@ -1711,7 +1711,7 @@ pymonoprice==0.4
 pymysensors==0.24.0
 
 # homeassistant.components.iron_os
-pynecil==3.0.0
+pynecil==3.0.1
 
 # homeassistant.components.netgear
 pynetgear==0.10.10
