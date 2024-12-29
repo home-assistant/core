@@ -3,10 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.influxdb import API_VERSION_2, DEFAULT_API_VERSION, DOMAIN
+from homeassistant.components.influxdb import (
+    API_VERSION_2,
+    DEFAULT_API_VERSION,
+    DOMAIN,
+    ApiException,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -68,6 +74,71 @@ async def test_import(
     assert result["data"] == config_base
 
     assert get_write_api(mock_client).call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_base", "get_write_api", "test_exception", "reason"),
+    [
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            ConnectionError("fail"),
+            "cannot_connect",
+        ),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            InfluxDBClientError("fail"),
+            "cannot_connect",
+        ),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            InfluxDBServerError("fail"),
+            "cannot_connect",
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            ConnectionError("fail"),
+            "cannot_connect",
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            ApiException(http_resp=MagicMock()),
+            "cannot_connect",
+        ),
+        (
+            API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            Exception(),
+            "unknown",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_import_connection_error(
+    hass: HomeAssistant, mock_client, config_base, get_write_api, test_exception, reason
+) -> None:
+    """Test abort on connection error."""
+    write_api = get_write_api(mock_client)
+    write_api.side_effect = test_exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config_base,
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(
