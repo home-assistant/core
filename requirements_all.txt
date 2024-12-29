@@ -213,7 +213,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.9.1
+aiocomelit==0.10.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.0.2
@@ -321,7 +321,7 @@ aioopenexchangerates==0.6.8
 aiooui==0.1.7
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.1.0
+aiopegelonline==0.1.1
 
 # homeassistant.components.acmeda
 aiopulse==0.4.6
@@ -383,7 +383,7 @@ aiosteamist==1.0.0
 aiostreammagic==2.10.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==5.1.0
+aioswitcher==6.0.0
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1134,7 +1134,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241224.0
+home-assistant-frontend==20241229.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
@@ -1260,7 +1260,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2024.11.16.205004
+knx-frontend==2024.12.26.233449
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1570,7 +1570,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.6
+opower==0.8.7
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2494,7 +2494,7 @@ pyvesync==2.1.14
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.21
+pyvlx==0.2.26
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2963,7 +2963,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.2.1
+voip-utils==0.2.2
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
