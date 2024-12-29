@@ -78,7 +78,11 @@ async def test_async_setup_entry__loads_fans(
         await hass.async_block_till_done()
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
-        assert setups_mock.call_args.args[1] == [Platform.FAN, Platform.SENSOR]
+        assert setups_mock.call_args.args[1] == [
+            Platform.FAN,
+            Platform.BINARY_SENSOR,
+            Platform.SENSOR,
+        ]
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert not hass.data[DOMAIN][VS_SWITCHES]
