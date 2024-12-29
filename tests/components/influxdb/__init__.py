@@ -8,8 +8,8 @@ BASE_V1_CONFIG = {
     "port": 123,
     "username": "user",
     "password": "password",
-    "verify_ssl": "False",
-    "ssl": "False",
+    "verify_ssl": False,
+    "ssl": False,
     "database": "db",
     "max_retries": 0,
     "include": {
@@ -37,7 +37,7 @@ BASE_V2_CONFIG = {
     "token": "token",
     "organization": "organization",
     "bucket": "Home Assistant",
-    "verify_ssl": "True",
+    "verify_ssl": True,
     "include": {
         "entity_globs": [],
         "entities": [],
@@ -57,6 +57,62 @@ BASE_V2_CONFIG = {
     "component_config_glob": {},
     "component_config_domain": {},
 }
+
+IMPORT_V1_CONFIG = {
+    "api_version": influxdb.DEFAULT_API_VERSION,
+    "host": "localhost",
+    "verify_ssl": True,
+    "database": "home_assistant",
+    "max_retries": 0,
+    "include": {
+        "entity_globs": [],
+        "entities": [],
+        "domains": [],
+    },
+    "exclude": {
+        "entity_globs": [],
+        "entities": [],
+        "domains": [],
+    },
+    "tags": {},
+    "tags_attributes": [],
+    "measurement_attr": "unit_of_measurement",
+    "ignore_attributes": [],
+    "component_config": {},
+    "component_config_glob": {},
+    "component_config_domain": {},
+    "bucket": "Home Assistant",
+}
+IMPORT_V2_CONFIG = {
+    "api_version": influxdb.API_VERSION_2,
+    "host": "us-west-2-1.aws.cloud2.influxdata.com",
+    "url": "https://us-west-2-1.aws.cloud2.influxdata.com",
+    "token": "token",
+    "organization": "org",
+    "database": "home_assistant",
+    "bucket": "Home Assistant",
+    "verify_ssl": True,
+    "ssl": True,
+    "include": {
+        "entity_globs": [],
+        "entities": [],
+        "domains": [],
+    },
+    "exclude": {
+        "entity_globs": [],
+        "entities": [],
+        "domains": [],
+    },
+    "max_retries": 0,
+    "tags": {},
+    "tags_attributes": [],
+    "measurement_attr": "unit_of_measurement",
+    "ignore_attributes": [],
+    "component_config": {},
+    "component_config_glob": {},
+    "component_config_domain": {},
+}
+
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
