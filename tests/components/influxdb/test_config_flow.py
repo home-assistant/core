@@ -9,7 +9,13 @@ from homeassistant import config_entries
 from homeassistant.components.influxdb import API_VERSION_2, DEFAULT_API_VERSION, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import BASE_V1_CONFIG, BASE_V2_CONFIG, INFLUX_CLIENT_PATH
+from . import (
+    BASE_V1_CONFIG,
+    BASE_V2_CONFIG,
+    INFLUX_CLIENT_PATH,
+    _get_write_api_mock_v1,
+    _get_write_api_mock_v2,
+)
 
 from tests.common import MockConfigEntry
 
@@ -29,20 +35,24 @@ def mock_client_fixture(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base"),
+    ("mock_client", "config_base", "get_write_api"),
     [
         (
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
-async def test_import(hass: HomeAssistant, mock_client, config_base) -> None:
+async def test_import(
+    hass: HomeAssistant, mock_client, config_base, get_write_api
+) -> None:
     """Test we can import."""
     with patch(
         "homeassistant.components.influxdb.async_setup_entry", return_value=True
@@ -56,6 +66,8 @@ async def test_import(hass: HomeAssistant, mock_client, config_base) -> None:
     assert result["type"] == "create_entry"
     assert result["title"] == config_base["host"]
     assert result["data"] == config_base
+
+    assert get_write_api(mock_client).call_count == 1
 
 
 @pytest.mark.parametrize(
