@@ -149,7 +149,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
                 )
 
                 try:
-                    if authentication:
+                    if user_input:
                         # Attempt to login
                         try:
                             await heos.sign_in(
