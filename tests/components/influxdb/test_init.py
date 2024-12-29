@@ -19,8 +19,6 @@ from homeassistant.setup import async_setup_component
 from . import (
     BASE_V1_CONFIG,
     BASE_V2_CONFIG,
-    IMPORT_V1_CONFIG,
-    IMPORT_V2_CONFIG,
     INFLUX_CLIENT_PATH,
     INFLUX_PATH,
     _get_write_api_mock_v1,
@@ -92,13 +90,13 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
     [
         (
             influxdb.DEFAULT_API_VERSION,
-            IMPORT_V1_CONFIG,
+            BASE_V1_CONFIG,
             {},
             _get_write_api_mock_v1,
         ),
         (
             influxdb.API_VERSION_2,
-            IMPORT_V2_CONFIG,
+            BASE_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
                 "organization": "org",
@@ -132,26 +130,33 @@ async def test_setup_minimal_config(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api"),
+    ("mock_client", "config_base", "config_ext", "get_write_api"),
     [
         (
             influxdb.DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
+            {
+                "port": 123,
+                "username": "user",
+                "password": "password",
+            },
             _get_write_api_mock_v1,
         ),
         (
             influxdb.API_VERSION_2,
             BASE_V2_CONFIG,
+            {"port": 123},
             _get_write_api_mock_v2,
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_setup_config_full(
-    hass: HomeAssistant, mock_client, config_base, get_write_api
+    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
 ) -> None:
     """Test the setup with full configuration."""
-    config = config_base
+    config = config_base.copy()
+    config.update(config_ext)
 
     mock_entry = MockConfigEntry(
         domain="influxdb", unique_id=config["host"], data=config
@@ -214,7 +219,7 @@ async def test_setup_config_full(
             },
             {
                 "ssl": True,
-                "verify_ssl": False,
+                "verify_ssl": "fake/path/ca.pem",
             },
         ),
         (
