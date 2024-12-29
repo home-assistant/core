@@ -8,7 +8,7 @@ rules:
     status: exempt
     comment: |
       This integration does not poll.
-  brands: todo
+  brands: done
   common-modules:
     status: done
     comment: |
