@@ -5369,6 +5369,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "s3backup": {
+      "name": "S3 Backup",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "sabnzbd": {
       "name": "SABnzbd",
       "integration_type": "hub",
