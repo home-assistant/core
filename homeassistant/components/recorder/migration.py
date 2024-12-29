@@ -2453,7 +2453,7 @@ class BaseMigration(ABC):
         self.migration_changes = migration_changes
 
     @abstractmethod
-    def migrate_data(self, instance: Recorder) -> bool:
+    def migrate_data(self, instance: Recorder, /) -> bool:
         """Migrate some data, return True if migration is completed."""
 
     def _migrate_data(self, instance: Recorder) -> bool:
