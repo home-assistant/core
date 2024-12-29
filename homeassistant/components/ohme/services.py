@@ -6,7 +6,7 @@ from ohme import OhmeApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, ServiceResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 
@@ -55,7 +55,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def list_charge_slots(
         service_call: ServiceCall,
-    ) -> dict[str, list[dict[str, Any]]]:
+    ) -> ServiceResponse:
         """List of charge slots."""
         client = __get_client(service_call)
 
