@@ -521,6 +521,7 @@ FLOWS = {
         "ruuvi_gateway",
         "ruuvitag_ble",
         "rympro",
+        "s3backup",
         "sabnzbd",
         "samsungtv",
         "sanix",
