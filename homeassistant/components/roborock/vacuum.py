@@ -20,11 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
 from .const import (
+    CLEAN_ROOMS_SERVICE_NAME,
     DOMAIN,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-    VACUUM_CLEAN_ROOMS_SERVICE_NAME,
 )
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
@@ -98,7 +98,7 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(
-        VACUUM_CLEAN_ROOMS_SERVICE_NAME,
+        CLEAN_ROOMS_SERVICE_NAME,
         cv.make_entity_service_schema(
             {
                 vol.Required("room_ids"): vol.Any(
@@ -109,7 +109,7 @@ async def async_setup_entry(
                 ),
             },
         ),
-        RoborockVacuum.vacuum_clean_rooms.__name__,
+        RoborockVacuum.clean_rooms.__name__,
         supports_response=SupportsResponse.NONE,
     )
 
@@ -241,7 +241,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "y": robot_position.y,
         }
 
-    async def vacuum_clean_rooms(
+    async def clean_rooms(
         self, room_ids: int | list[int] | str, repeat: int = 1
     ) -> None:
         """Clean specific rooms."""

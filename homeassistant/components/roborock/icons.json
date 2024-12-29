@@ -128,7 +128,7 @@
     "get_vacuum_current_position": {
       "service": "mdi:map-marker"
     },
-    "vacuum_clean_rooms": {
+    "clean_rooms": {
       "service": "mdi:vacuum"
     }
   }

@@ -12,10 +12,10 @@ from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import (
+    CLEAN_ROOMS_SERVICE_NAME,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-    VACUUM_CLEAN_ROOMS_SERVICE_NAME,
 )
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
@@ -325,7 +325,7 @@ async def test_vacuum_clean_rooms(
     ) as mock_send_command:
         await hass.services.async_call(
             DOMAIN,
-            VACUUM_CLEAN_ROOMS_SERVICE_NAME,
+            CLEAN_ROOMS_SERVICE_NAME,
             data,
             blocking=True,
         )

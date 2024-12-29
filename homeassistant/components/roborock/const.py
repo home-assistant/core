@@ -51,4 +51,4 @@ MAP_SLEEP = 3
 GET_MAPS_SERVICE_NAME = "get_maps"
 SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"
 GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"
-VACUUM_CLEAN_ROOMS_SERVICE_NAME = "vacuum_clean_rooms"
+CLEAN_ROOMS_SERVICE_NAME = "clean_rooms"

@@ -26,7 +26,7 @@ get_vacuum_current_position:
     entity:
       integration: roborock
       domain: vacuum
-vacuum_clean_rooms:
+clean_rooms:
   target:
     entity:
       integration: roborock
