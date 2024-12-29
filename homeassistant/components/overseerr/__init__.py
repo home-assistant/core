@@ -67,9 +67,9 @@ class OverseerrWebhookManager:
             self.handle_webhook,
             allowed_methods=[METH_POST],
         )
-        if not await self.check_need_change():
-            return
         url = async_generate_url(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+        if not await self.check_need_change(url):
+            return
         LOGGER.debug("Setting Overseerr webhook to %s", url)
         if not await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
             LOGGER.debug("Failed to set Overseerr webhook")
@@ -81,10 +81,9 @@ class OverseerrWebhookManager:
             json_payload=JSON_PAYLOAD,
         )
 
-    async def check_need_change(self) -> bool:
+    async def check_need_change(self, url: str) -> bool:
         """Check if webhook needs to be changed."""
         current_config = await self.client.get_webhook_notification_config()
-        url = async_generate_url(self.hass, self.entry.data[CONF_WEBHOOK_ID])
         return (
             not current_config.enabled
             or current_config.options.webhook_url != url

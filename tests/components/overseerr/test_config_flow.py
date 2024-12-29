@@ -1,16 +1,36 @@
 """Tests for the Overseerr config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from python_overseerr.exceptions import OverseerrConnectionError
 
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_URL,
+    CONF_WEBHOOK_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import WEBHOOK_ID
+
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def patch_webhook_id() -> None:
+    """Patch webhook ID generation."""
+    with patch(
+        "homeassistant.components.overseerr.config_flow.async_generate_id",
+        return_value=WEBHOOK_ID,
+    ):
+        yield
 
 
 async def test_full_flow(
@@ -37,6 +57,7 @@ async def test_full_flow(
         CONF_PORT: 80,
         CONF_SSL: False,
         CONF_API_KEY: "test-key",
+        CONF_WEBHOOK_ID: "test-webhook-id",
     }
 
 
