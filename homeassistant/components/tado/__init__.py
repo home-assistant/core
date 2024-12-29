@@ -50,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-type TadoConfigEntry = ConfigEntry[TadoConnector]
+type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:

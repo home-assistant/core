@@ -27,7 +27,6 @@ from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -51,7 +50,6 @@ from .const import (
     HA_TO_TADO_HVAC_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
     PRESET_AUTO,
-    SIGNAL_TADO_UPDATE_RECEIVED,
     SUPPORT_PRESET_AUTO,
     SUPPORT_PRESET_MANUAL,
     TADO_DEFAULT_MAX_TEMP,
@@ -348,59 +346,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _LOGGER.debug("Erwin: updating Tado climate entity %s", self)
-        self._tado_zone_data = self._tado.data["zone"][self.zone_id]
-        self._tado_geofence_data = self._tado.data["geofence"]
-
-        # Assign offset values to mapped attributes
-        for offset_key, attr in TADO_TO_HA_OFFSET_MAP.items():
-            if (
-                self._device_id in self._tado.data["device"]
-                and offset_key
-                in self._tado.data["device"][self._device_id][TEMP_OFFSET]
-            ):
-                self._tado_zone_temp_offset[attr] = self._tado.data["device"][
-                    self._device_id
-                ][TEMP_OFFSET][offset_key]
-
-        self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
-        self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
-
-        if self._is_valid_setting_for_hvac_mode(TADO_FANLEVEL_SETTING):
-            self._current_tado_fan_level = self._tado_zone_data.current_fan_level
-        if self._is_valid_setting_for_hvac_mode(TADO_FANSPEED_SETTING):
-            self._current_tado_fan_speed = self._tado_zone_data.current_fan_speed
-        if self._is_valid_setting_for_hvac_mode(TADO_SWING_SETTING):
-            self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
-        if self._is_valid_setting_for_hvac_mode(TADO_VERTICAL_SWING_SETTING):
-            self._current_tado_vertical_swing = (
-                self._tado_zone_data.current_vertical_swing_mode
-            )
-        if self._is_valid_setting_for_hvac_mode(TADO_HORIZONTAL_SWING_SETTING):
-            self._current_tado_horizontal_swing = (
-                self._tado_zone_data.current_horizontal_swing_mode
-            )
+        self._async_update_home_data()
+        self._async_update_zone_data()
         super()._handle_coordinator_update()
-
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(self._tado.home_id, "home", "data"),
-                self._async_update_home_callback,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_zone_callback,
-            )
-        )
 
     @callback
     def _async_update_zone_data(self) -> None:
@@ -529,7 +477,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._tado.set_presence(preset_mode)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -588,7 +536,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
         await self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -596,7 +544,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             "Setting new hvac mode for device %s to %s", self._device_id, hvac_mode
         )
         await self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:
@@ -699,7 +647,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             vertical_swing=vertical_swing,
             horizontal_swing=horizontal_swing,
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     def _normalize_target_temp_for_hvac_mode(self) -> None:
         def adjust_temp(min_temp, max_temp) -> float | None:

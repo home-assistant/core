@@ -117,7 +117,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
         """Update the device data from Tado."""
         try:
             devices = await self.hass.async_add_executor_job(self.tado.get_devices)
-        except RuntimeError as err:
+        except RequestException as err:
             _LOGGER.error("Error updating Tado devices: %s", err)
             raise UpdateFailed(f"Error updating Tado devices: {err}") from err
 
@@ -140,7 +140,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
                     device[TEMP_OFFSET] = await self.hass.async_add_executor_job(
                         self.tado.get_device_info, device_short_serial_no, TEMP_OFFSET
                     )
-            except RuntimeError:
+            except RequestException:
                 _LOGGER.error(
                     "Unable to connect to Tado while updating device %s",
                     device_short_serial_no,
@@ -158,7 +158,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             mobile_devices = await self.hass.async_add_executor_job(
                 self.tado.get_mobile_devices
             )
-        except RuntimeError as err:
+        except RequestException as err:
             _LOGGER.error("Error updating Tado mobile devices: %s", err)
             raise UpdateFailed(f"Error updating Tado mobile devices: {err}") from err
 
@@ -178,7 +178,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
                     mobile_device_id,
                     mobile_device,
                 )
-            except RuntimeError:
+            except RequestException:
                 _LOGGER.error(
                     "Unable to connect to Tado while updating mobile device %s",
                     mobile_device_id,
@@ -192,7 +192,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
                 self.tado.get_zone_states
             )
             zone_states = zone_states_call["zoneStates"]
-        except RuntimeError as err:
+        except RequestException as err:
             _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
@@ -206,7 +206,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             data = await self.hass.async_add_executor_job(
                 self.tado.get_zone_state, zone_id
             )
-        except RuntimeError as err:
+        except RequestException as err:
             _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
@@ -222,7 +222,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             self.data["geofence"] = await self.hass.async_add_executor_job(
                 self.tado.get_home_state
             )
-        except RuntimeError as err:
+        except RequestException as err:
             _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
 
