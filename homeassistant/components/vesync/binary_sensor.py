@@ -6,9 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncfan import VeSyncAirBypass
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -19,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import rgetattr
 from .const import DOMAIN, VS_FANS
 from .entity import VeSyncBaseEntity
 
@@ -29,9 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes custom binary sensor entities."""
 
-    is_on: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] | None = None
-    on_icon: str | None = None
-    off_icon: str | None = None
+    is_on: Callable[[VeSyncBaseDevice], bool] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
@@ -42,7 +39,7 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     VeSyncBinarySensorEntityDescription(
-        key="water_tank_lifted",
+        key="details.water_tank_lifted",
         translation_key="water_tank_lifted",
         is_on=lambda device: device.details["water_tank_lifted"],
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -59,7 +56,7 @@ async def async_setup_entry(
     entities: list[VeSyncBinarySensor] = []
     for device in hass.data[DOMAIN][VS_FANS]:
         for description in SENSOR_DESCRIPTIONS:
-            if getattr(device, description.key, None) is not None:
+            if rgetattr(device, description.key) is not None:
                 entities.append(VeSyncBinarySensor(description, device))  # noqa: PERF401
     async_add_entities(entities)
 
@@ -81,10 +78,5 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self.entity_description.is_on is not None:
-            _LOGGER.debug(
-                "%s Is on State: %s",
-                self.device.device_name,
-                self.entity_description.is_on(self.device),
-            )
             return self.entity_description.is_on(self.device)
         return None

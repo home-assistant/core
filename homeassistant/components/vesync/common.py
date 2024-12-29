@@ -7,6 +7,28 @@ from .const import VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 _LOGGER = logging.getLogger(__name__)
 
 
+def rgetattr(obj, attr):
+    """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
+    _this_func = rgetattr
+    sp = attr.split(".", 1)
+    if len(sp) == 1:
+        left, right = sp[0], ""
+    else:
+        left, right = sp
+
+    if isinstance(obj, dict):
+        obj = obj.get(left)
+    elif hasattr(obj, left):
+        obj = getattr(obj, left)
+    else:
+        return None
+
+    if right:
+        obj = _this_func(obj, right)
+
+    return obj
+
+
 async def async_process_devices(hass, manager):
     """Assign devices to proper component."""
     devices = {}
