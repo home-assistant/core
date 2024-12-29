@@ -10,7 +10,7 @@ from unittest.mock import ANY, MagicMock, Mock, call, patch
 import pytest
 
 from homeassistant.components import influxdb
-from homeassistant.components.influxdb.const import DEFAULT_BUCKET
+from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
@@ -19,6 +19,8 @@ from homeassistant.setup import async_setup_component
 from . import (
     BASE_V1_CONFIG,
     BASE_V2_CONFIG,
+    IMPORT_V1_CONFIG,
+    IMPORT_V2_CONFIG,
     INFLUX_CLIENT_PATH,
     INFLUX_PATH,
     _get_write_api_mock_v1,
@@ -68,17 +70,6 @@ def mock_client_fixture(
         yield client
 
 
-@pytest.fixture(name="mock_import")
-def mock_import_fixture(
-    request: pytest.FixtureRequest,
-) -> Generator[MagicMock]:
-    """Patch the InfluxDBClient object with mock for version under test."""
-    with patch(
-        "homeassistant.components.influxdb.config_flow.ConfigFlow.async_step_import"
-    ) as async_import:
-        yield async_import
-
-
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
@@ -97,12 +88,17 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
 
 
 @pytest.mark.parametrize(
-    ("mock_import", "config_base", "config_ext", "get_write_api"),
+    ("mock_client", "config_base", "config_ext", "get_write_api"),
     [
-        (influxdb.DEFAULT_API_VERSION, BASE_V1_CONFIG, {}, _get_write_api_mock_v1),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            IMPORT_V1_CONFIG,
+            {},
+            _get_write_api_mock_v1,
+        ),
         (
             influxdb.API_VERSION_2,
-            BASE_V2_CONFIG,
+            IMPORT_V2_CONFIG,
             {
                 "api_version": influxdb.API_VERSION_2,
                 "organization": "org",
@@ -111,10 +107,10 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
             _get_write_api_mock_v2,
         ),
     ],
-    indirect=["mock_import"],
+    indirect=["mock_client"],
 )
 async def test_setup_minimal_config(
-    hass: HomeAssistant, mock_import, config_base, config_ext, get_write_api
+    hass: HomeAssistant, mock_client, config_base, config_ext, get_write_api
 ) -> None:
     """Test the setup with minimal configuration and defaults."""
     config = {"influxdb": {}}
@@ -123,8 +119,16 @@ async def test_setup_minimal_config(
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert mock_import.call_count == 1
-    # assert mock_import.call_args == call(config_base)
+    assert get_write_api(mock_client).call_count == 2
+
+    conf_entries = hass.config_entries.async_entries(DOMAIN)
+
+    assert len(conf_entries) == 1
+
+    entry = conf_entries[0]
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data == config_base
 
 
 @pytest.mark.parametrize(
@@ -210,7 +214,7 @@ async def test_setup_config_full(
             },
             {
                 "ssl": True,
-                "verify_ssl": "fake/path/ca.pem",
+                "verify_ssl": False,
             },
         ),
         (
