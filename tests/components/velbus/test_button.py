@@ -32,10 +32,8 @@ async def test_entities(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_press(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_button: AsyncMock,
     config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test button press."""
     await init_integration(hass, config_entry)
