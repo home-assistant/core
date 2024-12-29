@@ -424,3 +424,13 @@ async def test_signing(
     ) as mock_get_private_key:
         await setup_platform(hass, normal_config_entry)
         mock_get_private_key.assert_called_once()
+
+
+async def test_bad_implementation(
+    hass: HomeAssistant,
+    bad_config_entry: MockConfigEntry,
+) -> None:
+    """Test handling of a bad authentication implementation."""
+
+    await setup_platform(hass, bad_config_entry)
+    assert bad_config_entry.state is ConfigEntryState.SETUP_ERROR
