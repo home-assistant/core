@@ -38,14 +38,14 @@ SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
         key="water_lacks",
         translation_key="water_lacks",
-        is_on=lambda device: device.water_lacks == "on",
+        is_on=lambda device: device.water_lacks,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     VeSyncBinarySensorEntityDescription(
-        key="is_on",
-        translation_key="online",
-        is_on=lambda device: device.is_on,
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        key="water_tank_lifted",
+        translation_key="water_tank_lifted",
+        is_on=lambda device: device.details["water_tank_lifted"],
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
 
@@ -65,7 +65,7 @@ async def async_setup_entry(
 
 
 class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
-    """Hyundai / Kia Connect binary sensor class."""
+    """Vesync Connect binary sensor class."""
 
     def __init__(
         self,
@@ -81,5 +81,10 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self.entity_description.is_on is not None:
+            _LOGGER.debug(
+                "%s Is on State: %s",
+                self.device.device_name,
+                self.entity_description.is_on(self.device),
+            )
             return self.entity_description.is_on(self.device)
         return None

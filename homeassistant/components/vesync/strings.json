@@ -47,8 +47,8 @@
       "water_lacks": {
         "name": "Low Water"
       },
-      "online": {
-        "name": "Online"
+      "water_tank_lifted": {
+        "name": "Water Tank Lifted"
       }
     },
     "fan": {
