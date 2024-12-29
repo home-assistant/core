@@ -22,22 +22,23 @@ FORM_USER_INPUT = {
 
 
 async def test_form_valid_input(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth: Generator[AsyncMock]
+    hass: HomeAssistant,
+    mock_setup_entry: Generator[AsyncMock],
+    mock_auth: Generator[AsyncMock],
 ) -> None:
     """Test that the form correct reacts to valid input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         FORM_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Client Credentials"
     assert result["data"] == FORM_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -65,7 +66,7 @@ async def test_form_invalid_input(
         FORM_USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": result_error}
 
     # Make sure the config flow tests finish with either an
@@ -76,9 +77,8 @@ async def test_form_invalid_input(
         result["flow_id"],
         FORM_USER_INPUT,
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Client Credentials"
     assert result["data"] == FORM_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
@@ -102,5 +102,4 @@ async def test_form_abort_on_matching_entry(
         result["flow_id"],
         FORM_USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
