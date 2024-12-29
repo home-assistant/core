@@ -1,0 +1,10 @@
+{
+  "domain": "sensorpush_cloud",
+  "name": "SensorPush Cloud",
+  "codeowners": ["@sstallion"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sensorpush_cloud",
+  "iot_class": "cloud_polling",
+  "loggers": ["sensorpush_api", "sensorpush_ha"],
+  "requirements": ["sensorpush-api==2.1.0", "sensorpush-ha==1.0.1"]
+}

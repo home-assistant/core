@@ -2659,8 +2659,14 @@ sensirion-ble==0.1.1
 # homeassistant.components.sensorpro
 sensorpro-ble==0.5.3
 
+# homeassistant.components.sensorpush_cloud
+sensorpush-api==2.1.0
+
 # homeassistant.components.sensorpush
 sensorpush-ble==1.7.1
+
+# homeassistant.components.sensorpush_cloud
+sensorpush-ha==1.0.1
 
 # homeassistant.components.sensoterra
 sensoterra==2.0.1

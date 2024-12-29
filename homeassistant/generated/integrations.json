@@ -5503,9 +5503,20 @@
     },
     "sensorpush": {
       "name": "SensorPush",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "integrations": {
+        "sensorpush": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "SensorPush"
+        },
+        "sensorpush_cloud": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "SensorPush Cloud"
+        }
+      }
     },
     "sensoterra": {
       "name": "Sensoterra",

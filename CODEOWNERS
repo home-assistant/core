@@ -1324,6 +1324,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensorpro/ @bdraco
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
+/homeassistant/components/sensorpush_cloud/ @sstallion
+/tests/components/sensorpush_cloud/ @sstallion
 /homeassistant/components/sensoterra/ @markruys
 /tests/components/sensoterra/ @markruys
 /homeassistant/components/sentry/ @dcramer @frenck
