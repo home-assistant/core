@@ -306,32 +306,6 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries()) == 1
 
 
-@pytest.mark.usefixtures("habitica")
-async def test_flow_reauth_invalid_credentials(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test reauth flow with invalid credentials."""
-    config_entry.add_to_hass(hass)
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            SECTION_REAUTH_LOGIN: {},
-            SECTION_REAUTH_API_KEY: {},
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
-
-    assert len(hass.config_entries.async_entries()) == 1
-
-
 @pytest.mark.parametrize(
     ("raise_error", "user_input", "text_error"),
     [
@@ -397,3 +371,19 @@ async def test_flow_reauth_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
+
+    habitica.get_user.side_effect = None
+    habitica.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_REAUTH_API_KEY,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+
+    assert len(hass.config_entries.async_entries()) == 1
