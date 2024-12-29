@@ -16,7 +16,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN, TITLE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +32,12 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
 
         if user_input is not None:
-            return self.async_create_entry(title=TITLE, data=user_input)
+            return self.async_create_entry(
+                title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input
+            )
 
         return self.async_show_form(
             step_id="user",
@@ -47,10 +50,10 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(
-                                    label=api.name,
-                                    value=api.id,
+                                    label=name,
+                                    value=llm_api_id,
                                 )
-                                for api in llm.async_get_apis(self.hass)
+                                for llm_api_id, name in llm_apis.items()
                             ]
                         )
                     ),

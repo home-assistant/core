@@ -36,6 +36,6 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Model Context Protocol Server"
+    assert result["title"] == "Assist"
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["data"] == {CONF_LLM_HASS_API: "assist"}
