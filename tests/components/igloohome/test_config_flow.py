@@ -21,10 +21,10 @@ FORM_USER_INPUT = {
 }
 
 
-async def test_form(
+async def test_form_valid_input(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_auth: Generator[AsyncMock]
 ) -> None:
-    """Test we get the form."""
+    """Test that the form correct reacts to valid input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
