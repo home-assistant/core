@@ -89,8 +89,8 @@ async def async_setup_entry(
         SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
         cv.make_entity_service_schema(
             {
-                vol.Required("x_coord"): vol.Coerce(int),
-                vol.Required("y_coord"): vol.Coerce(int),
+                vol.Required("x"): vol.Coerce(int),
+                vol.Required("y"): vol.Coerce(int),
             },
         ),
         RoborockVacuum.async_set_vacuum_goto_position.__name__,
@@ -202,9 +202,9 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             [self._device_status.get_fan_speed_code(fan_speed)],
         )
 
-    async def async_set_vacuum_goto_position(self, x_coord: int, y_coord: int) -> None:
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
-        await self.send(RoborockCommand.APP_GOTO_TARGET, [x_coord, y_coord])
+        await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
     async def async_send_command(
         self,

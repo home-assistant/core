@@ -22,6 +22,17 @@ def tile() -> AsyncMock:
     mock = AsyncMock(spec=Tile)
     mock.uuid = "19264d2dffdbca32"
     mock.name = "Wallet"
+    mock.dead = False
+    mock.latitude = 1
+    mock.longitude = 1
+    mock.altitude = 0
+    mock.lost = False
+    mock.last_timestamp = datetime(2020, 8, 12, 17, 55, 26)
+    mock.lost_timestamp = datetime(1969, 12, 31, 19, 0, 0)
+    mock.ring_state = "STOPPED"
+    mock.voip_state = "OFFLINE"
+    mock.hardware_version = "02.09"
+    mock.firmware_version = "01.12.14.0"
     mock.as_dict.return_value = {
         "accuracy": 13.496111,
         "altitude": 0,

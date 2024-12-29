@@ -198,7 +198,7 @@ async def test_goto(
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "x_coord": 25500, "y_coord": 25500}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "x": 25500, "y": 25500}
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:
