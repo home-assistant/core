@@ -1,11 +1,11 @@
 rules:
   # Bronze
-  config-flow: todo
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: todo
   runtime-data: done
-  test-before-setup: todo
+  test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
