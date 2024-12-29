@@ -1,7 +1,7 @@
 {
   "domain": "influxdb",
   "name": "InfluxDB",
-  "codeowners": ["@mdegat01, @Robbie1221"],
+  "codeowners": ["@mdegat01", "@Robbie1221"],
   "documentation": "https://www.home-assistant.io/integrations/influxdb",
   "iot_class": "local_push",
   "loggers": ["influxdb", "influxdb_client"],
