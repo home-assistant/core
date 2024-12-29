@@ -68,6 +68,7 @@ SENSOR_CHARGE_SESSION = [
     ),
     OhmeSensorDescription(
         key="battery",
+        translation_key="car_battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=0,
