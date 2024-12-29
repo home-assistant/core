@@ -23,7 +23,11 @@ from habiticalib import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -71,10 +75,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 await self.habitica.get_content(user.data.preferences.language)
             ).data
         except NotAuthorizedError as e:
-            raise ConfigEntryNotReady(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"account": self.config_entry.title},
+                translation_key="authentication_failed",
             ) from e
         except TooManyRequestsError as e:
             raise ConfigEntryNotReady(
