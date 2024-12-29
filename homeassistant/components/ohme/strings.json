@@ -38,7 +38,7 @@
       "description": "Return a list of charge slots.",
       "fields": {
         "config_entry": {
-          "name": "Ohme",
+          "name": "Ohme account",
           "description": "The Ohme config entry for which to return charge slots."
         }
       }

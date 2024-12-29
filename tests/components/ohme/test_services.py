@@ -3,9 +3,12 @@
 from unittest.mock import MagicMock
 
 import pytest
-
+from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.ohme.const import DOMAIN
-from homeassistant.components.ohme.services import ATTR_CONFIG_ENTRY
+from homeassistant.components.ohme.services import (
+    ATTR_CONFIG_ENTRY,
+    SERVICE_LIST_CHARGE_SLOTS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -15,7 +18,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_list_charge_slots(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test list charge slots service."""
 
@@ -29,7 +35,7 @@ async def test_list_charge_slots(
         }
     ]
 
-    response = await hass.services.async_call(
+    assert snapshot == await hass.services.async_call(
         DOMAIN,
         "list_charge_slots",
         {
@@ -39,13 +45,25 @@ async def test_list_charge_slots(
         return_response=True,
     )
 
-    assert response == {"slots": mock_client.slots}
+
+async def test_list_charge_slots_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test list charge slots service."""
+
+    await setup_integration(hass, mock_config_entry)
 
     # Test error
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError, match="Invalid config entry provided. Got invalid"
+    ):
         await hass.services.async_call(
             DOMAIN,
-            "list_charge_slots",
+            SERVICE_LIST_CHARGE_SLOTS,
             {ATTR_CONFIG_ENTRY: "invalid"},
             blocking=True,
+            return_response=True,
         )

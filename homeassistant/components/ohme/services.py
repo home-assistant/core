@@ -13,9 +13,6 @@ from homeassistant.helpers import selector
 from .const import DOMAIN
 
 SERVICE_LIST_CHARGE_SLOTS = "list_charge_slots"
-SERVICES = [
-    SERVICE_LIST_CHARGE_SLOTS,
-]
 ATTR_CONFIG_ENTRY: Final = "config_entry"
 SERVICE_SCHEMA: Final = vol.Schema(
     {

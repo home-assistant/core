@@ -24,6 +24,13 @@ class OhmeRuntimeData:
     advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
 
 
+async def async_setup(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
+    """Set up Ohme integration."""
+    async_setup_services(hass)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
@@ -54,8 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
         await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = OhmeRuntimeData(*coordinators)
-
-    async_setup_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
