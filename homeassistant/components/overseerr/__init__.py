@@ -8,7 +8,11 @@ from aiohttp.hdrs import METH_POST
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 
-from homeassistant.components.webhook import async_generate_url, async_register
+from homeassistant.components.webhook import (
+    async_generate_url,
+    async_register,
+    async_unregister,
+)
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import HomeAssistantView
@@ -32,6 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) ->
 
     await webhook_manager.register_webhook()
 
+    entry.async_on_unload(webhook_manager.unregister_webhook)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -53,8 +59,6 @@ class OverseerrWebhookManager:
 
     async def register_webhook(self) -> None:
         """Register webhook."""
-        if not await self.check_need_change():
-            return
         async_register(
             self.hass,
             DOMAIN,
@@ -63,10 +67,12 @@ class OverseerrWebhookManager:
             self.handle_webhook,
             allowed_methods=[METH_POST],
         )
+        if not await self.check_need_change():
+            return
         url = async_generate_url(self.hass, self.entry.data[CONF_WEBHOOK_ID])
-        LOGGER.warning("Setting Overseerr webhook to %s", url)
+        LOGGER.debug("Setting Overseerr webhook to %s", url)
         if not await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
-            LOGGER.error("Failed to set Overseerr webhook")
+            LOGGER.debug("Failed to set Overseerr webhook")
             return
         await self.client.set_webhook_notification_config(
             enabled=True,
@@ -95,3 +101,7 @@ class OverseerrWebhookManager:
         if data["notification_type"].startswith("MEDIA"):
             await self.entry.runtime_data.async_refresh()
         return HomeAssistantView.json({"message": "ok"})
+
+    async def unregister_webhook(self) -> None:
+        """Unregister webhook."""
+        async_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
