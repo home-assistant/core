@@ -5805,6 +5805,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "snoo": {
+      "name": "Happiest Baby Snoo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "snooz": {
       "name": "Snooz",
       "integration_type": "hub",
