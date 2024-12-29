@@ -14,6 +14,7 @@ from homeassistant.components.influxdb.const import DEFAULT_BUCKET
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.setup import async_setup_component
 
 from . import (
     BASE_V1_CONFIG,
@@ -67,6 +68,17 @@ def mock_client_fixture(
         yield client
 
 
+@pytest.fixture(name="mock_import")
+def mock_import_fixture(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock]:
+    """Patch the InfluxDBClient object with mock for version under test."""
+    with patch(
+        "homeassistant.components.influxdb.config_flow.ConfigFlow.async_step_import"
+    ) as async_import:
+        yield async_import
+
+
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request: pytest.FixtureRequest):
     """Get version specific lambda to make write API call mock."""
@@ -82,6 +94,37 @@ def get_mock_call_fixture(request: pytest.FixtureRequest):
     if request.param == influxdb.API_VERSION_2:
         return lambda body, precision=None: v2_call(body, precision)
     return lambda body, precision=None: call(body, time_precision=precision)
+
+
+@pytest.mark.parametrize(
+    ("mock_import", "config_base", "config_ext", "get_write_api"),
+    [
+        (influxdb.DEFAULT_API_VERSION, BASE_V1_CONFIG, {}, _get_write_api_mock_v1),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "organization": "org",
+                "token": "token",
+            },
+            _get_write_api_mock_v2,
+        ),
+    ],
+    indirect=["mock_import"],
+)
+async def test_setup_minimal_config(
+    hass: HomeAssistant, mock_import, config_base, config_ext, get_write_api
+) -> None:
+    """Test the setup with minimal configuration and defaults."""
+    config = {"influxdb": {}}
+    config["influxdb"].update(config_ext)
+
+    assert await async_setup_component(hass, influxdb.DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert mock_import.call_count == 1
+    # assert mock_import.call_args == call(config_base)
 
 
 @pytest.mark.parametrize(
