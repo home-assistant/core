@@ -1,6 +1,6 @@
 """Ohme services."""
 
-from typing import Any, Final
+from typing import Final
 
 from ohme import OhmeApiClient
 import voluptuous as vol
@@ -9,8 +9,8 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
-    SupportsResponse,
     ServiceResponse,
+    SupportsResponse,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
