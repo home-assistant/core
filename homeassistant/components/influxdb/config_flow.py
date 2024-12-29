@@ -19,7 +19,8 @@ async def _validate_influxdb_connection(
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, data, True)
-    except ConnectionError:
+    except ConnectionError as ex:
+        _LOGGER.error(ex)
         return {"base": "cannot_connect"}
     except Exception:
         _LOGGER.exception("Unknown error")
