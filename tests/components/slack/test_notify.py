@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import os
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
+from aiohttp import ClientError
 import pytest
 from slack_sdk.errors import SlackApiError
 
@@ -358,3 +361,243 @@ def test_async_get_filename_from_url(url, expected_filename) -> None:
     """Test _async_get_filename_from_url with various URLs."""
 
     assert _async_get_filename_from_url(url) == expected_filename
+
+
+@pytest.mark.asyncio
+async def test_send_remote_file_message_url_not_allowed() -> None:
+    """Tests that sending a remote file fails if the URL is not allowed."""
+    mock_client = Mock()
+    mock_client.files_remote_add = AsyncMock()
+    mock_hass = Mock()
+    mock_hass.config.is_allowed_external_url = Mock(return_value=False)
+    service = SlackNotificationService(mock_hass, mock_client, {})
+
+    url = "http://example.com/image.png"
+    targets = ["#general"]
+    message = "Here is a remote image"
+    title = "Remote Image"
+
+    await service._async_send_remote_file_message(
+        url=url,
+        targets=targets,
+        message=message,
+        title=title,
+        thread_ts=None,
+    )
+
+    mock_client.files_remote_add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_send_remote_file_message_no_valid_channels() -> None:
+    """Tests that sending a remote file fails if no valid channels are found."""
+    mock_client = Mock()
+    mock_client.files_remote_add = AsyncMock()
+    mock_hass = Mock()
+    mock_hass.config.is_allowed_external_url = Mock(return_value=True)
+    service = SlackNotificationService(mock_hass, mock_client, {})
+
+    url = "http://example.com/image.png"
+    targets = ["#invalid_channel"]
+    message = "Here is a remote image"
+    title = "Remote Image"
+
+    with patch.object(service, "_async_get_channel_id", return_value=None):
+        await service._async_send_remote_file_message(
+            url=url,
+            targets=targets,
+            message=message,
+            title=title,
+            thread_ts=None,
+        )
+
+    mock_client.files_remote_add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_send_remote_file_message_download_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Tests that a ClientError during file download is logged."""
+    mock_client = Mock()
+    mock_client.conversations_list = AsyncMock(
+        return_value={"channels": []}
+    )  # Mock Slack API response
+    mock_hass = Mock()
+    mock_hass.config.is_allowed_external_url = Mock(return_value=True)
+    mock_hass.data = {"aiohttp_client": {}}
+    service = SlackNotificationService(mock_hass, mock_client, {})
+
+    url = "http://example.com/image.png"
+    message = "Here is a remote image"
+    title = "Remote Image"
+
+    with (
+        patch.object(service, "_async_get_channel_id", return_value="C12345"),
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ) as mock_get_clientsession,
+    ):
+        mock_session = mock_get_clientsession.return_value
+        mock_session.request = AsyncMock(side_effect=ClientError)
+
+        with caplog.at_level(logging.ERROR):
+            # Call the function to test
+            await service._async_send_remote_file_message(
+                url=url,
+                targets=["#general"],
+                message=message,
+                title=title,
+                thread_ts=None,
+            )
+
+            # Assert that the error was logged
+            assert any(
+                "Error while retrieving http://example.com/image.png" in record.message
+                for record in caplog.records
+            )
+
+        # Ensure no further actions were taken
+        mock_client.files_remote_add.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_send_remote_file_message_with_auth() -> None:
+    """Tests that sending a remote file with authentication works."""
+    # Mock Slack client behavior
+    mock_client = Mock()
+    mock_client.files_remote_add = AsyncMock(
+        return_value={
+            "file": {"id": "F12345", "permalink": "http://example.com/image.png"}
+        }
+    )
+    mock_client.files_remote_share = AsyncMock()
+    mock_hass = Mock()
+    mock_hass.config.is_allowed_external_url = Mock(return_value=True)
+    mock_hass.data = {"aiohttp_client": {}}
+    service = SlackNotificationService(mock_hass, mock_client, {})
+
+    # Test data
+    url = "http://example.com/image.png"
+    targets = ["#general"]
+    message = "Here is a remote image"
+    title = "Remote Image"
+    username = "user"
+    password = "pass"
+
+    with (
+        patch.object(service, "_async_get_channel_id", return_value="C12345"),
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ) as mock_get_clientsession,
+    ):
+        # Mock HTTP session behavior
+        mock_session = mock_get_clientsession.return_value
+        mock_response = AsyncMock()
+        mock_response.read = AsyncMock(return_value=b"image data")
+        mock_response.raise_for_status = Mock()
+        mock_session.request = AsyncMock(return_value=mock_response)
+
+        # Call the function to test
+        await service._async_send_remote_file_message(
+            url=url,
+            targets=targets,
+            message=message,
+            title=title,
+            thread_ts=None,
+            username=username,
+            password=password,
+        )
+
+        # Assert HTTP request with BasicAuth
+        mock_session.request.assert_called_once_with(
+            "get",
+            url,
+            auth=aiohttp.BasicAuth(username, password=password),
+        )
+
+        # Assert Slack client methods are called with correct parameters
+        mock_client.files_remote_add.assert_called_once_with(
+            external_id=mock_client.files_remote_add.call_args.kwargs[
+                "external_id"
+            ],  # Allow dynamic ID
+            external_url=url,
+            title=title,
+        )
+        mock_client.files_remote_share.assert_called_once_with(
+            file="F12345",
+            title=title,
+            channels="C12345",
+            initial_comment=message,
+            text=message,
+        )
+
+        # Ensure the session is properly closed
+        await mock_session.close()
+
+
+@pytest.mark.asyncio
+async def test_send_remote_file_message_success() -> None:
+    """Tests that sending a remote file works."""
+    # Mock Slack client behavior
+    mock_client = Mock()
+    mock_client.files_remote_add = AsyncMock(
+        return_value={
+            "file": {"id": "F12345", "permalink": "http://example.com/image.png"}
+        }
+    )
+    mock_client.files_remote_share = AsyncMock()
+    mock_hass = Mock()
+    mock_hass.config.is_allowed_external_url = Mock(return_value=True)
+    mock_hass.data = {"aiohttp_client": {}}
+    service = SlackNotificationService(mock_hass, mock_client, {})
+
+    # Test data
+    url = "http://example.com/image.png"
+    targets = ["#general"]
+    message = "Here is a remote image"
+    title = "Remote Image"
+
+    with (
+        patch.object(service, "_async_get_channel_id", return_value="C12345"),
+        patch(
+            "homeassistant.helpers.aiohttp_client.async_get_clientsession",
+            return_value=AsyncMock(),
+        ) as mock_get_clientsession,
+    ):
+        # Mock HTTP session behavior
+        mock_session = mock_get_clientsession.return_value
+        mock_response = AsyncMock()
+        mock_response.read = AsyncMock(return_value=b"image data")
+        mock_response.raise_for_status = Mock()
+        mock_session.request = AsyncMock(return_value=mock_response)
+
+        # Call the function to test
+        await service._async_send_remote_file_message(
+            url=url,
+            targets=targets,
+            message=message,
+            title=title,
+            thread_ts=None,
+        )
+
+        # Assert Slack client methods are called with correct parameters
+        mock_client.files_remote_add.assert_called_once_with(
+            external_id=mock_client.files_remote_add.call_args.kwargs[
+                "external_id"
+            ],  # Allow the test to match dynamic `external_id`
+            external_url=url,
+            title=title,
+        )
+        mock_client.files_remote_share.assert_called_once_with(
+            file="F12345",
+            title=title,
+            channels="C12345",
+            initial_comment=message,
+            text=message,
+        )
+
+        # Ensure the session is properly closed
+        await mock_session.close()

@@ -243,20 +243,25 @@ class SlackNotificationService(BaseNotificationService):
         if username and password is not None:
             kwargs = {"auth": BasicAuth(username, password=password)}
 
-        resp = await session.request("get", url, **kwargs)
-
+        image_data = None
         try:
+            resp = await session.request("get", url, **kwargs)
             resp.raise_for_status()
+            image_data = await resp.read()  # Read image data on success
         except ClientError as err:
             _LOGGER.error("Error while retrieving %s: %r", url, err)
             return
 
         # Step 3: Resize the image to meet the minimum dimension requirements
         # https://api.slack.com/methods/files.remote.add#markdown
+        if not image_data:
+            _LOGGER.error("Image data could not be retrieved")
+            return
+
+        include_preview = True
         try:
-            data = await resp.read()  # Read the bytes from the StreamReader
             # Open the image and convert to RGB if necessary
-            image = Image.open(BytesIO(data))
+            image = Image.open(BytesIO(image_data))
             if image.mode in ("RGBA", "P"):  # Convert if image has alpha channel
                 image = image.convert("RGB")
 
@@ -283,23 +288,43 @@ class SlackNotificationService(BaseNotificationService):
             image_buffer = BytesIO()
             image.save(image_buffer, format="PNG")
             image_buffer.seek(0)
-        except (OSError, ValueError) as e:
+        except OSError:
+            # If the file is not an image, handle it as a generic file
+            image_buffer = BytesIO(image_data)
+            include_preview = False
+        except ValueError as e:
             _LOGGER.error("Error processing image: %s", e)
             return
 
         # Step 4: Upload the image to Slack
-        add_response = await self._client.files_remote_add(
-            external_id=f"ha_{int(time())}",  # Unique identifier
-            external_url=url,
-            title=title or os.path.basename(url),
-            preview_image=image_buffer,  # will be displayed in channels
-        )
+        add_response = None
+        try:
+            if include_preview:
+                add_response = await self._client.files_remote_add(
+                    external_id=f"ha_{int(time())}",  # Unique identifier
+                    external_url=url,
+                    title=title or os.path.basename(url),
+                    preview_image=image_buffer,  # will be displayed in channels
+                )
+            else:
+                add_response = await self._client.files_remote_add(
+                    external_id=f"ha_{int(time())}",  # Unique identifier
+                    external_url=url,
+                    title=title or os.path.basename(url),
+                )
+            # Log the response for debugging
+            _LOGGER.debug("Remote add response: %s", add_response)
 
-        # Log the response for debugging
-        _LOGGER.debug("Remote add response: %s", add_response)
+            metadata = add_response.get("file")
+            if metadata is not None:
+                _LOGGER.info("File uploaded: %s", metadata.get("permalink"))
+            else:
+                _LOGGER.error("Metadata is missing in the Slack response")
+        except (SlackApiError, ClientError) as err:
+            _LOGGER.error("Error uploading file: %s", err)
 
         # Step 5: Share the file in the channel
-        if add_response.get("file"):
+        if add_response and add_response.get("file"):
             external_id = add_response["file"]["id"]
             tasks = {
                 channel_id: self._client.files_remote_share(
