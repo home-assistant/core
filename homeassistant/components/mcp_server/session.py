@@ -46,7 +46,8 @@ class SessionManager:
             yield session_id
         finally:
             _LOGGER.debug("Closing session: %s", session_id)
-            self._sessions.pop(session_id)
+            if session_id in self._sessions:  # close() may have already been called
+                self._sessions.pop(session_id)
 
     def get(self, session_id: str) -> Session | None:
         """Get an existing session."""

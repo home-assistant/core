@@ -99,7 +99,7 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         llm_api_id = entry.data[CONF_LLM_HASS_API]
         server = await create_server(hass, llm_api_id, context)
         options = await hass.async_add_executor_job(
-            server.create_initialization_options
+            server.create_initialization_options  # Reads package for version info
         )
 
         read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
