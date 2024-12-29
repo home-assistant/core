@@ -81,7 +81,9 @@ async def test_adam_climate_entity_attributes(
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 async def test_adam_2_climate_entity_attributes(
-    hass: HomeAssistant, mock_smile_adam_heat_cool: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test creation of adam climate device environment."""
     state = hass.states.get("climate.living_room")

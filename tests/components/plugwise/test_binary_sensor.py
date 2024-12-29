@@ -67,7 +67,9 @@ async def test_adam_climate_binary_sensor_change(
 
 
 @pytest.mark.parametrize("chosen_env", ["p1v4_442_triple"], indirect=True)
-@pytest.mark.parametrize("gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True
+)
 async def test_p1_binary_sensor_entity(
     hass: HomeAssistant, mock_smile_p1: MagicMock, init_integration: MockConfigEntry
 ) -> None:

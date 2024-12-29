@@ -112,7 +112,9 @@ async def test_gateway_config_entry_not_ready(
 
 
 @pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
-@pytest.mark.parametrize("gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
 async def test_device_in_dr(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -49,7 +49,9 @@ async def test_anna_max_boiler_temp_change(
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
 async def test_adam_dhw_setpoint_change(
-    hass: HomeAssistant, mock_smile_adam_heat_cool: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test changing of number entities."""
     state = hass.states.get("number.opentherm_domestic_hot_water_setpoint")

@@ -52,7 +52,9 @@ async def test_adam_change_select_entity(
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 async def test_adam_select_regulation_mode(
-    hass: HomeAssistant, mock_smile_adam_heat_cool: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test a regulation_mode select.
 
