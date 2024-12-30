@@ -13,9 +13,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
-from PyViCare.PyViCareVentilationDevice import (
-    VentilationDevice as PyViCareVentilationDevice,
-)
 from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -98,24 +95,12 @@ ORDERED_NAMED_FAN_SPEEDS = [
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareFan]:
-    """Create ViCare button entities for a device."""
-
-    entities: list[ViCareFan] = []
-
-    for device in device_list:
-        if isinstance(device.api, PyViCareVentilationDevice):
-            entities.append(
-                ViCareFan(get_device_serial(device.api), device.config, device.api)
-            )
-        elif device.api.isVentilationDevice():
-            entities.append(
-                ViCareFan(
-                    get_device_serial(device.api),
-                    device.config,
-                    device.config.asVentilation(),
-                )
-            )
-    return entities
+    """Create ViCare climate entities for a device."""
+    return [
+        ViCareFan(get_device_serial(device.api), device.config, device.api)
+        for device in device_list
+        if device.api.isVentilationDevice()
+    ]
 
 
 async def async_setup_entry(
