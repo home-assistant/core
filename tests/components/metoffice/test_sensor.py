@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 
 import pytest
 import requests_mock
@@ -20,8 +21,6 @@ from .const import (
     TEST_DATETIME_STRING,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
-    TEST_SITE_NAME_KINGSLYNN,
-    TEST_SITE_NAME_WAVERTREE,
     WAVERTREE_SENSOR_RESULTS,
 )
 
@@ -67,12 +66,11 @@ async def test_one_sensor_site_running(
     assert len(running_sensor_ids) > 0
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
-        sensor_id = sensor.attributes.get("sensor_id")
-        _, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+        sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
+        sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
 
         assert sensor.state == sensor_value
         assert sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
-        assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
         assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 
@@ -138,25 +136,22 @@ async def test_two_sensor_sites_running(
     assert len(running_sensor_ids) > 0
     for running_id in running_sensor_ids:
         sensor = hass.states.get(running_id)
-        sensor_id = sensor.attributes.get("sensor_id")
         if "wavertree" in running_id:
-            _, sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
+            sensor_id = re.search("met_office_wavertree_(.+?)$", running_id).group(1)
+            sensor_value = WAVERTREE_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
-            assert sensor.attributes.get("sensor_id") == sensor_id
-            assert sensor.attributes.get("site_name") == TEST_SITE_NAME_WAVERTREE
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
         else:
-            _, sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
+            sensor_id = re.search("met_office_king_s_lynn_(.+?)$", running_id).group(1)
+            sensor_value = KINGSLYNN_SENSOR_RESULTS[sensor_id]
             assert sensor.state == sensor_value
             assert (
                 sensor.attributes.get("last_update").isoformat() == TEST_DATETIME_STRING
             )
-            assert sensor.attributes.get("sensor_id") == sensor_id
-            assert sensor.attributes.get("site_name") == TEST_SITE_NAME_KINGSLYNN
             assert sensor.attributes.get("attribution") == ATTRIBUTION
 
 

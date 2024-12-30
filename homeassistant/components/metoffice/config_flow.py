@@ -100,7 +100,9 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_reauth(
@@ -139,6 +141,9 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): str,
                 }
             ),
+            description_placeholders={
+                "docs_url": ("https://www.home-assistant.io/integrations/metoffice")
+            },
             errors=errors,
         )
 

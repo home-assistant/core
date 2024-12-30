@@ -43,8 +43,6 @@ from .const import (
 from .helpers import get_attribute
 
 ATTR_LAST_UPDATE = "last_update"
-ATTR_SENSOR_ID = "sensor_id"
-ATTR_SITE_NAME = "site_name"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -264,6 +262,4 @@ class MetOfficeCurrentSensor(
         """Return the state attributes of the device."""
         return {
             ATTR_LAST_UPDATE: self.coordinator.data.now()["time"],
-            ATTR_SENSOR_ID: self.entity_description.key,
-            ATTR_SITE_NAME: self.coordinator.data.name,
         }
