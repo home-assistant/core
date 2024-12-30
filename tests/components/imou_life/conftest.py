@@ -16,8 +16,10 @@ IMOU_TOKEN_RETURN = {
 @pytest.fixture
 def imou_config_flow() -> Generator[MagicMock]:
     """Fixture to mock the Imou Open API Client for testing configuration flows.
+
     Yields:
        MagicMock: A mocked instance of ImouOpenApiClient.
+
     """
     with (
         patch.object(ImouOpenApiClient, "async_get_token", return_value=True),
@@ -41,6 +43,7 @@ def imou_config_flow_exception() -> Generator[MagicMock]:
 
     Returns:
         Generator[MagicMock]: A generated mocked client instance that raises an exception when `async_get_token` is called.
+
     """
     with (
         patch.object(ImouOpenApiClient, "async_get_token", return_value=True),
