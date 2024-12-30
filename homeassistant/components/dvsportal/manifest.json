@@ -1,0 +1,12 @@
+{
+  "domain": "dvsportal",
+  "name": "DVSPortal",
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/chessspider/dvsportal#readme",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "custom",
+  "requirements": ["dvsportal==1.2.0"]
+}
