@@ -191,6 +191,34 @@ async def test_zeroconf_duplicate(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_duplicate_different_ip(
+    hass: HomeAssistant,
+    mock_russound_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate flow with different IP."""
+    mock_config_entry.add_to_hass(hass)
+
+    ZEROCONF_DISCOVERY.ip_address = (ip_address("192.168.20.18"),)
+    ZEROCONF_DISCOVERY.ip_addresses = [ip_address("192.168.20.18")]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry
+    assert entry.data == {
+        CONF_HOST: "(IPv4Address('192.168.20.18'),)",
+        CONF_PORT: 9621,
+    }
+
+
 async def _start_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> ConfigFlowResult:
