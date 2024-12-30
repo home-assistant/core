@@ -76,6 +76,9 @@
       },
       "muted": {
         "name": "Muted"
+      },
+      "boost_state": {
+        "name": "Boost state"
       }
     },
     "button": {
