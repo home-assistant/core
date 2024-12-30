@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: SnooConfigEntry) -> bool:
     """Unload a config entry."""
     disconnects = await asyncio.gather(
-        *(coordinator.snoo.disconnect() for coordinator in entry.data.values()),
+        *(coordinator.snoo.disconnect() for coordinator in entry.runtime_data.values()),
         return_exceptions=True,
     )
     for disconnect in disconnects:

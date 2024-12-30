@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import jwt
 from python_snoo.exceptions import InvalidSnooAuth, SnooAuthException
 from python_snoo.snoo import Snoo
 import voluptuous as vol
@@ -36,8 +37,6 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_USERNAME])
-            self._abort_if_unique_id_configured()
             hub = Snoo(
                 email=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
@@ -45,7 +44,7 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await hub.authorize()
+                tokens = await hub.authorize()
             except SnooAuthException:
                 errors["base"] = "cannot_connect"
             except InvalidSnooAuth:
@@ -54,6 +53,12 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception %s")
                 errors["base"] = "unknown"
             else:
+                user_uuid = jwt.decode(
+                    tokens.aws_access, options={"verify_signature": False}
+                )["username"]
+                await self.async_set_unique_id(user_uuid)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
