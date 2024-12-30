@@ -32,7 +32,6 @@ from homeassistant.components.stream import (
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
     Stream,
-    StreamOpenClientError,
     create_stream,
 )
 from homeassistant.config_entries import (
@@ -291,8 +290,6 @@ async def async_test_and_preview_stream(
             f"{DOMAIN}.test_stream",
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
-    except StreamOpenClientError as err:
-        raise InvalidStreamException("unknown_with_details", str(err)) from err
     except PermissionError as err:
         raise InvalidStreamException("stream_not_permitted") from err
     except OSError as err:
@@ -346,7 +343,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         errors = {}
-        description_placeholders = {}
         hass = self.hass
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
@@ -362,8 +358,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except InvalidStreamException as err:
                     errors[CONF_STREAM_SOURCE] = str(err)
-                    if err.details:
-                        errors["error_details"] = err.details
                     self.preview_stream = None
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
@@ -382,8 +376,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     # temporary preview for user to check the image
                     self.preview_cam = user_input
                     return await self.async_step_user_confirm()
-                if "error_details" in errors:
-                    description_placeholders["error"] = errors.pop("error_details")
         elif self.user_input:
             user_input = self.user_input
         else:
@@ -391,7 +383,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=build_schema(user_input),
-            description_placeholders=description_placeholders,
             errors=errors,
         )
 
@@ -440,7 +431,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage Generic IP Camera options."""
         errors: dict[str, str] = {}
-        description_placeholders = {}
         hass = self.hass
 
         if user_input:
@@ -457,8 +447,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     )
                 except InvalidStreamException as err:
                     errors[CONF_STREAM_SOURCE] = str(err)
-                    if err.details:
-                        errors["error_details"] = err.details
                     self.preview_stream = None
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
@@ -480,8 +468,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     # temporary preview for user to check the image
                     self.preview_cam = data
                     return await self.async_step_user_confirm()
-                if "error_details" in errors:
-                    description_placeholders["error"] = errors.pop("error_details")
         elif self.user_input:
             user_input = self.user_input
         return self.async_show_form(
@@ -491,7 +477,6 @@ class GenericOptionsFlowHandler(OptionsFlow):
                 True,
                 self.show_advanced_options,
             ),
-            description_placeholders=description_placeholders,
             errors=errors,
         )
 

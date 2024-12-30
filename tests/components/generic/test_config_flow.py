@@ -29,7 +29,6 @@ from homeassistant.components.generic.const import (
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-    StreamOpenClientError,
 )
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import (
@@ -662,25 +661,6 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
-async def test_form_stream_worker_error(
-    hass: HomeAssistant, user_flow: ConfigFlowResult
-) -> None:
-    """Test we handle a StreamOpenClientError and pass the message through."""
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=StreamOpenClientError("Some message", 999),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "unknown_with_details"}
-    assert result2["description_placeholders"] == {"error": "Some message"}
-
-
-@respx.mock
 async def test_form_stream_permission_error(
     hass: HomeAssistant, fakeimgbytes_png: bytes, user_flow: ConfigFlowResult
 ) -> None:
@@ -864,43 +844,6 @@ async def test_options_template_error(
         )
     assert result7.get("type") is FlowResultType.FORM
     assert result7["errors"] == {"stream_source": "malformed_url"}
-
-
-@respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
-async def test_options_stream_other_error(
-    hass: HomeAssistant, fakeimgbytes_png: bytes, user_flow: ConfigFlowResult
-) -> None:
-    """Test we handle a StreamOpenClientError and pass the message through."""
-    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
-    respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
-
-    mock_entry = MockConfigEntry(
-        title="Test Camera",
-        domain=DOMAIN,
-        data={},
-        options=TESTDATA,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(mock_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream",
-        side_effect=StreamOpenClientError("A problem", "with detail"),
-    ):
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            TESTDATA,
-        )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"stream_source": "unknown_with_details"}
-    assert result2["description_placeholders"] == {"error": "A problem"}
 
 
 async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
