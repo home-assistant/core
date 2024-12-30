@@ -9,13 +9,13 @@ set_vacuum_goto_position:
       integration: roborock
       domain: vacuum
   fields:
-    x_coord:
+    x:
       example: 27500
       required: true
       selector:
         text:
           type: number
-    y_coord:
+    y:
       example: 32000
       required: true
       selector:

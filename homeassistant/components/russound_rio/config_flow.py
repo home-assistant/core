@@ -78,26 +78,3 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=DATA_SCHEMA,
             )
         return await self.async_step_user(user_input)
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Attempt to import the existing configuration."""
-        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
-        host = import_data[CONF_HOST]
-        port = import_data.get(CONF_PORT, 9621)
-
-        # Connection logic is repeated here since this method will be removed in future releases
-        client = RussoundClient(RussoundTcpConnectionHandler(host, port))
-        try:
-            await client.connect()
-            controller = client.controllers[1]
-            await client.disconnect()
-        except RUSSOUND_RIO_EXCEPTIONS:
-            _LOGGER.exception("Could not connect to Russound RIO")
-            return self.async_abort(
-                reason="cannot_connect", description_placeholders={}
-            )
-        else:
-            await self.async_set_unique_id(controller.mac_address)
-            self._abort_if_unique_id_configured()
-            data = {CONF_HOST: host, CONF_PORT: port}
-            return self.async_create_entry(title=controller.controller_type, data=data)
