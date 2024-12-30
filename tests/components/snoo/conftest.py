@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .mock_data import MOCK_AMAZON_AUTH, MOCK_SNOO_AUTH
+from .mock_data import MOCK_AMAZON_AUTH, MOCK_SNOO_AUTH, MOCK_SNOO_DEVICES
 
 
 @pytest.fixture
@@ -43,5 +43,11 @@ def bypass_api() -> None:
         patch(
             "homeassistant.components.snoo.Snoo.schedule_reauthorization",
         ),
+        patch(
+            "homeassistant.components.snoo.Snoo.get_devices",
+            return_value=MOCK_SNOO_DEVICES,
+        ),
+        patch("homeassistant.components.snoo.Snoo.subscribe"),
+        patch("homeassistant.components.snoo.Snoo.send_command"),
     ):
         yield
