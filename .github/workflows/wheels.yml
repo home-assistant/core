@@ -76,7 +76,19 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # Add additional pip wheel build constraints
+            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
+
+      - name: Write pip wheel build constraints
+        run: |
+          (
+            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
+            # this caused the numpy builds to fail
+            # https://github.com/scikit-build/ninja-python-distributions/issues/274
+            echo "ninja==1.11.1.1"
+          ) > build_constraints.txt
 
       - name: Upload env_file
         uses: actions/upload-artifact@v4.5.0
@@ -84,6 +96,13 @@ jobs:
           name: env_file
           path: ./.env_file
           include-hidden-files: true
+          overwrite: true
+
+      - name: Upload build_constraints
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: build_constraints
+          path: ./build_constraints.txt
           overwrite: true
 
       - name: Upload requirements_diff
@@ -122,6 +141,11 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: env_file
+
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
 
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
@@ -166,6 +190,11 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: env_file
+
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
 
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
