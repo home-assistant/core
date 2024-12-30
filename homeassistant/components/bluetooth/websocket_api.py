@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from functools import lru_cache
+import time
+from typing import Any
 
 from habluetooth import BluetoothScanningMode
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
@@ -13,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
 from .api import async_register_callback
-from .match import CONNECTABLE, BluetoothCallbackMatcher
+from .match import BluetoothCallbackMatcher
 from .models import BluetoothChange
 
 
@@ -21,6 +23,29 @@ from .models import BluetoothChange
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the bluetooth websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_advertisements)
+
+
+@lru_cache(maxsize=1024)
+def serialize_service_info(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+    """Serialize a BluetoothServiceInfoBleak object."""
+    return {
+        "name": service_info.name,
+        "address": service_info.address,
+        "rssi": service_info.rssi,
+        "manufacturer_data": {
+            str(manufacturer_id): manufacturer_data.hex()
+            for manufacturer_id, manufacturer_data in service_info.manufacturer_data.items()
+        },
+        "service_data": {
+            service_uuid: service_data.hex()
+            for service_uuid, service_data in service_info.service_data.items()
+        },
+        "service_uuids": service_info.service_uuids,
+        "source": service_info.source,
+        "connectable": service_info.connectable,
+        "time": service_info.time + (time.time() - time.monotonic()),
+        "tx_power": service_info.tx_power,
+    }
 
 
 class _AdvertisementSubscription:
@@ -39,22 +64,21 @@ class _AdvertisementSubscription:
         self.pending_service_infos: list[BluetoothServiceInfoBleak] = []
         self.ws_msg_id = ws_msg_id
         self.connection = connection
-        self.__call__ = self.pending_mode_callback
+        self.pending = True
 
     def start(self) -> None:
         """Start the subscription."""
         connection = self.connection
-        connection.send_message(websocket_api.result_message(self.ws_msg_id))
         connection.subscriptions[self.ws_msg_id] = async_register_callback(
             self.hass, self, self.match_dict, BluetoothScanningMode.PASSIVE
         )
-        self.__call__ = self.live_mode_callback
+        self.pending = False
         connection.send_message(
             json_bytes(
-                websocket_api.event_message(
+                websocket_api.result_message(
                     self.ws_msg_id,
                     [
-                        service_info.as_dict()
+                        serialize_service_info(service_info)
                         for service_info in self.pending_service_infos
                     ],
                 )
@@ -62,27 +86,25 @@ class _AdvertisementSubscription:
         )
         self.pending_service_infos.clear()
 
-    def live_mode_callback(
+    def __call__(
         self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         """Handle the callback."""
+        if self.pending:
+            self.pending_service_infos.append(service_info)
+            return
         self.connection.send_message(
             json_bytes(
-                websocket_api.event_message(self.ws_msg_id, [service_info.as_dict()])
+                websocket_api.event_message(
+                    self.ws_msg_id, [serialize_service_info(service_info)]
+                )
             )
         )
-
-    def pending_mode_callback(
-        self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
-    ) -> None:
-        """Handle the callback."""
-        self.pending_service_infos.append(service_info)
 
 
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "bluetooth/subscribe_advertisements",
-        vol.Optional("match_dict"): dict,
     }
 )
 @websocket_api.async_response
@@ -90,8 +112,6 @@ async def ws_subscribe_advertisements(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe advertisements websocket command."""
-    if "match_dict" in msg:
-        match_dict = cast(BluetoothCallbackMatcher, msg["match_dict"])
-    else:
-        match_dict = {CONNECTABLE: False}
-    _AdvertisementSubscription(hass, connection, msg["id"], match_dict).start()
+    _AdvertisementSubscription(
+        hass, connection, msg["id"], BluetoothCallbackMatcher(connectable=False)
+    ).start()

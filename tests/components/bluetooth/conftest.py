@@ -8,6 +8,12 @@ from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
 
+# pylint: disable-next=no-name-in-module
+from homeassistant.components import bluetooth
+from homeassistant.core import HomeAssistant
+
+from . import FakeScanner
+
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
 def disable_bluez_manager_socket():
@@ -304,3 +310,21 @@ def disable_new_discovery_flows_fixture():
         "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
     ) as mock_create_flow:
         yield mock_create_flow
+
+
+@pytest.fixture
+def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci0 scanner."""
+    hci0_scanner = FakeScanner("hci0", "hci0")
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
+    yield
+    cancel()
+
+
+@pytest.fixture
+def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
+    """Register an hci1 scanner."""
+    hci1_scanner = FakeScanner("hci1", "hci1")
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
+    yield
+    cancel()
