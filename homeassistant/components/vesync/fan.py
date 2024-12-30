@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def _setup_entities(devices, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncFanHA(VeSyncDevice, FanEntity):
+class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = (

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
@@ -60,7 +60,7 @@ def _setup_entities(devices, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLight(VeSyncDevice, LightEntity):
+class VeSyncBaseLight(VeSyncBaseEntity, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     _attr_name = None

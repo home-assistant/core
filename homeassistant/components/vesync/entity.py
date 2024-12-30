@@ -1,11 +1,9 @@
 """Common entity for VeSync Component."""
 
-from typing import Any
-
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -50,10 +48,6 @@ class VeSyncBaseEntity(Entity):
         """Update vesync device."""
         self.device.update()
 
-
-class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
-    """Base class for VeSync Device Representations."""
-
     @property
     def details(self):
         """Provide access to the device details dictionary."""
@@ -63,7 +57,3 @@ class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.device_status == "on"
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self.device.turn_off()

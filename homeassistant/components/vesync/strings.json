@@ -43,6 +43,11 @@
         "name": "Current voltage"
       }
     },
+    "switch": {
+      "on": {
+        "name": "On"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

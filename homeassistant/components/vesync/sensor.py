@@ -204,7 +204,7 @@ def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
     async_add_entities(
         (
-            VeSyncSensorEntity(dev, description)
+            VeSyncSensorEntity(description, dev)
             for dev in devices
             for description in SENSORS
             if description.exists_fn(dev)
@@ -220,8 +220,8 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
         description: VeSyncSensorEntityDescription,
+        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
     ) -> None:
         """Initialize the VeSync outlet device."""
         super().__init__(device)
