@@ -17,13 +17,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture(name="mock_amazon_auth")
-def mock_amazon_auth() -> None:
-    """Return a fake response for authing to amazon."""
-
-
 @pytest.fixture(name="bypass_api")
-def bypass_api(mock_snoo_auth, mock_amazon_auth, mock_reauth) -> None:
+def bypass_api() -> None:
     """Bypass the Snoo api."""
     with (
         patch(

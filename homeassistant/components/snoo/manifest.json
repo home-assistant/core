@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/snoo",
   "iot_class": "cloud_push",
   "loggers": ["snoo"],
-  "requirements": ["python-snoo==0.2.4"]
+  "requirements": ["python-snoo==0.3.1"]
 }

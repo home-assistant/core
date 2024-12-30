@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from python_snoo.containers import SnooData, SnooStates
+from python_snoo.containers import SnooData, SnooEvents, SnooStates
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -45,6 +45,13 @@ SENSOR_DESCRIPTIONS: list[SnooSensorEntityDescription] = [
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    SnooSensorEntityDescription(
+        key="last_event",
+        translation_key="last_event",
+        value_fn=lambda data: data.event.value,
+        device_class=SensorDeviceClass.ENUM,
+        options=[e.value for e in SnooEvents],
     ),
 ]
 
