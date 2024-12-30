@@ -195,6 +195,7 @@ async def _setup(
 ) -> list[State]:
     """Create client and test expected sensors."""
     config = {
+        DOMAIN: config_ext,
         sensor.DOMAIN: {"platform": DOMAIN},
     }
     influx_config = config[sensor.DOMAIN]
