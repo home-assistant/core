@@ -9,9 +9,10 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "dvsportal"
 
 DATA_SCHEMA = vol.Schema(
     {

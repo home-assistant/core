@@ -1,0 +1,3 @@
+"""Setup dvsportal."""
+
+DOMAIN = "dvsportal"
