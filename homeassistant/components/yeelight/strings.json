@@ -59,7 +59,7 @@
   "services": {
     "set_mode": {
       "name": "Set mode",
-      "description": "Sets a operation mode.",
+      "description": "Sets an operation mode.",
       "fields": {
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
