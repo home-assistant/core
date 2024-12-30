@@ -4,13 +4,12 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from pyimouapi.ha_device import ImouHaDevice, ImouHaDeviceManager
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class ImouDataUpdateCoordinator(DataUpdateCoordinator):
@@ -20,10 +19,10 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
         self, hass: HomeAssistant, device_manager: ImouHaDeviceManager
     ) -> None:
         """Init ImouDataUpdateCoordinator."""
-        LOGGER.info("ImouDataUpdateCoordinator init")
+        _LOGGER.info("ImouDataUpdateCoordinator init")
         super().__init__(
             hass,
-            LOGGER,
+            _LOGGER,
             name="ImouDataUpdateCoordinator",
             update_interval=timedelta(seconds=60),
             always_update=True,
@@ -64,10 +63,10 @@ class ImouDataUpdateCoordinator(DataUpdateCoordinator):
         return True
 
     async def _async_update_data(self):
-        LOGGER.info("ImouDataUpdateCoordinator update_data")
-        async with async_timeout.timeout(120):
+        _LOGGER.info("ImouDataUpdateCoordinator update_data")
+        async with asyncio.timeout(120):
             try:
                 return await self.async_update_all_device()
             except Exception as err:
-                LOGGER.error(f"Error fetching data: {err}")  # noqa: G004
+                _LOGGER.error(f"Error fetching data: {err}")  # noqa: G004
                 raise UpdateFailed from err
