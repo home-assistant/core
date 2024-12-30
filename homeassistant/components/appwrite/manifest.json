@@ -1,0 +1,13 @@
+{
+  "domain": "appwrite",
+  "name": "Appwrite",
+  "codeowners": ["@ParitoshBh"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/appwrite",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["appwrite==6.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}

@@ -1,0 +1,7 @@
+{
+  "services": {
+    "execute_function": {
+      "service": "mdi:function"
+    }
+  }
+}

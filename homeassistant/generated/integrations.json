@@ -402,6 +402,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "appwrite": {
+      "name": "Appwrite",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "aprilaire": {
       "name": "AprilAire",
       "integration_type": "device",
