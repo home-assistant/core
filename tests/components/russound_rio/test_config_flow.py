@@ -200,13 +200,27 @@ async def test_zeroconf_duplicate_different_ip(
     """Test duplicate flow with different IP."""
     mock_config_entry.add_to_hass(hass)
 
-    ZEROCONF_DISCOVERY.ip_address = (ip_address("192.168.20.18"),)
-    ZEROCONF_DISCOVERY.ip_addresses = [ip_address("192.168.20.18")]
+    ZEROCONF_DISCOVERY_DIFFERENT_IP = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.20.18"),
+        ip_addresses=[ip_address("192.168.20.18")],
+        hostname="controller1.local.",
+        name="controller1._stream-magic._tcp.local.",
+        port=9621,
+        type="_rio._tcp.local.",
+        properties={
+            "txtvers": "0",
+            "productType": "2",
+            "productId": "59",
+            "version": "07.04.00",
+            "buildDate": "Jul 8 2019",
+            "localName": "0",
+        },
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
+        data=ZEROCONF_DISCOVERY_DIFFERENT_IP,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -214,7 +228,7 @@ async def test_zeroconf_duplicate_different_ip(
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry
     assert entry.data == {
-        CONF_HOST: "(IPv4Address('192.168.20.18'),)",
+        CONF_HOST: "192.168.20.18",
         CONF_PORT: 9621,
     }
 
