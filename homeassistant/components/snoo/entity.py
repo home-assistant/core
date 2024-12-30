@@ -21,22 +21,17 @@ class SnooDescriptionEntity(CoordinatorEntity[SnooCoordinator]):
         """Initialize the Snoo entity."""
         super().__init__(coordinator)
         self.device = coordinator.device
-        self._attr_device_info = coordinator.device_info
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device_unique_id}_{description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.data is not None and super().available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get the device info of a corresponding entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device_unique_id)},
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.device_unique_id)},
             name=self.device.name,
             manufacturer="Happiest Baby",
             model="Snoo",
             serial_number=self.device.serialNumber,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data is not None and super().available

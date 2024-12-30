@@ -1,22 +1,22 @@
-"""Support for Anova Coordinators."""
+"""Support for Snoo Coordinators."""
 
 import logging
 
 from python_snoo.containers import SnooData, SnooDevice
 from python_snoo.snoo import Snoo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from . import SnooConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class SnooCoordinator(DataUpdateCoordinator[SnooData]):
-    """Snoo custom coordinator."""
+    """Snoo coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SnooConfigEntry
 
     def __init__(self, hass: HomeAssistant, device: SnooDevice, snoo: Snoo) -> None:
         """Set up Snoo Coordinator."""
@@ -27,7 +27,6 @@ class SnooCoordinator(DataUpdateCoordinator[SnooData]):
         )
         self.device_unique_id = device.serialNumber
         self.device = device
-        self.device_info: DeviceInfo | None = None
         self.sensor_data_set: bool = False
         self.snoo = snoo
 
