@@ -1,4 +1,4 @@
-"""Diagnostics support for Nord Pool."""
+"""Diagnostics support for Trafikverket Weatherstation."""
 
 from __future__ import annotations
 
@@ -13,5 +13,5 @@ from . import TVWeatherConfigEntry
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: TVWeatherConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for Nord Pool config entry."""
+    """Return diagnostics for Trafikverket Weatherstation config entry."""
     return asdict(entry.runtime_data.data)

@@ -1,4 +1,4 @@
-"""Test Nord Pool diagnostics."""
+"""Test Trafikverket Weatherstation diagnostics."""
 
 from __future__ import annotations
 

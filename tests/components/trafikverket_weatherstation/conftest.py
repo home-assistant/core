@@ -1,4 +1,4 @@
-"""Fixtures for the Nord Pool integration."""
+"""Fixtures for the Trafikverket Weatherstation integration."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 async def load_int(
     hass: HomeAssistant, mock_response: WeatherStationInfoModel
 ) -> MockConfigEntry:
-    """Set up the Nord Pool integration in Home Assistant."""
+    """Set up the Trafikverket Weatherstation integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -51,7 +51,7 @@ async def mock_weather_response(
 
 @pytest.fixture(name="get_data")
 async def get_data_from_library(hass: HomeAssistant) -> WeatherStationInfoModel:
-    """Retrieve data from Nord Pool library."""
+    """Retrieve data from Trafikverket Weatherstation library."""
     return WeatherStationInfoModel(
         station_name="Arlanda",
         station_id="227",
