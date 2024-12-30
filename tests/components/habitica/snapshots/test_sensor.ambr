@@ -7,9 +7,9 @@
     'capabilities': dict({
       'options': list([
         'warrior',
-        'healer',
-        'wizard',
         'rogue',
+        'wizard',
+        'healer',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -35,7 +35,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.CLASS: 'class'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_class',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_class',
     'unit_of_measurement': None,
   })
 # ---
@@ -46,9 +46,9 @@
       'friendly_name': 'test-user Class',
       'options': list([
         'warrior',
-        'healer',
-        'wizard',
         'rogue',
+        'wizard',
+        'healer',
       ]),
     }),
     'context': <ANY>,
@@ -91,7 +91,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.CONSTITUTION: 'constitution'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_constitution',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_constitution',
     'unit_of_measurement': 'CON',
   })
 # ---
@@ -101,7 +101,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 20,
+      'equipment': 42,
       'friendly_name': 'test-user Constitution',
       'level': 19,
       'unit_of_measurement': 'CON',
@@ -111,7 +111,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '80',
+    'state': '102',
   })
 # ---
 # name: test_sensors[sensor.test_user_dailies-entry]
@@ -143,7 +143,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -151,23 +151,39 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1': dict({
-        'created_at': '2024-09-22T11:44:43.774Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-09-22T11:44:43.774000+00:00',
         'every_x': 1,
         'frequency': 'weekly',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'is_due': True,
         'next_due': list([
-          '2024-09-24T22:00:00.000Z',
-          '2024-09-27T22:00:00.000Z',
-          '2024-09-28T22:00:00.000Z',
-          '2024-10-01T22:00:00.000Z',
-          '2024-10-04T22:00:00.000Z',
-          '2024-10-08T22:00:00.000Z',
+          '2024-09-24T22:00:00+00:00',
+          '2024-09-27T22:00:00+00:00',
+          '2024-09-28T22:00:00+00:00',
+          '2024-10-01T22:00:00+00:00',
+          '2024-10-04T22:00:00+00:00',
+          '2024-10-08T22:00:00+00:00',
         ]),
         'notes': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
         'priority': 2,
@@ -180,7 +196,7 @@
           'th': False,
           'w': True,
         }),
-        'start_date': '2024-09-21T22:00:00.000Z',
+        'start_date': '2024-09-21T22:00:00+00:00',
         'tags': list([
           '51076966-2970-4b40-b6ba-d58c6a756dd7',
         ]),
@@ -189,24 +205,40 @@
         'yester_daily': True,
       }),
       '564b9ac9-c53d-4638-9e7f-1cd96fe19baa': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
         'completed': True,
-        'created_at': '2024-07-07T17:51:53.268Z',
+        'created_at': '2024-07-07T17:51:53.268000+00:00',
         'every_x': 1,
         'frequency': 'weekly',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'is_due': True,
         'next_due': list([
-          'Mon Sep 23 2024 00:00:00 GMT+0200',
-          'Tue Sep 24 2024 00:00:00 GMT+0200',
-          'Wed Sep 25 2024 00:00:00 GMT+0200',
-          'Thu Sep 26 2024 00:00:00 GMT+0200',
-          'Fri Sep 27 2024 00:00:00 GMT+0200',
-          'Sat Sep 28 2024 00:00:00 GMT+0200',
+          '2024-09-23T00:00:00+02:00',
+          '2024-09-24T00:00:00+02:00',
+          '2024-09-25T00:00:00+02:00',
+          '2024-09-26T00:00:00+02:00',
+          '2024-09-27T00:00:00+02:00',
+          '2024-09-28T00:00:00+02:00',
         ]),
         'notes': 'Klicke um Änderungen zu machen!',
         'priority': 1,
@@ -219,31 +251,102 @@
           'th': True,
           'w': True,
         }),
-        'start_date': '2024-07-06T22:00:00.000Z',
+        'start_date': '2024-07-06T22:00:00+00:00',
         'streak': 1,
         'text': 'Zahnseide benutzen',
         'type': 'daily',
         'value': -2.9663035443712333,
         'yester_daily': True,
       }),
+      '6e53f1f5-a315-4edd-984d-8d762e4a08ef': dict({
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-10-10T15:57:14.304000+00:00',
+        'every_x': 1,
+        'frequency': 'monthly',
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'next_due': list([
+          '2024-12-14T23:00:00+00:00',
+          '2025-01-18T23:00:00+00:00',
+          '2025-02-15T23:00:00+00:00',
+          '2025-03-15T23:00:00+00:00',
+          '2025-04-19T23:00:00+00:00',
+          '2025-05-17T23:00:00+00:00',
+        ]),
+        'notes': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+        'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'start_date': '2024-09-20T23:00:00+00:00',
+        'streak': 1,
+        'text': 'Arbeite an einem kreativen Projekt',
+        'type': 'daily',
+        'value': -0.9215181434950852,
+        'weeks_of_month': list([
+          3,
+        ]),
+        'yester_daily': True,
+      }),
       'f2c85972-1a19-4426-bc6d-ce3337b9d99f': dict({
-        'created_at': '2024-07-07T17:51:53.266Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.266000+00:00',
         'every_x': 1,
         'frequency': 'weekly',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'is_due': True,
         'next_due': list([
-          '2024-09-22T22:00:00.000Z',
-          '2024-09-23T22:00:00.000Z',
-          '2024-09-24T22:00:00.000Z',
-          '2024-09-25T22:00:00.000Z',
-          '2024-09-26T22:00:00.000Z',
-          '2024-09-27T22:00:00.000Z',
+          '2024-09-22T22:00:00+00:00',
+          '2024-09-23T22:00:00+00:00',
+          '2024-09-24T22:00:00+00:00',
+          '2024-09-25T22:00:00+00:00',
+          '2024-09-26T22:00:00+00:00',
+          '2024-09-27T22:00:00+00:00',
         ]),
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
@@ -256,7 +359,7 @@
           'th': True,
           'w': True,
         }),
-        'start_date': '2024-07-06T22:00:00.000Z',
+        'start_date': '2024-07-06T22:00:00+00:00',
         'text': '5 Minuten ruhig durchatmen',
         'type': 'daily',
         'value': -1.919611992979862,
@@ -270,7 +373,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_sensors[sensor.test_user_display_name-entry]
@@ -302,7 +405,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.DISPLAY_NAME: 'display_name'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_display_name',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_display_name',
     'unit_of_measurement': None,
   })
 # ---
@@ -348,7 +451,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.EXPERIENCE: 'experience'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_experience',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience',
     'unit_of_measurement': 'XP',
   })
 # ---
@@ -398,7 +501,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.GEMS: 'gems'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_gems',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gems',
     'unit_of_measurement': 'gems',
   })
 # ---
@@ -414,7 +517,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '40',
   })
 # ---
 # name: test_sensors[sensor.test_user_gold-entry]
@@ -449,7 +552,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.GOLD: 'gold'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_gold',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gold',
     'unit_of_measurement': 'GP',
   })
 # ---
@@ -496,7 +599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HABITS: 'habits'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_habits',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_habits',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -504,60 +607,160 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       '1d147de6-5c02-4740-8e2f-71d3015a37f4': dict({
-        'created_at': '2024-07-07T17:51:53.266Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.266000+00:00',
         'frequency': 'daily',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Eine kurze Pause machen',
         'type': 'habit',
         'up': True,
       }),
       'bc1d1855-b2b8-4663-98ff-62e7b763dfc4': dict({
-        'created_at': '2024-07-07T17:51:53.265Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.265000+00:00',
         'down': True,
         'frequency': 'daily',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Oder lösche es über die Bearbeitungs-Ansicht',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
         'type': 'habit',
       }),
       'e97659e0-2c42-4599-a7bb-00282adc410d': dict({
-        'created_at': '2024-07-07T17:51:53.264Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.264000+00:00',
         'frequency': 'daily',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Füge eine Aufgabe zu Habitica hinzu',
         'type': 'habit',
         'up': True,
       }),
       'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a': dict({
-        'created_at': '2024-07-07T17:51:53.268Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.268000+00:00',
         'down': True,
         'frequency': 'daily',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Gesundes Essen/Junkfood',
         'type': 'habit',
         'up': True,
@@ -605,7 +808,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HEALTH: 'health'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_health',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health',
     'unit_of_measurement': 'HP',
   })
 # ---
@@ -620,7 +823,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.test_user_intelligence-entry]
@@ -655,7 +858,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.INTELLIGENCE: 'intelligence'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_intelligence',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intelligence',
     'unit_of_measurement': 'INT',
   })
 # ---
@@ -665,7 +868,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 0,
+      'equipment': 12,
       'friendly_name': 'test-user Intelligence',
       'level': 19,
       'unit_of_measurement': 'INT',
@@ -675,7 +878,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60',
+    'state': '72',
   })
 # ---
 # name: test_sensors[sensor.test_user_level-entry]
@@ -707,7 +910,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.LEVEL: 'level'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_level',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_level',
     'unit_of_measurement': None,
   })
 # ---
@@ -756,7 +959,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.MANA: 'mana'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_mana',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana',
     'unit_of_measurement': 'MP',
   })
 # ---
@@ -803,7 +1006,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.HEALTH_MAX: 'health_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_health_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
     'unit_of_measurement': 'HP',
   })
 # ---
@@ -850,7 +1053,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.MANA_MAX: 'mana_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_mana_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana_max',
     'unit_of_measurement': 'MP',
   })
 # ---
@@ -900,13 +1103,14 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.TRINKETS: 'trinkets'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_trinkets',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_trinkets',
     'unit_of_measurement': '⧖',
   })
 # ---
 # name: test_sensors[sensor.test_user_mystic_hourglasses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/notif_subscriber_reward.png',
       'friendly_name': 'test-user Mystic hourglasses',
       'unit_of_measurement': '⧖',
     }),
@@ -947,7 +1151,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.EXPERIENCE_MAX: 'experience_max'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_experience_max',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience_max',
     'unit_of_measurement': 'XP',
   })
 # ---
@@ -997,7 +1201,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.PERCEPTION: 'perception'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_perception',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_perception',
     'unit_of_measurement': 'PER',
   })
 # ---
@@ -1007,7 +1211,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 8,
+      'equipment': 15,
       'friendly_name': 'test-user Perception',
       'level': 19,
       'unit_of_measurement': 'PER',
@@ -1017,7 +1221,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '68',
+    'state': '75',
   })
 # ---
 # name: test_sensors[sensor.test_user_rewards-entry]
@@ -1049,7 +1253,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.REWARDS: 'rewards'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_rewards',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_rewards',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -1057,18 +1261,43 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b': dict({
-        'created_at': '2024-07-07T17:51:53.266Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-07-07T17:51:53.266000+00:00',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Belohne Dich selbst',
         'type': 'reward',
-        'value': 10,
+        'value': 10.0,
       }),
       'friendly_name': 'test-user Rewards',
       'unit_of_measurement': 'tasks',
@@ -1113,7 +1342,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.STRENGTH: 'strength'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_strength',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_strength',
     'unit_of_measurement': 'STR',
   })
 # ---
@@ -1123,7 +1352,7 @@
       'allocated': 15,
       'buffs': 26,
       'class': 0,
-      'equipment': 27,
+      'equipment': 44,
       'friendly_name': 'test-user Strength',
       'level': 19,
       'unit_of_measurement': 'STR',
@@ -1133,7 +1362,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '104',
   })
 # ---
 # name: test_sensors[sensor.test_user_to_do_s-entry]
@@ -1165,7 +1394,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabitipySensorEntity.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': 'tasks',
   })
 # ---
@@ -1173,41 +1402,116 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       '1aa3137e-ef72-4d1f-91ee-41933602f438': dict({
-        'created_at': '2024-09-21T22:16:38.153Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-09-21T22:16:38.153000+00:00',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Rasen mähen und die Pflanzen gießen.',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Garten pflegen',
         'type': 'todo',
       }),
       '2f6fcabc-f670-4ec3-ba65-817e8deea490': dict({
-        'created_at': '2024-09-21T22:17:19.513Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-09-21T22:17:19.513000+00:00',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Rechnungen bezahlen',
         'type': 'todo',
       }),
       '86ea2475-d1b5-4020-bdcc-c188c7996afa': dict({
-        'created_at': '2024-09-21T22:16:16.756Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-09-21T22:16:16.756000+00:00',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Den Ausflug für das kommende Wochenende organisieren.',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'tags': list([
           '51076966-2970-4b40-b6ba-d58c6a756dd7',
         ]),
@@ -1215,15 +1519,40 @@
         'type': 'todo',
       }),
       '88de7cd9-af2b-49ce-9afd-bf941d87336b': dict({
-        'created_at': '2024-09-21T22:17:57.816Z',
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'created_at': '2024-09-21T22:17:57.816000+00:00',
         'group': dict({
+          'assignedDate': None,
           'assignedUsers': list([
           ]),
-          'completedBy': dict({
+          'assignedUsersDetail': dict({
           }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
         }),
         'notes': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
         'priority': 1,
+        'repeat': dict({
+          'f': False,
+          'm': True,
+          's': False,
+          'su': False,
+          't': True,
+          'th': False,
+          'w': True,
+        }),
         'text': 'Buch zu Ende lesen',
         'type': 'todo',
       }),

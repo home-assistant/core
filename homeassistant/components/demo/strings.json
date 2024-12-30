@@ -42,6 +42,13 @@
               "auto": "Auto",
               "off": "[%key:common::state::off%]"
             }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "rangefull": "Full range",
+              "auto": "Auto",
+              "off": "[%key:common::state::off%]"
+            }
           }
         }
       }

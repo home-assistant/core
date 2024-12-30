@@ -12,6 +12,6 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/iron_os",
   "iot_class": "local_polling",
-  "loggers": ["pynecil", "aiogithubapi"],
-  "requirements": ["pynecil==0.2.1", "aiogithubapi==24.6.0"]
+  "loggers": ["pynecil"],
+  "requirements": ["pynecil==3.0.1"]
 }

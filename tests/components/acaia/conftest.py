@@ -80,4 +80,5 @@ def mock_scale() -> Generator[MagicMock]:
         )
         scale.weight = 123.45
         scale.timer = 23
+        scale.flow_rate = 1.23
         yield scale

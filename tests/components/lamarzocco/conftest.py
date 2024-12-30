@@ -2,21 +2,36 @@
 
 from collections.abc import Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture
@@ -31,6 +46,7 @@ def mock_config_entry(
         data=USER_INPUT
         | {
             CONF_MODEL: mock_lamarzocco.model,
+            CONF_ADDRESS: "00:00:00:00:00:00",
             CONF_HOST: "host",
             CONF_TOKEN: "token",
             CONF_NAME: "GS3",
@@ -119,7 +135,10 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
         serial_number=serial_number,
         name=serial_number,
     )
-    config = load_json_object_fixture("config.json", DOMAIN)
+    if device_fixture == MachineModel.LINEA_MINI:
+        config = load_json_object_fixture("config_mini.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config.json", DOMAIN)
     statistics = json.loads(load_fixture("statistics.json", DOMAIN))
 
     dummy_machine.parse_config(config)
@@ -127,7 +146,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine",
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
             autospec=True,
         ) as lamarzocco_mock,
     ):

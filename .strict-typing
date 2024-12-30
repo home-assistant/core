@@ -41,6 +41,7 @@ homeassistant.util.unit_system
 # --- Add components below this line ---
 homeassistant.components
 homeassistant.components.abode.*
+homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
@@ -136,6 +137,7 @@ homeassistant.components.co2signal.*
 homeassistant.components.command_line.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
+homeassistant.components.cookidoo.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
@@ -168,6 +170,7 @@ homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*
 homeassistant.components.efergy.*
+homeassistant.components.eheimdigital.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
 homeassistant.components.elevenlabs.*
@@ -268,6 +271,7 @@ homeassistant.components.ios.*
 homeassistant.components.iotty.*
 homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
+homeassistant.components.iron_os.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
@@ -307,6 +311,7 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
@@ -357,13 +362,16 @@ homeassistant.components.openuv.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
+homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
 homeassistant.components.panel_custom.*
+homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
+homeassistant.components.powerfox.*
 homeassistant.components.powerwall.*
 homeassistant.components.private_ble_device.*
 homeassistant.components.prometheus.*
@@ -385,6 +393,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.reolink.*
 homeassistant.components.repairs.*
 homeassistant.components.rest.*
 homeassistant.components.rest_command.*
@@ -399,11 +408,13 @@ homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
 homeassistant.components.rtsp_to_webrtc.*
+homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
+homeassistant.components.schlage.*
 homeassistant.components.scrape.*
 homeassistant.components.script.*
 homeassistant.components.search.*
@@ -436,7 +447,7 @@ homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
 homeassistant.components.steamist.*
-homeassistant.components.stookalert.*
+homeassistant.components.stookwijzer.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
 homeassistant.components.stt.*

@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-import voluptuous as vol
-
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_URL, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_MAX_ENTRIES, DOMAIN
 from .coordinator import FeedReaderCoordinator, StoredData
 
 type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
@@ -20,60 +15,6 @@ type FeedReaderConfigEntry = ConfigEntry[FeedReaderCoordinator]
 CONF_URLS = "urls"
 
 MY_KEY: HassKey[StoredData] = HassKey(DOMAIN)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                    vol.Optional(
-                        CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES
-                    ): cv.positive_int,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Feedreader component."""
-    if DOMAIN in config:
-        for url in config[DOMAIN][CONF_URLS]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={
-                        CONF_URL: url,
-                        CONF_MAX_ENTRIES: config[DOMAIN][CONF_MAX_ENTRIES],
-                    },
-                )
-            )
-
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.1.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Feedreader",
-            },
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FeedReaderConfigEntry) -> bool:

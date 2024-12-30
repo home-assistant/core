@@ -3,34 +3,27 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyheos import Heos, HeosError, const as heos_const
-import voluptuous as vol
+from pyheos import Heos, HeosError, HeosOptions, HeosPlayer, const as heos_const
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
-from .config_flow import format_title
 from .const import (
     COMMAND_RETRY_ATTEMPTS,
     COMMAND_RETRY_DELAY,
-    DATA_CONTROLLER_MANAGER,
-    DATA_ENTITY_ID_MAP,
-    DATA_GROUP_MANAGER,
-    DATA_SOURCE_MANAGER,
     DOMAIN,
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
@@ -38,44 +31,25 @@ from .const import (
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})},
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the HEOS component."""
-    if DOMAIN not in config:
-        return True
-    host = config[DOMAIN][CONF_HOST]
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        # Create new entry based on config
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-            )
-        )
-    else:
-        # Check if host needs to be updated
-        entry = entries[0]
-        if entry.data[CONF_HOST] != host:
-            hass.config_entries.async_update_entry(
-                entry, title=format_title(host), data={**entry.data, CONF_HOST: host}
-            )
+@dataclass
+class HeosRuntimeData:
+    """Runtime data and coordinators for HEOS config entries."""
 
-    return True
+    controller_manager: ControllerManager
+    group_manager: GroupManager
+    source_manager: SourceManager
+    players: dict[int, HeosPlayer]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Initialize config entry which represents the HEOS controller."""
     # For backwards compat
     if entry.unique_id is None:
@@ -84,9 +58,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
-    controller = Heos(host, all_progress_events=False)
+    controller = Heos(HeosOptions(host, all_progress_events=False, auto_reconnect=True))
     try:
-        await controller.connect(auto_reconnect=True)
+        await controller.connect()
     # Auto reconnect only operates if initial connection was successful.
     except HeosError as error:
         await controller.disconnect()
@@ -128,17 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
 
-    group_manager = GroupManager(hass, controller)
+    group_manager = GroupManager(hass, controller, players)
 
-    hass.data[DOMAIN] = {
-        DATA_CONTROLLER_MANAGER: controller_manager,
-        DATA_GROUP_MANAGER: group_manager,
-        DATA_SOURCE_MANAGER: source_manager,
-        Platform.MEDIA_PLAYER: players,
-        # Maps player_id to entity_id. Populated by the individual
-        # HeosMediaPlayer entities.
-        DATA_ENTITY_ID_MAP: {},
-    }
+    entry.runtime_data = HeosRuntimeData(
+        controller_manager, group_manager, source_manager, players
+    )
 
     services.register(hass, controller)
     group_manager.connect_update()
@@ -149,11 +117,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
-    controller_manager = hass.data[DOMAIN][DATA_CONTROLLER_MANAGER]
-    await controller_manager.disconnect()
-    hass.data.pop(DOMAIN)
+    await entry.runtime_data.controller_manager.disconnect()
 
     services.remove(hass)
 
@@ -246,21 +212,25 @@ class ControllerManager:
 class GroupManager:
     """Class that manages HEOS groups."""
 
-    def __init__(self, hass, controller):
+    def __init__(
+        self, hass: HomeAssistant, controller: Heos, players: dict[int, HeosPlayer]
+    ) -> None:
         """Init group manager."""
         self._hass = hass
-        self._group_membership = {}
+        self._group_membership: dict[str, str] = {}
         self._disconnect_player_added = None
         self._initialized = False
         self.controller = controller
+        self.players = players
+        self.entity_id_map: dict[int, str] = {}
 
     def _get_entity_id_to_player_id_map(self) -> dict:
         """Return mapping of all HeosMediaPlayer entity_ids to player_ids."""
-        return {v: k for k, v in self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP].items()}
+        return {v: k for k, v in self.entity_id_map.items()}
 
-    async def async_get_group_membership(self):
+    async def async_get_group_membership(self) -> dict[str, list[str]]:
         """Return all group members for each player as entity_ids."""
-        group_info_by_entity_id = {
+        group_info_by_entity_id: dict[str, list[str]] = {
             player_entity_id: []
             for player_entity_id in self._get_entity_id_to_player_id_map()
         }
@@ -271,7 +241,7 @@ class GroupManager:
             _LOGGER.error("Unable to get HEOS group info: %s", err)
             return group_info_by_entity_id
 
-        player_id_to_entity_id_map = self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP]
+        player_id_to_entity_id_map = self.entity_id_map
         for group in groups.values():
             leader_entity_id = player_id_to_entity_id_map.get(group.leader.player_id)
             member_entity_ids = [
@@ -282,28 +252,26 @@ class GroupManager:
             # Make sure the group leader is always the first element
             group_info = [leader_entity_id, *member_entity_ids]
             if leader_entity_id:
-                group_info_by_entity_id[leader_entity_id] = group_info
+                group_info_by_entity_id[leader_entity_id] = group_info  # type: ignore[assignment]
                 for member_entity_id in member_entity_ids:
-                    group_info_by_entity_id[member_entity_id] = group_info
+                    group_info_by_entity_id[member_entity_id] = group_info  # type: ignore[assignment]
 
         return group_info_by_entity_id
 
     async def async_join_players(
-        self, leader_entity_id: str, member_entity_ids: list[str]
+        self, leader_id: int, leader_entity_id: str, member_entity_ids: list[str]
     ) -> None:
         """Create a group a group leader and member players."""
+        # Resolve HEOS player_id for each member entity_id
         entity_id_to_player_id_map = self._get_entity_id_to_player_id_map()
-        leader_id = entity_id_to_player_id_map.get(leader_entity_id)
-        if not leader_id:
-            raise HomeAssistantError(
-                f"The group leader {leader_entity_id} could not be resolved to a HEOS"
-                " player."
-            )
-        member_ids = [
-            entity_id_to_player_id_map[member]
-            for member in member_entity_ids
-            if member in entity_id_to_player_id_map
-        ]
+        member_ids: list[int] = []
+        for member in member_entity_ids:
+            member_id = entity_id_to_player_id_map.get(member)
+            if not member_id:
+                raise HomeAssistantError(
+                    f"The group member {member} could not be resolved to a HEOS player."
+                )
+            member_ids.append(member_id)
 
         try:
             await self.controller.create_group(leader_id, member_ids)
@@ -315,14 +283,8 @@ class GroupManager:
                 err,
             )
 
-    async def async_unjoin_player(self, player_entity_id: str):
+    async def async_unjoin_player(self, player_id: int, player_entity_id: str):
         """Remove `player_entity_id` from any group."""
-        player_id = self._get_entity_id_to_player_id_map().get(player_entity_id)
-        if not player_id:
-            raise HomeAssistantError(
-                f"The player {player_entity_id} could not be resolved to a HEOS player."
-            )
-
         try:
             await self.controller.create_group(player_id, [])
         except HeosError as err:
@@ -358,13 +320,9 @@ class GroupManager:
 
         # When adding a new HEOS player we need to update the groups.
         async def _async_handle_player_added():
-            # Avoid calling async_update_groups when `DATA_ENTITY_ID_MAP` has not been
+            # Avoid calling async_update_groups when the entity_id map has not been
             # fully populated yet. This may only happen during early startup.
-            if (
-                len(self._hass.data[DOMAIN][Platform.MEDIA_PLAYER])
-                <= len(self._hass.data[DOMAIN][DATA_ENTITY_ID_MAP])
-                and not self._initialized
-            ):
+            if len(self.players) <= len(self.entity_id_map) and not self._initialized:
                 self._initialized = True
                 await self.async_update_groups(SIGNAL_HEOS_PLAYER_ADDED)
 
@@ -378,6 +336,17 @@ class GroupManager:
         if self._disconnect_player_added:
             self._disconnect_player_added()
             self._disconnect_player_added = None
+
+    @callback
+    def register_media_player(self, player_id: int, entity_id: str) -> CALLBACK_TYPE:
+        """Register a media player player_id with it's entity_id so it can be resolved later."""
+        self.entity_id_map[player_id] = entity_id
+        return lambda: self.unregister_media_player(player_id)
+
+    @callback
+    def unregister_media_player(self, player_id) -> None:
+        """Remove a media player player_id from the entity_id map."""
+        self.entity_id_map.pop(player_id, None)
 
     @property
     def group_membership(self):

@@ -40,7 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -103,7 +103,7 @@ async def test_form_entry_already_exist(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -163,7 +163,7 @@ async def test_flow_fails(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
             side_effect=side_effect(),
         ),
         patch(
@@ -208,7 +208,7 @@ async def test_flow_fails_departures(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stops",
@@ -254,7 +254,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -326,7 +326,7 @@ async def test_reauth_flow_error(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
             side_effect=side_effect(),
         ),
         patch(
@@ -345,7 +345,7 @@ async def test_reauth_flow_error(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -409,7 +409,7 @@ async def test_reauth_flow_error_departures(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -428,7 +428,7 @@ async def test_reauth_flow_error_departures(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -479,7 +479,7 @@ async def test_options_flow(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_search_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",

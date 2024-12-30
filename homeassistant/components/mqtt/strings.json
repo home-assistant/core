@@ -11,14 +11,6 @@
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
-    "payload_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported natively. Update the automation or script to use the `payload` option instead and restart Home Assistant to fix this issue."
-    },
-    "topic_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `topic_template` option used in MQTT publish action call to topic `{topic}` from topic template `{topic_template}`. Use the `topic` option instead. In automations templates are supported natively. Update the automation or script to use the `topic` option instead and restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -61,6 +53,7 @@
           "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
           "client_key": "The private key file that belongs to your client certificate.",
+          "keepalive": "A value less than 90 seconds is advised.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
           "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
@@ -100,6 +93,7 @@
       "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
@@ -113,7 +107,7 @@
       "bad_ws_headers": "Supply valid HTTP headers as a JSON object",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_inclusion": "The client certificate and private key must be configurered together"
+      "invalid_inclusion": "The client certificate and private key must be configured together"
     }
   },
   "device_automation": {
@@ -172,6 +166,7 @@
           "client_id": "[%key:component::mqtt::config::step::broker::data_description::client_id%]",
           "client_cert": "[%key:component::mqtt::config::step::broker::data_description::client_cert%]",
           "client_key": "[%key:component::mqtt::config::step::broker::data_description::client_key%]",
+          "keepalive": "[%key:component::mqtt::config::step::broker::data_description::keepalive%]",
           "tls_insecure": "[%key:component::mqtt::config::step::broker::data_description::tls_insecure%]",
           "protocol": "[%key:component::mqtt::config::step::broker::data_description::protocol%]",
           "set_ca_cert": "[%key:component::mqtt::config::step::broker::data_description::set_ca_cert%]",
@@ -287,6 +282,9 @@
     }
   },
   "exceptions": {
+    "addon_start_failed": {
+      "message": "Failed to correctly start {addon} add-on."
+    },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
     },
@@ -296,11 +294,23 @@
     "invalid_publish_topic": {
       "message": "Unable to publish: topic template `{topic_template}` produced an invalid topic `{topic}` after rendering ({error})"
     },
+    "mqtt_broker_error": {
+      "message": "Error talking to MQTT: {error_message}."
+    },
     "mqtt_not_setup_cannot_subscribe": {
       "message": "Cannot subscribe to topic \"{topic}\", make sure MQTT is set up correctly."
     },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
+    },
+    "mqtt_not_setup_cannot_unsubscribe_twice": {
+      "message": "Cannot unsubscribe topic \"{topic}\" twice."
+    },
+    "mqtt_topic_not_a_string": {
+      "message": "Topic needs to be a string! Got: {topic}."
+    },
+    "mqtt_trigger_cannot_remove_twice": {
+      "message": "Can't remove trigger twice."
     }
   }
 }

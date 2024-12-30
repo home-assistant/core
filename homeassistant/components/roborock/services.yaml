@@ -1,4 +1,28 @@
 get_maps:
   target:
     entity:
+      integration: roborock
+      domain: vacuum
+set_vacuum_goto_position:
+  target:
+    entity:
+      integration: roborock
+      domain: vacuum
+  fields:
+    x:
+      example: 27500
+      required: true
+      selector:
+        text:
+          type: number
+    y:
+      example: 32000
+      required: true
+      selector:
+        text:
+          type: number
+get_vacuum_current_position:
+  target:
+    entity:
+      integration: roborock
       domain: vacuum
