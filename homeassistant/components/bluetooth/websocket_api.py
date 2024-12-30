@@ -66,7 +66,8 @@ class _AdvertisementSubscription:
         self.connection = connection
         self.pending = True
 
-    def start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Start the subscription."""
         connection = self.connection
         connection.subscriptions[self.ws_msg_id] = async_register_callback(
@@ -114,4 +115,4 @@ async def ws_subscribe_advertisements(
     """Handle subscribe advertisements websocket command."""
     _AdvertisementSubscription(
         hass, connection, msg["id"], BluetoothCallbackMatcher(connectable=False)
-    ).start()
+    ).async_start()
