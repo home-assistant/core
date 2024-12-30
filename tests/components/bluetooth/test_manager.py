@@ -1,6 +1,5 @@
 """Tests for the Bluetooth integration manager."""
 
-from collections.abc import Generator
 from datetime import timedelta
 import time
 from typing import Any
@@ -61,24 +60,6 @@ from tests.common import (
     load_fixture,
     mock_integration,
 )
-
-
-@pytest.fixture
-def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
-    """Register an hci0 scanner."""
-    hci0_scanner = FakeScanner("hci0", "hci0")
-    cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
-    yield
-    cancel()
-
-
-@pytest.fixture
-def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
-    """Register an hci1 scanner."""
-    hci1_scanner = FakeScanner("hci1", "hci1")
-    cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
-    yield
-    cancel()
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
