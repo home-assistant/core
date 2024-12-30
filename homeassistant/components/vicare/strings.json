@@ -83,7 +83,7 @@
             "state": {
               "permanent": "permanent",
               "ventilation": "schedule",
-              "standby": "standby",
+              "standby": "[%key:common::state::standby%]",
               "standard": "grundbetrieb",
               "sensor_driven": "sensor",
               "sensor_override": "schedule with sensor-override"
