@@ -188,3 +188,7 @@ async def async_init_integration(
         if not skip_setup:
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
+
+        # For a first refresh
+        await entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()

@@ -13,10 +13,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -25,11 +23,11 @@ from .const import (
     CONDITIONS_MAP,
     SENSOR_DATA_CATEGORY_GEOFENCE,
     SENSOR_DATA_CATEGORY_WEATHER,
-    SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
     TYPE_HOT_WATER,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoHomeEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -243,27 +241,9 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
 
         self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(self._tado.home_id, "home", "data"),
-                self._async_update_callback,
-            )
-        )
-        self._async_update_home_data()
-
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_home_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_home_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
             tado_weather_data = self._tado.data["weather"]
             tado_geofence_data = self._tado.data["geofence"]
@@ -280,6 +260,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_sensor_data
             )
+        super()._handle_coordinator_update()
 
 
 class TadoZoneSensor(TadoZoneEntity, SensorEntity):
@@ -303,29 +284,9 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             f"{entity_description.key} {zone_id} {coordinator.home_id}"
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_callback,
-            )
-        )
-        self._async_update_zone_data()
-
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_zone_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_zone_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
             tado_zone_data = self._tado.data["zone"][self.zone_id]
         except KeyError:
@@ -336,3 +297,4 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_zone_data
             )
+        super()._handle_coordinator_update()

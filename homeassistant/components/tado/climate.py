@@ -23,7 +23,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.tado.coordinator import TadoDataUpdateCoordinator
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -72,6 +71,7 @@ from .const import (
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode, generate_supported_fanmodes
 
@@ -388,7 +388,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_callback(self) -> None:
         """Load tado data and update state."""
         self._async_update_zone_data()
-        self.async_write_ha_state()
+        super().async_write_ha_state()
 
     @callback
     def _async_update_home_data(self) -> None:
@@ -399,7 +399,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_home_callback(self) -> None:
         """Load tado data and update state."""
         self._async_update_home_data()
-        self.async_write_ha_state()
+        super().async_write_ha_state()
 
     @property
     def current_humidity(self) -> int | None:
@@ -468,8 +468,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
-        # TODO: removed a check for auto geofencing here to call the API
-        # Check if it still updates the state correctly
         if self._auto_geofencing_supported:
             return SUPPORT_PRESET_AUTO
         return SUPPORT_PRESET_MANUAL
@@ -728,13 +726,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             return
 
         overlay_mode = decide_overlay_mode(
-            tado=self._tado,
+            coordinator=self._tado,
             duration=duration,
             overlay_mode=overlay_mode,
             zone_id=self.zone_id,
         )
         duration = decide_duration(
-            tado=self._tado,
+            coordinator=self._tado,
             duration=duration,
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,
@@ -803,18 +801,23 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
 
     def _is_valid_setting_for_hvac_mode(self, setting: str) -> bool:
-        return (
-            self._current_tado_capabilities.get(self._current_tado_hvac_mode, {}).get(
-                setting
-            )
-            is not None
+        """Determine if a setting is valid for the current HVAC mode."""
+        capabilities: str | dict[str, str] = self._current_tado_capabilities.get(
+            self._current_tado_hvac_mode, {}
         )
+        if isinstance(capabilities, dict):
+            return capabilities.get(setting) is not None
+        return False
 
     def _is_current_setting_supported_by_current_hvac_mode(
         self, setting: str, current_state: str | None
     ) -> bool:
-        if self._is_valid_setting_for_hvac_mode(setting):
-            return current_state in self._current_tado_capabilities[
-                self._current_tado_hvac_mode
-            ].get(setting, [])
+        """Determine if the current setting is supported by the current HVAC mode."""
+        capabilities: str | dict[str, str] = self._current_tado_capabilities.get(
+            self._current_tado_hvac_mode, {}
+        )
+        if isinstance(capabilities, dict) and self._is_valid_setting_for_hvac_mode(
+            setting
+        ):
+            return current_state in capabilities.get(setting, [])
         return False
