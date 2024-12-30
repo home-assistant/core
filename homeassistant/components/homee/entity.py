@@ -3,7 +3,7 @@
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeNode
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import HomeeConfigEntry
@@ -23,7 +23,7 @@ class HomeeNodeEntity(Entity):
         self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{node.id}"
         self._entry = entry
 
-        self._attr_device_info = dr.DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._node.id)},
             name=self._node.name,
             model=get_name_for_enum(NodeProfile, self._node.profile),
