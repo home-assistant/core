@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data_description": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "description": "[%key:common::config_flow::data::host%]",
+          "project_id": "Project ID",
+          "api_key": "API Key"
+        },
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "description": "[%key:common::config_flow::data::host%]",
+          "project_id": "Project ID",
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "execute_function": {
+      "name": "Execute Function",
+      "description": "Trigger a function in Appwrite.",
+      "fields": {
+        "function_id": {
+          "name": "Function ID",
+          "description": "The function id of the function to trigger."
+        },
+        "function_body": {
+          "name": "Function Body",
+          "description": "The stringified json object which will be passed on to the function."
+        },
+        "function_path": {
+          "name": "Function Path",
+          "description": "The path which will be passed on to the function."
+        },
+        "function_headers": {
+          "name": "Function Headers",
+          "description": "The headers which will be passed on to the function."
+        },
+        "function_scheduled_at": {
+          "name": "Function Schedule Time",
+          "description": "The time at which function will be scheduled."
+        },
+        "function_async": {
+          "name": "Function Async",
+          "description": "Determines if function execution is async."
+        },
+        "function_method": {
+          "name": "Function Method",
+          "description": "The method which will be passed on to the function."
+        }
+      }
+    }
+  }
+}

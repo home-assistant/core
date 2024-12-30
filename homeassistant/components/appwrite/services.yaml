@@ -1,0 +1,23 @@
+execute_function:
+  fields:
+    function_id:
+      example: "function-id"
+      required: true
+    function_body:
+      required: false
+    function_path:
+      example: "?name=docker&namespace=default"
+      required: false
+    function_headers:
+      required: false
+    function_scheduled_at:
+      example: "2020-10-15T06:38:00.000+00:00"
+      required: false
+    function_async:
+      example: "true"
+      default: "false"
+      required: false
+    function_method:
+      example: "DELETE"
+      default: "GET"
+      required: false

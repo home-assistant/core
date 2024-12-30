@@ -451,6 +451,9 @@ apple_weatherkit==1.1.3
 # homeassistant.components.apprise
 apprise==1.9.1
 
+# homeassistant.components.appwrite
+appwrite==6.1.0
+
 # homeassistant.components.aprs
 aprslib==0.7.2
 
