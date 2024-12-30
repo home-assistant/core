@@ -659,6 +659,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="OperationalState",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="operational_state",
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.OperationalState,
+            clusters.OperationalState.Attributes.OperationalStateList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="SmokeCOAlarmExpiryDate",
             translation_key="expiry_date",
             device_class=SensorDeviceClass.TIMESTAMP,
@@ -697,38 +710,13 @@ DISCOVERY_SCHEMAS = [
             key="WaterHeaterManagementEstimatedHeatRequired",
             translation_key="estimated_heat_required",
             device_class=SensorDeviceClass.ENERGY,
-            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-            state_class=SensorStateClass.TOTAL,
-            measurement_to_ha=lambda x: x / 1000,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="WaterHeaterManagementBoostState",
-            translation_key="boost_state",
-            device_class=SensorDeviceClass.ENUM,
-            options=list(BOOST_STATE_MAP.values()),
-            measurement_to_ha=BOOST_STATE_MAP.get,
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.WaterHeaterManagement.Attributes.BoostState,),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="OperationalState",
-            device_class=SensorDeviceClass.ENUM,
-            translation_key="operational_state",
-        ),
-        entity_class=MatterOperationalStateSensor,
-        required_attributes=(
-            clusters.OperationalState.Attributes.OperationalState,
-            clusters.OperationalState.Attributes.OperationalStateList,
         ),
     ),
 ]
