@@ -10,7 +10,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

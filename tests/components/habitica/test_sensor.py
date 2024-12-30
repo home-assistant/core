@@ -26,7 +26,7 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_habitica", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -44,7 +44,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_habitica", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

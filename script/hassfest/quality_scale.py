@@ -562,7 +562,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kitchen_sink",
     "kiwi",
     "kmtronic",
-    "knx",
     "kodi",
     "konnected",
     "kostal_plenticore",
