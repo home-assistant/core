@@ -9,12 +9,18 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
 from .api import async_register_callback
 from .match import CONNECTABLE, BluetoothCallbackMatcher
 from .models import BluetoothChange
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the bluetooth websocket API."""
+    websocket_api.async_register_command(hass, ws_subscribe_advertisements)
 
 
 class _AdvertisementSubscription:
