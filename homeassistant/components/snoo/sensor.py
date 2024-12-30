@@ -25,7 +25,7 @@ from .entity import SnooDescriptionEntity
 
 @dataclass(frozen=True, kw_only=True)
 class SnooSensorEntityDescription(SensorEntityDescription):
-    """Describes a Snoo binary sensor."""
+    """Describes a Snoo sensor."""
 
     value_fn: Callable[[SnooData], bool]
 

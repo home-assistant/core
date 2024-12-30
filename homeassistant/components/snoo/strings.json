@@ -32,7 +32,7 @@
           "level3": "Level 3",
           "level4": "Level 4",
           "stop": "Stopped",
-          "pretimeout": "Pre-Timeout",
+          "pretimeout": "Pre-timeout",
           "timeout": "Timeout"
         }
       },
