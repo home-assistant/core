@@ -176,3 +176,34 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._service.port,
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of existing entry."""
+
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, reconfigure_entry.data
+                ),
+            )
+
+        service = await WyomingService.create(
+            user_input[CONF_HOST],
+            user_input[CONF_PORT],
+        )
+
+        if service is None:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_USER_DATA_SCHEMA, user_input
+                ),
+                errors={"base": "cannot_connect"},
+            )
+
+        return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
