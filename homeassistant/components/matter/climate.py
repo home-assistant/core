@@ -446,6 +446,10 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
             clusters.OnOff.Attributes.OnOff,
         ),
-        device_type=(device_types.Thermostat, device_types.RoomAirConditioner, device_types.WaterHeater),
+        device_type=(
+            device_types.Thermostat,
+            device_types.RoomAirConditioner,
+            device_types.WaterHeater,
+        ),
     ),
 ]
