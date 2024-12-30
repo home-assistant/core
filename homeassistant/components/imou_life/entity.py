@@ -1,4 +1,4 @@
-"""An abstract class commom to all IMOU entities."""
+"""An abstract class common to all IMOU entities."""
 
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 

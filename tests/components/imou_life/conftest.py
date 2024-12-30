@@ -1,10 +1,10 @@
 """Config for the Imou camera integration."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from pyimouapi import ImouOpenApiClient, InvalidAppIdOrSecretException
+import pytest
 
 IMOU_TOKEN_RETURN = {
     "accessToken": "test_token",
@@ -15,11 +15,10 @@ IMOU_TOKEN_RETURN = {
 
 @pytest.fixture
 def imou_config_flow() -> Generator[MagicMock]:
-    """
-    Fixture to mock the Imou Open API Client for testing configuration flows.
+    """Fixture to mock the Imou Open API Client for testing configuration flows.
     Yields:
        MagicMock: A mocked instance of ImouOpenApiClient.
-   """
+    """
     with (
         patch.object(ImouOpenApiClient, "async_get_token", return_value=True),
         patch(
@@ -35,8 +34,7 @@ def imou_config_flow() -> Generator[MagicMock]:
 
 @pytest.fixture
 def imou_config_flow_exception() -> Generator[MagicMock]:
-    """
-    Create a test fixture that simulates the behavior of the Imou Open API client.
+    """Create a test fixture that simulates the behavior of the Imou Open API client.
 
     This test fixture is used to simulate exceptions that may be raised by the Imou Open API client during the configuration flow.
     It uses the `patch` decorator to replace the behavior of the `ImouOpenApiClient` class, allowing a mocked instance to be used in tests.
