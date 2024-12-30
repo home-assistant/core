@@ -23,7 +23,7 @@ async def async_setup_entry(
     config_entry: TwinklyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Setups a mode select from a config entry."""
+    """Sets up a mode select from a config entry."""
     entity = TwinklyModeSelect(config_entry.runtime_data)
     async_add_entities([entity], update_before_add=True)
 
