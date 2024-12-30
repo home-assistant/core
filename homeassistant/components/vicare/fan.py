@@ -78,12 +78,7 @@ class VentilationMode(enum.StrEnum):
 class VentilationQuickmode(enum.StrEnum):
     """ViCare ventilation quickmodes."""
 
-    COMFORT = "comfort"
-    ECO = "eco"
-    BOOST = "forcedLevelFour"
-    HOLIDAY = "holiday"
     STANDBY = "standby"
-    SILENT = "silent"
 
 
 HA_TO_VICARE_MODE_VENTILATION = {
