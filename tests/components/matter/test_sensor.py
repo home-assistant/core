@@ -343,25 +343,25 @@ async def test_water_heater(
 ) -> None:
     """Test water heater sensor."""
     # TankVolume
-    state = hass.states.get("sensor.mock_water_heater_tank_volume")
-    assert state
-    assert state.state == "100"
-
-    set_node_attribute(matter_node, 1, 148, 2, 200)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.mock_water_heater_tank_volume")
+    state = hass.states.get("sensor.water_heater_tank_volume")
     assert state
     assert state.state == "200"
 
-    # TankPercentage
-    state = hass.states.get("sensor.mock_water_heater_tank_percentage")
-    assert state
-    assert state.state == "20"
-
-    set_node_attribute(matter_node, 1, 148, 4, 40)
+    set_node_attribute(matter_node, 2, 148, 2, 100)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.mock_water_heater_tank_percentage")
+    state = hass.states.get("sensor.water_heater_tank_volume")
+    assert state
+    assert state.state == "100"
+
+    # TankPercentage
+    state = hass.states.get("sensor.water_heater_tank_percentage")
     assert state
     assert state.state == "40"
+
+    set_node_attribute(matter_node, 2, 148, 4, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_tank_percentage")
+    assert state
+    assert state.state == "50"
