@@ -41,23 +41,25 @@ def mock_client_fixture(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_base", "get_write_api"),
+    ("mock_client", "config_base", "get_write_api", "db_name"),
     [
         (
             DEFAULT_API_VERSION,
             BASE_V1_CONFIG,
             _get_write_api_mock_v1,
+            BASE_V1_CONFIG["database"],
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             _get_write_api_mock_v2,
+            BASE_V2_CONFIG["bucket"],
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_import(
-    hass: HomeAssistant, mock_client, config_base, get_write_api
+    hass: HomeAssistant, mock_client, config_base, get_write_api, db_name
 ) -> None:
     """Test we can import."""
     with patch(
@@ -70,7 +72,7 @@ async def test_import(
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == config_base["host"]
+    assert result["title"] == f"{db_name} ({config_base["host"]})"
     assert result["data"] == config_base
 
     assert get_write_api(mock_client).call_count == 1
@@ -142,13 +144,13 @@ async def test_import_connection_error(
 
 
 @pytest.mark.parametrize(
-    "config_base",
+    ("config_base", "db_name"),
     [
-        BASE_V1_CONFIG,
-        BASE_V2_CONFIG,
+        (BASE_V1_CONFIG, BASE_V1_CONFIG["database"]),
+        (BASE_V2_CONFIG, BASE_V2_CONFIG["bucket"]),
     ],
 )
-async def test_import_update(hass: HomeAssistant, config_base) -> None:
+async def test_import_update(hass: HomeAssistant, config_base, db_name) -> None:
     """Test we can import and update the config."""
     config_ext = {
         "include": {
@@ -166,7 +168,7 @@ async def test_import_update(hass: HomeAssistant, config_base) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_base,
-        unique_id=config_base["host"],
+        unique_id=f"{config_base["host"]}_{db_name}",
     )
     entry.add_to_hass(hass)
 
