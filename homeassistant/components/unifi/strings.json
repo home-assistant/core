@@ -111,7 +111,7 @@
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
-          "description": "Try reconnect client to wireless network."
+          "description": "String representing a device ID related to a UniFi Network integration."
         }
       }
     },
