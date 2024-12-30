@@ -2,60 +2,42 @@ rules:
   ## Bronze
   config-flow: done
   test-before-configure: done
-  unique-config-entry:
-    status: todo
-    comment: Add tests preventing second entry for same device
-  config-flow-test-coverage:
-    status: todo
-    comment: Cover test_form and zeroconf
-  runtime-data:
-    status: todo
-    comment: Clean up test_init for testing internals
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
   test-before-setup: done
-  appropriate-polling:
-    status: todo
-    comment: Clean up coordinator (L71) check for mypy happiness
+  appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
   entity-event-setup: done
   dependency-transparency: done
   action-setup:
-    status: todo
-    comment: Check if we have these, otherwise exempt
-  common-modules:
-    status: todo
-    comment: Verify entity for async_added_to_hass usage (discard?)
+    status: exempt
+    comment: Plugwise integration has no custom actions
+  common-modules: done
   docs-high-level-description:
     status: todo
-    comment: Rewrite top section
+    comment: Rewrite top section, docs PR prepared waiting for 36087 merge
   docs-installation-instructions:
     status: todo
     comment: Docs PR 36087
-  docs-removal-instructions:
-    status: todo
-    comment: Docs PR 36055 (done, but mark todo for benchmark)
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   ## Silver
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: todo
-    comment: Climate exception on ValueError should be ServiceValidationError
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: The hubs have a hardcoded `Smile ID` printed on the sticker used as password, it can not be changed
-  parallel-updates:
-    status: todo
-    comment: Using coordinator, but required due to mutable platform
-  test-coverage:
-    status: todo
-    comment: Consider using snapshots + consistency in setup calls + add numerical tests + use fixtures
+  parallel-updates: done
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters:
     status: todo
-    comment: Docs PR 36087 (partial) + todo rewrite generically
+    comment: Docs PR 36087 (partial) + todo rewrite generically (PR prepared)
   docs-configuration-parameters:
     status: exempt
     comment: Plugwise has no options flow
@@ -68,41 +50,33 @@ rules:
   discovery: done
   stale-devices: done
   diagnostics: done
-  exception-translations:
-    status: todo
-    comment: Add coordinator, util and climate exceptions
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: This integration does not have any reconfiguration steps (yet) investigate how/why
-  dynamic-devices:
-    status: todo
-    comment: Add missing logic to button for unloading and creation
+  reconfiguration-flow: done
+  dynamic-devices: done
   discovery-update-info: done
   repair-issues:
     status: exempt
     comment: This integration does not have repairs
   docs-use-cases:
     status: todo
-    comment: Check for completeness
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   docs-supported-devices:
     status: todo
-    comment: The list is there but could be improved for readability
+    comment: The list is there but could be improved for readability, PR prepared waiting for 36087 merge
   docs-supported-functions:
     status: todo
-    comment: Check for completeness
-  docs-data-update:
-    status: todo
-    comment: Docs PR 36055 (done, but mark todo for benchmark)
+    comment: Check for completeness, PR prepared waiting for 36087 merge
+  docs-data-update: done
   docs-known-limitations:
     status: todo
-    comment: Partial in 36087 but could be more elaborat
+    comment: Partial in 36087 but could be more elaborate
   docs-troubleshooting:
     status: todo
-    comment: Check for completeness
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   docs-examples:
     status: todo
-    comment: Check for completeness
+    comment: Check for completeness, PR prepared waiting for 36087 merge
   ## Platinum
   async-dependency: done
   inject-websession: done

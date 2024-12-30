@@ -151,7 +151,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     port=self._panel_direct_port,
                 )
             )
-            ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
+            ssl_context = await self.hass.async_add_executor_job(
+                build_direct_ssl_context, self._panel_direct_ssl_cert
+            )
 
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
@@ -203,7 +205,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_direct(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle the direct setup step."""
-        self._selected_mode = CONF_ELMAX_MODE_CLOUD
+        self._selected_mode = CONF_ELMAX_MODE_DIRECT
         if user_input is None:
             return self.async_show_form(
                 step_id=CONF_ELMAX_MODE_DIRECT,

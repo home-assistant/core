@@ -9,6 +9,21 @@
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address of the Russound controller.",
+          "port": "The port of the Russound controller."
+        }
+      },
+      "reconfigure": {
+        "description": "Reconfigure your Russound controller.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::russound_rio::config::step::user::data_description::host%]",
+          "port": "[%key:component::russound_rio::config::step::user::data_description::port%]"
         }
       }
     },
@@ -17,21 +32,9 @@
     },
     "abort": {
       "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The {integration_title} YAML configuration import cannot connect to the Russound device",
-      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nPlease make sure {integration_title} is turned on, and restart Home Assistant to try importing again. Otherwise, please remove the YAML from your configuration and add the integration manually."
-    },
-    "deprecated_yaml_import_issue_no_primary_controller": {
-      "title": "The {integration_title} YAML configuration import cannot configure the Russound Device.",
-      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nNo primary controller was detected for the Russound device. Please make sure that the target Russound device has it's controller ID set to 1 (using the selector on the back of the unit)."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::title%]",
-      "description": "[%key:component::russound_rio::issues::deprecated_yaml_import_issue_cannot_connect::description%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "This Russound controller does not match the existing device id. Please make sure you entered the correct IP address."
     }
   },
   "exceptions": {

@@ -67,7 +67,6 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
     _attr_precision = PRECISION_TENTHS
 
     # This disables the warning for async_turn_{on,off}, can be removed later.
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -114,7 +113,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         await self._state_feature.set_value(False)
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_current_temperature = cast(float | None, self._temp_feature.value)
         self._attr_target_temperature = cast(float | None, self._target_feature.value)
@@ -132,11 +131,12 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
                 self._mode_feature.value,
             )
             self._attr_hvac_action = HVACAction.OFF
-            return
+            return True
 
         self._attr_hvac_action = STATE_TO_ACTION[
             cast(ThermostatState, self._mode_feature.value)
         ]
+        return True
 
     def _get_unique_id(self) -> str:
         """Return unique id."""

@@ -1,0 +1,88 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup {cookidoo}",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "country": "Country"
+        },
+        "data_description": {
+          "email": "Email used to access your {cookidoo} account.",
+          "password": "Password used to access your {cookidoo} account.",
+          "country": "Pick your country for the {cookidoo} content."
+        }
+      },
+      "language": {
+        "title": "Setup {cookidoo}",
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]"
+        },
+        "data_description": {
+          "language": "Pick your language for the {cookidoo} content."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Login again to {cookidoo}",
+        "description": "Please log in to {cookidoo} again to continue using this integration.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::cookidoo::config::step::user::data_description::email%]",
+          "password": "[%key:component::cookidoo::config::step::user::data_description::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "todo_clear": {
+        "name": "Clear shopping list and additional purchases"
+      }
+    },
+    "todo": {
+      "ingredient_list": {
+        "name": "Shopping list"
+      },
+      "additional_item_list": {
+        "name": "Additional purchases"
+      }
+    }
+  },
+  "exceptions": {
+    "button_clear_todo_failed": {
+      "message": "Failed to clear all items from the Cookidoo shopping list"
+    },
+    "todo_save_item_failed": {
+      "message": "Failed to save {name} to Cookidoo shopping list"
+    },
+    "todo_update_item_failed": {
+      "message": "Failed to update {name} in Cookidoo shopping list"
+    },
+    "todo_delete_item_failed": {
+      "message": "Failed to delete {count} item(s) from Cookidoo shopping list"
+    },
+    "setup_request_exception": {
+      "message": "Failed to connect to server, try again later"
+    },
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {email}, check your email and password"
+    },
+    "update_exception": {
+      "message": "Unable to connect and retrieve data from cookidoo"
+    }
+  }
+}

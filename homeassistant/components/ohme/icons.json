@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "button": {
+      "approve": {
+        "default": "mdi:check-decagram"
+      }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:car",
+        "state": {
+          "unplugged": "mdi:power-plug-off",
+          "plugged_in": "mdi:power-plug",
+          "charging": "mdi:battery-charging-100",
+          "pending_approval": "mdi:alert-decagram"
+        }
+      },
+      "ct_current": {
+        "default": "mdi:gauge"
+      }
+    }
+  },
+  "services": {
+    "list_charge_slots": {
+      "service": "mdi:clock-start"
+    }
+  }
+}

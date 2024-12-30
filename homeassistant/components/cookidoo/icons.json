@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "button": {
+      "todo_clear": {
+        "default": "mdi:cart-off"
+      }
+    },
+    "todo": {
+      "ingredient_list": {
+        "default": "mdi:cart-plus"
+      },
+      "additional_item_list": {
+        "default": "mdi:cart-plus"
+      }
+    }
+  }
+}
