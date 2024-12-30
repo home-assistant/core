@@ -1,16 +1,11 @@
 """Support for the (unofficial) Tado API."""
 
 from datetime import timedelta
-import logging
-
-import requests.exceptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -23,10 +18,6 @@ from .const import (
 )
 from .coordinator import TadoDataUpdateCoordinator
 from .services import setup_services
-from .tado_connector import TadoConnector
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
