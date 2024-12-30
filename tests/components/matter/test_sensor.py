@@ -354,6 +354,18 @@ async def test_water_heater(
     assert state
     assert state.state == "100"
 
+    # EstimatedHeatRequired
+    state = hass.states.get("sensor.water_heater_heat_energy_needed")
+    assert state
+    assert state.state == "4.0"
+
+    set_node_attribute(matter_node, 2, 148, 3, 1000000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_heat_energy_needed")
+    assert state
+    assert state.state == "1.0"
+
     # TankPercentage
     state = hass.states.get("sensor.water_heater_tank_percentage")
     assert state

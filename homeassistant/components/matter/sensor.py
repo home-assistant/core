@@ -710,9 +710,11 @@ DISCOVERY_SCHEMAS = [
             key="WaterHeaterManagementEstimatedHeatRequired",
             translation_key="estimated_heat_required",
             device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL,
         ),
         entity_class=MatterSensor,
         required_attributes=(

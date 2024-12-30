@@ -249,6 +249,9 @@
       "tank_percentage": {
         "name": "Tank percentage"
       },
+      "estimated_heat_required": {
+        "name": "Heat energy needed"
+      },
       "valve_position": {
         "name": "Valve position"
       },
