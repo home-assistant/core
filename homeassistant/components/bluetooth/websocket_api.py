@@ -17,8 +17,8 @@ from .match import CONNECTABLE, BluetoothCallbackMatcher
 from .models import BluetoothChange
 
 
-class _AdvertismentSubscription:
-    """Class to hold the subscription data."""
+class _AdvertisementSubscription:
+    """Class to hold and manage the subscription data."""
 
     def __init__(
         self,
@@ -88,4 +88,4 @@ async def ws_subscribe_advertisements(
         match_dict = cast(BluetoothCallbackMatcher, msg["match_dict"])
     else:
         match_dict = {CONNECTABLE: False}
-    _AdvertismentSubscription(hass, connection, msg["id"], match_dict).start()
+    _AdvertisementSubscription(hass, connection, msg["id"], match_dict).start()
