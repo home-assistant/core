@@ -12,6 +12,7 @@ from .session import SessionManager
 from .types import MCPServerConfigEntry
 
 __all__ = [
+    "CONFIG_SCHEMA",
     "DOMAIN",
     "async_setup",
     "async_setup_entry",
