@@ -10,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,14 +28,6 @@ class SnooCoordinator(DataUpdateCoordinator[SnooData]):
         self.device_unique_id = device.serialNumber
         self.device = device
         self.device_info: DeviceInfo | None = None
-
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device_unique_id)},
-            name=device.name,
-            manufacturer="Happiest Baby",
-            model="Snoo",
-            serial_number=device.serialNumber,
-        )
         self.sensor_data_set: bool = False
         self.snoo = snoo
 

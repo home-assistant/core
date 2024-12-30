@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -24,17 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-    hub = Snoo(
-        email=data[CONF_USERNAME],
-        password=data[CONF_PASSWORD],
-        clientsession=async_get_clientsession(hass),
-    )
-    await hub.authorize()
-    return {"title": data[CONF_USERNAME]}
 
 
 class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -50,8 +38,14 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
             self._abort_if_unique_id_configured()
+            hub = Snoo(
+                email=user_input[CONF_USERNAME],
+                password=user_input[CONF_PASSWORD],
+                clientsession=async_get_clientsession(self.hass),
+            )
+
             try:
-                info = await validate_input(self.hass, user_input)
+                await hub.authorize()
             except SnooAuthException:
                 errors["base"] = "cannot_connect"
             except InvalidSnooAuth:
@@ -60,7 +54,9 @@ class SnooConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception %s")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import SnooCoordinator
 
 
@@ -27,3 +29,14 @@ class SnooDescriptionEntity(CoordinatorEntity[SnooCoordinator]):
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data is not None and super().available
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get the device info of a corresponding entity."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.device_unique_id)},
+            name=self.device.name,
+            manufacturer="Happiest Baby",
+            model="Snoo",
+            serial_number=self.device.serialNumber,
+        )
