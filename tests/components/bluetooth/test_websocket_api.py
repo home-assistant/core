@@ -44,7 +44,9 @@ async def test_subscribe_advertisements(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == [
+
+    response = await client.receive_json()
+    assert response["event"] == [
         {
             "address": "44:44:33:11:23:12",
             "connectable": True,
@@ -58,7 +60,7 @@ async def test_subscribe_advertisements(
             "tx_power": -127,
         }
     ]
-    adv_time = response["result"][0]["time"]
+    adv_time = response["event"][0]["time"]
 
     switchbot_adv_signal_100 = generate_advertisement_data(
         local_name="wohand_signal_100",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from functools import lru_cache
 import time
 from typing import Any
@@ -74,18 +75,26 @@ class _AdvertisementSubscription:
             self.hass, self, self.match_dict, BluetoothScanningMode.PASSIVE
         )
         self.pending = False
-        connection.send_message(
+        self.connection.send_message(
+            json_bytes(websocket_api.result_message(self.ws_msg_id))
+        )
+        self._send_service_infos(self.pending_service_infos)
+        self.pending_service_infos.clear()
+
+    def _send_service_infos(
+        self, service_infos: Iterable[BluetoothServiceInfoBleak]
+    ) -> None:
+        self.connection.send_message(
             json_bytes(
-                websocket_api.result_message(
+                websocket_api.event_message(
                     self.ws_msg_id,
                     [
                         serialize_service_info(service_info)
-                        for service_info in self.pending_service_infos
+                        for service_info in service_infos
                     ],
                 )
             )
         )
-        self.pending_service_infos.clear()
 
     def __call__(
         self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
@@ -94,13 +103,7 @@ class _AdvertisementSubscription:
         if self.pending:
             self.pending_service_infos.append(service_info)
             return
-        self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(
-                    self.ws_msg_id, [serialize_service_info(service_info)]
-                )
-            )
-        )
+        self._send_service_infos((service_info,))
 
 
 @websocket_api.websocket_command(
