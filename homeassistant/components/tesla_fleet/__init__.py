@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
-    except (ValueError, KeyError) as e:
+    except ValueError as e:
         # Remove invalid implementation from config entry then raise AuthFailed
         hass.config_entries.async_update_entry(
             entry, data={"auth_implementation": None}
