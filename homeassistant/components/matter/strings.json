@@ -255,9 +255,6 @@
       "estimated_heat_required": {
         "name": "Heat energy needed"
       },
-      "boost_state": {
-        "name": "Boost state"
-      },
       "valve_position": {
         "name": "Valve position"
       },

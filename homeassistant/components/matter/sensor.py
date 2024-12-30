@@ -721,16 +721,4 @@ DISCOVERY_SCHEMAS = [
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
         ),
     ),
-    MatterDiscoverySchema(
-        platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
-            key="WaterHeaterManagementBoostState",
-            translation_key="boost_state",
-            device_class=SensorDeviceClass.ENUM,
-            options=[x for x in BOOST_STATE_MAP.values() if x is not None],
-            measurement_to_ha=lambda x: BOOST_STATE_MAP[x],
-        ),
-        entity_class=MatterSensor,
-        required_attributes=(clusters.WaterHeaterManagement.Attributes.BoostState,),
-    ),
 ]

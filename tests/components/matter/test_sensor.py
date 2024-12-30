@@ -377,15 +377,3 @@ async def test_water_heater(
     state = hass.states.get("sensor.water_heater_tank_percentage")
     assert state
     assert state.state == "50"
-
-    # BoostState
-    state = hass.states.get("sensor.water_heater_boost_state")
-    assert state
-    assert state.state == "inactive"
-
-    set_node_attribute(matter_node, 2, 148, 5, 1)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.water_heater_boost_state")
-    assert state
-    assert state.state == "active"
