@@ -27,7 +27,9 @@ def async_setup(hass: HomeAssistant) -> None:
 
 
 @lru_cache(maxsize=1024)
-def serialize_service_info(service_info: BluetoothServiceInfoBleak) -> dict[str, Any]:
+def serialize_service_info(
+    service_info: BluetoothServiceInfoBleak, time_diff: float
+) -> dict[str, Any]:
     """Serialize a BluetoothServiceInfoBleak object."""
     return {
         "name": service_info.name,
@@ -44,7 +46,7 @@ def serialize_service_info(service_info: BluetoothServiceInfoBleak) -> dict[str,
         "service_uuids": service_info.service_uuids,
         "source": service_info.source,
         "connectable": service_info.connectable,
-        "time": service_info.time + (time.time() - time.monotonic()),
+        "time": service_info.time + time_diff,
         "tx_power": service_info.tx_power,
     }
 
@@ -66,6 +68,12 @@ class _AdvertisementSubscription:
         self.ws_msg_id = ws_msg_id
         self.connection = connection
         self.pending = True
+        # Keep time_diff precise to 2 decimal places
+        # so the cached serialization can be reused,
+        # however we still want to calculate it each
+        # subscription in case the system clock is wrong
+        # and gets corrected.
+        self.time_diff = round(time.time() - time.monotonic(), 2)
 
     @callback
     def async_start(self) -> None:
@@ -89,7 +97,7 @@ class _AdvertisementSubscription:
                 websocket_api.event_message(
                     self.ws_msg_id,
                     [
-                        serialize_service_info(service_info)
+                        serialize_service_info(service_info, self.time_diff)
                         for service_info in service_infos
                     ],
                 )
