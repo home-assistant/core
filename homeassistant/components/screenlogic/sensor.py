@@ -9,7 +9,7 @@ from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
 from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.chemistry import DOSE_STATE
 from screenlogicpy.device_const.pump import PUMP_TYPE
-from screenlogicpy.device_const.system import EQUIPMENT_FLAG
+from screenlogicpy.device_const.system import CONTROLLER_STATE, EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -41,7 +41,7 @@ class ScreenLogicSensorDescription(
 ):
     """Describes a ScreenLogic sensor."""
 
-    value_mod: Callable[[int | str], int | str] | None = None
+    value_mod: Callable[[int | str], int | str | None] | None = None
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -59,6 +59,18 @@ SUPPORTED_CORE_SENSORS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="air_temperature",
+    ),
+    ScreenLogicPushSensorDescription(
+        subscription_code=CODE.STATUS_CHANGED,
+        data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
+        key=VALUE.STATE,
+        device_class=SensorDeviceClass.ENUM,
+        options=["ready", "sync", "service"],
+        value_mod=lambda val: (
+            CONTROLLER_STATE(val).name.lower() if val in [1, 2, 3] else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="controller_state",
     ),
 ]
 
@@ -344,7 +356,7 @@ class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | int | float:
+    def native_value(self) -> str | int | float | None:
         """State of the sensor."""
         val = self.entity_data[ATTR.VALUE]
         value_mod = self.entity_description.value_mod
