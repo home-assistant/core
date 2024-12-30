@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.tado import TadoConnector
+from homeassistant.components.tado import TadoDataUpdateCoordinator
 from homeassistant.components.tado.const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_DEFAULT,
@@ -13,9 +13,11 @@ from homeassistant.components.tado.helper import decide_duration, decide_overlay
 from homeassistant.core import HomeAssistant
 
 
-def dummy_tado_connector(hass: HomeAssistant, fallback) -> TadoConnector:
+def dummy_tado_connector(hass: HomeAssistant, fallback) -> TadoDataUpdateCoordinator:
     """Return dummy tado connector."""
-    return TadoConnector(hass, username="dummy", password="dummy", fallback=fallback)
+    return TadoDataUpdateCoordinator(
+        hass, username="dummy", password="dummy", fallback=fallback
+    )
 
 
 async def test_overlay_mode_duration_set(hass: HomeAssistant) -> None:
