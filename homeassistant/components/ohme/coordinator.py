@@ -66,3 +66,14 @@ class OhmeAdvancedSettingsCoordinator(OhmeBaseCoordinator):
     async def _internal_update_data(self):
         """Fetch data from API endpoint."""
         await self.client.async_get_advanced_settings()
+
+
+class OhmeDeviceInfoCoordinator(OhmeBaseCoordinator):
+    """Coordinator to pull device info and charger settings from the API."""
+
+    coordinator_name = "Device Info"
+    _default_update_interval = timedelta(minutes=30)
+
+    async def _internal_update_data(self):
+        """Fetch data from API endpoint."""
+        await self.client.async_update_device_info()

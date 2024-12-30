@@ -24,7 +24,6 @@ class OhmeButtonDescription(OhmeEntityDescription, ButtonEntityDescription):
     """Class describing Ohme button entities."""
 
     press_fn: Callable[[OhmeApiClient], Awaitable[None]]
-    available_fn: Callable[[OhmeApiClient], bool]
 
 
 BUTTON_DESCRIPTIONS = [
@@ -67,11 +66,3 @@ class OhmeButton(OhmeEntity, ButtonEntity):
                 translation_key="api_failed", translation_domain=DOMAIN
             ) from e
         await self.coordinator.async_request_refresh()
-
-    @property
-    def available(self) -> bool:
-        """Is entity available."""
-
-        return super().available and self.entity_description.available_fn(
-            self.coordinator.client
-        )

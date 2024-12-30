@@ -18,6 +18,7 @@ class OhmeEntityDescription(EntityDescription):
     """Class describing Ohme entities."""
 
     is_supported_fn: Callable[[OhmeApiClient], bool] = lambda _: True
+    available_fn: Callable[[OhmeApiClient], bool] = lambda _: True
 
 
 class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
@@ -51,4 +52,8 @@ class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
     @property
     def available(self) -> bool:
         """Return if charger reporting as online."""
-        return super().available and self.coordinator.client.available
+        return (
+            super().available
+            and self.coordinator.client.available
+            and self.entity_description.available_fn(self.coordinator.client)
+        )

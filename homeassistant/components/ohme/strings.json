@@ -57,6 +57,7 @@
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
           "charging": "Charging",
+          "paused": "Paused",
           "pending_approval": "Pending approval"
         }
       },
@@ -65,6 +66,23 @@
       },
       "vehicle_battery": {
         "name": "Vehicle battery"
+      }
+    },
+    "switch": {
+      "pause_charge": {
+        "name": "Pause charge"
+      },
+      "max_charge": {
+        "name": "Max charge"
+      },
+      "lock_buttons": {
+        "name": "Lock buttons"
+      },
+      "require_approval": {
+        "name": "Require approval"
+      },
+      "sleep_when_inactive": {
+        "name": "Sleep when inactive"
       }
     }
   },
