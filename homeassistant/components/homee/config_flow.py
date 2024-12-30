@@ -10,10 +10,8 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
@@ -36,8 +34,6 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.homee: Homee = None
-        self.all_devices: bool = True
-        self.debug_data: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -54,7 +50,6 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.homee.get_access_token()
-                _LOGGER.info("Got access token for homee")
             except HomeeConnectionFailedException:
                 errors["base"] = "cannot_connect"
             except HomeeAuthenticationFailedException:
@@ -63,6 +58,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                _LOGGER.info("Got access token for homee")
                 self.hass.loop.create_task(self.homee.run())
                 _LOGGER.debug("Homee task created")
                 await self.homee.wait_until_connected()
@@ -73,34 +69,19 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.info("Homee config successfully tested")
 
                 await self.async_set_unique_id(self.homee.settings.uid)
-                try:
-                    self._abort_if_unique_id_configured()
-                except AbortFlow:
-                    return self.async_abort(reason="already_configured")
-                else:
-                    _LOGGER.info(
-                        "Created new homee entry with ID %s", self.homee.settings.uid
-                    )
 
-                    return self.async_create_entry(
-                        title=f"{self.homee.settings.uid} ({self.homee.host})",
-                        data={
-                            CONF_HOST: self.homee.host,
-                            CONF_USERNAME: self.homee.user,
-                            CONF_PASSWORD: self.homee.password,
-                        },
-                    )
+                self._abort_if_unique_id_configured()
 
+                _LOGGER.info(
+                    "Created new homee entry with ID %s", self.homee.settings.uid
+                )
+
+                return self.async_create_entry(
+                    title=f"{self.homee.settings.homee_name} ({self.homee.host})",
+                    data=user_input,
+                )
         return self.async_show_form(
             step_id="user",
             data_schema=AUTH_SCHEMA,
             errors=errors,
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

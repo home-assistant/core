@@ -62,8 +62,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> bo
     """Unload a homee config entry."""
     # Unload platforms
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload homee integration after config change."""
-    await hass.config_entries.async_reload(entry.entry_id)

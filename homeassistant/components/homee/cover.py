@@ -4,7 +4,7 @@ import logging
 from typing import Any, cast
 
 from pyHomee.const import AttributeType, NodeProfile
-from pyHomee.model import HomeeNode
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -29,41 +29,39 @@ OPEN_CLOSE_ATTRIBUTES = [
 POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
 
 
+def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute:
+    """Return the attribute used for opening/closing the cover."""
+    # We assume, that no device has UP_DOWN and OPEN_CLOSE, but only one of them.
+    if open_close := node.get_attribute_by_type(AttributeType.UP_DOWN) is None:
+        open_close = node.get_attribute_by_type(AttributeType.OPEN_CLOSE)
+
+    return open_close
+
+
 def get_cover_features(
-    node: HomeeNodeEntity,
-) -> tuple[CoverEntityFeature, AttributeType]:
+    node: HomeeNode, open_close_attribute: HomeeAttribute
+) -> CoverEntityFeature:
     """Determine the supported cover features of a homee node based on the available attributes."""
     features = CoverEntityFeature(0)
-    open_close = None
 
-    # We assume, that no device has UP_DOWN and OPEN_CLOSE, but only one of them.
-    if node.has_attribute(AttributeType.UP_DOWN) or node.has_attribute(
-        AttributeType.OPEN_CLOSE
-    ):
-        if node.has_attribute(AttributeType.UP_DOWN):
-            open_close = AttributeType.UP_DOWN
-        else:
-            open_close = AttributeType.OPEN_CLOSE
-
-        if node.get_attribute(open_close).editable:
-            features |= (
-                CoverEntityFeature.OPEN
-                | CoverEntityFeature.CLOSE
-                | CoverEntityFeature.STOP
-            )
+    if open_close_attribute.editable:
+        features |= (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
 
     # Check for up/down position settable.
-    if node.has_attribute(AttributeType.POSITION):
-        if node.get_attribute(AttributeType.POSITION).editable:
+    attribute = node.get_attribute_by_type(AttributeType.POSITION)
+    if attribute is not None:
+        if attribute.editable:
             features |= CoverEntityFeature.SET_POSITION
 
-    if node.has_attribute(AttributeType.SLAT_ROTATION_IMPULSE):
+    if node.get_attribute_by_type(AttributeType.SLAT_ROTATION_IMPULSE) is not None:
         features |= CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
 
-    if node.has_attribute(AttributeType.SHUTTER_SLAT_POSITION):
+    if node.get_attribute_by_type(AttributeType.SHUTTER_SLAT_POSITION) is not None:
         features |= CoverEntityFeature.SET_TILT_POSITION
 
-    return features, open_close
+    return features
 
 
 def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
@@ -73,7 +71,7 @@ def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
         NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
     }
 
-    return COVER_DEVICE_PROFILES.get(node.profile, None)
+    return COVER_DEVICE_PROFILES.get(node.profile)
 
 
 async def async_setup_entry(
@@ -82,12 +80,6 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Add the homee platform for the cover integration."""
-
-    devices: list[HomeeCover] = []
-    nodes = config_entry.runtime_data.nodes
-    devices.extend(
-        HomeeCover(node, config_entry) for node in nodes if is_cover_node(node)
-    )
 
     async_add_devices(
         HomeeCover(node, config_entry)
@@ -109,22 +101,25 @@ def is_cover_node(node: HomeeNode) -> bool:
 class HomeeCover(HomeeNodeEntity, CoverEntity):
     """Representation of a homee cover device."""
 
+    _attr_name = None
+
     def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
         """Initialize a homee cover entity."""
         super().__init__(node, entry)
-        self._attr_supported_features, self._open_close_attribute = get_cover_features(
-            self
+        self._open_close_attribute = get_open_close_attribute(node)
+        self._attr_supported_features = get_cover_features(
+            node, self._open_close_attribute
         )
         self._device_class = get_device_class(node)
         self._attr_name = None
-        self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{self._node.id}-{self.get_attribute(self._open_close_attribute).id}"
+        self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{self._node.id}-{self._open_close_attribute.id}"
 
     @property
     def current_cover_position(self) -> int | None:
         """Return the cover's position."""
         # Translate the homee position values to HA's 0-100 scale
         if self.has_attribute(AttributeType.POSITION):
-            attribute = self.get_attribute(AttributeType.POSITION)
+            attribute = self._node.get_attribute_by_type(AttributeType.POSITION)
             homee_min = attribute.minimum
             homee_max = attribute.maximum
             homee_position = attribute.current_value
@@ -139,7 +134,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Return the cover's tilt position."""
         # Translate the homee position values to HA's 0-100 scale
         if self.has_attribute(AttributeType.SHUTTER_SLAT_POSITION):
-            attribute = self.get_attribute(AttributeType.SHUTTER_SLAT_POSITION)
+            attribute = self._node.get_attribute_by_type(
+                AttributeType.SHUTTER_SLAT_POSITION
+            )
             homee_min = attribute.minimum
             homee_max = attribute.maximum
             homee_position = attribute.current_value
@@ -154,9 +151,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Return the opening status of the cover."""
         if self._open_close_attribute is not None:
             return (
-                self.attribute(self._open_close_attribute) == 3
+                self._open_close_attribute.get_value() == 3
                 if not self.is_reversed(self._open_close_attribute)
-                else self.attribute(self._open_close_attribute) == 4
+                else self._open_close_attribute.get_value() == 4
             )
 
         return None
@@ -166,34 +163,32 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         """Return the closing status of the cover."""
         if self._open_close_attribute is not None:
             return (
-                self.attribute(self._open_close_attribute) == 4
+                self._open_close_attribute.get_value() == 4
                 if not self.is_reversed(self._open_close_attribute)
-                else self.attribute(self._open_close_attribute) == 3
+                else self._open_close_attribute.get_value() == 3
             )
 
         return None
 
     @property
     def is_closed(self) -> bool | None:
-        """Return the state of the cover."""
+        """Return if the cover is closed."""
         if self.has_attribute(AttributeType.POSITION):
-            return (
-                self.attribute(AttributeType.POSITION)
-                == self.get_attribute(AttributeType.POSITION).maximum
-            )
+            attribute = self._node.get_attribute_by_type(AttributeType.POSITION)
+            return attribute.get_value() == attribute.maximum
 
         if self._open_close_attribute is not None:
             if not self.is_reversed(self._open_close_attribute):
-                return self.attribute(self._open_close_attribute) == 1
+                return self._open_close_attribute.get_value() == 1
 
-            return self.attribute(self._open_close_attribute) == 0
+            return self._open_close_attribute.get_value() == 0
 
         # If none of the above is present, it might be a slat only cover.
         if self.has_attribute(AttributeType.SHUTTER_SLAT_POSITION):
-            return (
-                self.attribute(AttributeType.SHUTTER_SLAT_POSITION)
-                == self.get_attribute(AttributeType.SHUTTER_SLAT_POSITION).minimum
+            attribute = self._node.get_attribute_by_type(
+                AttributeType.SHUTTER_SLAT_POSITION
             )
+            return attribute.get_value() == attribute.minimum
 
         return None
 
@@ -217,7 +212,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             position = 100 - cast(int, kwargs[ATTR_POSITION])
 
             # Convert position to range of our entity.
-            attribute = self.get_attribute(AttributeType.POSITION)
+            attribute = self._node.get_attribute_by_type(AttributeType.POSITION)
             homee_min = attribute.minimum
             homee_max = attribute.maximum
             homee_position = (position / 100) * (homee_max - homee_min) + homee_min
@@ -248,7 +243,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
 
             # Convert position to range of our entity.
-            attribute = self.get_attribute(AttributeType.SHUTTER_SLAT_POSITION)
+            attribute = self._node.get_attribute_by_type(
+                AttributeType.SHUTTER_SLAT_POSITION
+            )
             homee_min = attribute.minimum
             homee_max = attribute.maximum
             homee_position = (position / 100) * (homee_max - homee_min) + homee_min
