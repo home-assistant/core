@@ -28,10 +28,8 @@ from homeassistant.util.percentage import (
 )
 
 from .entity import ViCareEntity
-from .types import ViCareDevice
-from .utils import filter_states, get_device_serial, is_supported
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_device_serial
+from .utils import filter_states, get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 

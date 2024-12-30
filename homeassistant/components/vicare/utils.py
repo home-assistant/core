@@ -1,9 +1,8 @@
 """ViCare helpers functions."""
 
-from collections.abc import Callable
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -24,7 +23,6 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
 from .const import (
     CONF_HEATING_TYPE,
     DEFAULT_CACHE_DURATION,
@@ -32,7 +30,7 @@ from .const import (
     VICARE_TOKEN_FILENAME,
     HeatingType,
 )
-from .types import ViCareConfigEntry, ViCareRequiredKeysMixin
+from .types import ViCareConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
