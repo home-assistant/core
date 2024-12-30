@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
@@ -58,6 +57,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
+    CONF_SET_VARIABLES,
     CONF_STOP,
     CONF_TARGET,
     CONF_THEN,
@@ -90,7 +90,7 @@ from . import condition, config_validation as cv, service, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
-from .script_variables import ScriptVariables
+from .script_variables import ScriptRunVariables, ScriptVariables
 from .template import Template
 from .trace import (
     TraceElement,
@@ -177,7 +177,7 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
         future.set_result(None)
 
 
-def action_trace_append(variables: dict[str, Any], path: str) -> TraceElement:
+def action_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables, path)
     trace_append_element(trace_element, ACTION_TRACE_NODE_MAX_LEN)
@@ -189,7 +189,7 @@ async def trace_action(
     hass: HomeAssistant,
     script_run: _ScriptRun,
     stop: asyncio.Future[None],
-    variables: dict[str, Any],
+    variables: TemplateVarsType,
 ) -> AsyncGenerator[TraceElement]:
     """Trace action execution."""
     path = trace_path_get()
@@ -286,6 +286,7 @@ STATIC_VALIDATION_ACTION_TYPES = (
     cv.SCRIPT_ACTION_DELAY,
     cv.SCRIPT_ACTION_FIRE_EVENT,
     cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE,
+    cv.SCRIPT_ACTION_SET_VARIABLES,
     cv.SCRIPT_ACTION_STOP,
     cv.SCRIPT_ACTION_VARIABLES,
     cv.SCRIPT_ACTION_WAIT_TEMPLATE,
@@ -411,7 +412,7 @@ class _ScriptRun:
         self,
         hass: HomeAssistant,
         script: Script,
-        variables: dict[str, Any],
+        variables: ScriptRunVariables,
         context: Context | None,
         log_exceptions: bool,
     ) -> None:
@@ -488,7 +489,9 @@ class _ScriptRun:
             script_stack.pop()
             self._finish()
 
-        return ScriptRunResult(self._conversation_response, response, self._variables)
+        return ScriptRunResult(
+            self._conversation_response, response, self._variables.data
+        )
 
     async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
@@ -627,11 +630,15 @@ class _ScriptRun:
         except ScriptStoppedError as ex:
             raise asyncio.CancelledError from ex
 
-    async def _async_run_script(self, script: Script) -> None:
+    async def _async_run_script(
+        self, script: Script, variables: ScriptRunVariables | None = None
+    ) -> None:
         """Execute a script."""
+        if variables is None:
+            variables = self._variables.enter_scope()
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
-                script.async_run(self._variables, self._context), eager_start=True
+                script.async_run(variables, self._context), eager_start=True
             )
         )
         if result and result.conversation_response is not UNDEFINED:
@@ -648,14 +655,25 @@ class _ScriptRun:
         """Run a sequence in parallel."""
         scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
 
-        async def async_run_with_trace(idx: int, script: Script) -> None:
+        async def async_run_with_trace(
+            idx: int, script: Script, variables: ScriptRunVariables
+        ) -> None:
             """Run a script with a trace path."""
             trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
-                await self._async_run_script(script)
+                await self._async_run_script(script, variables)
+
+        pregenerated_variables = [
+            self._variables.enter_scope(parallel=True) for _ in range(len(scripts))
+        ]
 
         results = await asyncio.gather(
-            *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
+            *(
+                async_run_with_trace(idx, script, variables)
+                for idx, (script, variables) in enumerate(
+                    zip(scripts, pregenerated_variables, strict=True)
+                )
+            ),
             return_exceptions=True,
         )
         for result in results:
@@ -695,7 +713,7 @@ class _ScriptRun:
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
-        saved_repeat_vars = self._variables.get("repeat")
+        self._variables = self._variables.enter_scope()
 
         def set_repeat_var(
             iteration: int, count: int | None = None, item: Any = None
@@ -705,7 +723,7 @@ class _ScriptRun:
                 repeat_vars["last"] = iteration == count
             if item is not None:
                 repeat_vars["item"] = item
-            self._variables["repeat"] = repeat_vars
+            self._variables.define_single("repeat", repeat_vars)
 
         script = self._script._get_repeat_script(self._step)  # noqa: SLF001
         warned_too_many_loops = False
@@ -856,10 +874,7 @@ class _ScriptRun:
                 # while all the cpu time is consumed.
                 await asyncio.sleep(0)
 
-        if saved_repeat_vars:
-            self._variables["repeat"] = saved_repeat_vars
-        else:
-            self._variables.pop("repeat", None)  # Not set if count = 0
+        self._variables = self._variables.exit_scope()
 
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
@@ -949,11 +964,14 @@ class _ScriptRun:
         raise _StopScript(stop, response)
 
     async def _async_variables_step(self) -> None:
+        """Define a local variable."""
+        self._step_log("defining local variables")
+        self._variables.define(self._action[CONF_VARIABLES])
+
+    async def _async_set_variables_step(self) -> None:
         """Set a variable value."""
         self._step_log("setting variables")
-        self._variables = self._action[CONF_VARIABLES].async_render(
-            self._hass, self._variables, render_as_defaults=False
-        )
+        self._variables.assign(self._action[CONF_SET_VARIABLES])
 
     async def _async_call_service_step(self) -> None:
         """Call the service specified in the action."""
@@ -1006,7 +1024,7 @@ class _ScriptRun:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         await device_action.async_call_action_from_config(
-            self._hass, self._action, self._variables, self._context
+            self._hass, self._action, self._variables.data.copy(), self._context
         )
 
     async def _async_scene_step(self) -> None:
@@ -1221,7 +1239,7 @@ class _ScriptRun:
 
         self._step_log("wait for trigger", timeout)
 
-        variables = {**self._variables}
+        variables = dict(self._variables)
         self._variables["wait"] = {
             "remaining": timeout,
             "completed": False,
@@ -1355,7 +1373,7 @@ async def _async_stop_scripts_at_shutdown(hass: HomeAssistant, event: Event) -> 
         )
 
 
-type _VarsType = dict[str, Any] | Mapping[str, Any] | MappingProxyType[str, Any]
+type _VarsType = dict[str, Any] | Mapping[str, Any] | ScriptRunVariables
 
 
 def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
@@ -1408,7 +1426,6 @@ class Script:
         *,
         # Used in "Running <running_description>" log message
         change_listener: Callable[[], Any] | None = None,
-        copy_variables: bool = False,
         log_exceptions: bool = True,
         logger: logging.Logger | None = None,
         max_exceeded: str = DEFAULT_MAX_EXCEEDED,
@@ -1462,8 +1479,6 @@ class Script:
         self._parallel_scripts: dict[int, list[Script]] = {}
         self._sequence_scripts: dict[int, Script] = {}
         self.variables = variables
-        self._variables_dynamic = template.is_complex(variables)
-        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1732,25 +1747,19 @@ class Script:
         if self.top_level:
             if self.variables:
                 try:
-                    variables = self.variables.async_render(
+                    run_variables = self.variables.async_render(
                         self._hass,
                         run_variables,
                     )
                 except exceptions.TemplateError as err:
                     self._log("Error rendering variables: %s", err, level=logging.ERROR)
                     raise
-            elif run_variables:
-                variables = dict(run_variables)
-            else:
-                variables = {}
 
+            variables = ScriptRunVariables(run_variables)
             variables["context"] = context
-        elif self._copy_variables_on_run:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], copy(run_variables))
         else:
-            # This is not the top level script, variables have been turned to a dict
-            variables = cast(dict[str, Any], run_variables)
+            # This is not the top level script, run_variables is an instance of ScriptRunVariables
+            variables = cast(ScriptRunVariables, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1976,7 +1985,6 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
-                copy_variables=True,
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script
