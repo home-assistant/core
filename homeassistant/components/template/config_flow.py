@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
+from datetime import timedelta
 from functools import partial
+import logging
 from typing import Any, cast
 
 import voluptuous as vol
@@ -32,6 +34,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -67,6 +70,8 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
@@ -524,6 +529,15 @@ def ws_start_preview(
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
+    preview_entity.platform = EntityPlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=template_type,
+        platform_name=DOMAIN,
+        platform=None,
+        scan_interval=timedelta(hours=1),
+        entity_namespace=None,
+    )
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
