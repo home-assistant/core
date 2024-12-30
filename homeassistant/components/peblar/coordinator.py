@@ -16,6 +16,7 @@ from peblar import (
     PeblarEVInterface,
     PeblarMeter,
     PeblarSystem,
+    PeblarSystemInformation,
     PeblarUserConfiguration,
     PeblarVersions,
 )
@@ -24,7 +25,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from tests.components.peblar.conftest import PeblarSystemInformation
 
 from .const import DOMAIN, LOGGER
 

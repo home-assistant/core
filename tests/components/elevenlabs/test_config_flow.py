@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.elevenlabs.const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
@@ -56,7 +58,10 @@ async def test_user_step(
 
 
 async def test_invalid_api_key(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_async_client_fail: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_async_client_api_error: AsyncMock,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test user step with invalid api key."""
 
@@ -77,8 +82,8 @@ async def test_invalid_api_key(
 
     mock_setup_entry.assert_not_called()
 
-    # Reset the side effect
-    mock_async_client_fail.side_effect = None
+    # Use a working client
+    request.getfixturevalue("mock_async_client")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
