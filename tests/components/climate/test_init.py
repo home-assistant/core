@@ -36,6 +36,7 @@ from homeassistant.components.climate.const import (
     SWING_HORIZONTAL_OFF,
     SWING_HORIZONTAL_ON,
     ClimateEntityFeature,
+    HVACAction,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
@@ -425,7 +426,7 @@ async def test_mode_validation(
 
 
 async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
-    """Test turn_on/turn_off/toggle methods."""
+    """Test turn_on/turn_off/toggle methods and the is_on property."""
 
     class MockClimateEntityTest(MockClimateEntity):
         """Mock Climate device."""
@@ -440,20 +441,54 @@ async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
         async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
             """Set new target hvac mode."""
             self._attr_hvac_mode = hvac_mode
+            self._attr_is_on = hvac_mode != HVACMode.OFF
 
     climate = MockClimateEntityTest()
     climate.hass = hass
 
+    assert climate.is_on is False
+
     await climate.async_turn_on()
     assert climate.hvac_mode == HVACMode.HEAT
+    assert climate.is_on is True
 
     await climate.async_turn_off()
     assert climate.hvac_mode == HVACMode.OFF
+    assert climate.is_on is False
 
     await climate.async_toggle()
     assert climate.hvac_mode == HVACMode.HEAT
+    assert climate.is_on is True
     await climate.async_toggle()
     assert climate.hvac_mode == HVACMode.OFF
+    assert climate.is_on is False
+
+    # Test is_on property in case _attr_is_on is not set
+    delattr(climate, "_attr_is_on")
+
+    # When hvac_action is set, is_on should depend on it
+    climate._attr_hvac_mode = HVACMode.AUTO
+    climate._attr_hvac_action = HVACAction.HEATING
+    assert climate.hvac_mode == HVACMode.AUTO
+    assert climate.hvac_action == HVACAction.HEATING
+    assert climate.is_on is True
+    climate._attr_hvac_action = HVACAction.OFF
+    assert climate.hvac_action == HVACAction.OFF
+    assert climate.is_on is False
+
+    # When hvac_action is not used and hvac_mode is set, is_on should depend on it
+    climate._attr_hvac_action = None
+    assert climate.hvac_action is None
+    assert climate.hvac_mode == HVACMode.AUTO
+    assert climate.is_on is True
+    climate._attr_hvac_mode = HVACMode.OFF
+    assert climate.hvac_mode == HVACMode.OFF
+    assert climate.is_on is False
+
+    # If no mode or action is set and _attr_is_on is not set, is_on should be None
+    climate._attr_hvac_action = None
+    climate._attr_hvac_mode = None
+    assert climate.is_on is None
 
 
 async def test_sync_toggle(hass: HomeAssistant) -> None:

@@ -240,6 +240,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "preset_mode",
     "preset_modes",
     "is_aux_heat",
+    "is_on",
     "fan_mode",
     "fan_modes",
     "swing_mode",
@@ -280,6 +281,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_hvac_mode: HVACMode | None
     _attr_hvac_modes: list[HVACMode]
     _attr_is_aux_heat: bool | None
+    _attr_is_on: bool | None
     _attr_max_humidity: float = DEFAULT_MAX_HUMIDITY
     _attr_max_temp: float
     _attr_min_humidity: float = DEFAULT_MIN_HUMIDITY
@@ -356,6 +358,26 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not isinstance(hvac_mode, HVACMode):
             return HVACMode(hvac_mode).value  # type: ignore[unreachable]
         return hvac_mode.value
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if the climate is turned on.
+
+        The climate's on/off state can be be controlled independently
+        from the hvac_action and hvac_mode if the _attr_is_on attribute is set.
+
+        If the _attr_is_on attrubiute is set, then return that value.
+        Otherwise, return True if hvac_action is not None and not HVACAction.OFF.
+        Return None if hvac_action is None,
+        otherwise return True if hvac_mode is not HVACMode.OFF.
+        """
+        if hasattr(self, "_attr_is_on"):
+            return self._attr_is_on
+        if self.hvac_action is not None:
+            return self.hvac_action != HVACAction.OFF
+        if self.hvac_mode is None:
+            return None
+        return self.hvac_mode != HVACMode.OFF
 
     @property
     def precision(self) -> float:
