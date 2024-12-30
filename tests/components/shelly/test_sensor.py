@@ -1391,7 +1391,6 @@ async def test_rpc_voltmeter_value(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC voltmeter value sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter_value"
