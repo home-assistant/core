@@ -233,6 +233,34 @@ async def test_zeroconf_duplicate_different_ip(
     }
 
 
+async def test_user_flow_works_discovery(
+    hass: HomeAssistant,
+    mock_russound_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow can continue after discovery happened."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert len(hass.config_entries.flow.async_progress(DOMAIN)) == 2
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
 async def _start_reconfigure_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> ConfigFlowResult:

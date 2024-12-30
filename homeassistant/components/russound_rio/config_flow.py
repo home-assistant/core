@@ -99,7 +99,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Could not connect to Russound RIO")
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(controller.mac_address)
+                await self.async_set_unique_id(
+                    controller.mac_address, raise_on_progress=False
+                )
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch(reason="wrong_device")
                     return self.async_update_reload_and_abort(
