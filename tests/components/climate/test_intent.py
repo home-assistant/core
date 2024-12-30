@@ -1,13 +1,16 @@
 """Test climate intents."""
 
 from collections.abc import Generator
+from typing import Any
 
 import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
+    ATTR_TEMPERATURE,
     DOMAIN,
     ClimateEntity,
+    ClimateEntityFeature,
     HVACMode,
     intent as climate_intent,
 )
@@ -263,6 +266,146 @@ async def test_get_temperature_no_entities(
             assistant=conversation.DOMAIN,
         )
     assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+
+
+async def test_set_temperature(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HassClimateSetTemperature intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await climate_intent.async_setup_intents(hass)
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with set_temperature."""
+
+        _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+
+    climate_1 = MockClimateEntityTemp()
+    climate_1._attr_name = "Climate 1"
+    climate_1._attr_unique_id = "1234"
+    climate_1._attr_current_temperature = 10.0
+    climate_1._attr_target_temperature = 10.0
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "1234", suggested_object_id="climate_1"
+    )
+
+    climate_2 = MockClimateEntityTemp()
+    climate_2._attr_name = "Climate 2"
+    climate_2._attr_unique_id = "5678"
+    climate_2._attr_current_temperature = 22.0
+    climate_2._attr_target_temperature = 22.0
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", suggested_object_id="climate_2"
+    )
+
+    await create_mock_platform(hass, [climate_1, climate_2])
+
+    # Add climate entities to different areas:
+    # climate_1 => living room
+    # climate_2 => bedroom
+    # nothing in office
+    living_room_area = area_registry.async_create(name="Living Room")
+    bedroom_area = area_registry.async_create(name="Bedroom")
+    office_area = area_registry.async_create(name="Office")
+
+    entity_registry.async_update_entity(
+        climate_1.entity_id, area_id=living_room_area.id
+    )
+    entity_registry.async_update_entity(climate_2.entity_id, area_id=bedroom_area.id)
+
+    # Select climate entity by name (Cliamte 1)
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_SET_TEMPERATURE,
+        {"name": {"value": "Climate 1"}, ATTR_TEMPERATURE: {"value": 20.0}},
+        assistant=conversation.DOMAIN,
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.matched_states
+    assert response.matched_states[0].entity_id == climate_1.entity_id
+    assert climate_1.target_temperature == 20
+
+    # Select climate entity by area (Cliamte 2)
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_SET_TEMPERATURE,
+        {"area": {"value": bedroom_area.name}, ATTR_TEMPERATURE: {"value": 25.0}},
+        assistant=conversation.DOMAIN,
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.matched_states
+    assert response.matched_states[0].entity_id == climate_2.entity_id
+    assert climate_2.target_temperature == 25
+
+    # Check area with no climate entities
+    with pytest.raises(intent.MatchFailedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {"area": {"value": office_area.name}, ATTR_TEMPERATURE: {"value": 20.0}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Exception should contain details of what we tried to match
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    constraints = error.value.constraints
+    assert constraints.name is None
+    assert constraints.area_name == office_area.name
+    assert constraints.domains is None
+    assert constraints.device_classes is None
+
+    # Check wrong name
+    with pytest.raises(intent.MatchFailedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {"name": {"value": "Does not exist"}, ATTR_TEMPERATURE: {"value": 20.0}},
+            assistant=conversation.DOMAIN,
+        )
+
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    constraints = error.value.constraints
+    assert constraints.name == "Does not exist"
+    assert constraints.area_name is None
+    assert constraints.domains is None
+    assert constraints.device_classes is None
+
+    # Check wrong name with area
+    with pytest.raises(intent.MatchFailedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {
+                "name": {"value": "Climate 1"},
+                "area": {"value": bedroom_area.name},
+                ATTR_TEMPERATURE: {"value": 20.0},
+            },
+            assistant=conversation.DOMAIN,
+        )
+
+    assert isinstance(error.value, intent.MatchFailedError)
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    constraints = error.value.constraints
+    assert constraints.name == "Climate 1"
+    assert constraints.area_name == bedroom_area.name
+    assert constraints.domains is None
+    assert constraints.device_classes is None
 
 
 async def test_not_exposed(
