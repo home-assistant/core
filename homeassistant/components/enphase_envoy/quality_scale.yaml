@@ -8,11 +8,7 @@ rules:
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - test_zero_conf_malformed_serial_property - with pytest.raises(KeyError) as ex::
-      I don't believe this should be able to raise a KeyError Shouldn't we abort the flow?
+  config-flow-test-coverage: done
   config-flow:
     status: todo
     comment: |
