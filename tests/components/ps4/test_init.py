@@ -52,7 +52,6 @@ MOCK_FLOW_RESULT = {
     "title": "test_ps4",
     "data": MOCK_DATA,
     "options": {},
-    "subentries": (),
 }
 
 MOCK_ENTRY_ID = "SomeID"

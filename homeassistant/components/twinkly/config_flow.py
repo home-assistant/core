@@ -23,6 +23,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle twinkly config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -45,7 +46,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (TimeoutError, ClientError):
                 errors[CONF_HOST] = "cannot_connect"
             else:
-                await self.async_set_unique_id(device_info[DEV_ID])
+                await self.async_set_unique_id(
+                    device_info["mac"], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
 
                 return self._create_entry_from_device(device_info, host)
@@ -62,7 +65,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         device_info = await Twinkly(
             discovery_info.ip, async_get_clientsession(self.hass)
         ).get_details()
-        await self.async_set_unique_id(device_info[DEV_ID])
+        await self.async_set_unique_id(device_info["mac"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
         self._discovered_device = (device_info, discovery_info.ip)
@@ -77,6 +80,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._create_entry_from_device(device_info, host)
 
         self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            "name": device_info[DEV_NAME],
+        }
         placeholders = {
             "model": device_info[DEV_MODEL],
             "name": device_info[DEV_NAME],
