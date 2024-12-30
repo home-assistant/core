@@ -790,6 +790,9 @@ dropmqttapi==1.0.3
 # homeassistant.components.dsmr
 dsmr-parser==1.4.2
 
+# homeassistant.components.dvsportal
+dvsportal==1.2.0
+
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
 

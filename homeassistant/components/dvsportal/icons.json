@@ -1,0 +1,10 @@
+{
+  "services": {
+    "create_reservation": {
+      "service": "mdi:car-arrow-right"
+    },
+    "end_reservation": {
+      "service": "mdi:car-arrow-left"
+    }
+  }
+}
