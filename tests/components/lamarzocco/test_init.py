@@ -199,8 +199,11 @@ async def test_websocket_closed_on_unload(
     ) as local_client:
         client = local_client.return_value
         client.websocket = AsyncMock()
-        client.websocket.closed = False
+
         await async_init_integration(hass, mock_config_entry)
+        mock_lamarzocco.websocket_connect.assert_called_once()
+
+        client.websocket.closed = False
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         client.websocket.close.assert_called_once()
