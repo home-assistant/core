@@ -23,21 +23,6 @@
   },
   "entity": {
     "sensor": {
-      "last_event": {
-        "name": "Last Event",
-        "state": {
-          "activity_button": "Activity button",
-          "timer": "Timer",
-          "power_button": "Power button",
-          "cry": "Cry",
-          "command": "Command",
-          "safety_clip": "Safety clip",
-          "long_activity_press": "Long activity press",
-          "restart": "restart",
-          "initial_status_requested": "initial_status_requested",
-          "status_requested": "status_requested"
-        }
-      },
       "state": {
         "name": "State",
         "state": {

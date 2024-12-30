@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from python_snoo.containers import SnooData, SnooEvents, SnooStates
+from python_snoo.containers import SnooData, SnooStates
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -14,12 +14,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     StateType,
 )
-from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SnooConfigEntry
-from .coordinator import SnooCoordinator
+from .coordinator import SnooConfigEntry, SnooCoordinator
 from .entity import SnooDescriptionEntity
 
 
@@ -41,17 +39,9 @@ SENSOR_DESCRIPTIONS: list[SnooSensorEntityDescription] = [
     SnooSensorEntityDescription(
         key="time_left",
         translation_key="time_left",
-        value_fn=lambda data: data.state_machine.time_left,
-        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda data: data.state_machine.time_left_timestamp,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-    ),
-    SnooSensorEntityDescription(
-        key="last_event",
-        translation_key="last_event",
-        value_fn=lambda data: data.event.value,
-        device_class=SensorDeviceClass.ENUM,
-        options=[e.value for e in SnooEvents],
     ),
 ]
 

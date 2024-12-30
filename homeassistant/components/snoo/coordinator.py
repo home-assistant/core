@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-# from . import SnooConfigEntry
+type SnooConfigEntry = ConfigEntry[dict[str, SnooCoordinator]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class SnooCoordinator(DataUpdateCoordinator[SnooData]):
     """Snoo coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SnooConfigEntry
 
     def __init__(self, hass: HomeAssistant, device: SnooDevice, snoo: Snoo) -> None:
         """Set up Snoo Coordinator."""
