@@ -1,5 +1,21 @@
 # serializer version: 1
-# name: test_api_events[calendar.test_user_dailies]
+# name: test_api_events[date range in the past-calendar.test_user_dailies]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_daily_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_s]
+  list([
+  ])
+# ---
+# name: test_api_events[default date range-calendar.test_user_dailies]
   list([
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -577,7 +593,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_daily_reminders]
+# name: test_api_events[default date range-calendar.test_user_daily_reminders]
   list([
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -819,7 +835,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_to_do_reminders]
+# name: test_api_events[default date range-calendar.test_user_to_do_reminders]
   list([
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
@@ -837,7 +853,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_to_do_s]
+# name: test_api_events[default date range-calendar.test_user_to_do_s]
   list([
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
@@ -912,7 +928,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': None,
   })
 # ---
@@ -965,7 +981,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_daily_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_daily_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1017,7 +1033,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todo_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todo_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1069,7 +1085,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': None,
   })
 # ---

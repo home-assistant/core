@@ -34,8 +34,8 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
   devices: done

@@ -2,11 +2,19 @@
 
 from unittest.mock import AsyncMock
 
+from goslideapi.goslideapi import (
+    AuthenticationFailed,
+    ClientConnectionError,
+    ClientTimeoutError,
+    DigestAuthCalcError,
+)
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_platform
@@ -44,3 +52,37 @@ async def test_pressing_button(
         blocking=True,
     )
     mock_slide_api.slide_calibrate.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        ClientConnectionError,
+        ClientTimeoutError,
+        AuthenticationFailed,
+        DigestAuthCalcError,
+    ],
+)
+async def test_pressing_button_exception(
+    hass: HomeAssistant,
+    exception: Exception,
+    mock_slide_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test pressing button."""
+    await setup_platform(hass, mock_config_entry, [Platform.BUTTON])
+
+    mock_slide_api.slide_calibrate.side_effect = exception
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Error while sending the calibration request to the device",
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {
+                ATTR_ENTITY_ID: "button.slide_bedroom_calibrate",
+            },
+            blocking=True,
+        )

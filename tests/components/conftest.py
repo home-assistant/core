@@ -19,6 +19,7 @@ from aiohasupervisor.models import (
     StoreInfo,
 )
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import repairs
 from homeassistant.config_entries import (
@@ -34,6 +35,7 @@ from homeassistant.data_entry_flow import (
     FlowHandler,
     FlowManager,
     FlowResultType,
+    section,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -644,6 +646,61 @@ def _get_integration_quality_scale_rule(integration: str, rule: str) -> str:
     return status if isinstance(status, str) else status["status"]
 
 
+async def _check_step_or_section_translations(
+    hass: HomeAssistant,
+    translation_errors: dict[str, str],
+    category: str,
+    integration: str,
+    translation_prefix: str,
+    description_placeholders: dict[str, str],
+    data_schema: vol.Schema | None,
+) -> None:
+    # neither title nor description are required
+    # - title defaults to integration name
+    # - description is optional
+    for header in ("title", "description"):
+        await _validate_translation(
+            hass,
+            translation_errors,
+            category,
+            integration,
+            f"{translation_prefix}.{header}",
+            description_placeholders,
+            translation_required=False,
+        )
+
+    if not data_schema:
+        return
+
+    for data_key, data_value in data_schema.schema.items():
+        if isinstance(data_value, section):
+            # check the nested section
+            await _check_step_or_section_translations(
+                hass,
+                translation_errors,
+                category,
+                integration,
+                f"{translation_prefix}.sections.{data_key}",
+                description_placeholders,
+                data_value.schema,
+            )
+            continue
+        iqs_config_flow = _get_integration_quality_scale_rule(
+            integration, "config-flow"
+        )
+        # data and data_description are compulsory
+        for header in ("data", "data_description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                category,
+                integration,
+                f"{translation_prefix}.{header}.{data_key}",
+                description_placeholders,
+                translation_required=(iqs_config_flow == "done"),
+            )
+
+
 async def _check_config_flow_result_translations(
     manager: FlowManager,
     flow: FlowHandler,
@@ -675,35 +732,16 @@ async def _check_config_flow_result_translations(
     setattr(flow, "__flow_seen_before", hasattr(flow, "__flow_seen_before"))
 
     if result["type"] is FlowResultType.FORM:
-        iqs_config_flow = _get_integration_quality_scale_rule(
-            integration, "config-flow"
-        )
         if step_id := result.get("step_id"):
-            # neither title nor description are required
-            # - title defaults to integration name
-            # - description is optional
-            for header in ("title", "description"):
-                await _validate_translation(
-                    flow.hass,
-                    translation_errors,
-                    category,
-                    integration,
-                    f"{key_prefix}step.{step_id}.{header}",
-                    result["description_placeholders"],
-                    translation_required=False,
-                )
-            if iqs_config_flow == "done" and (data_schema := result["data_schema"]):
-                # data and data_description are compulsory
-                for data_key in data_schema.schema:
-                    for header in ("data", "data_description"):
-                        await _validate_translation(
-                            flow.hass,
-                            translation_errors,
-                            category,
-                            integration,
-                            f"{key_prefix}step.{step_id}.{header}.{data_key}",
-                            result["description_placeholders"],
-                        )
+            await _check_step_or_section_translations(
+                flow.hass,
+                translation_errors,
+                category,
+                integration,
+                f"{key_prefix}step.{step_id}",
+                result["description_placeholders"],
+                result["data_schema"],
+            )
 
         if errors := result.get("errors"):
             for error in errors.values():
