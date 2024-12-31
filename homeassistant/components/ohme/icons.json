@@ -43,7 +43,6 @@
         }
       }
     }
-    
   },
   "services": {
     "list_charge_slots": {
