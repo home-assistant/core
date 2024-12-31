@@ -46,6 +46,7 @@ DEVICE_2 = {
 }
 DEVICE_DATA_QUERY = DEVICE_1 | DEVICE_2
 
+SERIAL = "m123456789"
 
 SENSOR_DATA_QUERY = {
     "sys_serial_number": SERIAL,
