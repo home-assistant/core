@@ -132,7 +132,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_REFRESH_TOKEN],
         )
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
+            entry,
+            data={
+                **entry.data,
+                CONF_ACCESS_TOKEN: token.access_token,
+                CONF_REFRESH_TOKEN: token.refresh_token,
+            },
         )
 
         # Get devices and their current status
