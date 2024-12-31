@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import StateType
 
 from .bridge import RefossDataUpdateCoordinator
 from .const import (
+    _LOGGER,
     CHANNEL_DISPLAY_NAME,
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -126,6 +127,7 @@ async def async_setup_entry(
         device = coordinator.device
 
         if not isinstance(device, ElectricityXMix):
+            _LOGGER.debug("Device %s is not ElectricityXMix", device.dev_name)
             return
 
         sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")

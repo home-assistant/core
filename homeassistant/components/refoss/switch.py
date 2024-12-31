@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import RefossDataUpdateCoordinator
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
+from .const import _LOGGER, COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import RefossEntity
 
 
@@ -29,6 +29,7 @@ async def async_setup_entry(
         """Register the device."""
         device = coordinator.device
         if not isinstance(device, ToggleXMix):
+            _LOGGER.debug("Device %s is not ToggleXMix", device.dev_name)
             return
 
         new_entities = []
