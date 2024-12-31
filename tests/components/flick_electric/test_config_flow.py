@@ -78,6 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "123 Fake St"
     assert result2["data"] == CONF
+    assert result2["context"]["unique_id"] == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -148,6 +149,7 @@ async def test_form_multi_account(hass: HomeAssistant) -> None:
             CONF_SUPPLY_NODE_REF: "456",
             CONF_ACCOUNT_ID: "5678",
         }
+        assert result3["context"]["unique_id"] == "5678"
         assert len(mock_setup_entry.mock_calls) == 1
 
 
