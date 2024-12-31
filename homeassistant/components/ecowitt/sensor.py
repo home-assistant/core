@@ -8,7 +8,7 @@ import logging
 from typing import Final
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes, EcoWittStation
 from aioecowitt.sensor import SENSOR_MAP
-
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -35,12 +35,14 @@ from homeassistant.const import (
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _METRIC: Final = (
@@ -263,8 +265,6 @@ async def async_setup_entry(
 
     def _new_sensor(sensor: EcoWittSensor) -> None:
         """Add a new sensor entity if it doesn't already exist."""
-
-        _LOGGER.debug("ecowitt.sensors: %s", ecowitt.sensors)
         if sensor.key in added_keys:
             _LOGGER.debug("Sensor already added: %s", sensor.key)
             return
@@ -309,21 +309,30 @@ async def async_setup_entry(
 
     # Restore entities from the entity registry
     for config_entry in entries:
-        unique_id = config_entry.unique_id.split("-")[1]
-
-        sensor = ecowitt.sensors[
-            f"9835D60D7F0BDF05A99FC269236C3079.{get_sensor_key_by_name(config_entry.original_name)}"
-        ] = EcoWittSensor(
-            name=config_entry.original_name,
-            key=config_entry.unique_id.split("-")[1],
-            stype=get_sensor_key_by_name(config_entry.original_name),
-            station=EcoWittStation(
-                station="GW2000A_V3.1.6",
-                model="GW2000A",
-                frequence="868M",
-                key="9835D60D7F0BDF05A99FC269236C3079",
-                version="126",
-            ),
+        config_entry_unique_id = config_entry.unique_id.split("-")[0]
+        config_entry_key = config_entry.unique_id.split("-")[1]
+        sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
+        device_registry = dr.async_get(hass)
+        device_info = device_registry.async_get_device(
+            identifiers={
+                (DOMAIN, config_entry_unique_id),
+            }
+        )
+        _LOGGER.debug("device_info: %s", device_info)
+        station = EcoWittStation(
+            station=device_info.name,
+            model=device_info.model,
+            frequence="",
+            key=config_entry_unique_id,
+            version="2",
+        )
+        sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
+            EcoWittSensor(
+                name=config_entry.original_name,
+                key=config_entry_key,
+                stype=sensor_key_name,
+                station=station,
+            )
         )
         mapping = ECOWITT_SENSORS_MAPPING[
             get_sensor_stype_by_name(config_entry.original_name)
@@ -345,7 +354,7 @@ async def async_setup_entry(
             )
         entity = EcowittSensorEntity(sensor, description)
         entities.append(entity)
-        added_keys.add(unique_id)
+        added_keys.add(config_entry_key)
 
     async_add_entities(entities)
 
