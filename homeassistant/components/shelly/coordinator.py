@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, cast
 
+from aiohttp.client_exceptions import ClientConnectionResetError
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_NAMES, MODEL_VALVE
@@ -771,7 +772,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             except InvalidAuthError:
                 self.entry.async_start_reauth(self.hass)
                 return
-            except DeviceConnectionError as err:
+            except (DeviceConnectionError, ClientConnectionResetError) as err:
                 # If the device is restarting or has gone offline before
                 # the ping/pong timeout happens, the shutdown command
                 # will fail, but we don't care since we are unloading
