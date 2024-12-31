@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RussoundConfigEntry) -> 
 
     try:
         await client.connect()
+        await client.load_zone_source_metadata()
     except RUSSOUND_RIO_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

@@ -12,6 +12,7 @@
           "unplugged": "mdi:power-plug-off",
           "plugged_in": "mdi:power-plug",
           "charging": "mdi:battery-charging-100",
+          "paused": "mdi:pause",
           "pending_approval": "mdi:alert-decagram"
         }
       },
