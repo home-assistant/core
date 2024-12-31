@@ -25,6 +25,7 @@ class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
     """Base class for all Ohme entities."""
 
     _attr_has_entity_name = True
+    entity_description: OhmeEntityDescription
 
     def __init__(
         self,
