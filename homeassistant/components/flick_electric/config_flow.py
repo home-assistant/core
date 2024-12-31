@@ -96,9 +96,6 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             self.accounts = await FlickAPI(self.auth).getCustomerAccounts()
         except (APIException, ClientResponseError):
             errors["base"] = "cannot_connect"
-        except AuthException:
-            # We should never get here as we have a valid token
-            return self.async_abort(reason="unknown")
 
         active_accounts = [a for a in self.accounts if a["status"] == "active"]
 
