@@ -70,6 +70,8 @@ from .const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_HVAC_ONOFF_MODE_ON,
+    CONF_HVAC_ONOFF_MODE_OFF,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
@@ -249,7 +251,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     self._attr_swing_modes.append(swing_mode)
 
         if CONF_HVAC_ONOFF_REGISTER in config:
-            self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
+            onoff_config = config[CONF_HVAC_ONOFF_REGISTER]
+            if isinstance(onoff_config, dict):
+                self._hvac_onoff_register = onoff_config[CONF_ADDRESS]
+                self._hvac_on_mode = onoff_config.get(CONF_HVAC_ONOFF_MODE_ON, 1)
+                self._hvac_off_mode = onoff_config.get(CONF_HVAC_ONOFF_MODE_OFF, 0)
+            else:
+                self._hvac_onoff_register = onoff_config
+                self._hvac_on_mode = 1
+                self._hvac_off_mode = 0
             self._hvac_onoff_write_registers = config[CONF_WRITE_REGISTERS]
             if HVACMode.OFF not in self._attr_hvac_modes:
                 self._attr_hvac_modes.append(HVACMode.OFF)
@@ -266,19 +276,20 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if self._hvac_onoff_register is not None:
-            # Turn HVAC Off by writing 0 to the On/Off register, or 1 otherwise.
+            # Turn HVAC Off or On using the specified values
+            value = self._hvac_off_mode if hvac_mode == HVACMode.OFF else self._hvac_on_mode
             if self._hvac_onoff_write_registers:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    [0 if hvac_mode == HVACMode.OFF else 1],
+                    [value],
                     CALL_TYPE_WRITE_REGISTERS,
                 )
             else:
                 await self._hub.async_pb_call(
                     self._slave,
                     self._hvac_onoff_register,
-                    0 if hvac_mode == HVACMode.OFF else 1,
+                    value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
