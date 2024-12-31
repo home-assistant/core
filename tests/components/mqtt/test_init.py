@@ -44,6 +44,7 @@ from homeassistant.util.dt import utcnow
 from tests.common import (
     MockConfigEntry,
     MockEntity,
+    MockEntityPlatform,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -194,6 +195,7 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     # test value template with entity
     entity = Entity()
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     entity.entity_id = "select.test"
     tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
@@ -218,6 +220,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
