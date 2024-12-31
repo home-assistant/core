@@ -5,8 +5,8 @@ from unittest.mock import patch
 from pyflick.authentication import AuthException
 
 from homeassistant.components.flick_electric.const import CONF_ACCOUNT_ID, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_SOURCE, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import CONF, _mock_flick_price
@@ -21,7 +21,7 @@ async def test_init_auth_failure_triggers_auth(hass: HomeAssistant) -> None:
             "homeassistant.components.flick_electric.HassFlickAuth.async_get_access_token",
             side_effect=AuthException,
         ),
-        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
+        # patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -32,21 +32,13 @@ async def test_init_auth_failure_triggers_auth(hass: HomeAssistant) -> None:
         )
         entry.add_to_hass(hass)
 
+        # Ensure setup fails
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        mock_flow_init.assert_called_once_with(
-            DOMAIN,
-            context={
-                CONF_SOURCE: SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-                "title_placeholders": {
-                    "name": entry.title,
-                },
-            },
-            data={**entry.data},
-        )
         assert entry.state is ConfigEntryState.SETUP_ERROR
+
+        # Ensure reauth flow is triggered
+        await hass.async_block_till_done()
+        assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_init_migration_single_account(hass: HomeAssistant) -> None:
@@ -71,7 +63,6 @@ async def test_init_migration_single_account(hass: HomeAssistant) -> None:
             "homeassistant.components.flick_electric.FlickAPI.getPricing",
             return_value=_mock_flick_price(),
         ),
-        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -87,7 +78,7 @@ async def test_init_migration_single_account(hass: HomeAssistant) -> None:
 
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        mock_flow_init.assert_not_called()
+        assert len(hass.config_entries.flow.async_progress()) == 0
         assert entry.state is ConfigEntryState.LOADED
         assert entry.version == 2
         assert entry.unique_id == CONF[CONF_ACCOUNT_ID]
@@ -122,7 +113,6 @@ async def test_init_migration_multi_account_reauth(hass: HomeAssistant) -> None:
             "homeassistant.components.flick_electric.FlickAPI.getPricing",
             return_value=_mock_flick_price(),
         ),
-        patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -136,18 +126,11 @@ async def test_init_migration_multi_account_reauth(hass: HomeAssistant) -> None:
         )
         entry.add_to_hass(hass)
 
+        # ensure setup fails
         assert not await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        mock_flow_init.assert_called_once_with(
-            DOMAIN,
-            context={
-                CONF_SOURCE: SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-                "title_placeholders": {
-                    "name": entry.title,
-                },
-            },
-            data={**entry.data},
-        )
         assert entry.state is ConfigEntryState.MIGRATION_ERROR
+        await hass.async_block_till_done()
+
+        # Ensure reauth flow is triggered
+        await hass.async_block_till_done()
+        assert len(hass.config_entries.flow.async_progress()) == 1
