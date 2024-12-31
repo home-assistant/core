@@ -6,6 +6,7 @@ post:
         config_entry:
           integration: mastodon
     status:
+      required: true
       selector:
         text:
     visibility:

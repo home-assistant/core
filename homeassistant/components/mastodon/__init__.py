@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from mastodon.Mastodon import Mastodon, MastodonError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -21,24 +18,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
-from .coordinator import MastodonCoordinator
+from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
 from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
-
-
-@dataclass
-class MastodonData:
-    """Mastodon data type."""
-
-    client: Mastodon
-    instance: dict
-    account: dict
-    coordinator: MastodonCoordinator
-
-
-type MastodonConfigEntry = ConfigEntry[MastodonData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

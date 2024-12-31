@@ -32,8 +32,15 @@
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
-    "unable_to_send_message": "Unable to send message",
-    "unable_to_upload_image": "Unable to upload image {media_path}"
+    "unable_to_send_message": "Unable to send message.",
+    "unable_to_upload_image": "Unable to upload image {media_path}.",
+    "not_whitelisted_directory": "{media} is not a whitelisted directory."
+  },
+  "issues": {
+    "deprecated_notify_action": {
+      "title": "Deprecated Notify action used for Mastodon",
+      "description": "The Notify action for Mastodon is deprecated.\n\nUse the `mastodon.post` action instead."
+    }
   },
   "entity": {
     "sensor": {
@@ -58,7 +65,7 @@
       "fields": {
         "config_entry_id": {
           "name": "Mastodon account",
-          "description": "Select the Mastodon account to post to"
+          "description": "Select the Mastodon account to post to."
         },
         "status": {
           "name": "Status",
@@ -66,15 +73,19 @@
         },
         "visibility": {
           "name": "Visibility",
-          "description": "The visibility of the post."
+          "description": "The visibility of the post (default: account setting)."
         },
         "content_warning": {
           "name": "Content warning",
-          "description": "A content warning will be shown before the status text is shown. (default: no content warning)."
+          "description": "A content warning will be shown before the status text is shown (default: no content warning)."
+        },
+        "media": {
+          "name": "Media",
+          "description": "Attach an image or video to the post."
         },
         "media_warning": {
           "name": "Media warning",
-          "description": "If an image or video is attached, will mark the media as sensitive. (default: no media warning)."
+          "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning)."
         }
       }
     }
