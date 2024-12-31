@@ -45,7 +45,3 @@ class FlickElectricDataCoordinator(DataUpdateCoordinator[FlickPrice]):
             raise ConfigEntryAuthFailed from err
         except (APIException, aiohttp.ClientResponseError) as err:
             raise UpdateFailed from err
-        except Exception as err:
-            raise UpdateFailed(
-                f"Error communicating with Flick Electric API: {err}"
-            ) from err
