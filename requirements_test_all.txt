@@ -84,7 +84,7 @@ PyRMVtransport==0.3.3
 PySwitchbot==0.55.4
 
 # homeassistant.components.syncthru
-PySyncThru==0.7.10
+PySyncThru==0.8.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
