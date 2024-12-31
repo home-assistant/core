@@ -19,12 +19,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
+from .const import (
+    CONF_BASE_URL,
+    DEFAULT_URL,
+    LOGGER,
+    ATTR_MEDIA_WARNING,
+    ATTR_CONTENT_WARNING,
+)
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"
-ATTR_MEDIA_WARNING = "media_warning"
-ATTR_CONTENT_WARNING = "content_warning"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {

@@ -1,0 +1,138 @@
+"""Define services for the Mastodon integration."""
+
+from dataclasses import asdict
+from enum import StrEnum
+import mimetypes
+from typing import Any, cast
+
+from mastodon import Mastodon
+from mastodon.Mastodon import MastodonAPIError
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+from . import MastodonConfigEntry
+from .const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_CONTENT_WARNING,
+    ATTR_MEDIA,
+    ATTR_MEDIA_WARNING,
+    ATTR_STATUS,
+    ATTR_VISIBILITY,
+    DOMAIN,
+    LOGGER,
+)
+
+
+class StatusVisibility(StrEnum):
+    """StatusVisibility model."""
+
+    PUBLIC = "public"
+    UNLISTED = "unlisted"
+    PRIVATE = "private"
+    DIRECT = "direct"
+
+
+SERVICE_POST = "post"
+SERVICE_POST_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_STATUS): str,
+        vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
+        vol.Optional(ATTR_CONTENT_WARNING): bool,
+        vol.Optional(ATTR_MEDIA): str,
+        vol.Optional(ATTR_MEDIA_WARNING): bool,
+    }
+)
+
+
+def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MastodonConfigEntry:
+    """Get the Mastodon config entry."""
+    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="integration_not_found",
+            translation_placeholders={"target": DOMAIN},
+        )
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_loaded",
+            translation_placeholders={"target": entry.title},
+        )
+    return cast(MastodonConfigEntry, entry)
+
+
+def setup_services(hass: HomeAssistant) -> None:
+    """Set up the services for the Mastodon integration."""
+
+    async def async_post(call: ServiceCall) -> ServiceResponse:
+        """Post a status."""
+        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        status = call.data[ATTR_STATUS]
+        visibility = StatusVisibility(call.data[ATTR_VISIBILITY])
+        content_warning = call.data.get(ATTR_CONTENT_WARNING)
+        media = call.data.get(ATTR_MEDIA)
+        media_warning = call.data.get(ATTR_MEDIA_WARNING)
+        client = entry.runtime_data.client
+
+        if media:
+            if not hass.config.is_allowed_path(media):
+                LOGGER.warning("'%s' is not a whitelisted directory", media)
+                return None
+            mediadata = _upload_media(client, media)
+
+            try:
+                client.status_post(
+                    status,
+                    media_ids=mediadata["id"],
+                    sensitive=content_warning,
+                    visibility=visibility,
+                    spoiler_text=media_warning,
+                )
+            except MastodonAPIError as err:
+                LOGGER.error("Unable to send message")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_send_message",
+                ) from err
+        else:
+            try:
+                client.status_post(
+                    status, visibility=visibility, spoiler_text=content_warning
+                )
+            except MastodonAPIError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_send_message",
+                ) from err
+        return None
+
+    def _upload_media(client: Mastodon, media_path: Any = None) -> Any:
+        """Upload media."""
+        with open(media_path, "rb"):
+            media_type = _media_type(media_path)
+        try:
+            mediadata = client.media_post(media_path, mime_type=media_type)
+        except MastodonAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_upload_image",
+                translation_placeholders={"media_path": media_path},
+            ) from err
+
+        return mediadata
+
+    def _media_type(self, media_path: Any = None) -> Any:
+        """Get media Type."""
+        (media_type, _) = mimetypes.guess_type(media_path)
+
+        return media_type
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_POST, async_post, schema=SERVICE_POST_SCHEMA
+    )

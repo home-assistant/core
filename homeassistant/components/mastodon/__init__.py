@@ -17,10 +17,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
 from .coordinator import MastodonCoordinator
+from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
@@ -37,6 +39,12 @@ class MastodonData:
 
 
 type MastodonConfigEntry = ConfigEntry[MastodonData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mastodon component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:

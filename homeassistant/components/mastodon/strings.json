@@ -25,6 +25,16 @@
       "unknown": "Unknown error occured when connecting to the Mastodon instance."
     }
   },
+  "exceptions": {
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "unable_to_send_message": "Unable to send message",
+    "unable_to_upload_image": "Unable to upload image {media_path}"
+  },
   "entity": {
     "sensor": {
       "followers": {
@@ -38,6 +48,44 @@
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      }
+    }
+  },
+  "services": {
+    "post": {
+      "name": "Post",
+      "description": "Post a status to Mastodon",
+      "fields": {
+        "config_entry_id": {
+          "name": "Mastodon account",
+          "description": "Select the Mastodon account to post to"
+        },
+        "status": {
+          "name": "Status",
+          "description": "The status to post."
+        },
+        "visibility": {
+          "name": "Visibility",
+          "description": "The visibility of the post."
+        },
+        "content_warning": {
+          "name": "Content warning",
+          "description": "A content warning will be shown before the status text is shown. (default: no content warning)."
+        },
+        "media_warning": {
+          "name": "Media warning",
+          "description": "If an image or video is attached, will mark the media as sensitive. (default: no media warning)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "post_visibility": {
+      "options": {
+        "public": "Public",
+        "unlisted": "Unlisted",
+        "private": "Private",
+        "direct": "Direct"
       }
     }
   }
