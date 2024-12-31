@@ -187,6 +187,13 @@ RPC_THERMOSTAT_SETTINGS: Final = {
     "step": 0.5,
 }
 
+BLU_TRV_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 30,
+    "step": 0.1,
+    "default": 20.0,
+}
+
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700
