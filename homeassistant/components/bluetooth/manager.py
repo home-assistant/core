@@ -47,6 +47,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         "hass",
         "storage",
         "_integration_matcher",
+        "_disappeared_callbacks",
         "_callback_index",
         "_cancel_logging_listener",
     )
@@ -64,6 +65,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         self.storage = storage
         self._integration_matcher = integration_matcher
         self._callback_index = BluetoothCallbackMatcherIndex()
+        self._disappeared_callbacks: set[Callable[[str], None]] = set()
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
         super().__init__(bluetooth_adapters, slot_manager)
         self._async_logging_changed()
@@ -90,6 +92,20 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                 service_info,
                 discovery_key=discovery_key,
             )
+
+    @hass_callback
+    def async_register_disappeared_callback(
+        self, callback: Callable[[str], None]
+    ) -> CALLBACK_TYPE:
+        """Register a callback to be called when an address disappears."""
+        self._disappeared_callbacks.add(callback)
+        return partial(self._async_remove_disappeared_callback, callback)
+
+    def _async_remove_disappeared_callback(
+        self, callback: Callable[[str], None]
+    ) -> None:
+        """Remove a disappeared callback."""
+        self._disappeared_callbacks.discard(callback)
 
     @hass_callback
     def async_rediscover_address(self, address: str) -> None:
@@ -143,6 +159,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             lambda service_info: bool(service_info.address == address),
         ):
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        for callback in self._disappeared_callbacks:
+            try:
+                callback(address)
+            except Exception:
+                _LOGGER.exception("Error in disappeared callback")
 
     async def async_setup(self) -> None:
         """Set up the bluetooth manager."""

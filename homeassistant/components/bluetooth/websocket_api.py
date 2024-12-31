@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-from functools import lru_cache
+from collections.abc import Callable, Iterable
+from functools import lru_cache, partial
 import time
 from typing import Any
 
@@ -15,7 +15,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
-from .api import async_register_callback
+from .api import _get_manager, async_register_callback
 from .match import BluetoothCallbackMatcher
 from .models import BluetoothChange
 
@@ -76,30 +76,60 @@ class _AdvertisementSubscription:
         self.time_diff = round(time.time() - time.monotonic(), 2)
 
     @callback
+    def _async_unsubscribe(
+        self, cancel_callbacks: tuple[Callable[[], None], ...]
+    ) -> None:
+        """Unsubscribe the callback."""
+        for cancel_callback in cancel_callbacks:
+            cancel_callback()
+
+    @callback
     def async_start(self) -> None:
         """Start the subscription."""
         connection = self.connection
-        connection.subscriptions[self.ws_msg_id] = async_register_callback(
+        cancel_adv_callback = async_register_callback(
             self.hass, self, self.match_dict, BluetoothScanningMode.PASSIVE
+        )
+        cancel_disappeared_callback = _get_manager(
+            self.hass
+        ).async_register_disappeared_callback(self._async_removed)
+        connection.subscriptions[self.ws_msg_id] = partial(
+            self._async_unsubscribe, (cancel_adv_callback, cancel_disappeared_callback)
         )
         self.pending = False
         self.connection.send_message(
             json_bytes(websocket_api.result_message(self.ws_msg_id))
         )
-        self._send_service_infos(self.pending_service_infos)
+        self._async_added(self.pending_service_infos)
         self.pending_service_infos.clear()
 
-    def _send_service_infos(
-        self, service_infos: Iterable[BluetoothServiceInfoBleak]
-    ) -> None:
+    def _async_added(self, service_infos: Iterable[BluetoothServiceInfoBleak]) -> None:
         self.connection.send_message(
             json_bytes(
                 websocket_api.event_message(
                     self.ws_msg_id,
-                    [
-                        serialize_service_info(service_info, self.time_diff)
-                        for service_info in service_infos
-                    ],
+                    {
+                        "add": [
+                            serialize_service_info(service_info, self.time_diff)
+                            for service_info in service_infos
+                        ]
+                    },
+                )
+            )
+        )
+
+    def _async_removed(self, address: str) -> None:
+        self.connection.send_message(
+            json_bytes(
+                websocket_api.event_message(
+                    self.ws_msg_id,
+                    {
+                        "remove": [
+                            {
+                                "address": address,
+                            }
+                        ]
+                    },
                 )
             )
         )
@@ -111,7 +141,7 @@ class _AdvertisementSubscription:
         if self.pending:
             self.pending_service_infos.append(service_info)
             return
-        self._send_service_infos((service_info,))
+        self._async_added((service_info,))
 
 
 @websocket_api.websocket_command(
