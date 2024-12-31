@@ -182,7 +182,6 @@ def _significant_states_stmt(
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
-                run_start_ts,
                 start_time_ts,
                 single_metadata_id,
                 metadata_ids,
@@ -352,11 +351,12 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(
-        States.metadata_id,
-        States.last_updated_ts,
-    )
+    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
+        # If we do not need the start time state or the
+        # oldest possible timestamp is newer than the start time
+        # we can return the statement as is as there will
+        # never be a start time state.
         return stmt
     return _select_from_subquery(
         union_all(
@@ -555,7 +555,6 @@ def get_last_state_changes(
 
 
 def _get_start_time_state_for_entities_stmt(
-    run_start_ts: float,
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
@@ -583,7 +582,6 @@ def _get_start_time_state_for_entities_stmt(
                     .where(
                         (StatesMeta.metadata_id == States.metadata_id)
                         & (States.last_updated_ts < epoch_time)
-                        & (States.last_updated_ts >= run_start_ts)
                     )
                     .order_by(States.last_updated_ts.desc())
                     .limit(1)
@@ -617,7 +615,6 @@ def _get_oldest_possible_ts(
 
 
 def _get_start_time_state_stmt(
-    run_start_ts: float,
     epoch_time: float,
     single_metadata_id: int | None,
     metadata_ids: list[int],
@@ -638,7 +635,6 @@ def _get_start_time_state_stmt(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_start_time_state_for_entities_stmt(
-        run_start_ts,
         epoch_time,
         metadata_ids,
         no_attributes,

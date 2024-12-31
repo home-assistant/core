@@ -115,7 +115,7 @@
     },
     "firmware_update": {
       "title": "Reolink firmware update required",
-      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
     "hdr_switch_deprecated": {
       "title": "Reolink HDR switch deprecated",
@@ -567,6 +567,7 @@
           "stayoff": "Stay off",
           "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
