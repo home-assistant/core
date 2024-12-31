@@ -49,24 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     connection = datapoint.Manager.Manager(api_key=api_key)
 
-    async def async_update_daily() -> datapoint.Forecast:
-        return await hass.async_add_executor_job(
-            fetch_data, connection, latitude, longitude, "daily"
-        )
-
     async def async_update_hourly() -> datapoint.Forecast:
         return await hass.async_add_executor_job(
             fetch_data, connection, latitude, longitude, "hourly"
         )
 
-    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"MetOffice Daily Coordinator for {site_name}",
-        update_method=async_update_daily,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    async def async_update_daily() -> datapoint.Forecast:
+        return await hass.async_add_executor_job(
+            fetch_data, connection, latitude, longitude, "daily"
+        )
 
     metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
@@ -77,18 +68,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=f"MetOffice Daily Coordinator for {site_name}",
+        update_method=async_update_daily,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
-        METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
         METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
+        METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
         METOFFICE_NAME: site_name,
         METOFFICE_COORDINATES: coordinates,
     }
 
     # Fetch initial data so we have data when entities subscribe
     await asyncio.gather(
-        metoffice_daily_coordinator.async_config_entry_first_refresh(),
         metoffice_hourly_coordinator.async_config_entry_first_refresh(),
+        metoffice_daily_coordinator.async_config_entry_first_refresh(),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
