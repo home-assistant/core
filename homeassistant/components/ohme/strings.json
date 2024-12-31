@@ -57,7 +57,7 @@
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
           "charging": "Charging",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval"
         }
       },
