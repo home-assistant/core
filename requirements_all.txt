@@ -365,7 +365,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.1.0
+aioshelly==12.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
