@@ -168,15 +168,7 @@ async def test_reauth_token(hass: HomeAssistant) -> None:
             side_effect=AuthException,
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
@@ -255,15 +247,7 @@ async def test_form_reauth_migrate(hass: HomeAssistant) -> None:
             return_value=_mock_flick_price(),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
@@ -314,15 +298,7 @@ async def test_form_reauth_migrate_multi_account(hass: HomeAssistant) -> None:
             return_value=_mock_flick_price(),
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-            data=entry.data,
-        )
+        result = await entry.start_reauth_flow(hass)
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_account"
