@@ -11,7 +11,6 @@ from homeassistant.components.mastodon.const import (
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
