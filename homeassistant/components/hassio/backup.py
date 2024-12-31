@@ -28,6 +28,9 @@ from homeassistant.components.backup import (
     NewBackup,
     WrittenBackup,
 )
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.backup.manager import IncorrectPasswordError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -385,17 +388,24 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             restore_location = agent.location
 
-        job = await self._client.backups.partial_restore(
-            backup_id,
-            supervisor_backups.PartialRestoreOptions(
-                addons=restore_addons_set,
-                folders=restore_folders_set,
-                homeassistant=restore_homeassistant,
-                password=password,
-                background=True,
-                location=restore_location,
-            ),
-        )
+        try:
+            job = await self._client.backups.partial_restore(
+                backup_id,
+                supervisor_backups.PartialRestoreOptions(
+                    addons=restore_addons_set,
+                    folders=restore_folders_set,
+                    homeassistant=restore_homeassistant,
+                    password=password,
+                    background=True,
+                    location=restore_location,
+                ),
+            )
+        except SupervisorBadRequestError as err:
+            # Supervisor currently does not transmit machine parsable error types
+            message = err.args[0]
+            if message.startswith("Invalid password for backup"):
+                raise IncorrectPasswordError(message) from err
+            raise HomeAssistantError(message) from err
 
         restore_complete = asyncio.Event()
 
