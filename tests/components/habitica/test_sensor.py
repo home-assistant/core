@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.components.habitica.sensor import HabiticaSensorEntity
+from homeassistant.components.sensor.const import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -26,7 +27,33 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
+@pytest.fixture
+def inject_deprecated_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> Generator[None]:
+    """Inject deprecated entities to entity registry."""
+
+    entity_registry = er.async_get(hass)
+    for entity in (
+        ("test_user_dailies", "dailys"),
+        ("test_user_to_do_s", "todos"),
+        ("test_user_habits", "habits"),
+        ("test_user_rewards", "rewards"),
+        ("test_user_health_max", "health_max"),
+    ):
+        entity_registry.async_get_or_create(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"a380546a-94be-4b8e-8a0b-23e0d5c03303_{entity[1]}",
+            suggested_object_id=entity[0],
+            disabled_by=None,
+        )
+
+
+@pytest.mark.usefixtures(
+    "habitica", "entity_registry_enabled_by_default", "inject_deprecated_entities"
+)
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -44,14 +71,18 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "habitica", "entity_registry_enabled_by_default", "inject_deprecated_entities"
+)
 async def test_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test task sensor deprecation issue."""
 
+    assert entity_registry is not None
     with patch(
         "homeassistant.components.habitica.sensor.entity_used_in", return_value=True
     ):
@@ -64,11 +95,11 @@ async def test_sensor_deprecation_issue(
 
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.HABITS}",
+            issue_id=f"deprecated_entity_{HabiticaSensorEntity.HABITS}",
         )
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.REWARDS}",
+            issue_id=f"deprecated_entity_{HabiticaSensorEntity.REWARDS}",
         )
         assert issue_registry.async_get_issue(
             domain=DOMAIN,

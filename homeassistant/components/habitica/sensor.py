@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -31,11 +32,11 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers import entity_registry as er
+
 from .const import ASSETS_URL, DOMAIN
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import get_attribute_points, get_attributes_total, entity_used_in
+from .util import entity_used_in, get_attribute_points, get_attributes_total
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,14 +243,80 @@ async def async_setup_entry(
     """Set up the habitica sensors."""
 
     coordinator = config_entry.runtime_data
+    ent_reg = er.async_get(hass)
+    entities: list[SensorEntity] = []
+    description: SensorEntityDescription
+    for description in SENSOR_DESCRIPTIONS:
+        if description.key is HabiticaSensorEntity.HEALTH_MAX:
+            if entity_id := ent_reg.async_get_entity_id(
+                SENSOR_DOMAIN,
+                DOMAIN,
+                f"{config_entry.unique_id}_{description.key}",
+            ):
+                entity_entry = ent_reg.async_get(entity_id)
+                assert entity_entry
+                if entity_entry.disabled:
+                    ent_reg.async_remove(entity_id)
+                    async_delete_issue(
+                        hass,
+                        DOMAIN,
+                        f"deprecated_entity_{description.key}",
+                    )
+                else:
+                    entities.append(HabiticaSensor(coordinator, description))
+                    if entity_used_in(hass, entity_id):
+                        async_create_issue(
+                            hass,
+                            DOMAIN,
+                            f"deprecated_entity_{description.key}",
+                            breaks_in_ha_version="2025.8.0",
+                            is_fixable=False,
+                            severity=IssueSeverity.WARNING,
+                            translation_key="deprecated_entity",
+                            translation_placeholders={
+                                "name": str(
+                                    entity_entry.name or entity_entry.original_name
+                                ),
+                                "entity": entity_id,
+                            },
+                        )
+        else:
+            entities.append(HabiticaSensor(coordinator, description))
 
-    entities: list[SensorEntity] = [
-        HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
-    ]
-    entities.extend(
-        HabiticaTaskSensor(coordinator, description)
-        for description in TASK_SENSOR_DESCRIPTION
-    )
+    for description in TASK_SENSOR_DESCRIPTION:
+        if entity_id := ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{config_entry.unique_id}_{description.key}",
+        ):
+            entity_entry = ent_reg.async_get(entity_id)
+            assert entity_entry
+            if entity_entry.disabled:
+                ent_reg.async_remove(entity_id)
+                async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_entity_{description.key}",
+                )
+            else:
+                entities.append(HabiticaTaskSensor(coordinator, description))
+                if entity_used_in(hass, entity_id):
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"deprecated_entity_{description.key}",
+                        breaks_in_ha_version="2025.8.0",
+                        is_fixable=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="deprecated_entity",
+                        translation_placeholders={
+                            "name": str(
+                                entity_entry.name or entity_entry.original_name
+                            ),
+                            "entity": entity_id,
+                        },
+                    )
+
     async_add_entities(entities, True)
 
 
@@ -280,39 +347,6 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
             return f"{ASSETS_URL}{entity_picture}"
         return None
 
-    async def async_added_to_hass(self) -> None:
-        """Raise issue when entity is registered and was not disabled."""
-        if TYPE_CHECKING:
-            assert self.unique_id
-        if entity_id := er.async_get(self.hass).async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, self.unique_id
-        ):
-            if (
-                self.enabled
-                and self.entity_description.key is HabiticaSensorEntity.HEALTH_MAX
-                and entity_used_in(self.hass, entity_id)
-            ):
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_entity_{self.entity_description.key}",
-                    breaks_in_ha_version="2025.8.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_entity",
-                    translation_placeholders={
-                        "name": str(self.name),
-                        "entity": entity_id,
-                    },
-                )
-            else:
-                async_delete_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_entity_{self.entity_description.key}",
-                )
-        await super().async_added_to_hass()
-
 
 class HabiticaTaskSensor(HabiticaBase, SensorEntity):
     """A Habitica task sensor."""
@@ -340,37 +374,3 @@ class HabiticaTaskSensor(HabiticaBase, SensorEntity):
                     task[map_key] = value
             attrs[str(task_id)] = task
         return attrs
-
-    async def async_added_to_hass(self) -> None:
-        """Raise issue when entity is registered and was not disabled."""
-        if TYPE_CHECKING:
-            assert self.unique_id
-        if entity_id := er.async_get(self.hass).async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, self.unique_id
-        ):
-            if (
-                self.enabled
-                and self.entity_description.key
-                in (HabiticaSensorEntity.REWARDS, HabiticaSensorEntity.HABITS)
-                and entity_used_in(self.hass, entity_id)
-            ):
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_task_entity_{self.entity_description.key}",
-                    breaks_in_ha_version="2025.8.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_entity",
-                    translation_placeholders={
-                        "name": str(self.name),
-                        "entity": entity_id,
-                    },
-                )
-            else:
-                async_delete_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_task_entity_{self.entity_description.key}",
-                )
-        await super().async_added_to_hass()
