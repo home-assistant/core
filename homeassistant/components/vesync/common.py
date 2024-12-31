@@ -52,6 +52,10 @@ async def async_process_devices(hass, manager):
                 devices[VS_LIGHTS].append(switch)
         _LOGGER.debug("%d VeSync switches found", len(manager.switches))
 
+    # Evaluate humidifier devices for dependent entities
+    if devices[VS_HUMIDIFIERS]:
+        devices[VS_SWITCHES].extend(devices[VS_HUMIDIFIERS])
+
     return devices
 
 
