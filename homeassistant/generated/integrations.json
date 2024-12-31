@@ -406,7 +406,7 @@
       "name": "Appwrite",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "aprilaire": {
       "name": "AprilAire",
