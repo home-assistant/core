@@ -938,7 +938,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.87.0
 
 # homeassistant.components.conversation
-hassil==2.0.5
+hassil==2.1.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
