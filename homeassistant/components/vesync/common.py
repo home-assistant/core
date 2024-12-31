@@ -2,7 +2,14 @@
 
 import logging
 
-from .const import VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
+from .const import (
+    HUMIDIFER_BASE_DEVICES,
+    SKU_TO_BASE_DEVICE,
+    VS_FANS,
+    VS_LIGHTS,
+    VS_SENSORS,
+    VS_SWITCHES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,3 +49,8 @@ async def async_process_devices(hass, manager):
         _LOGGER.debug("%d VeSync switches found", len(manager.switches))
 
     return devices
+
+
+def is_humidifier(device) -> bool:
+    """Check if the device represents a humidifier."""
+    return SKU_TO_BASE_DEVICE.get(device.device_type) in HUMIDIFER_BASE_DEVICES
