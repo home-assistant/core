@@ -32,6 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .common import has_feature
 from .const import (
     DEV_TYPE_TO_HA,
     DOMAIN,
@@ -185,6 +186,15 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
+    ),
+    VeSyncSensorEntityDescription(
+        key="humidity",
+        translation_key="current_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["humidity"],
+        exists_fn=lambda device: has_feature(device, "details", "humidity"),
     ),
 )
 
