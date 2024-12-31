@@ -366,7 +366,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         The climate's on/off state can be be controlled independently
         from the hvac_action and hvac_mode if the _attr_is_on attribute is set.
 
-        If the _attr_is_on attrubiute is set, then return that value.
+        If the _attr_is_on attribute is set, then return that value.
         Otherwise, return True if hvac_action is not None and not HVACAction.OFF.
         Return None if hvac_action is None,
         otherwise return True if hvac_mode is not HVACMode.OFF.
