@@ -57,7 +57,9 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         )
         camera = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, serial)
         self.alarm_image_password = (
-            camera.data[CONF_PASSWORD] if camera is not None else None
+            camera.data[CONF_PASSWORD]
+            if camera and camera.source != SOURCE_IGNORE
+            else None
         )
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
