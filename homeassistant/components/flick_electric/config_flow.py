@@ -86,13 +86,19 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
             except (APIException, ClientResponseError):
                 errors["base"] = "cannot_connect"
             except AuthException:
-                # Send user back to enter credentials
-                return await self.async_step_user({**self.data})
+                # We should never get here as we have a valid token
+                return self.async_abort(reason="unknown")
             else:
                 # Supply node is active
                 return await self._async_create_entry()
 
-        self.accounts = await FlickAPI(self.auth).getCustomerAccounts()
+        try:
+            self.accounts = await FlickAPI(self.auth).getCustomerAccounts()
+        except (APIException, ClientResponseError):
+            errors["base"] = "cannot_connect"
+        except AuthException:
+            # We should never get here as we have a valid token
+            return self.async_abort(reason="unknown")
 
         active_accounts = [a for a in self.accounts if a["status"] == "active"]
 
