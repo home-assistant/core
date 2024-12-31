@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any, ParamSpec, TypeVar
 
 from reolink_aio.exceptions import (
@@ -30,8 +29,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .host import ReolinkHost
-
-_LOGGER = logging.getLogger(__name__)
 
 type ReolinkConfigEntry = config_entries.ConfigEntry[ReolinkData]
 
