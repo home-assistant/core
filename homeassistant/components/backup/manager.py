@@ -829,6 +829,9 @@ class BackupManager:
                 restore_folders=restore_folders,
                 restore_homeassistant=restore_homeassistant,
             )
+            self.async_on_backup_event(
+                RestoreBackupEvent(stage=None, state=RestoreBackupState.COMPLETED)
+            )
         except Exception:
             self.async_on_backup_event(
                 RestoreBackupEvent(stage=None, state=RestoreBackupState.FAILED)
