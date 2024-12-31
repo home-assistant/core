@@ -57,6 +57,7 @@
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
           "charging": "Charging",
+          "paused": "Paused",
           "pending_approval": "Pending approval"
         }
       },
