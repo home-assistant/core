@@ -62,6 +62,9 @@
       },
       "ct_current": {
         "name": "CT current"
+      },
+      "vehicle_battery": {
+        "name": "Vehicle battery"
       }
     }
   },

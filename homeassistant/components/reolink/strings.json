@@ -574,6 +574,7 @@
           "stayoff": "Stay off",
           "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
