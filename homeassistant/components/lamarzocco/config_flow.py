@@ -43,6 +43,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
@@ -141,8 +144,17 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.EMAIL, autocomplete="username"
+                        )
+                    ),
+                    vol.Required(CONF_PASSWORD): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=errors,
@@ -343,13 +355,20 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(
-                            CONF_USERNAME,
-                            default=reconfigure_entry.data[CONF_USERNAME],
-                        ): str,
+                            CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL, autocomplete="username"
+                            ),
+                        ),
                         vol.Required(
-                            CONF_PASSWORD,
-                            default=reconfigure_entry.data[CONF_PASSWORD],
-                        ): str,
+                            CONF_PASSWORD, default=reconfigure_entry.data[CONF_PASSWORD]
+                        ): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.PASSWORD,
+                                autocomplete="current-password",
+                            ),
+                        ),
                     }
                 ),
             )
