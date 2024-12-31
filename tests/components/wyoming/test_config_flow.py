@@ -324,3 +324,40 @@ async def test_zeroconf_discovery_already_configured(
 
     assert result.get("type") is FlowResultType.ABORT
     assert entry.unique_id == "test_zeroconf_name._wyoming._tcp.local._Test Satellite"
+
+
+async def test_reconfig_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we can reconfigure an existing entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.1.1.2", "port": 1234},
+        unique_id="1234",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=STT_INFO,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 1234,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["port"] == 1234
