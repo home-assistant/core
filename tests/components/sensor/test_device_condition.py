@@ -53,6 +53,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.CO2: "CONF_IS_CO2",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_IS_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_IS_VOLUME",
+        SensorDeviceClass.RADIOACTIVITY_CONCENTRATION: "CONF_IS_RADIOACTIVITY_CONCENTRATION",
     }.get(device_class, f"CONF_IS_{device_class.value.upper()}")
     assert hasattr(device_condition, constant_name), f"Missing constant {constant_name}"
 
@@ -61,6 +62,7 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "is_battery_level",
         SensorDeviceClass.ENERGY_STORAGE: "is_energy",
         SensorDeviceClass.VOLUME_STORAGE: "is_volume",
+        SensorDeviceClass.RADIOACTIVITY_CONCENTRATION: "is_radioactivity_concentration",
     }.get(device_class, f"is_{device_class.value}")
     assert getattr(device_condition, constant_name) == constant_value
 
@@ -119,7 +121,7 @@ async def test_get_conditions(
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert len(conditions) == 27
+    assert len(conditions) == 28
     assert conditions == unordered(expected_conditions)
 
 

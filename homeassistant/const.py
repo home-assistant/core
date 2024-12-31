@@ -962,6 +962,14 @@ class UnitOfDataRate(StrEnum):
     GIBIBYTES_PER_SECOND = "GiB/s"
 
 
+# Radioactivity concentration units
+class UnitOfRadioactivityConcentration(StrEnum):
+    """Radioactivity concentration units."""
+
+    BECQUERELS_PER_CUBIC_METER = "Bq/m³"
+    PICOCURIES_PER_LITER = "pCi/L"
+
+
 # States
 COMPRESSED_STATE_STATE: Final = "s"
 COMPRESSED_STATE_ATTRIBUTES: Final = "a"
@@ -1066,6 +1074,7 @@ SPEED: Final = "speed"
 WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
 ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
+RADIOACTIVITY_CONCENTRATION: Final = "radioactivity_concentration"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 

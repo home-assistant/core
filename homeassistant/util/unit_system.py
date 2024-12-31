@@ -13,6 +13,7 @@ from homeassistant.const import (
     LENGTH,
     MASS,
     PRESSURE,
+    RADIOACTIVITY_CONCENTRATION,
     TEMPERATURE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadioactivityConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -32,6 +34,7 @@ from .unit_conversion import (
     AreaConverter,
     DistanceConverter,
     PressureConverter,
+    RadioactivityConcentrationConverter,
     SpeedConverter,
     TemperatureConverter,
     VolumeConverter,
@@ -57,6 +60,8 @@ MASS_UNITS: set[str] = {
 
 PRESSURE_UNITS = PressureConverter.VALID_UNITS
 
+RADIOACTIVITY_CONCENTRATION_UNITS = RadioactivityConcentrationConverter.VALID_UNITS
+
 VOLUME_UNITS = VolumeConverter.VALID_UNITS
 
 WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
@@ -72,6 +77,7 @@ _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     VOLUME: VOLUME_UNITS,
     PRESSURE: PRESSURE_UNITS,
     AREA: AREA_UNITS,
+    RADIOACTIVITY_CONCENTRATION: RADIOACTIVITY_CONCENTRATION_UNITS,
 }
 
 
@@ -95,6 +101,7 @@ class UnitSystem:
         length: UnitOfLength,
         mass: UnitOfMass,
         pressure: UnitOfPressure,
+        radioactivity_concentration: UnitOfRadioactivityConcentration,
         temperature: UnitOfTemperature,
         volume: UnitOfVolume,
         wind_speed: UnitOfSpeed,
@@ -111,6 +118,7 @@ class UnitSystem:
                 (volume, VOLUME),
                 (mass, MASS),
                 (pressure, PRESSURE),
+                (radioactivity_concentration, RADIOACTIVITY_CONCENTRATION),
             )
             if not _is_valid_unit(unit, unit_type)
         )
@@ -124,6 +132,7 @@ class UnitSystem:
         self.length_unit = length
         self.mass_unit = mass
         self.pressure_unit = pressure
+        self.radioactivity_concentration_unit = radioactivity_concentration
         self.temperature_unit = temperature
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
@@ -198,6 +207,20 @@ class UnitSystem:
             volume, from_unit, self.volume_unit
         )
 
+    def radioactivity_concentration(
+        self, radioactivity_concentration: float | None, from_unit: str
+    ) -> float:
+        """Convert the given radioactivity_concentration to this unit system."""
+        if not isinstance(radioactivity_concentration, Number):
+            raise TypeError(f"{radioactivity_concentration!s} is not a numeric value")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return RadioactivityConcentrationConverter.convert(  # type: ignore[unreachable]
+            radioactivity_concentration,
+            from_unit,
+            self.radioactivity_concentration_unit,
+        )
+
     def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
         return {
@@ -206,6 +229,7 @@ class UnitSystem:
             AREA: self.area_unit,
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
+            RADIOACTIVITY_CONCENTRATION: self.radioactivity_concentration_unit,
             TEMPERATURE: self.temperature_unit,
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
@@ -314,6 +338,7 @@ METRIC_SYSTEM = UnitSystem(
     length=UnitOfLength.KILOMETERS,
     mass=UnitOfMass.GRAMS,
     pressure=UnitOfPressure.PA,
+    radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
     temperature=UnitOfTemperature.CELSIUS,
     volume=UnitOfVolume.LITERS,
     wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -362,6 +387,11 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
         ("pressure", UnitOfPressure.HPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.KPA): UnitOfPressure.PSI,
         ("pressure", UnitOfPressure.MMHG): UnitOfPressure.INHG,
+        # Convert non-USCS radioactivity concentration
+        (
+            "radioactivity concentration",
+            UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+        ): UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
         # Convert non-USCS speeds, except knots, to mph
         ("speed", UnitOfSpeed.METERS_PER_SECOND): UnitOfSpeed.MILES_PER_HOUR,
         ("speed", UnitOfSpeed.MILLIMETERS_PER_SECOND): UnitOfSpeed.INCHES_PER_SECOND,
@@ -392,6 +422,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     length=UnitOfLength.MILES,
     mass=UnitOfMass.POUNDS,
     pressure=UnitOfPressure.PSI,
+    radioactivity_concentration=UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
     temperature=UnitOfTemperature.FAHRENHEIT,
     volume=UnitOfVolume.GALLONS,
     wind_speed=UnitOfSpeed.MILES_PER_HOUR,

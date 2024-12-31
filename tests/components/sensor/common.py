@@ -14,6 +14,7 @@ from homeassistant.const import (
     UnitOfApparentPower,
     UnitOfFrequency,
     UnitOfPressure,
+    UnitOfRadioactivityConcentration,
     UnitOfReactivePower,
     UnitOfVolume,
 )
@@ -48,6 +49,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
     SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
+    SensorDeviceClass.RADIOACTIVITY_CONCENTRATION: UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,  # radioactivity concentration (Bq/m³)
 }
 
 

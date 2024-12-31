@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRadioactivityConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -47,6 +48,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     PowerConverter,
     PressureConverter,
+    RadioactivityConcentrationConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -76,6 +78,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         MassConverter,
         PowerConverter,
         PressureConverter,
+        RadioactivityConcentrationConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -119,6 +122,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    RadioactivityConcentrationConverter: (
+        UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+        UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
+        37,
+    ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
@@ -567,6 +575,32 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 3.99967, UnitOfPressure.CBAR),
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+    ],
+    RadioactivityConcentrationConverter: [
+        (
+            37,
+            UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+            1,
+            UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
+            37,
+            UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+        ),
+        (
+            100,
+            UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+            2.7027,
+            UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
+        ),
+        (
+            4,
+            UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
+            148,
+            UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+        ),
     ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h

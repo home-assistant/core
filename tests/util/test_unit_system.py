@@ -11,6 +11,7 @@ from homeassistant.const import (
     LENGTH,
     MASS,
     PRESSURE,
+    RADIOACTIVITY_CONCENTRATION,
     TEMPERATURE,
     VOLUME,
     WIND_SPEED,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadioactivityConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolume,
@@ -53,6 +55,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=INVALID_UNIT,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -67,6 +70,7 @@ def test_invalid_units() -> None:
             length=INVALID_UNIT,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -81,6 +85,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=INVALID_UNIT,
@@ -95,6 +100,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=INVALID_UNIT,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -109,6 +115,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=INVALID_UNIT,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -123,6 +130,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=INVALID_UNIT,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -137,6 +145,7 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -151,6 +160,22 @@ def test_invalid_units() -> None:
             length=UnitOfLength.METERS,
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
+            radioactivity_concentration=UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+            temperature=UnitOfTemperature.CELSIUS,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+        )
+
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            radioactivity_concentration=INVALID_UNIT,
             temperature=UnitOfTemperature.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
@@ -173,6 +198,10 @@ def test_invalid_value() -> None:
         METRIC_SYSTEM.accumulated_precipitation("50mm", UnitOfLength.MILLIMETERS)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.area("2m²", UnitOfArea.SQUARE_METERS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.radioactivity_concentration(
+            "2m²", UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER
+        )
 
 
 def test_as_dict() -> None:
@@ -186,6 +215,7 @@ def test_as_dict() -> None:
         PRESSURE: UnitOfPressure.PA,
         ACCUMULATED_PRECIPITATION: UnitOfLength.MILLIMETERS,
         AREA: UnitOfArea.SQUARE_METERS,
+        RADIOACTIVITY_CONCENTRATION: UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
@@ -354,6 +384,60 @@ def test_area_to_imperial() -> None:
     assert IMPERIAL_SYSTEM.area(25, METRIC_SYSTEM.area_unit) == 269.09776041774313
 
 
+def test_radioactivity_concentration_same_unit() -> None:
+    """Test no conversion happens if to unit is same as from unit."""
+    assert (
+        METRIC_SYSTEM.radioactivity_concentration(
+            5, METRIC_SYSTEM.radioactivity_concentration_unit
+        )
+        == 5
+    )
+
+
+def test_radioactivity_concentration_unknown_unit() -> None:
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        METRIC_SYSTEM.radioactivity_concentration(5, "abc")
+
+
+def test_radioactivity_concentration_to_metric() -> None:
+    """Test temperature conversion to metric system."""
+    assert (
+        METRIC_SYSTEM.radioactivity_concentration(
+            25, METRIC_SYSTEM.radioactivity_concentration_unit
+        )
+        == 25
+    )
+    assert (
+        round(
+            METRIC_SYSTEM.radioactivity_concentration(
+                1, IMPERIAL_SYSTEM.radioactivity_concentration_unit
+            ),
+            1,
+        )
+        == 37.0
+    )
+
+
+def test_radioactivity_concentration_to_imperial() -> None:
+    """Test temperature conversion to imperial system."""
+    assert (
+        IMPERIAL_SYSTEM.radioactivity_concentration(
+            77, IMPERIAL_SYSTEM.radioactivity_concentration_unit
+        )
+        == 77
+    )
+    assert (
+        round(
+            IMPERIAL_SYSTEM.radioactivity_concentration(
+                148, METRIC_SYSTEM.radioactivity_concentration_unit
+            ),
+            0,
+        )
+        == 4
+    )
+
+
 def test_properties() -> None:
     """Test the unit properties are returned as expected."""
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
@@ -364,6 +448,10 @@ def test_properties() -> None:
     assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
     assert METRIC_SYSTEM.accumulated_precipitation_unit == UnitOfLength.MILLIMETERS
     assert METRIC_SYSTEM.area_unit == UnitOfArea.SQUARE_METERS
+    assert (
+        METRIC_SYSTEM.radioactivity_concentration_unit
+        == UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER
+    )
 
 
 @pytest.mark.parametrize(
