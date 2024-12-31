@@ -25,7 +25,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_permissions": "Cannot get pricing for this account. Please check user permissions.",
       "no_accounts": "No services are active on this Flick account"
     }
   },

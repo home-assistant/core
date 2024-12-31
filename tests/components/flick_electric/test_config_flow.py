@@ -78,7 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "123 Fake St"
     assert result2["data"] == CONF
-    assert result2["context"]["unique_id"] == "1234"
+    assert result2["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -149,7 +149,7 @@ async def test_form_multi_account(hass: HomeAssistant) -> None:
             CONF_SUPPLY_NODE_REF: "456",
             CONF_ACCOUNT_ID: "5678",
         }
-        assert result3["context"]["unique_id"] == "5678"
+        assert result3["result"].unique_id == "5678"
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -518,7 +518,7 @@ async def test_form_select_account_invalid_auth(hass: HomeAssistant) -> None:
         )
 
         assert result3["type"] is FlowResultType.ABORT
-        assert result3["reason"] == "unknown"
+        assert result3["reason"] == "no_permissions"
 
 
 async def test_form_select_account_failed_to_connect(hass: HomeAssistant) -> None:
@@ -589,6 +589,52 @@ async def test_form_select_account_failed_to_connect(hass: HomeAssistant) -> Non
 
         assert result3["type"] is FlowResultType.FORM
         assert result3["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getCustomerAccounts",
+            return_value=[
+                {
+                    "id": "1234",
+                    "status": "active",
+                    "address": "123 Fake St",
+                    "main_consumer": {"supply_node_ref": "123"},
+                },
+                {
+                    "id": "5678",
+                    "status": "active",
+                    "address": "456 Fake St",
+                    "main_consumer": {"supply_node_ref": "456"},
+                },
+            ],
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.FlickAPI.getPricing",
+            return_value=_mock_flick_price(),
+        ),
+        patch(
+            "homeassistant.components.flick_electric.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"account_id": "5678"},
+        )
+
+        assert result4["type"] is FlowResultType.CREATE_ENTRY
+        assert result4["title"] == "456 Fake St"
+        assert result4["data"] == {
+            **CONF,
+            CONF_SUPPLY_NODE_REF: "456",
+            CONF_ACCOUNT_ID: "5678",
+        }
+        assert result4["result"].unique_id == "5678"
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_select_account_no_accounts(hass: HomeAssistant) -> None:

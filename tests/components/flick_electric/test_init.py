@@ -21,7 +21,6 @@ async def test_init_auth_failure_triggers_auth(hass: HomeAssistant) -> None:
             "homeassistant.components.flick_electric.HassFlickAuth.async_get_access_token",
             side_effect=AuthException,
         ),
-        # patch.object(hass.config_entries.flow, "async_init") as mock_flow_init,
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

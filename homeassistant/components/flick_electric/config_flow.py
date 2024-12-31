@@ -87,7 +87,7 @@ class FlickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except AuthException:
                 # We should never get here as we have a valid token
-                return self.async_abort(reason="unknown")
+                return self.async_abort(reason="no_permissions")
             else:
                 # Supply node is active
                 return await self._async_create_entry()
