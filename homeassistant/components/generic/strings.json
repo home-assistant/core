@@ -67,11 +67,11 @@
           "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
         }
       },
-      "confirm_still": {
-        "title": "Preview",
-        "description": "![Camera Still Image Preview]({preview_url})",
+      "user_confirm": {
+        "title": "Confirmation",
+        "description": "Please wait for previews to load...",
         "data": {
-          "confirmed_ok": "This image looks good."
+          "confirmed_ok": "Everything looks good."
         }
       }
     },

@@ -768,7 +768,7 @@ async def test_manual_camera(
         patch(
             "homeassistant.components.stream.async_check_stream_client_error",
             side_effect=stream.StreamOpenClientError(
-                stream_client_error=stream.StreamClientError.NotFound
+                "Stream was not found", error_code=stream.StreamClientError.NotFound
             ),
         ),
     ):
@@ -791,7 +791,8 @@ async def test_manual_camera(
         patch(
             "homeassistant.components.stream.async_check_stream_client_error",
             side_effect=stream.StreamOpenClientError(
-                stream_client_error=stream.StreamClientError.Unauthorized
+                "Request is unauthorized",
+                error_code=stream.StreamClientError.Unauthorized,
             ),
         ),
     ):
@@ -835,7 +836,7 @@ async def test_manual_camera(
     [
         pytest.param(
             stream.StreamOpenClientError(
-                stream_client_error=stream.StreamClientError.NotFound
+                "Stream was not found", error_code=stream.StreamClientError.NotFound
             ),
             id="open_client_error",
         ),
