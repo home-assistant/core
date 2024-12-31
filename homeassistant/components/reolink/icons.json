@@ -43,6 +43,12 @@
           "on": "mdi:motion-sensor"
         }
       },
+      "cry": {
+        "default": "mdi:emoticon-happy-outline",
+        "state": {
+          "on": "mdi:emoticon-cry-outline"
+        }
+      },
       "sleep": {
         "default": "mdi:sleep-off",
         "state": {
