@@ -989,6 +989,77 @@ async def test_reader_writer_restore(
 
 
 @pytest.mark.parametrize(
+    ("supervisor_error_string", "expected_error_code"),
+    [
+        (
+            "Invalid password for backup",
+            "password_incorrect",
+        ),
+        (
+            "Backup was made on supervisor version 2025.12.0, can't restore on 2024.12.0. Must update supervisor first.",
+            "home_assistant_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_reader_writer_restore_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    supervisor_error_string: str,
+    expected_error_code: str,
+) -> None:
+    """Test restoring a backup."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.partial_restore.side_effect = SupervisorBadRequestError(
+        supervisor_error_string
+    )
+    supervisor_client.backups.list.return_value = [TEST_BACKUP]
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/restore", "agent_id": "hassio.local", "backup_id": "abc123"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    supervisor_client.backups.partial_restore.assert_called_once_with(
+        "abc123",
+        supervisor_backups.PartialRestoreOptions(
+            addons=None,
+            background=True,
+            folders=None,
+            homeassistant=True,
+            location=None,
+            password=None,
+        ),
+    )
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "stage": None,
+        "state": "failed",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+    response = await client.receive_json()
+    assert response["error"]["code"] == expected_error_code
+
+
+@pytest.mark.parametrize(
     ("parameters", "expected_error"),
     [
         (
