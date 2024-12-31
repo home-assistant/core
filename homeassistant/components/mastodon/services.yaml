@@ -20,11 +20,11 @@ post:
           translation_key: post_visibility
     content_warning:
       selector:
-        boolean:
+        text:
     media:
       selector:
         text:
     media_warning:
+      required: true
       selector:
         boolean:
-

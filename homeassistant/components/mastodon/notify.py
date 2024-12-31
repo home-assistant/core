@@ -112,10 +112,10 @@ class MastodonNotificationService(BaseNotificationService):
             try:
                 self.client.status_post(
                     message,
-                    media_ids=mediadata["id"],
-                    sensitive=sensitive,
                     visibility=target,
                     spoiler_text=content_warning,
+                    media_ids=mediadata["id"],
+                    sensitive=sensitive,
                 )
             except MastodonAPIError as err:
                 raise HomeAssistantError(

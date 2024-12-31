@@ -40,7 +40,7 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_STATUS): str,
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
-        vol.Optional(ATTR_CONTENT_WARNING): bool,
+        vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
     }
@@ -83,9 +83,7 @@ def setup_services(hass: HomeAssistant) -> None:
         media = None
         if ATTR_MEDIA in call.data:
             media = call.data.get(ATTR_MEDIA)
-        media_warning = None
-        if ATTR_MEDIA_WARNING in call.data:
-            media_warning = call.data.get(ATTR_MEDIA_WARNING)
+        media_warning = call.data.get(ATTR_MEDIA_WARNING)
 
         if media:
             if not hass.config.is_allowed_path(media):
@@ -102,9 +100,9 @@ def setup_services(hass: HomeAssistant) -> None:
                         client.status_post,
                         status=status,
                         media_ids=mediadata["id"],
-                        sensitive=content_warning,
+                        spoiler_text=content_warning,
                         visibility=visibility,
-                        spoiler_text=media_warning,
+                        sensitive=media_warning,
                     )
                 )
             except MastodonAPIError as err:

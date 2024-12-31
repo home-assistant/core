@@ -32,9 +32,15 @@
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
-    "unable_to_send_message": "Unable to send message.",
-    "unable_to_upload_image": "Unable to upload image {media_path}.",
-    "not_whitelisted_directory": "{media} is not a whitelisted directory."
+    "unable_to_send_message": {
+      "message": "Unable to send message."
+    },
+    "unable_to_upload_image": {
+      "message": "Unable to upload image {media_path}."
+    },
+    "not_whitelisted_directory": {
+      "message": "{media} is not a whitelisted directory."
+    }
   },
   "issues": {
     "deprecated_notify_action": {
@@ -93,10 +99,10 @@
   "selector": {
     "post_visibility": {
       "options": {
-        "public": "Public",
-        "unlisted": "Unlisted",
-        "private": "Private",
-        "direct": "Direct"
+        "public": "Public - Visible to everyone",
+        "unlisted": "Unlisted - Public but not shown in public timelines",
+        "private": "Private - Followers only",
+        "direct": "Direct - Mentioned accounts only"
       }
     }
   }

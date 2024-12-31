@@ -13,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -23,6 +23,8 @@ from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
