@@ -82,7 +82,6 @@ async def async_setup_entry(
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco cloud partition."""
 
-    _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -108,6 +107,14 @@ class RiscoAlarm(AlarmControlPanelEntity):
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
 
     @property
+    def code_format(self) -> CodeFormat | None:
+        """Code format or None if no code is required."""
+        return (
+            CodeFormat.NUMBER
+            if self._attr_code_arm_required or self._code_disarm_required
+            else None
+        )
+
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._partition.triggered:
