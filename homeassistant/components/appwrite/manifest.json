@@ -6,7 +6,7 @@
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/appwrite",
   "homekit": {},
-  "iot_class": "cloud_polling",
+  "iot_class": "cloud_push",
   "requirements": ["appwrite==6.1.0"],
   "ssdp": [],
   "zeroconf": []
