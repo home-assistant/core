@@ -19,5 +19,10 @@
         "default": "mdi:gauge"
       }
     }
+  },
+  "services": {
+    "list_charge_slots": {
+      "service": "mdi:clock-start"
+    }
   }
 }
