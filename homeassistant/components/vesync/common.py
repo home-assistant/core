@@ -6,6 +6,7 @@ from .const import (
     HUMIDIFER_BASE_DEVICES,
     SKU_TO_BASE_DEVICE,
     VS_FANS,
+    VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_SENSORS,
     VS_SWITCHES,
@@ -21,14 +22,17 @@ async def async_process_devices(hass, manager):
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
     devices[VS_SENSORS] = []
+    devices[VS_HUMIDIFIERS] = []
 
     await hass.async_add_executor_job(manager.update)
 
     if manager.fans:
-        devices[VS_FANS].extend(manager.fans)
         # Expose fan sensors separately
         devices[VS_SENSORS].extend(manager.fans)
         _LOGGER.debug("%d VeSync fans found", len(manager.fans))
+
+        for fan in manager.fans:
+            devices[VS_HUMIDIFIERS if is_humidifier(fan) else VS_FANS].append(fan)
 
     if manager.bulbs:
         devices[VS_LIGHTS].extend(manager.bulbs)
@@ -54,3 +58,8 @@ async def async_process_devices(hass, manager):
 def is_humidifier(device) -> bool:
     """Check if the device represents a humidifier."""
     return SKU_TO_BASE_DEVICE.get(device.device_type) in HUMIDIFER_BASE_DEVICES
+
+
+def has_feature(device, dictionary, attribute):
+    """Return the detail of the attribute."""
+    return getattr(device, dictionary, {}).get(attribute, None) is not None
