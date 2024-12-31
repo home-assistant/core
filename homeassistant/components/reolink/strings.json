@@ -215,6 +215,13 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
+      "cry": {
+        "name": "Baby crying",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "motion_lens_0": {
         "name": "Motion lens 0",
         "state": {
