@@ -848,6 +848,8 @@ build.json @home-assistant/supervisor
 /tests/components/litterrobot/ @natekspencer @tkdrob
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
 /tests/components/livisi/ @StefanIacobLivisi @planbnet
+/homeassistant/components/lk_systems/ @simon-bonnedahl
+/tests/components/lk_systems/ @simon-bonnedahl
 /homeassistant/components/local_calendar/ @allenporter
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
