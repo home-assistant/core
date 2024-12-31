@@ -427,7 +427,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """
         # HA_VOL * (MAX VOL / 100) * VOL_RESOLUTION
         self._update_receiver(
-            "volume", int(volume * (self._max_volume / 100) * self._volume_resolution)
+            "volume", round(volume * (self._max_volume / 100) * self._volume_resolution)
         )
 
     async def async_volume_up(self) -> None:

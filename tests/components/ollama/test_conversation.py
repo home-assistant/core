@@ -51,8 +51,8 @@ async def test_chat(
 
         assert args["model"] == "test model"
         assert args["messages"] == [
-            Message({"role": "system", "content": prompt}),
-            Message({"role": "user", "content": "test message"}),
+            Message(role="system", content=prompt),
+            Message(role="user", content="test message"),
         ]
 
         assert (

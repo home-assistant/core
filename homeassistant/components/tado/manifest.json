@@ -1,7 +1,7 @@
 {
   "domain": "tado",
   "name": "Tado",
-  "codeowners": ["@chiefdragon", "@erwindouna"],
+  "codeowners": ["@erwindouna"],
   "config_flow": true,
   "dhcp": [
     {
@@ -14,5 +14,5 @@
   },
   "iot_class": "cloud_polling",
   "loggers": ["PyTado"],
-  "requirements": ["python-tado==0.17.6"]
+  "requirements": ["python-tado==0.18.5"]
 }

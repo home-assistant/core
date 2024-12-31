@@ -32,8 +32,8 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["result"].unique_id == "test-username"
+    assert result["title"] == MOCK_DATA[CONF_COUNTER_ID]
+    assert result["result"].unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -63,18 +63,20 @@ async def test_form_invalid_auth(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["result"].unique_id == "test-username"
+    assert result["title"] == MOCK_DATA[CONF_COUNTER_ID]
+    assert result["result"].unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+async def test_form_already_configured(
+    hass: HomeAssistant, suez_client: AsyncMock
+) -> None:
     """Test we abort when entry is already configured."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-username",
+        unique_id=MOCK_DATA[CONF_COUNTER_ID],
         data=MOCK_DATA,
     )
     entry.add_to_hass(hass)
@@ -124,7 +126,7 @@ async def test_form_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-username"
+    assert result["title"] == MOCK_DATA[CONF_COUNTER_ID]
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -139,7 +141,7 @@ async def test_form_auto_counter(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    partial_form = {**MOCK_DATA}
+    partial_form = MOCK_DATA.copy()
     partial_form.pop(CONF_COUNTER_ID)
     suez_client.find_counter.side_effect = PySuezError("test counter not found")
 
@@ -160,7 +162,7 @@ async def test_form_auto_counter(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["result"].unique_id == "test-username"
+    assert result["title"] == MOCK_DATA[CONF_COUNTER_ID]
+    assert result["result"].unique_id == MOCK_DATA[CONF_COUNTER_ID]
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1

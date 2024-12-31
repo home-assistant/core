@@ -31,7 +31,10 @@ from .const import (
     CONF_SPEED,
     CONF_TEXT_TYPE,
     CONF_VOICE,
+    DEFAULT_GAIN,
     DEFAULT_LANG,
+    DEFAULT_PITCH,
+    DEFAULT_SPEED,
 )
 
 DEFAULT_VOICE = ""
@@ -104,15 +107,15 @@ def tts_options_schema(
             ),
             vol.Optional(
                 CONF_SPEED,
-                default=defaults.get(CONF_SPEED, 1.0),
+                default=defaults.get(CONF_SPEED, DEFAULT_SPEED),
             ): NumberSelector(NumberSelectorConfig(min=0.25, max=4.0, step=0.01)),
             vol.Optional(
                 CONF_PITCH,
-                default=defaults.get(CONF_PITCH, 0),
+                default=defaults.get(CONF_PITCH, DEFAULT_PITCH),
             ): NumberSelector(NumberSelectorConfig(min=-20.0, max=20.0, step=0.1)),
             vol.Optional(
                 CONF_GAIN,
-                default=defaults.get(CONF_GAIN, 0),
+                default=defaults.get(CONF_GAIN, DEFAULT_GAIN),
             ): NumberSelector(NumberSelectorConfig(min=-96.0, max=16.0, step=0.1)),
             vol.Optional(
                 CONF_PROFILES,

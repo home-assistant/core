@@ -32,6 +32,18 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "services": {
+    "list_charge_slots": {
+      "name": "List charge slots",
+      "description": "Return a list of charge slots.",
+      "fields": {
+        "config_entry": {
+          "name": "Ohme account",
+          "description": "The Ohme config entry for which to return charge slots."
+        }
+      }
+    }
+  },
   "entity": {
     "button": {
       "approve": {
@@ -50,6 +62,9 @@
       },
       "ct_current": {
         "name": "CT current"
+      },
+      "vehicle_battery": {
+        "name": "Vehicle battery"
       }
     }
   },
@@ -62,6 +77,12 @@
     },
     "api_failed": {
       "message": "Error communicating with Ohme API"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
     }
   }
 }

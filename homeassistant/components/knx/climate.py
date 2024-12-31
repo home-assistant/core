@@ -427,7 +427,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
 
-    def after_update_callback(self, _device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             hvac_mode = CONTROLLER_MODES.get(
@@ -435,4 +435,4 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             )
             if hvac_mode is not HVACMode.OFF:
                 self._last_hvac_mode = hvac_mode
-        super().after_update_callback(_device)
+        super().after_update_callback(device)

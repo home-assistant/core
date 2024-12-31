@@ -1,0 +1,351 @@
+# serializer version: 1
+# name: test_all_entities[sensor.overseerr_available_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_available_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-available_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_available_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Available requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_available_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_declined_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_declined_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Declined requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'declined_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-declined_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_declined_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Declined requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_declined_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_movie_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_movie_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Movie requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'movie_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-movie_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_movie_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Movie requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_movie_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_pending_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_pending_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pending requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pending_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-pending_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_pending_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Pending requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_pending_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_processing_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_processing_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Processing requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'processing_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-processing_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_processing_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Processing requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_processing_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_total_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_total_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-total_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_total_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr Total requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_total_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_tv_requests-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.overseerr_tv_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TV requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tv_requests',
+    'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-tv_requests',
+    'unit_of_measurement': 'requests',
+  })
+# ---
+# name: test_all_entities[sensor.overseerr_tv_requests-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Overseerr TV requests',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'requests',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.overseerr_tv_requests',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---

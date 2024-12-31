@@ -428,6 +428,24 @@
     "get_maps": {
       "name": "Get maps",
       "description": "Get the map and room information of your device."
+    },
+    "set_vacuum_goto_position": {
+      "name": "Go to position",
+      "description": "Send the vacuum to a specific position.",
+      "fields": {
+        "x": {
+          "name": "X-coordinate",
+          "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position."
+        },
+        "y": {
+          "name": "Y-coordinate",
+          "description": "[%key:component::roborock::services::set_vacuum_goto_position::fields::x::description%]"
+        }
+      }
+    },
+    "get_vacuum_current_position": {
+      "name": "Get current position",
+      "description": "Get the current position of the vacuum."
     }
   }
 }

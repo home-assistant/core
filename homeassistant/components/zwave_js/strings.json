@@ -290,7 +290,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         }
       },
-      "name": "Bulk set partial configuration parameters (advanced)."
+      "name": "Bulk set partial configuration parameters (advanced)"
     },
     "clear_lock_usercode": {
       "description": "Clears a user code from a lock.",

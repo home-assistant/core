@@ -42,6 +42,8 @@ PRECIPITATION_TYPE = [
     "yes",
 ]
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TrafikverketSensorEntityDescription(SensorEntityDescription):

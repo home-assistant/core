@@ -1,0 +1,384 @@
+# serializer version: 1
+# name: test_all_entities[sensor.zurich_bern_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Delay',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay',
+    'unique_id': 'Zürich Bern_delay',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'duration',
+      'friendly_name': 'Zürich Bern Delay',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_departure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Departure',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure0',
+    'unique_id': 'Zürich Bern_departure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'timestamp',
+      'friendly_name': 'Zürich Bern Departure',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_departure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-06T17:03:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_departure_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Departure +1',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure1',
+    'unique_id': 'Zürich Bern_departure1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'timestamp',
+      'friendly_name': 'Zürich Bern Departure +1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_departure_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-06T17:04:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_departure_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Departure +2',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure2',
+    'unique_id': 'Zürich Bern_departure2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_departure_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'timestamp',
+      'friendly_name': 'Zürich Bern Departure +2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_departure_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-06T17:05:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Duration',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'Zürich Bern_duration',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'device_class': 'duration',
+      'friendly_name': 'Zürich Bern Duration',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_line-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_line',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Line',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'line',
+    'unique_id': 'Zürich Bern_line',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_line-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'friendly_name': 'Zürich Bern Line',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_line',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'T10',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_platform-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_platform',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Platform',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'platform',
+    'unique_id': 'Zürich Bern_platform',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_platform-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'friendly_name': 'Zürich Bern Platform',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_platform',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_transfers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zurich_bern_transfers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Transfers',
+    'platform': 'swiss_public_transport',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'transfers',
+    'unique_id': 'Zürich Bern_transfers',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zurich_bern_transfers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by transport.opendata.ch',
+      'friendly_name': 'Zürich Bern Transfers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zurich_bern_transfers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---

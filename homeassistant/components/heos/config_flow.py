@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from pyheos import Heos, HeosError
+from pyheos import Heos, HeosError, HeosOptions
 import voluptuous as vol
 
 from homeassistant.components import ssdp
@@ -20,7 +20,7 @@ def format_title(host: str) -> str:
 
 async def _validate_host(host: str, errors: dict[str, str]) -> bool:
     """Validate host is reachable, return True, otherwise populate errors and return False."""
-    heos = Heos(host)
+    heos = Heos(HeosOptions(host, events=False, heart_beat=False))
     try:
         await heos.connect()
     except HeosError:

@@ -15,7 +15,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -24,15 +23,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
+from .coordinator import OpenMeteoConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OpenMeteoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Open-Meteo weather entity based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities([OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator)])
 
 
@@ -53,7 +53,7 @@ class OpenMeteoWeatherEntity(
     def __init__(
         self,
         *,
-        entry: ConfigEntry,
+        entry: OpenMeteoConfigEntry,
         coordinator: DataUpdateCoordinator[OpenMeteoForecast],
     ) -> None:
         """Initialize Open-Meteo weather entity."""

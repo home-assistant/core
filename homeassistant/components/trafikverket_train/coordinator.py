@@ -74,22 +74,21 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     from_station: StationInfoModel
     to_station: StationInfoModel
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TVTrainConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._train_api = TrafikverketTrain(
-            async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), config_entry.data[CONF_API_KEY]
         )
-        self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
-        self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
-        self._filter_product: str | None = self.config_entry.options.get(
-            CONF_FILTER_PRODUCT
-        )
+        self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
+        self._filter_product: str | None = config_entry.options.get(CONF_FILTER_PRODUCT)
 
     async def _async_setup(self) -> None:
         """Initiate stations."""

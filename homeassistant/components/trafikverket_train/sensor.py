@@ -25,6 +25,8 @@ from .coordinator import TrainData, TVDataUpdateCoordinator
 
 ATTR_PRODUCT_FILTER = "product_filter"
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TrafikverketSensorEntityDescription(SensorEntityDescription):

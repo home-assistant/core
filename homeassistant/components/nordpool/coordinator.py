@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -73,7 +72,7 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
         data = await self.api_call()
-        if data:
+        if data and data.entries:
             self.async_set_updated_data(data)
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
@@ -90,18 +89,20 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
                 self.config_entry.data[CONF_AREAS],
             )
         except (
-            NordPoolEmptyResponseError,
             NordPoolResponseError,
             NordPoolError,
         ) as error:
             LOGGER.debug("Connection error: %s", error)
-            if retry > 0:
-                next_run = (4 - retry) * 15
-                LOGGER.debug("Wait %d seconds for next try", next_run)
-                await asyncio.sleep(next_run)
-                return await self.api_call(retry - 1)
             self.async_set_update_error(error)
 
+        if data:
+            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+            for entry in data.entries:
+                if entry.requested_date == current_day:
+                    LOGGER.debug("Data for current day found")
+                    return data
+
+        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
         return data
 
     def merge_price_entries(self) -> list[DeliveryPeriodEntry]:

@@ -485,7 +485,7 @@ class SimpliSafe:
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        LOGGER.warning("Reconnecting to websocket")
+        LOGGER.debug("Reconnecting to websocket")
         await self._async_cancel_websocket_loop()
         self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()
