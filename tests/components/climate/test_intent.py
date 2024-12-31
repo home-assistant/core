@@ -400,7 +400,7 @@ async def test_set_temperature(
         )
 
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
     constraints = error.value.constraints
     assert constraints.name == "Climate 1"
     assert constraints.area_name == bedroom_area.name
