@@ -185,6 +185,10 @@
           "name": "Lower target temperature",
           "description": "The min temperature setpoint."
         },
+        "temperature_unit": {
+          "name": "Target temperature unit",
+          "description": "The unit used for the temperature setpoint."
+        },
         "hvac_mode": {
           "name": "HVAC mode",
           "description": "HVAC operation mode."

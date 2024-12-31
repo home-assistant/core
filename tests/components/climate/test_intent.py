@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
+    ATTR_TEMPERATURE_UNIT,
     DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
@@ -333,6 +334,24 @@ async def test_set_temperature(
     assert response.matched_states
     assert response.matched_states[0].entity_id == climate_1.entity_id
     assert climate_1.target_temperature == 20
+
+    # Select climate entity by name (Cliamte 1), use different unit
+    response = await intent.async_handle(
+        hass,
+        "test",
+        climate_intent.INTENT_SET_TEMPERATURE,
+        {
+            "name": {"value": "Climate 1"},
+            ATTR_TEMPERATURE: {"value": 77},
+            ATTR_TEMPERATURE_UNIT: {"value": "°F"},
+        },
+        assistant=conversation.DOMAIN,
+    )
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.matched_states
+    assert response.matched_states[0].entity_id == climate_1.entity_id
+    assert climate_1.target_temperature == 25
 
     # Select climate entity by area (Cliamte 2)
     response = await intent.async_handle(

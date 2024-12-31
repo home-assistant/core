@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
 from . import (
     ATTR_TEMPERATURE,
+    ATTR_TEMPERATURE_UNIT,
     DOMAIN,
     INTENT_GET_TEMPERATURE,
     INTENT_SET_TEMPERATURE,
@@ -29,6 +31,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             required_slots={
                 (ATTR_TEMPERATURE): vol.Range(0, 250),
             },
+            optional_slots={(ATTR_TEMPERATURE_UNIT): vol.Coerce(UnitOfTemperature)},
             description="Sets the desired temperature of a climate device or entity",
             platforms={DOMAIN},
         ),

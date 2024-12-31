@@ -118,6 +118,7 @@ ATTR_SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
+ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35

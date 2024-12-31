@@ -65,6 +65,13 @@ set_temperature:
           max: 250
           step: 0.1
           mode: box
+    temperature_unit:
+      selector:
+        select:
+          options:
+            - "°C"
+            - "°F"
+            - "K"
     hvac_mode:
       selector:
         select:

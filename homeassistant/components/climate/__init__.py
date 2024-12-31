@@ -56,6 +56,7 @@ from .const import (  # noqa: F401
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
+    ATTR_TEMPERATURE_UNIT,
     DOMAIN,
     FAN_AUTO,
     FAN_DIFFUSE,
@@ -125,6 +126,7 @@ SET_TEMPERATURE_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
             vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
+            vol.Optional(ATTR_TEMPERATURE_UNIT): vol.Coerce(UnitOfTemperature),
             vol.Optional(ATTR_HVAC_MODE): vol.Coerce(HVACMode),
         }
     ),
@@ -910,6 +912,9 @@ async def async_service_temperature_set(
     min_temp = entity.min_temp
     max_temp = entity.max_temp
     temp_unit = entity.temperature_unit
+    target_temp_unit: UnitOfTemperature | None = service_call.data.get(
+        ATTR_TEMPERATURE_UNIT
+    )
 
     if (
         (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
@@ -925,7 +930,7 @@ async def async_service_temperature_set(
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
             kwargs[value] = check_temp = TemperatureConverter.convert(
-                temp, hass.config.units.temperature_unit, temp_unit
+                temp, target_temp_unit or hass.config.units.temperature_unit, temp_unit
             )
 
             _LOGGER.debug(
