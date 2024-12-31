@@ -260,11 +260,19 @@ class APIEntityStateView(HomeAssistantView):
         if not user.is_admin:
             raise Unauthorized(entity_id=entity_id)
         hass = request.app[KEY_HASS]
-        try:
-            data = await request.json()
-        except ValueError:
-            return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
+        body = await request.text()
+        try:
+            data: Any = json_loads(body) if body else None
+        except ValueError:
+            return self.json_message(
+                "State data should be valid JSON.", HTTPStatus.BAD_REQUEST
+            )
+
+        if data is not None and not isinstance(data, dict):
+            return self.json_message(
+                "State data should be a JSON object", HTTPStatus.BAD_REQUEST
+            )
         if (new_state := data.get("state")) is None:
             return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
@@ -478,7 +486,17 @@ class APITemplateView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Render a template."""
         try:
-            data = await request.json()
+            body = await request.text()
+            try:
+                data: Any = json_loads(body) if body else None
+            except ValueError:
+                return self.json_message(
+                    "Template data should be valid JSON.", HTTPStatus.BAD_REQUEST
+                )
+            if data is not None and not isinstance(data, dict):
+                return self.json_message(
+                    "Template data should be a JSON object", HTTPStatus.BAD_REQUEST
+                )
             tpl = _cached_template(data["template"], request.app[KEY_HASS])
             return tpl.async_render(variables=data.get("variables"), parse_result=False)  # type: ignore[no-any-return]
         except (ValueError, TemplateError) as ex:
