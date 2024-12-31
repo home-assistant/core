@@ -5,8 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import cast
 
 from pynecil import (
+    CharSetting,
     CommunicationError,
     DeviceInfoResponse,
     IronOSUpdate,
@@ -19,6 +21,7 @@ from pynecil import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -147,3 +150,21 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
                 _LOGGER.debug("Failed to fetch settings", exc_info=e)
 
         return self.data or SettingsDataResponse()
+
+    async def write(self, characteristic: CharSetting, value: bool) -> None:
+        """Write value to the settings characteristic."""
+
+        try:
+            await self.device.write(characteristic, value)
+        except CommunicationError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="submit_setting_failed",
+            ) from e
+
+        # prevent switch bouncing while waiting for coordinator to finish refresh
+        self.data.update(
+            cast(SettingsDataResponse, {characteristic.name.lower(): value})
+        )
+        self.async_update_listeners()
+        await self.async_request_refresh()

@@ -468,7 +468,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await stream.async_check_stream_client_error(self.hass, rtsp_url)
             except stream.StreamOpenClientError as ex:
-                if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+                if ex.error_code is stream.StreamClientError.Unauthorized:
                     errors["base"] = "invalid_camera_auth"
                 else:
                     _LOGGER.debug(
