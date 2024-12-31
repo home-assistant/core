@@ -26,16 +26,15 @@ class SenseEntity(CoordinatorEntity[SenseCoordinator]):
         self,
         gateway: ASyncSenseable,
         coordinator: SenseCoordinator,
-        sense_monitor_id: str,
         unique_id: str,
     ) -> None:
         """Initialize the Sense sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{sense_monitor_id}-{unique_id}"
+        self._attr_unique_id = f"{gateway.sense_monitor_id}-{unique_id}"
         self._gateway = gateway
         self._attr_device_info = DeviceInfo(
-            name=f"Sense {sense_monitor_id}",
-            identifiers={(DOMAIN, sense_monitor_id)},
+            name=f"Sense {gateway.sense_monitor_id}",
+            identifiers={(DOMAIN, gateway.sense_monitor_id)},
             model="Sense",
             manufacturer="Sense Labs, Inc.",
             configuration_url="https://home.sense.com",
