@@ -11,7 +11,7 @@
         }
       },
       "select_account": {
-        "title": "Select Account",
+        "title": "Select account",
         "data": {
           "account_id": "Account"
         }
