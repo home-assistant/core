@@ -48,7 +48,7 @@ ProgettiHWSW==0.1.3
 PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
-PyFlick==0.0.2
+PyFlick==1.1.2
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -294,7 +294,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.9.4
+aiomealie==0.9.5
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -827,7 +827,7 @@ eliqonline==1.2.2
 elkm1-lib==2.2.10
 
 # homeassistant.components.elmax
-elmax-api==0.0.6.3
+elmax-api==0.0.6.4rc0
 
 # homeassistant.components.elvia
 elvia==0.1.0
@@ -1088,7 +1088,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.1
+habiticalib==0.3.2
 
 # homeassistant.components.bluetooth
 habluetooth==3.6.0
@@ -1134,7 +1134,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241229.0
+home-assistant-frontend==20241230.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
@@ -1528,7 +1528,7 @@ oemthermostat==1.1.1
 ohme==1.2.0
 
 # homeassistant.components.ollama
-ollama==0.3.3
+ollama==0.4.5
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
@@ -2043,7 +2043,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.3
+pylamarzocco==1.4.5
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2387,7 +2387,7 @@ python-linkplay==0.1.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==6.6.0
+python-matter-server==7.0.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2488,7 +2488,7 @@ pyvera==0.3.15
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.14
+pyvesync==2.1.15
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2575,7 +2575,7 @@ renault-api==0.2.8
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.5
+reolink-aio==0.11.6
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

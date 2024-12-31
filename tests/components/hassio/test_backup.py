@@ -942,7 +942,9 @@ async def test_reader_writer_restore(
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
-    assert response["event"] == {"manager_state": "idle"}
+    assert response["event"] == {
+        "manager_state": "idle",
+    }
     response = await client.receive_json()
     assert response["success"]
 
@@ -979,6 +981,13 @@ async def test_reader_writer_restore(
     )
     response = await client.receive_json()
     assert response["success"]
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "restore_backup",
+        "stage": None,
+        "state": "completed",
+    }
 
     response = await client.receive_json()
     assert response["event"] == {"manager_state": "idle"}
