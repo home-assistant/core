@@ -326,7 +326,7 @@ async def test_zeroconf_discovery_already_configured(
     assert entry.unique_id == "test_zeroconf_name._wyoming._tcp.local._Test Satellite"
 
 
-async def test_reconfig_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_reconfig_flow(hass: HomeAssistant) -> None:
     """Test we can reconfigure an existing entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -352,7 +352,7 @@ async def test_reconfig_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "port": 1234,
+                "port": 12345,
             },
         )
         await hass.async_block_till_done()
@@ -360,4 +360,38 @@ async def test_reconfig_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data["host"] == "1.1.1.1"
-    assert config_entry.data["port"] == 1234
+    assert config_entry.data["port"] == 12345
+
+
+async def test_reconfig_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we handle cannot connect error during reconfiguration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.1.1.1", "port": 1234},
+        unique_id="1234",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "2.2.2.2",
+                "port": 4567,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
