@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 import httpx
 from mcp import types
-import voluptuous as vol
+from voluptuous_openapi import convert_to_voluptuous
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -59,37 +58,6 @@ async def async_unload_entry(
 API_PROMPT = "The following tools are available from a remote server named {name}."
 
 
-# XXX: Swap in voluptuous-openapi https://github.com/home-assistant-libs/voluptuous-openapi/pull/40
-def _convert_schema(input_schema: dict[str, Any]) -> vol.Schema:
-    """Format a tool for the API."""
-    if input_schema.get("type") != "object":
-        raise ValueError("Input schema must be an object.")
-    required = set(input_schema.get("required", []))
-    fields = {}
-    for field_name, properties in input_schema.get("properties", {}).items():
-        field_type: type[vol.Required | vol.Optional]
-        if field_name in required:
-            field_type = vol.Required
-        else:
-            field_type = vol.Optional
-        field_key = field_type(field_name, description=properties.get("description"))
-        field_value: Any
-        if properties["type"] == "string":
-            field_value = str
-        elif properties["type"] == "number":
-            field_value = float
-        elif properties["type"] == "integer":
-            field_value = int
-        elif properties["type"] == "boolean":
-            field_value = bool
-        elif properties["type"] == "object":
-            field_value = _convert_schema(properties)
-        else:
-            raise ValueError(f"Unsupported type {properties['type']}")
-        fields[field_key] = field_value
-    return vol.Schema(fields)
-
-
 class ModelContextProtocolTool(llm.Tool):
     """A Tool exposed over the Model Context Protocol."""
 
@@ -101,7 +69,7 @@ class ModelContextProtocolTool(llm.Tool):
         """Initialize the tool."""
         self.name = tool.name
         self.description = tool.description
-        self.parameters = _convert_schema(tool.inputSchema)
+        self.parameters = convert_to_voluptuous(tool.inputSchema)
         self.coordinator = coordinator
 
     async def async_call(
@@ -124,11 +92,6 @@ class ModelContextProtocolAPI(llm.API):
     """Define an object to hold the Model Context Protocol API."""
 
     coordinator: ModelContextProtocolCoordinator
-
-    # def __init__(self, hass: HomeAssistant, id: str, name: str, coordinator: ModelContextProtocolCoordinator):
-    #     """Initialize the API."""
-    #     super().__init__(hass=hass, id=id, name=name)
-    #     self.coordinator = coordinator
 
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext

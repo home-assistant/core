@@ -29,8 +29,12 @@ async def mcp_client(url: str) -> AsyncGenerator[ClientSession]:
     This is an asynccontxt manager that wraps to other async context managers
     so that the coordinator has a single object to manage.
     """
-    async with sse_client(url=url) as streams, ClientSession(*streams) as session:
-        yield session
+    try:
+        async with sse_client(url=url) as streams, ClientSession(*streams) as session:
+            await session.initialize()
+            yield session
+    except ExceptionGroup as err:
+        raise err.exceptions[0] from err
 
 
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[Tool]]):
@@ -55,9 +59,8 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[Tool]]):
         self.ctx_mgr = mcp_client(self.config_entry.data[CONF_URL])
         try:
             self.session = await self.ctx_mgr.__aenter__()  # pylint: disable=unnecessary-dunder-call
-            await self.session.initialize()
         except httpx.HTTPError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(f"Error communicating with MCP server: {err}") from err
 
     async def close(self) -> None:
         """Close the client connection."""

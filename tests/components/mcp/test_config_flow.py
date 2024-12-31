@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.mcp.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_API_NAME
 
@@ -57,7 +57,7 @@ async def test_form(
         ),
         (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
-            "server_error",
+            "cannot_connect",
         ),
         (httpx.HTTPError("Some HTTP error"), "cannot_connect"),
         (Exception, "unknown"),
@@ -126,11 +126,12 @@ async def test_input_form_validation_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with pytest.raises(InvalidData):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
 
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so

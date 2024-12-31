@@ -15,8 +15,8 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "server_error": "Failed to connect and the server responded with an error",
-      "missing_capabilities": "The MCP server does not support the required capabilities (Tools)"
+      "missing_capabilities": "The MCP server does not support the required capabilities (Tools)",
+      "invalid_url": "Must be a valid MCP server URL e.g. https://example.com/sse"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
