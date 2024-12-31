@@ -54,7 +54,6 @@
       "away": "[%key:common::state::not_home%]",
       "schedule": "Schedule",
       "hg": "Frost guard",
-      "temperature": "Temperature",
       "temperature_set": "Temperature Set"
     },
     "trigger_type": {
@@ -123,7 +122,7 @@
           "description": "Temperature Set."
         },
         "temperature": {
-          "name": "[%key:component::netatmo::device_automation::trigger_subtype::temperature%]",
+          "name": "[%key:component::sensor::entity_component::temperature::name%]",
           "description": "Desired thermostat temperature."
         }
       }
