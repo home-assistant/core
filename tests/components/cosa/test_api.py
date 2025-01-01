@@ -1,7 +1,7 @@
 """Test the Api."""
 
-import json
-from unittest.mock import MagicMock, patch
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -21,81 +21,137 @@ def test_api_initialization(api) -> None:
     assert api._Api__authToken is None
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_login_success(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test__async_login_success(api) -> None:
     """Test successful login."""
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps(
-        {"authToken": "test-token", "ok": 1}
-    )
-    mock_conn.getresponse.return_value.status = 200
-
-    assert api.login() is True
-    assert api._Api__authToken == "test-token"
+    with patch.object(
+        api,
+        "_Api__async_post_without_auth",
+        new=AsyncMock(return_value={"authToken": "test-token", "ok": 1}),
+    ):
+        assert await api._Api__async_login() is True
+        assert api._Api__authToken == "test-token"
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_login_failure(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test__async_login_failure(api) -> None:
     """Test failed login."""
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps({"ok": 0})
-    mock_conn.getresponse.return_value.status = 200
+    with patch.object(
+        api,
+        "_Api__async_post_without_auth",
+        new=AsyncMock(return_value={"ok": 0}),
+    ):
+        assert await api._Api__async_login() is False
+        assert api._Api__authToken is None
 
-    assert api.login() is False
-    assert api._Api__authToken is None
+
+@pytest.mark.asyncio
+async def test_async_connection_status(api) -> None:
+    """Test the async connection status."""
+    with patch.object(api, "_Api__async_login", new=AsyncMock(return_value=True)):
+        assert await api.async_connection_status() is True
+
+    with patch.object(api, "_Api__async_login", new=AsyncMock(return_value=False)):
+        assert await api.async_connection_status() is False
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_get_endpoints_success(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test_async_get_endpoints_success(api) -> None:
     """Test successful retrieval of endpoints."""
-    api._Api__authToken = "test-token"
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps(
-        {"endpoints": ["endpoint1", "endpoint2"], "ok": 1}
-    )
-    mock_conn.getresponse.return_value.status = 200
-
-    endpoints = api.getEndpoints()
-    assert endpoints == ["endpoint1", "endpoint2"]
+    with patch.object(
+        api,
+        "_Api__async_get",
+        new=AsyncMock(return_value={"endpoints": ["endpoint1", "endpoint2"]}),
+    ):
+        endpoints = await api.async_get_endpoints()
+        assert endpoints == ["endpoint1", "endpoint2"]
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_get_endpoints_failure(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test_async_get_endpoints_failure(api) -> None:
     """Test failed retrieval of endpoints."""
-    api._Api__authToken = "test-token"
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps({"ok": 0})
-    mock_conn.getresponse.return_value.status = 200
-
-    endpoints = api.getEndpoints()
-    assert endpoints is None
+    with patch.object(api, "_Api__async_get", new=AsyncMock(return_value=None)):
+        endpoints = await api.async_get_endpoints()
+        assert endpoints is None
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_set_target_temperatures_success(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test_async_set_target_temperatures_success(api) -> None:
     """Test successful setting of target temperatures."""
-    api._Api__authToken = "test-token"
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps({"ok": 1})
-    mock_conn.getresponse.return_value.status = 200
-
-    result = api.setTargetTemperatures("endpoint1", 20, 18, 16, 22)
-    assert result is True
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_set_target_temperatures("endpoint1", 20, 18, 16, 22)
+        assert result is True
 
 
-@patch("homeassistant.components.cosa.api.Api.getConnection")
-def test_set_target_temperatures_failure(mock_get_connection, api) -> None:
+@pytest.mark.asyncio
+async def test_async_set_target_temperatures_failure(api) -> None:
     """Test failed setting of target temperatures."""
-    api._Api__authToken = "test-token"
-    mock_conn = MagicMock()
-    mock_get_connection.return_value = mock_conn
-    mock_conn.getresponse.return_value.read.return_value = json.dumps({"ok": 0})
-    mock_conn.getresponse.return_value.status = 200
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_set_target_temperatures("endpoint1", 20, 18, 16, 22)
+        assert result is False
 
-    result = api.setTargetTemperatures("endpoint1", 20, 18, 16, 22)
-    assert result is False
+
+@pytest.mark.asyncio
+async def test_async_disable_success(api) -> None:
+    """Test successful disabling of an endpoint."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_disable("endpoint1")
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_async_disable_failure(api) -> None:
+    """Test failed disabling of an endpoint."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_disable("endpoint1")
+        assert result is False
+
+
+@pytest.mark.asyncio
+async def test_async_enable_schedule_success(api) -> None:
+    """Test successful enabling of schedule mode."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_enable_schedule("endpoint1")
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_async_enable_schedule_failure(api) -> None:
+    """Test failed enabling of schedule mode."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_enable_schedule("endpoint1")
+        assert result is False
+
+
+@pytest.mark.asyncio
+async def test_async_enable_custom_mode_success(api) -> None:
+    """Test successful enabling of custom mode."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value={"ok": 1})):
+        result = await api.async_enable_custom_mode("endpoint1")
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_async_enable_custom_mode_failure(api) -> None:
+    """Test failed enabling of custom mode."""
+    with patch.object(api, "_Api__async_post", new=AsyncMock(return_value=None)):
+        result = await api.async_enable_custom_mode("endpoint1")
+        assert result is False
+
+
+async def test_is_login_timed_out(api) -> None:
+    """Test the __is_login_timed_out method."""
+
+    assert (
+        api._Api__is_login_timed_out() is True
+    ), "Test when __lastSuccessfulCall is None"
+
+    api._Api__lastSuccessfulCall = datetime.now(UTC)
+    assert (
+        api._Api__is_login_timed_out() is False
+    ), "Test when __lastSuccessfulCall is within the timeout delta"
+
+    api._Api__lastSuccessfulCall = datetime.now(UTC) - timedelta(minutes=100)
+    assert (
+        api._Api__is_login_timed_out() is True
+    ), "Test when __lastSuccessfulCall is outside the timeout delta"

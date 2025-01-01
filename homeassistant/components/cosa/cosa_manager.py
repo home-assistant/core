@@ -16,9 +16,9 @@ class CosaManager:
         self.__password = password
         self.__api = Api(self.__username, self.__password)
 
-    def getConnectionStatus(self) -> bool:
+    async def getConnectionStatus(self) -> bool:
         """Check if the Cosa API connection is working."""
-        return self.__api.status()
+        return await self.__api.async_connection_status()
 
     __homeId = None
 
@@ -27,7 +27,7 @@ class CosaManager:
         if self.__homeId is not None:
             return self.__homeId
 
-        endpoints = self.__api.getEndpoints()
+        endpoints = self.__api.async_get_endpoints()
         if endpoints is None:
             return None
 
@@ -42,7 +42,7 @@ class CosaManager:
         if homeId is None:
             return None
 
-        return self.__api.getEndpoint(homeId)
+        return self.__api.async_get_endpoint(homeId)
 
     def setTemperature(self, targetTemp: int) -> bool:
         """Set the target temperature for the device.
@@ -58,7 +58,7 @@ class CosaManager:
         if homeId is None:
             return False
 
-        currentStatus = self.__api.getEndpoint(homeId)
+        currentStatus = self.__api.async_get_endpoint(homeId)
         if currentStatus is None:
             return False
 
@@ -78,7 +78,7 @@ class CosaManager:
             # already set to targetTemp
             return True
 
-        targetSetSuccess = self.__api.setTargetTemperatures(
+        targetSetSuccess = self.__api.async_set_target_temperatures(
             homeId, homeTemp, awayTemp, sleepTemp, targetTemp
         )
         if not targetSetSuccess:
@@ -88,10 +88,10 @@ class CosaManager:
             # already set to manual mode
             return True
 
-        modeSetSuccess = self.__api.enableCustomMode(homeId)
+        modeSetSuccess = self.__api.async_enable_custom_mode(homeId)
         if not modeSetSuccess:
             # try revert back to previous temperature. If this fails, then it's a lost cause
-            self.__api.setTargetTemperatures(
+            self.__api.async_set_target_temperatures(
                 homeId, homeTemp, awayTemp, sleepTemp, customTemp
             )
             return False
@@ -104,7 +104,7 @@ class CosaManager:
         if homeId is None:
             return False
 
-        currentStatus = self.__api.getEndpoint(homeId)
+        currentStatus = self.__api.async_get_endpoint(homeId)
         if currentStatus is None:
             return False
 
@@ -115,7 +115,7 @@ class CosaManager:
             # already turned off
             return True
 
-        return self.__api.disable(homeId)
+        return self.__api.async_disable(homeId)
 
     def enableSchedule(self) -> bool:
         """Enable the schedule mode on the device."""
@@ -123,7 +123,7 @@ class CosaManager:
         if homeId is None:
             return False
 
-        currentStatus = self.__api.getEndpoint(homeId)
+        currentStatus = self.__api.async_get_endpoint(homeId)
         if currentStatus is None:
             return False
 
@@ -133,4 +133,4 @@ class CosaManager:
             # already enabled
             return True
 
-        return self.__api.enableSchedule(homeId)
+        return self.__api.async_enable_schedule(homeId)
