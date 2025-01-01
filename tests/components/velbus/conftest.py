@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from velbusaio.channels import Button
+from velbusaio.channels import Button, Relay
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
@@ -17,7 +17,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="controller")
-def mock_controller(mock_button: AsyncMock) -> Generator[AsyncMock]:
+def mock_controller(
+    mock_button: AsyncMock, mock_relay: AsyncMock
+) -> Generator[AsyncMock]:
     """Mock a successful velbus controller."""
     with (
         patch("homeassistant.components.velbus.Velbus", autospec=True) as controller,
@@ -29,6 +31,7 @@ def mock_controller(mock_button: AsyncMock) -> Generator[AsyncMock]:
         cont = controller.return_value
         cont.get_all_binary_sensor.return_value = [mock_button]
         cont.get_all_button.return_value = [mock_button]
+        cont.get_all_switch.return_value = [mock_relay]
         yield controller
 
 
@@ -45,6 +48,22 @@ def mock_button() -> AsyncMock:
     channel.get_module_sw_version.return_value = "1.0.0"
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_closed.return_value = True
+    return channel
+
+
+@pytest.fixture
+def mock_relay() -> AsyncMock:
+    """Mock a successful velbus channel."""
+    channel = AsyncMock(spec=Relay)
+    channel.get_categories.return_value = ["switch"]
+    channel.get_name.return_value = "RelayName"
+    channel.get_module_address.return_value = 99
+    channel.get_channel_number.return_value = 55
+    channel.get_module_type_name.return_value = "VMB4RYNO"
+    channel.get_full_name.return_value = "Full relay name"
+    channel.get_module_sw_version.return_value = "1.0.1"
+    channel.get_module_serial.return_value = "qwerty123"
+    channel.is_on.return_value = True
     return channel
 
 
