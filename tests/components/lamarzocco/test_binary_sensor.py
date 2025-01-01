@@ -28,7 +28,9 @@ async def test_binary_sensors(
 ) -> None:
     """Test the La Marzocco binary sensors."""
 
-    with patch("homeassistant.components.lamarzocco.PLATFORMS", [Platform.SENSOR]):
+    with patch(
+        "homeassistant.components.lamarzocco.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
         await async_init_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
