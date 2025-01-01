@@ -255,8 +255,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         self._attr_swing_mode = self.device_data.swing_mode
         self._attr_swing_modes = self.device_data.swing_modes
 
-        return super()._handle_coordinator_update()
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if "targetTemperature" not in self.device_data.active_features:
