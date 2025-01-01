@@ -57,6 +57,6 @@ async def test_coordinator_update(
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
 
-    assert hass.states.get("sensor.air_purifier_400s_air_quality").state == 15
+    assert hass.states.get("sensor.air_purifier_400s_air_quality").state == "15"
