@@ -316,11 +316,7 @@ async def async_setup_entry(
         sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
         _LOGGER.debug("entry.data: %s", entry.data)
         station = EcoWittStation(
-            station=entry.data["station"],
-            model=entry.data["model"],
-            frequence=entry.data["frequence"],
-            key=entry.data["key"],
-            version=entry.data["version"],
+            **entry.data["station"],
         )
         sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
             EcoWittSensor(

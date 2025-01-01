@@ -39,14 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> b
         """Update device config."""
         hass.config_entries.async_update_entry(
             entry,
-            data={
-                **entry.data,
-                "station": sensor.station.station,
-                "model": sensor.station.model,
-                "frequence": sensor.station.frequence,
-                "key": sensor.station.key,
-                "version": sensor.station.version,
-            },
+            data={**entry.data, "station": sensor.station},
         )
 
     ecowitt.new_sensor_cb.append(async_update_device_config)
