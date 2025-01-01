@@ -8,12 +8,10 @@ from ttls.client import TWINKLY_MODES
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TwinklyConfigEntry, TwinklyCoordinator
-from .const import DEV_MODEL, DEV_NAME, DOMAIN
+from .entity import TwinklyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,28 +26,16 @@ async def async_setup_entry(
     async_add_entities([entity], update_before_add=True)
 
 
-class TwinklyModeSelect(CoordinatorEntity[TwinklyCoordinator], SelectEntity):
+class TwinklyModeSelect(TwinklyEntity, SelectEntity):
     """Twinkly Mode Selection."""
 
-    _attr_has_entity_name = True
     _attr_name = "Mode"
     _attr_options = TWINKLY_MODES
 
     def __init__(self, coordinator: TwinklyCoordinator) -> None:
         """Initialize TwinklyModeSelect."""
         super().__init__(coordinator)
-        device_info = coordinator.data.device_info
-        mac = device_info["mac"]
-
-        self._attr_unique_id = f"{mac}_mode"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            manufacturer="LEDWORKS",
-            model=device_info[DEV_MODEL],
-            name=device_info[DEV_NAME],
-            sw_version=coordinator.software_version,
-        )
+        self._attr_unique_id = f"{coordinator.data.device_info["mac"]}_mode"
         self.client = coordinator.client
 
     @property
