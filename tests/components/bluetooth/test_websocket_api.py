@@ -8,21 +8,21 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from . import (
+    _get_manager,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_source,
 )
 
-from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_subscribe_advertisements(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
+    hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test bluetooth subscribe_advertisements."""
@@ -96,7 +96,9 @@ async def test_subscribe_advertisements(
     }
     new_time = response["event"]["add"][0]["time"]
     assert new_time > adv_time
-    freezer.tick(86400)
-    async_fire_time_changed(hass)
+    manager = _get_manager()
+    freezer.tick(3600)
+    manager._async_check_unavailable()
+    await hass.async_block_till_done()
     response = await client.receive_json()
     assert response["event"] == {"remove": [{"address": "44:44:33:11:23:12"}]}
