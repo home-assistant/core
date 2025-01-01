@@ -60,11 +60,7 @@ rules:
     status: done
     comment: pending https://github.com/home-assistant/core/pull/132373
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      - test_config_different_unique_id -> unique_id set to the mock config entry is an int, not a str
-      - Apart from the coverage, test_option_change_reload does not verify that the config entry is reloaded
+  test-coverage: done
 
   # Gold
   devices: done
