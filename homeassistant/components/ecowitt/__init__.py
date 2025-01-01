@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aioecowitt import EcoWittListener
+from aioecowitt import EcoWittListener, EcoWittSensor
 from aiohttp import web
 
 from homeassistant.components import webhook
@@ -34,6 +34,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcowittConfigEntry) -> b
     webhook.async_register(
         hass, DOMAIN, entry.title, entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
+
+    def async_update_device_config(sensor: EcoWittSensor) -> None:
+        """Update device config."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                "station": sensor.station.station,
+                "model": sensor.station.model,
+                "frequence": sensor.station.frequence,
+                "key": sensor.station.key,
+                "version": sensor.station.version,
+            },
+        )
+
+    ecowitt.new_sensor_cb.append(async_update_device_config)
 
     @callback
     def _stop_ecowitt(_: Event) -> None:

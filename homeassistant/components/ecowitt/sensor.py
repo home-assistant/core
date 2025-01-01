@@ -310,21 +310,17 @@ async def async_setup_entry(
     # Restore entities from the entity registry
     for config_entry in entries:
         config_entry_unique_id = config_entry.unique_id.split("-")[0]
+        _LOGGER.debug("config_entry_unique_id %s", config_entry_unique_id)
         config_entry_key = config_entry.unique_id.split("-")[1]
+        _LOGGER.debug("config_entry_key: %s", config_entry_key)
         sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
-        device_registry = dr.async_get(hass)
-        device_info = device_registry.async_get_device(
-            identifiers={
-                (DOMAIN, config_entry_unique_id),
-            }
-        )
-        _LOGGER.debug("device_info: %s", device_info)
+        _LOGGER.debug("entry.data: %s", entry.data)
         station = EcoWittStation(
-            station=device_info.name,
-            model=device_info.model,
-            frequence="",
-            key=config_entry_unique_id,
-            version="2",
+            station=entry.data["station"],
+            model=entry.data["model"],
+            frequence=entry.data["frequence"],
+            key=entry.data["key"],
+            version=entry.data["version"],
         )
         sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
             EcoWittSensor(
