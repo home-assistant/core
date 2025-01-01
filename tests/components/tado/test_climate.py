@@ -1,5 +1,14 @@
 """The sensor tests for the tado platform."""
 
+from unittest.mock import patch
+
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_TEMPERATURE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
@@ -121,3 +130,31 @@ async def test_smartac_with_fanlevel_vertical_and_horizontal_swing(
     # Only test for a subset of attributes in case
     # HA changes the implementation and a new one appears
     assert all(item in state.attributes.items() for item in expected_attributes.items())
+
+
+async def test_heater_set_temperature(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the set temperature of the heater."""
+
+    await async_init_integration(hass)
+
+    with (
+        patch(
+            "homeassistant.components.tado.coordinator.PyTado.interface.api.Tado.set_zone_overlay"
+        ) as mock_set_state,
+        patch(
+            "homeassistant.components.tado.coordinator.PyTado.interface.api.Tado.get_zone_state",
+            return_value={"setting": {"temperature": {"celsius": 22.0}}},
+        ),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: "climate.baseboard_heater", ATTR_TEMPERATURE: 22.0},
+            blocking=True,
+        )
+
+    mock_set_state.assert_called_once()
+    snapshot.assert_match(mock_set_state.call_args)

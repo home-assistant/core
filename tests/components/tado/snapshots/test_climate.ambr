@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_heater_set_temperature
+  _Call(
+    tuple(
+      1,
+      'NEXT_TIME_BLOCK',
+      22.0,
+      None,
+      'HEATING',
+      'ON',
+      'HEAT',
+      None,
+      None,
+      None,
+      None,
+      None,
+    ),
+    dict({
+    }),
+  )
+# ---
