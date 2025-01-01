@@ -51,7 +51,7 @@ rules:
   discovery: done
   stale-devices: todo
   diagnostics: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
   dynamic-devices: todo
