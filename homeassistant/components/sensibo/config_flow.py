@@ -77,6 +77,9 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
 
     async def async_step_reconfigure(
@@ -103,6 +106,9 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
 
     async def async_step_user(
@@ -128,4 +134,7 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
