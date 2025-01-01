@@ -154,10 +154,6 @@ class HeosOptionsFlowHandler(OptionsFlow):
                         await heos.sign_in(
                             user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                         )
-                        _LOGGER.debug(
-                            "Successfully signed-in to HEOS Account: %s",
-                            heos.signed_in_username,
-                        )
                     except CommandFailedError as err:
                         if err.error_id in (6, 8, 10):  # Auth-specific errors
                             errors["base"] = "invalid_auth"
@@ -172,14 +168,20 @@ class HeosOptionsFlowHandler(OptionsFlow):
                     except HeosError:
                         errors["base"] = "unknown"
                         _LOGGER.exception("Unexpected error occurred during sign-in")
+                    else:
+                        _LOGGER.debug(
+                            "Successfully signed-in to HEOS Account: %s",
+                            heos.signed_in_username,
+                        )
                 else:
                     # Log out
                     try:
                         await heos.sign_out()
-                        _LOGGER.debug("Successfully signed-out of HEOS Account")
                     except HeosError:
                         errors["base"] = "unknown"
                         _LOGGER.exception("Unexpected error occurred during sign-out")
+                    else:
+                        _LOGGER.debug("Successfully signed-out of HEOS Account")
 
             if not errors:
                 return self.async_create_entry(data=user_input)
