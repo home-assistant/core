@@ -44,6 +44,16 @@ SWITCH_SETTINGS_DATA = [
         off_value="2",
         off_label="Automatic economical",
     ),
+    PlenticoreSwitchEntityDescription(
+        module_id="devices:local",
+        key="Battery:ManualCharge",
+        name="Battery Manual Charge",
+        is_on="1",
+        on_value="1",
+        on_label="On",
+        off_value="0",
+        off_label="Off",
+    ),
 ]
 
 
