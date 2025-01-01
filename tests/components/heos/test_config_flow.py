@@ -1,6 +1,7 @@
 """Tests for the Heos config flow module."""
 
 from pyheos import CommandFailedError, HeosError
+import pytest
 
 from homeassistant.components import heos, ssdp
 from homeassistant.components.heos.const import DOMAIN
@@ -192,8 +193,28 @@ async def test_reconfigure_cannot_connect_recovers(
     assert result["type"] is FlowResultType.ABORT
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_error_key"),
+    [
+        (
+            CommandFailedError("sign_in", "Invalid credentials", 6),
+            "invalid_auth",
+        ),
+        (
+            CommandFailedError("sign_in", "User not logged in", 8),
+            "invalid_auth",
+        ),
+        (CommandFailedError("sign_in", "user not found", 10), "invalid_auth"),
+        (CommandFailedError("sign_in", "System error", 12), "unknown"),
+        (HeosError(), "unknown"),
+    ],
+)
 async def test_options_flow_signs_in(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant,
+    config_entry,
+    controller,
+    error: HeosError,
+    expected_error_key: str,
 ) -> None:
     """Test options flow signs-in with entered credentials."""
     config_entry.add_to_hass(hass)
@@ -206,50 +227,19 @@ async def test_options_flow_signs_in(
     assert result["errors"] == {}
     assert result["type"] is FlowResultType.FORM
 
-    # Enter invalid credentials shows error
+    # Invalid credentials, system error, or unexpected error.
     user_input = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-    errors = [
-        CommandFailedError("sign_in", "Invalid credentials", 6),
-        CommandFailedError("sign_in", "User not logged in", 8),
-        CommandFailedError("sign_in", "user not found", 10),
-    ]
-    for error in errors:
-        controller.sign_in.reset_mock()
-        controller.sign_in.side_effect = error
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input
-        )
-        assert controller.sign_in.call_count == 1
-        assert controller.sign_out.call_count == 0
-        assert result["step_id"] == "init"
-        assert result["errors"] == {"base": "invalid_auth"}
-        assert result["type"] is FlowResultType.FORM
-
-    # Unknown command error validating credentials shows error
-    controller.sign_in.reset_mock()
-    controller.sign_in.side_effect = CommandFailedError("sign_in", "System error", 12)
+    controller.sign_in.side_effect = error
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input
     )
     assert controller.sign_in.call_count == 1
     assert controller.sign_out.call_count == 0
     assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error_key}
     assert result["type"] is FlowResultType.FORM
 
-    # Unknown error validating credentials shows error
-    controller.sign_in.reset_mock()
-    controller.sign_in.side_effect = HeosError()
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input
-    )
-    assert controller.sign_in.call_count == 1
-    assert controller.sign_out.call_count == 0
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "unknown"}
-    assert result["type"] is FlowResultType.FORM
-
-    # Enter valid credentials signs-in and creates entry
+    # Valid credentials signs-in and creates entry
     controller.sign_in.reset_mock()
     controller.sign_in.side_effect = None
     result = await hass.config_entries.options.async_configure(
@@ -297,8 +287,19 @@ async def test_options_flow_signs_out(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected_errors"),
+    [
+        ({CONF_USERNAME: "user"}, {CONF_PASSWORD: "password_missing"}),
+        ({CONF_PASSWORD: "pass"}, {CONF_USERNAME: "username_missing"}),
+    ],
+)
 async def test_options_flow_missing_one_param_recovers(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant,
+    config_entry,
+    controller,
+    user_input: dict[str, str],
+    expected_errors: dict[str, str],
 ) -> None:
     """Test options flow signs-in after recovering from only username or password being entered."""
     config_entry.add_to_hass(hass)
@@ -311,22 +312,12 @@ async def test_options_flow_missing_one_param_recovers(
     assert result["errors"] == {}
     assert result["type"] is FlowResultType.FORM
 
-    # Enter only username
-    user_input = {CONF_USERNAME: "user"}
+    # Enter only username or password
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input
     )
     assert result["step_id"] == "init"
-    assert result["errors"] == {CONF_PASSWORD: "password_missing"}
-    assert result["type"] is FlowResultType.FORM
-
-    # Enter only password
-    user_input = {CONF_PASSWORD: "pass"}
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input
-    )
-    assert result["step_id"] == "init"
-    assert result["errors"] == {CONF_USERNAME: "username_missing"}
+    assert result["errors"] == expected_errors
     assert result["type"] is FlowResultType.FORM
 
     # Enter valid credentials
