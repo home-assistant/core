@@ -14,6 +14,7 @@ class TwinklyEntity(CoordinatorEntity[TwinklyCoordinator]):
 
     def __init__(self, coordinator: TwinklyCoordinator) -> None:
         """Initialize."""
+        super().__init__(coordinator)
         device_info = coordinator.data.device_info
         mac = device_info["mac"]
         self._attr_device_info = DeviceInfo(
