@@ -58,7 +58,8 @@ def setup_mock_foscam_camera(mock_foscam_camera):
 
         mock_foscam_camera.get_product_all_info.return_value = (product_all_info_rc, {})
         mock_foscam_camera.get_dev_info.return_value = (dev_info_rc, dev_info_data)
-        mock_foscam_camera.is_asleep.return_value = (0, False)
+        mock_foscam_camera.get_port_info.return_value = (dev_info_rc, {})
+        mock_foscam_camera.is_asleep.return_value = (0, True)
 
         return mock_foscam_camera
 
