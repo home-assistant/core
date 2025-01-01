@@ -45,7 +45,7 @@ ProgettiHWSW==0.1.3
 PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
-PyFlick==0.0.2
+PyFlick==1.1.2
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -84,7 +84,7 @@ PyRMVtransport==0.3.3
 PySwitchbot==0.55.4
 
 # homeassistant.components.syncthru
-PySyncThru==0.7.10
+PySyncThru==0.8.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -338,7 +338,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.2.0
+aiorussound==4.4.0
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -347,7 +347,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.1.0
+aioshelly==12.2.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -938,7 +938,7 @@ habluetooth==3.6.0
 hass-nabucasa==0.87.0
 
 # homeassistant.components.conversation
-hassil==2.0.5
+hassil==2.1.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
@@ -963,7 +963,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241230.0
+home-assistant-frontend==20241231.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.12.20
@@ -1008,6 +1008,9 @@ idasen-ha==2.6.3
 
 # homeassistant.components.network
 ifaddr==0.2.0
+
+# homeassistant.components.igloohome
+igloohome-api==0.0.6
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.7
@@ -1657,7 +1660,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.5
+pylamarzocco==1.4.6
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2075,7 +2078,7 @@ renault-api==0.2.8
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.5
+reolink-aio==0.11.6
 
 # homeassistant.components.rflink
 rflink==0.0.66
