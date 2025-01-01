@@ -54,11 +54,15 @@ def fakeimgbytes_gif() -> bytes:
 @pytest.fixture
 def fakeimg_png(fakeimgbytes_png: bytes) -> Generator[None]:
     """Set up respx to respond to test url with fake image bytes."""
-    respx.get("http://127.0.0.1/testurl/1", name="fake_img").respond(
+    respx.get("http://127.0.0.1/testurl/1", name="fake_img1").respond(
+        stream=fakeimgbytes_png
+    )
+    respx.get("http://127.0.0.1/testurl/2", name="fake_img2").respond(
         stream=fakeimgbytes_png
     )
     yield
-    respx.pop("fake_img")
+    respx.pop("fake_img1")
+    respx.pop("fake_img2")
 
 
 @pytest.fixture
@@ -89,8 +93,8 @@ def mock_create_stream(hass: HomeAssistant) -> _patch[MagicMock]:
     )
 
 
-@pytest.fixture
-async def user_flow(hass: HomeAssistant) -> ConfigFlowResult:
+@pytest.fixture(name="user_flow")
+async def user_flow_fixture(hass: HomeAssistant) -> ConfigFlowResult:
     """Initiate a user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -126,8 +130,8 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-@pytest.fixture
-async def setup_entry(
+@pytest.fixture(name="setup_entry")
+async def setup_entry_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Set up a config entry ready to be used in tests."""
