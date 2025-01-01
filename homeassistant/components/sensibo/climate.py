@@ -201,12 +201,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Initiate Sensibo Climate."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
-        self._attr_temperature_unit = (
-            UnitOfTemperature.CELSIUS
-            if self.device_data.temp_unit == "C"
-            else UnitOfTemperature.FAHRENHEIT
-        )
-        self._attr_supported_features = self.get_features()
+        self._handle_coordinator_update()
 
     def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
@@ -216,84 +211,46 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 features |= FIELD_TO_FLAG[key]
         return features
 
-    @property
-    def current_humidity(self) -> int | None:
-        """Return the current humidity."""
-        return self.device_data.humidity
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_supported_features = self.get_features()
 
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return hvac operation."""
-        if self.device_data.device_on and self.device_data.hvac_mode:
-            return SENSIBO_TO_HA[self.device_data.hvac_mode]
-        return HVACMode.OFF
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes."""
-        if not self.device_data.hvac_modes:
-            return [HVACMode.OFF]
-        return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        self._attr_current_humidity = self.device_data.humidity
+        self._attr_current_temperature = None
         if self.device_data.temp:
-            return TemperatureConverter.convert(
+            self._attr_current_temperature = TemperatureConverter.convert(
                 self.device_data.temp,
                 UnitOfTemperature.CELSIUS,
                 self.temperature_unit,
             )
-        return None
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return temperature unit."""
-        return (
+        self._attr_temperature_unit = (
             UnitOfTemperature.CELSIUS
             if self.device_data.temp_unit == "C"
             else UnitOfTemperature.FAHRENHEIT
         )
+        self._attr_target_temperature = self.device_data.target_temp
+        self._attr_target_temperature_step = self.device_data.temp_step
+        self._attr_min_temp = self.device_data.temp_list[0]
+        self._attr_max_temp = self.device_data.temp_list[-1]
 
-    @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self.device_data.target_temp
+        self._attr_hvac_mode = HVACMode.OFF
+        if self.device_data.device_on and self.device_data.hvac_mode:
+            self._attr_hvac_mode = SENSIBO_TO_HA[self.device_data.hvac_mode]
 
-    @property
-    def target_temperature_step(self) -> float | None:
-        """Return the supported step of target temperature."""
-        return self.device_data.temp_step
+        if not self.device_data.hvac_modes:
+            self._attr_hvac_modes = [HVACMode.OFF]
+        else:
+            self._attr_hvac_modes = [
+                SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes
+            ]
 
-    @property
-    def fan_mode(self) -> str | None:
-        """Return the fan setting."""
-        return self.device_data.fan_mode
+        self._attr_fan_mode = self.device_data.fan_mode
+        self._attr_fan_modes = self.device_data.fan_modes
 
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return self.device_data.fan_modes
+        self._attr_swing_mode = self.device_data.swing_mode
+        self._attr_swing_modes = self.device_data.swing_modes
 
-    @property
-    def swing_mode(self) -> str | None:
-        """Return the swing setting."""
-        return self.device_data.swing_mode
-
-    @property
-    def swing_modes(self) -> list[str] | None:
-        """Return the list of available swing modes."""
-        return self.device_data.swing_modes
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self.device_data.temp_list[0]
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self.device_data.temp_list[-1]
+        return super()._handle_coordinator_update()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
