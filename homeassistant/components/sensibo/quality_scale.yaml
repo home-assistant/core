@@ -3,10 +3,13 @@ rules:
   config-flow:
     status: todo
     comment: |
-      Data descriptions.
+      Data descriptions. Expand errors strings (no_devices,no_username etc.)
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Refresh docstrings, example test_form, add test unique id
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -34,23 +37,34 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage: done
+  test-coverage:
+    status: done
+    comment: |
+      Tests are very complex and needs a rewrite for future additions
   integration-owner: done
-  docs-installation-parameters: done
+  docs-installation-parameters:
+    status: todo
+    comment: configuration_basic
   docs-configuration-parameters:
     status: exempt
     comment: |
       This integration has no options flow.
 
   # Gold
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: |
+      Make pure sensitivity translatable in enable_pure_boost
   entity-device-class: done
   devices: done
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
   stale-devices: todo
-  diagnostics: done
+  diagnostics:
+    status: done
+    comment: |
+      Change to only use redact once
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: done
