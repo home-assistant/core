@@ -7,7 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 import logging
 import time
-from typing import Final
+from typing import Any, Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes, EcoWittStation
 from aioecowitt.sensor import SENSOR_MAP
@@ -249,23 +249,7 @@ async def async_setup_entry(
     entities = []
     added_keys = set()  # Track keys of already added entities
 
-    def _new_sensor(sensor: EcoWittSensor) -> None:
-        """Add a new sensor entity if it doesn't already exist."""
-        if sensor.key in added_keys:
-            _LOGGER.debug("Sensor already added: %s", sensor.key)
-            return
-
-        if sensor.stype not in ECOWITT_SENSORS_MAPPING:
-            return
-
-        # Ignore unsupported locale metrics
-        if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
-            return
-        if sensor.stype in _IMPERIAL and hass.config.units is not US_CUSTOMARY_SYSTEM:
-            return
-
-        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
-
+    def _generate_entity(sensor: EcoWittSensor, mapping: Any) -> EcowittSensorEntity:
         # Setup sensor description
         description = dataclasses.replace(
             mapping,
@@ -285,7 +269,25 @@ async def async_setup_entry(
                 state_class=SensorStateClass.MEASUREMENT,
             )
 
-        entity = EcowittSensorEntity(sensor, description)
+        return EcowittSensorEntity(sensor, description)
+
+    def _new_sensor(sensor: EcoWittSensor) -> None:
+        """Add a new sensor entity if it doesn't already exist."""
+        if sensor.key in added_keys:
+            _LOGGER.debug("Sensor already added: %s", sensor.key)
+            return
+
+        if sensor.stype not in ECOWITT_SENSORS_MAPPING:
+            return
+
+        # Ignore unsupported locale metrics
+        if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
+            return
+        if sensor.stype in _IMPERIAL and hass.config.units is not US_CUSTOMARY_SYSTEM:
+            return
+
+        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
+        entity = _generate_entity(sensor, mapping)
         entities.append(entity)
         added_keys.add(sensor.key)
         async_add_entities([entity])
@@ -313,22 +315,7 @@ async def async_setup_entry(
             stype = get_sensor_stype_by_name(config_entry.original_name)
             assert stype is not None
             mapping = ECOWITT_SENSORS_MAPPING[stype]
-            description = dataclasses.replace(
-                mapping,
-                key=sensor.key,
-                name=sensor.name,
-            )
-            if sensor.key in (
-                "hrain_piezomm",
-                "hrain_piezo",
-                "hourlyrainmm",
-                "hourlyrainin",
-            ):
-                description = dataclasses.replace(
-                    description,
-                    state_class=SensorStateClass.MEASUREMENT,
-                )
-            entity = EcowittSensorEntity(sensor, description)
+            entity = _generate_entity(sensor, mapping)
             entities.append(entity)
             added_keys.add(config_entry_key)
 
