@@ -295,11 +295,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self.device_data.temp_list[-1]
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.device_data.available and super().available
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if "targetTemperature" not in self.device_data.active_features:
