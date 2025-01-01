@@ -23,6 +23,7 @@ def mock_controller(
     mock_temperature: AsyncMock,
     mock_select: AsyncMock,
     mock_cover: AsyncMock,
+    mock_cover_no_position: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock a successful velbus controller."""
     with (
@@ -38,7 +39,7 @@ def mock_controller(
         cont.get_all_switch.return_value = [mock_relay]
         cont.get_all_climate.return_value = [mock_temperature]
         cont.get_all_select.return_value = [mock_select]
-        cont.get_all_cover.return_value = [mock_cover]
+        cont.get_all_cover.return_value = [mock_cover, mock_cover_no_position]
         yield controller
 
 
@@ -117,6 +118,27 @@ def mock_cover() -> AsyncMock:
     channel.is_open.return_value = True
     channel.is_opening.return_value = False
     channel.is_closing.return_value = False
+    return channel
+
+
+@pytest.fixture
+def mock_cover_no_position() -> AsyncMock:
+    """Mock a successful velbus channel."""
+    channel = AsyncMock(spec=Blind)
+    channel.get_categories.return_value = ["cover"]
+    channel.get_name.return_value = "CoverNameNoPos"
+    channel.get_module_address.return_value = 200
+    channel.get_channel_number.return_value = 1
+    channel.get_module_type_name.return_value = "VMB2BLE"
+    channel.get_full_name.return_value = "Full cover name no position"
+    channel.get_module_sw_version.return_value = "1.0.1"
+    channel.get_module_serial.return_value = "12345"
+    channel.support_position.return_value = False
+    channel.get_position.return_value = None
+    channel.is_closed.return_value = False
+    channel.is_open.return_value = True
+    channel.is_opening.return_value = True
+    channel.is_closing.return_value = True
     return channel
 
 
