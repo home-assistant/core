@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 
-class TadoDataUpdateCoordinator(DataUpdateCoordinator):
+class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
     def __init__(
@@ -43,17 +43,16 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self.hass = hass
         self._username = username
         self._password = password
         self._fallback = fallback
         self._debug = debug
 
-        self.tado = None
+        self.tado: Tado = None
         self.home_id: int
         self.home_name: str
-        self.zones: list[dict[Any, Any]] = []
-        self.devices: list[dict[Any, Any]] = []
+        self.zones: list[dict[str, dict]] = []
+        self.devices: list[dict[str, dict]] = []
         self.data: dict[str, dict] = {
             "device": {},
             "mobile_device": {},
@@ -63,14 +62,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
     @property
-    def fallback(self):
+    def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         """Set up Tado connection and load initial data."""
         try:
-            _LOGGER.info("Setting up Tado connection")
+            _LOGGER.debug("Setting up Tado connection")
             self.tado = await self.hass.async_add_executor_job(
                 Tado,
                 self._username,
@@ -83,16 +82,17 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
         _LOGGER.debug("Tado connection established for username: %s", self._username)
 
         try:
+            _LOGGER.debug("Preloading home data")
             tado_home_call = await self.hass.async_add_executor_job(self.tado.get_me)
-            tado_home = tado_home_call["homes"][0]
-            self.home_id = tado_home["id"]
-            self.home_name = tado_home["name"]
-
             _LOGGER.debug("Preloading zones and devices")
             self.zones = await self.hass.async_add_executor_job(self.tado.get_zones)
             self.devices = await self.hass.async_add_executor_job(self.tado.get_devices)
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
+
+        tado_home = tado_home_call["homes"][0]
+        self.home_id = tado_home["id"]
+        self.home_name = tado_home["name"]
         _LOGGER.info("Tado setup complete")
 
     async def _async_update_data(self) -> dict[str, dict]:
@@ -104,7 +104,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             await self._async_update_mobile_devices()
             await self._async_update_zones()
             await self._async_update_home()
-        except Exception as err:
+        except RequestException as err:
             raise UpdateFailed(f"Error updating Tado data: {err}") from err
 
         return self.data
@@ -124,6 +124,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER.error("No linked devices found for home ID %s", self.home_id)
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
+        await self.hass.async_add_executor_job(self._update_device_info, devices)
+
+    def _update_device_info(self, devices) -> None:
+        """Update the device data from Tado."""
         for device in devices:
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
@@ -136,15 +140,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
                         "Updating temperature offset for device %s",
                         device_short_serial_no,
                     )
-                    device[TEMP_OFFSET] = await self.hass.async_add_executor_job(
-                        self.tado.get_device_info, device_short_serial_no, TEMP_OFFSET
+                    device[TEMP_OFFSET] = self.tado.get_device_info(
+                        device_short_serial_no, TEMP_OFFSET
                     )
-            except RequestException:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating device %s",
-                    device_short_serial_no,
-                )
-                return
+            except RequestException as e:
+                _LOGGER.error("Error updating device %s: %s", device_short_serial_no, e)
 
             self.data["device"][device["shortSerialNo"]] = device
             _LOGGER.debug(
@@ -308,7 +308,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator):
         fan_level=None,
         vertical_swing=None,
         horizontal_swing=None,
-    ):
+    ) -> None:
         """Set a zone overlay."""
         if self.tado is None:
             raise UpdateFailed("Tado client is not initialized")
