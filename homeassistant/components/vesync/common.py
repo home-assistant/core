@@ -1,23 +1,21 @@
 """Common utilities for VeSync Component."""
 
 import logging
+from typing import Any
 
-from .const import (
-    HUMIDIFER_BASE_DEVICES,
-    SKU_TO_BASE_DEVICE,
-    VS_FANS,
-    VS_HUMIDIFIERS,
-    VS_LIGHTS,
-    VS_SENSORS,
-    VS_SWITCHES,
-)
+from pyvesync import VeSync
+from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+
+from homeassistant.core import HomeAssistant
+
+from .const import VS_FANS, VS_HUMIDIFIERS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_process_devices(hass, manager):
+async def async_process_devices(hass: HomeAssistant, manager: VeSync):
     """Assign devices to proper component."""
-    devices = {}
+    devices: dict[str, Any] = {}
     devices[VS_SWITCHES] = []
     devices[VS_FANS] = []
     devices[VS_LIGHTS] = []
@@ -61,7 +59,9 @@ async def async_process_devices(hass, manager):
 
 def is_humidifier(device) -> bool:
     """Check if the device represents a humidifier."""
-    return SKU_TO_BASE_DEVICE.get(device.device_type) in HUMIDIFER_BASE_DEVICES
+
+    # VeSyncHumid200300S is the base for all humidifiers except VeSyncSuperior6000S.
+    return isinstance(device, (VeSyncHumid200300S, VeSyncSuperior6000S))
 
 
 def has_feature(device, dictionary, attribute):
