@@ -47,6 +47,7 @@
     'state': 'open',
   })
 # ---
+<<<<<<< HEAD
 # name: test_entities[cover.covernamenopos-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -95,3 +96,5 @@
     'state': 'opening',
   })
 # ---
+=======
+>>>>>>> 0367f99dae9 (add first velbsu cover test)
