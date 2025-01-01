@@ -1,4 +1,4 @@
-"""Velbus button platform tests."""
+"""Velbus climate platform tests."""
 
 from unittest.mock import AsyncMock, patch
 
