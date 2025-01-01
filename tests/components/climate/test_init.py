@@ -490,6 +490,13 @@ async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
     climate._attr_hvac_mode = None
     assert climate.is_on is None
 
+    # If _attr_is_on is set to False the state should be always off
+    climate._attr_hvac_action = HVACAction.IDLE
+    climate._attr_hvac_mode = HVACMode.AUTO
+    climate._attr_is_on = False
+    assert climate.is_on is False
+    assert climate.state == HVACMode.OFF
+
 
 async def test_sync_toggle(hass: HomeAssistant) -> None:
     """Test if async toggle calls sync toggle."""

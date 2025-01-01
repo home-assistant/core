@@ -354,6 +354,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         hvac_mode = self.hvac_mode
         if hvac_mode is None:
             return None
+        if hasattr(self, "_attr_is_on") and self._attr_is_on is False:
+            return HVACMode.OFF.value
         # Support hvac_mode as string for custom integration backwards compatibility
         if not isinstance(hvac_mode, HVACMode):
             return HVACMode(hvac_mode).value  # type: ignore[unreachable]
