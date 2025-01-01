@@ -33,7 +33,10 @@ rules:
   # Silver
   config-entry-unloading: done
   log-when-unavailable: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Move to base entity for common handling
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
