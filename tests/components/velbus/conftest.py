@@ -42,6 +42,7 @@ def mock_controller(
     mock_module_no_subdevices: AsyncMock,
     mock_module_subdevices: AsyncMock,
     mock_cover: AsyncMock,
+    mock_cover_no_position: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock a successful velbus controller."""
     with (
