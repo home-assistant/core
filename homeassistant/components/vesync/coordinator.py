@@ -16,7 +16,7 @@ from .const import UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class VeSyncDataCoordinator(DataUpdateCoordinator):
+class VeSyncDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class representing data coordinator for VeSync devices."""
 
     def __init__(self, hass: HomeAssistant, manager: VeSync) -> None:
