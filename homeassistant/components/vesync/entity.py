@@ -6,21 +6,19 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import VeSyncDataCoordinator
 
 
-class VeSyncBaseEntity(CoordinatorEntity[DataUpdateCoordinator[dict[str, Any]]]):
+class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, device: VeSyncBaseDevice, coordinator: DataUpdateCoordinator
+        self, device: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
     ) -> None:
         """Initialize the VeSync device."""
         super().__init__(coordinator)

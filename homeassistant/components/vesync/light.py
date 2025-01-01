@@ -15,10 +15,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import color as color_util
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_LIGHTS
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ async def async_setup_entry(
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities,
-    coordinator: DataUpdateCoordinator,
+    coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
     entities: list[VeSyncBaseLight] = []

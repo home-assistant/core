@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -28,6 +27,7 @@ from .const import (
     VS_DISCOVERY,
     VS_FANS,
 )
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ async def async_setup_entry(
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities,
-    coordinator: DataUpdateCoordinator,
+    coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
     entities = []
@@ -112,7 +112,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
-    def __init__(self, fan, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, fan, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan, coordinator)
         self.smartfan = fan

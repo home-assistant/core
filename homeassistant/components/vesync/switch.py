@@ -10,9 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ async def async_setup_entry(
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities,
-    coordinator: DataUpdateCoordinator,
+    coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
     entities: list[VeSyncBaseSwitch] = []
@@ -74,7 +74,7 @@ class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
 class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     """Representation of a VeSync switch."""
 
-    def __init__(self, plug, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, plug, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize the VeSync switch device."""
         super().__init__(plug, coordinator)
         self.smartplug = plug
@@ -88,7 +88,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
 class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
 
-    def __init__(self, switch, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, switch, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize Light Switch device class."""
         super().__init__(switch, coordinator)
         self.switch = switch

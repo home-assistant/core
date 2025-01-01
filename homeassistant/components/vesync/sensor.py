@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DEV_TYPE_TO_HA,
@@ -40,6 +39,7 @@ from .const import (
     VS_DISCOVERY,
     VS_SENSORS,
 )
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -214,7 +214,7 @@ async def async_setup_entry(
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities,
-    coordinator: DataUpdateCoordinator,
+    coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
 
