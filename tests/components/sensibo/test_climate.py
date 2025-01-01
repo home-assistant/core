@@ -136,7 +136,7 @@ async def test_climate_fan(
     )
     with pytest.raises(
         HomeAssistantError,
-        match="Climate fan mode not_in_ha is not supported by the integration",
+        match="Fan mode not_in_ha is not valid. Valid fan modes are: quiet, low, medium",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

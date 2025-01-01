@@ -201,7 +201,12 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Initiate Sensibo Climate."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
-        self._handle_coordinator_update()
+        self._update_data()
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_data()
+        return super()._handle_coordinator_update()
 
     def get_features(self) -> ClimateEntityFeature:
         """Get supported features."""
@@ -211,23 +216,23 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 features |= FIELD_TO_FLAG[key]
         return features
 
-    def _handle_coordinator_update(self) -> None:
+    def _update_data(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_supported_features = self.get_features()
 
         self._attr_current_humidity = self.device_data.humidity
         self._attr_current_temperature = None
+        self._attr_temperature_unit = (
+            UnitOfTemperature.CELSIUS
+            if self.device_data.temp_unit == "C"
+            else UnitOfTemperature.FAHRENHEIT
+        )
         if self.device_data.temp:
             self._attr_current_temperature = TemperatureConverter.convert(
                 self.device_data.temp,
                 UnitOfTemperature.CELSIUS,
                 self.temperature_unit,
             )
-        self._attr_temperature_unit = (
-            UnitOfTemperature.CELSIUS
-            if self.device_data.temp_unit == "C"
-            else UnitOfTemperature.FAHRENHEIT
-        )
         self._attr_target_temperature = self.device_data.target_temp
         self._attr_target_temperature_step = self.device_data.temp_step
         self._attr_min_temp = self.device_data.temp_list[0]
