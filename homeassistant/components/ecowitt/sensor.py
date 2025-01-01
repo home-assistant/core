@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 import logging
+import time
 from typing import Final
+
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes, EcoWittStation
 from aioecowitt.sensor import SENSOR_MAP
-from homeassistant.const import CONF_WEBHOOK_ID
+
 from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
@@ -32,17 +35,14 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 _METRIC: Final = (
@@ -221,34 +221,20 @@ ECOWITT_SENSORS_MAPPING: Final = {
 }
 
 
-def get_sensor_key_by_name(name: str) -> str | None:
-    """Retrieve the sensor key from SENSOR_MAP by its name.
-
-    Args:
-        name (str): The name of the sensor.
-
-    Returns:
-        str | None: The corresponding key if found, otherwise None.
-
-    """
+def get_sensor_key_by_name(name: str | None) -> str | None:
+    """Retrieve the sensor key from SENSOR_MAP by its name."""
     for key, mapping in SENSOR_MAP.items():
         if mapping.name == name:
+            _LOGGER.debug("get_sensor_key_by_name %s", key)
             return key
     return None
 
 
 def get_sensor_stype_by_name(name: str) -> EcoWittSensorTypes | None:
-    """Retrieve the sensor type (stype) from SENSOR_MAP by its name.
-
-    Args:
-        name (str): The name of the sensor.
-
-    Returns:
-        EcoWittSensorTypes | None: The corresponding sensor type if found, otherwise None.
-
-    """
+    """Retrieve the sensor type (stype) from SENSOR_MAP by its name."""
     for mapping in SENSOR_MAP.values():
         if mapping.name == name:
+            _LOGGER.debug("get_sensor_stype_by_name %s", mapping.stype)
             return mapping.stype
     return None
 
@@ -309,53 +295,49 @@ async def async_setup_entry(
 
     # Restore entities from the entity registry
     for config_entry in entries:
-        config_entry_unique_id = config_entry.unique_id.split("-")[0]
-        _LOGGER.debug("config_entry_unique_id %s", config_entry_unique_id)
-        config_entry_key = config_entry.unique_id.split("-")[1]
-        _LOGGER.debug("config_entry_key: %s", config_entry_key)
-        sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
-        _LOGGER.debug("entry.data: %s", entry.data)
-        station = EcoWittStation(
-            **entry.data["station"],
-        )
-        sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
-            EcoWittSensor(
-                name=config_entry.original_name,
-                key=config_entry_key,
-                stype=sensor_key_name,
-                station=station,
+        if config_entry.original_name is not None:
+            config_entry_unique_id = config_entry.unique_id.split("-")[0]
+            config_entry_key = config_entry.unique_id.split("-")[1]
+            sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
+            station = EcoWittStation(
+                **entry.data["station"],
             )
-        )
-        mapping = ECOWITT_SENSORS_MAPPING[
-            get_sensor_stype_by_name(config_entry.original_name)
-        ]
-        description = dataclasses.replace(
-            mapping,
-            key=sensor.key,
-            name=sensor.name,
-        )
-        if sensor.key in (
-            "hrain_piezomm",
-            "hrain_piezo",
-            "hourlyrainmm",
-            "hourlyrainin",
-        ):
+            sensor = ecowitt.sensors[f"{config_entry_unique_id}.{sensor_key_name}"] = (
+                EcoWittSensor(
+                    name=config_entry.original_name,
+                    key=config_entry_key,
+                    stype=sensor_key_name,  # type: ignore[arg-type]
+                    station=station,
+                )
+            )
+            stype = get_sensor_stype_by_name(config_entry.original_name)
+            assert stype is not None
+            mapping = ECOWITT_SENSORS_MAPPING[stype]
             description = dataclasses.replace(
-                description,
-                state_class=SensorStateClass.MEASUREMENT,
+                mapping,
+                key=sensor.key,
+                name=sensor.name,
             )
-        entity = EcowittSensorEntity(sensor, description)
-        entities.append(entity)
-        added_keys.add(config_entry_key)
+            if sensor.key in (
+                "hrain_piezomm",
+                "hrain_piezo",
+                "hourlyrainmm",
+                "hourlyrainin",
+            ):
+                description = dataclasses.replace(
+                    description,
+                    state_class=SensorStateClass.MEASUREMENT,
+                )
+            entity = EcowittSensorEntity(sensor, description)
+            entities.append(entity)
+            added_keys.add(config_entry_key)
 
     async_add_entities(entities)
 
     # Add new sensors dynamically from webhook data
     ecowitt.new_sensor_cb.append(_new_sensor)
     entry.async_on_unload(lambda: ecowitt.new_sensor_cb.remove(_new_sensor))
-    _LOGGER.debug("ecowitt.sensors.values(): %s", ecowitt.sensors.values())
     for sensor in ecowitt.sensors.values():
-        _LOGGER.debug("Adding existing sensor: %s", sensor)
         _new_sensor(sensor)
 
 
@@ -370,7 +352,7 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
         """Initialize the sensor."""
         super().__init__(sensor)
         self.entity_description = description
-        self.restored_value = None
+        self.restored_value: StateType | datetime | date | Decimal = None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -381,11 +363,21 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
+            self._attr_available = True
             self.restored_value = sensor_data.native_value
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType | datetime | date | Decimal:
         """Return the state of the sensor."""
         if self.ecowitt.value is not None:
             return self.ecowitt.value
         return self.restored_value
+
+    @property
+    def available(self) -> bool:
+        """Return whether the state is based on actual reading from device."""
+        if self.ecowitt.value is not None:
+            return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()
+        if self.restored_value:
+            return True
+        return False
