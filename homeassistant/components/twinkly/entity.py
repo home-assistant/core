@@ -12,16 +12,15 @@ class TwinklyEntity(CoordinatorEntity[TwinklyCoordinator]):
 
     _attr_has_entity_name = True
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this Twinkly device."""
-        device_info = self.coordinator.data.device_info
+    def __init__(self, coordinator: TwinklyCoordinator) -> None:
+        """Initialize."""
+        device_info = coordinator.data.device_info
         mac = device_info["mac"]
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer="LEDWORKS",
             model=device_info[DEV_MODEL],
             name=device_info[DEV_NAME],
-            sw_version=self.coordinator.software_version,
+            sw_version=coordinator.software_version,
         )
