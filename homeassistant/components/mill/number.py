@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from mill import MillDevice
+
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, UnitOfPower
@@ -42,7 +44,7 @@ class MillNumber(CoordinatorEntity[MillDataUpdateCoordinator], NumberEntity):
     def __init__(
         self,
         coordinator: MillDataUpdateCoordinator,
-        mill_device,
+        mill_device: MillDevice,
     ) -> None:
         """Initialize the number."""
         super().__init__(coordinator)
@@ -65,7 +67,7 @@ class MillNumber(CoordinatorEntity[MillDataUpdateCoordinator], NumberEntity):
         self.async_write_ha_state()
 
     @callback
-    def _update_attr(self, device):
+    def _update_attr(self, device: MillDevice) -> None:
         self._attr_native_value = device.data["deviceSettings"]["reported"].get(
             "max_heater_power"
         )
