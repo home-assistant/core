@@ -48,7 +48,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self._fallback = fallback
         self._debug = debug
 
-        self.tado: Tado = None
+        self.tado: Tado = Tado
         self.home_id: int
         self.home_name: str
         self.zones: list[dict[str, dict]] = []
@@ -111,8 +111,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_devices(self) -> None:
         """Update the device data from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             devices = await self.hass.async_add_executor_job(self.tado.get_devices)
@@ -153,9 +151,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_mobile_devices(self) -> None:
         """Update the mobile device(s) data from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
-
         try:
             mobile_devices = await self.hass.async_add_executor_job(
                 self.tado.get_mobile_devices
@@ -189,8 +184,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_zones(self) -> None:
         """Update the zone data from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             zone_states_call = await self.hass.async_add_executor_job(
@@ -206,8 +199,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _update_zone(self, zone_id: int) -> None:
         """Update the internal data of a zone."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         _LOGGER.debug("Updating zone %s", zone_id)
         try:
@@ -223,8 +214,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_home(self) -> None:
         """Update the home data from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             self.data["weather"] = await self.hass.async_add_executor_job(
@@ -245,8 +234,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             return await self.hass.async_add_executor_job(
@@ -257,8 +244,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def get_auto_geofencing_supported(self) -> bool:
         """Fetch the auto geofencing supported from Tado."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             return await self.hass.async_add_executor_job(
@@ -269,8 +254,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         try:
             await self.hass.async_add_executor_job(
@@ -285,8 +268,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         presence=PRESET_HOME,
     ):
         """Set the presence to home, away or auto."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         if presence == PRESET_AWAY:
             await self.hass.async_add_executor_job(self.tado.set_away)
@@ -310,8 +291,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         horizontal_swing=None,
     ) -> None:
         """Set a zone overlay."""
-        if self.tado is None:
-            raise UpdateFailed("Tado client is not initialized")
 
         _LOGGER.debug(
             "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s, fan_speed=%s, swing=%s, fan_level=%s, vertical_swing=%s, horizontal_swing=%s",
