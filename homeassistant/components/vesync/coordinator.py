@@ -1,4 +1,4 @@
-"""Representation of VeSync data coordinator."""
+"""Class to manage VeSync data updates."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Any
 from pyvesync import VeSync
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import UPDATE_INTERVAL
 
@@ -33,10 +33,5 @@ class VeSyncDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
 
-        try:
-            # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
-            return await self.hass.async_add_executor_job(
-                self._manager.update_all_devices
-            )
-        except Exception as error:
-            raise UpdateFailed(error) from error
+        # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
+        return await self.hass.async_add_executor_job(self._manager.update_all_devices)
