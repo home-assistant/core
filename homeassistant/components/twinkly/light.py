@@ -15,19 +15,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TwinklyConfigEntry, TwinklyCoordinator
-from .const import (
-    DEV_LED_PROFILE,
-    DEV_MODEL,
-    DEV_NAME,
-    DEV_PROFILE_RGB,
-    DEV_PROFILE_RGBW,
-    DOMAIN,
-)
+from .const import DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
+from .entity import TwinklyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,10 +35,9 @@ async def async_setup_entry(
     async_add_entities([entity], update_before_add=True)
 
 
-class TwinklyLight(CoordinatorEntity[TwinklyCoordinator], LightEntity):
+class TwinklyLight(TwinklyEntity, LightEntity):
     """Implementation of the light for the Twinkly service."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "light"
 
@@ -54,7 +45,7 @@ class TwinklyLight(CoordinatorEntity[TwinklyCoordinator], LightEntity):
         """Initialize a TwinklyLight entity."""
         super().__init__(coordinator)
         device_info = coordinator.data.device_info
-        self._attr_unique_id = mac = device_info["mac"]
+        self._attr_unique_id = device_info["mac"]
 
         if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
             self._attr_supported_color_modes = {ColorMode.RGBW}
@@ -68,14 +59,6 @@ class TwinklyLight(CoordinatorEntity[TwinklyCoordinator], LightEntity):
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_color_mode = ColorMode.BRIGHTNESS
         self.client = coordinator.client
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            manufacturer="LEDWORKS",
-            model=device_info[DEV_MODEL],
-            name=device_info[DEV_NAME],
-            sw_version=coordinator.software_version,
-        )
         if coordinator.supports_effects:
             self._attr_supported_features = LightEntityFeature.EFFECT
         self._update_attr()

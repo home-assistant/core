@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_entities[select.select-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'summer',
+        'winter',
+        'holiday',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.select',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'select',
+    'platform': 'velbus',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'qwerty1234567-33-program_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.select-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'select',
+      'options': list([
+        'none',
+        'summer',
+        'winter',
+        'holiday',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.select',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'winter',
+  })
+# ---
