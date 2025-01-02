@@ -116,7 +116,7 @@ async def test_flow_fails(
         )
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Sensibo"
+    assert result3["title"] == "username"
     assert result3["data"] == {
         "api_key": "1234567891",
     }

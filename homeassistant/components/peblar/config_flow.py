@@ -27,7 +27,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _host: str
+    _discovery_info: zeroconf.ZeroconfServiceInfo
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -137,8 +137,15 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(sn)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
-        self._host = discovery_info.host
-        self.context.update({"configuration_url": f"http://{discovery_info.host}"})
+        self._discovery_info = discovery_info
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "name": discovery_info.name.replace("._http._tcp.local.", "")
+                },
+                "configuration_url": f"http://{discovery_info.host}",
+            },
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -149,7 +156,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             peblar = Peblar(
-                host=self._host,
+                host=self._discovery_info.host,
                 session=async_create_clientsession(
                     self.hass, cookie_jar=CookieJar(unsafe=True)
                 ),
@@ -165,7 +172,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="Peblar",
                     data={
-                        CONF_HOST: self._host,
+                        CONF_HOST: self._discovery_info.host,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
@@ -179,6 +186,10 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={
+                "hostname": self._discovery_info.name.replace("._http._tcp.local.", ""),
+                "host": self._discovery_info.host,
+            },
             errors=errors,
         )
 
