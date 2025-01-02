@@ -147,3 +147,23 @@ async def test_optional_sensor_from_featuremap(
     )
     state = hass.states.get(entity_id)
     assert state is None
+
+
+@pytest.mark.parametrize("node_fixture", ["water_heater"])
+async def test_water_heater(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test water heater sensor."""
+    # BoostState
+    state = hass.states.get("binary_sensor.water_heater_boost_state")
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 2, 148, 5, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.water_heater_boost_state")
+    assert state
+    assert state.state == "on"

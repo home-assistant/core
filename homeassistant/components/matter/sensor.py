@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -62,13 +63,18 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
-
 OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+}
+
+BOOST_STATE_MAP = {
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
 }
 
 
@@ -653,6 +659,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="OperationalState",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="operational_state",
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.OperationalState,
+            clusters.OperationalState.Attributes.OperationalStateList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="SmokeCOAlarmExpiryDate",
             translation_key="expiry_date",
             device_class=SensorDeviceClass.TIMESTAMP,
@@ -665,14 +684,41 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
-            key="OperationalState",
-            device_class=SensorDeviceClass.ENUM,
-            translation_key="operational_state",
+            key="WaterHeaterManagementTankVolume",
+            translation_key="tank_volume",
+            device_class=SensorDeviceClass.VOLUME_STORAGE,
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
-        entity_class=MatterOperationalStateSensor,
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankVolume,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementTankPercentage",
+            translation_key="tank_percentage",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WaterHeaterManagement.Attributes.TankPercentage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WaterHeaterManagementEstimatedHeatRequired",
+            translation_key="estimated_heat_required",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.MILLIWATT_HOUR,
+            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL,
+        ),
+        entity_class=MatterSensor,
         required_attributes=(
-            clusters.OperationalState.Attributes.OperationalState,
-            clusters.OperationalState.Attributes.OperationalStateList,
+            clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
         ),
     ),
 ]

@@ -76,6 +76,9 @@
       },
       "muted": {
         "name": "Muted"
+      },
+      "boost_state": {
+        "name": "Boost state"
       }
     },
     "button": {
@@ -242,6 +245,15 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "tank_volume": {
+        "name": "Tank volume"
+      },
+      "tank_percentage": {
+        "name": "Tank percentage"
+      },
+      "estimated_heat_required": {
+        "name": "Heat energy needed"
       },
       "valve_position": {
         "name": "Valve position"
