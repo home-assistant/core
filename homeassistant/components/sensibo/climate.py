@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -222,11 +222,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
         self._attr_current_humidity = self.device_data.humidity
         self._attr_current_temperature = None
-        self._attr_temperature_unit = (
-            UnitOfTemperature.CELSIUS
-            if self.device_data.temp_unit == "C"
-            else UnitOfTemperature.FAHRENHEIT
-        )
+        if self.device_data.temp_unit == "C":
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if self.device_data.temp:
             self._attr_current_temperature = TemperatureConverter.convert(
                 self.device_data.temp,
@@ -242,12 +241,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if self.device_data.device_on and self.device_data.hvac_mode:
             self._attr_hvac_mode = SENSIBO_TO_HA[self.device_data.hvac_mode]
 
-        if not self.device_data.hvac_modes:
-            self._attr_hvac_modes = [HVACMode.OFF]
-        else:
-            self._attr_hvac_modes = [
-                SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes
-            ]
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
+        self._attr_hvac_modes = [
+            SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes
+        ]
 
         self._attr_fan_mode = self.device_data.fan_mode
         self._attr_fan_modes = self.device_data.fan_modes
