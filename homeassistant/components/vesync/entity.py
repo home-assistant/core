@@ -54,6 +54,6 @@ class VeSyncBaseEntity(Entity):
         return self.device.details
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if device is on."""
         return self.device.device_status == "on"

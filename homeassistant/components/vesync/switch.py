@@ -52,7 +52,6 @@ async def async_setup_entry(
             if rgetattr(device, description.key) is not None:
                 entities.append(VeSyncSwitchEntity(device, description))  # noqa: PERF401
     async_add_entities(entities)
-    return True
 
 
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
@@ -63,7 +62,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device)
-        self.entity_description = description
+        self.entity_description: VeSyncSwitchEntityDescription = description
         if isinstance(self.device, VeSyncOutlet):
             self._attr_device_class = SwitchDeviceClass.OUTLET
         if isinstance(self.device, VeSyncSwitch):
