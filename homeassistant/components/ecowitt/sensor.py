@@ -244,10 +244,10 @@ async def async_setup_entry(
     entry: EcowittConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Ecowitt sensors from a config entry."""
+    """Set up Ecowitt sensors."""
     ecowitt = entry.runtime_data
     entities = []
-    added_keys = set()  # Track keys of already added entities
+    added_keys = set()
 
     def _generate_entity(sensor: EcoWittSensor, mapping: Any) -> EcowittSensorEntity:
         # Setup sensor description
@@ -257,7 +257,7 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Adjust specific configurations for hourly rain sensors
+        # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
         if sensor.key in (
             "hrain_piezomm",
             "hrain_piezo",
@@ -324,6 +324,8 @@ async def async_setup_entry(
     # Add new sensors dynamically from webhook data
     ecowitt.new_sensor_cb.append(_new_sensor)
     entry.async_on_unload(lambda: ecowitt.new_sensor_cb.remove(_new_sensor))
+
+    # Add all sensors that are already known
     for sensor in ecowitt.sensors.values():
         _new_sensor(sensor)
 
@@ -332,9 +334,7 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
     """Representation of a Ecowitt Sensor."""
 
     def __init__(
-        self,
-        sensor: EcoWittSensor,
-        description: SensorEntityDescription,
+        self, sensor: EcoWittSensor, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(sensor)
@@ -343,7 +343,6 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
-        # If not None, we got an initial value.
         await super().async_added_to_hass()
         if self._attr_native_value is not None:
             return
