@@ -340,19 +340,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._tado_zone_temp_offset: dict[str, Any] = {}
 
-        self._async_update_home_data()
         self._async_update_zone_data()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._async_update_home_data()
         self._async_update_zone_data()
         super()._handle_coordinator_update()
 
     @callback
     def _async_update_zone_data(self) -> None:
         """Load tado data into zone."""
+        self._tado_geofence_data = self._tado.data["geofence"]
         self._tado_zone_data = self._tado.data["zone"][self.zone_id]
 
         # Assign offset values to mapped attributes
@@ -388,18 +387,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _async_update_zone_callback(self) -> None:
         """Load tado data and update state."""
         self._async_update_zone_data()
-        super().async_write_ha_state()
-
-    @callback
-    def _async_update_home_data(self) -> None:
-        """Load tado geofencing data into zone."""
-        self._tado_geofence_data = self._tado.data["geofence"]
-
-    @callback
-    def _async_update_home_callback(self) -> None:
-        """Load tado data and update state."""
-        self._async_update_home_data()
-        super().async_write_ha_state()
 
     @property
     def current_humidity(self) -> int | None:
