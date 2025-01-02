@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    entities = []
+    entities: list[VeSyncSwitchEntity] = []
     for device in hass.data[DOMAIN][VS_SWITCHES]:
         for description in SENSOR_DESCRIPTIONS:
             if rgetattr(device, description.key) is not None:
