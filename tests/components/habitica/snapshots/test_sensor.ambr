@@ -34,7 +34,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.CLASS: 'class'>,
+    'translation_key': <HabiticaSensorEntity.CLASS: 'class'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_class',
     'unit_of_measurement': None,
   })
@@ -90,7 +90,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.CONSTITUTION: 'constitution'>,
+    'translation_key': <HabiticaSensorEntity.CONSTITUTION: 'constitution'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_constitution',
     'unit_of_measurement': 'CON',
   })
@@ -142,7 +142,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.DAILIES: 'dailys'>,
+    'translation_key': <HabiticaSensorEntity.DAILIES: 'dailys'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': 'tasks',
   })
@@ -404,7 +404,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.DISPLAY_NAME: 'display_name'>,
+    'translation_key': <HabiticaSensorEntity.DISPLAY_NAME: 'display_name'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_display_name',
     'unit_of_measurement': None,
   })
@@ -450,7 +450,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.EXPERIENCE: 'experience'>,
+    'translation_key': <HabiticaSensorEntity.EXPERIENCE: 'experience'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience',
     'unit_of_measurement': 'XP',
   })
@@ -500,7 +500,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.GEMS: 'gems'>,
+    'translation_key': <HabiticaSensorEntity.GEMS: 'gems'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gems',
     'unit_of_measurement': 'gems',
   })
@@ -551,7 +551,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.GOLD: 'gold'>,
+    'translation_key': <HabiticaSensorEntity.GOLD: 'gold'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_gold',
     'unit_of_measurement': 'GP',
   })
@@ -598,7 +598,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.HABITS: 'habits'>,
+    'translation_key': <HabiticaSensorEntity.HABITS: 'habits'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_habits',
     'unit_of_measurement': 'tasks',
   })
@@ -807,7 +807,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.HEALTH: 'health'>,
+    'translation_key': <HabiticaSensorEntity.HEALTH: 'health'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health',
     'unit_of_measurement': 'HP',
   })
@@ -857,7 +857,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.INTELLIGENCE: 'intelligence'>,
+    'translation_key': <HabiticaSensorEntity.INTELLIGENCE: 'intelligence'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intelligence',
     'unit_of_measurement': 'INT',
   })
@@ -909,7 +909,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.LEVEL: 'level'>,
+    'translation_key': <HabiticaSensorEntity.LEVEL: 'level'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_level',
     'unit_of_measurement': None,
   })
@@ -958,7 +958,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.MANA: 'mana'>,
+    'translation_key': <HabiticaSensorEntity.MANA: 'mana'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana',
     'unit_of_measurement': 'MP',
   })
@@ -1005,7 +1005,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.HEALTH_MAX: 'health_max'>,
+    'translation_key': <HabiticaSensorEntity.HEALTH_MAX: 'health_max'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
     'unit_of_measurement': 'HP',
   })
@@ -1052,7 +1052,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.MANA_MAX: 'mana_max'>,
+    'translation_key': <HabiticaSensorEntity.MANA_MAX: 'mana_max'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mana_max',
     'unit_of_measurement': 'MP',
   })
@@ -1102,7 +1102,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.TRINKETS: 'trinkets'>,
+    'translation_key': <HabiticaSensorEntity.TRINKETS: 'trinkets'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_trinkets',
     'unit_of_measurement': '⧖',
   })
@@ -1150,7 +1150,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.EXPERIENCE_MAX: 'experience_max'>,
+    'translation_key': <HabiticaSensorEntity.EXPERIENCE_MAX: 'experience_max'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_experience_max',
     'unit_of_measurement': 'XP',
   })
@@ -1200,7 +1200,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.PERCEPTION: 'perception'>,
+    'translation_key': <HabiticaSensorEntity.PERCEPTION: 'perception'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_perception',
     'unit_of_measurement': 'PER',
   })
@@ -1252,7 +1252,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.REWARDS: 'rewards'>,
+    'translation_key': <HabiticaSensorEntity.REWARDS: 'rewards'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_rewards',
     'unit_of_measurement': 'tasks',
   })
@@ -1341,7 +1341,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.STRENGTH: 'strength'>,
+    'translation_key': <HabiticaSensorEntity.STRENGTH: 'strength'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_strength',
     'unit_of_measurement': 'STR',
   })
@@ -1393,7 +1393,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipySensorEntity.TODOS: 'todos'>,
+    'translation_key': <HabiticaSensorEntity.TODOS: 'todos'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': 'tasks',
   })

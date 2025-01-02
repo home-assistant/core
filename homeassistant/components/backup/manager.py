@@ -728,7 +728,7 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} {HAVERSION}"
+            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
         )
         new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
