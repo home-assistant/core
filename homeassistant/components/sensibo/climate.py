@@ -211,7 +211,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        for key in self.device_data.full_features:
+        for key in self.device_data.active_features:
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
         return features
