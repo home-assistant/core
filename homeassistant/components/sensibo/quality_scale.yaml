@@ -54,10 +54,7 @@ rules:
       This integration has no options flow.
 
   # Gold
-  entity-translations:
-    status: todo
-    comment: |
-      Make pure sensitivity translatable in enable_pure_boost
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
@@ -68,7 +65,7 @@ rules:
     status: done
     comment: |
       Change to only use redact once
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   dynamic-devices: todo
