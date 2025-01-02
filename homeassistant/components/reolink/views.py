@@ -103,8 +103,10 @@ class PlaybackProxyView(HomeAssistantView):
                 request, config_entry_id, channel, stream_res, vod_type, filename, retry
             )
 
+        # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
         if reolink_response.content_type not in [
             "video/mp4",
+            "application/octet-stream",
             "apolication/octet-stream",
         ]:
             err_str = f"Reolink playback expected video/mp4 but got {reolink_response.content_type}"
