@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError, ClientTimeout, web
+from urllib import parse
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
@@ -29,7 +30,7 @@ def async_generate_playback_proxy_url(
     return url_format.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        filename=filename.replace("/", "|"),
+        filename=parse.quote(filename, safe="")
         stream_res=stream_res,
         vod_type=vod_type,
     )
@@ -64,7 +65,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = filename.replace("|", "/")
+        filename = parse.unquote(filename)
         ch = int(channel)
         host = get_host(self.hass, config_entry_id)
 
