@@ -11,25 +11,29 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import VelbusConfigEntry
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VelbusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    async_add_entities(VelbusClimate(channel) for channel in cntrl.get_all("climate"))
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusClimate(channel)
+        for channel in entry.runtime_data.controller.get_all_climate()
+    )
 
 
 class VelbusClimate(VelbusEntity, ClimateEntity):
@@ -42,7 +46,6 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_preset_modes = list(PRESET_MODES)
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def target_temperature(self) -> float | None:

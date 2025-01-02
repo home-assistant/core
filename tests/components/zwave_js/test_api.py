@@ -3176,10 +3176,10 @@ async def test_set_raw_config_parameter(
     args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "endpoint.set_raw_config_parameter_value"
     assert args["nodeId"] == multisensor_6.node_id
-    assert args["options"]["parameter"] == 102
-    assert args["options"]["value"] == 1
-    assert args["options"]["valueSize"] == 2
-    assert args["options"]["valueFormat"] == 1
+    assert args["parameter"] == 102
+    assert args["value"] == 1
+    assert args["valueSize"] == 2
+    assert args["valueFormat"] == 1
 
     # Reset the mock for async_send_command_no_wait instead
     client.async_send_command_no_wait.reset_mock()
@@ -3250,7 +3250,7 @@ async def test_get_raw_config_parameter(
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "endpoint.get_raw_config_parameter_value"
     assert args["nodeId"] == multisensor_6.node_id
-    assert args["options"]["parameter"] == 102
+    assert args["parameter"] == 102
 
     client.async_send_command.reset_mock()
 
@@ -5195,3 +5195,131 @@ async def test_get_integration_settings(
     assert msg["result"] == {
         CONF_INSTALLER_MODE: installer_mode,
     }
+
+
+async def test_cancel_secure_bootstrap_s2(
+    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the cancel_secure_bootstrap_s2 WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    # Test successful cancellation
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/cancel_secure_bootstrap_s2",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "controller.cancel_secure_bootstrap_s2"
+
+    # Test FailedZWaveCommand is caught
+    with patch(
+        f"{CONTROLLER_PATCH_PREFIX}.async_cancel_secure_bootstrap_s2",
+        side_effect=FailedZWaveCommand("failed_command", 1, "error message"),
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                TYPE: "zwave_js/cancel_secure_bootstrap_s2",
+                ENTRY_ID: entry.entry_id,
+            }
+        )
+        msg = await ws_client.receive_json()
+
+        assert not msg["success"]
+        assert msg["error"]["code"] == "zwave_error"
+        assert msg["error"]["message"] == "zwave_error: Z-Wave error 1 - error message"
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/cancel_secure_bootstrap_s2",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+    # Test sending command with invalid entry ID fails
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/cancel_secure_bootstrap_s2",
+            ENTRY_ID: "invalid_entry_id",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_subscribe_s2_inclusion(
+    hass: HomeAssistant, integration, client, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the subscribe_s2_inclusion websocket command."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_s2_inclusion",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Test receiving DSK request event
+    event = Event(
+        type="validate dsk and enter pin",
+        data={
+            "source": "controller",
+            "event": "validate dsk and enter pin",
+            "dsk": "test_dsk",
+        },
+    )
+    client.driver.receive_event(event)
+
+    msg = await ws_client.receive_json()
+    assert msg["event"] == {
+        "event": "validate dsk and enter pin",
+        "dsk": "test_dsk",
+    }
+
+    # Test sending command with not loaded entry fails
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_s2_inclusion",
+            ENTRY_ID: entry.entry_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_LOADED
+
+    # Test invalid config entry id
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_s2_inclusion",
+            ENTRY_ID: "INVALID",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND

@@ -1,11 +1,13 @@
 """Tests for the TP-Link component."""
 
 from collections import namedtuple
+from dataclasses import replace
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from kasa import (
+    BaseProtocol,
     Device,
     DeviceConfig,
     DeviceConnectionParameters,
@@ -17,17 +19,19 @@ from kasa import (
     Module,
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
-from kasa.protocol import BaseProtocol
 from kasa.smart.modules.alarm import Alarm
+from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.tplink import (
     CONF_AES_KEYS,
     CONF_ALIAS,
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_HOST,
+    CONF_LIVE_VIEW,
     CONF_MODEL,
     CONF_USES_HTTP,
     Credentials,
@@ -49,20 +53,27 @@ MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"
 IP_ADDRESS = "127.0.0.1"
 IP_ADDRESS2 = "127.0.0.2"
+IP_ADDRESS3 = "127.0.0.3"
 ALIAS = "My Bulb"
+ALIAS_CAMERA = "My Camera"
 MODEL = "HS100"
+MODEL_CAMERA = "C210"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEVICE_ID = "123456789ABCDEFGH"
 DEVICE_ID_MAC = "AA:BB:CC:DD:EE:FF"
 DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
+MAC_ADDRESS3 = "66:55:44:33:22:11"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
+DEFAULT_ENTRY_TITLE_CAMERA = f"{ALIAS_CAMERA} {MODEL_CAMERA}"
 CREDENTIALS_HASH_LEGACY = ""
 CONN_PARAMS_LEGACY = DeviceConnectionParameters(
     DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
 )
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
+DEVICE_CONFIG_DICT_LEGACY = {
+    k: v for k, v in DEVICE_CONFIG_LEGACY.to_dict().items() if k != "credentials"
+}
 CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
 CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
@@ -78,7 +89,26 @@ DEVICE_CONFIG_KLAP = DeviceConfig(
 CONN_PARAMS_AES = DeviceConnectionParameters(
     DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
 )
-AES_KEYS = {"private": "foo", "public": "bar"}
+_test_privkey = (
+    "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAKLJKmBWGj6WYo9sewI8vkqar"
+    "Ed5H1JUr8Jj/LEWLTtV6+Mm4mfyEk6YKFHSmIG4AGgrVsGK/EbEkTZk9CwtixNQpBVc36oN2R"
+    "vuWWV38YnP4vI63mNxTA/gQonCsahjN4HfwE87pM7O5z39aeunoYm6Be663t33DbJH1ZUbZjm"
+    "tAgMBAAECgYB1Bn1KaFvRprcQOIJt51E9vNghQbf8rhj0fIEKpdC6mVhNIoUdCO+URNqnh+hP"
+    "SQIx4QYreUlHbsSeABFxOQSDJm6/kqyQsp59nCVDo/bXTtlvcSJ/sU3riqJNxYqEU1iJ0xMvU"
+    "N1VKKTmik89J8e5sN9R0AFfUSJIk7MpdOoD2QJBANTbV27nenyvbqee/ul4frdt2rrPGcGpcV"
+    "QmY87qbbrZgqgL5LMHHD7T/v/I8D1wRog1sBz/AiZGcnv/ox8dHKsCQQDDx8DCGPySSVqKVua"
+    "yUkBNpglN83wiCXZjyEtWIt+aB1A2n5ektE/o8oHnnOuvMdooxvtid7Mdapi2VLHV7VMHAkAE"
+    "d0GjWwnv2cJpk+VnQpbuBEkFiFjS/loZWODZM4Pv2qZqHi3DL9AA5XPBLBcWQufH7dBvG06RP"
+    "QMj5N4oRfUXAkEAuJJkVliqHNvM4OkGewzyFII4+WVYHNqg43dcFuuvtA27AJQ6qYtYXrvp3k"
+    "phI3yzOIhHTNCea1goepSkR5ODFwJBAJCTRbB+P47aEr/xA51ZFHE6VefDBJG9yg6yK4jcOxg"
+    "5ficXEpx8442okNtlzwa+QHpm/L3JOFrHwiEeVqXtiqY="
+)
+_test_pubkey = (
+    "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCiySpgVho+lmKPbHsCPL5KmqxHeR9SVK/CY"
+    "/yxFi07VevjJuJn8hJOmChR0piBuABoK1bBivxGxJE2ZPQsLYsTUKQVXN+qDdkb7llld/GJz+"
+    "LyOt5jcUwP4EKJwrGoYzeB38BPO6TOzuc9/Wnrp6GJugXuut7d9w2yR9WVG2Y5rQIDAQAB"
+)
+AES_KEYS = {"private": _test_privkey, "public": _test_pubkey}
 DEVICE_CONFIG_AES = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
@@ -86,8 +116,22 @@ DEVICE_CONFIG_AES = DeviceConfig(
     uses_http=True,
     aes_keys=AES_KEYS,
 )
-DEVICE_CONFIG_DICT_KLAP = DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)
-DEVICE_CONFIG_DICT_AES = DEVICE_CONFIG_AES.to_dict(exclude_credentials=True)
+CONN_PARAMS_AES_CAMERA = DeviceConnectionParameters(
+    DeviceFamily.SmartIpCamera, DeviceEncryptionType.Aes, https=True, login_version=2
+)
+DEVICE_CONFIG_AES_CAMERA = DeviceConfig(
+    IP_ADDRESS3,
+    credentials=CREDENTIALS,
+    connection_type=CONN_PARAMS_AES_CAMERA,
+    uses_http=True,
+)
+
+DEVICE_CONFIG_DICT_KLAP = {
+    k: v for k, v in DEVICE_CONFIG_KLAP.to_dict().items() if k != "credentials"
+}
+DEVICE_CONFIG_DICT_AES = {
+    k: v for k, v in DEVICE_CONFIG_AES.to_dict().items() if k != "credentials"
+}
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,
@@ -113,6 +157,22 @@ CREATE_ENTRY_DATA_AES = {
     CONF_USES_HTTP: True,
     CONF_AES_KEYS: AES_KEYS,
 }
+CREATE_ENTRY_DATA_AES_CAMERA = {
+    CONF_HOST: IP_ADDRESS3,
+    CONF_ALIAS: ALIAS_CAMERA,
+    CONF_MODEL: MODEL_CAMERA,
+    CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
+    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES_CAMERA.to_dict(),
+    CONF_USES_HTTP: True,
+    CONF_LIVE_VIEW: True,
+    CONF_CAMERA_CREDENTIALS: {"username": "camuser", "password": "campass"},
+}
+SMALLEST_VALID_JPEG = (
+    "ffd8ffe000104a46494600010101004800480000ffdb00430003020202020203020202030303030406040404040408060"
+    "6050609080a0a090809090a0c0f0c0a0b0e0b09090d110d0e0f101011100a0c12131210130f101010ffc9000b08000100"
+    "0101011100ffcc000600101005ffda0008010100003f00d2cf20ffd9"
+)
+SMALLEST_VALID_JPEG_BYTES = bytes.fromhex(SMALLEST_VALID_JPEG)
 
 
 def _load_feature_fixtures():
@@ -239,6 +299,9 @@ def _mocked_device(
     device.modules = {}
     device.features = {}
 
+    # replace device_config to prevent changes affecting between tests
+    device_config = replace(device_config)
+
     if not ip_address:
         ip_address = IP_ADDRESS
     else:
@@ -251,20 +314,27 @@ def _mocked_device(
             for module_name in modules
         }
 
+    device_features = {}
     if features:
-        device.features = {
+        device_features = {
             feature_id: _mocked_feature(feature_id, require_fixture=True)
             for feature_id in features
             if isinstance(feature_id, str)
         }
 
-        device.features.update(
+        device_features.update(
             {
                 feature.id: feature
                 for feature in features
                 if isinstance(feature, Feature)
             }
         )
+    device.features = device_features
+
+    for mod in device.modules.values():
+        mod.get_feature.side_effect = device_features.get
+        mod.has_feature.side_effect = lambda id: id in device_features
+
     device.children = []
     if children:
         for child in children:
@@ -283,6 +353,7 @@ def _mocked_device(
     device.protocol = _mock_protocol()
     device.config = device_config
     device.credentials_hash = credentials_hash
+
     return device
 
 
@@ -297,8 +368,8 @@ def _mocked_feature(
     precision_hint=None,
     choices=None,
     unit=None,
-    minimum_value=0,
-    maximum_value=2**16,  # Arbitrary max
+    minimum_value=None,
+    maximum_value=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -328,11 +399,14 @@ def _mocked_feature(
     feature.unit = unit or fixture.get("unit")
 
     # number
-    feature.minimum_value = minimum_value or fixture.get("minimum_value")
-    feature.maximum_value = maximum_value or fixture.get("maximum_value")
+    min_val = minimum_value or fixture.get("minimum_value")
+    feature.minimum_value = 0 if min_val is None else min_val
+    max_val = maximum_value or fixture.get("maximum_value")
+    feature.maximum_value = 2**16 if max_val is None else max_val
 
     # select
     feature.choices = choices or fixture.get("choices")
+
     return feature
 
 
@@ -344,13 +418,7 @@ def _mocked_light_module(device) -> Light:
     light.state = LightState(
         light_on=True, brightness=light.brightness, color_temp=light.color_temp
     )
-    light.is_color = True
-    light.is_variable_color_temp = True
-    light.is_dimmable = True
-    light.is_brightness = True
-    light.has_effects = False
     light.hsv = (10, 30, 5)
-    light.valid_temperature_range = ColorTempRange(min=4000, max=9000)
     light.hw_info = {"sw_ver": "1.0.0", "hw_ver": "1.0.0"}
 
     async def _set_state(state, *_, **__):
@@ -383,7 +451,6 @@ def _mocked_light_module(device) -> Light:
 
 def _mocked_light_effect_module(device) -> LightEffect:
     effect = MagicMock(spec=LightEffect, name="Mocked light effect")
-    effect.has_effects = True
     effect.has_custom_effects = True
     effect.effect = "Effect1"
     effect.effect_list = ["Off", "Effect1", "Effect2"]
@@ -417,6 +484,17 @@ def _mocked_alarm_module(device):
     alarm.stop = AsyncMock()
 
     return alarm
+
+
+def _mocked_camera_module(device):
+    camera = MagicMock(auto_spec=Camera, name="Mocked camera")
+    camera.is_on = True
+    camera.set_state = AsyncMock()
+    camera.stream_rtsp_url.return_value = (
+        f"rtsp://user:pass@{device.host}:{LOCAL_STREAMING_PORT}/stream1"
+    )
+
+    return camera
 
 
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
@@ -486,6 +564,7 @@ MODULE_TO_MOCK_GEN = {
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
+    Module.Camera: _mocked_camera_module,
 }
 
 

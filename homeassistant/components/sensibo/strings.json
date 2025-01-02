@@ -18,7 +18,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the documentation to get your api key"
+          "api_key": "Follow the [documentation]({url}) to get your api key"
         }
       },
       "reauth_confirm": {
@@ -499,9 +499,6 @@
   "exceptions": {
     "no_target_temperature_in_features": {
       "message": "Current mode doesn't support setting target temperature"
-    },
-    "no_target_temperature": {
-      "message": "No target temperature provided"
     },
     "no_fan_level_in_features": {
       "message": "Current mode doesn't support setting fan level"

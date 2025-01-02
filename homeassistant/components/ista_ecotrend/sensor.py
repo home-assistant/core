@@ -40,6 +40,8 @@ from .coordinator import IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value, get_statistics
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -71,7 +73,6 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
         translation_key=IstaSensorEntity.HEATING,
         suggested_display_precision=0,
         consumption_type=IstaConsumptionType.HEATING,
-        native_unit_of_measurement="units",
         state_class=SensorStateClass.TOTAL,
     ),
     IstaSensorEntityDescription(

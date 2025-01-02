@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeconnect.api import HomeConnectAppliance
+from homeconnect.api import HomeConnectAppliance, HomeConnectError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -14,9 +14,14 @@ from .api import HomeConnectDevice
 
 
 def _generate_appliance_diagnostics(appliance: HomeConnectAppliance) -> dict[str, Any]:
+    try:
+        programs = appliance.get_programs_available()
+    except HomeConnectError:
+        programs = None
     return {
+        "connected": appliance.connected,
         "status": appliance.status,
-        "programs": appliance.get_programs_available(),
+        "programs": programs,
     }
 
 

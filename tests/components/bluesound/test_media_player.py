@@ -11,7 +11,7 @@ from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
-from homeassistant.components.bluesound.services import (
+from homeassistant.components.bluesound.media_player import (
     SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
     SERVICE_SET_TIMER,
@@ -259,7 +259,7 @@ async def test_join(
         blocking=True,
     )
 
-    player_mocks.player_data_secondary.player.add_slave.assert_called_once_with(
+    player_mocks.player_data_secondary.player.add_follower.assert_called_once_with(
         "1.1.1.1", 11000
     )
 
@@ -273,7 +273,7 @@ async def test_unjoin(
     """Test the unjoin action."""
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        master=PairedPlayer("2.2.2.2", 11000),
+        leader=PairedPlayer("2.2.2.2", 11000),
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -287,7 +287,7 @@ async def test_unjoin(
         blocking=True,
     )
 
-    player_mocks.player_data_secondary.player.remove_slave.assert_called_once_with(
+    player_mocks.player_data_secondary.player.remove_follower.assert_called_once_with(
         "1.1.1.1", 11000
     )
 
@@ -297,7 +297,7 @@ async def test_attr_master(
     setup_config_entry: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the media player master."""
+    """Test the media player leader."""
     attr_master = hass.states.get("media_player.player_name1111").attributes[
         ATTR_MASTER
     ]
@@ -305,7 +305,7 @@ async def test_attr_master(
 
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
-        slaves=[PairedPlayer("2.2.2.2", 11000)],
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
@@ -325,23 +325,62 @@ async def test_attr_bluesound_group(
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the media player grouping."""
+    """Test the media player grouping for leader."""
     attr_bluesound_group = hass.states.get(
         "media_player.player_name1111"
     ).attributes.get("bluesound_group")
     assert attr_bluesound_group is None
 
-    updated_status = dataclasses.replace(
-        player_mocks.player_data.status_long_polling_mock.get(),
-        group_name="player-name1111+player-name2222",
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        followers=[PairedPlayer("2.2.2.2", 11000)],
     )
-    player_mocks.player_data.status_long_polling_mock.set(updated_status)
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
     # give the long polling loop a chance to update the state; this could be any async call
     await hass.async_block_till_done()
 
     attr_bluesound_group = hass.states.get(
         "media_player.player_name1111"
+    ).attributes.get("bluesound_group")
+
+    assert attr_bluesound_group == ["player-name1111", "player-name2222"]
+
+
+async def test_attr_bluesound_group_for_follower(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    setup_config_entry_secondary: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media player grouping for follower."""
+    attr_bluesound_group = hass.states.get(
+        "media_player.player_name2222"
+    ).attributes.get("bluesound_group")
+    assert attr_bluesound_group is None
+
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        followers=[PairedPlayer("2.2.2.2", 11000)],
+    )
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data_secondary.sync_status_long_polling_mock.get(),
+        leader=PairedPlayer("1.1.1.1", 11000),
+    )
+    player_mocks.player_data_secondary.sync_status_long_polling_mock.set(
+        updated_sync_status
+    )
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    attr_bluesound_group = hass.states.get(
+        "media_player.player_name2222"
     ).attributes.get("bluesound_group")
 
     assert attr_bluesound_group == ["player-name1111", "player-name2222"]

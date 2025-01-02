@@ -57,7 +57,6 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_hvac_modes = list(HVACMODE_REVERSE)
     _attr_preset_modes = list(PRESETMODES)
     _attr_translation_key = "duotecno"
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def current_temperature(self) -> float | None:

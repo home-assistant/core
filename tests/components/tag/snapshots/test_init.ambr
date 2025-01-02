@@ -5,8 +5,6 @@
       'items': list([
         dict({
           'id': 'test tag id',
-          'migrated': True,
-          'name': 'test tag name',
         }),
         dict({
           'device_id': 'some_scanner',
@@ -15,6 +13,27 @@
         }),
         dict({
           'id': '1234567890',
+        }),
+      ]),
+    }),
+    'key': 'tag',
+    'minor_version': 3,
+    'version': 1,
+  })
+# ---
+# name: test_tag_scanned
+  dict({
+    'data': dict({
+      'items': list([
+        dict({
+          'id': 'test tag id',
+        }),
+        dict({
+          'id': 'test tag id 2',
+        }),
+        dict({
+          'device_id': 'some_scanner',
+          'id': 'new tag',
         }),
       ]),
     }),

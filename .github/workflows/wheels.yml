@@ -76,18 +76,37 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # Add additional pip wheel build constraints
+            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
 
+      - name: Write pip wheel build constraints
+        run: |
+          (
+            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
+            # this caused the numpy builds to fail
+            # https://github.com/scikit-build/ninja-python-distributions/issues/274
+            echo "ninja==1.11.1.1"
+          ) > build_constraints.txt
+
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: env_file
           path: ./.env_file
           include-hidden-files: true
           overwrite: true
 
+      - name: Upload build_constraints
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: build_constraints
+          path: ./build_constraints.txt
+          overwrite: true
+
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -99,7 +118,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -123,6 +142,11 @@ jobs:
         with:
           name: env_file
 
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
+
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
         with:
@@ -143,7 +167,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-dev"
-          skip-binary: aiohttp;multidict;yarl
+          skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
@@ -166,6 +190,11 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: env_file
+
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
 
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
@@ -196,33 +225,6 @@ jobs:
           # resolving packages on 32-bits systems (like armhf, armv7).
 
           split -l $(expr $(expr $(cat requirements_all.txt | wc -l) + 1) / 3) requirements_all_wheels_${{ matrix.arch }}.txt requirements_all.txt
-
-      - name: Create requirements for cython<3
-        if: matrix.abi == 'cp312'
-        run: |
-          # Some dependencies still require 'cython<3'
-          # and don't yet use isolated build environments.
-          # Build these first.
-          # pydantic: https://github.com/pydantic/pydantic/issues/7689
-
-          touch requirements_old-cython.txt
-          cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
-
-      - name: Build wheels (old cython)
-        uses: home-assistant/wheels@2024.11.0
-        if: matrix.abi == 'cp312'
-        with:
-          abi: ${{ matrix.abi }}
-          tag: musllinux_1_2
-          arch: ${{ matrix.arch }}
-          wheels-key: ${{ secrets.WHEELS_KEY }}
-          env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pydantic;pymicro-vad;yarl
-          constraints: "homeassistant/package_constraints.txt"
-          requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_old-cython.txt"
-          pip: "'cython<3'"
 
       - name: Build wheels (part 1)
         uses: home-assistant/wheels@2024.11.0

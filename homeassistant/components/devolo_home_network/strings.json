@@ -6,11 +6,17 @@
         "description": "[%key:common::config_flow::description::confirm_setup%]",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "IP address of your devolo Home Network device. This can be found in the devolo Home Network App on the device dashboard."
         }
       },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password you protected the device with."
         }
       },
       "zeroconf_confirm": {

@@ -15,9 +15,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_PAUSED,
+    VacuumActivity,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -53,7 +51,7 @@ async def test_vacuum(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumActivity.DOCKED
     assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
@@ -95,18 +93,21 @@ async def test_vacuum_with_error(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_ERROR
+    assert vacuum.state == VacuumActivity.ERROR
 
 
 @pytest.mark.parametrize(
     ("robot_data", "expected_state"),
     [
-        ({"displayCode": "DC_CAT_DETECT"}, STATE_DOCKED),
-        ({"isDFIFull": True}, STATE_ERROR),
-        ({"robotCycleState": "CYCLE_STATE_CAT_DETECT"}, STATE_PAUSED),
+        ({"displayCode": "DC_CAT_DETECT"}, VacuumActivity.DOCKED),
+        ({"isDFIFull": True}, VacuumActivity.ERROR),
+        (
+            {"robotCycleState": "CYCLE_STATE_CAT_DETECT"},
+            VacuumActivity.PAUSED,
+        ),
     ],
 )
-async def test_vacuum_states(
+async def test_activities(
     hass: HomeAssistant,
     mock_account_with_litterrobot_4: MagicMock,
     robot_data: dict[str, str | bool],
@@ -150,7 +151,7 @@ async def test_commands(
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumActivity.DOCKED
 
     extra = extra or {}
     data = {ATTR_ENTITY_ID: VACUUM_ENTITY_ID, **extra.get("data", {})}

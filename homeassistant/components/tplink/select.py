@@ -91,6 +91,7 @@ class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
         await self._feature.set_value(option)
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_option = self._feature.value
+        self._attr_current_option = cast(str | None, self._feature.value)
+        return True
