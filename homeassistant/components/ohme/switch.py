@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from ohme import ApiException, ChargerStatus, OhmeApiClient
+from ohme import ApiException, OhmeApiClient
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -27,25 +27,6 @@ class OhmeSwitchDescription(OhmeEntityDescription, SwitchEntityDescription):
     turn_on_fn: Callable[[OhmeApiClient], Coroutine[Any, Any, Any]]
     turn_off_fn: Callable[[OhmeApiClient], Coroutine[Any, Any, Any]]
 
-
-SWITCH_CHARGE_SESSION = [
-    OhmeSwitchDescription(
-        key="pause_charge",
-        translation_key="pause_charge",
-        is_on_fn=lambda client: client.status is ChargerStatus.PAUSED,
-        turn_on_fn=lambda client: client.async_pause_charge(),
-        turn_off_fn=lambda client: client.async_resume_charge(),
-        available_fn=lambda client: client.status is not ChargerStatus.UNPLUGGED,
-    ),
-    OhmeSwitchDescription(
-        key="max_charge",
-        translation_key="max_charge",
-        is_on_fn=lambda client: client.max_charge,
-        turn_on_fn=lambda client: client.async_max_charge(state=True),
-        turn_off_fn=lambda client: client.async_max_charge(state=False),
-        available_fn=lambda client: client.status is not ChargerStatus.UNPLUGGED,
-    ),
-]
 
 SWITCH_DEVICE_INFO = [
     OhmeSwitchDescription(
@@ -98,7 +79,6 @@ async def async_setup_entry(
     """Set up switches."""
     coordinators = config_entry.runtime_data
     coordinator_map = [
-        (SWITCH_CHARGE_SESSION, coordinators.charge_session_coordinator),
         (SWITCH_DEVICE_INFO, coordinators.device_info_coordinator),
     ]
 

@@ -69,12 +69,6 @@
       }
     },
     "switch": {
-      "pause_charge": {
-        "name": "Pause charge"
-      },
-      "max_charge": {
-        "name": "Max charge"
-      },
       "lock_buttons": {
         "name": "Lock buttons"
       },
