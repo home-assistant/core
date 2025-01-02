@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_HOSTNAME, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -180,10 +180,8 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={
-                CONF_HOSTNAME: self._discovery_info.name.replace(
-                    "._http._tcp.local.", ""
-                ),
-                CONF_HOST: self._discovery_info.host,
+                "hostname": self._discovery_info.name.replace("._http._tcp.local.", ""),
+                "host": self._discovery_info.host,
             },
             errors=errors,
         )
