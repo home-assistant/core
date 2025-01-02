@@ -39,6 +39,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # CONF_IP_ADDRESS is only in user_input if the user has manually typed in the IP address
             if CONF_IP_ADDRESS in user_input and self._hub is None:
                 # When the user has input the IP manually, we need to gather more information
                 # from the Hub before we can continue setup.
