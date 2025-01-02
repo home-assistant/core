@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from urllib import parse
 
 from aiohttp import ClientError, ClientTimeout, web
-from urllib import parse
 from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
@@ -31,7 +31,7 @@ def async_generate_playback_proxy_url(
     return url_format.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        filename=parse.quote(filename, safe="")
+        filename=parse.quote(filename, safe=""),
         stream_res=stream_res,
         vod_type=vod_type,
     )

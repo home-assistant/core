@@ -22,10 +22,10 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.components.media_source import Unresolvable
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -58,7 +58,9 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
         config_entry_id
     )
     if config_entry is None:
-        raise Unresolvable(f"Could not find Reolink config entry id '{config_entry_id}'.")
+        raise Unresolvable(
+            f"Could not find Reolink config entry id '{config_entry_id}'."
+        )
     return config_entry.runtime_data.host
 
 
