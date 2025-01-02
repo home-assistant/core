@@ -1,50 +1,36 @@
 """Test the Homee config flow."""
 
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import AsyncMock
 
 from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
 
-from homeassistant.components.homee import config_flow
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOMEE_ID, HOMEE_IP, TESTPASS, TESTUSER
+from .conftest import HOMEE_ID, HOMEE_IP, HOMEE_NAME, TESTPASS, TESTUSER
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_homee", "mock_config_entry", "mock_setup_entry")
 async def test_config_flow(
     hass: HomeAssistant,
-    mock_homee: MagicMock,  # pylint: disable=unused-argument
-    mock_config_entry: MockConfigEntry,  # pylint: disable=unused-argument
-    mock_setup_entry: MagicMock,  # pylint: disable=unused-argument
 ) -> None:
     """Test the complete config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    expected = {
-        "data_schema": config_flow.AUTH_SCHEMA,
-        "description_placeholders": None,
-        "errors": {},
-        "flow_id": ANY,
-        "handler": DOMAIN,
-        "step_id": "user",
-        "type": FlowResultType.FORM,
-        "last_step": None,
-        "preview": None,
-    }
-    assert result == expected
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-    flow_id = result["flow_id"]
-
-    final_result = await hass.config_entries.flow.async_configure(
-        flow_id,
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         user_input={
             CONF_HOST: HOMEE_IP,
             CONF_USERNAME: TESTUSER,
@@ -52,22 +38,15 @@ async def test_config_flow(
         },
     )
 
-    assert final_result["type"] == FlowResultType.CREATE_ENTRY
-    assert final_result["flow_id"] == flow_id
-    assert final_result["handler"] == DOMAIN
-    assert final_result["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert result["data"] == {
         "host": HOMEE_IP,
         "username": TESTUSER,
         "password": TESTPASS,
     }
-    assert final_result["options"] == {}
-    assert final_result["context"] == {
-        "source": "user",
-        "unique_id": HOMEE_ID,
-    }
-    assert final_result["title"] == f"{HOMEE_ID} ({HOMEE_IP})"
-    assert final_result["minor_version"] == 1
-    assert final_result["version"] == 1
+    assert result["title"] == f"{HOMEE_NAME} ({HOMEE_IP})"
+    assert result["result"].unique_id == HOMEE_ID
 
 
 @pytest.mark.parametrize(
@@ -85,6 +64,7 @@ async def test_config_flow(
 )
 async def test_config_flow_errors(
     hass: HomeAssistant,
+    mock_homee: AsyncMock,
     side_eff: Exception,
     error: dict[str, str],
 ) -> None:
@@ -95,26 +75,36 @@ async def test_config_flow_errors(
     assert result["type"] == FlowResultType.FORM
     flow_id = result["flow_id"]
 
-    with patch(
-        "pyHomee.Homee.get_access_token",
-        side_effect=side_eff,
-    ):
-        final_result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input={
-                CONF_HOST: HOMEE_IP,
-                CONF_USERNAME: TESTUSER,
-                CONF_PASSWORD: TESTPASS,
-            },
-        )
+    mock_homee.get_access_token.side_effect = side_eff
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={
+            CONF_HOST: HOMEE_IP,
+            CONF_USERNAME: TESTUSER,
+            CONF_PASSWORD: TESTPASS,
+        },
+    )
 
-    assert final_result["type"] == FlowResultType.FORM
-    assert final_result["errors"] == error
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == error
+
+    mock_homee.get_access_token.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={
+            CONF_HOST: HOMEE_IP,
+            CONF_USERNAME: TESTUSER,
+            CONF_PASSWORD: TESTPASS,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_homee")
 async def test_flow_already_configured(
     hass: HomeAssistant,
-    mock_homee: MagicMock,  # pylint: disable=unused-argument
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config flow aborts when already configured."""
@@ -123,10 +113,10 @@ async def test_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.FORM
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_HOST: HOMEE_IP,
@@ -134,5 +124,5 @@ async def test_flow_already_configured(
             CONF_PASSWORD: TESTPASS,
         },
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

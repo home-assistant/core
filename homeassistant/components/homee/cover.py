@@ -32,7 +32,7 @@ POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITI
 def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute:
     """Return the attribute used for opening/closing the cover."""
     # We assume, that no device has UP_DOWN and OPEN_CLOSE, but only one of them.
-    if open_close := node.get_attribute_by_type(AttributeType.UP_DOWN) is None:
+    if (open_close := node.get_attribute_by_type(AttributeType.UP_DOWN)) is None:
         open_close = node.get_attribute_by_type(AttributeType.OPEN_CLOSE)
 
     return open_close
@@ -110,9 +110,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         self._attr_supported_features = get_cover_features(
             node, self._open_close_attribute
         )
-        self._device_class = get_device_class(node)
-        self._attr_name = None
-        self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{self._node.id}-{self._open_close_attribute.id}"
+        self._attr_device_class = get_device_class(node)
+
+        self._attr_unique_id = f"{self._attr_unique_id}-{self._open_close_attribute.id}"
 
     @property
     def current_cover_position(self) -> int | None:
@@ -152,7 +152,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         if self._open_close_attribute is not None:
             return (
                 self._open_close_attribute.get_value() == 3
-                if not self.is_reversed(self._open_close_attribute)
+                if not self._open_close_attribute.is_reversed
                 else self._open_close_attribute.get_value() == 4
             )
 
@@ -164,7 +164,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         if self._open_close_attribute is not None:
             return (
                 self._open_close_attribute.get_value() == 4
-                if not self.is_reversed(self._open_close_attribute)
+                if not self._open_close_attribute.is_reversed
                 else self._open_close_attribute.get_value() == 3
             )
 
@@ -178,7 +178,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             return attribute.get_value() == attribute.maximum
 
         if self._open_close_attribute is not None:
-            if not self.is_reversed(self._open_close_attribute):
+            if not self._open_close_attribute.is_reversed:
                 return self._open_close_attribute.get_value() == 1
 
             return self._open_close_attribute.get_value() == 0
@@ -194,14 +194,14 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if not self.is_reversed(self._open_close_attribute):
+        if not self._open_close_attribute.is_reversed:
             await self.async_set_value(self._open_close_attribute, 0)
         else:
             await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if not self.is_reversed(self._open_close_attribute):
+        if not self._open_close_attribute.is_reversed:
             await self.async_set_value(self._open_close_attribute, 1)
         else:
             await self.async_set_value(self._open_close_attribute, 0)
@@ -225,14 +225,20 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        if not self.is_reversed(AttributeType.SLAT_ROTATION_IMPULSE):
+        slat_attribute = self._node.get_attribute_by_type(
+            AttributeType.SLAT_ROTATION_IMPULSE
+        )
+        if not slat_attribute.is_reversed:
             await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 2)
         else:
             await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 1)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        if not self.is_reversed(AttributeType.SLAT_ROTATION_IMPULSE):
+        slat_attribute = self._node.get_attribute_by_type(
+            AttributeType.SLAT_ROTATION_IMPULSE
+        )
+        if not slat_attribute.is_reversed:
             await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 1)
         else:
             await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 2)

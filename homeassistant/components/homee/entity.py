@@ -34,6 +34,11 @@ class HomeeNodeEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Add the homee binary sensor device to home assistant."""
         self.async_on_remove(self._node.add_on_changed_listener(self._on_node_updated))
+        self.async_on_remove(
+            await self._entry.runtime_data.add_connection_listener(
+                self._on_connection_changed
+            )
+        )
 
     @property
     def available(self) -> bool:
@@ -63,15 +68,6 @@ class HomeeNodeEntity(Entity):
         """Check if an attribute of the given type exists."""
         return attribute_type in self._node.attribute_map
 
-    def is_reversed(self, attribute_type) -> bool:
-        """Check if movement direction is reversed."""
-        attribute = self._node.get_attribute_by_type(attribute_type)
-        if hasattr(attribute.options, "reverse_control_ui"):
-            if attribute.options.reverse_control_ui:
-                return True
-
-        return False
-
     async def async_set_value(self, attribute_type: int, value: float) -> None:
         """Set an attribute value on the homee node."""
         await self.async_set_value_by_id(
@@ -86,10 +82,8 @@ class HomeeNodeEntity(Entity):
     def _on_node_updated(self, node: HomeeNode) -> None:
         self.schedule_update_ha_state()
 
-
-class AttributeNotFoundException(Exception):
-    """Raised if a requested attribute does not exist on a homee node."""
-
-    def __init__(self, attributeType) -> None:
-        """Initialize the exception."""
-        self.attributeType = attributeType
+    async def _on_connection_changed(self, connected: bool) -> None:
+        if not connected:
+            self._node.state = 0
+        else:
+            await self.async_update()

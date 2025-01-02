@@ -12,16 +12,15 @@
     "step": {
       "user": {
         "title": "Configure homee",
-        "description": "Manually enter the ip address of the homee you want to connect.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP address ofyour Homee.",
+          "host": "The IP address of your Homee.",
           "username": "The username for your Homee.",
-          "password": "The password for your user."
+          "password": "The password for your Homee."
         }
       }
     }

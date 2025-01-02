@@ -2,11 +2,12 @@
 
 import logging
 
-from pyHomee import Homee
+from pyHomee import Homee, HomeeAuthFailedException, HomeeConnectionFailedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -33,11 +34,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
 
     # Start the homee websocket connection as a new task
     # and wait until we are connected
+    try:
+        await homee.get_access_token()
+    except HomeeConnectionFailedException as exc:
+        raise ConfigEntryNotReady(
+            f"Connection to Homee failed: {exc.__cause__}"
+        ) from exc
+    except HomeeAuthFailedException as exc:
+        raise ConfigEntryNotReady(
+            f"Authentication to Homee failed: {exc.__cause__}"
+        ) from exc
+
     hass.loop.create_task(homee.run())
     await homee.wait_until_connected()
 
     entry.runtime_data = homee
     entry.async_on_unload(homee.disconnect)
+
+    async def _connection_update_callback(connected: bool) -> None:
+        """Call when the device is notified of changes."""
+        if connected:
+            _LOGGER.warning("Reconnected to Homee at %s", entry.data[CONF_HOST])
+        else:
+            _LOGGER.warning("Disconnected from Homee at %s", entry.data[CONF_HOST])
+
+    await homee.add_connection_listener(_connection_update_callback)
 
     # create device register entry
     device_registry = dr.async_get(hass)
