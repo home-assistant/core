@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pyvesync import VeSync
 
@@ -16,7 +15,7 @@ from .const import UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class VeSyncDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
     def __init__(self, hass: HomeAssistant, manager: VeSync) -> None:
@@ -30,10 +29,15 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
+        return await self.hass.async_add_executor_job(self.update_data_all)
+
+    def update_data_all(self) -> None:
+        """Update all the devices."""
+
         # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
-        await self.hass.async_add_executor_job(self._manager.update_all_devices)
+        self._manager.update_all_devices()
         # Vesync updates energy on applicable devices every 6 hours
-        return await self.hass.async_add_executor_job(self._manager.update_energy)
+        self._manager.update_energy()
