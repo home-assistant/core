@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes custom binary sensor entities."""
 
-    is_on: Callable[[VeSyncBaseDevice], bool] | None = None
+    is_on: Callable[[VeSyncBaseDevice], bool]
 
 
 SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
