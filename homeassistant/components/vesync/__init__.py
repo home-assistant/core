@@ -147,6 +147,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         in_use_platforms.append(Platform.SWITCH)
     if hass.data[DOMAIN][VS_FANS]:
         in_use_platforms.append(Platform.FAN)
+        in_use_platforms.append(Platform.BINARY_SENSOR)
     if hass.data[DOMAIN][VS_LIGHTS]:
         in_use_platforms.append(Platform.LIGHT)
     if hass.data[DOMAIN][VS_SENSORS]:
