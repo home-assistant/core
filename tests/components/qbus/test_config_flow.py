@@ -14,19 +14,17 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.util.json import JsonObjectType
 
-from .const import FIXTURE_PAYLOAD_CONFIG, TOPIC_CONFIG
-
-from tests.common import load_json_object_fixture
+from .const import TOPIC_CONFIG
 
 _PAYLOAD_DEVICE_STATE = '{"id":"UL1","properties":{"connected":true},"type":"event"}'
 
 
-async def test_step_discovery_confirm_create_entry(hass: HomeAssistant) -> None:
+async def test_step_discovery_confirm_create_entry(
+    hass: HomeAssistant, payload_config: JsonObjectType
+) -> None:
     """Test mqtt confirm step and entry creation."""
-
-    payload_config = load_json_object_fixture(FIXTURE_PAYLOAD_CONFIG, DOMAIN)
-
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
         topic="cloudapp/QBUSMQTTGW/UL1/state",
@@ -123,10 +121,10 @@ async def test_handle_gateway_topic_when_online(
     assert result.get("reason") == "discovery_in_progress"
 
 
-async def test_handle_config_topic(hass: HomeAssistant) -> None:
+async def test_handle_config_topic(
+    hass: HomeAssistant, payload_config: JsonObjectType
+) -> None:
     """Test handling of config topic."""
-
-    payload_config = load_json_object_fixture(FIXTURE_PAYLOAD_CONFIG, DOMAIN)
 
     discovery = MqttServiceInfo(
         subscribed_topic=TOPIC_CONFIG,
@@ -168,11 +166,10 @@ async def test_handle_device_topic_missing_config(hass: HomeAssistant) -> None:
     assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_handle_device_topic_device_not_found(hass: HomeAssistant) -> None:
+async def test_handle_device_topic_device_not_found(
+    hass: HomeAssistant, payload_config: JsonObjectType
+) -> None:
     """Test handling of device topic when device is not found."""
-
-    payload_config = load_json_object_fixture(FIXTURE_PAYLOAD_CONFIG, DOMAIN)
-
     discovery = MqttServiceInfo(
         subscribed_topic="cloudapp/QBUSMQTTGW/+/state",
         topic="cloudapp/QBUSMQTTGW/UL2/state",

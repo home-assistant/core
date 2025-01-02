@@ -2,7 +2,6 @@
 
 import json
 
-from homeassistant.components.qbus.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -10,14 +9,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonObjectType
 
-from .const import FIXTURE_PAYLOAD_CONFIG, TOPIC_CONFIG
+from .const import TOPIC_CONFIG
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_mqtt_message,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 _PAYLOAD_SWITCH_STATE_ON = '{"id":"UL10","properties":{"value":true},"type":"state"}'
@@ -39,13 +35,13 @@ async def test_switch_turn_on_off(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     mock_config_entry: MockConfigEntry,
+    payload_config: JsonObjectType,
 ) -> None:
     """Test turning on and off."""
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    payload_config = load_json_object_fixture(FIXTURE_PAYLOAD_CONFIG, DOMAIN)
     async_fire_mqtt_message(hass, TOPIC_CONFIG, json.dumps(payload_config))
     await hass.async_block_till_done()
 
