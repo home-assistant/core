@@ -82,7 +82,7 @@ async def test_sensors_aranet_radiation(
     entity = entity_registry.async_get("sensor.aranet_12345_battery")
     device = device_registry.async_get(entity.device_id)
     assert device.name == "Aranet☢ 12345"
-    assert device.model == "ARANET_RADIATION"
+    assert device.model == "Aranet Radiation"
     assert device.sw_version == "v1.4.38"
     assert device.manufacturer == "SAF Tehnika"
 
@@ -143,7 +143,7 @@ async def test_sensors_aranet2(
     entity = entity_registry.async_get("sensor.aranet2_12345_battery")
     device = device_registry.async_get(entity.device_id)
     assert device.name == "Aranet2 12345"
-    assert device.model == "ARANET2"
+    assert device.model == "Aranet2"
     assert device.sw_version == "v1.4.4"
     assert device.manufacturer == "SAF Tehnika"
 
@@ -218,7 +218,7 @@ async def test_sensors_aranet4(
     entity = entity_registry.async_get("sensor.aranet4_12345_battery")
     device = device_registry.async_get(entity.device_id)
     assert device.name == "Aranet4 12345"
-    assert device.model == "ARANET4"
+    assert device.model == "Aranet4"
     assert device.sw_version == "v1.2.0"
     assert device.manufacturer == "SAF Tehnika"
 
@@ -295,7 +295,7 @@ async def test_sensors_aranetrn(
     entity = entity_registry.async_get("sensor.aranetrn_12345_battery")
     device = device_registry.async_get(entity.device_id)
     assert device.name == "AranetRn+ 12345"
-    assert device.model == "ARANET_RADON"
+    assert device.model == "Aranet Radon Plus"
     assert device.sw_version == "v1.6.4"
     assert device.manufacturer == "SAF Tehnika"
 
