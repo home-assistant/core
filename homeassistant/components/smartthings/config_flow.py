@@ -54,6 +54,7 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.installed_app_id = None
         self.refresh_token = None
         self.endpoints_initialized = False
+        self.public_key = None
 
     async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Occurs when a previously entry setup fails and is re-initiated."""
@@ -138,6 +139,7 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
                 app, client = await create_app(self.hass, self.api)
                 self.oauth_client_secret = client.client_secret
                 self.oauth_client_id = client.client_id
+                self.public_key = app.webhook_public_key
             setup_smartapp(self.hass, app)
             self.app_id = app.app_id
 
@@ -252,6 +254,7 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_LOCATION_ID: self.location_id,
             CONF_APP_ID: self.app_id,
             CONF_INSTALLED_APP_ID: self.installed_app_id,
+            "public_key": self.public_key,
         }
 
         location = await self.api.location(data[CONF_LOCATION_ID])

@@ -10,7 +10,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import Attribute, Capability, SmartThings, AppEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -113,7 +113,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         smart_app = manager.smartapps.get(entry.data[CONF_APP_ID])
         if not smart_app:
             # Validate and setup the app.
-            app = await api.app(entry.data[CONF_APP_ID])
+            app = AppEntity(
+                api._service,
+                {
+                    "appId": entry.data[CONF_APP_ID],
+                    "appName": entry.title,
+                    "description": "Home Assistant integration",
+                    "appType": "WEBHOOK_SMART_APP",
+                    "classifications": ["AUTOMATION"],
+                    "displayName": entry.title,
+                    "webhookSmartApp": {
+                        "targetUrl": "a/webhook",
+                        "publicKey": entry.data["public_key"],
+                    }
+                }
+            )
             smart_app = setup_smartapp(hass, app)
 
         # Validate and retrieve the installed app.
@@ -130,6 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_CLIENT_SECRET],
             entry.data[CONF_REFRESH_TOKEN],
         )
+        print(token.__dict__)
         hass.config_entries.async_update_entry(
             entry,
             data={
