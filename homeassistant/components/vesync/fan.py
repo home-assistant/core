@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +84,7 @@ def _setup_entities(devices, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncFanHA(VeSyncDevice, FanEntity):
+class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = (
@@ -100,6 +100,16 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         """Initialize the VeSync fan device."""
         super().__init__(fan)
         self.smartfan = fan
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
+
+    @property
+    def details(self):
+        """Provide access to the device details dictionary."""
+        return self.device.details
 
     @property
     def percentage(self) -> int | None:
@@ -213,3 +223,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if percentage is None:
             percentage = 50
         self.set_percentage(percentage)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self.device.turn_off()
