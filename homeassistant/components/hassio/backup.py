@@ -27,12 +27,10 @@ from homeassistant.components.backup import (
     BackupReaderWriterError,
     CreateBackupEvent,
     Folder,
+    IncorrectPasswordError,
     NewBackup,
     WrittenBackup,
 )
-
-# pylint: disable-next=hass-component-root-import
-from homeassistant.components.backup.manager import IncorrectPasswordError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
