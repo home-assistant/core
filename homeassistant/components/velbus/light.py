@@ -122,13 +122,10 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
     @api_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the Velbus light to turn on."""
-        if ATTR_FLASH in kwargs:
-            if kwargs[ATTR_FLASH] == FLASH_LONG:
-                attr, *args = "set_led_state", "slow"
-            elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                attr, *args = "set_led_state", "fast"
-            else:
-                attr, *args = "set_led_state", "on"
+        if ATTR_FLASH in kwargs and kwargs[ATTR_FLASH] == FLASH_LONG:
+            attr, *args = "set_led_state", "slow"
+        elif ATTR_FLASH in kwargs and kwargs[ATTR_FLASH] == FLASH_SHORT:
+            attr, *args = "set_led_state", "fast"
         else:
             attr, *args = "set_led_state", "on"
         await getattr(self._channel, attr)(*args)
