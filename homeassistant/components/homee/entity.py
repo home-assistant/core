@@ -1,6 +1,6 @@
 """Base Entities for Homee integration."""
 
-from pyHomee.const import AttributeType, NodeProfile
+from pyHomee.const import AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeNode
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -43,7 +43,7 @@ class HomeeNodeEntity(Entity):
     @property
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return self._node.state <= 1
+        return self._node.state == NodeState.AVAILABLE
 
     async def async_update(self) -> None:
         """Fetch new state data for this node."""
@@ -84,6 +84,6 @@ class HomeeNodeEntity(Entity):
 
     async def _on_connection_changed(self, connected: bool) -> None:
         if not connected:
-            self._node.state = 0
+            self._node.state = NodeState.HOST_UNAVAILABLE
         else:
             await self.async_update()
