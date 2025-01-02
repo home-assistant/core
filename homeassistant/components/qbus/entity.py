@@ -31,6 +31,7 @@ class QbusEntity(Entity, ABC):
     """Representation of a Qbus entity."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
@@ -42,7 +43,6 @@ class QbusEntity(Entity, ABC):
         ref_id = format_ref_id(mqtt_output.ref_id)
 
         self._attr_unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
-        self._attr_name = None
 
         self._attr_device_info = DeviceInfo(
             name=mqtt_output.name.title(),
