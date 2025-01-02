@@ -1,7 +1,6 @@
 """Constants for VeSync Component."""
 
 DOMAIN = "vesync"
-SERVICE_UPDATE_DEVS = "update_devices"
 
 VS_SWITCHES = "switches"
 VS_FANS = "fans"
