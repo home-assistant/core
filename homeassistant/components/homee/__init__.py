@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
         host=entry.data[CONF_HOST],
         user=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        device="pymee_" + hass.config.location_name,
+        device="HA_" + hass.config.location_name,
         reconnect_interval=10,
         max_retries=100,
     )
