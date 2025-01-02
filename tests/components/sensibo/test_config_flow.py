@@ -41,6 +41,8 @@ async def test_basic_setup(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 2
+    assert result["title"] == "Sensibo"
+    assert result["result"].unique_id == "firstnamelastname"
     assert result["data"] == {
         CONF_API_KEY: "1234567890",
     }
