@@ -246,7 +246,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Ecowitt sensors."""
     ecowitt = entry.runtime_data
-    entities = []
+    entities: list[EcowittSensorEntity] = []
     added_keys = set()
 
     def _generate_entity(sensor: EcoWittSensor, mapping: Any) -> EcowittSensorEntity:
@@ -271,26 +271,31 @@ async def async_setup_entry(
 
         return EcowittSensorEntity(sensor, description)
 
-    def _new_sensor(sensor: EcoWittSensor) -> None:
-        """Add a new sensor entity if it doesn't already exist."""
-        if sensor.key in added_keys:
-            _LOGGER.debug("Sensor already added: %s", sensor.key)
-            return
+    def _new_sensor(*sensors: EcoWittSensor) -> None:
+        """Add new sensor entities if they don't already exist."""
+        new_sensor_entities: list[EcowittSensorEntity] = []
+        for sensor in sensors:
+            if sensor.key in added_keys:
+                _LOGGER.debug("Sensor already added: %s", sensor.key)
+                continue
 
-        if sensor.stype not in ECOWITT_SENSORS_MAPPING:
-            return
+            if sensor.stype not in ECOWITT_SENSORS_MAPPING:
+                continue
 
-        # Ignore unsupported locale metrics
-        if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
-            return
-        if sensor.stype in _IMPERIAL and hass.config.units is not US_CUSTOMARY_SYSTEM:
-            return
+            # Ignore unsupported locale metrics
+            if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
+                continue
+            if (
+                sensor.stype in _IMPERIAL
+                and hass.config.units is not US_CUSTOMARY_SYSTEM
+            ):
+                continue
 
-        mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
-        entity = _generate_entity(sensor, mapping)
-        entities.append(entity)
-        added_keys.add(sensor.key)
-        async_add_entities([entity])
+            mapping = ECOWITT_SENSORS_MAPPING[sensor.stype]
+            entity = _generate_entity(sensor, mapping)
+            new_sensor_entities.append(entity)
+            added_keys.add(sensor.key)
+        async_add_entities(new_sensor_entities)
 
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -326,8 +331,7 @@ async def async_setup_entry(
     entry.async_on_unload(lambda: ecowitt.new_sensor_cb.remove(_new_sensor))
 
     # Add all sensors that are already known
-    for sensor in ecowitt.sensors.values():
-        _new_sensor(sensor)
+    _new_sensor(*ecowitt.sensors.values())
 
 
 class EcowittSensorEntity(EcowittEntity, RestoreSensor):
