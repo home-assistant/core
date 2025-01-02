@@ -51,8 +51,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.tado: Tado = Tado
         self.home_id: int
         self.home_name: str
-        self.zones: list[dict[str, dict]] = []
-        self.devices: list[dict[str, dict]] = []
+        self.zones: list[dict[Any, Any]] = []
+        self.devices: list[dict[Any, Any]] = []
         self.data: dict[str, dict] = {
             "device": {},
             "mobile_device": {},
