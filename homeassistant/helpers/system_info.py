@@ -5,7 +5,6 @@ from __future__ import annotations
 from functools import cache
 from getpass import getuser
 import logging
-import os
 import platform
 from typing import TYPE_CHECKING, Any
 
@@ -13,6 +12,7 @@ from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
+from homeassistant.util.system_info import is_official_image
 
 from .hassio import is_hassio
 from .importlib import async_import_module
@@ -21,12 +21,6 @@ from .singleton import singleton
 _LOGGER = logging.getLogger(__name__)
 
 _DATA_MAC_VER = "system_info_mac_ver"
-
-
-@cache
-def is_official_image() -> bool:
-    """Return True if Home Assistant is running in an official container."""
-    return os.path.isfile("/OFFICIAL_IMAGE")
 
 
 @singleton(_DATA_MAC_VER)
