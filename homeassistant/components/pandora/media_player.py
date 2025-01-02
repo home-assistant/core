@@ -174,6 +174,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Station %s is not in list", source)
             return
         _LOGGER.debug("Setting station %s, %d", source, station_index)
+        assert self._pianobar is not None
         self._send_station_list_command()
         self._pianobar.sendline(f"{station_index}")
         self._pianobar.expect("\r\n")
@@ -181,6 +182,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _send_station_list_command(self) -> None:
         """Send a station list command."""
+        assert self._pianobar is not None
         self._pianobar.send("s")
         try:
             self._pianobar.expect("Select station:", timeout=1)
@@ -201,6 +203,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _query_for_playing_status(self) -> str | None:
         """Query system for info about current track."""
+        assert self._pianobar is not None
         self._clear_buffer()
         self._pianobar.send("i")
         try:
@@ -263,6 +266,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         so we have to detect state by checking the ticker.
 
         """
+        assert self._pianobar is not None
         (
             cur_minutes,
             cur_seconds,
@@ -280,6 +284,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _log_match(self) -> None:
         """Log grabbed values from console."""
+        assert self._pianobar is not None
         _LOGGER.debug(
             "Before: %s\nMatch: %s\nAfter: %s",
             repr(self._pianobar.before),
@@ -289,6 +294,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _send_pianobar_command(self, service_cmd: str) -> None:
         """Send a command to Pianobar."""
+        assert self._pianobar is not None
         command = CMD_MAP.get(service_cmd)
         _LOGGER.debug("Sending pinaobar command %s for %s", command, service_cmd)
         if command is None:
@@ -299,6 +305,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
 
     def _update_stations(self) -> None:
         """List defined Pandora stations."""
+        assert self._pianobar is not None
         self._send_station_list_command()
         station_lines = self._pianobar.before.decode("utf-8")
         _LOGGER.debug("Getting stations: %s", station_lines)
@@ -319,6 +326,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         This is necessary because there are a bunch of 00:00 in the buffer
 
         """
+        assert self._pianobar is not None
         try:
             while not self._pianobar.expect(".+", timeout=0.1):
                 pass
