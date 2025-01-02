@@ -32,8 +32,8 @@ def is_virtual_env() -> bool:
 def is_docker_env() -> bool:
     """Return True if we run in a container env."""
     return (
-        Path("/run/.containerenv").exists()
-        or Path("/.dockerenv").exists()
+        Path("/.dockerenv").exists().exists()
+        or Path("/run/.containerenv")
         or "KUBERNETES_SERVICE_HOST" in os.environ
         or is_official_image()
     )
