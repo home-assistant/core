@@ -218,6 +218,10 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
+        if not include_homeassistant and include_database:
+            raise HomeAssistantError(
+                "Cannot create a backup with database but without Home Assistant"
+            )
         manager = self._hass.data[DATA_MANAGER]
 
         include_addons_set: supervisor_backups.AddonSet | set[str] | None = None
@@ -380,8 +384,16 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
-        if restore_homeassistant and not restore_database:
-            raise HomeAssistantError("Cannot restore Home Assistant without database")
+        manager = self._hass.data[DATA_MANAGER]
+        # The backup manager has already checked that the backup exists so we don't need to
+        # check that here.
+        backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
+        if (
+            backup
+            and restore_homeassistant
+            and restore_database != backup.database_included
+        ):
+            raise HomeAssistantError("Restore database must match backup")
         if not restore_homeassistant and restore_database:
             raise HomeAssistantError("Cannot restore database without Home Assistant")
         restore_addons_set = set(restore_addons) if restore_addons else None
@@ -391,7 +403,6 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        manager = self._hass.data[DATA_MANAGER]
         restore_location: str | None
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
