@@ -21,6 +21,7 @@ class EcowittEntity(Entity):
     def __init__(self, sensor: EcoWittSensor) -> None:
         """Construct the entity."""
         self.ecowitt: EcoWittSensor = sensor
+
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={
