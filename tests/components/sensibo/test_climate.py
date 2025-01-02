@@ -817,7 +817,7 @@ async def test_climate_pure_boost(
             ATTR_GEO_INTEGRATION: False,
             ATTR_INDOOR_INTEGRATION: True,
             ATTR_OUTDOOR_INTEGRATION: True,
-            ATTR_SENSITIVITY: "Sensitive",
+            ATTR_SENSITIVITY: "sensitive",
         },
         blocking=True,
     )
@@ -1153,7 +1153,7 @@ async def test_climate_full_ac_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == HVACMode.OFF
+    assert state.state == HVACMode.HEAT
 
     mock_client.async_set_ac_states = AsyncMock()
 
