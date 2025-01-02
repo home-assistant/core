@@ -1,5 +1,6 @@
 """Config flow to configure Heos."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
@@ -22,6 +23,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+AUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
 
 def format_title(host: str) -> str:
     """Format the title for config entries."""
@@ -38,6 +48,52 @@ async def _validate_host(host: str, errors: dict[str, str]) -> bool:
         return False
     finally:
         await heos.disconnect()
+    return True
+
+
+async def _validate_auth(
+    user_input: dict[str, str], heos: Heos, errors: dict[str, str]
+) -> bool:
+    """Validate authentication by signing in or out, otherwise populate errors if needed."""
+    authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
+    if authentication and CONF_USERNAME not in user_input:
+        errors[CONF_USERNAME] = "username_missing"
+        return False
+    if authentication and CONF_PASSWORD not in user_input:
+        errors[CONF_PASSWORD] = "password_missing"
+        return False
+
+    if user_input:
+        # Attempt to login
+        try:
+            await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        except CommandFailedError as err:
+            if err.error_id in (6, 8, 10):  # Auth-specific errors
+                errors["base"] = "invalid_auth"
+                _LOGGER.warning("Failed to sign-in to HEOS Account: %s", err)
+            else:
+                errors["base"] = "unknown"
+                _LOGGER.exception("Unexpected error occurred during sign-in")
+            return False
+        except HeosError:
+            errors["base"] = "unknown"
+            _LOGGER.exception("Unexpected error occurred during sign-in")
+            return False
+        else:
+            _LOGGER.debug(
+                "Successfully signed-in to HEOS Account: %s",
+                heos.signed_in_username,
+            )
+    else:
+        # Log out
+        try:
+            await heos.sign_out()
+        except HeosError:
+            errors["base"] = "unknown"
+            _LOGGER.exception("Unexpected error occurred during sign-out")
+            return False
+        else:
+            _LOGGER.debug("Successfully signed-out of HEOS Account")
     return True
 
 
@@ -117,15 +173,30 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication after auth failure event."""
+        return await self.async_step_reauth_confirm()
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_USERNAME): selector.TextSelector(),
-        vol.Optional(CONF_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
-    }
-)
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Validate account credentials and update options."""
+        errors: dict[str, str] = {}
+        entry = self._get_reauth_entry()
+        if user_input is not None:
+            heos = cast(Heos, entry.runtime_data.controller_manager.controller)
+            if await _validate_auth(user_input, heos, errors):
+                return self.async_update_reload_and_abort(entry, options=user_input)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            errors=errors,
+            data_schema=self.add_suggested_values_to_schema(
+                AUTH_SCHEMA, user_input or entry.options
+            ),
+        )
 
 
 class HeosOptionsFlowHandler(OptionsFlow):
@@ -137,59 +208,16 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
-            if authentication and CONF_USERNAME not in user_input:
-                errors[CONF_USERNAME] = "username_missing"
-            if authentication and CONF_PASSWORD not in user_input:
-                errors[CONF_PASSWORD] = "password_missing"
-
-            if not errors:
-                heos = cast(
-                    Heos, self.config_entry.runtime_data.controller_manager.controller
-                )
-
-                if user_input:
-                    # Attempt to login
-                    try:
-                        await heos.sign_in(
-                            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                        )
-                    except CommandFailedError as err:
-                        if err.error_id in (6, 8, 10):  # Auth-specific errors
-                            errors["base"] = "invalid_auth"
-                            _LOGGER.warning(
-                                "Failed to sign-in to HEOS Account: %s", err
-                            )
-                        else:
-                            errors["base"] = "unknown"
-                            _LOGGER.exception(
-                                "Unexpected error occurred during sign-in"
-                            )
-                    except HeosError:
-                        errors["base"] = "unknown"
-                        _LOGGER.exception("Unexpected error occurred during sign-in")
-                    else:
-                        _LOGGER.debug(
-                            "Successfully signed-in to HEOS Account: %s",
-                            heos.signed_in_username,
-                        )
-                else:
-                    # Log out
-                    try:
-                        await heos.sign_out()
-                    except HeosError:
-                        errors["base"] = "unknown"
-                        _LOGGER.exception("Unexpected error occurred during sign-out")
-                    else:
-                        _LOGGER.debug("Successfully signed-out of HEOS Account")
-
-            if not errors:
+            heos = cast(
+                Heos, self.config_entry.runtime_data.controller_manager.controller
+            )
+            if await _validate_auth(user_input, heos, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
             errors=errors,
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, user_input or self.config_entry.options
+                AUTH_SCHEMA, user_input or self.config_entry.options
             ),
         )
