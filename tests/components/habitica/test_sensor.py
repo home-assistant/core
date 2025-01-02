@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
-from homeassistant.components.habitica.sensor import HabitipySensorEntity
+from homeassistant.components.habitica.sensor import HabiticaSensorEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,7 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_habitica", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -44,7 +44,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_habitica", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -64,9 +64,9 @@ async def test_sensor_deprecation_issue(
 
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabitipySensorEntity.TODOS}",
+            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.TODOS}",
         )
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabitipySensorEntity.DAILIES}",
+            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.DAILIES}",
         )

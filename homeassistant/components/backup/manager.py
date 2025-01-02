@@ -728,7 +728,7 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} {HAVERSION}"
+            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
         )
         new_backup, self._backup_task = await self._reader_writer.async_create_backup(
             agent_ids=agent_ids,
@@ -828,6 +828,9 @@ class BackupManager:
                 restore_database=restore_database,
                 restore_folders=restore_folders,
                 restore_homeassistant=restore_homeassistant,
+            )
+            self.async_on_backup_event(
+                RestoreBackupEvent(stage=None, state=RestoreBackupState.COMPLETED)
             )
         except Exception:
             self.async_on_backup_event(

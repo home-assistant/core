@@ -7,10 +7,23 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
+from pyheos import (
+    Credentials,
+    Heos,
+    HeosError,
+    HeosOptions,
+    HeosPlayer,
+    const as heos_const,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -56,11 +69,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
     host = entry.data[CONF_HOST]
+    credentials: Credentials | None = None
+    if entry.options:
+        credentials = Credentials(
+            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
+        )
+
     # Setting all_progress_events=False ensures that we only receive a
     # media position update upon start of playback or when media changes
-    controller = Heos(host, all_progress_events=False)
+    controller = Heos(
+        HeosOptions(
+            host,
+            all_progress_events=False,
+            auto_reconnect=True,
+            credentials=credentials,
+        )
+    )
     try:
-        await controller.connect(auto_reconnect=True)
+        await controller.connect()
     # Auto reconnect only operates if initial connection was successful.
     except HeosError as error:
         await controller.disconnect()
@@ -83,12 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             favorites = await controller.get_favorites()
         else:
             _LOGGER.warning(
-                (
-                    "%s is not logged in to a HEOS account and will be unable to"
-                    " retrieve HEOS favorites: Use the 'heos.sign_in' service to"
-                    " sign-in to a HEOS account"
-                ),
-                host,
+                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
             )
         inputs = await controller.get_input_sources()
     except HeosError as error:
