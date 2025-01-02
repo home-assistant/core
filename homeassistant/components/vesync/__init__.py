@@ -13,15 +13,24 @@ from .common import async_process_devices
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_COORDINATOR,
     VS_DISCOVERY,
     VS_FANS,
+    VS_HUMIDIFIERS,
     VS_LIGHTS,
     VS_MANAGER,
     VS_SENSORS,
     VS_SWITCHES,
 )
+from .coordinator import VeSyncDataCoordinator
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,10 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
+    coordinator = VeSyncDataCoordinator(hass, manager)
+
+    # Store coordinator at domain level since only single integration instance is permitted.
+    hass.data[DOMAIN][VS_COORDINATOR] = coordinator
+
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
     sensors = hass.data[DOMAIN][VS_SENSORS] = []
+    humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS] = []
     platforms = []
 
     if device_dict[VS_SWITCHES]:
@@ -70,6 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         sensors.extend(device_dict[VS_SENSORS])
         platforms.append(Platform.SENSOR)
 
+    if device_dict[VS_HUMIDIFIERS]:
+        humidifiers.extend(device_dict[VS_HUMIDIFIERS])
+        platforms.append(Platform.HUMIDIFIER)
+
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
@@ -79,12 +98,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         fans = hass.data[DOMAIN][VS_FANS]
         lights = hass.data[DOMAIN][VS_LIGHTS]
         sensors = hass.data[DOMAIN][VS_SENSORS]
+        humidifiers = hass.data[DOMAIN][VS_HUMIDIFIERS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
         sensor_devs = dev_dict.get(VS_SENSORS, [])
+        humidifier_devs = dev_dict.get(VS_HUMIDIFIERS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -125,6 +146,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if new_sensors and not sensors:
             sensors.extend(new_sensors)
             hass.async_create_task(forward_setups(config_entry, [Platform.SENSOR]))
+
+        humidifiers_set = set(humidifier_devs)
+        new_humidifiers = list(humidifiers_set.difference(humidifiers))
+        if new_humidifiers and humidifiers:
+            humidifiers.extend(new_humidifiers)
+            async_dispatcher_send(
+                hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), new_humidifiers
+            )
+            return
+        if new_humidifiers and not humidifiers:
+            humidifiers.extend(new_humidifiers)
+            hass.async_create_task(forward_setups(config_entry, [Platform.HUMIDIFIER]))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery

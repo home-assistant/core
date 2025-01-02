@@ -63,9 +63,10 @@ async def test_async_setup_entry__no_devices(
 
 
 async def test_async_setup_entry__loads_fans(
-    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan
+    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
     """Test setup connects to vesync and loads fan platform."""
+    fan = Mock()
     fans = [fan]
     manager.fans = fans
     manager._dev_list = {

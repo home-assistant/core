@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fan_state[Air Purifier 131s][devices]
+# name: test_humidifier_state[Air Purifier 131s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -33,65 +33,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 131s][entities]
+# name: test_humidifier_state[Air Purifier 131s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'preset_modes': list([
-          'auto',
-          'sleep',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'fan',
-      'entity_category': None,
-      'entity_id': 'fan.air_purifier_131s',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': None,
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 57>,
-      'translation_key': 'vesync',
-      'unique_id': 'air-purifier',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 131s][fan.air_purifier_131s]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 131s',
-      'preset_modes': list([
-        'auto',
-        'sleep',
-      ]),
-      'supported_features': <FanEntityFeature: 57>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_131s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_fan_state[Air Purifier 200s][devices]
+# name: test_humidifier_state[Air Purifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -125,70 +71,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 200s][entities]
+# name: test_humidifier_state[Air Purifier 200s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'preset_modes': list([
-          'sleep',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'fan',
-      'entity_category': None,
-      'entity_id': 'fan.air_purifier_200s',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': None,
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 57>,
-      'translation_key': 'vesync',
-      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 200s][fan.air_purifier_200s]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'child_lock': False,
-      'friendly_name': 'Air Purifier 200s',
-      'mode': 'manual',
-      'night_light': 'off',
-      'percentage': 33,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
-        'sleep',
-      ]),
-      'screen_status': True,
-      'supported_features': <FanEntityFeature: 57>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_200s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_fan_state[Air Purifier 400s][devices]
+# name: test_humidifier_state[Air Purifier 400s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -222,97 +109,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 400s][entities]
+# name: test_humidifier_state[Air Purifier 400s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'preset_modes': list([
-          'auto',
-          'sleep',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'fan',
-      'entity_category': None,
-      'entity_id': 'fan.air_purifier_400s',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': None,
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 57>,
-      'translation_key': 'vesync',
-      'unique_id': '400s-purifier',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'child_lock': False,
-      'friendly_name': 'Air Purifier 400s',
-      'mode': 'manual',
-      'night_light': 'off',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
-        'auto',
-        'sleep',
-      ]),
-      'screen_status': True,
-      'supported_features': <FanEntityFeature: 57>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_400s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_fan_state[Air Purifier 400s][fan.air_purifier_400s_updated]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'child_lock': False,
-      'friendly_name': 'Air Purifier 400s',
-      'mode': 'manual',
-      'night_light': 'on',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
-        'auto',
-        'sleep',
-      ]),
-      'screen_status': True,
-      'supported_features': <FanEntityFeature: 57>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_400s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_fan_state[Air Purifier 600s][devices]
+# name: test_humidifier_state[Air Purifier 600s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -346,72 +147,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 600s][entities]
+# name: test_humidifier_state[Air Purifier 600s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'preset_modes': list([
-          'auto',
-          'sleep',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'fan',
-      'entity_category': None,
-      'entity_id': 'fan.air_purifier_600s',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': None,
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'supported_features': <FanEntityFeature: 57>,
-      'translation_key': 'vesync',
-      'unique_id': '600s-purifier',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
-# name: test_fan_state[Air Purifier 600s][fan.air_purifier_600s]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'child_lock': False,
-      'friendly_name': 'Air Purifier 600s',
-      'mode': 'manual',
-      'night_light': 'off',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
-        'auto',
-        'sleep',
-      ]),
-      'screen_status': True,
-      'supported_features': <FanEntityFeature: 57>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_600s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_fan_state[Dimmable Light][devices]
+# name: test_humidifier_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -445,11 +185,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Dimmable Light][entities]
+# name: test_humidifier_state[Dimmable Light][entities]
   list([
   ])
 # ---
-# name: test_fan_state[Dimmer Switch][devices]
+# name: test_humidifier_state[Dimmer Switch][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -483,11 +223,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Dimmer Switch][entities]
+# name: test_humidifier_state[Dimmer Switch][entities]
   list([
   ])
 # ---
-# name: test_fan_state[Humidifier 200s][devices]
+# name: test_humidifier_state[Humidifier 200s][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -521,11 +261,71 @@
     }),
   ])
 # ---
-# name: test_fan_state[Humidifier 200s][entities]
+# name: test_humidifier_state[Humidifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'max_humidity': 80,
+        'min_humidity': 30,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'humidifier',
+      'entity_category': None,
+      'entity_id': 'humidifier.humidifier_200s_none',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '200s-humidifier',
+      'unit_of_measurement': None,
+    }),
   ])
 # ---
-# name: test_fan_state[Humidifier 600S][devices]
+# name: test_humidifier_state[Humidifier 200s][humidifier.humidifier_200s_none]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'automatic_stop_reach_target': True,
+      'current_humidity': 35,
+      'display': True,
+      'friendly_name': 'Humidifier 200s None',
+      'humidity': 40,
+      'humidity_high': False,
+      'max_humidity': 80,
+      'min_humidity': 30,
+      'mist_level': 0,
+      'mist_virtual_level': 6,
+      'mode': 'manual',
+      'supported_features': <HumidifierEntityFeature: 0>,
+      'water_lacks': True,
+      'water_tank_lifted': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_200s_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_humidifier_state[Humidifier 600S][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -559,11 +359,74 @@
     }),
   ])
 # ---
-# name: test_fan_state[Humidifier 600S][entities]
+# name: test_humidifier_state[Humidifier 600S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'max_humidity': 80,
+        'min_humidity': 30,
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'humidifier',
+      'entity_category': None,
+      'entity_id': 'humidifier.humidifier_600s_none',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '600s-humidifier',
+      'unit_of_measurement': None,
+    }),
   ])
 # ---
-# name: test_fan_state[Outlet][devices]
+# name: test_humidifier_state[Humidifier 600S][humidifier.humidifier_600s_none]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'automatic_stop_reach_target': True,
+      'current_humidity': 35,
+      'display': True,
+      'friendly_name': 'Humidifier 600S None',
+      'humidity': 40,
+      'humidity_high': False,
+      'max_humidity': 80,
+      'min_humidity': 30,
+      'mist_level': 0,
+      'mist_virtual_level': 6,
+      'mode': 'manual',
+      'night_light_brightness': 10,
+      'supported_features': <HumidifierEntityFeature: 0>,
+      'warm_mist_enabled': False,
+      'warm_mist_level': 0,
+      'water_lacks': True,
+      'water_tank_lifted': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.humidifier_600s_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_humidifier_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -597,11 +460,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Outlet][entities]
+# name: test_humidifier_state[Outlet][entities]
   list([
   ])
 # ---
-# name: test_fan_state[Temperature Light][devices]
+# name: test_humidifier_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -635,11 +498,11 @@
     }),
   ])
 # ---
-# name: test_fan_state[Temperature Light][entities]
+# name: test_humidifier_state[Temperature Light][entities]
   list([
   ])
 # ---
-# name: test_fan_state[Wall Switch][devices]
+# name: test_humidifier_state[Wall Switch][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -673,7 +536,7 @@
     }),
   ])
 # ---
-# name: test_fan_state[Wall Switch][entities]
+# name: test_humidifier_state[Wall Switch][entities]
   list([
   ])
 # ---

@@ -26,7 +26,7 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Air Purifier 400s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-400s-detail.json")
     ],
     "Air Purifier 600s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
@@ -68,6 +68,20 @@ def mock_devices_response(
             fixture[0],
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_json_object_fixture(fixture[2], DOMAIN),
+        )
+
+
+def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) -> None:
+    """Build a response for the Helpers.call_api method for air_purifier_400s with updated data."""
+
+    device_name = "Air Purifier 400s"
+    for fixture in DEVICE_FIXTURES[device_name]:
+        requests_mock.request(
+            fixture[0],
+            f"https://smartapi.vesync.com{fixture[1]}",
+            json=load_json_object_fixture(
+                "air-purifier-400s-detail-updated.json", DOMAIN
+            ),
         )
 
 

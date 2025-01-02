@@ -4,11 +4,33 @@ DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
 
+UPDATE_INTERVAL = 60
+"""
+Update interval for DataCoordinator.
+
+The vesync daily quota formula is 3200 + 1500 * device_count.
+
+An interval of 60 seconds amounts 1440 calls/day which
+would be below the 4700 daily quota. For 2 devices, the
+total would be 2880.
+
+Using 30 seconds interval gives 8640 for 3 devices which
+exceeds the quota of 7700.
+"""
+
 VS_SWITCHES = "switches"
 VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
+VS_HUMIDIFIERS = "humidifiers"
+VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+
+VS_HUMIDIFIER_MODE_AUTO = "auto"
+VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
+VS_HUMIDIFIER_MODE_MANUAL = "manual"
+VS_HUMIDIFIER_MODE_SLEEP = "sleep"
+
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
@@ -30,6 +52,8 @@ DEV_TYPE_TO_HA = {
     "ESWD16": "walldimmer",
     "ESL100": "bulb-dimmable",
     "ESL100CW": "bulb-tunable-white",
+    "Classic200S": "humidifier",
+    "Classic300S": "humidifier",
 }
 
 SKU_TO_BASE_DEVICE = {
@@ -68,4 +92,12 @@ SKU_TO_BASE_DEVICE = {
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-WEU": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-WUS": "EverestAir",  # Alt ID Model EverestAir
+    # Humidifiers
+    "Classic200S": "Classic200S",
+    "Classic300S": "Classic300S",
+    "LUH-A601S-WUSB": "Classic300S",
 }
+"""Mapping of air purifier device type to base type."""
+
+HUMIDIFER_BASE_DEVICES = ["Classic300S", "Classic200S"]
+"""Listing of humidifiers being handled."""
