@@ -1,0 +1,40 @@
+# Service ID
+pot_transfer:
+  fields:
+    transfer_account:
+      required: false
+      selector:
+        device:
+          filter:
+            - integration: monzo
+              model: Current Account
+            - integration: monzo
+              model: Joint Account
+    transfer_pots:
+      required: true
+      selector:
+        device:
+          multiple: true
+          filter:
+            - integration: monzo
+              model: Pot
+    transfer_type:
+      required: true
+      selector:
+        select:
+          options:
+            - deposit
+            - withdraw
+          translation_key: transfer_type
+    amount:
+      required: true
+      advanced: false
+      example: 12.34
+      default: 1.00
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          step: 0.01
+          unit_of_measurement: GBP
+          mode: box
