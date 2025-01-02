@@ -102,7 +102,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         self.smartfan = fan
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.device_status == "on"
 
