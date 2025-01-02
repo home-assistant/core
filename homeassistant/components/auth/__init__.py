@@ -129,6 +129,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from ipaddress import ip_address
 from logging import getLogger
 from typing import Any, cast
 import uuid
@@ -141,6 +142,7 @@ from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
+    RefreshFlowContext,
     RefreshToken,
     User,
 )
@@ -318,7 +320,11 @@ class TokenView(HomeAssistantView):
         )
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, request.remote
+                refresh_token,
+                RefreshFlowContext(
+                    headers=request.headers,
+                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+                ),
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -386,7 +392,11 @@ class TokenView(HomeAssistantView):
 
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, request.remote
+                refresh_token,
+                RefreshFlowContext(
+                    headers=request.headers,
+                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+                ),
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -543,7 +553,13 @@ async def websocket_create_long_lived_access_token(
     )
 
     try:
-        access_token = hass.auth.async_create_access_token(refresh_token)
+        access_token = hass.auth.async_create_access_token(
+            refresh_token,
+            RefreshFlowContext(
+                headers=connection.request.headers,
+                ip_address=ip_address(connection.request.remote),  # type: ignore[arg-type]
+            ),
+        )
     except InvalidAuthError as exc:
         connection.send_error(msg["id"], websocket_api.ERR_UNAUTHORIZED, str(exc))
         return

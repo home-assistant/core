@@ -26,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from . import auth_store, jwt_wrapper, models
 from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
-from .models import AuthFlowContext, AuthFlowResult
+from .models import AuthFlowContext, AuthFlowResult, RefreshFlowContext
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 from .providers.homeassistant import HassAuthProvider
 
@@ -595,12 +595,17 @@ class AuthManager:
 
     @callback
     def async_create_access_token(
-        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+        self,
+        refresh_token: models.RefreshToken,
+        context: RefreshFlowContext,
     ) -> str:
         """Create a new access token."""
-        self.async_validate_refresh_token(refresh_token, remote_ip)
+        self.async_validate_refresh_token(refresh_token, context)
 
-        self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
+        self._store.async_log_refresh_token_usage(
+            refresh_token,
+            str(context["ip_address"]) if "ip_address" in context else None,
+        )
 
         now = int(time.time())
         expire_seconds = int(refresh_token.access_token_expiration.total_seconds())
@@ -639,14 +644,16 @@ class AuthManager:
 
     @callback
     def async_validate_refresh_token(
-        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+        self,
+        refresh_token: models.RefreshToken,
+        context: RefreshFlowContext,
     ) -> None:
         """Validate that a refresh token is usable.
 
         Will raise InvalidAuthError on errors.
         """
         if provider := self._async_resolve_provider(refresh_token):
-            provider.async_validate_refresh_token(refresh_token, remote_ip)
+            provider.async_validate_refresh_token(refresh_token, context)
 
     @callback
     def async_validate_access_token(self, token: str) -> models.RefreshToken | None:

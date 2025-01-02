@@ -7,6 +7,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal
 
 from aiohttp import web
+from aiohttp.web import Request
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
@@ -51,6 +52,7 @@ class ActiveConnection:
         "supported_features",
         "handlers",
         "binary_handlers",
+        "request",
     )
 
     def __init__(
@@ -60,6 +62,7 @@ class ActiveConnection:
         send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken,
+        request: Request,
     ) -> None:
         """Initialize an active connection."""
         self.logger = logger
@@ -75,6 +78,7 @@ class ActiveConnection:
             self.hass.data[const.DOMAIN]
         )
         self.binary_handlers: list[BinaryHandler | None] = []
+        self.request = request
         current_connection.set(self)
 
     def __repr__(self) -> str:
