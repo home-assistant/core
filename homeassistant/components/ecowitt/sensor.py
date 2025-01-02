@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import dataclasses
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 import logging
-import time
 from typing import Any, Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes, EcoWittStation
@@ -39,6 +38,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
@@ -344,12 +344,15 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
         super().__init__(sensor)
         self.entity_description = description
         self.restored_value: StateType | datetime | date | Decimal = None
+        self.restored_last_reported: datetime | None = None
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if self._attr_native_value is not None:
             return
+        if (sensor_last_state := await self.async_get_last_state()) is not None:
+            self.restored_last_reported = sensor_last_state.last_reported
 
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
@@ -367,7 +370,9 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
     def available(self) -> bool:
         """Return whether the state is based on actual reading from device."""
         if self.ecowitt.value is not None:
-            return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()
-        if self.restored_value:
-            return True
+            return super().available
+        if self.restored_last_reported:
+            return (
+                self.restored_last_reported + timedelta(minutes=5)
+            ) > dt_util.utcnow()
         return False

@@ -1,7 +1,6 @@
 """Support for Ecowitt Weather Stations."""
 
 import dataclasses
-import time
 from typing import Final
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
@@ -75,8 +74,3 @@ class EcowittBinarySensorEntity(EcowittEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.ecowitt.value)
-
-    @property
-    def available(self) -> bool:
-        """Return whether the state is based on actual reading from device."""
-        return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()

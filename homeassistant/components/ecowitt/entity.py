@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from aioecowitt import EcoWittSensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,3 +40,8 @@ class EcowittEntity(Entity):
 
         self.ecowitt.update_cb.append(_update_state)
         self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))
+
+    @property
+    def available(self) -> bool:
+        """Return whether the state is based on actual reading from device."""
+        return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()
