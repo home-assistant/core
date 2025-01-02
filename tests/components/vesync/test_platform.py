@@ -20,7 +20,7 @@ from .common import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_update(
+async def test_entity_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     requests_mock: requests_mock.Mocker,
@@ -82,8 +82,8 @@ async def test_coordinator_update(
     assert hass.states.get("sensor.outlet_current_voltage").state == "129.0"
 
     # Test energy update
-    # pyvesync only updates energy parameters once every 6 hours and hence the 21600.
-    freezer.tick(timedelta(seconds=21600))
+    # pyvesync only updates energy parameters once every 6 hours.
+    freezer.tick(timedelta(hours=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
 
