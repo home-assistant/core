@@ -154,7 +154,7 @@ async def async_setup_entry(
             vol.Required(ATTR_GEO_INTEGRATION): bool,
             vol.Required(ATTR_INDOOR_INTEGRATION): bool,
             vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
+            vol.Required(ATTR_SENSITIVITY): vol.In(["normal", "sensitive"]),
         },
         "async_enable_pure_boost",
     )
@@ -168,7 +168,7 @@ async def async_setup_entry(
             vol.Optional(ATTR_FAN_MODE): str,
             vol.Optional(ATTR_SWING_MODE): str,
             vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
-            vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
+            vol.Optional(ATTR_LIGHT): vol.In(["on", "off", "dim"]),
         },
         "async_full_ac_state",
     )
@@ -473,7 +473,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             "enabled": True,
         }
         if sensitivity is not None:
-            params["sensitivity"] = sensitivity[0]
+            params["sensitivity"] = sensitivity[0].upper()
         if indoor_integration is not None:
             params["measurementsIntegration"] = indoor_integration
         if ac_integration is not None:
@@ -512,6 +512,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 UnitOfTemperature.FAHRENHEIT,
                 UnitOfTemperature.CELSIUS,
             )
+
+        if smart_type == "feelslike":
+            smart_type = "feelsLike"
 
         params: dict[str, str | bool | float | dict] = {
             "enabled": True,
