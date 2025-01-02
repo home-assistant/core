@@ -23,7 +23,7 @@ type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 
 # HUB CREATION #
-class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
     """Abstract representation of an inverter.
 
     A HUB or a data update coordinator is a HASS Object that automatically polls
@@ -72,7 +72,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:  # Timeline is a list not a dict
                 self.data[key] = entity_dict[key]
 
-    async def init_and_store(self) -> dict[str, Any]:
+    async def init_and_store(self) -> dict[str, str | float | int]:
         """Init API and store the data provided."""
         await self.api.init()
         self.store_data(self.api.storage)
@@ -96,7 +96,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection"
             )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch and store newest data from API.
 
         This is the place to where entities can get their data.
