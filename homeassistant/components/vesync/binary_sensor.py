@@ -57,7 +57,7 @@ async def async_setup_entry(
     for device in hass.data[DOMAIN][VS_FANS]:
         for description in SENSOR_DESCRIPTIONS:
             if rgetattr(device, description.key) is not None:
-                entities.append(VeSyncBinarySensor(description, device))  # noqa: PERF401
+                entities.append(VeSyncBinarySensor(device, description))  # noqa: PERF401
     async_add_entities(entities)
 
 
@@ -66,8 +66,8 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
 
     def __init__(
         self,
-        description: VeSyncBinarySensorEntityDescription,
         device: VeSyncBaseEntity,
+        description: VeSyncBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device)
