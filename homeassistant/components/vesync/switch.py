@@ -79,11 +79,6 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
         super().__init__(plug, coordinator)
         self.smartplug = plug
 
-    def update(self) -> None:
-        """Update outlet details and energy usage."""
-        self.smartplug.update()
-        self.smartplug.update_energy()
-
 
 class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     """Handle representation of VeSync Light Switch."""
