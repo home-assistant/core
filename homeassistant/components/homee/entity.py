@@ -30,6 +30,7 @@ class HomeeNodeEntity(Entity):
             sw_version=self._get_software_version(),
             via_device=(DOMAIN, self._entry.runtime_data.settings.uid),
         )
+        self._host_connected = entry.runtime_data.connected
 
     async def async_added_to_hass(self) -> None:
         """Add the homee binary sensor device to home assistant."""
@@ -43,7 +44,7 @@ class HomeeNodeEntity(Entity):
     @property
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return self._node.state == NodeState.AVAILABLE
+        return (self._node.state == NodeState.AVAILABLE) and self._host_connected
 
     async def async_update(self) -> None:
         """Fetch new state data for this node."""
@@ -83,7 +84,5 @@ class HomeeNodeEntity(Entity):
         self.schedule_update_ha_state()
 
     async def _on_connection_changed(self, connected: bool) -> None:
-        if not connected:
-            self._node.state = NodeState.HOST_UNAVAILABLE
-        else:
-            await self.async_update()
+        self._host_connected = connected
+        self.schedule_update_ha_state()
