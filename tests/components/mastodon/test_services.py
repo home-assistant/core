@@ -2,11 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from syrupy.assertion import SnapshotAssertion
+import pytest
 
 from homeassistant.components.mastodon.const import (
     ATTR_CONFIG_ENTRY_ID,
+    ATTR_CONTENT_WARNING,
     ATTR_STATUS,
+    ATTR_VISIBILITY,
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
@@ -17,11 +19,35 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("payload", "kwargs"),
+    [
+        (
+            {
+                ATTR_STATUS: "test toot",
+            },
+            {"status": "test toot", "spoiler_text": None, "visibility": None},
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_VISIBILITY: "private"},
+            {"status": "test toot", "spoiler_text": None, "visibility": "private"},
+        ),
+        (
+            {
+                ATTR_STATUS: "test toot",
+                ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_VISIBILITY: "private",
+            },
+            {"status": "test toot", "spoiler_text": "Spoiler", "visibility": "private"},
+        ),
+    ],
+)
 async def test_service_post(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
+    payload: dict[str, str],
+    kwargs: dict[str, str | None],
 ) -> None:
     """Test the post service."""
 
@@ -32,10 +58,12 @@ async def test_service_post(
         SERVICE_POST,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            ATTR_STATUS: "test toot",
-        },
+        }
+        | payload,
         blocking=True,
         return_response=False,
     )
 
-    assert mock_mastodon_client.status_post.assert_called_once
+    mock_mastodon_client.status_post.assert_called_with(**kwargs)
+
+    mock_mastodon_client.status_post.reset_mock()
