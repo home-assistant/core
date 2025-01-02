@@ -206,10 +206,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             if self.device_data.temp_unit == "C"
             else UnitOfTemperature.FAHRENHEIT
         )
-        self._attr_supported_features = self.get_features()
 
-    def get_features(self) -> ClimateEntityFeature:
-        """Get supported features."""
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         for key in self.device_data.full_features:
             if key in FIELD_TO_FLAG:
