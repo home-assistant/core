@@ -96,6 +96,4 @@ class RussoundBaseEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        await self._client.unregister_state_update_callbacks(
-            self._state_update_callback
-        )
+        self._client.unregister_state_update_callbacks(self._state_update_callback)

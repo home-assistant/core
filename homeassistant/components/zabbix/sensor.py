@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyzabbix import ZabbixAPI
 import voluptuous as vol
+from zabbix_utils import ZabbixAPI
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,

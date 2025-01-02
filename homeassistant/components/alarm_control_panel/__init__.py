@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from functools import partial
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from propcache import cached_property
 import voluptuous as vol
@@ -27,26 +26,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
-    _DEPRECATED_FORMAT_NUMBER,
-    _DEPRECATED_FORMAT_TEXT,
-    _DEPRECATED_SUPPORT_ALARM_ARM_AWAY,
-    _DEPRECATED_SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    _DEPRECATED_SUPPORT_ALARM_ARM_HOME,
-    _DEPRECATED_SUPPORT_ALARM_ARM_NIGHT,
-    _DEPRECATED_SUPPORT_ALARM_ARM_VACATION,
-    _DEPRECATED_SUPPORT_ALARM_TRIGGER,
+from .const import (
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     DOMAIN,
@@ -163,7 +150,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     _alarm_control_panel_option_default_code: str | None = None
 
     __alarm_legacy_state: bool = False
-    __alarm_legacy_state_reported: bool = False
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -173,17 +159,15 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             # setting the state directly.
             cls.__alarm_legacy_state = True
 
-    def __setattr__(self, __name: str, __value: Any) -> None:
+    def __setattr__(self, name: str, value: Any, /) -> None:
         """Set attribute.
 
         Deprecation warning if setting '_attr_state' directly
         unless already reported.
         """
-        if __name == "_attr_state":
-            if self.__alarm_legacy_state_reported is not True:
-                self._report_deprecated_alarm_state_handling()
-            self.__alarm_legacy_state_reported = True
-        return super().__setattr__(__name, __value)
+        if name == "_attr_state":
+            self._report_deprecated_alarm_state_handling()
+        return super().__setattr__(name, value)
 
     @callback
     def add_to_platform_start(
@@ -194,7 +178,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__alarm_legacy_state and not self.__alarm_legacy_state_reported:
+        if self.__alarm_legacy_state:
             self._report_deprecated_alarm_state_handling()
 
     @callback
@@ -203,27 +187,30 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
         Integrations should implement alarm_state instead of using state directly.
         """
-        self.__alarm_legacy_state_reported = True
-        if "custom_components" in type(self).__module__:
-            # Do not report on core integrations as they have been fixed.
-            report_issue = "report it to the custom integration author."
-            _LOGGER.warning(
-                "Entity %s (%s) is setting state directly"
-                " which will stop working in HA Core 2025.11."
-                " Entities should implement the 'alarm_state' property and"
-                " return its state using the AlarmControlPanelState enum, please %s",
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
+        report_usage(
+            "is setting state directly."
+            f" Entity {self.entity_id} ({type(self)}) should implement the 'alarm_state'"
+            " property and return its state using the AlarmControlPanelState enum",
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.11",
+            integration_domain=self.platform.platform_name if self.platform else None,
+            exclude_integrations={DOMAIN},
+        )
 
     @final
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if (alarm_state := self.alarm_state) is None:
-            return None
-        return alarm_state
+        if (alarm_state := self.alarm_state) is not None:
+            return alarm_state
+        if self._attr_state is not None:
+            # Backwards compatibility for integrations that set state directly
+            # Should be removed in 2025.11
+            if TYPE_CHECKING:
+                assert isinstance(self._attr_state, str)
+            return self._attr_state
+        return None
 
     @cached_property
     def alarm_state(self) -> AlarmControlPanelState | None:
@@ -269,7 +256,6 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Check if arm code is required, raise if no code is given."""
         if not (_code := self.code_or_default_code(code)) and self.code_arm_required:
             raise ServiceValidationError(
-                f"Arming requires a code but none was given for {self.entity_id}",
                 translation_domain=DOMAIN,
                 translation_key="code_arm_required",
                 translation_placeholders={
@@ -369,12 +355,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     @cached_property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        features = self._attr_supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = AlarmControlPanelEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
+        return self._attr_supported_features
 
     @final
     @property
@@ -412,13 +393,3 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
             self._alarm_control_panel_option_default_code = default_code
             return
         self._alarm_control_panel_option_default_code = None
-
-
-# As we import constants of the const module here, we need to add the following
-# functions to check for deprecated constants again
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

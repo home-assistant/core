@@ -120,6 +120,19 @@
     'switch.test_light_switch_2_test_serial_2',
   ])
 # ---
+# name: test_outlet_insertion_ok
+  list([
+    'switch.test_outlet_0_test_serial_ou_0',
+    'switch.test_outlet_1_test_serial_ou_1',
+  ])
+# ---
+# name: test_outlet_insertion_ok.1
+  list([
+    'switch.test_outlet_0_test_serial_ou_0',
+    'switch.test_outlet_1_test_serial_ou_1',
+    'switch.test_outlet_2_test_serial_ou_2',
+  ])
+# ---
 # name: test_setup_entry_ok_nodevices
   list([
   ])

@@ -7,14 +7,12 @@ from enum import StrEnum, unique
 from pyoverkiz.enums import Protocol
 from pyoverkiz.enums.ui import UIWidget
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import HomeAssistantOverkizData
-from ..const import DOMAIN
+from .. import OverkizDataConfigEntry
 from .atlantic_electrical_heater import AtlanticElectricalHeater
 from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
     AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint,
@@ -29,6 +27,7 @@ from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
 from .atlantic_pass_apc_zone_control_zone import AtlanticPassAPCZoneControlZone
 from .hitachi_air_to_air_heat_pump_hlrrwifi import HitachiAirToAirHeatPumpHLRRWIFI
 from .hitachi_air_to_air_heat_pump_ovp import HitachiAirToAirHeatPumpOVP
+from .hitachi_air_to_water_heating_zone import HitachiAirToWaterHeatingZone
 from .somfy_heating_temperature_interface import SomfyHeatingTemperatureInterface
 from .somfy_thermostat import SomfyThermostat
 from .valve_heating_temperature_interface import ValveHeatingTemperatureInterface
@@ -53,6 +52,7 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: AtlanticHeatRecoveryVentilation,
     UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: AtlanticPassAPCHeatingZone,
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: AtlanticPassAPCZoneControl,
+    UIWidget.HITACHI_AIR_TO_WATER_HEATING_ZONE: HitachiAirToWaterHeatingZone,
     UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: SomfyHeatingTemperatureInterface,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
@@ -79,11 +79,11 @@ WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz climate from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     # Match devices based on the widget.
     entities_based_on_widget: list[Entity] = [

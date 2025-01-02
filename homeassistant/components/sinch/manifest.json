@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sinch",
   "iot_class": "cloud_push",
   "loggers": ["clx"],
+  "quality_scale": "legacy",
   "requirements": ["clx-sdk-xms==1.0.0"]
 }

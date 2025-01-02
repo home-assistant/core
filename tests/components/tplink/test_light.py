@@ -26,8 +26,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
@@ -54,6 +54,7 @@ from . import (
     DEVICE_ID,
     MAC_ADDRESS,
     _mocked_device,
+    _mocked_feature,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -118,8 +119,32 @@ async def test_legacy_dimmer_unique_id(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("device", "transition"),
     [
-        (_mocked_device(modules=[Module.Light]), 2.0),
-        (_mocked_device(modules=[Module.Light, Module.LightEffect]), None),
+        (
+            _mocked_device(
+                modules=[Module.Light],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            2.0,
+        ),
+        (
+            _mocked_device(
+                modules=[Module.Light, Module.LightEffect],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            None,
+        ),
     ],
 )
 async def test_color_light(
@@ -131,7 +156,10 @@ async def test_color_light(
     )
     already_migrated_config_entry.add_to_hass(hass)
     light = device.modules[Module.Light]
+
+    # Setting color_temp to None emulates a device with active effects
     light.color_temp = None
+
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -153,8 +181,8 @@ async def test_color_light(
         assert attributes[ATTR_COLOR_MODE] == "brightness"
     else:
         assert attributes[ATTR_COLOR_MODE] == "hs"
-        assert attributes[ATTR_MIN_MIREDS] == 111
-        assert attributes[ATTR_MAX_MIREDS] == 250
+        assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
+        assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
         assert attributes[ATTR_HS_COLOR] == (10, 30)
         assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
         assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
@@ -220,9 +248,14 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    device = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+    ]
+
+    device = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light = device.modules[Module.Light]
-    light.is_variable_color_temp = False
+
     type(light).color_temp = PropertyMock(side_effect=Exception)
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -272,25 +305,47 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("bulb", "is_color"),
+    ("device", "is_color"),
     [
-        (_mocked_device(modules=[Module.Light], alias="my_light"), True),
-        (_mocked_device(modules=[Module.Light], alias="my_light"), False),
+        (
+            _mocked_device(
+                modules=[Module.Light],
+                alias="my_light",
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            True,
+        ),
+        (
+            _mocked_device(
+                modules=[Module.Light],
+                alias="my_light",
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            False,
+        ),
     ],
 )
 async def test_color_temp_light(
-    hass: HomeAssistant, bulb: MagicMock, is_color: bool
+    hass: HomeAssistant, device: MagicMock, is_color: bool
 ) -> None:
     """Test a light."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    device = _mocked_device(modules=[Module.Light], alias="my_light")
+    # device = _mocked_device(modules=[Module.Light], alias="my_light")
     light = device.modules[Module.Light]
-    light.is_color = is_color
-    light.color_temp = 4000
-    light.is_variable_color_temp = True
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -303,12 +358,12 @@ async def test_color_temp_light(
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
-    if light.is_color:
+    if is_color:
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
     else:
         assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
-    assert attributes[ATTR_MIN_MIREDS] == 111
-    assert attributes[ATTR_MAX_MIREDS] == 250
+    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     await hass.services.async_call(
@@ -368,10 +423,11 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    device = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+    ]
+    device = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light = device.modules[Module.Light]
-    light.is_color = False
-    light.is_variable_color_temp = False
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -414,11 +470,8 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    device = _mocked_device(modules=[Module.Light], alias="my_light")
+    device = _mocked_device(modules=[Module.Light], alias="my_light", features=[])
     light = device.modules[Module.Light]
-    light.is_color = False
-    light.is_variable_color_temp = False
-    light.is_dimmable = False
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -450,11 +503,9 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    device = _mocked_device(modules=[Module.Light], alias="my_light")
+    device = _mocked_device(modules=[Module.Light], alias="my_light", features=[])
     light = device.modules[Module.Light]
-    light.is_color = False
-    light.is_variable_color_temp = False
-    light.is_dimmable = False
+
     light.state = LightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
@@ -513,8 +564,15 @@ async def test_smart_strip_effects(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
     device = _mocked_device(
-        modules=[Module.Light, Module.LightEffect], alias="my_light"
+        modules=[Module.Light, Module.LightEffect], alias="my_light", features=features
     )
     light = device.modules[Module.Light]
     light_effect = device.modules[Module.LightEffect]
@@ -977,8 +1035,15 @@ async def test_scene_effect_light(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
     device = _mocked_device(
-        modules=[Module.Light, Module.LightEffect], alias="my_light"
+        modules=[Module.Light, Module.LightEffect], alias="my_light", features=features
     )
     light_effect = device.modules[Module.LightEffect]
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
