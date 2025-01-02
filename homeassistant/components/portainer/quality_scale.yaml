@@ -1,0 +1,84 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: no actions/services are implemented
+  appropriate-polling: done
+  brands:
+    status: todo
+    comment: waiting for PR to get merged
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: no actions/services are implemented
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: no subscription required, only polling
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: no actions/services are implemented
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: no configuration options
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: not set at the moment, we use a coordinator
+  reauthentication-flow: todo
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: no discovery possible
+  discovery:
+    status: exempt
+    comment: no discovery possible
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: no lesspopular entities in this integration
+  entity-translations:
+    status: exempt
+    comment: Entities just have the name of the container which is not translatable
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
