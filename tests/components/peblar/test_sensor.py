@@ -11,8 +11,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.freeze_time("2024-12-21 21:45:00")
 @pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -23,7 +24,7 @@ async def test_entities(
     """Test the sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # Ensure all entities are correctly assigned to the Peblar device
+    # Ensure all entities are correctly assigned to the Peblar EV charger
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "23-45-A4O-MOF")}
     )

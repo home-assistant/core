@@ -3,7 +3,7 @@
   "BopHomeWizardAddress": "p1meter-093586",
   "BopSource": "homewizard",
   "BopSourceParameters": "{}",
-  "ConnectedPhases": 1,
+  "ConnectedPhases": 3,
   "CurrentCtrlBopCtType": "CTK05-14",
   "CurrentCtrlBopEnable": true,
   "CurrentCtrlBopFuseRating": 35,

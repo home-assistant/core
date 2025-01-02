@@ -9,6 +9,7 @@ from pypck.connection import (
     PchkLcnNotConnectedError,
     PchkLicenseError,
 )
+from pypck.lcn_defs import LcnEvent
 import pytest
 
 from homeassistant import config_entries
@@ -114,6 +115,22 @@ async def test_async_setup_entry_fails(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "event",
+    [LcnEvent.CONNECTION_LOST, LcnEvent.PING_TIMEOUT, LcnEvent.BUS_DISCONNECTED],
+)
+async def test_async_entry_reload_on_host_event_received(
+    hass: HomeAssistant, entry: MockConfigEntry, event: LcnEvent
+) -> None:
+    """Test for config entry reload on certain host event received."""
+    lcn_connection = await init_integration(hass, entry)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as async_schedule_reload:
+        lcn_connection.fire_event(event)
+        async_schedule_reload.assert_called_with(entry.entry_id)
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)

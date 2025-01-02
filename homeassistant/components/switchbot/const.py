@@ -33,6 +33,7 @@ class SupportedModels(StrEnum):
     HUB2 = "hub2"
     RELAY_SWITCH_1PM = "relay_switch_1pm"
     RELAY_SWITCH_1 = "relay_switch_1"
+    LEAK = "leak"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -58,6 +59,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.LEAK: SupportedModels.LEAK,
 }
 
 SUPPORTED_MODEL_TYPES = (
