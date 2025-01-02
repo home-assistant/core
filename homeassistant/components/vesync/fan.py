@@ -9,7 +9,6 @@ from typing import Any
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -17,7 +16,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_FANS
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,15 +54,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the VeSync fan platform."""
-
-    @callback
-    def discover(devices):
-        """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
-    )
 
     _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
 

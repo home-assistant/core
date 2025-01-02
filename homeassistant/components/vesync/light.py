@@ -11,11 +11,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_LIGHTS
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,15 +28,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up lights."""
-
-    @callback
-    def discover(devices):
-        """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_LIGHTS), discover)
-    )
 
     _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
 
