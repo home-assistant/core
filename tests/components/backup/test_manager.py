@@ -112,7 +112,7 @@ async def test_async_create_backup(
     assert create_backup.called
     assert create_backup.call_args == call(
         agent_ids=["backup.local"],
-        backup_name="Custom 2025.1.0",
+        backup_name="Custom backup 2025.1.0",
         extra_metadata={
             "instance_id": hass.data["core.uuid"],
             "with_automatic_settings": False,
@@ -248,7 +248,7 @@ async def test_async_initiate_backup(
     ws_client = await hass_ws_client(hass)
 
     include_database = params.get("include_database", True)
-    name = params.get("name", "Custom 2025.1.0")
+    name = params.get("name", "Custom backup 2025.1.0")
     password = params.get("password")
     path_glob.return_value = []
 
@@ -584,7 +584,7 @@ async def test_async_initiate_backup_with_agent_error(
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
-        "name": "Custom 2025.1.0",
+        "name": "Custom backup 2025.1.0",
         "protected": False,
         "size": 123,
         "with_automatic_settings": False,
