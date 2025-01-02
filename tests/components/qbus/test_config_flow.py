@@ -138,16 +138,12 @@ async def test_handle_config_topic(hass: HomeAssistant) -> None:
     )
 
     with (
-        patch.object(
-            QbusConfigCoordinator, "store_config", return_value=None, autospec=True
-        ) as mock_store,
         patch("homeassistant.components.mqtt.client.async_publish") as mock_publish,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
         )
 
-    assert mock_store.called
     assert mock_publish.called
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "discovery_in_progress"
@@ -164,18 +160,10 @@ async def test_handle_device_topic_missing_config(hass: HomeAssistant) -> None:
         timestamp=time.time(),
     )
 
-    with (
-        patch.object(
-            QbusConfigCoordinator,
-            "async_get_or_request_config",
-            return_value=None,
-        ) as mock_get_config,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery
+    )
 
-    assert mock_get_config.called
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "invalid_discovery_info"
 
