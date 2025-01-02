@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,8 +24,6 @@ async def test_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     load_int: ConfigEntry,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo device."""
@@ -46,10 +42,7 @@ async def test_entity_failed_service_calls(
     hass: HomeAssistant,
     p_error: Exception,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo send command with error."""
 

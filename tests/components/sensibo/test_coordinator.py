@@ -14,7 +14,6 @@ import pytest
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from . import ENTRY_CONFIG
 
@@ -52,7 +51,8 @@ async def test_coordinator(
     mock_data.reset_mock()
 
     mock_data.side_effect = SensiboError("info")
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
@@ -61,7 +61,8 @@ async def test_coordinator(
 
     mock_data.return_value = SensiboData(raw={}, parsed={})
     mock_data.side_effect = None
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=3))
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
@@ -73,7 +74,8 @@ async def test_coordinator(
 
     mock_data.return_value = get_data[0]
     mock_data.side_effect = None
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
@@ -81,7 +83,8 @@ async def test_coordinator(
     mock_data.reset_mock()
 
     mock_data.side_effect = AuthenticationError("info")
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=7))
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")

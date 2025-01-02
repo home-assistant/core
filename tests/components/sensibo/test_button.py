@@ -38,7 +38,6 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_button(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:

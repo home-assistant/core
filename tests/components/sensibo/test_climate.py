@@ -90,7 +90,6 @@ async def test_climate(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     load_int: ConfigEntry,
-    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -657,7 +656,6 @@ async def test_climate_no_fan_no_swing(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -1213,9 +1211,7 @@ async def test_climate_full_ac_state(
 async def test_climate_fan_mode_and_swing_mode_not_supported(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate fan_mode and swing_mode not supported is raising error."""

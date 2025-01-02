@@ -33,7 +33,6 @@ async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -61,8 +60,6 @@ async def test_select_set_option(
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo select service."""

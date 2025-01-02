@@ -36,12 +36,8 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_switch(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch."""
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
@@ -53,8 +49,6 @@ async def test_switch_timer(
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch timer."""
@@ -121,8 +115,6 @@ async def test_switch_pure_boost(
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch pure boost."""
@@ -175,14 +167,7 @@ async def test_switch_pure_boost(
 
 
 async def test_switch_command_failure(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant, load_int: ConfigEntry, mock_client: MagicMock
 ) -> None:
     """Test the Sensibo switch fails commands."""
 
@@ -223,8 +208,6 @@ async def test_switch_climate_react(
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react."""
@@ -279,10 +262,7 @@ async def test_switch_climate_react_no_data(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react with no data."""

@@ -34,7 +34,6 @@ async def test_number(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -56,14 +55,7 @@ async def test_number(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_set_value(
-    hass: HomeAssistant,
-    load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant, load_int: ConfigEntry, mock_client: MagicMock
 ) -> None:
     """Test the Sensibo number service."""
 

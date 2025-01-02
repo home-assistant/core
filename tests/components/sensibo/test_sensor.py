@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import PureAQI, SensiboData
@@ -28,7 +27,6 @@ async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,

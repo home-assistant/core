@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import MagicMock, patch
-
-from pysensibo.model import SensiboData
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
@@ -20,11 +17,7 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
-async def test_load_unload_entry(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_load_unload_entry(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test setup and unload config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -46,11 +39,7 @@ async def test_load_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_migrate_entry(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_migrate_entry(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -70,11 +59,7 @@ async def test_migrate_entry(
     assert entry.unique_id == "firstnamelastname"
 
 
-async def test_migrate_entry_fails(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_migrate_entry_fails(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test migrate entry fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,

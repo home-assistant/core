@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysensibo import AuthenticationError, SensiboData, SensiboError
+from pysensibo import AuthenticationError, SensiboError
 import pytest
 
 from homeassistant import config_entries
@@ -20,10 +20,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_basic_setup(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_client: MagicMock
 ) -> None:
     """Test we get and complete the form."""
 
@@ -59,11 +56,7 @@ async def test_basic_setup(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-    error_message: Exception,
-    p_error: str,
+    hass: HomeAssistant, mock_client: MagicMock, error_message: Exception, p_error: str
 ) -> None:
     """Test config flow errors."""
 
@@ -101,11 +94,7 @@ async def test_flow_fails(
     }
 
 
-async def test_flow_get_no_devices(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_flow_get_no_devices(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test config flow get no devices from api."""
 
     result = await hass.config_entries.flow.async_init(
@@ -143,9 +132,7 @@ async def test_flow_get_no_devices(
 
 
 async def test_flow_get_no_username(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test config flow get no username from api."""
 
@@ -183,11 +170,7 @@ async def test_flow_get_no_username(
     }
 
 
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_reauth_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
         version=2,
@@ -221,11 +204,7 @@ async def test_reauth_flow(
     ],
 )
 async def test_reauth_flow_error(
-    hass: HomeAssistant,
-    sideeffect: Exception,
-    p_error: str,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    hass: HomeAssistant, sideeffect: Exception, p_error: str, mock_client: MagicMock
 ) -> None:
     """Test a reauthentication flow with error."""
     entry = MockConfigEntry(
@@ -289,7 +268,6 @@ async def test_flow_reauth_no_username_or_device(
     get_me: dict[str, Any],
     p_error: str,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
     """Test reauth flow with errors from api."""
     entry = MockConfigEntry(
@@ -338,11 +316,7 @@ async def test_flow_reauth_no_username_or_device(
     assert entry.data == {CONF_API_KEY: "1234567890"}
 
 
-async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
-) -> None:
+async def test_reconfigure_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test a reconfigure flow."""
     entry = MockConfigEntry(
         version=2,
@@ -376,11 +350,7 @@ async def test_reconfigure_flow(
     ],
 )
 async def test_reconfigure_flow_error(
-    hass: HomeAssistant,
-    sideeffect: Exception,
-    p_error: str,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    hass: HomeAssistant, sideeffect: Exception, p_error: str, mock_client: MagicMock
 ) -> None:
     """Test a reconfigure flow with error."""
     entry = MockConfigEntry(
@@ -444,7 +414,6 @@ async def test_flow_reconfigure_no_username_or_device(
     get_me: dict[str, Any],
     p_error: str,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
     """Test reconfigure flow with errors from api."""
     entry = MockConfigEntry(
