@@ -30,13 +30,15 @@ async def test_device(
     get_data: tuple[SensiboData, dict[str, Any]],
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the Sensibo climate."""
+    """Test the Sensibo device."""
 
     state1 = hass.states.get("climate.hallway")
     assert state1
 
-    dr_entries = dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
-    assert dr_entries == snapshot
+    assert (
+        dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
+        == snapshot
+    )
 
 
 @pytest.mark.parametrize("p_error", SENSIBO_ERRORS)

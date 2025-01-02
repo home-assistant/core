@@ -1,4 +1,4 @@
-"""Test for Sensibo component Init."""
+"""Test for Sensibo integration setup."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ async def test_load_unload_entry(
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
-    """Test setup entry."""
+    """Test setup and unload config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_CONFIG,
@@ -75,7 +75,7 @@ async def test_migrate_entry_fails(
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
-    """Test migrate entry unique id."""
+    """Test migrate entry fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,

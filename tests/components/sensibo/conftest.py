@@ -41,7 +41,7 @@ async def load_int(
     mock_client: SensiboClient,
     load_platforms: list[Platform],
 ) -> MockConfigEntry:
-    """Set up the Sensibo integration in Home Assistant."""
+    """Set up the Sensibo integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=ENTRY_CONFIG,
@@ -64,7 +64,7 @@ async def get_client(
     hass: HomeAssistant,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> AsyncGenerator[MagicMock]:
-    """Retrieve data from upstream Sensibo library."""
+    """Mock SensiboClient."""
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient",
@@ -82,7 +82,7 @@ async def get_data_from_library(
     aioclient_mock: AiohttpClientMocker,
     load_json: tuple[dict[str, Any], dict[str, Any]],
 ) -> AsyncGenerator[tuple[SensiboData, dict[str, Any]]]:
-    """Get data."""
+    """Get data from api."""
     aioclient_mock.request(
         "GET",
         url=APIV1 + "/users/me",

@@ -1,4 +1,4 @@
-"""The test for the sensibo binary sensor platform."""
+"""The test for the sensibo climate platform."""
 
 from __future__ import annotations
 
@@ -661,7 +661,7 @@ async def test_climate_no_fan_no_swing(
     get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo climate fan service."""
+    """Test the Sensibo climate fan."""
 
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
@@ -767,7 +767,7 @@ async def test_climate_pure_boost(
     get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo climate assumed state service."""
+    """Test the Sensibo climate pure boost service."""
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

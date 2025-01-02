@@ -60,7 +60,7 @@ async def test_button_update(
     get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo button."""
+    """Test the Sensibo button press."""
 
     state_button = hass.states.get("button.hallway_reset_filter")
     state_filter_clean = hass.states.get("binary_sensor.hallway_filter_clean_required")
@@ -112,7 +112,7 @@ async def test_button_failure(
     load_int: ConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test the Sensibo button fails."""
+    """Test the Sensibo button failure."""
 
     state_button = hass.states.get("button.hallway_reset_filter")
 

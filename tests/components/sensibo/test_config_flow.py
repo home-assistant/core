@@ -19,13 +19,13 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_setup_form(
+async def test_basic_setup(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
-    """Test we get the form."""
+    """Test we get and complete the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -291,7 +291,7 @@ async def test_flow_reauth_no_username_or_device(
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
-    """Test config flow get no username from api."""
+    """Test reauth flow with errors from api."""
     entry = MockConfigEntry(
         version=2,
         domain=DOMAIN,
@@ -446,7 +446,7 @@ async def test_flow_reconfigure_no_username_or_device(
     mock_client: MagicMock,
     get_data: tuple[SensiboData, dict[str, Any]],
 ) -> None:
-    """Test config flow get no username from api."""
+    """Test reconfigure flow with errors from api."""
     entry = MockConfigEntry(
         version=2,
         domain=DOMAIN,

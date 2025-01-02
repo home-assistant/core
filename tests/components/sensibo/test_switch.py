@@ -57,7 +57,7 @@ async def test_switch_timer(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo switch."""
+    """Test the Sensibo switch timer."""
 
     state = hass.states.get("switch.hallway_timer")
     assert state.state == STATE_OFF
@@ -125,7 +125,7 @@ async def test_switch_pure_boost(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo switch."""
+    """Test the Sensibo switch pure boost."""
 
     state = hass.states.get("switch.kitchen_pure_boost")
     assert state.state == STATE_OFF
@@ -285,7 +285,7 @@ async def test_switch_climate_react_no_data(
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo switch for climate react."""
+    """Test the Sensibo switch for climate react with no data."""
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_type", None)
 
