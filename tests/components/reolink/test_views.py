@@ -117,6 +117,34 @@ async def test_proxy_get_source_error(
     reolink_connect.get_vod_source.side_effect = None
 
 
+async def test_proxy_invalid_config_entry_id(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test config entry id not found for playback proxy URL."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    proxy_url = async_generate_playback_proxy_url(
+        "wrong_config_id",
+        TEST_CHANNEL,
+        TEST_FILE_NAME_MP4,
+        TEST_STREAM,
+        TEST_VOD_TYPE,
+    )
+
+    http_client = await hass_client()
+    response = await http_client.get(proxy_url)
+
+    assert await response.content.read() == bytes(
+        "Reolink playback proxy could not find config entry id: wrong_config_id",
+        "utf-8",
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+
 async def test_playback_proxy_timeout(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
