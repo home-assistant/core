@@ -675,4 +675,15 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalStateCurrentPhase",
+            translation_key="current_phase",
+            native_unit_of_measurement=None,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.OperationalState.Attributes.CurrentPhase,),
+    ),
 ]

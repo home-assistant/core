@@ -246,6 +246,9 @@
       "valve_position": {
         "name": "Valve position"
       },
+      "current_phase": {
+        "name": "Current phase"
+      },
       "battery_replacement_description": {
         "name": "Battery type"
       }
