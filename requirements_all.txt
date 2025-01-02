@@ -2255,7 +2255,7 @@ pyschlage==2024.11.0
 pysensibo==1.1.0
 
 # homeassistant.components.serial
-pyserial-asyncio-fast==0.13
+pyserial-asyncio-fast==0.14
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
