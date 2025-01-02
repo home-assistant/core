@@ -30,11 +30,6 @@ class DiscoveryService(Listener):
 
         device = await async_build_base_device(device_info)
         if device is None:
-            _LOGGER.debug(
-                "Request device %s failed, ip: %s,",
-                device_info.dev_name,
-                device_info.inner_ip,
-            )
             return
 
         coordo = RefossDataUpdateCoordinator(self.hass, device)

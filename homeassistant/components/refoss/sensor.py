@@ -127,7 +127,6 @@ async def async_setup_entry(
         device = coordinator.device
 
         if not isinstance(device, ElectricityXMix):
-            _LOGGER.debug("Device %s is not ElectricityXMix", device.dev_name)
             return
 
         sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")
@@ -145,6 +144,7 @@ async def async_setup_entry(
             for channel in device.channels
             for description in descriptions
         )
+        _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)

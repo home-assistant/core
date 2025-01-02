@@ -29,7 +29,6 @@ async def async_setup_entry(
         """Register the device."""
         device = coordinator.device
         if not isinstance(device, ToggleXMix):
-            _LOGGER.debug("Device %s is not ToggleXMix", device.dev_name)
             return
 
         new_entities = []
@@ -38,6 +37,7 @@ async def async_setup_entry(
             new_entities.append(entity)
 
         async_add_entities(new_entities)
+        _LOGGER.debug("Device %s add switch entity success", device.dev_name)
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)

@@ -14,7 +14,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     refoss_discovery = await refoss_discovery_server(hass)
     devices = await refoss_discovery.broadcast_msg(wait_for=DISCOVERY_TIMEOUT)
-    _LOGGER.info(
+    _LOGGER.debug(
         "Discovered devices: [%s]", ", ".join([info.dev_name for info in devices])
     )
     return len(devices) > 0
