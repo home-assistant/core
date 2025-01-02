@@ -970,6 +970,7 @@ class Recorder(threading.Thread):
                 # which does not need migration or repair.
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
+                    initial_version=SCHEMA_VERSION,
                     migration_needed=False,
                     non_live_data_migration_needed=False,
                     schema_errors=set(),

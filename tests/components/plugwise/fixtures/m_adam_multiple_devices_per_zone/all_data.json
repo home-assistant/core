@@ -32,6 +32,7 @@
         "off"
       ],
       "climate_mode": "auto",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Badkamer",
@@ -66,6 +67,7 @@
         "off"
       ],
       "climate_mode": "heat",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Bios",
@@ -112,6 +114,7 @@
     "446ac08dd04d4eff8ac57489757b7314": {
       "active_preset": "no_frost",
       "climate_mode": "heat",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Garage",
@@ -258,6 +261,7 @@
         "off"
       ],
       "climate_mode": "auto",
+      "control_state": "idle",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Jessie",
@@ -402,6 +406,7 @@
         "off"
       ],
       "climate_mode": "auto",
+      "control_state": "heating",
       "dev_class": "climate",
       "model": "ThermoZone",
       "name": "Woonkamer",
@@ -577,7 +582,7 @@
     "cooling_present": false,
     "gateway_id": "fe799307f1624099878210aa0b9f1475",
     "heater_id": "90986d591dcd426cae3ec3e8111ff730",
-    "item_count": 364,
+    "item_count": 369,
     "notifications": {
       "af82e4ccf9c548528166d38e560662a4": {
         "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."

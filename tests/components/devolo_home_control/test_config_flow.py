@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.devolo_home_control.const import DEFAULT_MYDEVOLO, DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
@@ -90,7 +90,6 @@ async def test_form_advanced_options(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "mydevolo_url": "https://test_mydevolo_url.test",
             },
         )
         await hass.async_block_till_done()
@@ -100,7 +99,6 @@ async def test_form_advanced_options(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "mydevolo_url": "https://test_mydevolo_url.test",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -170,7 +168,6 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -207,7 +204,6 @@ async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -229,7 +225,6 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
         data={
             "username": "test-username",
             "password": "test-password",
-            "mydevolo_url": "https://test_mydevolo_url.test",
         },
     )
     mock_config.add_to_hass(hass)
@@ -281,7 +276,6 @@ async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "mydevolo_url": DEFAULT_MYDEVOLO,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1

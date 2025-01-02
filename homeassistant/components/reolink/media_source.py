@@ -81,6 +81,8 @@ class ReolinkVODMediaSource(MediaSource):
 
         def get_vod_type() -> VodRequestType:
             if filename.endswith(".mp4"):
+                if host.api.is_nvr:
+                    return VodRequestType.DOWNLOAD
                 return VodRequestType.PLAYBACK
             if host.api.is_nvr:
                 return VodRequestType.FLV

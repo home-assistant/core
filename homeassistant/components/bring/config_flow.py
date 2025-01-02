@@ -85,6 +85,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if not (errors := await self.validate_input(user_input)):
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self.reauth_entry, data=user_input
                 )

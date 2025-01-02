@@ -119,7 +119,7 @@ MAX_PACKETS_TO_READ = 500
 
 type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
-type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes | bytearray  # Only bytes if encoding is None
 
 
 def publish(
@@ -227,7 +227,7 @@ def async_subscribe_internal(
             translation_placeholders={"topic": topic},
         ) from exc
     client = mqtt_data.client
-    if not client.connected and not mqtt_config_entry_enabled(hass):
+    if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_subscribe",
@@ -661,7 +661,7 @@ class MQTT:
                     self.conf.get(CONF_PORT, DEFAULT_PORT),
                     self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
                 )
-        except OSError as err:
+        except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
         finally:
@@ -695,12 +695,15 @@ class MQTT:
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
+        # pylint: disable-next=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         while True:
             if not self.connected:
                 try:
                     async with self._connection_lock, self._async_connect_in_executor():
                         await self.hass.async_add_executor_job(self._mqttc.reconnect)
-                except OSError as err:
+                except (OSError, mqtt.WebsocketConnectionError) as err:
                     _LOGGER.debug(
                         "Error re-connecting to MQTT server due to exception: %s", err
                     )

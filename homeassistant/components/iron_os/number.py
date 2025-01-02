@@ -336,10 +336,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities from a config entry."""
-    coordinator = entry.runtime_data
+    coordinators = entry.runtime_data
 
     async_add_entities(
-        IronOSNumberEntity(coordinator, description)
+        IronOSNumberEntity(coordinators, description)
         for description in PINECIL_NUMBER_DESCRIPTIONS
     )
 
@@ -351,15 +351,13 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: IronOSCoordinators,
+        coordinators: IronOSCoordinators,
         entity_description: IronOSNumberEntityDescription,
     ) -> None:
         """Initialize the number entity."""
-        super().__init__(
-            coordinator.live_data, entity_description, entity_description.characteristic
-        )
+        super().__init__(coordinators.live_data, entity_description)
 
-        self.settings = coordinator.settings
+        self.settings = coordinators.settings
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

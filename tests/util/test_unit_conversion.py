@@ -441,6 +441,8 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfElectricPotential.MICROVOLT, 5e-6, UnitOfElectricPotential.VOLT),
     ],
     EnergyConverter: [
+        (10, UnitOfEnergy.MILLIWATT_HOUR, 0.00001, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 10000, UnitOfEnergy.MILLIWATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00000001, UnitOfEnergy.GIGA_WATT_HOUR),
@@ -535,6 +537,7 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfPower.GIGA_WATT, 10e9, UnitOfPower.WATT),
         (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+        (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),

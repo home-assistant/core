@@ -139,7 +139,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.2.post1
+anyio==4.7.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -148,7 +148,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.1.3
+numpy==2.2.1
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -158,9 +158,8 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
-# Required to avoid breaking (#101042).
-# v2 has breaking changes (#99218).
-pydantic==1.10.19
+# ensure pydantic version does not float since it might have breaking changes
+pydantic==2.10.4
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -179,7 +178,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.3
+protobuf==5.29.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -238,11 +237,6 @@ async-timeout==4.0.3
 # https://github.com/home-assistant/core/issues/122508
 # https://github.com/home-assistant/core/issues/118004
 aiofiles>=24.1.0
-
-# 0.22.0 causes CI failures on Python 3.13
-# python3 -X dev -m pytest tests/components/matrix
-# python3 -X dev -m pytest tests/components/zha
-rpds-py==0.21.0
 """
 
 GENERATED_MESSAGE = (
@@ -634,7 +628,6 @@ def _get_hassfest_config() -> Config:
         specific_integrations=None,
         action="validate",
         requirements=True,
-        core_integrations_path=Path("homeassistant/components"),
     )
 
 

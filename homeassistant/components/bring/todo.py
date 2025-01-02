@@ -34,6 +34,8 @@ from .const import (
 from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

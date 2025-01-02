@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
 from typing import TYPE_CHECKING
 
@@ -47,14 +46,14 @@ def register_knx_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
-        partial(service_send_to_knx_bus, hass),
+        service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_READ,
-        partial(service_read_to_knx_bus, hass),
+        service_read_to_knx_bus,
         schema=SERVICE_KNX_READ_SCHEMA,
     )
 
@@ -62,7 +61,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_KNX_EVENT_REGISTER,
-        partial(service_event_register_modify, hass),
+        service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
     )
 
@@ -70,7 +69,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_KNX_EXPOSURE_REGISTER,
-        partial(service_exposure_register_modify, hass),
+        service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
@@ -78,7 +77,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         SERVICE_RELOAD,
-        partial(service_reload_integration, hass),
+        service_reload_integration,
     )
 
 
@@ -103,9 +102,9 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
 )
 
 
-async def service_event_register_modify(hass: HomeAssistant, call: ServiceCall) -> None:
+async def service_event_register_modify(call: ServiceCall) -> None:
     """Service for adding or removing a GroupAddress to the knx_event filter."""
-    knx_module = get_knx_module(hass)
+    knx_module = get_knx_module(call.hass)
 
     attr_address = call.data[KNX_ADDRESS]
     group_addresses = list(map(parse_device_group_address, attr_address))
@@ -156,11 +155,9 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 )
 
 
-async def service_exposure_register_modify(
-    hass: HomeAssistant, call: ServiceCall
-) -> None:
+async def service_exposure_register_modify(call: ServiceCall) -> None:
     """Service for adding or removing an exposure to KNX bus."""
-    knx_module = get_knx_module(hass)
+    knx_module = get_knx_module(call.hass)
 
     group_address = call.data[KNX_ADDRESS]
 
@@ -223,9 +220,9 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
 )
 
 
-async def service_send_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> None:
+async def service_send_to_knx_bus(call: ServiceCall) -> None:
     """Service for sending an arbitrary KNX message to the KNX bus."""
-    knx_module = get_knx_module(hass)
+    knx_module = get_knx_module(call.hass)
 
     attr_address = call.data[KNX_ADDRESS]
     attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
@@ -271,9 +268,9 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 )
 
 
-async def service_read_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> None:
+async def service_read_to_knx_bus(call: ServiceCall) -> None:
     """Service for sending a GroupValueRead telegram to the KNX bus."""
-    knx_module = get_knx_module(hass)
+    knx_module = get_knx_module(call.hass)
 
     for address in call.data[KNX_ADDRESS]:
         telegram = Telegram(
@@ -284,8 +281,8 @@ async def service_read_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> Non
         await knx_module.xknx.telegrams.put(telegram)
 
 
-async def service_reload_integration(hass: HomeAssistant, call: ServiceCall) -> None:
+async def service_reload_integration(call: ServiceCall) -> None:
     """Reload the integration."""
-    knx_module = get_knx_module(hass)
-    await hass.config_entries.async_reload(knx_module.entry.entry_id)
-    hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
+    knx_module = get_knx_module(call.hass)
+    await call.hass.config_entries.async_reload(knx_module.entry.entry_id)
+    call.hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)

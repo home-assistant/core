@@ -3,6 +3,7 @@
   dict({
     'config': dict({
       'backflush_enabled': False,
+      'bbw_settings': None,
       'boilers': dict({
         'CoffeeBoiler1': dict({
           'current_temperature': 96.5,
@@ -44,6 +45,7 @@
         }),
       }),
       'prebrew_mode': 'TypeB',
+      'scale': None,
       'smart_standby': dict({
         'enabled': True,
         'minutes': 10,

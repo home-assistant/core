@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from powerfox import Device, PowerMeter, WaterMeter
 
@@ -22,11 +21,11 @@ from . import PowerfoxConfigEntry
 from .coordinator import PowerfoxDataUpdateCoordinator
 from .entity import PowerfoxEntity
 
-T = TypeVar("T", PowerMeter, WaterMeter)
-
 
 @dataclass(frozen=True, kw_only=True)
-class PowerfoxSensorEntityDescription(Generic[T], SensorEntityDescription):
+class PowerfoxSensorEntityDescription[T: (PowerMeter, WaterMeter)](
+    SensorEntityDescription
+):
     """Describes Poweropti sensor entity."""
 
     value_fn: Callable[[T], float | int | None]
