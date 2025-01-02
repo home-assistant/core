@@ -719,6 +719,15 @@ class Recorder(threading.Thread):
         if schema_status is None:
             # Give up if we could not validate the schema
             return
+        if schema_status.current_version > SCHEMA_VERSION:
+            _LOGGER.error(
+                "The database schema version %s is newer than the installed version of "
+                "Home Assistant Core supports (%s), either upgrade Home Assistant Core "
+                "or restore the database from a backup compatible with this version",
+                schema_status.current_version,
+                SCHEMA_VERSION,
+            )
+            return
         self.schema_version = schema_status.current_version
 
         if not schema_status.migration_needed and not schema_status.schema_errors:
