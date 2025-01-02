@@ -38,6 +38,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
+        self.device_version = None
 
     async def _async_setup(self) -> None:
         try:
@@ -46,6 +47,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             raise UpdateFailed from None
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower
+        self.device_version = device_info.devVer
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
