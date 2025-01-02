@@ -1,0 +1,6 @@
+{
+  "domain": "dreo",
+  "name": "Dreo",
+  "integrations": ["dreo", "fan"],
+  "iot_standards": []
+}
