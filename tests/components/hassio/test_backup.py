@@ -176,6 +176,51 @@ TEST_BACKUP_DETAILS_3 = supervisor_backups.BackupComplete(
 )
 
 
+TEST_BACKUP_4 = supervisor_backups.Backup(
+    compressed=False,
+    content=supervisor_backups.BackupContent(
+        addons=["ssl"],
+        folders=["share"],
+        homeassistant=True,
+    ),
+    date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
+    location=None,
+    locations={None},
+    name="Test",
+    protected=False,
+    size=1.0,
+    size_bytes=1048576,
+    slug="abc123",
+    type=supervisor_backups.BackupType.PARTIAL,
+)
+TEST_BACKUP_DETAILS_4 = supervisor_backups.BackupComplete(
+    addons=[
+        supervisor_backups.BackupAddon(
+            name="Terminal & SSH",
+            size=0.0,
+            slug="core_ssh",
+            version="9.14.0",
+        )
+    ],
+    compressed=TEST_BACKUP.compressed,
+    date=TEST_BACKUP.date,
+    extra=None,
+    folders=["share"],
+    homeassistant_exclude_database=True,
+    homeassistant="2024.12.0",
+    location=TEST_BACKUP.location,
+    locations=TEST_BACKUP.locations,
+    name=TEST_BACKUP.name,
+    protected=TEST_BACKUP.protected,
+    repositories=[],
+    size=TEST_BACKUP.size,
+    size_bytes=TEST_BACKUP.size_bytes,
+    slug=TEST_BACKUP.slug,
+    supervisor_version="2024.11.2",
+    type=TEST_BACKUP.type,
+)
+
+
 @pytest.fixture(autouse=True)
 def fixture_supervisor_environ() -> Generator[None]:
     """Mock os environ for supervisor."""
@@ -662,8 +707,17 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
             replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share"}),
         ),
         (
-            {"include_folders": ["media"], "include_homeassistant": False},
-            replace(DEFAULT_BACKUP_OPTIONS, folders={"media"}, homeassistant=False),
+            {
+                "include_folders": ["media"],
+                "include_database": False,
+                "include_homeassistant": False,
+            },
+            replace(
+                DEFAULT_BACKUP_OPTIONS,
+                folders={"media"},
+                homeassistant=False,
+                homeassistant_exclude_database=True,
+            ),
         ),
     ],
 )
@@ -1100,9 +1154,22 @@ async def test_reader_writer_create_remote_backup(
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 @pytest.mark.parametrize(
-    ("extra_generate_options"),
+    ("extra_generate_options", "expected_error"),
     [
-        {"include_homeassistant": False},
+        (
+            {"include_homeassistant": False},
+            {
+                "code": "home_assistant_error",
+                "message": "Cannot create a backup with database but without Home Assistant",
+            },
+        ),
+        (
+            {"include_homeassistant": False, "include_database": False},
+            {
+                "code": "unknown_error",
+                "message": "Unknown error",
+            },
+        ),
     ],
 )
 async def test_reader_writer_create_wrong_parameters(
@@ -1110,6 +1177,7 @@ async def test_reader_writer_create_wrong_parameters(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     extra_generate_options: dict[str, Any],
+    expected_error: dict[str, str],
 ) -> None:
     """Test generating a backup."""
     client = await hass_ws_client(hass)
@@ -1147,7 +1215,7 @@ async def test_reader_writer_create_wrong_parameters(
 
     response = await client.receive_json()
     assert not response["success"]
-    assert response["error"] == {"code": "unknown_error", "message": "Unknown error"}
+    assert response["error"] == expected_error
 
     supervisor_client.backups.partial_backup.assert_not_called()
 
@@ -1356,15 +1424,25 @@ async def test_reader_writer_restore_error(
 
 
 @pytest.mark.parametrize(
-    ("parameters", "expected_error"),
+    ("backup", "backup_details", "parameters", "expected_error"),
     [
         (
+            TEST_BACKUP,
+            TEST_BACKUP_DETAILS,
             {"restore_database": False},
-            "Cannot restore Home Assistant without database",
+            "Restore database must match backup",
         ),
         (
+            TEST_BACKUP,
+            TEST_BACKUP_DETAILS,
             {"restore_homeassistant": False},
             "Cannot restore database without Home Assistant",
+        ),
+        (
+            TEST_BACKUP_4,
+            TEST_BACKUP_DETAILS_4,
+            {"restore_homeassistant": True, "restore_database": True},
+            "Restore database must match backup",
         ),
     ],
 )
@@ -1373,13 +1451,15 @@ async def test_reader_writer_restore_wrong_parameters(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    backup: supervisor_backups.Backup,
+    backup_details: supervisor_backups.BackupComplete,
     parameters: dict[str, Any],
     expected_error: str,
 ) -> None:
     """Test trigger restore."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.list.return_value = [TEST_BACKUP]
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.backups.list.return_value = [backup]
+    supervisor_client.backups.backup_info.return_value = backup_details
 
     default_parameters = {
         "type": "backup/restore",
