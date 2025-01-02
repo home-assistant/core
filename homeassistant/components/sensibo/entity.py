@@ -49,7 +49,7 @@ def async_handle_api_call[_T: SensiboDeviceBaseEntity, **_P](
         ):
             setattr(entity.device_data, key, value)
             LOGGER.debug("Debug check key %s is now %s", key, value)
-            entity.coordinator.async_set_updated_data(entity.coordinator.data)
+            entity.coordinator.async_update_listeners()
 
     return wrap_api_call
 
