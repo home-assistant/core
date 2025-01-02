@@ -72,7 +72,7 @@ class MastodonNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Toot a message, with media perhaps."""
 
-        ir.async_create_issue(
+        ir.create_issue(
             self.hass,
             DOMAIN,
             "deprecated_notify_action_mastodon",
