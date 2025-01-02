@@ -66,7 +66,7 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
 
     def __init__(
         self,
-        device: VeSyncBaseEntity,
+        device: VeSyncBaseDevice,
         description: VeSyncBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
