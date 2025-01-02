@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
-from .models import Folder
+from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
@@ -318,9 +318,9 @@ class BackupSchedule:
                     password=config_data.create_backup.password,
                     with_automatic_settings=True,
                 )
+            except BackupManagerError as err:
+                LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001
-                # another more specific exception will be added
-                # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
 
         manager.remove_next_backup_event = async_track_point_in_time(
