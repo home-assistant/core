@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes custom switch entities."""
 
-    is_on: Callable[[VeSyncBaseEntity], bool] | None = None
+    is_on: Callable[[VeSyncSwitch], bool]
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
@@ -59,7 +59,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     """VeSync sensor class."""
 
     def __init__(
-        self, device: VeSyncBaseEntity, description: VeSyncSwitchEntityDescription
+        self, device: VeSyncSwitch, description: VeSyncSwitchEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device)
