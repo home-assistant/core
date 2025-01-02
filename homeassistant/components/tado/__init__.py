@@ -1,9 +1,7 @@
 """Support for the (unofficial) Tado API."""
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 import requests.exceptions
 
@@ -22,9 +20,6 @@ from .const import (
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
-    UPDATE_LISTENER,
-    UPDATE_MOBILE_DEVICE_TRACK,
-    UPDATE_TRACK,
 )
 from .services import setup_services
 from .tado_connector import TadoConnector
@@ -55,17 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-type TadoConfigEntry = ConfigEntry[TadoRuntimeData]
-
-
-@dataclass
-class TadoRuntimeData:
-    """Dataclass for Tado runtime data."""
-
-    tadoconnector: TadoConnector
-    update_track: Any
-    update_mobile_device_track: Any
-    update_listener: Any
+type TadoConfigEntry = ConfigEntry[TadoConnector]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -99,26 +84,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     await hass.async_add_executor_job(tadoconnector.update)
 
     # Poll for updates in the background
-    update_track = async_track_time_interval(
-        hass,
-        lambda now: tadoconnector.update(),
-        SCAN_INTERVAL,
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            lambda now: tadoconnector.update(),
+            SCAN_INTERVAL,
+        )
     )
 
-    update_mobile_devices = async_track_time_interval(
-        hass,
-        lambda now: tadoconnector.update_mobile_devices(),
-        SCAN_MOBILE_DEVICE_INTERVAL,
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            lambda now: tadoconnector.update_mobile_devices(),
+            SCAN_MOBILE_DEVICE_INTERVAL,
+        )
     )
 
-    update_listener = entry.add_update_listener(_async_update_listener)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    entry.runtime_data = TadoRuntimeData(
-        tadoconnector=tadoconnector,
-        update_track=update_track,
-        update_mobile_device_track=update_mobile_devices,
-        update_listener=update_listener,
-    )
+    entry.runtime_data = tadoconnector
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -147,15 +131,6 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
-    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
-    hass.data[DOMAIN][entry.entry_id][UPDATE_MOBILE_DEVICE_TRACK]()
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

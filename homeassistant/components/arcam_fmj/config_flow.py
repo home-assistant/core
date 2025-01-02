@@ -22,6 +22,9 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    host: str
+    port: int
+
     async def _async_set_unique_id_and_update(
         self, host: str, port: int, uuid: str
     ) -> None:
@@ -74,16 +77,11 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
-        context = self.context
-        placeholders = {
-            "host": context[CONF_HOST],
-        }
-        context["title_placeholders"] = placeholders
+        placeholders = {"host": self.host}
+        self.context["title_placeholders"] = placeholders
 
         if user_input is not None:
-            return await self._async_check_and_create(
-                context[CONF_HOST], context[CONF_PORT]
-            )
+            return await self._async_check_and_create(self.host, self.port)
 
         return self.async_show_form(
             step_id="confirm", description_placeholders=placeholders
@@ -101,7 +99,6 @@ class ArcamFmjFlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        context = self.context
-        context[CONF_HOST] = host
-        context[CONF_PORT] = DEFAULT_PORT
+        self.host = host
+        self.port = DEFAULT_PORT
         return await self.async_step_confirm()

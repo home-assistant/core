@@ -9,7 +9,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.storage import Store
 
-    from . import TraceData
+    from .models import TraceData
 
 
 CONF_STORED_TRACES = "stored_traces"

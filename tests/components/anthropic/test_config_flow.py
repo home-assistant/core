@@ -108,7 +108,7 @@ async def test_options(
                 ),
                 body={"type": "error", "error": {"type": "invalid_request_error"}},
             ),
-            "invalid_request_error",
+            "unknown",
         ),
         (
             AuthenticationError(

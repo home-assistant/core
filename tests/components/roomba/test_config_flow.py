@@ -8,7 +8,12 @@ from roombapy import RoombaConnectionError, RoombaInfo
 
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.roomba import config_flow
-from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.components.roomba.const import (
+    CONF_BLID,
+    CONF_CONTINUOUS,
+    DEFAULT_DELAY,
+    DOMAIN,
+)
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_IGNORE,
@@ -206,7 +211,7 @@ async def test_form_user_discovery_and_password_fetch(hass: HomeAssistant) -> No
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -331,7 +336,7 @@ async def test_form_user_discovery_manual_and_auto_password_fetch(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -468,7 +473,7 @@ async def test_form_user_discovery_no_devices_found_and_auto_password_fetch(
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -541,7 +546,7 @@ async def test_form_user_discovery_no_devices_found_and_password_fetch_fails(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -677,7 +682,7 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -738,7 +743,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(
     assert result2["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -816,7 +821,7 @@ async def test_dhcp_discovery_falls_back_to_manual(
     assert result4["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -886,7 +891,7 @@ async def test_dhcp_discovery_no_devices_falls_back_to_manual(
     assert result3["data"] == {
         CONF_BLID: "BLID",
         CONF_CONTINUOUS: True,
-        CONF_DELAY: 1,
+        CONF_DELAY: DEFAULT_DELAY,
         CONF_HOST: MOCK_IP,
         CONF_PASSWORD: "password",
     }
@@ -1055,6 +1060,43 @@ async def test_dhcp_discovery_partial_hostname(hass: HomeAssistant) -> None:
     assert current_flows[0]["flow_id"] == result2["flow_id"]
 
 
+async def test_dhcp_discovery_when_user_flow_in_progress(hass: HomeAssistant) -> None:
+    """Test discovery flow when user flow is in progress."""
+
+    # Start a DHCP flow
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Start a user flow - unique ID not set
+    with patch(
+        "homeassistant.components.roomba.config_flow.RoombaDiscovery", _mocked_discovery
+    ):
+        result2 = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="aabbccddeeff",
+                hostname="irobot-blidthatislonger",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "link"
+
+    current_flows = hass.config_entries.flow.async_progress()
+    assert len(current_flows) == 2
+
+
 async def test_options_flow(
     hass: HomeAssistant,
 ) -> None:
@@ -1082,10 +1124,10 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_CONTINUOUS: True, CONF_DELAY: 1},
+        user_input={CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY},
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
-    assert config_entry.options == {CONF_CONTINUOUS: True, CONF_DELAY: 1}
+    assert result["data"] == {CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY}
+    assert config_entry.options == {CONF_CONTINUOUS: True, CONF_DELAY: DEFAULT_DELAY}

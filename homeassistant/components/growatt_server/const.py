@@ -12,6 +12,7 @@ SERVER_URLS = [
     "https://openapi.growatt.com/",  # Other regional server
     "https://openapi-cn.growatt.com/",  # Chinese server
     "https://openapi-us.growatt.com/",  # North American server
+    "https://openapi-au.growatt.com/",  # Australia Server
     "http://server.smten.com/",  # smten server
 ]
 

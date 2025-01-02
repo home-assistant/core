@@ -4,9 +4,6 @@
       "user": {
         "description": "Do you want to configure the Launch Library?"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {

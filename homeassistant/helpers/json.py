@@ -162,13 +162,17 @@ def json_dumps(data: Any) -> str:
     return json_bytes(data).decode("utf-8")
 
 
+json_bytes_sorted = partial(
+    orjson.dumps,
+    option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
+    default=json_encoder_default,
+)
+"""Dump json bytes with keys sorted."""
+
+
 def json_dumps_sorted(data: Any) -> str:
     """Dump json string with keys sorted."""
-    return orjson.dumps(
-        data,
-        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
-        default=json_encoder_default,
-    ).decode("utf-8")
+    return json_bytes_sorted(data).decode("utf-8")
 
 
 JSON_DUMP: Final = json_dumps

@@ -22,7 +22,7 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
-    async_remove_orphaned_virtual_entities,
+    async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
 )
@@ -61,13 +61,13 @@ async def async_setup_entry(
         virtual_text_ids = get_virtual_component_ids(
             coordinator.device.config, SELECT_PLATFORM
         )
-        async_remove_orphaned_virtual_entities(
+        async_remove_orphaned_entities(
             hass,
             config_entry.entry_id,
             coordinator.mac,
             SELECT_PLATFORM,
-            "enum",
             virtual_text_ids,
+            "enum",
         )
 
 

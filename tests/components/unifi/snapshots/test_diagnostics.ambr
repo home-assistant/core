@@ -27,6 +27,8 @@
         'verify_ssl': False,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'unifi',
       'entry_id': '1',
       'minor_version': 1,

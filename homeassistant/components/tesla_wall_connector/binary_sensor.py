@@ -13,12 +13,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    WallConnectorData,
-    WallConnectorEntity,
-    WallConnectorLambdaValueGetterMixin,
-)
+from . import WallConnectorData
 from .const import DOMAIN, WALLCONNECTOR_DATA_VITALS
+from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
 

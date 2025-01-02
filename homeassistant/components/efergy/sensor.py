@@ -20,8 +20,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import EfergyConfigEntry, EfergyEntity
+from . import EfergyConfigEntry
 from .const import CONF_CURRENT_VALUES, LOGGER
+from .entity import EfergyEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -182,4 +183,4 @@ class EfergySensor(EfergyEntity, SensorEntity):
             return
         if not self._attr_available:
             self._attr_available = True
-            LOGGER.info("Connection has resumed")
+            LOGGER.debug("Connection has resumed")

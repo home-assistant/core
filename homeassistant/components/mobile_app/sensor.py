@@ -59,6 +59,8 @@ async def async_setup_entry(
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
+        if capabilities := entry.capabilities:
+            config[ATTR_SENSOR_STATE_CLASS] = capabilities.get(ATTR_SENSOR_STATE_CLASS)
         entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
@@ -78,7 +80,7 @@ async def async_setup_entry(
 
 
 class MobileAppSensor(MobileAppEntity, RestoreSensor):
-    """Representation of an mobile app sensor."""
+    """Representation of a mobile app sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""

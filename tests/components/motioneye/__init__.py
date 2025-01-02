@@ -7,12 +7,12 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from motioneye_client.const import DEFAULT_PORT
 
-from homeassistant.components.motioneye import get_motioneye_entity_unique_id
 from homeassistant.components.motioneye.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
+from homeassistant.components.motioneye.entity import get_motioneye_entity_unique_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry

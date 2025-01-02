@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from functools import cached_property, lru_cache, partial
+from functools import lru_cache
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -32,22 +32,21 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage, translation
 from .debounce import Debouncer
-from .deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
-from .frame import report
+from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
+else:
+    from propcache import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,16 +78,6 @@ class DeviceEntryDisabler(StrEnum):
     CONFIG_ENTRY = "config_entry"
     INTEGRATION = "integration"
     USER = "user"
-
-
-# DISABLED_* are deprecated, to be removed in 2022.3
-_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
-    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
-)
-_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
-    DeviceEntryDisabler.INTEGRATION, "2025.1"
-)
-_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -277,7 +266,7 @@ def _validate_configuration_url(value: Any) -> str | None:
     return url_as_str
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -305,6 +294,7 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
     def disabled(self) -> bool:
@@ -341,7 +331,7 @@ class DeviceEntry:
             "via_device_id": self.via_device_id,
         }
 
-    @cached_property
+    @under_cached_property
     def json_repr(self) -> bytes | None:
         """Return a cached JSON representation of the entry."""
         try:
@@ -357,7 +347,7 @@ class DeviceEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -367,7 +357,7 @@ class DeviceEntry:
                     "config_entries": list(self.config_entries),
                     "configuration_url": self.configuration_url,
                     "connections": list(self.connections),
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "disabled_by": self.disabled_by,
                     "entry_type": self.entry_type,
                     "hw_version": self.hw_version,
@@ -377,7 +367,7 @@ class DeviceEntry:
                     "manufacturer": self.manufacturer,
                     "model": self.model,
                     "model_id": self.model_id,
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "name": self.name,
                     "primary_config_entry": self.primary_config_entry,
@@ -389,7 +379,7 @@ class DeviceEntry:
         )
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
@@ -400,6 +390,7 @@ class DeletedDeviceEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     def to_device_entry(
         self,
@@ -418,7 +409,7 @@ class DeletedDeviceEntry:
             is_new=True,
         )
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -426,11 +417,11 @@ class DeletedDeviceEntry:
                 {
                     "config_entries": list(self.config_entries),
                     "connections": list(self.connections),
-                    "created_at": self.created_at.isoformat(),
+                    "created_at": self.created_at,
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "orphaned_timestamp": self.orphaned_timestamp,
-                    "modified_at": self.modified_at.isoformat(),
+                    "modified_at": self.modified_at,
                 }
             )
         )
@@ -815,27 +806,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            via = self.async_get_device(identifiers={via_device})
+            if (via := self.async_get_device(identifiers={via_device})) is None:
+                report_usage(
+                    "calls `device_registry.async_get_or_create` referencing a "
+                    f"non existing `via_device` {via_device}, "
+                    f"with device info: {device_info}",
+                    core_behavior=ReportBehavior.LOG,
+                    breaks_in_ha_version="2025.12.0",
+                )
+
             via_device_id: str | UndefinedType = via.id if via else UNDEFINED
         else:
             via_device_id = UNDEFINED
-
-        if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry entry_type. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryType instead"
-                ),
-                error_if_core=False,
-            )
-            entry_type = DeviceEntryType(entry_type)
 
         device = self.async_update_device(
             device.id,
             allow_collisions=True,
             add_config_entry_id=config_entry_id,
-            add_config_entry=config_entry,
             configuration_url=configuration_url,
             device_info_type=device_info_type,
             disabled_by=disabled_by,
@@ -863,7 +850,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        add_config_entry: ConfigEntry | UndefinedType = UNDEFINED,
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         # Temporary flag so we don't blow up when collisions are implicitly introduced
         # by calls to async_get_or_create. Must not be set by integrations.
@@ -898,13 +884,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         config_entries = old.config_entries
 
-        if add_config_entry_id is not UNDEFINED and add_config_entry is UNDEFINED:
-            config_entry = self.hass.config_entries.async_get_entry(add_config_entry_id)
-            if config_entry is None:
+        if add_config_entry_id is not UNDEFINED:
+            if self.hass.config_entries.async_get_entry(add_config_entry_id) is None:
                 raise HomeAssistantError(
                     f"Can't link device to unknown config entry {add_config_entry_id}"
                 )
-            add_config_entry = config_entry
 
         if not new_connections and not new_identifiers:
             raise HomeAssistantError(
@@ -921,19 +905,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Cannot define both merge_identifiers and new_identifiers"
             )
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, DeviceEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for device registry disabled_by. This is deprecated and"
-                    " will stop working in Home Assistant 2022.3, it should be updated"
-                    " to use DeviceEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = DeviceEntryDisabler(disabled_by)
-
         if (
             suggested_area is not None
             and suggested_area is not UNDEFINED
@@ -948,11 +919,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
-        if add_config_entry is not UNDEFINED:
+        if add_config_entry_id is not UNDEFINED:
             primary_entry_id = old.primary_config_entry
             if (
                 device_info_type == "primary"
-                and add_config_entry.entry_id != primary_entry_id
+                and add_config_entry_id != primary_entry_id
             ):
                 if (
                     primary_entry_id is None
@@ -963,11 +934,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     )
                     or primary_entry.domain in LOW_PRIO_CONFIG_ENTRY_DOMAINS
                 ):
-                    new_values["primary_config_entry"] = add_config_entry.entry_id
-                    old_values["primary_config_entry"] = old.primary_config_entry
+                    new_values["primary_config_entry"] = add_config_entry_id
+                    old_values["primary_config_entry"] = primary_entry_id
 
-            if add_config_entry.entry_id not in old.config_entries:
-                config_entries = old.config_entries | {add_config_entry.entry_id}
+            if add_config_entry_id not in old.config_entries:
+                config_entries = old.config_entries | {add_config_entry_id}
 
         if (
             remove_config_entry_id is not UNDEFINED
@@ -1493,11 +1464,3 @@ def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, 
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
         for key, value in connections
     }
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

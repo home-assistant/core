@@ -1,6 +1,8 @@
 """Constants for the Template Platform Components."""
 
+from homeassistant.components.blueprint import BLUEPRINT_SCHEMA
 from homeassistant.const import Platform
+from homeassistant.helpers.typing import ConfigType
 
 CONF_ACTION = "action"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
@@ -38,3 +40,12 @@ PLATFORMS = [
     Platform.VACUUM,
     Platform.WEATHER,
 ]
+
+TEMPLATE_BLUEPRINT_SCHEMA = BLUEPRINT_SCHEMA
+
+
+class TemplateConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config: ConfigType | None = None
+    raw_blueprint_inputs: ConfigType | None = None

@@ -17,8 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 TEMPERATURE_DEFAULT_STEP = 0.5
 
@@ -57,7 +57,6 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _enable_turn_on_off_backwards_compatibility = False
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

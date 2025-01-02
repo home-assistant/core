@@ -1,0 +1,196 @@
+# serializer version: 1
+# name: test_complete_todo_item[daily]
+  tuple(
+    'Habitica',
+    '''
+      ![Dragon](https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Dragon.png)
+      You've found a Dragon Egg!
+    ''',
+  )
+# ---
+# name: test_complete_todo_item[todo]
+  tuple(
+    'Habitica',
+    '''
+      ![Dragon](https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Dragon.png)
+      You've found a Dragon Egg!
+    ''',
+  )
+# ---
+# name: test_todo_items[todo.test_user_dailies]
+  dict({
+    'todo.test_user_dailies': dict({
+      'items': list([
+        dict({
+          'description': 'Klicke um Änderungen zu machen!',
+          'due': '2024-09-22',
+          'status': 'completed',
+          'summary': 'Zahnseide benutzen',
+          'uid': '564b9ac9-c53d-4638-9e7f-1cd96fe19baa',
+        }),
+        dict({
+          'description': 'Klicke um Deinen Terminplan festzulegen!',
+          'due': '2024-09-21',
+          'status': 'needs_action',
+          'summary': '5 Minuten ruhig durchatmen',
+          'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f',
+        }),
+        dict({
+          'description': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+          'due': '2024-09-21',
+          'status': 'needs_action',
+          'summary': 'Fitnessstudio besuchen',
+          'uid': '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1',
+        }),
+        dict({
+          'description': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
+          'due': '2024-12-14',
+          'status': 'needs_action',
+          'summary': 'Arbeite an einem kreativen Projekt',
+          'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_todo_items[todo.test_user_to_do_s]
+  dict({
+    'todo.test_user_to_do_s': dict({
+      'items': list([
+        dict({
+          'description': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
+          'due': '2024-09-27',
+          'status': 'needs_action',
+          'summary': 'Buch zu Ende lesen',
+          'uid': '88de7cd9-af2b-49ce-9afd-bf941d87336b',
+        }),
+        dict({
+          'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+          'due': '2024-08-31',
+          'status': 'needs_action',
+          'summary': 'Rechnungen bezahlen',
+          'uid': '2f6fcabc-f670-4ec3-ba65-817e8deea490',
+        }),
+        dict({
+          'description': 'Rasen mähen und die Pflanzen gießen.',
+          'status': 'needs_action',
+          'summary': 'Garten pflegen',
+          'uid': '1aa3137e-ef72-4d1f-91ee-41933602f438',
+        }),
+        dict({
+          'description': 'Den Ausflug für das kommende Wochenende organisieren.',
+          'due': '2024-09-21',
+          'status': 'needs_action',
+          'summary': 'Wochenendausflug planen',
+          'uid': '86ea2475-d1b5-4020-bdcc-c188c7996afa',
+        }),
+        dict({
+          'description': 'Lebensmittel und Haushaltsbedarf für die Woche einkaufen.',
+          'status': 'completed',
+          'summary': 'Wocheneinkauf erledigen',
+          'uid': '162f0bbe-a097-4a06-b4f4-8fbeed85d2ba',
+        }),
+        dict({
+          'description': 'Wohnzimmer und Küche gründlich aufräumen.',
+          'status': 'completed',
+          'summary': 'Wohnung aufräumen',
+          'uid': '3fa06743-aa0f-472b-af1a-f27c755e329c',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_todos[todo.test_user_dailies-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.test_user_dailies',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dailies',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 92>,
+    'translation_key': <HabiticaTodoList.DAILIES: 'dailys'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todos[todo.test_user_dailies-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Dailies',
+      'supported_features': <TodoListEntityFeature: 92>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.test_user_dailies',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_todos[todo.test_user_to_do_s-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.test_user_to_do_s',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': "To-Do's",
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 95>,
+    'translation_key': <HabiticaTodoList.TODOS: 'todos'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todos[todo.test_user_to_do_s-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': "test-user To-Do's",
+      'supported_features': <TodoListEntityFeature: 95>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.test_user_to_do_s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---

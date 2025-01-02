@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -21,12 +22,8 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
-    STATE_CLOSED,
-    STATE_CLOSING,
     STATE_OFF,
     STATE_ON,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -72,10 +69,24 @@ OPEN_CLOSE_COVER_CONFIG = {
                 }
             },
             [
-                ("cover.test_state", STATE_OPEN, STATE_OPEN, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSED, STATE_CLOSED, {}, -1, ""),
-                ("cover.test_state", STATE_OPENING, STATE_OPENING, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSING, STATE_CLOSING, {}, -1, ""),
+                ("cover.test_state", CoverState.OPEN, CoverState.OPEN, {}, -1, ""),
+                ("cover.test_state", CoverState.CLOSED, CoverState.CLOSED, {}, -1, ""),
+                (
+                    "cover.test_state",
+                    CoverState.OPENING,
+                    CoverState.OPENING,
+                    {},
+                    -1,
+                    "",
+                ),
+                (
+                    "cover.test_state",
+                    CoverState.CLOSING,
+                    CoverState.CLOSING,
+                    {},
+                    -1,
+                    "",
+                ),
                 (
                     "cover.test_state",
                     "dog",
@@ -84,7 +95,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                     -1,
                     "Received invalid cover is_on state: dog",
                 ),
-                ("cover.test_state", STATE_OPEN, STATE_OPEN, {}, -1, ""),
+                ("cover.test_state", CoverState.OPEN, CoverState.OPEN, {}, -1, ""),
                 (
                     "cover.test_state",
                     "cat",
@@ -93,7 +104,7 @@ OPEN_CLOSE_COVER_CONFIG = {
                     -1,
                     "Received invalid cover is_on state: cat",
                 ),
-                ("cover.test_state", STATE_CLOSED, STATE_CLOSED, {}, -1, ""),
+                ("cover.test_state", CoverState.CLOSED, CoverState.CLOSED, {}, -1, ""),
                 (
                     "cover.test_state",
                     "bear",
@@ -120,17 +131,45 @@ OPEN_CLOSE_COVER_CONFIG = {
                 }
             },
             [
-                ("cover.test_state", STATE_OPEN, STATE_UNKNOWN, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSED, STATE_UNKNOWN, {}, -1, ""),
-                ("cover.test_state", STATE_OPENING, STATE_OPENING, {}, -1, ""),
-                ("cover.test_state", STATE_CLOSING, STATE_CLOSING, {}, -1, ""),
-                ("cover.test", STATE_CLOSED, STATE_CLOSING, {"position": 0}, 0, ""),
-                ("cover.test_state", STATE_OPEN, STATE_CLOSED, {}, -1, ""),
-                ("cover.test", STATE_CLOSED, STATE_OPEN, {"position": 10}, 10, ""),
+                ("cover.test_state", CoverState.OPEN, STATE_UNKNOWN, {}, -1, ""),
+                ("cover.test_state", CoverState.CLOSED, STATE_UNKNOWN, {}, -1, ""),
+                (
+                    "cover.test_state",
+                    CoverState.OPENING,
+                    CoverState.OPENING,
+                    {},
+                    -1,
+                    "",
+                ),
+                (
+                    "cover.test_state",
+                    CoverState.CLOSING,
+                    CoverState.CLOSING,
+                    {},
+                    -1,
+                    "",
+                ),
+                (
+                    "cover.test",
+                    CoverState.CLOSED,
+                    CoverState.CLOSING,
+                    {"position": 0},
+                    0,
+                    "",
+                ),
+                ("cover.test_state", CoverState.OPEN, CoverState.CLOSED, {}, -1, ""),
+                (
+                    "cover.test",
+                    CoverState.CLOSED,
+                    CoverState.OPEN,
+                    {"position": 10},
+                    10,
+                    "",
+                ),
                 (
                     "cover.test_state",
                     "dog",
-                    STATE_OPEN,
+                    CoverState.OPEN,
                     {},
                     -1,
                     "Received invalid cover is_on state: dog",
@@ -139,8 +178,9 @@ OPEN_CLOSE_COVER_CONFIG = {
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_state_text(
-    hass: HomeAssistant, states, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, states, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the state text of a template."""
     state = hass.states.get("cover.test_template_cover")
@@ -202,13 +242,13 @@ async def test_template_state_text(
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_state_text_ignored_if_none_or_empty(
     hass: HomeAssistant,
     entity: str,
     set_state: str,
     test_state: str,
     attr: dict[str, Any],
-    start_ha,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ignoring an empty state text of a template."""
@@ -239,10 +279,11 @@ async def test_template_state_text_ignored_if_none_or_empty(
         },
     ],
 )
-async def test_template_state_boolean(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_state_boolean(hass: HomeAssistant) -> None:
     """Test the value_template attribute."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
@@ -264,17 +305,18 @@ async def test_template_state_boolean(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_position(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the position_template attribute."""
-    hass.states.async_set("cover.test", STATE_OPEN)
+    hass.states.async_set("cover.test", CoverState.OPEN)
     attrs = {}
 
     for set_state, pos, test_state in (
-        (STATE_CLOSED, 42, STATE_OPEN),
-        (STATE_OPEN, 0.0, STATE_CLOSED),
-        (STATE_CLOSED, None, STATE_UNKNOWN),
+        (CoverState.CLOSED, 42, CoverState.OPEN),
+        (CoverState.OPEN, 0.0, CoverState.CLOSED),
+        (CoverState.CLOSED, None, STATE_UNKNOWN),
     ):
         attrs["position"] = pos
         hass.states.async_set("cover.test", set_state, attributes=attrs)
@@ -302,7 +344,8 @@ async def test_template_position(
         },
     ],
 )
-async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_not_optimistic(hass: HomeAssistant) -> None:
     """Test the is_closed attribute."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_UNKNOWN
@@ -344,9 +387,8 @@ async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
         ),
     ],
 )
-async def test_template_tilt(
-    hass: HomeAssistant, tilt_position: float | None, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_tilt(hass: HomeAssistant, tilt_position: float | None) -> None:
     """Test the tilt_template attribute."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") == tilt_position
@@ -388,7 +430,8 @@ async def test_template_tilt(
         },
     ],
 )
-async def test_template_out_of_bounds(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_out_of_bounds(hass: HomeAssistant) -> None:
     """Test template out-of-bounds condition."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("current_tilt_position") is None
@@ -424,8 +467,9 @@ async def test_template_out_of_bounds(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_template_open_or_position(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that at least one of open_cover or set_position is used."""
     assert hass.states.async_all("cover") == []
@@ -449,12 +493,11 @@ async def test_template_open_or_position(
         },
     ],
 )
-async def test_open_action(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the open_cover command."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     await hass.services.async_call(
         COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -490,12 +533,11 @@ async def test_open_action(
         },
     ],
 )
-async def test_close_stop_action(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_close_stop_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the close-cover and stop_cover commands."""
     state = hass.states.get("cover.test_template_cover")
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await hass.services.async_call(
         COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -521,9 +563,8 @@ async def test_close_stop_action(
         {"input_number": {"test": {"min": "0", "max": "100", "initial": "42"}}},
     ],
 )
-async def test_set_position(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_set_position(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test the set_position command."""
     with assert_setup_component(1, "cover"):
         assert await setup.async_setup_component(
@@ -652,11 +693,11 @@ async def test_set_position(
         (SERVICE_CLOSE_COVER_TILT, {ATTR_ENTITY_ID: ENTITY_COVER}, 0),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_set_tilt_position(
     hass: HomeAssistant,
     service,
     attr,
-    start_ha,
     calls: list[ServiceCall],
     tilt_position,
 ) -> None:
@@ -691,8 +732,9 @@ async def test_set_tilt_position(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_set_position_optimistic(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test optimistic position mode."""
     state = hass.states.get("cover.test_template_cover")
@@ -709,10 +751,10 @@ async def test_set_position_optimistic(
     assert state.attributes.get("current_position") == 42.0
 
     for service, test_state in (
-        (SERVICE_CLOSE_COVER, STATE_CLOSED),
-        (SERVICE_OPEN_COVER, STATE_OPEN),
-        (SERVICE_TOGGLE, STATE_CLOSED),
-        (SERVICE_TOGGLE, STATE_OPEN),
+        (SERVICE_CLOSE_COVER, CoverState.CLOSED),
+        (SERVICE_OPEN_COVER, CoverState.OPEN),
+        (SERVICE_TOGGLE, CoverState.CLOSED),
+        (SERVICE_TOGGLE, CoverState.OPEN),
     ):
         await hass.services.async_call(
             COVER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
@@ -740,8 +782,9 @@ async def test_set_position_optimistic(
         },
     ],
 )
+@pytest.mark.usefixtures("calls", "start_ha")
 async def test_set_tilt_position_optimistic(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test the optimistic tilt_position mode."""
     state = hass.states.get("cover.test_template_cover")
@@ -791,12 +834,13 @@ async def test_set_tilt_position_optimistic(
         },
     ],
 )
-async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("icon") == ""
 
-    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    state = hass.states.async_set("cover.test_state", CoverState.OPEN)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.test_template_cover")
@@ -826,12 +870,13 @@ async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_entity_picture_template(hass: HomeAssistant) -> None:
     """Test icon template."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("entity_picture") == ""
 
-    state = hass.states.async_set("cover.test_state", STATE_OPEN)
+    state = hass.states.async_set("cover.test_state", CoverState.OPEN)
     await hass.async_block_till_done()
 
     state = hass.states.get("cover.test_template_cover")
@@ -859,7 +904,8 @@ async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_availability_template(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_template(hass: HomeAssistant) -> None:
     """Test availability template."""
     hass.states.async_set("availability_state.state", STATE_OFF)
     await hass.async_block_till_done()
@@ -889,9 +935,8 @@ async def test_availability_template(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_availability_without_availability_template(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_availability_without_availability_template(hass: HomeAssistant) -> None:
     """Test that component is available if there is no."""
     state = hass.states.get("cover.test_template_cover")
     assert state.state != STATE_UNAVAILABLE
@@ -915,8 +960,9 @@ async def test_availability_without_availability_template(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_availability_template_keeps_component_available(
-    hass: HomeAssistant, start_ha, caplog_setup_text
+    hass: HomeAssistant, caplog_setup_text
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get("cover.test_template_cover") != STATE_UNAVAILABLE
@@ -941,7 +987,8 @@ async def test_invalid_availability_template_keeps_component_available(
         },
     ],
 )
-async def test_device_class(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_device_class(hass: HomeAssistant) -> None:
     """Test device class."""
     state = hass.states.get("cover.test_template_cover")
     assert state.attributes.get("device_class") == "door"
@@ -965,7 +1012,8 @@ async def test_device_class(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_invalid_device_class(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_invalid_device_class(hass: HomeAssistant) -> None:
     """Test device class."""
     state = hass.states.get("cover.test_template_cover")
     assert not state
@@ -994,7 +1042,8 @@ async def test_invalid_device_class(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option only creates one cover per id."""
     assert len(hass.states.async_all()) == 1
 
@@ -1019,7 +1068,8 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_state_gets_lowercased(hass: HomeAssistant) -> None:
     """Test True/False is lowercased."""
 
     hass.states.async_set("binary_sensor.garage_door_sensor", "off")
@@ -1027,10 +1077,10 @@ async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
 
     assert len(hass.states.async_all()) == 2
 
-    assert hass.states.get("cover.garage_door").state == STATE_OPEN
+    assert hass.states.get("cover.garage_door").state == CoverState.OPEN
     hass.states.async_set("binary_sensor.garage_door_sensor", "on")
     await hass.async_block_till_done()
-    assert hass.states.get("cover.garage_door").state == STATE_CLOSED
+    assert hass.states.get("cover.garage_door").state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
@@ -1065,8 +1115,9 @@ async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_self_referencing_icon_with_no_template_is_not_a_loop(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test a self referencing icon with no value template is not a loop."""
     assert len(hass.states.async_all()) == 1

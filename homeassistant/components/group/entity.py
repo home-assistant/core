@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
+from .const import ATTR_AUTO, ATTR_ORDER, DATA_COMPONENT, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -478,8 +478,8 @@ class Group(Entity):
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
     """Get the group entity component."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent[Group](
+    if (component := hass.data.get(DATA_COMPONENT)) is None:
+        component = hass.data[DATA_COMPONENT] = EntityComponent[Group](
             _PACKAGE_LOGGER, DOMAIN, hass
         )
     return component

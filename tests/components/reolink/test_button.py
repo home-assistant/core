@@ -48,6 +48,8 @@ async def test_button(
             blocking=True,
         )
 
+    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
+
 
 async def test_ptz_move_service(
     hass: HomeAssistant,
@@ -78,6 +80,8 @@ async def test_ptz_move_service(
             {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
             blocking=True,
         )
+
+    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -110,3 +114,5 @@ async def test_host_button(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+    reolink_connect.reboot.reset_mock(side_effect=True)

@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import API, DEVICES, DOMAIN, SomaEntity
+from .const import API, DEVICES, DOMAIN
+from .entity import SomaEntity
 from .utils import is_api_response_success
 
 

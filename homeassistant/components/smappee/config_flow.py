@@ -28,6 +28,9 @@ class SmappeeFlowHandler(
 
     DOMAIN = DOMAIN
 
+    ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
+    serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
+
     async def async_oauth_create_entry(self, data):
         """Create an entry for the flow."""
 
@@ -59,13 +62,9 @@ class SmappeeFlowHandler(
         if self.is_cloud_device_already_added():
             return self.async_abort(reason="already_configured_device")
 
-        self.context.update(
-            {
-                CONF_IP_ADDRESS: discovery_info.host,
-                CONF_SERIALNUMBER: serial_number,
-                "title_placeholders": {"name": serial_number},
-            }
-        )
+        self.context["title_placeholders"] = {"name": serial_number}
+        self.ip_address = discovery_info.host
+        self.serial_number = serial_number
 
         return await self.async_step_zeroconf_confirm()
 
@@ -80,33 +79,32 @@ class SmappeeFlowHandler(
             return self.async_abort(reason="already_configured_device")
 
         if user_input is None:
-            serialnumber = self.context.get(CONF_SERIALNUMBER)
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={"serialnumber": serialnumber},
+                description_placeholders={"serialnumber": self.serial_number},
                 errors=errors,
             )
 
-        ip_address = self.context.get(CONF_IP_ADDRESS)
-        serial_number = self.context.get(CONF_SERIALNUMBER)
-
         # Attempt to make a connection to the local device
-        if helper.is_smappee_genius(serial_number):
+        if helper.is_smappee_genius(self.serial_number):
             # next generation device, attempt connect to the local mqtt broker
-            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=serial_number)
+            smappee_mqtt = mqtt.SmappeeLocalMqtt(serial_number=self.serial_number)
             connect = await self.hass.async_add_executor_job(smappee_mqtt.start_attempt)
             if not connect:
                 return self.async_abort(reason="cannot_connect")
         else:
             # legacy devices, without local mqtt broker, try api access
-            smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
+            smappee_api = api.api.SmappeeLocalApi(ip=self.ip_address)
             logon = await self.hass.async_add_executor_job(smappee_api.logon)
             if logon is None:
                 return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=f"{DOMAIN}{serial_number}",
-            data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
+            title=f"{DOMAIN}{self.serial_number}",
+            data={
+                CONF_IP_ADDRESS: self.ip_address,
+                CONF_SERIALNUMBER: self.serial_number,
+            },
         )
 
     async def async_step_user(

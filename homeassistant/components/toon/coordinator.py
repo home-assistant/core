@@ -90,7 +90,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             await self.toon.subscribe_webhook(
                 application_id=self.entry.entry_id, url=webhook_url
             )
-            _LOGGER.info("Registered Toon webhook: %s", webhook_url)
+            _LOGGER.debug("Registered Toon webhook: %s", webhook_url)
         except ToonError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 

@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .bridge import DynaliteBridge
-from .dynalitebase import DynaliteBase, async_setup_entry_base
+from .entity import DynaliteBase, async_setup_entry_base
 
 
 async def async_setup_entry(

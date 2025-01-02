@@ -142,12 +142,8 @@ async def test_data_will_be_saved(
     req = await meraki_client.post(URL, data=json.dumps(data))
     assert req.status == HTTPStatus.OK
     await hass.async_block_till_done()
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a4")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a4").state
     assert state_name == "home"
 
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a5")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a5").state
     assert state_name == "home"

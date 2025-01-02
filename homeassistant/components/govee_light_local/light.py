@@ -15,26 +15,25 @@ from homeassistant.components.light import (
     LightEntity,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import GoveeLocalApiCoordinator
+from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoveeLocalConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Govee light setup."""
 
-    coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
         if is_new:
@@ -93,7 +92,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             },
             name=device.sku,
             manufacturer=MANUFACTURER,
-            model=device.sku,
+            model_id=device.sku,
             serial_number=device.fingerprint,
         )
 

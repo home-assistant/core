@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, Self
 
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
@@ -100,6 +100,8 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     scan_filter: str | None = None
     atv: BaseConfig | None = None
     atv_identifiers: list[str] | None = None
+    _host: str  # host in zeroconf discovery info, should not be accessed by other flows
+    host: str | None = None  # set by _async_aggregate_discoveries, for other flows
     protocol: Protocol | None = None
     pairing: PairingHandler | None = None
     protocols_to_pair: deque[Protocol] | None = None
@@ -115,6 +117,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new AppleTVConfigFlow."""
         self.credentials: dict[int, str | None] = {}  # Protocol -> credentials
+        self.all_identifiers: set[str] = set()
 
     @property
     def device_identifier(self) -> str | None:
@@ -157,7 +160,6 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             "type": "Apple TV",
         }
         self.scan_filter = self.unique_id
-        self.context["identifier"] = self.unique_id
         return await self.async_step_restore_device()
 
     async def async_step_restore_device(
@@ -192,7 +194,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.device_identifier, raise_on_progress=False
                 )
                 assert self.atv
-                self.context["all_identifiers"] = self.atv.all_identifiers
+                self.all_identifiers = set(self.atv.all_identifiers)
                 return await self.async_step_confirm()
 
         return self.async_show_form(
@@ -207,7 +209,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle device found via zeroconf."""
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
-        host = discovery_info.host
+        self._host = host = discovery_info.host
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
@@ -255,7 +257,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         # as two separate flows.
         #
         # To solve this, all identifiers are stored as
-        # "all_identifiers" in the flow context. When a new service is discovered, the
+        # "all_identifiers" in the flow. When a new service is discovered, the
         # code below will check these identifiers for all active flows and abort if a
         # match is found. Before aborting, the original flow is updated with any
         # potentially new identifiers. In the example above, when service C is
@@ -277,32 +279,32 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_check_and_update_in_progress(host, unique_id)
         # Host must only be set AFTER checking and updating in progress
         # flows or we will have a race condition where no flows move forward.
-        self.context[CONF_ADDRESS] = host
+        self.host = host
 
     @callback
     def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
         """Check for in-progress flows and update them with identifiers if needed."""
-        for flow in self._async_in_progress(include_uninitialized=True):
-            context = flow["context"]
-            if (
-                context.get("source") != SOURCE_ZEROCONF
-                or context.get(CONF_ADDRESS) != host
-            ):
-                continue
-            if (
-                "all_identifiers" in context
-                and unique_id not in context["all_identifiers"]
-            ):
-                # Add potentially new identifiers from this device to the existing flow
-                context["all_identifiers"].append(unique_id)
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
             raise AbortFlow("already_in_progress")
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        if (
+            other_flow.context.get("source") != SOURCE_ZEROCONF
+            or other_flow.host != self._host
+        ):
+            return False
+        if self.unique_id is not None:
+            # Add potentially new identifiers from this device to the existing flow
+            other_flow.all_identifiers.add(self.unique_id)
+        return True
 
     async def async_found_zeroconf_device(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle device found after Zeroconf discovery."""
         assert self.atv
-        self.context["all_identifiers"] = self.atv.all_identifiers
+        self.all_identifiers = set(self.atv.all_identifiers)
         # Also abort if an integration with this identifier already exists
         await self.async_set_unique_id(self.device_identifier)
         # but be sure to update the address if its changed so the scanner
@@ -310,7 +312,6 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(
             updates={CONF_ADDRESS: str(self.atv.address)}
         )
-        self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
 
     async def async_find_device_wrapper(
@@ -390,7 +391,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-confirmation of discovered node."""
         assert self.atv
         if user_input is not None:
-            expected_identifier_count = len(self.context["all_identifiers"])
+            expected_identifier_count = len(self.all_identifiers)
             # If number of services found during device scan mismatch number of
             # identifiers collected during Zeroconf discovery, then trigger a new scan
             # with hopes of finding all services.

@@ -655,7 +655,23 @@ MOCK_MESH_DATA = {
                             "cur_data_rate_tx": 0,
                             "cur_availability_rx": 99,
                             "cur_availability_tx": 99,
-                        }
+                        },
+                        {
+                            "uid": "nl-79",
+                            "type": "LAN",
+                            "state": "DISCONNECTED",
+                            "last_connected": 1642872667,
+                            "node_1_uid": "n-167",
+                            "node_2_uid": "n-76",
+                            "node_interface_1_uid": "ni-140",
+                            "node_interface_2_uid": "ni-77",
+                            "max_data_rate_rx": 1000000,
+                            "max_data_rate_tx": 1000000,
+                            "cur_data_rate_rx": 0,
+                            "cur_data_rate_tx": 0,
+                            "cur_availability_rx": 99,
+                            "cur_availability_tx": 99,
+                        },
                     ],
                 }
             ],
@@ -903,6 +919,14 @@ MOCK_HOST_ATTRIBUTES_DATA = [
         "X_AVM-DE_FriendlyNameIsWriteable": "1",
     },
 ]
+
+MOCK_CALL_DEFLECTION_DATA = {
+    "X_AVM-DE_OnTel1": {
+        "GetDeflections": {
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>0</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+        }
+    }
+}
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA

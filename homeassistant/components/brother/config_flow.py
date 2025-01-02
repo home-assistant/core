@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.components.snmp import async_get_snmp_engine
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -53,7 +53,6 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.brother: Brother
         self.host: str | None = None
-        self.entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,30 +140,15 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.entry = entry
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
         errors = {}
-
-        if TYPE_CHECKING:
-            assert self.entry is not None
 
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input, self.entry.unique_id)
+                await validate_input(self.hass, user_input, entry.unique_id)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except (ConnectionError, TimeoutError):
@@ -174,20 +158,18 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             except AnotherDevice:
                 errors["base"] = "another_device"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data=self.entry.data | {CONF_HOST: user_input[CONF_HOST]},
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: user_input[CONF_HOST]},
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=RECONFIGURE_SCHEMA,
-                suggested_values=self.entry.data | (user_input or {}),
+                suggested_values=entry.data | (user_input or {}),
             ),
-            description_placeholders={"printer_name": self.entry.title},
+            description_placeholders={"printer_name": entry.title},
             errors=errors,
         )
 

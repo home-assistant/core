@@ -2,17 +2,14 @@
 
 from datetime import timedelta
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiohasupervisor import SupervisorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import (
-    DOMAIN,
-    HASSIO_UPDATE_INTERVAL,
-    HassioAPIError,
-)
+from homeassistant.components.hassio import DOMAIN, HASSIO_UPDATE_INTERVAL
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -21,6 +18,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -28,44 +27,21 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
-    _install_test_addon_stats_mock(aioclient_mock)
-
-
-def _install_test_addon_stats_mock(aioclient_mock: AiohttpClientMocker):
-    """Install mock to provide valid stats for the test addon."""
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-
-
-def _install_test_addon_stats_failure_mock(aioclient_mock: AiohttpClientMocker):
-    """Install mocks to raise an exception when fetching stats for the test addon."""
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        exc=HassioAPIError,
-    )
 
 
 def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
     """Install default mocks."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -76,13 +52,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -175,32 +144,8 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
             },
         },
     )
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
-    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",
@@ -214,6 +159,9 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
     )
 
 
+@pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
 @pytest.mark.parametrize(
     ("entity_id", "expected"),
     [
@@ -273,6 +221,9 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
+    ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
+)
+@pytest.mark.parametrize(
     ("entity_id", "expected"),
     [
         ("sensor.test_cpu_percent", "0.99"),
@@ -288,6 +239,7 @@ async def test_stats_addon_sensor(
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
+    addon_stats: AsyncMock,
 ) -> None:
     """Test stats addons sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -305,7 +257,7 @@ async def test_stats_addon_sensor(
 
     aioclient_mock.clear_requests()
     _install_default_mocks(aioclient_mock)
-    _install_test_addon_stats_failure_mock(aioclient_mock)
+    addon_stats.side_effect = SupervisorError
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
@@ -315,7 +267,7 @@ async def test_stats_addon_sensor(
 
     aioclient_mock.clear_requests()
     _install_default_mocks(aioclient_mock)
-    _install_test_addon_stats_mock(aioclient_mock)
+    addon_stats.side_effect = None
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
@@ -348,7 +300,7 @@ async def test_stats_addon_sensor(
 
     aioclient_mock.clear_requests()
     _install_default_mocks(aioclient_mock)
-    _install_test_addon_stats_failure_mock(aioclient_mock)
+    addon_stats.side_effect = SupervisorError
 
     freezer.tick(HASSIO_UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)

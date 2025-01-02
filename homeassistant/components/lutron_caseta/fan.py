@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import LutronCasetaDeviceUpdatableEntity
+from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaConfigEntry
 
 DEFAULT_ON_PERCENTAGE = 50
@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
 
 
-class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
+class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
     _attr_supported_features = (
@@ -50,7 +50,6 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

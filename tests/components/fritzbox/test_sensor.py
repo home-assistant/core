@@ -3,8 +3,10 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
+import pytest
 from requests.exceptions import HTTPError
 
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -16,6 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICES,
     PERCENTAGE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfTemperature,
 )
@@ -23,7 +26,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceSensorMock, set_devices, setup_config_entry
+from . import (
+    FritzDeviceClimateMock,
+    FritzDeviceSensorMock,
+    set_devices,
+    setup_config_entry,
+)
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -136,3 +144,55 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(f"{SENSOR_DOMAIN}.new_device_temperature")
     assert state
+
+
+@pytest.mark.parametrize(
+    ("next_changes", "expected_states"),
+    [
+        (
+            [0, 16],
+            [STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN],
+        ),
+        (
+            [0, 22],
+            [STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN, STATE_UNKNOWN],
+        ),
+        (
+            [1726855200, 16.0],
+            ["2024-09-20T18:00:00+00:00", "16.0", PRESET_ECO, PRESET_COMFORT],
+        ),
+        (
+            [1726855200, 22.0],
+            ["2024-09-20T18:00:00+00:00", "22.0", PRESET_COMFORT, PRESET_ECO],
+        ),
+    ],
+)
+async def test_next_change_sensors(
+    hass: HomeAssistant, fritz: Mock, next_changes: list, expected_states: list
+) -> None:
+    """Test next change sensors."""
+    device = FritzDeviceClimateMock()
+    device.nextchange_endperiod = next_changes[0]
+    device.nextchange_temperature = next_changes[1]
+
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    base_name = f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
+
+    state = hass.states.get(f"{base_name}_next_scheduled_change_time")
+    assert state
+    assert state.state == expected_states[0]
+
+    state = hass.states.get(f"{base_name}_next_scheduled_temperature")
+    assert state
+    assert state.state == expected_states[1]
+
+    state = hass.states.get(f"{base_name}_next_scheduled_preset")
+    assert state
+    assert state.state == expected_states[2]
+
+    state = hass.states.get(f"{base_name}_current_scheduled_preset")
+    assert state
+    assert state.state == expected_states[3]

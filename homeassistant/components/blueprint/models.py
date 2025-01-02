@@ -44,7 +44,7 @@ from .errors import (
     InvalidBlueprintInputs,
     MissingInput,
 )
-from .schemas import BLUEPRINT_INSTANCE_FIELDS, BLUEPRINT_SCHEMA
+from .schemas import BLUEPRINT_INSTANCE_FIELDS
 
 
 class Blueprint:
@@ -56,10 +56,11 @@ class Blueprint:
         *,
         path: str | None = None,
         expected_domain: str | None = None,
+        schema: Callable[[Any], Any],
     ) -> None:
         """Initialize a blueprint."""
         try:
-            data = self.data = BLUEPRINT_SCHEMA(data)
+            data = self.data = schema(data)
         except vol.Invalid as err:
             raise InvalidBlueprint(expected_domain, path, data, err) from err
 
@@ -197,6 +198,7 @@ class DomainBlueprints:
         logger: logging.Logger,
         blueprint_in_use: Callable[[HomeAssistant, str], bool],
         reload_blueprint_consumers: Callable[[HomeAssistant, str], Awaitable[None]],
+        blueprint_schema: Callable[[Any], Any],
     ) -> None:
         """Initialize a domain blueprints instance."""
         self.hass = hass
@@ -206,6 +208,7 @@ class DomainBlueprints:
         self._reload_blueprint_consumers = reload_blueprint_consumers
         self._blueprints: dict[str, Blueprint | None] = {}
         self._load_lock = asyncio.Lock()
+        self._blueprint_schema = blueprint_schema
 
         hass.data.setdefault(DOMAIN, {})[domain] = self
 
@@ -233,7 +236,10 @@ class DomainBlueprints:
             raise FailedToLoad(self.domain, blueprint_path, err) from err
 
         return Blueprint(
-            blueprint_data, expected_domain=self.domain, path=blueprint_path
+            blueprint_data,
+            expected_domain=self.domain,
+            path=blueprint_path,
+            schema=self._blueprint_schema,
         )
 
     def _load_blueprints(self) -> dict[str, Blueprint | BlueprintException | None]:

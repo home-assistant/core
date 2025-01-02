@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import (
     ATTR_ONOFF,
     ATTR_TIME_PERIOD,
@@ -24,6 +24,7 @@ from .const import (
     SERVICE_BOOST_HOT_WATER,
     WATER_HEATER_MODES,
 )
+from .entity import HiveEntity
 
 HOTWATER_NAME = "Hot Water"
 PARALLEL_UPDATES = 0

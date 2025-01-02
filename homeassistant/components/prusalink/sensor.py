@@ -29,9 +29,9 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from . import PrusaLinkEntity
 from .const import DOMAIN
 from .coordinator import PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 

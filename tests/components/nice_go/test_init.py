@@ -81,7 +81,6 @@ async def test_firmware_update_required(
                     "displayName": "test-display-name",
                     "migrationStatus": "NOT_STARTED",
                 },
-                desired=None,
                 connectionState=None,
                 version=None,
                 timestamp=None,
@@ -347,7 +346,7 @@ async def test_no_connection_state(
         }
     )
 
-    assert hass.states.get("cover.test_garage_1").state == "unavailable"
+    assert hass.states.get("cover.test_garage_1").state == "open"
 
 
 async def test_connection_attempts_exhausted(

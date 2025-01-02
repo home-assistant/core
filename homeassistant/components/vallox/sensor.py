@@ -25,7 +25,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -34,6 +33,7 @@ from .const import (
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ValloxSensorEntity(ValloxEntity, SensorEntity):

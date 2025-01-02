@@ -1,0 +1,1305 @@
+# serializer version: 1
+# name: test_buttons[healer_fixture][button.test_user_allocate_all_stat_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allocate all stat points',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_allocate_all_stat_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Allocate all stat points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_blessing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_blessing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blessing',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.HEAL_ALL: 'heal_all'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal_all',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_blessing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_healAll.png',
+      'friendly_name': 'test-user Blessing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_blessing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_buy_a_health_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy a health potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_buy_a_health_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      'friendly_name': 'test-user Buy a health potion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_healing_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_healing_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Healing light',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.HEAL: 'heal'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_healing_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_heal.png',
+      'friendly_name': 'test-user Healing light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_healing_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_protective_aura-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_protective_aura',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Protective aura',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.PROTECT_AURA: 'protect_aura'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_protect_aura',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_protective_aura-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_protectAura.png',
+      'friendly_name': 'test-user Protective aura',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_protective_aura',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_revive_from_death-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_revive_from_death',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Revive from death',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_revive_from_death-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Revive from death',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_revive_from_death',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_searing_brightness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_searing_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Searing brightness',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.BRIGHTNESS: 'brightness'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_brightness',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_searing_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_brightness.png',
+      'friendly_name': 'test-user Searing brightness',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_searing_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_start_my_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_start_my_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start my day',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[healer_fixture][button.test_user_start_my_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Start my day',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_start_my_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_allocate_all_stat_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allocate all stat points',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_allocate_all_stat_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Allocate all stat points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_buy_a_health_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy a health potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_buy_a_health_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      'friendly_name': 'test-user Buy a health potion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_revive_from_death-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_revive_from_death',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Revive from death',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_revive_from_death-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Revive from death',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_revive_from_death',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_start_my_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_start_my_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start my day',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_start_my_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Start my day',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_start_my_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_stealth-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_stealth',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Stealth',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.STEALTH: 'stealth'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_stealth',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_stealth-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_stealth.png',
+      'friendly_name': 'test-user Stealth',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_stealth',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_tools_of_the_trade-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_tools_of_the_trade',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tools of the trade',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.TOOLS_OF_TRADE: 'tools_of_trade'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_tools_of_trade',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[rogue_fixture][button.test_user_tools_of_the_trade-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_toolsOfTrade.png',
+      'friendly_name': 'test-user Tools of the trade',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_tools_of_the_trade',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_allocate_all_stat_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allocate all stat points',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_allocate_all_stat_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Allocate all stat points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_buy_a_health_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy a health potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_buy_a_health_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      'friendly_name': 'test-user Buy a health potion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_defensive_stance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_defensive_stance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Defensive stance',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.DEFENSIVE_STANCE: 'defensive_stance'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_defensive_stance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_defensive_stance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_defensiveStance.png',
+      'friendly_name': 'test-user Defensive stance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_defensive_stance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_intimidating_gaze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_intimidating_gaze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Intimidating gaze',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.INTIMIDATE: 'intimidate'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intimidate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_intimidating_gaze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_intimidate.png',
+      'friendly_name': 'test-user Intimidating gaze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_intimidating_gaze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_revive_from_death-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_revive_from_death',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Revive from death',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_revive_from_death-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Revive from death',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_revive_from_death',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_start_my_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_start_my_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start my day',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_start_my_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Start my day',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_start_my_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_valorous_presence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_valorous_presence',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Valorous presence',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.VALOROUS_PRESENCE: 'valorous_presence'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_valorous_presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[warrior_fixture][button.test_user_valorous_presence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_valorousPresence.png',
+      'friendly_name': 'test-user Valorous presence',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_valorous_presence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_allocate_all_stat_points-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allocate all stat points',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_allocate_all_stat_points-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Allocate all stat points',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_allocate_all_stat_points',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_buy_a_health_potion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy a health potion',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_buy_a_health_potion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_potion.png',
+      'friendly_name': 'test-user Buy a health potion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_buy_a_health_potion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_chilling_frost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_chilling_frost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chilling frost',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.FROST: 'frost'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_frost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_chilling_frost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_frost.png',
+      'friendly_name': 'test-user Chilling frost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_chilling_frost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_earthquake-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_earthquake',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Earthquake',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.EARTH: 'earth'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_earth',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_earthquake-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_earth.png',
+      'friendly_name': 'test-user Earthquake',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_earthquake',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_ethereal_surge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_ethereal_surge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ethereal surge',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.MPHEAL: 'mpheal'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mpheal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_ethereal_surge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_mpheal.png',
+      'friendly_name': 'test-user Ethereal surge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_ethereal_surge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_revive_from_death-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_revive_from_death',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Revive from death',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_revive_from_death-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Revive from death',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_revive_from_death',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_start_my_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.test_user_start_my_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start my day',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[wizard_fixture][button.test_user_start_my_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Start my day',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.test_user_start_my_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

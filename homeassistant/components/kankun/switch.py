@@ -89,7 +89,7 @@ class KankunSwitch(SwitchEntity):
 
     def _switch(self, newstate):
         """Switch on or off."""
-        _LOGGER.info("Switching to state: %s", newstate)
+        _LOGGER.debug("Switching to state: %s", newstate)
 
         try:
             req = requests.get(
@@ -101,7 +101,7 @@ class KankunSwitch(SwitchEntity):
 
     def _query_state(self):
         """Query switch state."""
-        _LOGGER.info("Querying state from: %s", self._url)
+        _LOGGER.debug("Querying state from: %s", self._url)
 
         try:
             req = requests.get(f"{self._url}?get=state", auth=self._auth, timeout=5)

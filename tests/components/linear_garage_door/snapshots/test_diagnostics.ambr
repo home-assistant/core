@@ -63,6 +63,8 @@
         'site_id': 'test-site-id',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'linear_garage_door',
       'entry_id': 'acefdd4b3a4a0911067d1cf51414201e',
       'minor_version': 1,

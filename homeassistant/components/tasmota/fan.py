@@ -24,7 +24,7 @@ from homeassistant.util.percentage import (
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 ORDERED_NAMED_FAN_SPEEDS = [
     tasmota_const.FAN_SPEED_LOW,
@@ -72,7 +72,6 @@ class TasmotaFan(
     )
     _fan_speed = tasmota_const.FAN_SPEED_MEDIUM
     _tasmota_entity: tasmota_fan.TasmotaFan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the Tasmota fan."""

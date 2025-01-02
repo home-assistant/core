@@ -10,12 +10,18 @@ from rokuecp import Roku, RokuError
 import voluptuous as vol
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from . import RokuConfigEntry
+from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -52,20 +58,38 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_info = {}
 
     @callback
-    def _show_form(self, errors: dict[str, Any] | None = None) -> ConfigFlowResult:
+    def _show_form(
+        self,
+        user_input: dict[str, Any] | None,
+        errors: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
         """Show the form to the user."""
+        suggested_values = user_input
+        if suggested_values is None and self.source == SOURCE_RECONFIGURE:
+            suggested_values = {
+                CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST]
+            }
+
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, suggested_values
+            ),
             errors=errors or {},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self.async_step_user(user_input)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
-            return self._show_form()
+            return self._show_form(user_input)
 
         errors = {}
 
@@ -74,13 +98,21 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         except RokuError:
             _LOGGER.debug("Roku Error", exc_info=True)
             errors["base"] = ERROR_CANNOT_CONNECT
-            return self._show_form(errors)
+            return self._show_form(user_input, errors)
         except Exception:
             _LOGGER.exception("Unknown error trying to connect")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
         await self.async_set_unique_id(info["serial_number"])
-        self._abort_if_unique_id_configured(updates={CONF_HOST: user_input[CONF_HOST]})
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="wrong_device")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates={CONF_HOST: user_input[CONF_HOST]},
+            )
+
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -154,4 +186,37 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self.discovery_info[CONF_NAME],
             data=self.discovery_info,
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: RokuConfigEntry,
+    ) -> RokuOptionsFlowHandler:
+        """Create the options flow."""
+        return RokuOptionsFlowHandler()
+
+
+class RokuOptionsFlowHandler(OptionsFlow):
+    """Handle Roku options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Roku options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PLAY_MEDIA_APP_ID,
+                        default=self.config_entry.options.get(
+                            CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID
+                        ),
+                    ): str,
+                }
+            ),
         )

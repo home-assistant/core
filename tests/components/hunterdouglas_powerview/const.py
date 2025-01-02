@@ -6,6 +6,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 
 MOCK_MAC = "AA::BB::CC::DD::EE::FF"
+MOCK_SERIAL = "A1B2C3D4E5G6H7"
 
 HOMEKIT_DISCOVERY_GEN2 = zeroconf.ZeroconfServiceInfo(
     ip_address="1.2.3.4",
@@ -41,7 +42,7 @@ ZEROCONF_DISCOVERY_GEN3 = zeroconf.ZeroconfServiceInfo(
     ip_address="1.2.3.4",
     ip_addresses=[IPv4Address("1.2.3.4")],
     hostname="mock_hostname",
-    name="Powerview Generation 3._powerview-g3._tcp.local.",
+    name="Powerview Generation 3._PowerView-G3._tcp.local.",
     port=None,
     properties={},
     type="mock_type",

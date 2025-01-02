@@ -10,13 +10,7 @@ from deluge_client.client import DelugeRPCClient
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SOURCE,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -44,12 +38,10 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST] == entry.data[CONF_HOST]
                         and user_input[CONF_PORT] == entry.data[CONF_PORT]
                     ):
-                        if self.context.get(CONF_SOURCE) == SOURCE_REAUTH:
-                            self.hass.config_entries.async_update_entry(
+                        if self.source == SOURCE_REAUTH:
+                            return self.async_update_reload_and_abort(
                                 entry, data=user_input
                             )
-                            await self.hass.config_entries.async_reload(entry.entry_id)
-                            return self.async_abort(reason="reauth_successful")
                         return self.async_abort(reason="already_configured")
                 return self.async_create_entry(
                     title=DEFAULT_NAME,

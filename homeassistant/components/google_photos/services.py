@@ -24,14 +24,17 @@ from .const import DOMAIN, UPLOAD_SCOPE
 from .types import GooglePhotosConfigEntry
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
+CONF_ALBUM = "album"
 
 UPLOAD_SERVICE = "upload"
 UPLOAD_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(CONF_ALBUM): cv.string,
     }
 )
+CONTENT_SIZE_LIMIT = 20 * 1024 * 1024
 
 
 def _read_file_contents(
@@ -52,6 +55,16 @@ def _read_file_contents(
                 translation_domain=DOMAIN,
                 translation_key="filename_does_not_exist",
                 translation_placeholders={"filename": filename},
+            )
+        if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="file_too_large",
+                translation_placeholders={
+                    "filename": filename,
+                    "size": str(filename_path.stat().st_size),
+                    "limit": str(CONTENT_SIZE_LIMIT),
+                },
             )
         mime_type, _ = mimetypes.guess_type(filename)
         if mime_type is None or not (mime_type.startswith(("image", "video"))):
@@ -85,12 +98,23 @@ def async_register_services(hass: HomeAssistant) -> None:
                 translation_key="missing_upload_permission",
                 translation_placeholders={"target": DOMAIN},
             )
-
-        client_api = config_entry.runtime_data
+        coordinator = config_entry.runtime_data
+        client_api = coordinator.client
         upload_tasks = []
         file_results = await hass.async_add_executor_job(
             _read_file_contents, hass, call.data[CONF_FILENAME]
         )
+
+        album = call.data[CONF_ALBUM]
+        try:
+            album_id = await coordinator.get_or_create_album(album)
+        except GooglePhotosApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="create_album_error",
+                translation_placeholders={"message": str(err)},
+            ) from err
+
         for mime_type, content in file_results:
             upload_tasks.append(client_api.upload_content(content, mime_type))
         try:
@@ -108,7 +132,8 @@ def async_register_services(hass: HomeAssistant) -> None:
                         SimpleMediaItem(upload_token=upload_result.upload_token)
                     )
                     for upload_result in upload_results
-                ]
+                ],
+                album_id=album_id,
             )
         except GooglePhotosApiError as err:
             raise HomeAssistantError(
@@ -124,7 +149,8 @@ def async_register_services(hass: HomeAssistant) -> None:
                         for item_result in upload_result.new_media_item_results
                         if item_result.media_item and item_result.media_item.id
                     }
-                ]
+                ],
+                "album_id": album_id,
             }
         return None
 

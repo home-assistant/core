@@ -171,9 +171,11 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> DSMROptionFlowHandler:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
-        return DSMROptionFlowHandler(config_entry)
+        return DSMROptionFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -311,10 +313,6 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 class DSMROptionFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.entry = entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -328,7 +326,7 @@ class DSMROptionFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TIME_BETWEEN_UPDATE,
-                        default=self.entry.options.get(
+                        default=self.config_entry.options.get(
                             CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0)),

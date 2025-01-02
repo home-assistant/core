@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VolvoEntity, VolvoUpdateCoordinator
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
+from .coordinator import VolvoUpdateCoordinator
+from .entity import VolvoEntity
 
 
 async def async_setup_entry(

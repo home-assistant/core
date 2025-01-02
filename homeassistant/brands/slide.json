@@ -1,0 +1,5 @@
+{
+  "domain": "slide",
+  "name": "Slide",
+  "integrations": ["slide", "slide_local"]
+}

@@ -12,9 +12,12 @@ WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 VEHICLE_DATA = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_ASLEEP = load_json_object_fixture("vehicle_data.json", DOMAIN)
+VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 
 COMMAND_OK = {"response": {"result": True, "reason": ""}}
 COMMAND_REASON = {"response": {"result": False, "reason": "already closed"}}
@@ -43,9 +46,25 @@ METADATA = {
         "energy_device_data",
         "energy_cmds",
     ],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": False,
+            "access": True,
+            "polling": True,
+            "firmware": "2024.44.25",
+        }
+    },
 }
 METADATA_NOSCOPE = {
     "uid": "abc-123",
     "region": "NA",
     "scopes": ["openid", "offline_access", "vehicle_device_data"],
+    "vehicles": {
+        "LRW3F7EK4NC700000": {
+            "proxy": False,
+            "access": True,
+            "polling": True,
+            "firmware": "2024.44.25",
+        }
+    },
 }

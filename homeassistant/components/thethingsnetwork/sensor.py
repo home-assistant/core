@@ -4,10 +4,11 @@ import logging
 
 from ttn_client import TTNSensorValue
 
-from homeassistant.components.sensor import SensorEntity, StateType
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import CONF_APP_ID, DOMAIN
 from .entity import TTNEntity

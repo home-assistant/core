@@ -8,7 +8,7 @@ from aioruckus import AjaxSession, SystemStat
 from aioruckus.exceptions import AuthenticationError, SchemaError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -64,8 +64,6 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,27 +80,24 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if self._reauth_entry is None:
-                    await self.async_set_unique_id(info[KEY_SYS_SERIAL])
+                await self.async_set_unique_id(info[KEY_SYS_SERIAL])
+                if self.source != SOURCE_REAUTH:
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=info[KEY_SYS_TITLE], data=user_input
                     )
-                if info[KEY_SYS_SERIAL] == self._reauth_entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=user_input
+                reauth_entry = self._get_reauth_entry()
+                if info[KEY_SYS_SERIAL] == reauth_entry.unique_id:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data=user_input
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-                    return self.async_abort(reason="reauth_successful")
                 errors["base"] = "invalid_host"
 
-        data_schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
-        )
+        data_schema = DATA_SCHEMA
+        if self.source == SOURCE_REAUTH:
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, self._get_reauth_entry().data
+            )
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
@@ -111,9 +106,6 @@ class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()
 
 

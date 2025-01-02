@@ -54,7 +54,10 @@ async def async_init_integration(
             text=load_fixture(set_fan_speed_fixture),
         )
         entry = MockConfigEntry(
-            domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
+            domain=DOMAIN,
+            data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
+            minor_version=2,
+            unique_id="123456",
         )
         entry.add_to_hass(hass)
 

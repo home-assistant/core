@@ -1,0 +1,318 @@
+# serializer version: 1
+# name: test_states[camera.front_door_last_recording-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_door_last_recording',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last recording',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_recording',
+    'unique_id': '987654-last_recording',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front_door_last_recording-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front_door_last_recording?token=1caab5c3b3',
+      'friendly_name': 'Front Door Last recording',
+      'last_video_id': None,
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_door_last_recording',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.front_door_live_view-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_door_live_view',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Live view',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'live_view',
+    'unique_id': '987654-live_view',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front_door_live_view-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front_door_live_view?token=1caab5c3b3',
+      'friendly_name': 'Front Door Live view',
+      'frontend_stream_type': <StreamType.WEB_RTC: 'web_rtc'>,
+      'last_video_id': None,
+      'supported_features': <CameraEntityFeature: 2>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_door_live_view',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.front_last_recording-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_last_recording',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last recording',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_recording',
+    'unique_id': '765432-last_recording',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front_last_recording-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front_last_recording?token=1caab5c3b3',
+      'friendly_name': 'Front Last recording',
+      'last_video_id': None,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_last_recording',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.front_live_view-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_live_view',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Live view',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'live_view',
+    'unique_id': '765432-live_view',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.front_live_view-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.front_live_view?token=1caab5c3b3',
+      'friendly_name': 'Front Live view',
+      'frontend_stream_type': <StreamType.WEB_RTC: 'web_rtc'>,
+      'last_video_id': None,
+      'supported_features': <CameraEntityFeature: 2>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_live_view',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.internal_last_recording-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.internal_last_recording',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last recording',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_recording',
+    'unique_id': '345678-last_recording',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.internal_last_recording-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.internal_last_recording?token=1caab5c3b3',
+      'friendly_name': 'Internal Last recording',
+      'last_video_id': None,
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 0>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.internal_last_recording',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[camera.internal_live_view-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.internal_live_view',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Live view',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': 'live_view',
+    'unique_id': '345678-live_view',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.internal_live_view-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'attribution': 'Data provided by Ring.com',
+      'entity_picture': '/api/camera_proxy/camera.internal_live_view?token=1caab5c3b3',
+      'friendly_name': 'Internal Live view',
+      'frontend_stream_type': <StreamType.WEB_RTC: 'web_rtc'>,
+      'last_video_id': None,
+      'supported_features': <CameraEntityFeature: 2>,
+      'video_url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.internal_live_view',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

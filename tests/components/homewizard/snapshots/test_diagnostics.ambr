@@ -82,8 +82,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -171,8 +171,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -311,8 +311,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -404,8 +404,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -497,8 +497,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -586,8 +586,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -675,8 +675,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })
@@ -764,8 +764,8 @@
     }),
     'entry': dict({
       'ip_address': '**REDACTED**',
-      'product_name': 'Product name',
-      'product_type': 'product_type',
+      'product_name': 'P1 Meter',
+      'product_type': 'HWE-P1',
       'serial': '**REDACTED**',
     }),
   })

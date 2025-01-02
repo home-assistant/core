@@ -137,6 +137,23 @@ async def test_zero_conf(hass: HomeAssistant) -> None:
     assert result["data"] == CONF_DATA
 
 
+async def test_url_rewrite(hass: HomeAssistant) -> None:
+    """Test auth flow url rewrite."""
+    with patch(
+        "homeassistant.components.radarr.config_flow.RadarrClient.async_try_zeroconf",
+        return_value=("v3", API_KEY, "/test"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={CONF_SOURCE: SOURCE_USER},
+            data={CONF_URL: "https://192.168.1.100/test", CONF_VERIFY_SSL: False},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"][CONF_URL] == "https://192.168.1.100:443/test"
+
+
 @pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_full_reauth_flow_implementation(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker

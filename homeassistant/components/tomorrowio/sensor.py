@@ -38,7 +38,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import TomorrowioEntity
 from .const import (
     DOMAIN,
     TMRW_ATTR_CARBON_MONOXIDE,
@@ -70,6 +69,7 @@ from .const import (
     TMRW_ATTR_WIND_GUST,
 )
 from .coordinator import TomorrowioDataUpdateCoordinator
+from .entity import TomorrowioEntity
 
 
 @dataclass(frozen=True)

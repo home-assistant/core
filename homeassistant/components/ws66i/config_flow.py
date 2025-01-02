@@ -130,7 +130,7 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> Ws66iOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return Ws66iOptionsFlowHandler(config_entry)
+        return Ws66iOptionsFlowHandler()
 
 
 @callback
@@ -144,10 +144,6 @@ def _key_for_source(
 
 class Ws66iOptionsFlowHandler(OptionsFlow):
     """Handle a WS66i options flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None

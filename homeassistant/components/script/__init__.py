@@ -5,10 +5,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
-from functools import cached_property
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

@@ -49,7 +49,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OpenThermGwOptionsFlow:
         """Get the options flow for this handler."""
-        return OpenThermGwOptionsFlow(config_entry)
+        return OpenThermGwOptionsFlow()
 
     async def async_step_init(
         self, info: dict[str, Any] | None = None
@@ -131,10 +131,6 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class OpenThermGwOptionsFlow(OptionsFlow):
     """Handle opentherm_gw options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -18,7 +18,7 @@ from nettigo_air_monitor import (
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -72,11 +72,8 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self.host: str
-        self.entry: ConfigEntry
-        self._config: NamConfig
+    _config: NamConfig
+    host: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -189,8 +186,6 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.entry = entry
         self.host = entry_data[CONF_HOST]
         self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
@@ -212,11 +207,9 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             ):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            self.hass.config_entries.async_update_entry(
-                self.entry, data={**user_input, CONF_HOST: self.host}
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data={**user_input, CONF_HOST: self.host}
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -226,24 +219,12 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if TYPE_CHECKING:
-            assert entry is not None
-
-        self.host = entry.data[CONF_HOST]
-        self.entry = entry
-
-        return await self.async_step_reconfigure_confirm()
-
-    async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a reconfiguration flow initialized by the user."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        self.host = reconfigure_entry.data[CONF_HOST]
 
         if user_input is not None:
             try:
@@ -251,21 +232,20 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
-                if format_mac(config.mac_address) != self.entry.unique_id:
-                    return self.async_abort(reason="another_device")
+                await self.async_set_unique_id(format_mac(config.mac_address))
+                self._abort_if_unique_id_mismatch(reason="another_device")
 
-                data = {**self.entry.data, CONF_HOST: user_input[CONF_HOST]}
-                self.hass.config_entries.async_update_entry(self.entry, data=data)
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates={CONF_HOST: user_input[CONF_HOST]}
+                )
 
         return self.async_show_form(
-            step_id="reconfigure_confirm",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
                 }
             ),
-            description_placeholders={"device_name": self.entry.title},
+            description_placeholders={"device_name": reconfigure_entry.title},
             errors=errors,
         )

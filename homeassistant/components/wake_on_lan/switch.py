@@ -113,7 +113,7 @@ class WolSwitch(SwitchEntity):
         if self._broadcast_port is not None:
             service_kwargs["port"] = self._broadcast_port
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Send magic packet to mac %s (broadcast: %s, port: %s)",
             self._mac_address,
             self._broadcast_address,

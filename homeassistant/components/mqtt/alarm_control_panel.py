@@ -7,23 +7,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_NAME,
-    CONF_VALUE_TEMPLATE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CODE, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,12 +28,14 @@ from .const import (
     CONF_SUPPORTED_FEATURES,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 _SUPPORTED_FEATURES = {
     "arm_home": AlarmControlPanelEntityFeature.ARM_HOME,
@@ -182,29 +173,30 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             )
             return
         if payload == PAYLOAD_NONE:
-            self._attr_state = None
+            self._attr_alarm_state = None
             return
         if payload not in (
-            STATE_ALARM_DISARMED,
-            STATE_ALARM_ARMED_HOME,
-            STATE_ALARM_ARMED_AWAY,
-            STATE_ALARM_ARMED_NIGHT,
-            STATE_ALARM_ARMED_VACATION,
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            STATE_ALARM_PENDING,
-            STATE_ALARM_ARMING,
-            STATE_ALARM_DISARMING,
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelState.DISARMED,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.PENDING,
+            AlarmControlPanelState.ARMING,
+            AlarmControlPanelState.DISARMING,
+            AlarmControlPanelState.TRIGGERED,
         ):
             _LOGGER.warning("Received unexpected payload: %s", msg.payload)
             return
-        self._attr_state = str(payload)
+        assert isinstance(payload, str)
+        self._attr_alarm_state = AlarmControlPanelState(payload)
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_state"}
+            CONF_STATE_TOPIC, self._state_message_received, {"_attr_alarm_state"}
         )
 
     async def _subscribe_topics(self) -> None:

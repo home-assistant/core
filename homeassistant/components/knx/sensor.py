@@ -35,7 +35,7 @@ from homeassistant.util.enum import try_parse_enum
 
 from . import KNXModule
 from .const import ATTR_SOURCE, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -211,7 +211,7 @@ class KNXSystemSensor(SensorEntity):
             return True
         return self.knx.xknx.connection_manager.state is XknxConnectionState.CONNECTED
 
-    def after_update_callback(self, _: XknxConnectionState) -> None:
+    def after_update_callback(self, device: XknxConnectionState) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

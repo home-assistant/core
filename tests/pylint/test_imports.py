@@ -209,6 +209,10 @@ def test_good_root_import(
             "homeassistant.components.pylint_test.climate",
         ),
         (
+            "from homeassistant.components.climate.entity import ClimateEntityFeature",
+            "homeassistant.components.pylint_test.climate",
+        ),
+        (
             "from homeassistant.components.climate import const",
             "tests.components.pylint_test.climate",
         ),
@@ -218,6 +222,10 @@ def test_good_root_import(
         ),
         (
             "import homeassistant.components.climate.const as climate",
+            "tests.components.pylint_test.climate",
+        ),
+        (
+            "import homeassistant.components.climate.entity as climate",
             "tests.components.pylint_test.climate",
         ),
     ],

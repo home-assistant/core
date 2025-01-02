@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from autarco import AccountSite, Inverter, Solar
+from autarco import AccountSite, Battery, Inverter, Solar
 import pytest
 
 from homeassistant.components.autarco.const import DOMAIN
@@ -66,6 +66,17 @@ def mock_autarco_client() -> Generator[AsyncMock]:
                 health="OK",
             ),
         }
+        client.get_battery.return_value = Battery(
+            flow_now=777,
+            net_charged_now=777,
+            state_of_charge=56,
+            discharged_today=2,
+            discharged_month=25,
+            discharged_total=696,
+            charged_today=1,
+            charged_month=26,
+            charged_total=748,
+        )
         yield client
 
 

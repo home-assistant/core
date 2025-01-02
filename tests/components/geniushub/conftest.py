@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from geniushubclient import GeniusDevice, GeniusZone
 import pytest
@@ -11,7 +11,6 @@ from homeassistant.components.geniushub.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_array_fixture
-from tests.components.smhi.common import AsyncMock
 
 
 @pytest.fixture
@@ -40,13 +39,13 @@ def mock_geniushub_client() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def zones() -> list[dict[str, Any]]:
     """Return a list of zones."""
     return load_json_array_fixture("zones_cloud_test_data.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="package")
 def devices() -> list[dict[str, Any]]:
     """Return a list of devices."""
     return load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)

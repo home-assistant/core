@@ -21,7 +21,7 @@ from homeassistant.util.scaling import int_states_in_range
 
 from . import KNXModule
 from .const import KNX_ADDRESS, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 from .schema import FanSchema
 
 DEFAULT_PERCENTAGE: Final = 50
@@ -43,7 +43,6 @@ class KNXFan(KnxYamlEntity, FanEntity):
     """Representation of a KNX fan."""
 
     _device: XknxFan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX fan."""

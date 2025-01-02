@@ -1,7 +1,7 @@
 """Tests for AVM Fritz!Box climate component."""
 
 from datetime import timedelta
-from unittest.mock import Mock, call
+from unittest.mock import Mock, _Call, call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -123,7 +123,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
         f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_next_scheduled_change_time"
     )
     assert state
-    assert state.state == "1970-01-01T00:00:00+00:00"
+    assert state.state == "2024-09-20T18:00:00+00:00"
     assert (
         state.attributes[ATTR_FRIENDLY_NAME]
         == f"{CONF_FAKE_NAME} Next scheduled change time"
@@ -270,8 +270,33 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
     assert fritz().login.call_count == 4
 
 
-async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test setting temperature by temperature."""
+@pytest.mark.parametrize(
+    ("service_data", "expected_call_args"),
+    [
+        ({ATTR_TEMPERATURE: 23}, [call(23)]),
+        (
+            {
+                ATTR_HVAC_MODE: HVACMode.OFF,
+                ATTR_TEMPERATURE: 23,
+            },
+            [call(0)],
+        ),
+        (
+            {
+                ATTR_HVAC_MODE: HVACMode.HEAT,
+                ATTR_TEMPERATURE: 23,
+            },
+            [call(23)],
+        ),
+    ],
+)
+async def test_set_temperature(
+    hass: HomeAssistant,
+    fritz: Mock,
+    service_data: dict,
+    expected_call_args: list[_Call],
+) -> None:
+    """Test setting temperature."""
     device = FritzDeviceClimateMock()
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
@@ -280,56 +305,53 @@ async def test_set_temperature_temperature(hass: HomeAssistant, fritz: Mock) -> 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 23},
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(23)]
+    assert device.set_target_temperature.call_count == len(expected_call_args)
+    assert device.set_target_temperature.call_args_list == expected_call_args
 
 
-async def test_set_temperature_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test setting temperature by mode."""
-    device = FritzDeviceClimateMock()
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: HVACMode.OFF,
-            ATTR_TEMPERATURE: 23,
-        },
-        True,
-    )
-    assert device.set_target_temperature.call_args_list == [call(0)]
-
-
-async def test_set_temperature_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test setting temperature by mode."""
-    device = FritzDeviceClimateMock()
-    device.target_temperature = 0.0
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_HVAC_MODE: HVACMode.HEAT,
-            ATTR_TEMPERATURE: 23,
-        },
-        True,
-    )
-    assert device.set_target_temperature.call_args_list == [call(22)]
-
-
-async def test_set_hvac_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
+@pytest.mark.parametrize(
+    ("service_data", "target_temperature", "current_preset", "expected_call_args"),
+    [
+        # mode off always sets target temperature to 0
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, PRESET_COMFORT, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, PRESET_ECO, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, None, [call(0)]),
+        # mode heat sets target temperature based on current scheduled preset,
+        # when not already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_COMFORT, [call(22)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, None, [call(22)]),
+        # mode heat does not set target temperature, when already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, None, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, None, []),
+    ],
+)
+async def test_set_hvac_mode(
+    hass: HomeAssistant,
+    fritz: Mock,
+    service_data: dict,
+    target_temperature: float,
+    current_preset: str,
+    expected_call_args: list[_Call],
+) -> None:
     """Test setting hvac mode."""
     device = FritzDeviceClimateMock()
+    device.target_temperature = target_temperature
+
+    if current_preset is PRESET_COMFORT:
+        device.nextchange_temperature = device.eco_temperature
+    elif current_preset is PRESET_ECO:
+        device.nextchange_temperature = device.comfort_temperature
+    else:
+        device.nextchange_endperiod = 0
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -337,43 +359,12 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, fritz: Mock) -> None:
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(0)]
 
-
-async def test_no_reset_hvac_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test setting hvac mode."""
-    device = FritzDeviceClimateMock()
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
-        True,
-    )
-    assert device.set_target_temperature.call_count == 0
-
-
-async def test_set_hvac_mode_heat(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test setting hvac mode."""
-    device = FritzDeviceClimateMock()
-    device.target_temperature = 0.0
-    assert await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
-    )
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
-        True,
-    )
-    assert device.set_target_temperature.call_args_list == [call(22)]
+    assert device.set_target_temperature.call_count == len(expected_call_args)
+    assert device.set_target_temperature.call_args_list == expected_call_args
 
 
 async def test_set_preset_mode_comfort(hass: HomeAssistant, fritz: Mock) -> None:

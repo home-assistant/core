@@ -20,7 +20,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsChildEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 DICT_HA_TO_MYS = {
@@ -72,7 +72,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

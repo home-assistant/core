@@ -47,7 +47,10 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name = device.name
         self._host = host
         self._set_confirm_only()
-        self.context["title_placeholders"] = {"name": self._name, "host": host}
+        self.context["title_placeholders"] = {
+            "name": self._name or "LOOKin",
+            "host": host,
+        }
         return await self.async_step_discovery_confirm()
 
     async def async_step_user(
@@ -92,13 +95,12 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm the discover flow."""
         assert self._host is not None
         if user_input is None:
-            self.context["title_placeholders"] = {
-                "name": self._name,
-                "host": self._host,
-            }
             return self.async_show_form(
                 step_id="discovery_confirm",
-                description_placeholders={"name": self._name, "host": self._host},
+                description_placeholders={
+                    "name": self._name or "LOOKin",
+                    "host": self._host,
+                },
             )
 
         return self.async_create_entry(

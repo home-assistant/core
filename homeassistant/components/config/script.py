@@ -5,10 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.script.config import (
-    SCRIPT_ENTITY_SCHEMA,
-    async_validate_config_item,
-)
+from homeassistant.components.script.config import async_validate_config_item
 from homeassistant.config import SCRIPT_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -45,7 +42,6 @@ def async_setup(hass: HomeAssistant) -> bool:
             "config",
             SCRIPT_CONFIG_PATH,
             cv.slug,
-            SCRIPT_ENTITY_SCHEMA,
             post_write_hook=hook,
             data_validator=async_validate_config_item,
         )

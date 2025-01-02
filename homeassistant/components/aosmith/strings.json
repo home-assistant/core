@@ -28,12 +28,7 @@
   "entity": {
     "sensor": {
       "hot_water_availability": {
-        "name": "Hot water availability",
-        "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
-        }
+        "name": "Hot water availability"
       },
       "energy_usage": {
         "name": "Energy usage"

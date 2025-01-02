@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from bsblan import Device, Info, Sensor, State, StaticState
+from bsblan import Device, HotWaterState, Info, Sensor, State, StaticState
 import pytest
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
@@ -40,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_bsblan() -> Generator[MagicMock, None, None]:
+def mock_bsblan() -> Generator[MagicMock]:
     """Return a mocked BSBLAN client."""
     with (
         patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
@@ -58,6 +58,11 @@ def mock_bsblan() -> Generator[MagicMock, None, None]:
         bsblan.sensor.return_value = Sensor.from_json(
             load_fixture("sensor.json", DOMAIN)
         )
+        bsblan.hot_water_state.return_value = HotWaterState.from_json(
+            load_fixture("dhw_state.json", DOMAIN)
+        )
+        # mock get_temperature_unit property
+        bsblan.get_temperature_unit = "°C"
 
         yield bsblan
 

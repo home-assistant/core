@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pyzabbix import ZabbixAPI
 import voluptuous as vol
+from zabbix_utils import ZabbixAPI
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -56,7 +56,7 @@ def setup_platform(
         _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
         return
 
-    _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
+    _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
 
     # The following code seems overly complex. Need to think about this...
     if trigger_conf := config.get(_CONF_TRIGGERS):

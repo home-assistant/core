@@ -46,7 +46,6 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
     _attr_min_temp = 5
     _attr_has_entity_name = True
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

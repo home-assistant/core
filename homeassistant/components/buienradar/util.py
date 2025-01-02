@@ -101,7 +101,7 @@ class BrData:
                 if resp.status == HTTPStatus.OK:
                     result[SUCCESS] = True
                 else:
-                    result[MESSAGE] = "Got http statuscode: %d" % (resp.status)
+                    result[MESSAGE] = f"Got http statuscode: {resp.status}"
 
                 return result
         except (TimeoutError, aiohttp.ClientError) as err:

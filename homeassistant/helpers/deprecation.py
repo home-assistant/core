@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
+from contextlib import suppress
+from enum import Enum, EnumType, _EnumDict
 import functools
 import inspect
 import logging
@@ -156,6 +157,30 @@ def _print_deprecation_warning(
 
 
 def _print_deprecation_warning_internal(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
+) -> None:
+    # Suppress ImportError due to use of deprecated enum in core.py
+    # Can be removed in HA Core 2025.1
+    with suppress(ImportError):
+        _print_deprecation_warning_internal_impl(
+            obj_name,
+            module_name,
+            replacement,
+            description,
+            verb,
+            breaks_in_ha_version,
+            log_when_no_integration_is_found=log_when_no_integration_is_found,
+        )
+
+
+def _print_deprecation_warning_internal_impl(
     obj_name: str,
     module_name: str,
     replacement: str,
@@ -338,3 +363,35 @@ def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
         for name in module_globals_keys
         if name.startswith(_PREFIX_DEPRECATED)
     ]
+
+
+class EnumWithDeprecatedMembers(EnumType):
+    """Enum with deprecated members."""
+
+    def __new__(
+        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        cls: str,
+        bases: tuple[type, ...],
+        classdict: _EnumDict,
+        *,
+        deprecated: dict[str, tuple[str, str]],
+        **kwds: Any,
+    ) -> Any:
+        """Create a new class."""
+        classdict["__deprecated__"] = deprecated
+        return super().__new__(mcs, cls, bases, classdict, **kwds)
+
+    def __getattribute__(cls, name: str) -> Any:
+        """Warn if accessing a deprecated member."""
+        deprecated = super().__getattribute__("__deprecated__")
+        if name in deprecated:
+            _print_deprecation_warning_internal(
+                f"{cls.__name__}.{name}",
+                cls.__module__,
+                f"{deprecated[name][0]}",
+                "enum member",
+                "used",
+                deprecated[name][1],
+                log_when_no_integration_is_found=False,
+            )
+        return super().__getattribute__(name)

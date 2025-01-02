@@ -8,8 +8,9 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import WebsocketDataType
@@ -43,10 +44,10 @@ async def test_lock_from_light(
 ) -> None:
     """Test that all supported lock entities based on lights are created."""
     assert len(hass.states.async_all()) == 1
-    assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.door_lock").state == LockState.UNLOCKED
 
     await light_ws_data({"state": {"on": True}})
-    assert hass.states.get("lock.door_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.door_lock").state == LockState.LOCKED
 
     # Verify service calls
 
@@ -107,10 +108,10 @@ async def test_lock_from_sensor(
 ) -> None:
     """Test that all supported lock entities based on sensors are created."""
     assert len(hass.states.async_all()) == 2
-    assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
+    assert hass.states.get("lock.door_lock").state == LockState.UNLOCKED
 
     await sensor_ws_data({"state": {"lockstate": "locked"}})
-    assert hass.states.get("lock.door_lock").state == STATE_LOCKED
+    assert hass.states.get("lock.door_lock").state == LockState.LOCKED
 
     # Verify service calls
 

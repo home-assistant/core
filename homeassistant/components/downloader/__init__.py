@@ -10,17 +10,10 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-)
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
@@ -35,67 +28,6 @@ from .const import (
     DOWNLOAD_FAILED_EVENT,
     SERVICE_DOWNLOAD_FILE,
 )
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DOWNLOAD_DIR): cv.string})},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Downloader component, via the YAML file."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(_async_import_config(hass, config))
-    return True
-
-
-async def _async_import_config(hass: HomeAssistant, config: ConfigType) -> None:
-    """Import the Downloader component from the YAML file."""
-
-    import_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_DOWNLOAD_DIR: config[DOMAIN][CONF_DOWNLOAD_DIR],
-        },
-    )
-
-    if (
-        import_result["type"] == FlowResultType.ABORT
-        and import_result["reason"] != "single_instance_allowed"
-    ):
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="directory_does_not_exist",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Downloader",
-                "url": "/config/integrations/dashboard/add?domain=downloader",
-            },
-        )
-    else:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Downloader",
-            },
-        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

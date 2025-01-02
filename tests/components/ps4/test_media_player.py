@@ -194,10 +194,7 @@ async def test_state_standby_is_set(hass: HomeAssistant) -> None:
 async def test_state_playing_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to playing."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.",
-        "pyps4.Ps4Async.async_get_ps_store_data",
-    )
+    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.async_get_ps_store_data"
 
     with patch(mock_func, return_value=None):
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
@@ -224,10 +221,7 @@ async def test_state_none_is_set(hass: HomeAssistant) -> None:
 async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
     """Test that media attributes are fetched."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.",
-        "pyps4.Ps4Async.async_get_ps_store_data",
-    )
+    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.async_get_ps_store_data"
 
     # Mock result from fetching data.
     mock_result = MagicMock()
@@ -276,8 +270,7 @@ async def test_media_attributes_are_loaded(
     patch_load_json_object.return_value = {MOCK_TITLE_ID: MOCK_GAMES_DATA_LOCKED}
 
     with patch(
-        "homeassistant.components.ps4.media_player."
-        "pyps4.Ps4Async.async_get_ps_store_data",
+        "homeassistant.components.ps4.media_player.pyps4.Ps4Async.async_get_ps_store_data",
         return_value=None,
     ) as mock_fetch:
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
@@ -381,9 +374,7 @@ async def test_device_info_assummed_works(
 async def test_turn_on(hass: HomeAssistant) -> None:
     """Test that turn on service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.wakeup"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.wakeup"
 
     with patch(mock_func) as mock_call:
         await hass.services.async_call(
@@ -397,9 +388,7 @@ async def test_turn_on(hass: HomeAssistant) -> None:
 async def test_turn_off(hass: HomeAssistant) -> None:
     """Test that turn off service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.standby"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.standby"
 
     with patch(mock_func) as mock_call:
         await hass.services.async_call(
@@ -413,9 +402,7 @@ async def test_turn_off(hass: HomeAssistant) -> None:
 async def test_toggle(hass: HomeAssistant) -> None:
     """Test that toggle service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.toggle"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.toggle"
 
     with patch(mock_func) as mock_call:
         await hass.services.async_call(
@@ -429,8 +416,8 @@ async def test_toggle(hass: HomeAssistant) -> None:
 async def test_media_pause(hass: HomeAssistant) -> None:
     """Test that media pause service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.remote_control"
+    mock_func = (
+        "homeassistant.components.ps4.media_player.pyps4.Ps4Async.remote_control"
     )
 
     with patch(mock_func) as mock_call:
@@ -445,8 +432,8 @@ async def test_media_pause(hass: HomeAssistant) -> None:
 async def test_media_stop(hass: HomeAssistant) -> None:
     """Test that media stop service calls function."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4.media_player.", "pyps4.Ps4Async.remote_control"
+    mock_func = (
+        "homeassistant.components.ps4.media_player.pyps4.Ps4Async.remote_control"
     )
 
     with patch(mock_func) as mock_call:

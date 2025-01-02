@@ -7,17 +7,13 @@ from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import MotorReverseTime, MotorStateModifier
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
+from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverState
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -53,7 +49,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
         MockModuleConnection, "control_motors_outputs"
     ) as control_motors_outputs:
         state = hass.states.get(COVER_OUTPUTS)
-        state.state = STATE_CLOSED
+        state.state = CoverState.CLOSED
 
         # command failed
         control_motors_outputs.return_value = False
@@ -71,7 +67,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state != STATE_OPENING
+        assert state.state != CoverState.OPENING
 
         # command success
         control_motors_outputs.reset_mock(return_value=True)
@@ -90,7 +86,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state == STATE_OPENING
+        assert state.state == CoverState.OPENING
 
 
 async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -101,7 +97,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         MockModuleConnection, "control_motors_outputs"
     ) as control_motors_outputs:
         state = hass.states.get(COVER_OUTPUTS)
-        state.state = STATE_OPEN
+        state.state = CoverState.OPEN
 
         # command failed
         control_motors_outputs.return_value = False
@@ -119,7 +115,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state != STATE_CLOSING
+        assert state.state != CoverState.CLOSING
 
         # command success
         control_motors_outputs.reset_mock(return_value=True)
@@ -138,7 +134,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state == STATE_CLOSING
+        assert state.state == CoverState.CLOSING
 
 
 async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -149,7 +145,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
         MockModuleConnection, "control_motors_outputs"
     ) as control_motors_outputs:
         state = hass.states.get(COVER_OUTPUTS)
-        state.state = STATE_CLOSING
+        state.state = CoverState.CLOSING
 
         # command failed
         control_motors_outputs.return_value = False
@@ -165,7 +161,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state == STATE_CLOSING
+        assert state.state == CoverState.CLOSING
 
         # command success
         control_motors_outputs.reset_mock(return_value=True)
@@ -182,7 +178,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
-        assert state.state not in (STATE_CLOSING, STATE_OPENING)
+        assert state.state not in (CoverState.CLOSING, CoverState.OPENING)
 
 
 async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -196,7 +192,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         states[0] = MotorStateModifier.UP
 
         state = hass.states.get(COVER_RELAYS)
-        state.state = STATE_CLOSED
+        state.state = CoverState.CLOSED
 
         # command failed
         control_motors_relays.return_value = False
@@ -212,7 +208,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state != STATE_OPENING
+        assert state.state != CoverState.OPENING
 
         # command success
         control_motors_relays.reset_mock(return_value=True)
@@ -229,7 +225,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state == STATE_OPENING
+        assert state.state == CoverState.OPENING
 
 
 async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -243,7 +239,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
         states[0] = MotorStateModifier.DOWN
 
         state = hass.states.get(COVER_RELAYS)
-        state.state = STATE_OPEN
+        state.state = CoverState.OPEN
 
         # command failed
         control_motors_relays.return_value = False
@@ -259,7 +255,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state != STATE_CLOSING
+        assert state.state != CoverState.CLOSING
 
         # command success
         control_motors_relays.reset_mock(return_value=True)
@@ -276,7 +272,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state == STATE_CLOSING
+        assert state.state == CoverState.CLOSING
 
 
 async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -290,7 +286,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
         states[0] = MotorStateModifier.STOP
 
         state = hass.states.get(COVER_RELAYS)
-        state.state = STATE_CLOSING
+        state.state = CoverState.CLOSING
 
         # command failed
         control_motors_relays.return_value = False
@@ -306,7 +302,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state == STATE_CLOSING
+        assert state.state == CoverState.CLOSING
 
         # command success
         control_motors_relays.reset_mock(return_value=True)
@@ -323,7 +319,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
-        assert state.state not in (STATE_CLOSING, STATE_OPENING)
+        assert state.state not in (CoverState.CLOSING, CoverState.OPENING)
 
 
 async def test_pushed_outputs_status_change(
@@ -336,7 +332,7 @@ async def test_pushed_outputs_status_change(
     address = LcnAddr(0, 7, False)
 
     state = hass.states.get(COVER_OUTPUTS)
-    state.state = STATE_CLOSED
+    state.state = CoverState.CLOSED
 
     # push status "open"
     inp = ModStatusOutput(address, 0, 100)
@@ -345,7 +341,7 @@ async def test_pushed_outputs_status_change(
 
     state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     # push status "stop"
     inp = ModStatusOutput(address, 0, 0)
@@ -354,7 +350,7 @@ async def test_pushed_outputs_status_change(
 
     state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
-    assert state.state not in (STATE_OPENING, STATE_CLOSING)
+    assert state.state not in (CoverState.OPENING, CoverState.CLOSING)
 
     # push status "close"
     inp = ModStatusOutput(address, 1, 100)
@@ -363,7 +359,7 @@ async def test_pushed_outputs_status_change(
 
     state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
 
 async def test_pushed_relays_status_change(
@@ -377,7 +373,7 @@ async def test_pushed_relays_status_change(
     states = [False] * 8
 
     state = hass.states.get(COVER_RELAYS)
-    state.state = STATE_CLOSED
+    state.state = CoverState.CLOSED
 
     # push status "open"
     states[0:2] = [True, False]
@@ -387,7 +383,7 @@ async def test_pushed_relays_status_change(
 
     state = hass.states.get(COVER_RELAYS)
     assert state is not None
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     # push status "stop"
     states[0] = False
@@ -397,7 +393,7 @@ async def test_pushed_relays_status_change(
 
     state = hass.states.get(COVER_RELAYS)
     assert state is not None
-    assert state.state not in (STATE_OPENING, STATE_CLOSING)
+    assert state.state not in (CoverState.OPENING, CoverState.CLOSING)
 
     # push status "close"
     states[0:2] = [True, True]
@@ -407,7 +403,7 @@ async def test_pushed_relays_status_change(
 
     state = hass.states.get(COVER_RELAYS)
     assert state is not None
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

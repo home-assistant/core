@@ -7,6 +7,8 @@
         'port': 80,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'screenlogic',
       'entry_id': 'screenlogictest',
       'minor_version': 1,

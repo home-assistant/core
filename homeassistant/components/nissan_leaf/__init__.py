@@ -17,14 +17,10 @@ from pycarwings2.responses import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
@@ -52,6 +48,7 @@ from .const import (
     PYCARWINGS2_SLEEP,
     RESTRICTED_BATTERY,
     RESTRICTED_INTERVAL,
+    SIGNAL_UPDATE_LEAF,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +87,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
-SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
 SERVICE_UPDATE_LEAF = "update"
 SERVICE_START_CHARGE_LEAF = "start_charge"
@@ -496,44 +492,3 @@ class LeafDataStore:
         self._remove_listener = async_track_point_in_utc_time(
             self.hass, self.async_update_data, update_at
         )
-
-
-class LeafEntity(Entity):
-    """Base class for Nissan Leaf entity."""
-
-    def __init__(self, car: LeafDataStore) -> None:
-        """Store LeafDataStore upon init."""
-        self.car = car
-
-    def log_registration(self) -> None:
-        """Log registration."""
-        _LOGGER.debug(
-            "Registered %s integration for VIN %s",
-            self.__class__.__name__,
-            self.car.leaf.vin,
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return default attributes for Nissan leaf entities."""
-        return {
-            "next_update": self.car.next_update,
-            "last_attempt": self.car.last_check,
-            "updated_on": self.car.last_battery_response,
-            "update_in_progress": self.car.request_in_progress,
-            "vin": self.car.leaf.vin,
-        }
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.log_registration()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.car.hass, SIGNAL_UPDATE_LEAF, self._update_callback
-            )
-        )
-
-    @callback
-    def _update_callback(self) -> None:
-        """Update the state."""
-        self.async_schedule_update_ha_state(True)

@@ -92,19 +92,20 @@ class TeslemetryUpdateEntity(TeslemetryVehicleEntity, UpdateEntity):
             SCHEDULED,
             INSTALLING,
         ):
-            self._attr_in_progress = (
-                cast(int, self.get("vehicle_state_software_update_install_perc"))
-                or True
-            )
+            self._attr_in_progress = True
+            if install_perc := self.get("vehicle_state_software_update_install_perc"):
+                self._attr_update_percentage = cast(int, install_perc)
         else:
             self._attr_in_progress = False
+            self._attr_update_percentage = None
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.ENERGY_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.schedule_software_update(offset_sec=60))
         self._attr_in_progress = True
+        self._attr_update_percentage = None
         self.async_write_ha_state()

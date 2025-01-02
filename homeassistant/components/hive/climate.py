@@ -21,13 +21,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import (
     ATTR_TIME_PERIOD,
     DOMAIN,
     SERVICE_BOOST_HEATING_OFF,
     SERVICE_BOOST_HEATING_ON,
 )
+from .entity import HiveEntity
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVACMode.AUTO,
@@ -99,7 +100,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
         """Initialize the Climate device."""

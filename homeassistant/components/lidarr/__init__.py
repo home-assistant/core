@@ -12,17 +12,14 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
+    AlbumsDataUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
-    LidarrDataUpdateCoordinator,
     QueueDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
-    T,
     WantedDataUpdateCoordinator,
 )
 
@@ -39,6 +36,7 @@ class LidarrData:
     queue: QueueDataUpdateCoordinator
     status: StatusDataUpdateCoordinator
     wanted: WantedDataUpdateCoordinator
+    albums: AlbumsDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
@@ -58,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         queue=QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
         status=StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
         wanted=WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
+        albums=AlbumsDataUpdateCoordinator(hass, host_configuration, lidarr),
     )
     for field in fields(data):
         coordinator = getattr(data, field.name)
@@ -80,22 +79,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class LidarrEntity(CoordinatorEntity[LidarrDataUpdateCoordinator[T]]):
-    """Defines a base Lidarr entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: LidarrDataUpdateCoordinator[T],
-        description: EntityDescription,
-    ) -> None:
-        """Initialize the Lidarr entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
-        )

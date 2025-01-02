@@ -36,6 +36,7 @@ def create_entry(hass: HomeAssistant, device_id: str = DEVICE_UNIQUE_ID) -> Conf
         },
         unique_id="sample@gmail.com",
         version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry

@@ -5,6 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 import re
+from types import TracebackType
 from typing import Any
 from unittest import mock
 from urllib.parse import parse_qs
@@ -166,7 +167,7 @@ class AiohttpClientMockResponse:
     def __init__(
         self,
         method,
-        url,
+        url: URL,
         status=HTTPStatus.OK,
         response=None,
         json=None,
@@ -296,6 +297,18 @@ class AiohttpClientMockResponse:
         if self.closing:
             raise ClientConnectionError("Connection closed")
         return self._response
+
+    async def __aenter__(self):
+        """Enter the context manager."""
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Exit the context manager."""
 
 
 @contextmanager

@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,10 +32,6 @@ from homeassistant.const import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -285,15 +282,15 @@ class CoverGroup(GroupEntity, CoverEntity):
         for entity_id in self._entity_ids:
             if not (state := self.hass.states.get(entity_id)):
                 continue
-            if state.state == STATE_OPEN:
+            if state.state == CoverState.OPEN:
                 self._attr_is_closed = False
                 continue
-            if state.state == STATE_CLOSED:
+            if state.state == CoverState.CLOSED:
                 continue
-            if state.state == STATE_CLOSING:
+            if state.state == CoverState.CLOSING:
                 self._attr_is_closing = True
                 continue
-            if state.state == STATE_OPENING:
+            if state.state == CoverState.OPENING:
                 self._attr_is_opening = True
                 continue
         if not valid_state:

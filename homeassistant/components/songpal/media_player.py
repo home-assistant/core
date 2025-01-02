@@ -167,7 +167,7 @@ class SongpalEntity(MediaPlayerEntity):
 
     async def async_activate_websocket(self):
         """Activate websocket for listening if wanted."""
-        _LOGGER.info("Activating websocket connection")
+        _LOGGER.debug("Activating websocket connection")
 
         async def _volume_changed(volume: VolumeChange):
             _LOGGER.debug("Volume changed: %s", volume)

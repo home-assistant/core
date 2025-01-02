@@ -86,6 +86,42 @@
       },
       "phase3_current": {
         "name": "Phase 3 current"
+      },
+      "non_resettable_counter_1": {
+        "name": "Non Resettable counter 1"
+      },
+      "non_resettable_counter_2": {
+        "name": "Non Resettable counter 2"
+      },
+      "non_resettable_counter_3": {
+        "name": "Non Resettable counter 3"
+      },
+      "non_resettable_counter_4": {
+        "name": "Non Resettable counter 4"
+      },
+      "resettable_counter_1": {
+        "name": "Resettable counter 1"
+      },
+      "resettable_counter_2": {
+        "name": "Resettable counter 2"
+      },
+      "resettable_counter_3": {
+        "name": "Resettable counter 3"
+      },
+      "resettable_counter_4": {
+        "name": "Resettable counter 4"
+      },
+      "resettable_counter_5": {
+        "name": "Resettable counter 5"
+      },
+      "resettable_counter_6": {
+        "name": "Resettable counter 6"
+      },
+      "resettable_counter_7": {
+        "name": "Resettable counter 7"
+      },
+      "resettable_counter_8": {
+        "name": "Resettable counter 8"
       }
     }
   }

@@ -21,8 +21,8 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
@@ -66,7 +66,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _speeds: EnumTypeData | None = None
     _switch: DPCode | None = None
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

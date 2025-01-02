@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.awair import DOMAIN
+from homeassistant.components.awair.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 

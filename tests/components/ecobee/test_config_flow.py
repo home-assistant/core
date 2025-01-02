@@ -11,6 +11,7 @@ from homeassistant.components.ecobee.const import (
     DATA_ECOBEE_CONFIG,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -20,12 +21,11 @@ from tests.common import MockConfigEntry
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if ecobee is already setup."""
-    flow = config_flow.EcobeeFlowHandler()
-    flow.hass = hass
-
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

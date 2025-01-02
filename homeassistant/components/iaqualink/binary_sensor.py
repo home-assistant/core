@@ -13,8 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
 

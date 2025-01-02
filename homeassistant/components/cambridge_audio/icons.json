@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "select": {
+      "display_brightness": {
+        "default": "mdi:brightness-7",
+        "state": {
+          "bright": "mdi:brightness-7",
+          "dim": "mdi:brightness-6",
+          "off": "mdi:brightness-3"
+        }
+      },
+      "audio_output": {
+        "default": "mdi:audio-input-stereo-minijack"
+      }
+    },
+    "switch": {
+      "pre_amp": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-low"
+        }
+      },
+      "early_update": {
+        "default": "mdi:update"
+      }
+    }
+  }
+}

@@ -20,7 +20,8 @@ from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import UTC, utcnow
 
 from .conftest import (
@@ -248,35 +249,23 @@ async def test_init_calendar(
 async def test_multiple_config_entries(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
-    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test finding a calendar from the API."""
 
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+
     assert await component_setup()
 
-    config_entry1 = MockConfigEntry(
-        domain=DOMAIN, data=config_entry.data, unique_id=EMAIL_ADDRESS
-    )
-    calendar1 = {
-        **test_api_calendar,
-        "id": "calendar-id1",
-        "summary": "Example Calendar 1",
-    }
-
-    mock_calendars_list({"items": [calendar1]})
-    mock_events_list({}, calendar_id="calendar-id1")
-    config_entry1.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry1.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.example_calendar_1")
+    state = hass.states.get(TEST_API_ENTITY)
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Example calendar 1"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == TEST_API_ENTITY_NAME
 
     config_entry2 = MockConfigEntry(
         domain=DOMAIN, data=config_entry.data, unique_id="other-address@example.com"
@@ -605,7 +594,7 @@ async def test_unsupported_create_event(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test create event service call is unsupported for virtual calendars."""
-
+    await async_setup_component(hass, "homeassistant", {})
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
@@ -613,8 +602,12 @@ async def test_unsupported_create_event(
     start_datetime = datetime.datetime.now(tz=zoneinfo.ZoneInfo("America/Regina"))
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
+    entity_id = "calendar.backyard_light"
 
-    with pytest.raises(HomeAssistantError, match="does not support this service"):
+    with pytest.raises(
+        ServiceNotSupported,
+        match=f"Entity {entity_id} does not support action google.create_event",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "create_event",
@@ -625,7 +618,7 @@ async def test_unsupported_create_event(
                 "summary": TEST_EVENT_SUMMARY,
                 "description": TEST_EVENT_DESCRIPTION,
             },
-            target={"entity_id": "calendar.backyard_light"},
+            target={"entity_id": entity_id},
             blocking=True,
         )
 

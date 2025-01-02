@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_RETAIN, DEFAULT_OPTIMISTIC, DEFAULT_RETAIN
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -37,6 +37,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_ACTIVITY_STATE_TOPIC = "activity_state_topic"
 CONF_ACTIVITY_VALUE_TEMPLATE = "activity_value_template"

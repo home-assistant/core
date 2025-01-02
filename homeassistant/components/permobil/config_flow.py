@@ -14,7 +14,7 @@ from mypermobil import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.helpers import selector
@@ -156,6 +156,11 @@ class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=GET_TOKEN_SCHEMA,
                 errors=errors,
                 description_placeholders={"app_name": "MyPermobil"},
+            )
+
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), title=self.data[CONF_EMAIL], data=self.data
             )
 
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)

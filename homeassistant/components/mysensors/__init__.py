@@ -23,7 +23,7 @@ from .const import (
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -148,7 +148,7 @@ def setup_mysensors_platform(
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
-        _LOGGER.info("Adding new devices: %s", new_devices)
+        _LOGGER.debug("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
             async_add_entities(new_devices)
     return new_devices

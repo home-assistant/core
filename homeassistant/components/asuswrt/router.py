@@ -290,7 +290,7 @@ class AsusWrtRouter:
 
         if self._connect_error:
             self._connect_error = False
-            _LOGGER.info("Reconnected to ASUS router %s", self.host)
+            _LOGGER.warning("Reconnected to ASUS router %s", self.host)
 
         self._connected_devices = len(wrt_devices)
         consider_home: int = self._options.get(

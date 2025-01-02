@@ -226,9 +226,9 @@ MOCK_STATUS_COAP = {
     "update": {
         "status": "pending",
         "has_update": True,
-        "beta_version": "some_beta_version",
-        "new_version": "some_new_version",
-        "old_version": "some_old_version",
+        "beta_version": "20231107-162609/v1.14.1-rc1-g0617c15",
+        "new_version": "20230913-111730/v1.14.0-gcb84623",
+        "old_version": "20230913-111730/v1.14.0-gcb84623",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
     "wifi_sta": {"rssi": -64},

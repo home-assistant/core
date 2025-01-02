@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 import datetime
 from enum import IntEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 import numpy as np
@@ -27,7 +27,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from av import CodecContext, Packet
+    from av import Packet, VideoCodecContext
 
     from homeassistant.components.camera import DynamicStreamSettings
 
@@ -438,17 +438,17 @@ class KeyFrameConverter:
         """Initialize."""
 
         # Keep import here so that we can import stream integration
-        # without installingreqs
+        # without installing reqs
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
-        self._packet: Packet = None
+        self._packet: Packet | None = None
         self._event: asyncio.Event = asyncio.Event()
         self._hass = hass
         self._image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
         self._lock = asyncio.Lock()
-        self._codec_context: CodecContext | None = None
+        self._codec_context: VideoCodecContext | None = None
         self._stream_settings = stream_settings
         self._dynamic_stream_settings = dynamic_stream_settings
 
@@ -460,7 +460,7 @@ class KeyFrameConverter:
         self._packet = packet
         self._hass.loop.call_soon_threadsafe(self._event.set)
 
-    def create_codec_context(self, codec_context: CodecContext) -> None:
+    def create_codec_context(self, codec_context: VideoCodecContext) -> None:
         """Create a codec context to be used for decoding the keyframes.
 
         This is run by the worker thread and will only be called once per worker.
@@ -474,7 +474,9 @@ class KeyFrameConverter:
         # pylint: disable-next=import-outside-toplevel
         from av import CodecContext
 
-        self._codec_context = CodecContext.create(codec_context.name, "r")
+        self._codec_context = cast(
+            "VideoCodecContext", CodecContext.create(codec_context.name, "r")
+        )
         self._codec_context.extradata = codec_context.extradata
         self._codec_context.skip_frame = "NONKEY"
         self._codec_context.thread_type = "NONE"
@@ -506,9 +508,8 @@ class KeyFrameConverter:
                     frames = self._codec_context.decode(None)
                 break
             except EOFError:
-                _LOGGER.debug("Codec context needs flushing, attempting to reopen")
-                self._codec_context.close()
-                self._codec_context.open()
+                _LOGGER.debug("Codec context needs flushing")
+                self._codec_context.flush_buffers()
         else:
             _LOGGER.debug("Unable to decode keyframe")
             return

@@ -47,12 +47,3 @@ def mock_zha_get_last_network_settings() -> Generator[None]:
         AsyncMock(return_value=None),
     ):
         yield
-
-
-@pytest.fixture(name="stop_addon")
-def stop_addon_fixture():
-    """Mock stop add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_stop_addon"
-    ) as stop_addon:
-        yield stop_addon

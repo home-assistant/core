@@ -23,8 +23,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'https://lyrion.org/',
-    'model': 'Lyrion Music Server',
+    'manufacturer': 'Ralph Irving',
+    'model': 'SqueezeLite',
     'model_id': None,
     'name': 'Test Player',
     'name_by_user': None,

@@ -225,7 +225,7 @@ async def _async_get_trigger_platform(
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
-        raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
+        raise vol.Invalid(f"Invalid trigger '{platform}' specified") from None
     try:
         return await integration.async_get_platform("trigger")
     except ImportError:

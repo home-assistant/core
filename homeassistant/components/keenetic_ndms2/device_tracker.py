@@ -9,7 +9,6 @@ from ndms2_client import Device
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -102,11 +101,6 @@ class KeeneticTracker(ScannerEntity):
             and (dt_util.utcnow() - self._last_seen)
             < self._router.consider_home_interval
         )
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the client."""
-        return SourceType.ROUTER
 
     @property
     def name(self) -> str:

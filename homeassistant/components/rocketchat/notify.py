@@ -52,8 +52,10 @@ def get_service(
     except RocketConnectionException:
         _LOGGER.warning("Unable to connect to Rocket.Chat server at %s", url)
     except RocketAuthenticationException:
-        _LOGGER.warning("Rocket.Chat authentication failed for user %s", username)
-        _LOGGER.info("Please check your username/password")
+        _LOGGER.warning(
+            "Rocket.Chat authentication failed for user %s. Please check your username/password",
+            username,
+        )
 
     return None
 

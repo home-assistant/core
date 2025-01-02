@@ -28,9 +28,9 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.device is not None
 
-    async_add_entities([WyomingSatelliteAssistInProgress(item.satellite.device)])
+    async_add_entities([WyomingSatelliteAssistInProgress(item.device)])
 
 
 class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntity):

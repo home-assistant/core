@@ -87,7 +87,7 @@ class LcnScene(LcnEntity, Scene):
             self.transition = None
         else:
             self.transition = pypck.lcn_defs.time_to_ramp_value(
-                config[CONF_DOMAIN_DATA][CONF_TRANSITION]
+                config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
             )
 
     async def async_activate(self, **kwargs: Any) -> None:

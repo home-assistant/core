@@ -9,7 +9,6 @@ from datetime import datetime
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.util import slugify
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
@@ -17,7 +16,6 @@ from homeassistant.util.hass_dict import HassKey
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
-    normalize_name,
 )
 from .registry import BaseRegistry
 from .singleton import singleton
@@ -130,15 +128,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         """Get all floors."""
         return self.floors.values()
 
-    @callback
     def _generate_id(self, name: str) -> str:
         """Generate floor ID."""
-        suggestion = suggestion_base = slugify(name)
-        tries = 1
-        while suggestion in self.floors:
-            tries += 1
-            suggestion = f"{suggestion_base}_{tries}"
-        return suggestion
+        return self.floors.generate_id_from_name(name)
 
     @callback
     def async_create(
@@ -151,30 +143,26 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
     ) -> FloorEntry:
         """Create a new floor."""
         self.hass.verify_event_loop_thread("floor_registry.async_create")
+
         if floor := self.async_get_floor_by_name(name):
             raise ValueError(
                 f"The name {name} ({floor.normalized_name}) is already in use"
             )
-
-        normalized_name = normalize_name(name)
 
         floor = FloorEntry(
             aliases=aliases or set(),
             icon=icon,
             floor_id=self._generate_id(name),
             name=name,
-            normalized_name=normalized_name,
             level=level,
         )
         floor_id = floor.floor_id
         self.floors[floor_id] = floor
         self.async_schedule_save()
+
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(
-                action="create",
-                floor_id=floor_id,
-            ),
+            EventFloorRegistryUpdatedData(action="create", floor_id=floor_id),
         )
         return floor
 
@@ -215,7 +203,6 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         }
         if name is not UNDEFINED and name != old.name:
             changes["name"] = name
-            changes["normalized_name"] = normalize_name(name)
 
         if not changes:
             return old
@@ -243,14 +230,12 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 
         if data is not None:
             for floor in data["floors"]:
-                normalized_name = normalize_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     aliases=set(floor["aliases"]),
                     icon=floor["icon"],
                     floor_id=floor["floor_id"],
                     name=floor["name"],
                     level=floor["level"],
-                    normalized_name=normalized_name,
                     created_at=datetime.fromisoformat(floor["created_at"]),
                     modified_at=datetime.fromisoformat(floor["modified_at"]),
                 )

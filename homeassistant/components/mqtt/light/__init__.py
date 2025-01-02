@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
-from ..mixins import async_setup_entity_entry_helper
+from ..entity import async_setup_entity_entry_helper
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
@@ -29,6 +29,8 @@ from .schema_template import (
     PLATFORM_SCHEMA_MODERN_TEMPLATE,
     MqttLightTemplate,
 )
+
+PARALLEL_UPDATES = 0
 
 
 def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:

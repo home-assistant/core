@@ -2390,6 +2390,9 @@ async def test_execute_script(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "ignore_translations", ["component.test.exceptions.test_error.message"]
+)
 async def test_execute_script_err_localization(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -2566,18 +2569,18 @@ async def test_integration_setup_info(
 @pytest.mark.parametrize(
     ("key", "config"),
     [
-        ("trigger", {"platform": "event", "event_type": "hello"}),
-        ("trigger", [{"platform": "event", "event_type": "hello"}]),
+        ("triggers", {"platform": "event", "event_type": "hello"}),
+        ("triggers", [{"platform": "event", "event_type": "hello"}]),
         (
-            "condition",
+            "conditions",
             {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
         ),
         (
-            "condition",
+            "conditions",
             [{"condition": "state", "entity_id": "hello.world", "state": "paulus"}],
         ),
-        ("action", {"service": "domain_test.test_service"}),
-        ("action", [{"service": "domain_test.test_service"}]),
+        ("actions", {"service": "domain_test.test_service"}),
+        ("actions", [{"service": "domain_test.test_service"}]),
     ],
 )
 async def test_validate_config_works(
@@ -2599,13 +2602,13 @@ async def test_validate_config_works(
     [
         # Raises vol.Invalid
         (
-            "trigger",
+            "triggers",
             {"platform": "non_existing", "event_type": "hello"},
-            "Invalid platform 'non_existing' specified",
+            "Invalid trigger 'non_existing' specified",
         ),
         # Raises vol.Invalid
         (
-            "condition",
+            "conditions",
             {
                 "condition": "non_existing",
                 "entity_id": "hello.world",
@@ -2619,7 +2622,7 @@ async def test_validate_config_works(
         ),
         # Raises HomeAssistantError
         (
-            "condition",
+            "conditions",
             {
                 "above": 50,
                 "condition": "device",
@@ -2632,7 +2635,7 @@ async def test_validate_config_works(
         ),
         # Raises vol.Invalid
         (
-            "action",
+            "actions",
             {"non_existing": "domain_test.test_service"},
             "Unable to determine action @ data[0]",
         ),

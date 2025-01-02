@@ -18,8 +18,7 @@
       "invalid_dongle_path": "No valid dongle found for this path"
     },
     "abort": {
-      "invalid_dongle_path": "Invalid dongle path",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "invalid_dongle_path": "Invalid dongle path"
     }
   }
 }

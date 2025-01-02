@@ -23,9 +23,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import Control4Entity, get_items_of_category
+from . import get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
 from .director_utils import update_variables_for_config_entry
+from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 

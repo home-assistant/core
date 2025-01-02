@@ -85,6 +85,8 @@
         }),
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'philips_js',
       'minor_version': 1,
       'options': dict({

@@ -47,6 +47,7 @@ def enable_mocks_fixture(
     """Enable API mocks."""
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_import_dataset(
     hass: HomeAssistant,
     mock_async_zeroconf: MagicMock,
@@ -201,6 +202,7 @@ async def test_import_share_radio_no_channel_collision(
     )
 
 
+@pytest.mark.usefixtures("supervisor_client")
 @pytest.mark.parametrize("enable_compute_pskc", [True])
 @pytest.mark.parametrize(
     "dataset", [DATASET_INSECURE_NW_KEY, DATASET_INSECURE_PASSPHRASE]
@@ -310,6 +312,7 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
     mock_otrb_api.assert_called_once_with(new_config_entry_data["url"], ANY, ANY)
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_remove_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_config_entry_multipan
 ) -> None:

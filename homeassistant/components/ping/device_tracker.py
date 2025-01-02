@@ -8,7 +8,6 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,11 +55,6 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self.config_entry.entry_id
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type which is router."""
-        return SourceType.ROUTER
 
     @property
     def is_connected(self) -> bool:

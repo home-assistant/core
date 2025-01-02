@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmsDevice
@@ -74,6 +74,9 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_parse_discovery(discovery_info)
+        if TYPE_CHECKING:
+            # _async_parse_discovery unconditionally sets self._name
+            assert self._name is not None
 
         # Abort if the device doesn't support all services required for a DmsDevice.
         # Use the discovery_info instead of DmsDevice.is_profile_device to avoid

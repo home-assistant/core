@@ -9,14 +9,13 @@ from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant.components.august.const import DOMAIN
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_LOCKED,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -192,7 +191,7 @@ async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:
     lock_a6697750d607098bae8d6baa11ef8063_name = hass.states.get(
         "lock.a6697750d607098bae8d6baa11ef8063_name"
     )
-    assert lock_a6697750d607098bae8d6baa11ef8063_name.state == STATE_LOCKED
+    assert lock_a6697750d607098bae8d6baa11ef8063_name.state == LockState.LOCKED
 
 
 async def test_lock_has_doorsense(hass: HomeAssistant) -> None:

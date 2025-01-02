@@ -8,6 +8,10 @@ from homeconnect.api import HomeConnectAPI
 import pytest
 
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE,
+    BSH_DOOR_STATE_CLOSED,
+    BSH_DOOR_STATE_LOCKED,
+    BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
@@ -26,14 +30,14 @@ TEST_HC_APP = "Dishwasher"
 
 EVENT_PROG_DELAYED_START = {
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Delayed"
+        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
 EVENT_PROG_REMAIN_NO_VALUE = {
     "BSH.Common.Option.RemainingProgramTime": {},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Delayed"
+        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
@@ -103,13 +107,13 @@ PROGRAM_SEQUENCE_EVENTS = (
 # Entity mapping to expected state at each program sequence.
 ENTITY_ID_STATES = {
     "sensor.dishwasher_operation_state": (
-        "Delayed",
-        "Run",
-        "Run",
-        "Run",
-        "Ready",
+        "delayedstart",
+        "run",
+        "run",
+        "run",
+        "ready",
     ),
-    "sensor.dishwasher_remaining_program_time": (
+    "sensor.dishwasher_program_finish_time": (
         "unavailable",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
@@ -158,6 +162,8 @@ async def test_event_sensors(
     get_appliances.return_value = [appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.get_programs_available = MagicMock(return_value=["dummy_program"])
+    appliance.status.update(EVENT_PROG_DELAYED_START)
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -198,11 +204,13 @@ async def test_remaining_prog_time_edge_cases(
 ) -> None:
     """Run program sequence to test edge cases for the remaining_prog_time entity."""
     get_appliances.return_value = [appliance]
-    entity_id = "sensor.dishwasher_remaining_program_time"
+    entity_id = "sensor.dishwasher_program_finish_time"
     time_to_freeze = "2021-01-09 12:00:00+00:00"
     freezer.move_to(time_to_freeze)
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.get_programs_available = MagicMock(return_value=["dummy_program"])
+    appliance.status.update(EVENT_PROG_REMAIN_NO_VALUE)
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -221,28 +229,49 @@ async def test_remaining_prog_time_edge_cases(
     ("entity_id", "status_key", "event_value_update", "expected", "appliance"),
     [
         (
-            "sensor.fridgefreezer_door_alarm_freezer",
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_CLOSED,
+            "closed",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            BSH_DOOR_STATE,
+            BSH_DOOR_STATE_OPEN,
+            "open",
+            "Dishwasher",
+        ),
+        (
+            "sensor.fridgefreezer_freezer_door_alarm",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             "",
             "off",
             "FridgeFreezer",
         ),
         (
-            "sensor.fridgefreezer_door_alarm_freezer",
+            "sensor.fridgefreezer_freezer_door_alarm",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_OFF,
             "off",
             "FridgeFreezer",
         ),
         (
-            "sensor.fridgefreezer_door_alarm_freezer",
+            "sensor.fridgefreezer_freezer_door_alarm",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_PRESENT,
             "present",
             "FridgeFreezer",
         ),
         (
-            "sensor.fridgefreezer_door_alarm_freezer",
+            "sensor.fridgefreezer_freezer_door_alarm",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
             "confirmed",

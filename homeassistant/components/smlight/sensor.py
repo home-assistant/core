@@ -127,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.data
 
     async_add_entities(
         chain(
@@ -141,6 +141,7 @@ async def async_setup_entry(
 class SmSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb sensor."""
 
+    coordinator: SmDataUpdateCoordinator
     entity_description: SmSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -164,6 +165,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
 class SmInfoSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb info sensor."""
 
+    coordinator: SmDataUpdateCoordinator
     entity_description: SmInfoEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 

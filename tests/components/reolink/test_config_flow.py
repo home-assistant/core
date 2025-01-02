@@ -2,11 +2,17 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import ANY, AsyncMock, MagicMock, call
 
+from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    ApiError,
+    CredentialsInvalidError,
+    LoginFirmwareError,
+    ReolinkError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
@@ -79,6 +85,7 @@ async def test_config_flow_manual_success(
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_errors(
@@ -170,6 +177,20 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
+    reolink_connect.get_host_data.side_effect = LoginFirmwareError("Test error")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_HOST: TEST_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "update_needed"}
+
     reolink_connect.valid_password.return_value = False
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -199,7 +220,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
-    reolink_connect.get_host_data.side_effect = None
+    reolink_connect.get_host_data.reset_mock(side_effect=True)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -223,6 +244,9 @@ async def test_config_flow_errors(
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+
+    reolink_connect.unsubscribe.reset_mock(side_effect=True)
+    reolink_connect.logout.reset_mock(side_effect=True)
 
 
 async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
@@ -263,51 +287,6 @@ async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) ->
     }
 
 
-async def test_change_connection_settings(
-    hass: HomeAssistant, mock_setup_entry: MagicMock
-) -> None:
-    """Test changing connection settings by issuing a second user config flow."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=format_mac(TEST_MAC),
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_PORT: TEST_PORT,
-            CONF_USE_HTTPS: TEST_USE_HTTPS,
-        },
-        options={
-            CONF_PROTOCOL: DEFAULT_PROTOCOL,
-        },
-        title=TEST_NVR_NAME,
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: TEST_HOST2,
-            CONF_USERNAME: TEST_USERNAME2,
-            CONF_PASSWORD: TEST_PASSWORD2,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert config_entry.data[CONF_HOST] == TEST_HOST2
-    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
-    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
-
-
 async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test a reauth flow."""
     config_entry = MockConfigEntry(
@@ -333,14 +312,6 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -357,6 +328,55 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     assert config_entry.data[CONF_HOST] == TEST_HOST
     assert config_entry.data[CONF_USERNAME] == TEST_USERNAME2
     assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD2
+
+
+async def test_reauth_abort_unique_id_mismatch(
+    hass: HomeAssistant, mock_setup_entry: MagicMock, reolink_connect: MagicMock
+) -> None:
+    """Test a reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_connect.mac_address = "aa:aa:aa:aa:aa:aa"
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD2,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data[CONF_HOST] == TEST_HOST
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+
+    reolink_connect.mac_address = TEST_MAC
 
 
 async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
@@ -397,34 +417,94 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
     }
 
 
+async def test_dhcp_ip_update_aborted_if_wrong_mac(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect_class: MagicMock,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test dhcp discovery does not update the IP if the mac address does not match."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # ensure the last_update_succes is False for the device_coordinator.
+    reolink_connect.get_states.side_effect = ReolinkError("Test error")
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST2,
+        hostname="Reolink",
+        macaddress=DHCP_FORMATTED_MAC,
+    )
+
+    reolink_connect.mac_address = "aa:aa:aa:aa:aa:aa"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    for host in (TEST_HOST, TEST_HOST2):
+        expected_call = call(
+            host,
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            port=TEST_PORT,
+            use_https=TEST_USE_HTTPS,
+            protocol=DEFAULT_PROTOCOL,
+            timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback=ANY,
+        )
+        assert expected_call in reolink_connect_class.call_args_list
+
+    for exc_call in reolink_connect_class.call_args_list:
+        assert exc_call[0][0] in [TEST_HOST, TEST_HOST2]
+        get_session = exc_call[1]["aiohttp_get_session_callback"]
+        assert isinstance(get_session(), ClientSession)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    # Check that IP was not updated
+    assert config_entry.data[CONF_HOST] == TEST_HOST
+
+    reolink_connect.get_states.side_effect = None
+    reolink_connect_class.reset_mock()
+    reolink_connect.mac_address = TEST_MAC
+
+
 @pytest.mark.parametrize(
-    ("last_update_success", "attr", "value", "expected", "host_call_list"),
+    ("attr", "value", "expected", "host_call_list"),
     [
         (
-            False,
             None,
             None,
             TEST_HOST2,
             [TEST_HOST, TEST_HOST2],
         ),
         (
-            True,
-            None,
-            None,
-            TEST_HOST,
-            [TEST_HOST],
-        ),
-        (
-            False,
             "get_state",
             AsyncMock(side_effect=ReolinkError("Test error")),
-            TEST_HOST,
-            [TEST_HOST, TEST_HOST2],
-        ),
-        (
-            False,
-            "mac_address",
-            "aa:aa:aa:aa:aa:aa",
             TEST_HOST,
             [TEST_HOST, TEST_HOST2],
         ),
@@ -435,7 +515,6 @@ async def test_dhcp_ip_update(
     freezer: FrozenDateTimeFactory,
     reolink_connect_class: MagicMock,
     reolink_connect: MagicMock,
-    last_update_success: bool,
     attr: str,
     value: Any,
     expected: str,
@@ -463,12 +542,11 @@ async def test_dhcp_ip_update(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    if not last_update_success:
-        # ensure the last_update_succes is False for the device_coordinator.
-        reolink_connect.get_states.side_effect = ReolinkError("Test error")
-        freezer.tick(DEVICE_UPDATE_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    # ensure the last_update_succes is False for the device_coordinator.
+    reolink_connect.get_states.side_effect = ReolinkError("Test error")
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST2,
@@ -477,6 +555,7 @@ async def test_dhcp_ip_update(
     )
 
     if attr is not None:
+        original = getattr(reolink_connect, attr)
         setattr(reolink_connect, attr, value)
 
     result = await hass.config_entries.flow.async_init(
@@ -492,14 +571,181 @@ async def test_dhcp_ip_update(
             use_https=TEST_USE_HTTPS,
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback=ANY,
         )
         assert expected_call in reolink_connect_class.call_args_list
 
     for exc_call in reolink_connect_class.call_args_list:
         assert exc_call[0][0] in host_call_list
+        get_session = exc_call[1]["aiohttp_get_session_callback"]
+        assert isinstance(get_session(), ClientSession)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()
     assert config_entry.data[CONF_HOST] == expected
+
+    reolink_connect.get_states.side_effect = None
+    reolink_connect_class.reset_mock()
+    if attr is not None:
+        setattr(reolink_connect, attr, original)
+
+
+async def test_dhcp_ip_update_ingnored_if_still_connected(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect_class: MagicMock,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test dhcp discovery is ignored when the camera is still properly connected to HA."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    dhcp_data = dhcp.DhcpServiceInfo(
+        ip=TEST_HOST2,
+        hostname="Reolink",
+        macaddress=DHCP_FORMATTED_MAC,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
+    )
+
+    expected_call = call(
+        TEST_HOST,
+        TEST_USERNAME,
+        TEST_PASSWORD,
+        port=TEST_PORT,
+        use_https=TEST_USE_HTTPS,
+        protocol=DEFAULT_PROTOCOL,
+        timeout=DEFAULT_TIMEOUT,
+        aiohttp_get_session_callback=ANY,
+    )
+    assert expected_call in reolink_connect_class.call_args_list
+
+    for exc_call in reolink_connect_class.call_args_list:
+        assert exc_call[0][0] == TEST_HOST
+        get_session = exc_call[1]["aiohttp_get_session_callback"]
+        assert isinstance(get_session(), ClientSession)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert config_entry.data[CONF_HOST] == TEST_HOST
+
+    reolink_connect.get_states.side_effect = None
+    reolink_connect_class.reset_mock()
+
+
+async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+    """Test a reconfiguration flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+
+
+async def test_reconfig_abort_unique_id_mismatch(
+    hass: HomeAssistant, mock_setup_entry: MagicMock, reolink_connect: MagicMock
+) -> None:
+    """Test a reconfiguration flow aborts if the unique id does not match."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_connect.mac_address = "aa:aa:aa:aa:aa:aa"
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data[CONF_HOST] == TEST_HOST
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+
+    reolink_connect.mac_address = TEST_MAC

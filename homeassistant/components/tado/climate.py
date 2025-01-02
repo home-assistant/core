@@ -105,7 +105,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado climate platform."""
 
-    tado: TadoConnector = entry.runtime_data.tadoconnector
+    tado = entry.runtime_data
     entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     platform = entity_platform.async_get_current_platform()
@@ -269,7 +269,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     _attr_name = None
     _attr_translation_key = DOMAIN
     _available = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

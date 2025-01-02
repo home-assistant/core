@@ -71,10 +71,8 @@ def get_automatic_geofencing(data: dict[str, str]) -> bool:
 
 def get_geofencing_mode(data: dict[str, str]) -> str:
     """Return Geofencing Mode based on Presence and Presence Locked attributes."""
-    tado_mode = ""
     tado_mode = data.get("presence", "unknown")
 
-    geofencing_switch_mode = ""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
             geofencing_switch_mode = "manual"
@@ -199,7 +197,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado: TadoConnector = entry.runtime_data.tadoconnector
+    tado = entry.runtime_data
     zones = tado.zones
     entities: list[SensorEntity] = []
 

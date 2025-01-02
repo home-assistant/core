@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
+from aiomealie import MealieAuthenticationError, MealieClient, MealieError
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
@@ -52,9 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         about = await client.get_about()
         version = create_version(about.version)
     except MealieAuthenticationError as error:
-        raise ConfigEntryAuthFailed from error
-    except MealieConnectionError as error:
-        raise ConfigEntryNotReady(error) from error
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
+    except MealieError as error:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        ) from error
 
     if not version.valid:
         LOGGER.warning(

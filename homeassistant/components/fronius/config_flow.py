@@ -10,7 +10,7 @@ from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -52,11 +52,9 @@ async def validate_host(
     try:
         inverter_info = await fronius.inverter_info()
         first_inverter = next(inverter for inverter in inverter_info["inverters"])
-    except FroniusError as err:
+    except (FroniusError, StopIteration) as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    except StopIteration as err:
-        raise CannotConnect("No supported Fronius SolarNet device found.") from err
     first_inverter_uid: str = first_inverter["unique_id"]["value"]
     return first_inverter_uid, FroniusConfigEntryData(
         host=host,
@@ -72,7 +70,6 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self.info: FroniusConfigEntryData
-        self._entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -90,7 +87,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(unique_id, raise_on_progress=False)
-                self._abort_if_unique_id_configured(updates=dict(info))
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=create_title(info), data=info)
 
@@ -145,6 +142,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Add reconfigure step to allow to reconfigure a config entry."""
         errors = {}
+        reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             try:
@@ -155,33 +153,16 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Config didn't change or is already configured in another entry
-                self._async_abort_entries_match(dict(info))
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
 
-                existing_entry = await self.async_set_unique_id(
-                    unique_id, raise_on_progress=False
-                )
-                assert self._entry is not None
-                if existing_entry and existing_entry.entry_id != self._entry.entry_id:
-                    # Uid of device is already configured in another entry (but with different host)
-                    self._abort_if_unique_id_configured()
+                return self.async_update_reload_and_abort(reconfigure_entry, data=info)
 
-                return self.async_update_reload_and_abort(
-                    self._entry,
-                    data=info,
-                    reason="reconfigure_successful",
-                )
-
-        if self._entry is None:
-            self._entry = self.hass.config_entries.async_get_entry(
-                self.context["entry_id"]
-            )
-            assert self._entry is not None
-        host = self._entry.data[CONF_HOST]
+        host = reconfigure_entry.data[CONF_HOST]
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
-            description_placeholders={"device": self._entry.title},
+            description_placeholders={"device": reconfigure_entry.title},
             errors=errors,
         )
 

@@ -24,8 +24,13 @@ from homeassistant.components.climate import (
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import assert_entities, setup_platform
 from .const import (
@@ -391,6 +396,7 @@ async def test_climate_noscope(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Tests with no command scopes."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
@@ -405,8 +411,9 @@ async def test_climate_noscope(
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity climate.test_climate does not support this service.",
+        ServiceNotSupported,
+        match="Entity climate.test_climate does not "
+        "support action climate.set_temperature",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -418,7 +425,7 @@ async def test_climate_noscope(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("entity_id", "high", "low"),
+    ("entity_id", "low", "high"),
     [
         ("climate.test_climate", 16, 28),
         ("climate.test_cabin_overheat_protection", 30, 40),
@@ -436,7 +443,8 @@ async def test_climate_notemp(
     await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
 
     with pytest.raises(
-        ServiceValidationError, match="Temperature is required for this action"
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

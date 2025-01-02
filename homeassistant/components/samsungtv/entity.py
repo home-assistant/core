@@ -93,7 +93,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
-            LOGGER.info(
+            LOGGER.warning(
                 "Attempting to turn on %s via Wake-On-Lan; if this does not work, "
                 "please ensure that Wake-On-Lan is available for your device or use "
                 "a turn_on automation",

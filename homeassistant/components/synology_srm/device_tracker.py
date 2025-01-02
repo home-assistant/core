@@ -100,8 +100,6 @@ class SynologySrmDeviceScanner(DeviceScanner):
         self.devices = []
         self.success_init = self._update_info()
 
-        _LOGGER.info("Synology SRM scanner initialized")
-
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()

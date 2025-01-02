@@ -469,7 +469,7 @@ async def test_setting_blocked_attribute_via_mqtt_json_message(
 ) -> None:
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG, {}
+        hass, mqtt_mock_entry, text.DOMAIN, DEFAULT_CONFIG, None
     )
 
 

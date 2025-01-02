@@ -121,7 +121,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado: TadoConnector = entry.runtime_data.tadoconnector
+    tado = entry.runtime_data
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []

@@ -2,28 +2,25 @@
 
 from __future__ import annotations
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.button
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BleBoxEntity
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
+from .entity import BleBoxEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BleBoxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox button entry."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
-
     entities = [
-        BleBoxButtonEntity(feature) for feature in product.features.get("buttons", [])
+        BleBoxButtonEntity(feature)
+        for feature in config_entry.runtime_data.features.get("buttons", [])
     ]
     async_add_entities(entities, True)
 

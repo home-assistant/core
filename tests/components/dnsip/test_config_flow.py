@@ -278,11 +278,15 @@ async def test_options_flow_empty_return(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {

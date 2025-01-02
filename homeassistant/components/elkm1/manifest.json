@@ -15,5 +15,5 @@
   "documentation": "https://www.home-assistant.io/integrations/elkm1",
   "iot_class": "local_push",
   "loggers": ["elkm1_lib"],
-  "requirements": ["elkm1-lib==2.2.7"]
+  "requirements": ["elkm1-lib==2.2.10"]
 }

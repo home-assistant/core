@@ -14,9 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
-from . import RainMachineConfigEntry, RainMachineData, RainMachineEntity
+from . import RainMachineConfigEntry, RainMachineData
 from .const import DATA_RESTRICTIONS_UNIVERSAL
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import key_exists
 
 

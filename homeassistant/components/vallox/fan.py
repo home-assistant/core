@@ -14,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -27,6 +26,7 @@ from .const import (
     VALLOX_PROFILE_TO_PRESET_MODE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
+from .entity import ValloxEntity
 
 
 class ExtraStateAttributeDetails(NamedTuple):
@@ -83,7 +83,6 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

@@ -11,13 +11,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import WeheatConfigEntry
-from .const import DISPLAY_PRECISION_COP, DISPLAY_PRECISION_WATTS
+from .const import (
+    DISPLAY_PRECISION_COP,
+    DISPLAY_PRECISION_WATER_TEMP,
+    DISPLAY_PRECISION_WATTS,
+)
 from .coordinator import WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
 
@@ -55,6 +65,133 @@ SENSORS = [
         suggested_display_precision=DISPLAY_PRECISION_COP,
         value_fn=lambda status: status.cop,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="water_inlet_temperature",
+        key="water_inlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_inlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="water_outlet_temperature",
+        key="water_outlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_outlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="ch_inlet_temperature",
+        key="ch_inlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_house_in_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="outside_temperature",
+        key="outside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.air_inlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="thermostat_water_setpoint",
+        key="thermostat_water_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.thermostat_water_setpoint,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="thermostat_room_temperature",
+        key="thermostat_room_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.thermostat_room_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="thermostat_room_temperature_setpoint",
+        key="thermostat_room_temperature_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.thermostat_room_temperature_setpoint,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="heat_pump_state",
+        key="heat_pump_state",
+        name=None,
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.name.lower() for s in HeatPump.State],
+        value_fn=(
+            lambda status: status.heat_pump_state.name.lower()
+            if status.heat_pump_state
+            else None
+        ),
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used",
+        key="electricity_used",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output",
+        key="energy_output",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_output,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_rpm",
+        key="compressor_rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_fn=lambda status: status.compressor_rpm,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_percentage",
+        key="compressor_percentage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda status: status.compressor_percentage,
+    ),
+]
+
+
+DHW_SENSORS = [
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_top_temperature",
+        key="dhw_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.dhw_top_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_bottom_temperature",
+        key="dhw_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.dhw_bottom_temperature,
+    ),
 ]
 
 
@@ -64,11 +201,19 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
-    async_add_entities(
+    entities = [
         WeheatHeatPumpSensor(coordinator, entity_description)
         for entity_description in SENSORS
         for coordinator in entry.runtime_data
+    ]
+    entities.extend(
+        WeheatHeatPumpSensor(coordinator, entity_description)
+        for entity_description in DHW_SENSORS
+        for coordinator in entry.runtime_data
+        if coordinator.heat_pump_info.has_dhw
     )
+
+    async_add_entities(entities)
 
 
 class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):

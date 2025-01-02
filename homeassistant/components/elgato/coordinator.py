@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from elgato import BatteryInfo, Elgato, ElgatoConnectionError, Info, Settings, State
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+
+type ElgatoConfigEntry = ConfigEntry[ElgatoDataUpdateCoordinator]
 
 
 @dataclass
@@ -26,20 +28,20 @@ class ElgatoData:
 class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
     """Class to manage fetching Elgato data."""
 
-    config_entry: ConfigEntry
+    config_entry: ElgatoConfigEntry
     has_battery: bool | None = None
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ElgatoConfigEntry) -> None:
         """Initialize the coordinator."""
         self.config_entry = entry
         self.client = Elgato(
             entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
             session=async_get_clientsession(hass),
         )
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL,
         )

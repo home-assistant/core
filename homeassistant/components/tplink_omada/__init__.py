@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from tplink_omada_client import OmadaSite
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -10,10 +11,11 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
@@ -22,15 +24,17 @@ from .controller import OmadaSiteController
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up TP-Link Omada from a config entry."""
+type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 
-    hass.data.setdefault(DOMAIN, {})
+
+async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
+    """Set up TP-Link Omada from a config entry."""
 
     try:
         client = await create_omada_client(hass, entry.data)
@@ -52,21 +56,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, site_client)
-    gateway_coordinator = await controller.get_gateway_coordinator()
-    if gateway_coordinator:
-        await gateway_coordinator.async_config_entry_first_refresh()
-    await controller.get_clients_coordinator().async_config_entry_first_refresh()
+    await controller.initialize_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = controller
+    entry.runtime_data = controller
+
+    async def handle_reconnect_client(call: ServiceCall) -> None:
+        """Handle the service action call."""
+        mac: str | None = call.data.get("mac")
+        if not mac:
+            return
+
+        await site_client.reconnect_client(mac)
+
+    hass.services.async_register(DOMAIN, "reconnect_client", handle_reconnect_client)
+
+    _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # This is the last loaded instance of Omada, deregister any services
+        hass.services.async_remove(DOMAIN, "reconnect_client")
 
     return unload_ok
+
+
+def _remove_old_devices(
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+    omada_devices: dict[str, OmadaListDevice],
+) -> None:
+    device_registry = dr.async_get(hass)
+
+    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        mac = next(
+            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
+        )
+        if mac and mac not in omada_devices:
+            device_registry.async_update_device(
+                registered_device.id, remove_config_entry_id=entry.entry_id
+            )

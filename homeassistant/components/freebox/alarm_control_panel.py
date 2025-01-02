@@ -5,31 +5,25 @@ from typing import Any
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, FreeboxHomeCategory
-from .home_base import FreeboxHomeEntity
+from .entity import FreeboxHomeEntity
 from .router import FreeboxRouter
 
 FREEBOX_TO_STATUS = {
-    "alarm1_arming": STATE_ALARM_ARMING,
-    "alarm2_arming": STATE_ALARM_ARMING,
-    "alarm1_armed": STATE_ALARM_ARMED_AWAY,
-    "alarm2_armed": STATE_ALARM_ARMED_HOME,
-    "alarm1_alert_timer": STATE_ALARM_TRIGGERED,
-    "alarm2_alert_timer": STATE_ALARM_TRIGGERED,
-    "alert": STATE_ALARM_TRIGGERED,
-    "idle": STATE_ALARM_DISARMED,
+    "alarm1_arming": AlarmControlPanelState.ARMING,
+    "alarm2_arming": AlarmControlPanelState.ARMING,
+    "alarm1_armed": AlarmControlPanelState.ARMED_AWAY,
+    "alarm2_armed": AlarmControlPanelState.ARMED_HOME,
+    "alarm1_alert_timer": AlarmControlPanelState.TRIGGERED,
+    "alarm2_alert_timer": AlarmControlPanelState.TRIGGERED,
+    "alert": AlarmControlPanelState.TRIGGERED,
+    "idle": AlarmControlPanelState.DISARMED,
 }
 
 
@@ -103,6 +97,6 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         """Update state."""
         state: str | None = await self.get_home_endpoint_value(self._command_state)
         if state:
-            self._attr_state = FREEBOX_TO_STATUS.get(state)
+            self._attr_alarm_state = FREEBOX_TO_STATUS.get(state)
         else:
-            self._attr_state = None
+            self._attr_alarm_state = None

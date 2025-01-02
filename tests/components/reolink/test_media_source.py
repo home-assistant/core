@@ -32,6 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     TEST_HOST2,
+    TEST_HOST_MODEL,
     TEST_MAC2,
     TEST_NVR_NAME,
     TEST_NVR_NAME2,
@@ -108,11 +109,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -224,6 +231,8 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
+
+    reolink_connect.model = TEST_HOST_MODEL
 
 
 async def test_browsing_unsupported_encoding(
@@ -345,3 +354,5 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+    reolink_connect.get_host_data.side_effect = None

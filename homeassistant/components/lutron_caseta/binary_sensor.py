@@ -11,9 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
+from . import DOMAIN as CASETA_DOMAIN
 from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
+from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry
+from .util import area_name_from_id
 
 
 async def async_setup_entry(
@@ -35,7 +37,7 @@ async def async_setup_entry(
     )
 
 
-class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
+class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
@@ -43,7 +45,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     def __init__(self, device, data):
         """Init an occupancy sensor."""
         super().__init__(device, data)
-        area = _area_name_from_id(self._smartbridge.areas, device["area"])
+        area = area_name_from_id(self._smartbridge.areas, device["area"])
         name = f"{area} {device['device_name']}"
         self._attr_name = name
         self._attr_device_info = DeviceInfo(

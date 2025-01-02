@@ -1,0 +1,391 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Home Assistant integration manifest",
+  "description": "The manifest for a Home Assistant integration",
+  "type": "object",
+  "if": {
+    "properties": { "integration_type": { "const": "virtual" } },
+    "required": ["integration_type"]
+  },
+  "then": {
+    "oneOf": [
+      {
+        "properties": {
+          "domain": {
+            "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+            "examples": ["mobile_app"],
+            "type": "string",
+            "pattern": "[0-9a-z_]+"
+          },
+          "name": {
+            "description": "The friendly name of the integration.",
+            "type": "string"
+          },
+          "integration_type": {
+            "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+            "const": "virtual"
+          },
+          "iot_standards": {
+            "description": "The IoT standards which supports devices or services of this virtual integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#iot-standards",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "enum": ["homekit", "zigbee", "zwave"]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": ["domain", "name", "integration_type", "iot_standards"]
+      },
+      {
+        "properties": {
+          "domain": {
+            "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+            "examples": ["mobile_app"],
+            "type": "string",
+            "pattern": "[0-9a-z_]+"
+          },
+          "name": {
+            "description": "The friendly name of the integration.",
+            "type": "string"
+          },
+          "integration_type": {
+            "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+            "const": "virtual"
+          },
+          "supported_by": {
+            "description": "The integration which supports devices or services of this virtual integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#supported-by",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["domain", "name", "integration_type", "supported_by"]
+      }
+    ]
+  },
+  "else": {
+    "properties": {
+      "domain": {
+        "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+        "examples": ["mobile_app"],
+        "type": "string",
+        "pattern": "[0-9a-z_]+"
+      },
+      "name": {
+        "description": "The friendly name of the integration.",
+        "type": "string"
+      },
+      "integration_type": {
+        "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+        "type": "string",
+        "default": "hub",
+        "enum": [
+          "device",
+          "entity",
+          "hardware",
+          "helper",
+          "hub",
+          "service",
+          "system"
+        ]
+      },
+      "config_flow": {
+        "description": "Whether the integration is configurable from the UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#config-flow",
+        "type": "boolean"
+      },
+      "mqtt": {
+        "description": "A list of topics to subscribe for the discovery of devices via MQTT.\nThis requires to specify \"mqtt\" in either the \"dependencies\" or \"after_dependencies\".\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#mqtt",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      },
+      "zeroconf": {
+        "description": "A list containing service domains to search for devices to discover via Zeroconf. Items can either be strings, which discovers all devices in the specific service domain, and/or objects which include filters. (useful for generic service domains like _http._tcp.local.)\nA device is discovered if it matches one of the items, but inside the individual item all properties have to be matched.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#zeroconf",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^.*\\.local\\.$",
+              "description": "Service domain to search for devices."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "description": "The service domain to search for devices.",
+                  "examples": ["_http._tcp.local."],
+                  "type": "string",
+                  "pattern": "^.*\\.local\\.$"
+                },
+                "name": {
+                  "description": "The name or name pattern of the devices to filter.",
+                  "type": "string"
+                },
+                "properties": {
+                  "description": "The properties of the Zeroconf advertisement to filter.",
+                  "type": "object",
+                  "additionalProperties": { "type": "string" }
+                }
+              },
+              "required": ["type"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "uniqueItems": true
+      },
+      "ssdp": {
+        "description": "A list of matchers to find devices discoverable via SSDP/UPnP. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#ssdp",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "description": "A matcher for the SSDP discovery.",
+          "type": "object",
+          "properties": {
+            "st": {
+              "type": "string"
+            },
+            "deviceType": {
+              "type": "string"
+            },
+            "manufacturer": {
+              "type": "string"
+            },
+            "modelDescription": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": { "type": "string" }
+        }
+      },
+      "bluetooth": {
+        "description": "A list of matchers to find devices discoverable via Bluetooth. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#bluetooth",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "description": "A matcher for the bluetooth discovery",
+          "type": "object",
+          "properties": {
+            "connectable": {
+              "description": "Whether the device needs to be connected to or it works with just advertisement data.",
+              "type": "boolean"
+            },
+            "local_name": {
+              "description": "The name or a name pattern of the device to match.",
+              "type": "string",
+              "pattern": "^([^*]+|[^*]{3,}[*].*)$"
+            },
+            "service_uuid": {
+              "description": "The 128-bit service data UUID to match.",
+              "type": "string",
+              "pattern": "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+            },
+            "service_data_uuid": {
+              "description": "The 16-bit service data UUID to match, converted into the corresponding 128-bit UUID by replacing the 3rd and 4th byte of `00000000-0000-1000-8000-00805f9b34fb` with the 16-bit UUID.",
+              "examples": ["0000fd3d-0000-1000-8000-00805f9b34fb"],
+              "type": "string",
+              "pattern": "0000[0-9a-f]{4}-0000-1000-8000-00805f9b34fb"
+            },
+            "manufacturer_id": {
+              "description": "The Manufacturer ID to match.",
+              "type": "integer"
+            },
+            "manufacturer_data_start": {
+              "description": "The start bytes of the manufacturer data to match.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "uniqueItems": true
+      },
+      "homekit": {
+        "description": "A list of model names to find devices which are discoverable via HomeKit. A device is discovered if the model name of the device starts with any of the specified model names.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#homekit",
+        "type": "object",
+        "properties": {
+          "models": {
+            "description": "The model names to search for.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "required": ["models"],
+        "additionalProperties": false
+      },
+      "dhcp": {
+        "description": "A list of matchers to find devices discoverable via DHCP. In order to be discovered, the device has to match all properties of any of the matchers.\nYou can specify an item with \"registered_devices\" set to true to check for devices with MAC addresses specified in the device registry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#dhcp",
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "registered_devices": {
+                  "description": "Whether the MAC addresses of devices in the device registry should be used for discovery, useful if the discovery is used to update the IP address of already registered devices.",
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "hostname": {
+                  "description": "The hostname or hostname pattern to match.",
+                  "type": "string"
+                },
+                "macaddress": {
+                  "description": "The MAC address or MAC address pattern to match.",
+                  "type": "string",
+                  "maxLength": 12
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "uniqueItems": true
+      },
+      "usb": {
+        "description": "A list of matchers to find devices discoverable via USB. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#usb",
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vid": {
+              "description": "The vendor ID to match.",
+              "type": "string",
+              "pattern": "[0-9A-F]{4}"
+            },
+            "pid": {
+              "description": "The product ID to match.",
+              "type": "string",
+              "pattern": "[0-9A-F]{4}"
+            },
+            "description": {
+              "description": "The USB device description to match.",
+              "type": "string"
+            },
+            "manufacturer": {
+              "description": "The manufacturer to match.",
+              "type": "string"
+            },
+            "serial_number": {
+              "description": "The serial number to match.",
+              "type": "string"
+            },
+            "known_devices": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "documentation": {
+        "description": "The website containing the documentation for the integration. It has to be in the format \"https://www.home-assistant.io/integrations/[domain]\"\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#documentation",
+        "type": "string",
+        "pattern": "^https://www.home-assistant.io/integrations/[0-9a-z_]+$",
+        "format": "uri"
+      },
+      "quality_scale": {
+        "description": "The quality scale of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-quality-scale",
+        "type": "string",
+        "enum": ["bronze", "silver", "gold", "platinum", "internal", "legacy"]
+      },
+      "requirements": {
+        "description": "The PyPI package requirements for the integration. The package has to be pinned to a specific version.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#requirements",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": ".+==.+"
+        },
+        "uniqueItems": true
+      },
+      "dependencies": {
+        "description": "A list of integrations which need to be loaded before this integration can be set up.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#dependencies",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      },
+      "after_dependencies": {
+        "description": "A list of integrations which need to be loaded before this integration is set up when it is configured. The integration will still be set up when the \"after_dependencies\" are not configured.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#after-dependencies",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      },
+      "codeowners": {
+        "description": "A list of GitHub usernames or GitHub team names of the integration owners.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#code-owners",
+        "type": "array",
+        "minItems": 0,
+        "items": {
+          "type": "string",
+          "pattern": "^@.+$"
+        },
+        "uniqueItems": true
+      },
+      "loggers": {
+        "description": "A list of logger names used by the requirements.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#loggers",
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true
+      },
+      "disabled": {
+        "description": "The reason for the integration being disabled.",
+        "type": "string"
+      },
+      "iot_class": {
+        "description": "The IoT class of the integration, describing how the integration connects to the device or service.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#iot-class",
+        "type": "string",
+        "enum": [
+          "assumed_state",
+          "cloud_polling",
+          "cloud_push",
+          "local_polling",
+          "local_push",
+          "calculated"
+        ]
+      },
+      "single_config_entry": {
+        "description": "Whether the integration only supports a single config entry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#single-config-entry-only",
+        "const": true
+      }
+    },
+    "additionalProperties": false,
+    "required": ["domain", "name", "codeowners", "documentation"],
+    "dependencies": {
+      "mqtt": {
+        "anyOf": [
+          { "required": ["dependencies"] },
+          { "required": ["after_dependencies"] }
+        ]
+      }
+    }
+  }
+}

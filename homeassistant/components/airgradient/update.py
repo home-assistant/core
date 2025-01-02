@@ -1,7 +1,8 @@
 """Airgradient Update platform."""
 
 from datetime import timedelta
-from functools import cached_property
+
+from propcache import cached_property
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant

@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_FAN_SMART = "smart"
@@ -101,7 +101,6 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     TYPE = CLIMATE_DOMAIN
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: Thermostat, hub: DeconzHub) -> None:
         """Set up thermostat device."""

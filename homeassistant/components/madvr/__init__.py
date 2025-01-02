@@ -8,7 +8,7 @@ from madvr.madvr import Madvr
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 
 from .coordinator import MadVRCoordinator
 
@@ -47,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MadVRConfigEntry) -> boo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    @callback
     async def handle_unload(event: Event) -> None:
         """Handle unload."""
         await async_handle_unload(coordinator=coordinator)

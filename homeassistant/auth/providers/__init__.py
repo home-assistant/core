@@ -5,14 +5,16 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import types
-from typing import Any
+from typing import Any, Generic
 
+from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import data_entry_flow, requirements
+from homeassistant import requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util import dt as dt_util
@@ -21,7 +23,14 @@ from homeassistant.util.hass_dict import HassKey
 
 from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
-from ..models import AuthFlowResult, Credentials, RefreshToken, User, UserMeta
+from ..models import (
+    AuthFlowContext,
+    AuthFlowResult,
+    Credentials,
+    RefreshToken,
+    User,
+    UserMeta,
+)
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS: HassKey[set[str]] = HassKey("auth_prov_reqs_processed")
@@ -37,6 +46,8 @@ AUTH_PROVIDER_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+_AuthProviderT = TypeVar("_AuthProviderT", bound="AuthProvider", default="AuthProvider")
 
 
 class AuthProvider:
@@ -97,7 +108,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow[Any]:
         """Return the data flow for logging in with auth provider.
 
         Auth provider should extend LoginFlow and return an instance.
@@ -184,12 +195,15 @@ async def load_auth_provider_module(
     return module
 
 
-class LoginFlow(data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]]):
+class LoginFlow(
+    FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
+    Generic[_AuthProviderT],
+):
     """Handler for the login flow."""
 
     _flow_result = AuthFlowResult
 
-    def __init__(self, auth_provider: AuthProvider) -> None:
+    def __init__(self, auth_provider: _AuthProviderT) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_module_id: str | None = None

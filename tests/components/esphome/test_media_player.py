@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -310,15 +311,17 @@ async def test_media_player_proxy(
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
-                        sample_rate=48000,
-                        num_channels=2,
+                        sample_rate=0,  # source rate
+                        num_channels=0,  # source channels
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=0,  # source width
                     ),
                     MediaPlayerSupportedFormat(
                         format="wav",
                         sample_rate=16000,
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
                     ),
                     MediaPlayerSupportedFormat(
                         format="mp3",
@@ -369,7 +372,13 @@ async def test_media_player_proxy(
         mock_async_create_proxy_url.assert_called_once()
         device_id = mock_async_create_proxy_url.call_args[0][1]
         mock_async_create_proxy_url.assert_called_once_with(
-            hass, device_id, media_url, media_format="flac", rate=48000, channels=2
+            hass,
+            device_id,
+            media_url,
+            media_format="flac",
+            rate=None,
+            channels=None,
+            width=None,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs
@@ -395,8 +404,33 @@ async def test_media_player_proxy(
         mock_async_create_proxy_url.assert_called_once()
         device_id = mock_async_create_proxy_url.call_args[0][1]
         mock_async_create_proxy_url.assert_called_once_with(
-            hass, device_id, media_url, media_format="wav", rate=16000, channels=1
+            hass,
+            device_id,
+            media_url,
+            media_format="wav",
+            rate=16000,
+            channels=1,
+            width=2,
         )
 
         media_args = mock_client.media_player_command.call_args.kwargs
         assert media_args["announcement"]
+
+        # test with bypass_proxy flag
+        mock_async_create_proxy_url.reset_mock()
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: media_url,
+                ATTR_MEDIA_EXTRA: {
+                    "bypass_proxy": True,
+                },
+            },
+            blocking=True,
+        )
+        mock_async_create_proxy_url.assert_not_called()
+        media_args = mock_client.media_player_command.call_args.kwargs
+        assert media_args["media_url"] == media_url

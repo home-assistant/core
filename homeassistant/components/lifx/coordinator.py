@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import IntEnum
-from functools import cached_property, partial
+from functools import partial
 from math import floor, log10
 from typing import Any, cast
 
@@ -21,6 +21,7 @@ from aiolifx.aiolifx import (
 from aiolifx.connection import LIFXConnection
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
+from propcache import cached_property
 
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
