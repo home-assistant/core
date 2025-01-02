@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
@@ -74,7 +74,7 @@ async def test_button_update(
     today_str = today.isoformat(timespec="seconds")
     freezer.move_to(today)
 
-    mock_client.async_reset_filter = AsyncMock(return_value={"status": "success"})
+    mock_client.async_reset_filter.return_value = {"status": "success"}
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -114,7 +114,7 @@ async def test_button_failure(
 
     state = hass.states.get("button.hallway_reset_filter")
 
-    mock_client.async_reset_filter = AsyncMock(return_value={"status": "failure"})
+    mock_client.async_reset_filter.return_value = {"status": "failure"}
 
     with pytest.raises(
         HomeAssistantError,

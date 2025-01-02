@@ -71,8 +71,8 @@ async def get_client(
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.async_get_devices_data = AsyncMock(return_value=get_data[0])
-        client.async_get_me = AsyncMock(return_value=get_data[1])
+        client.async_get_devices_data.return_value = get_data[0]
+        client.async_get_me.return_value = get_data[1]
         yield client
 
 

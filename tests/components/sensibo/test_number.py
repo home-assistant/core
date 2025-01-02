@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
@@ -62,7 +62,7 @@ async def test_number_set_value(
     state = hass.states.get("number.hallway_temperature_calibration")
     assert state.state == "0.1"
 
-    mock_client.async_set_calibration = AsyncMock(return_value={"status": "failure"})
+    mock_client.async_set_calibration.return_value = {"status": "failure"}
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -75,7 +75,7 @@ async def test_number_set_value(
     state = hass.states.get("number.hallway_temperature_calibration")
     assert state.state == "0.1"
 
-    mock_client.async_set_calibration = AsyncMock(return_value={"status": "success"})
+    mock_client.async_set_calibration.return_value = {"status": "success"}
 
     await hass.services.async_call(
         NUMBER_DOMAIN,

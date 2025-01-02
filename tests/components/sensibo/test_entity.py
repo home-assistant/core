@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -49,9 +49,9 @@ async def test_entity_failed_service_calls(
     state = hass.states.get("climate.hallway")
     assert state
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -64,7 +64,7 @@ async def test_entity_failed_service_calls(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"
 
-    mock_client.async_set_ac_state_property = AsyncMock(side_effect=p_error)
+    mock_client.async_set_ac_state_property.side_effect = p_error
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

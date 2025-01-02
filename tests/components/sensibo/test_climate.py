@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
@@ -145,9 +145,9 @@ async def test_climate_fan(
             blocking=True,
         )
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -177,8 +177,6 @@ async def test_climate_fan(
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    mock_client.async_set_ac_state_property = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -236,9 +234,9 @@ async def test_climate_swing(
             blocking=True,
         )
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -267,8 +265,6 @@ async def test_climate_swing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_client.async_set_ac_state_property = AsyncMock()
-
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -295,9 +291,9 @@ async def test_climate_temperatures(
     state = hass.states.get("climate.hallway")
     assert state.attributes["temperature"] == 25
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -310,7 +306,7 @@ async def test_climate_temperatures(
     state = hass.states.get("climate.hallway")
     assert state.attributes["temperature"] == 20
 
-    mock_client.async_set_ac_state_property = AsyncMock()
+    mock_client.async_set_ac_state_property.reset_mock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -320,9 +316,9 @@ async def test_climate_temperatures(
     )
     assert not mock_client.async_set_ac_state_property.called
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -450,8 +446,6 @@ async def test_climate_temperature_is_none(
     state = hass.states.get("climate.hallway")
     assert state.attributes["temperature"] == 25
 
-    mock_client.async_set_ac_state_property = AsyncMock()
-
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -501,9 +495,9 @@ async def test_climate_hvac_mode(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.HEAT
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -554,9 +548,9 @@ async def test_climate_on_off(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.HEAT
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -601,9 +595,9 @@ async def test_climate_service_failed(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.HEAT
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Error", "failureReason": "Did not work"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Error", "failureReason": "Did not work"}
+    }
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -638,9 +632,9 @@ async def test_climate_assumed_state(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.HEAT
 
-    mock_client.async_set_ac_state_property = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -701,7 +695,7 @@ async def test_climate_set_timer(
     state = hass.states.get("climate.hallway")
     assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
 
-    mock_client.async_set_timer = AsyncMock(return_value={"status": "failure"})
+    mock_client.async_set_timer.return_value = {"status": "failure"}
 
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
@@ -724,9 +718,10 @@ async def test_climate_set_timer(
             blocking=True,
         )
 
-    mock_client.async_set_timer = AsyncMock(
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}}
-    )
+    mock_client.async_set_timer.return_value = {
+        "status": "success",
+        "result": {"id": "SzTGE4oZ4D"},
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -777,8 +772,6 @@ async def test_climate_pure_boost(
     state2 = hass.states.get("switch.kitchen_pure_boost")
     assert state2.state == STATE_OFF
 
-    mock_client.async_set_pureboost = AsyncMock()
-
     with pytest.raises(
         MultipleInvalid,
     ):
@@ -794,19 +787,17 @@ async def test_climate_pure_boost(
             blocking=True,
         )
 
-    mock_client.async_set_pureboost = AsyncMock(
-        return_value={
-            "status": "success",
-            "result": {
-                "enabled": True,
-                "sensitivity": "S",
-                "measurements_integration": True,
-                "ac_integration": False,
-                "geo_integration": False,
-                "prime_integration": True,
-            },
-        }
-    )
+    mock_client.async_set_pureboost.return_value = {
+        "status": "success",
+        "result": {
+            "enabled": True,
+            "sensitivity": "S",
+            "measurements_integration": True,
+            "ac_integration": False,
+            "geo_integration": False,
+            "prime_integration": True,
+        },
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -867,8 +858,6 @@ async def test_climate_climate_react(
 
     state_climate = hass.states.get("climate.hallway")
 
-    mock_client.async_set_climate_react = AsyncMock()
-
     with pytest.raises(
         MultipleInvalid,
     ):
@@ -884,38 +873,36 @@ async def test_climate_climate_react(
             blocking=True,
         )
 
-    mock_client.async_set_climate_react = AsyncMock(
-        return_value={
-            "status": "success",
-            "result": {
-                "enabled": True,
-                "deviceUid": "ABC999111",
-                "highTemperatureState": {
-                    "on": True,
-                    "targetTemperature": 15,
-                    "temperatureUnit": "C",
-                    "mode": "cool",
-                    "fanLevel": "high",
-                    "swing": "stopped",
-                    "horizontalSwing": "stopped",
-                    "light": "on",
-                },
-                "highTemperatureThreshold": 30.5,
-                "lowTemperatureState": {
-                    "on": True,
-                    "targetTemperature": 25,
-                    "temperatureUnit": "C",
-                    "mode": "heat",
-                    "fanLevel": "low",
-                    "swing": "stopped",
-                    "horizontalSwing": "stopped",
-                    "light": "on",
-                },
-                "lowTemperatureThreshold": 5.5,
-                "type": "temperature",
+    mock_client.async_set_climate_react.return_value = {
+        "status": "success",
+        "result": {
+            "enabled": True,
+            "deviceUid": "ABC999111",
+            "highTemperatureState": {
+                "on": True,
+                "targetTemperature": 15,
+                "temperatureUnit": "C",
+                "mode": "cool",
+                "fanLevel": "high",
+                "swing": "stopped",
+                "horizontalSwing": "stopped",
+                "light": "on",
             },
-        }
-    )
+            "highTemperatureThreshold": 30.5,
+            "lowTemperatureState": {
+                "on": True,
+                "targetTemperature": 25,
+                "temperatureUnit": "C",
+                "mode": "heat",
+                "fanLevel": "low",
+                "swing": "stopped",
+                "horizontalSwing": "stopped",
+                "light": "on",
+            },
+            "lowTemperatureThreshold": 5.5,
+            "type": "temperature",
+        },
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -1020,38 +1007,36 @@ async def test_climate_climate_react_fahrenheit(
 
     state = hass.states.get("climate.hallway")
 
-    mock_client.async_set_climate_react = AsyncMock(
-        return_value={
-            "status": "success",
-            "result": {
-                "enabled": True,
-                "deviceUid": "ABC999111",
-                "highTemperatureState": {
-                    "on": True,
-                    "targetTemperature": 65,
-                    "temperatureUnit": "F",
-                    "mode": "cool",
-                    "fanLevel": "high",
-                    "swing": "stopped",
-                    "horizontalSwing": "stopped",
-                    "light": "on",
-                },
-                "highTemperatureThreshold": 77,
-                "lowTemperatureState": {
-                    "on": True,
-                    "targetTemperature": 85,
-                    "temperatureUnit": "F",
-                    "mode": "heat",
-                    "fanLevel": "low",
-                    "swing": "stopped",
-                    "horizontalSwing": "stopped",
-                    "light": "on",
-                },
-                "lowTemperatureThreshold": 32,
-                "type": "temperature",
+    mock_client.async_set_climate_react.return_value = {
+        "status": "success",
+        "result": {
+            "enabled": True,
+            "deviceUid": "ABC999111",
+            "highTemperatureState": {
+                "on": True,
+                "targetTemperature": 65,
+                "temperatureUnit": "F",
+                "mode": "cool",
+                "fanLevel": "high",
+                "swing": "stopped",
+                "horizontalSwing": "stopped",
+                "light": "on",
             },
-        }
-    )
+            "highTemperatureThreshold": 77,
+            "lowTemperatureState": {
+                "on": True,
+                "targetTemperature": 85,
+                "temperatureUnit": "F",
+                "mode": "heat",
+                "fanLevel": "low",
+                "swing": "stopped",
+                "horizontalSwing": "stopped",
+                "light": "on",
+            },
+            "lowTemperatureThreshold": 32,
+            "type": "temperature",
+        },
+    }
 
     await hass.services.async_call(
         DOMAIN,
@@ -1155,8 +1140,6 @@ async def test_climate_full_ac_state(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.HEAT
 
-    mock_client.async_set_ac_states = AsyncMock()
-
     with pytest.raises(
         MultipleInvalid,
     ):
@@ -1170,9 +1153,7 @@ async def test_climate_full_ac_state(
             blocking=True,
         )
 
-    mock_client.async_set_ac_states = AsyncMock(
-        return_value={"result": {"status": "Success"}}
-    )
+    mock_client.async_set_ac_states.return_value = {"result": {"status": "Success"}}
 
     await hass.services.async_call(
         DOMAIN,
@@ -1221,8 +1202,6 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
     assert state.attributes["swing_mode"] == "stopped"
-
-    mock_client.async_set_ac_state_property = AsyncMock()
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(

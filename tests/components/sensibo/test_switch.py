@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
@@ -58,9 +58,10 @@ async def test_switch_timer(
     assert state.attributes["id"] is None
     assert state.attributes["turn_on"] is None
 
-    mock_client.async_set_timer = AsyncMock(
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}}
-    )
+    mock_client.async_set_timer.return_value = {
+        "status": "success",
+        "result": {"id": "SzTGE4oZ4D"},
+    }
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -85,9 +86,10 @@ async def test_switch_timer(
     assert state.attributes["id"] == "SzTGE4oZ4D"
     assert state.attributes["turn_on"] is False
 
-    mock_client.async_del_timer = AsyncMock(
-        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}}
-    )
+    mock_client.async_del_timer.return_value = {
+        "status": "success",
+        "result": {"id": "SzTGE4oZ4D"},
+    }
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -122,7 +124,7 @@ async def test_switch_pure_boost(
     state = hass.states.get("switch.kitchen_pure_boost")
     assert state.state == STATE_OFF
 
-    mock_client.async_set_pureboost = AsyncMock(return_value={"status": "success"})
+    mock_client.async_set_pureboost.return_value = {"status": "success"}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -173,7 +175,7 @@ async def test_switch_command_failure(
 
     state = hass.states.get("switch.hallway_timer")
 
-    mock_client.async_set_timer = AsyncMock(return_value={"status": "failure"})
+    mock_client.async_set_timer.return_value = {"status": "failure"}
 
     with pytest.raises(
         HomeAssistantError,
@@ -187,7 +189,7 @@ async def test_switch_command_failure(
             blocking=True,
         )
 
-    mock_client.async_del_timer = AsyncMock(return_value={"status": "failure"})
+    mock_client.async_del_timer.return_value = {"status": "failure"}
 
     with pytest.raises(
         HomeAssistantError,
@@ -215,9 +217,7 @@ async def test_switch_climate_react(
     state = hass.states.get("switch.hallway_climate_react")
     assert state.state == STATE_OFF
 
-    mock_client.async_enable_climate_react = AsyncMock(
-        return_value={"status": "success"}
-    )
+    mock_client.async_enable_climate_react.return_value = {"status": "success"}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
