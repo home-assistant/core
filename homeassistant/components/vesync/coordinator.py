@@ -34,4 +34,6 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from API endpoint."""
 
         # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
-        return await self.hass.async_add_executor_job(self._manager.update_all_devices)
+        await self.hass.async_add_executor_job(self._manager.update_all_devices)
+        # Vesync updates energy on applicable devices every 6 hours
+        return await self.hass.async_add_executor_job(self._manager.update_energy)
