@@ -128,3 +128,8 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     except AttributeError as error:
         _LOGGER.debug("No compressors found: %s", error)
     return []
+
+
+def filter_state(state: str) -> str | None:
+    """Remove invalid states."""
+    return None if state in ("nothing", "unknown") else state
