@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_heater_set_hvac_mode[cool-COOL]
+# name: test_aircon_set_hvac_mode[cool-COOL]
   _Call(
     tuple(
       3,
@@ -19,7 +19,7 @@
     }),
   )
 # ---
-# name: test_heater_set_hvac_mode[dry-DRY]
+# name: test_aircon_set_hvac_mode[dry-DRY]
   _Call(
     tuple(
       3,
@@ -39,7 +39,7 @@
     }),
   )
 # ---
-# name: test_heater_set_hvac_mode[fan_only-FAN]
+# name: test_aircon_set_hvac_mode[fan_only-FAN]
   _Call(
     tuple(
       3,
@@ -59,7 +59,7 @@
     }),
   )
 # ---
-# name: test_heater_set_hvac_mode[heat-HEAT]
+# name: test_aircon_set_hvac_mode[heat-HEAT]
   _Call(
     tuple(
       3,
@@ -79,7 +79,7 @@
     }),
   )
 # ---
-# name: test_heater_set_hvac_mode[off-OFF]
+# name: test_aircon_set_hvac_mode[off-OFF]
   _Call(
     tuple(
       3,

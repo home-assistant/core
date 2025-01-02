@@ -174,13 +174,13 @@ async def test_heater_set_temperature(
         (HVACMode.OFF, "OFF"),
     ],
 )
-async def test_heater_set_hvac_mode(
+async def test_aircon_set_hvac_mode(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     hvac_mode: HVACMode,
     set_hvac_mode: str,
 ) -> None:
-    """Test the set hvac mode of the heater."""
+    """Test the set hvac mode of the air conditioning."""
 
     await async_init_integration(hass)
 
