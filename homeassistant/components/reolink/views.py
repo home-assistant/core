@@ -11,6 +11,7 @@ from reolink_aio.enums import VodRequestType
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.ssl import SSLCipherList
@@ -67,7 +68,12 @@ class PlaybackProxyView(HomeAssistantView):
 
         filename = parse.unquote(filename)
         ch = int(channel)
-        host = get_host(self.hass, config_entry_id)
+        try:
+            host = get_host(self.hass, config_entry_id)
+        except Unresolvable:
+            err_str = f"Reolink playback proxy could not find config entry id: {config_entry_id}"
+            _LOGGER.warning(err_str)
+            return web.Response(body=err_str, status=HTTPStatus.BAD_REQUEST)
 
         try:
             mime_type, reolink_url = await host.api.get_vod_source(
