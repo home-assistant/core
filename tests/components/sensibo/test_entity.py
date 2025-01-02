@@ -59,7 +59,6 @@ async def test_entity_failed_service_calls(
         {ATTR_ENTITY_ID: state.entity_id, ATTR_FAN_MODE: "low"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"

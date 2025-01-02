@@ -144,7 +144,6 @@ async def test_select_set_option(
         {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "fixedleft"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("select.hallway_horizontal_swing")
     assert state.state == "fixedleft"

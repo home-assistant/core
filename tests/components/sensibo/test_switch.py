@@ -71,7 +71,6 @@ async def test_switch_timer(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_on", True)
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_id", "SzTGE4oZ4D")
@@ -99,7 +98,6 @@ async def test_switch_timer(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_on", False)
 
@@ -134,7 +132,6 @@ async def test_switch_pure_boost(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_boost_enabled", True)
     monkeypatch.setattr(
@@ -156,7 +153,6 @@ async def test_switch_pure_boost(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_boost_enabled", False)
 
@@ -227,7 +223,6 @@ async def test_switch_climate_react(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", True)
 
@@ -246,7 +241,6 @@ async def test_switch_climate_react(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", False)
 

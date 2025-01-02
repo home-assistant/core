@@ -83,7 +83,6 @@ async def test_number_set_value(
         {ATTR_ENTITY_ID: state.entity_id, ATTR_VALUE: "0.2"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("number.hallway_temperature_calibration")
     assert state.state == "0.2"
