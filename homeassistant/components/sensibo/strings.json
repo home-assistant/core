@@ -561,6 +561,15 @@
     },
     "climate_react_not_available": {
       "message": "Use Sensibo Enable Climate React action once to enable switch or the Sensibo app"
+    },
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
+    "update_error": {
+      "message": "There was an error updating from the Sensibo API with the error: {error}"
+    },
+    "no_data": {
+      "message": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined"
     }
   }
 }
