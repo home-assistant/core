@@ -14,11 +14,12 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_SWITCHES
+from .const import DOMAIN, VS_DISCOVERY, VS_SWITCHES
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,13 +46,32 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensor platform."""
-    entities: list[VeSyncSwitchEntity] = []
-    for device in hass.data[DOMAIN][VS_SWITCHES]:
-        for description in SENSOR_DESCRIPTIONS:
-            if rgetattr(device, description.key) is not None:
-                entities.append(VeSyncSwitchEntity(device, description))  # noqa: PERF401
-    async_add_entities(entities)
+    """Set up switch platform."""
+
+    @callback
+    def discover(devices):
+        """Add new devices to platform."""
+        _setup_entities(devices, async_add_entities)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SWITCHES), discover)
+    )
+
+    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
+
+
+@callback
+def _setup_entities(devices, async_add_entities):
+    """Check if device is online and add entity."""
+    async_add_entities(
+        (
+            VeSyncSwitchEntity(dev, description)
+            for dev in devices
+            for description in SENSOR_DESCRIPTIONS
+            if rgetattr(dev, description.key) is not None
+        ),
+        update_before_add=True,
+    )
 
 
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
