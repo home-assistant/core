@@ -1001,7 +1001,7 @@ async def test_climate_pure_boost(
                 ATTR_ENTITY_ID: state_climate.entity_id,
                 ATTR_INDOOR_INTEGRATION: True,
                 ATTR_OUTDOOR_INTEGRATION: True,
-                ATTR_SENSITIVITY: "Sensitive",
+                ATTR_SENSITIVITY: "sensitive",
             },
             blocking=True,
         )
@@ -1036,7 +1036,7 @@ async def test_climate_pure_boost(
                 ATTR_GEO_INTEGRATION: False,
                 ATTR_INDOOR_INTEGRATION: True,
                 ATTR_OUTDOOR_INTEGRATION: True,
-                ATTR_SENSITIVITY: "Sensitive",
+                ATTR_SENSITIVITY: "sensitive",
             },
             blocking=True,
         )
