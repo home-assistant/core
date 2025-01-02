@@ -74,16 +74,14 @@ def setup_services(hass: HomeAssistant) -> None:
 
         status = call.data[ATTR_STATUS]
 
-        visibility = None
-        if ATTR_VISIBILITY in call.data:
-            visibility = StatusVisibility(call.data[ATTR_VISIBILITY])
-        content_warning = None
-        if ATTR_CONTENT_WARNING in call.data:
-            content_warning = call.data.get(ATTR_CONTENT_WARNING)
-        media = None
-        if ATTR_MEDIA in call.data:
-            media = call.data.get(ATTR_MEDIA)
-        media_warning = call.data.get(ATTR_MEDIA_WARNING)
+        visibility: str | None = (
+            StatusVisibility(call.data[ATTR_VISIBILITY])
+            if ATTR_VISIBILITY in call.data
+            else None
+        )
+        content_warning: str | None = call.data.get(ATTR_CONTENT_WARNING)
+        media: str | None = call.data.get(ATTR_MEDIA)
+        media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
 
         if media:
             if not hass.config.is_allowed_path(media):
