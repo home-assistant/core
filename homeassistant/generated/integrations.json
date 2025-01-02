@@ -1356,6 +1356,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "dreo": {
+      "name": "Dreo",
+      "integrations": {
+        "dreo": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Dreo"
+        }
+      }
+    },
     "drop_connect": {
       "name": "DROP",
       "integration_type": "hub",
@@ -5149,7 +5160,8 @@
       "name": "Refoss",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "rejseplanen": {
       "name": "Rejseplanen",
