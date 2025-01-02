@@ -168,7 +168,6 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = coordinator
         super().__init__(device_info, coordinator)
 
         self._attr_unique_id = (
@@ -179,7 +178,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            self._device_info = self._tado.data["device"][self.device_id]
+            self._device_info = self.coordinator.data["device"][self.device_id]
         except KeyError:
             return
 
@@ -205,7 +204,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = coordinator
+        self.coordinator = coordinator
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self._attr_unique_id = (
@@ -216,7 +215,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         except KeyError:
             return
 

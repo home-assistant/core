@@ -237,7 +237,6 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         super().__init__(coordinator)
-        self._tado = coordinator
 
         self._attr_unique_id = f"{entity_description.key} {coordinator.home_id}"
 
@@ -245,8 +244,8 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            tado_weather_data = self._tado.data["weather"]
-            tado_geofence_data = self._tado.data["geofence"]
+            tado_weather_data = self.coordinator.data["weather"]
+            tado_geofence_data = self.coordinator.data["geofence"]
         except KeyError:
             return
 
@@ -277,7 +276,6 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = coordinator
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self._attr_unique_id = (
@@ -288,7 +286,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
-            tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         except KeyError:
             return
 

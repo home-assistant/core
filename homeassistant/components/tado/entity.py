@@ -67,7 +67,6 @@ class TadoHomeEntity(TadoCoordinatorEntity):
 class TadoZoneEntity(TadoCoordinatorEntity):
     """Base implementation for Tado zone."""
 
-
     def __init__(
         self,
         zone_name: str,
