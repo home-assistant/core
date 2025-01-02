@@ -972,7 +972,7 @@ holidays==0.63
 home-assistant-frontend==20241231.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.12.20
+home-assistant-intents==2025.1.1
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
