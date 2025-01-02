@@ -50,7 +50,7 @@
   "services": {
     "get_command": {
       "name": "Get command",
-      "description": "Send sa generic HTTP get command.",
+      "description": "Sends a generic HTTP get command.",
       "fields": {
         "command": {
           "name": "Command",
