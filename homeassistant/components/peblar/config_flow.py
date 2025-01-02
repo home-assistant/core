@@ -138,7 +138,14 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         self._discovery_info = discovery_info
-        self.context.update({"configuration_url": f"http://{discovery_info.host}"})
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "name": discovery_info.name.replace("._http._tcp.local.", "")
+                },
+                "configuration_url": f"http://{discovery_info.host}",
+            },
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
