@@ -102,6 +102,7 @@ async def async_setup_entry(
                 )
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
+                if description.key in vehicle.coordinator.data
             ),
             (
                 TeslemetryChargeSwitchEntity(
@@ -150,10 +151,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryVehicleEntity, TeslemetrySwitchEnt
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        if self._value is None:
-            self._attr_is_on = None
-        else:
-            self._attr_is_on = bool(self._value)
+        self._attr_is_on = bool(self._value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""

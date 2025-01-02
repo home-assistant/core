@@ -57,11 +57,5 @@
         "name": "Uptime timestamp"
       }
     }
-  },
-  "issues": {
-    "uptime_seconds_deprecated": {
-      "title": "QNAP QSW uptime seconds sensor deprecated",
-      "description": "The QNAP QSW uptime seconds sensor entity is deprecated and will be removed in HA 2025.2.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the uptime seconds entity from `{info}` then click submit to fix this issue."
-    }
   }
 }

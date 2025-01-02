@@ -10,6 +10,8 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

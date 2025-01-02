@@ -75,9 +75,11 @@ def make_device_data(
             )
         if (
             isinstance(device, Device)
-            and device.device_type.startswith("Plug")
-            or isinstance(device, Remote)
-        ):
+            and (
+                device.device_type.startswith("Plug")
+                or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
+            )
+        ) or isinstance(device, Remote):
             devices_data.switches.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
@@ -88,6 +90,7 @@ def make_device_data(
             "Hub 2",
             "MeterPro",
             "MeterPro(CO2)",
+            "Relay Switch 1PM",
         ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)

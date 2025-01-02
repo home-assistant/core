@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "La Marzocco Espresso {host}",
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -26,7 +25,10 @@
       "bluetooth_selection": {
         "description": "Select your device from available Bluetooth devices.",
         "data": {
-          "mac": "Bluetooth device"
+          "mac": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "mac": "Select the Bluetooth device that is your machine"
         }
       },
       "machine_selection": {
@@ -36,7 +38,8 @@
           "machine": "Machine"
         },
         "data_description": {
-          "host": "Local IP address of the machine"
+          "host": "Local IP address of the machine",
+          "machine": "Select the machine you want to integrate"
         }
       },
       "reauth_confirm": {
@@ -64,8 +67,10 @@
     "step": {
       "init": {
         "data": {
-          "title": "Update Configuration",
           "use_bluetooth": "Use Bluetooth"
+        },
+        "data_description": {
+          "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
         }
       }
     }
@@ -117,6 +122,9 @@
       "preinfusion_off_key": {
         "name": "Preinfusion time Key {key}"
       },
+      "scale_target_key": {
+        "name": "Brew by weight target {key}"
+      },
       "smart_standby_time": {
         "name": "Smart standby time"
       },
@@ -128,6 +136,13 @@
       }
     },
     "select": {
+      "active_bbw": {
+        "name": "Active brew by weight recipe",
+        "state": {
+          "a": "Recipe A",
+          "b": "Recipe B"
+        }
+      },
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
@@ -196,6 +211,12 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
     "auto_on_off_error": {
       "message": "Error while setting auto on/off to {state} for {id}"
     },

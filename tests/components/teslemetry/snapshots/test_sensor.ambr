@@ -2422,7 +2422,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_level',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2495,7 +2495,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -2560,7 +2560,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_conn_charge_cable',
     'unit_of_measurement': None,
   })
 # ---
@@ -2624,7 +2624,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_energy_added',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_energy_added',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_energy_added',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -2694,7 +2694,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_rate',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charge_rate',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_rate',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -2761,7 +2761,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_actual_current',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_actual_current',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_actual_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2828,7 +2828,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_power',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_power',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -2895,7 +2895,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_voltage',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_voltage',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charger_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2969,7 +2969,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charging_state',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_charging_state',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_charging_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3051,7 +3051,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_miles_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_miles_to_arrival',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3121,7 +3121,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_driver_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_driver_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3194,7 +3194,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_est_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_est_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_est_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3259,7 +3259,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_fast_charger_type',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_fast_charger_type',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_fast_charger_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -3326,7 +3326,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_ideal_battery_range',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_ideal_battery_range',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_ideal_battery_range',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3396,7 +3396,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_inside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_inside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3469,7 +3469,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_odometer',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_odometer',
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
@@ -3539,7 +3539,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_outside_temp',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_outside_temp',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3609,7 +3609,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_passenger_temp_setting',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_passenger_temp_setting',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -3676,7 +3676,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_power',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_power',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_power',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -3748,7 +3748,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_shift_state',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_shift_state',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_shift_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3826,7 +3826,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_speed',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_speed',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
@@ -3893,7 +3893,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_energy_at_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_energy_at_arrival',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3958,7 +3958,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_minutes_to_arrival',
     'unit_of_measurement': None,
   })
 # ---
@@ -4019,7 +4019,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_minutes_to_full_charge',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_minutes_to_full_charge',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_minutes_to_full_charge',
     'unit_of_measurement': None,
   })
 # ---
@@ -4088,7 +4088,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4161,7 +4161,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_fr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_fr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4234,7 +4234,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rl',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rl',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4307,7 +4307,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
-    'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_pressure_rr',
+    'unique_id': 'LRW3F7EK4NC700000-vehicle_state_tpms_pressure_rr',
     'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
   })
 # ---
@@ -4374,7 +4374,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
-    'unique_id': 'LRWXF7EK4KC700000-drive_state_active_route_traffic_minutes_delay',
+    'unique_id': 'LRW3F7EK4NC700000-drive_state_active_route_traffic_minutes_delay',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -4441,7 +4441,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_usable_battery_level',
-    'unique_id': 'LRWXF7EK4KC700000-charge_state_usable_battery_level',
+    'unique_id': 'LRW3F7EK4NC700000-charge_state_usable_battery_level',
     'unit_of_measurement': '%',
   })
 # ---

@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_device
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'ituran',
+          '12345678',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'mock make',
+      'model': 'mock model',
+      'model_id': None,
+      'name': 'mock model',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '12345678',
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---

@@ -1,11 +1,16 @@
 """Constants for the habitica integration."""
 
-from homeassistant.const import CONF_PATH
+from homeassistant.const import APPLICATION_NAME, CONF_PATH, __version__
 
 CONF_API_USER = "api_user"
 
 DEFAULT_URL = "https://habitica.com"
 ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
+SITE_DATA_URL = "https://habitica.com/user/settings/siteData"
+FORGOT_PASSWORD_URL = "https://habitica.com/forgot-password"
+SIGN_UP_URL = "https://habitica.com/register"
+HABITICANS_URL = "https://habitica.com/static/img/home-main@3x.ffc32b12.png"
+
 DOMAIN = "habitica"
 
 # service constants
@@ -19,8 +24,6 @@ ATTR_DATA = "data"
 
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
-
-UNIT_TASKS = "tasks"
 
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"
@@ -41,9 +44,8 @@ SERVICE_SCORE_REWARD = "score_reward"
 SERVICE_TRANSFORMATION = "transformation"
 
 
-WARRIOR = "warrior"
-ROGUE = "rogue"
-HEALER = "healer"
-MAGE = "wizard"
-
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
+X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
+
+SECTION_REAUTH_LOGIN = "reauth_login"
+SECTION_REAUTH_API_KEY = "reauth_api_key"

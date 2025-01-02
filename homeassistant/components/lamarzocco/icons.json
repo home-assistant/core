@@ -43,6 +43,9 @@
       "preinfusion_off": {
         "default": "mdi:water"
       },
+      "scale_target": {
+        "default": "mdi:scale-balance"
+      },
       "smart_standby_time": {
         "default": "mdi:timer"
       },
@@ -54,6 +57,13 @@
       }
     },
     "select": {
+      "active_bbw": {
+        "default": "mdi:alpha-u",
+        "state": {
+          "a": "mdi:alpha-a",
+          "b": "mdi:alpha-b"
+        }
+      },
       "smart_standby_mode": {
         "default": "mdi:power",
         "state": {

@@ -20,6 +20,7 @@ DEFAULT_NAME = "pchk"
 
 ADD_ENTITIES_CALLBACKS = "add_entities_callbacks"
 CONNECTION = "connection"
+DEVICE_CONNECTIONS = "device_connections"
 CONF_HARDWARE_SERIAL = "hardware_serial"
 CONF_SOFTWARE_SERIAL = "software_serial"
 CONF_HARDWARE_TYPE = "hardware_type"

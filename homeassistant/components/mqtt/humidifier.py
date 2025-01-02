@@ -59,6 +59,8 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
+PARALLEL_UPDATES = 0
+
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"

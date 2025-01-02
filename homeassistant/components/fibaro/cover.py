@@ -13,23 +13,21 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController
-from .const import DOMAIN
+from . import FibaroConfigEntry
 from .entity import FibaroEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FibaroConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro covers."""
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     async_add_entities(
         [FibaroCover(device) for device in controller.fibaro_devices[Platform.COVER]],
         True,
@@ -69,37 +67,29 @@ class FibaroCover(FibaroEntity, CoverEntity):
         # so if it is missing we have a device which supports open / close only
         return not self.fibaro_device.value.has_value
 
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return current position of cover. 0 is closed, 100 is open."""
-        return self.bound(self.level)
+    def update(self) -> None:
+        """Update the state."""
+        super().update()
 
-    @property
-    def current_cover_tilt_position(self) -> int | None:
-        """Return the current tilt position for venetian blinds."""
-        return self.bound(self.level2)
+        self._attr_current_cover_position = self.bound(self.level)
+        self._attr_current_cover_tilt_position = self.bound(self.level2)
 
-    @property
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening or not.
+        device_state = self.fibaro_device.state
 
-        Be aware that this property is only available for some modern devices.
-        For example the Fibaro Roller Shutter 4 reports this correctly.
-        """
-        if self.fibaro_device.state.has_value:
-            return self.fibaro_device.state.str_value().lower() == "opening"
-        return None
+        # Be aware that opening and closing is only available for some modern
+        # devices.
+        # For example the Fibaro Roller Shutter 4 reports this correctly.
+        if device_state.has_value:
+            self._attr_is_opening = device_state.str_value().lower() == "opening"
+            self._attr_is_closing = device_state.str_value().lower() == "closing"
 
-    @property
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing or not.
-
-        Be aware that this property is only available for some modern devices.
-        For example the Fibaro Roller Shutter 4 reports this correctly.
-        """
-        if self.fibaro_device.state.has_value:
-            return self.fibaro_device.state.str_value().lower() == "closing"
-        return None
+        closed: bool | None = None
+        if self._is_open_close_only():
+            if device_state.has_value and device_state.str_value().lower() != "unknown":
+                closed = device_state.str_value().lower() == "closed"
+        elif self.current_cover_position is not None:
+            closed = self.current_cover_position == 0
+        self._attr_is_closed = closed
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -108,19 +98,6 @@ class FibaroCover(FibaroEntity, CoverEntity):
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self.set_level2(cast(int, kwargs.get(ATTR_TILT_POSITION)))
-
-    @property
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        if self._is_open_close_only():
-            state = self.fibaro_device.state
-            if not state.has_value or state.str_value().lower() == "unknown":
-                return None
-            return state.str_value().lower() == "closed"
-
-        if self.current_cover_position is None:
-            return None
-        return self.current_cover_position == 0
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

@@ -34,7 +34,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 12), (True, 14)])
+@pytest.mark.parametrize(("has_dhw", "nr_of_entities"), [(False, 15), (True, 17)])
 async def test_create_entities(
     hass: HomeAssistant,
     mock_weheat_discover: AsyncMock,

@@ -428,14 +428,6 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
-@dataclass(slots=True)
-class MockMigrationTask(migration.MigrationTask):
-    """Mock migration task which does nothing."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run migration task."""
-
-
 @contextmanager
 def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -453,7 +445,6 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(

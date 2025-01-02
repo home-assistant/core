@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aiolivisi import errors as livisi_errors
+from livisi import errors as livisi_errors
 import pytest
 
 from homeassistant.components.livisi.const import DOMAIN

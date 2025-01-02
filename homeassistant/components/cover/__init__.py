@@ -89,36 +89,8 @@ class CoverDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
-
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the CoverDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
-_DEPRECATED_DEVICE_CLASS_AWNING = DeprecatedConstantEnum(
-    CoverDeviceClass.AWNING, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_BLIND = DeprecatedConstantEnum(
-    CoverDeviceClass.BLIND, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_CURTAIN = DeprecatedConstantEnum(
-    CoverDeviceClass.CURTAIN, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_DAMPER = DeprecatedConstantEnum(
-    CoverDeviceClass.DAMPER, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_DOOR = DeprecatedConstantEnum(CoverDeviceClass.DOOR, "2025.1")
-_DEPRECATED_DEVICE_CLASS_GARAGE = DeprecatedConstantEnum(
-    CoverDeviceClass.GARAGE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_GATE = DeprecatedConstantEnum(CoverDeviceClass.GATE, "2025.1")
-_DEPRECATED_DEVICE_CLASS_SHADE = DeprecatedConstantEnum(
-    CoverDeviceClass.SHADE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_SHUTTER = DeprecatedConstantEnum(
-    CoverDeviceClass.SHUTTER, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
-    CoverDeviceClass.WINDOW, "2025.1"
-)
+
 
 # mypy: disallow-any-generics
 
@@ -135,27 +107,6 @@ class CoverEntityFeature(IntFlag):
     STOP_TILT = 64
     SET_TILT_POSITION = 128
 
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the CoverEntityFeature enum instead.
-_DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(CoverEntityFeature.OPEN, "2025.1")
-_DEPRECATED_SUPPORT_CLOSE = DeprecatedConstantEnum(CoverEntityFeature.CLOSE, "2025.1")
-_DEPRECATED_SUPPORT_SET_POSITION = DeprecatedConstantEnum(
-    CoverEntityFeature.SET_POSITION, "2025.1"
-)
-_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(CoverEntityFeature.STOP, "2025.1")
-_DEPRECATED_SUPPORT_OPEN_TILT = DeprecatedConstantEnum(
-    CoverEntityFeature.OPEN_TILT, "2025.1"
-)
-_DEPRECATED_SUPPORT_CLOSE_TILT = DeprecatedConstantEnum(
-    CoverEntityFeature.CLOSE_TILT, "2025.1"
-)
-_DEPRECATED_SUPPORT_STOP_TILT = DeprecatedConstantEnum(
-    CoverEntityFeature.STOP_TILT, "2025.1"
-)
-_DEPRECATED_SUPPORT_SET_TILT_POSITION = DeprecatedConstantEnum(
-    CoverEntityFeature.SET_TILT_POSITION, "2025.1"
-)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
@@ -349,10 +300,6 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if (features := self._attr_supported_features) is not None:
-            if type(features) is int:  # noqa: E721
-                new_features = CoverEntityFeature(features)
-                self._report_deprecated_supported_features_values(new_features)
-                return new_features
             return features
 
         supported_features = (

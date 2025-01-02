@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from pathlib import Path
+import sqlite3
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant.components.recorder import Recorder
@@ -143,29 +144,37 @@ async def test_query_no_value(
     assert text in caplog.text
 
 
-async def test_query_mssql_no_result(
-    recorder_mock: Recorder, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_query_on_disk_sqlite_no_result(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    tmp_path: Path,
 ) -> None:
     """Test the SQL sensor with a query that returns no value."""
-    config = {
-        "db_url": "mssql://",
-        "query": "SELECT 5 as value where 1=2",
-        "column": "value",
-        "name": "count_tables",
-    }
-    with (
-        patch("homeassistant.components.sql.sensor.sqlalchemy"),
-        patch(
-            "homeassistant.components.sql.sensor.sqlalchemy.text",
-            return_value=sql_text("SELECT TOP 1 5 as value where 1=2"),
-        ),
-    ):
-        await init_integration(hass, config)
+    db_path = tmp_path / "test.db"
+    db_path_str = f"sqlite:///{db_path}"
 
-    state = hass.states.get("sensor.count_tables")
+    def make_test_db():
+        """Create a test database."""
+        conn = sqlite3.connect(db_path)
+        conn.execute("CREATE TABLE users (value INTEGER)")
+        conn.commit()
+        conn.close()
+
+    await hass.async_add_executor_job(make_test_db)
+
+    config = {
+        "db_url": db_path_str,
+        "query": "SELECT value from users",
+        "column": "value",
+        "name": "count_users",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_users")
     assert state.state == STATE_UNKNOWN
 
-    text = "SELECT TOP 1 5 AS VALUE WHERE 1=2 returned no results"
+    text = "SELECT value from users LIMIT 1; returned no results"
     assert text in caplog.text
 
 

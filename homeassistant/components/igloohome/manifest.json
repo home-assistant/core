@@ -1,0 +1,10 @@
+{
+  "domain": "igloohome",
+  "name": "igloohome",
+  "codeowners": ["@keithle888"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/igloohome",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["igloohome-api==0.0.6"]
+}

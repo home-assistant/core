@@ -7,6 +7,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pynordpool"],
-  "requirements": ["pynordpool==0.2.2"],
+  "quality_scale": "platinum",
+  "requirements": ["pynordpool==0.2.4"],
   "single_config_entry": true
 }

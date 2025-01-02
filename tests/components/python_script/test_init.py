@@ -688,3 +688,27 @@ async def test_prohibited_augmented_assignment_operations(
     hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})
     await hass.async_block_till_done(wait_background_tasks=True)
     assert error in caplog.text
+
+
+async def test_import_allow_strptime(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test calling datetime.datetime.strptime works."""
+    source = """
+test_date = datetime.datetime.strptime('2024-04-01', '%Y-%m-%d')
+logger.info(f'Date {test_date}')
+    """
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "Error executing script: Not allowed to import _strptime" not in caplog.text
+    assert "Date 2024-04-01 00:00:00" in caplog.text
+
+
+async def test_no_other_imports_allowed(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test imports are not allowed."""
+    source = "import sys"
+    hass.async_add_executor_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "Error executing script: Not allowed to import sys" in caplog.text

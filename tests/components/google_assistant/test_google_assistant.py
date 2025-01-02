@@ -491,7 +491,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header) -> N
     assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
 
     bed = hass_fixture.states.get("light.bed_light")
-    assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
+    assert bed.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 4700
 
     assert hass_fixture.states.get("switch.decorative_lights").state == "off"
 

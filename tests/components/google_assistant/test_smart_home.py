@@ -402,7 +402,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     light.async_write_ha_state()
 
     light2 = DemoLight(
-        None, "Another Light", state=True, hs_color=(180, 75), ct=400, brightness=78
+        None, "Another Light", state=True, hs_color=(180, 75), ct=2500, brightness=78
     )
     light2.hass = hass
     light2.entity_id = "light.another_light"
@@ -410,7 +410,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
     light2._attr_name = "Another Light"
     light2.async_write_ha_state()
 
-    light3 = DemoLight(None, "Color temp Light", state=True, ct=400, brightness=200)
+    light3 = DemoLight(None, "Color temp Light", state=True, ct=2500, brightness=200)
     light3.hass = hass
     light3.entity_id = "light.color_temp_light"
     light3._attr_device_info = None
@@ -1450,7 +1450,7 @@ async def test_sync_message_recovery(
         "light.bad_light",
         "on",
         {
-            "min_mireds": "badvalue",
+            "max_color_temp_kelvin": "badvalue",
             "supported_color_modes": ["color_temp"],
         },
     )

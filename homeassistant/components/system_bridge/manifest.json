@@ -9,7 +9,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["systembridgeconnector"],
-  "quality_scale": "silver",
   "requirements": ["systembridgeconnector==4.1.5", "systembridgemodels==4.2.4"],
   "zeroconf": ["_system-bridge._tcp.local."]
 }

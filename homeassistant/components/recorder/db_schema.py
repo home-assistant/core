@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Self, cast
+from typing import Any, Final, Protocol, Self, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -77,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 47
+SCHEMA_VERSION = 48
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +130,8 @@ METADATA_ID_LAST_UPDATED_INDEX_TS = "ix_states_metadata_id_last_updated_ts"
 EVENTS_CONTEXT_ID_BIN_INDEX = "ix_events_context_id_bin"
 STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 LEGACY_STATES_EVENT_ID_INDEX = "ix_states_event_id"
-LEGACY_STATES_ENTITY_ID_LAST_UPDATED_INDEX = "ix_states_entity_id_last_updated_ts"
+LEGACY_STATES_ENTITY_ID_LAST_UPDATED_TS_INDEX = "ix_states_entity_id_last_updated_ts"
+LEGACY_MAX_LENGTH_EVENT_CONTEXT_ID: Final = 36
 CONTEXT_ID_BIN_MAX_LENGTH = 16
 
 MYSQL_COLLATE = "utf8mb4_unicode_ci"
@@ -162,14 +163,14 @@ class Unused(CHAR):
     """An unused column type that behaves like a string."""
 
 
-@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
-@compiles(Unused, "mysql", "mariadb", "sqlite")  # type: ignore[misc,no-untyped-call]
+@compiles(UnusedDateTime, "mysql", "mariadb", "sqlite")
+@compiles(Unused, "mysql", "mariadb", "sqlite")
 def compile_char_zero(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile UnusedDateTime and Unused as CHAR(0) on mysql, mariadb, and sqlite."""
     return "CHAR(0)"  # Uses 1 byte on MySQL (no change on sqlite)
 
 
-@compiles(Unused, "postgresql")  # type: ignore[misc,no-untyped-call]
+@compiles(Unused, "postgresql")
 def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
     """Compile Unused as CHAR(1) on postgresql."""
     return "CHAR(1)"  # Uses 1 byte
@@ -232,10 +233,14 @@ CONTEXT_BINARY_TYPE = LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH).with_variant(
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
+class _LiteralProcessorType(Protocol):
+    def __call__(self, value: Any) -> str: ...
+
+
 class JSONLiteral(JSON):
     """Teach SA how to literalize json."""
 
-    def literal_processor(self, dialect: Dialect) -> Callable[[Any], str]:
+    def literal_processor(self, dialect: Dialect) -> _LiteralProcessorType:
         """Processor to convert a value to JSON."""
 
         def process(value: Any) -> str:
@@ -348,6 +353,17 @@ class Events(Base):
             # When json_loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
+
+
+class LegacyEvents(LegacyBase):
+    """Event history data with event_id, used for schema migration."""
+
+    __table_args__ = (_DEFAULT_TABLE_ARGS,)
+    __tablename__ = TABLE_EVENTS
+    event_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
+    context_id: Mapped[str | None] = mapped_column(
+        String(LEGACY_MAX_LENGTH_EVENT_CONTEXT_ID), index=True
+    )
 
 
 class EventData(Base):
@@ -575,6 +591,28 @@ class States(Base):
         )
 
 
+class LegacyStates(LegacyBase):
+    """State change history with entity_id, used for schema migration."""
+
+    __table_args__ = (
+        Index(
+            LEGACY_STATES_ENTITY_ID_LAST_UPDATED_TS_INDEX,
+            "entity_id",
+            "last_updated_ts",
+        ),
+        _DEFAULT_TABLE_ARGS,
+    )
+    __tablename__ = TABLE_STATES
+    state_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
+    entity_id: Mapped[str | None] = mapped_column(UNUSED_LEGACY_COLUMN)
+    last_updated_ts: Mapped[float | None] = mapped_column(
+        TIMESTAMP_TYPE, default=time.time, index=True
+    )
+    context_id: Mapped[str | None] = mapped_column(
+        String(LEGACY_MAX_LENGTH_EVENT_CONTEXT_ID), index=True
+    )
+
+
 class StateAttributes(Base):
     """State attribute change history."""
 
@@ -691,12 +729,14 @@ class StatisticsBase:
     duration: timedelta
 
     @classmethod
-    def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
+    def from_stats(
+        cls, metadata_id: int, stats: StatisticData, now_timestamp: float | None = None
+    ) -> Self:
         """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
@@ -709,12 +749,17 @@ class StatisticsBase:
         )
 
     @classmethod
-    def from_stats_ts(cls, metadata_id: int, stats: StatisticDataTimestamp) -> Self:
+    def from_stats_ts(
+        cls,
+        metadata_id: int,
+        stats: StatisticDataTimestamp,
+        now_timestamp: float | None = None,
+    ) -> Self:
         """Create object from a statistics with timestamps."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
-            created_ts=time.time(),
+            created_ts=now_timestamp or time.time(),
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),

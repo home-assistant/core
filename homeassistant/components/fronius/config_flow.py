@@ -52,11 +52,9 @@ async def validate_host(
     try:
         inverter_info = await fronius.inverter_info()
         first_inverter = next(inverter for inverter in inverter_info["inverters"])
-    except FroniusError as err:
+    except (FroniusError, StopIteration) as err:
         _LOGGER.debug(err)
         raise CannotConnect from err
-    except StopIteration as err:
-        raise CannotConnect("No supported Fronius SolarNet device found.") from err
     first_inverter_uid: str = first_inverter["unique_id"]["value"]
     return first_inverter_uid, FroniusConfigEntryData(
         host=host,
@@ -89,7 +87,7 @@ class FroniusConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(unique_id, raise_on_progress=False)
-                self._abort_if_unique_id_configured(updates=dict(info))
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=create_title(info), data=info)
 

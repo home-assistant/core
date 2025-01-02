@@ -4,5 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/cppm_tracker",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["clearpasspy==1.0.2"]
 }

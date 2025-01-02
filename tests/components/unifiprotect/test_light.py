@@ -74,7 +74,7 @@ async def test_light_update(
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    new_light = light.copy()
+    new_light = light.model_copy()
     new_light.is_light_on = True
     new_light.light_device_settings.led_level = LEDLevel(3)
 
@@ -101,7 +101,7 @@ async def test_light_turn_on(
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.__fields__["set_light"] = Mock(final=False)
+    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
     light.set_light = AsyncMock()
 
     await hass.services.async_call(
@@ -123,7 +123,7 @@ async def test_light_turn_off(
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.__fields__["set_light"] = Mock(final=False)
+    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
     light.set_light = AsyncMock()
 
     await hass.services.async_call(

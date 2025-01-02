@@ -7,6 +7,10 @@ import os
 from typing import cast
 
 from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirModifiedEvent,
+    DirMovedEvent,
     FileClosedEvent,
     FileCreatedEvent,
     FileDeletedEvent,
@@ -68,7 +72,7 @@ class EventHandler(PatternMatchingEventHandler):
 
     def __init__(self, patterns: list[str], hass: HomeAssistant, entry_id: str) -> None:
         """Initialise the EventHandler."""
-        super().__init__(patterns)
+        super().__init__(patterns=patterns)
         self.hass = hass
         self.entry_id = entry_id
 
@@ -101,19 +105,19 @@ class EventHandler(PatternMatchingEventHandler):
             signal = f"folder_watcher-{self.entry_id}"
             dispatcher_send(self.hass, signal, event.event_type, fireable)
 
-    def on_modified(self, event: FileModifiedEvent) -> None:
+    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         """File modified."""
         self.process(event)
 
-    def on_moved(self, event: FileMovedEvent) -> None:
+    def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         """File moved."""
         self.process(event, moved=True)
 
-    def on_created(self, event: FileCreatedEvent) -> None:
+    def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         """File created."""
         self.process(event)
 
-    def on_deleted(self, event: FileDeletedEvent) -> None:
+    def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         """File deleted."""
         self.process(event)
 

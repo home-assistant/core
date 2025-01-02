@@ -5,10 +5,12 @@ from __future__ import annotations
 import logging
 
 from aiopegelonline import PegelOnline
+from aiopegelonline.const import CONNECT_ERRORS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_STATION
@@ -28,7 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) 
     _LOGGER.debug("Setting up station with uuid %s", station_uuid)
 
     api = PegelOnline(async_get_clientsession(hass))
-    station = await api.async_get_station_details(station_uuid)
+    try:
+        station = await api.async_get_station_details(station_uuid)
+    except CONNECT_ERRORS as err:
+        raise ConfigEntryNotReady("Failed to connect") from err
 
     coordinator = PegelOnlineDataUpdateCoordinator(hass, entry.title, api, station)
 

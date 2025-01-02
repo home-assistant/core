@@ -17,13 +17,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FibaroController
-from .const import DOMAIN
+from . import FibaroConfigEntry
 from .entity import FibaroEntity
 
 PRESET_RESUME = "resume"
@@ -111,11 +109,11 @@ OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FibaroConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     async_add_entities(
         [
             FibaroThermostat(device)
@@ -127,8 +125,6 @@ async def async_setup_entry(
 
 class FibaroThermostat(FibaroEntity, ClimateEntity):
     """Representation of a Fibaro Thermostat."""
-
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
@@ -274,15 +270,15 @@ class FibaroThermostat(FibaroEntity, ClimateEntity):
         if isinstance(fibaro_operation_mode, str):
             with suppress(ValueError):
                 return HVACMode(fibaro_operation_mode.lower())
-        elif fibaro_operation_mode in OPMODES_HVAC:
+            # when the mode cannot be instantiated a preset_mode is selected
+            return HVACMode.AUTO
+        if fibaro_operation_mode in OPMODES_HVAC:
             return OPMODES_HVAC[fibaro_operation_mode]
         return None
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if not self._op_mode_device:
-            return
-        if self.preset_mode:
             return
 
         if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:

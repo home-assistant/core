@@ -6,7 +6,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 from elevenlabs.types import Model, Voice as ElevenLabsVoice, VoiceSettings
 
@@ -16,12 +16,13 @@ from homeassistant.components.tts import (
     TtsAudioType,
     Voice,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EleventLabsConfigEntry
+from . import ElevenLabsConfigEntry
 from .const import (
     CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
@@ -38,6 +39,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
@@ -54,7 +56,7 @@ def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: EleventLabsConfigEntry,
+    config_entry: ElevenLabsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ElevenLabs tts platform via config entry."""
@@ -84,6 +86,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
     """The ElevenLabs API entity."""
 
     _attr_supported_options = [ATTR_VOICE]
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

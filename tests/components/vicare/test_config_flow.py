@@ -49,7 +49,7 @@ async def test_user_create_entry(
 
     # test PyViCareInvalidConfigurationError
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         side_effect=PyViCareInvalidConfigurationError(
             {"error": "foo", "error_description": "bar"}
         ),
@@ -65,7 +65,7 @@ async def test_user_create_entry(
 
     # test PyViCareInvalidCredentialsError
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         side_effect=PyViCareInvalidCredentialsError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -79,7 +79,7 @@ async def test_user_create_entry(
 
     # test success
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -110,7 +110,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 
     # test PyViCareInvalidConfigurationError
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         side_effect=PyViCareInvalidConfigurationError(
             {"error": "foo", "error_description": "bar"}
         ),
@@ -125,7 +125,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 
     # test success
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -160,7 +160,7 @@ async def test_form_dhcp(
     assert result["errors"] == {}
 
     with patch(
-        f"{MODULE}.config_flow.vicare_login",
+        f"{MODULE}.config_flow.login",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(

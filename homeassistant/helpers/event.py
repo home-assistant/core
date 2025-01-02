@@ -90,7 +90,6 @@ RANDOM_MICROSECOND_MIN = 50000
 RANDOM_MICROSECOND_MAX = 500000
 
 _TypedDictT = TypeVar("_TypedDictT", bound=Mapping[str, Any])
-_StateEventDataT = TypeVar("_StateEventDataT", bound=EventStateEventData)
 
 
 @dataclass(slots=True, frozen=True)
@@ -333,7 +332,7 @@ def async_track_state_change_event(
 
 
 @callback
-def _async_dispatch_entity_id_event_soon(
+def _async_dispatch_entity_id_event_soon[_StateEventDataT: EventStateEventData](
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
     event: Event[_StateEventDataT],
@@ -343,7 +342,7 @@ def _async_dispatch_entity_id_event_soon(
 
 
 @callback
-def _async_dispatch_entity_id_event(
+def _async_dispatch_entity_id_event[_StateEventDataT: EventStateEventData](
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
     event: Event[_StateEventDataT],
@@ -363,7 +362,7 @@ def _async_dispatch_entity_id_event(
 
 
 @callback
-def _async_state_filter(
+def _async_state_filter[_StateEventDataT: EventStateEventData](
     hass: HomeAssistant,
     callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
     event_data: _StateEventDataT,
@@ -996,15 +995,10 @@ class TrackTemplateResultInfo:
             if track_template_.template.hass:
                 continue
 
-            # pylint: disable-next=import-outside-toplevel
-            from .frame import ReportBehavior, report_usage
-
-            report_usage(
-                (
-                    "calls async_track_template_result with template without hass, "
-                    "which will stop working in HA Core 2025.10"
-                ),
-                core_behavior=ReportBehavior.LOG,
+            frame.report_usage(
+                "calls async_track_template_result with template without hass",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.10",
             )
             track_template_.template.hass = hass
 

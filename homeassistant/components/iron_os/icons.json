@@ -1,8 +1,107 @@
 {
   "entity": {
+    "binary_sensor": {
+      "tip_connected": {
+        "default": "mdi:pencil-outline",
+        "state": {
+          "off": "mdi:pencil-off-outline"
+        }
+      }
+    },
+    "button": {
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      },
+      "settings_reset": {
+        "default": "mdi:refresh"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
+      },
+      "sleep_temperature": {
+        "default": "mdi:thermometer-low"
+      },
+      "sleep_timeout": {
+        "default": "mdi:timer-sand"
+      },
+      "qc_max_voltage": {
+        "default": "mdi:flash-alert-outline"
+      },
+      "pd_timeout": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "boost_temp": {
+        "default": "mdi:thermometer-high"
+      },
+      "shutdown_timeout": {
+        "default": "mdi:thermometer-off"
+      },
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "voltage_div": {
+        "default": "mdi:call-split"
+      },
+      "temp_increment_short": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "temp_increment_long": {
+        "default": "mdi:gesture-tap-button"
+      },
+      "accel_sensitivity": {
+        "default": "mdi:motion"
+      },
+      "calibration_offset": {
+        "default": "mdi:contrast"
+      },
+      "hall_sensitivity": {
+        "default": "mdi:leak"
+      },
+      "keep_awake_pulse_delay": {
+        "default": "mdi:clock-end"
+      },
+      "keep_awake_pulse_duration": {
+        "default": "mdi:clock-start"
+      },
+      "keep_awake_pulse_power": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "min_voltage_per_cell": {
+        "default": "mdi:fuel-cell"
+      },
+      "power_limit": {
+        "default": "mdi:flash-alert"
+      }
+    },
+    "select": {
+      "locking_mode": {
+        "default": "mdi:download-lock"
+      },
+      "orientation_mode": {
+        "default": "mdi:screen-rotation"
+      },
+      "autostart_mode": {
+        "default": "mdi:power-standby"
+      },
+      "animation_speed": {
+        "default": "mdi:image-refresh"
+      },
+      "min_dc_voltage_cells": {
+        "default": "mdi:fuel-cell"
+      },
+      "temp_unit": {
+        "default": "mdi:temperature-celsius",
+        "state": {
+          "fahrenheit": "mdi:temperature-fahrenheit"
+        }
+      },
+      "desc_scroll_speed": {
+        "default": "mdi:message-text-fast"
+      },
+      "logo_duration": {
+        "default": "mdi:clock-digital"
       }
     },
     "sensor": {
@@ -57,6 +156,44 @@
       },
       "estimated_power": {
         "default": "mdi:flash"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "default": "mdi:play-box",
+        "state": {
+          "on": "mdi:animation-play"
+        }
+      },
+      "calibrate_cjc": {
+        "default": "mdi:tune-vertical"
+      },
+      "cooling_temp_blink": {
+        "default": "mdi:alarm-light-outline",
+        "state": {
+          "off": "mdi:alarm-light-off-outline"
+        }
+      },
+      "display_invert": {
+        "default": "mdi:invert-colors"
+      },
+      "invert_buttons": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "idle_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      },
+      "solder_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
       }
     }
   }

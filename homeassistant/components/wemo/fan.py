@@ -81,7 +81,6 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     )
     wemo: Humidifier
     _last_fan_on_mode: FanMode
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 from logging import getLogger
-from typing import cast
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
@@ -15,7 +14,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -65,10 +63,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
 
         super().__init__(coordinator)
 
-        self._attr_unique_id = (
-            coordinator.device.mac_address
-            or cast(ConfigEntry, coordinator.config_entry).entry_id
-        )
+        self._attr_unique_id = coordinator.unique_id
 
         self._attr_device_info = coordinator.device_info
 

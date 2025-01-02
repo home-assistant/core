@@ -441,6 +441,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 
     assert response == {
         "instance_id": "12345678901234567890",
+        "name": "test home",
         "remote": {
             "alias": None,
             "can_enable": True,

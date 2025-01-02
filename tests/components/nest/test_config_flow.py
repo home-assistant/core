@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import patch
 
 from google_nest_sdm.exceptions import AuthException
-from google_nest_sdm.structure import Structure
 import pytest
 
 from homeassistant import config_entries
@@ -25,9 +24,9 @@ from .common import (
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
     TEST_CONFIGFLOW_APP_CREDS,
-    FakeSubscriber,
     NestTestConfig,
 )
+from .conftest import FakeAuth, PlatformSetup
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -56,6 +55,11 @@ def mock_rand_topic_name_fixture() -> None:
         return_value=RAND_SUBSCRIBER_SUFFIX,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_request_setup(auth: FakeAuth) -> None:
+    """Fixture to ensure fake requests are setup."""
 
 
 class OAuthFixture:
@@ -257,12 +261,6 @@ def mock_subscriptions() -> list[tuple[str, str]]:
     return []
 
 
-@pytest.fixture(name="device_access_project_id")
-def mock_device_access_project_id() -> str:
-    """Fixture to configure the device access console project id used in tests."""
-    return PROJECT_ID
-
-
 @pytest.fixture(name="cloud_project_id")
 def mock_cloud_project_id() -> str:
     """Fixture to configure the cloud console project id used in tests."""
@@ -350,8 +348,7 @@ def mock_pubsub_api_responses(
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_app_credentials(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -388,7 +385,7 @@ async def test_app_credentials(
     ("sdm_managed_topic", "device_access_project_id", "cloud_project_id"),
     [(True, "new-project-id", "new-cloud-project-id")],
 )
-async def test_config_flow_restart(hass: HomeAssistant, oauth, subscriber) -> None:
+async def test_config_flow_restart(hass: HomeAssistant, oauth: OAuthFixture) -> None:
     """Check with auth implementation is re-initialized when aborting the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -443,8 +440,7 @@ async def test_config_flow_restart(hass: HomeAssistant, oauth, subscriber) -> No
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_flow_wrong_project_id(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Check the case where the wrong project ids are entered."""
     result = await hass.config_entries.flow.async_init(
@@ -500,8 +496,7 @@ async def test_config_flow_wrong_project_id(
 )
 async def test_config_flow_pubsub_configuration_error(
     hass: HomeAssistant,
-    oauth,
-    mock_subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Check full flow fails with configuration error."""
     result = await hass.config_entries.flow.async_init(
@@ -546,7 +541,8 @@ async def test_config_flow_pubsub_configuration_error(
     [(True, HTTPStatus.INTERNAL_SERVER_ERROR)],
 )
 async def test_config_flow_pubsub_subscriber_error(
-    hass: HomeAssistant, oauth, mock_subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
 ) -> None:
     """Check full flow with a subscriber error."""
     result = await hass.config_entries.flow.async_init(
@@ -697,7 +693,8 @@ async def test_reauth_multiple_config_entries(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_pubsub_subscription_strip_whitespace(
-    hass: HomeAssistant, oauth, subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
 ) -> None:
     """Check that project id has whitespace stripped on entry."""
     result = await hass.config_entries.flow.async_init(
@@ -776,10 +773,9 @@ async def test_pubsub_subscription_auth_failure(
 )
 async def test_pubsub_subscriber_config_entry_reauth(
     hass: HomeAssistant,
-    oauth,
-    setup_platform,
-    subscriber,
-    config_entry,
+    oauth: OAuthFixture,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the pubsub subscriber id is preserved during reauth."""
     await setup_platform()
@@ -805,22 +801,21 @@ async def test_pubsub_subscriber_config_entry_reauth(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_entry_title_from_home(
-    hass: HomeAssistant, oauth, subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    auth: FakeAuth,
 ) -> None:
     """Test that the Google Home name is used for the config entry title."""
 
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
-            {
-                "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
-                "traits": {
-                    "sdm.structures.traits.Info": {
-                        "customName": "Example Home",
-                    },
+    auth.structures.append(
+        {
+            "name": f"enterprise/{PROJECT_ID}/structures/some-structure-id",
+            "traits": {
+                "sdm.structures.traits.Info": {
+                    "customName": "Example Home",
                 },
-            }
-        )
+            },
+        }
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -848,13 +843,13 @@ async def test_config_entry_title_from_home(
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_config_entry_title_multiple_homes(
-    hass: HomeAssistant, oauth, subscriber
+    hass: HomeAssistant,
+    oauth: OAuthFixture,
+    auth: FakeAuth,
 ) -> None:
     """Test handling of multiple Google Homes authorized."""
-
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
+    auth.structures.extend(
+        [
             {
                 "name": f"enterprise/{PROJECT_ID}/structures/id-1",
                 "traits": {
@@ -862,11 +857,7 @@ async def test_config_entry_title_multiple_homes(
                         "customName": "Example Home #1",
                     },
                 },
-            }
-        )
-    )
-    device_manager.add_structure(
-        Structure.MakeStructure(
+            },
             {
                 "name": f"enterprise/{PROJECT_ID}/structures/id-2",
                 "traits": {
@@ -874,8 +865,8 @@ async def test_config_entry_title_multiple_homes(
                         "customName": "Example Home #2",
                     },
                 },
-            }
-        )
+            },
+        ]
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -923,18 +914,17 @@ async def test_title_failure_fallback(
 
 
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
-async def test_structure_missing_trait(hass: HomeAssistant, oauth, subscriber) -> None:
+async def test_structure_missing_trait(
+    hass: HomeAssistant, oauth: OAuthFixture, auth: FakeAuth
+) -> None:
     """Test handling the case where a structure has no name set."""
 
-    device_manager = await subscriber.async_get_device_manager()
-    device_manager.add_structure(
-        Structure.MakeStructure(
-            {
-                "name": f"enterprise/{PROJECT_ID}/structures/id-1",
-                # Missing Info trait
-                "traits": {},
-            }
-        )
+    auth.structures.append(
+        {
+            "name": f"enterprise/{PROJECT_ID}/structures/id-1",
+            # Missing Info trait
+            "traits": {},
+        }
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -973,8 +963,7 @@ async def test_dhcp_discovery(
 @pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
 async def test_dhcp_discovery_with_creds(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Exercise discovery dhcp with no config present (can't run)."""
     result = await hass.config_entries.flow.async_init(
@@ -1029,7 +1018,6 @@ async def test_dhcp_discovery_with_creds(
 async def test_token_error(
     hass: HomeAssistant,
     oauth: OAuthFixture,
-    subscriber: FakeSubscriber,
     status_code: HTTPStatus,
     error_reason: str,
 ) -> None:
@@ -1064,8 +1052,7 @@ async def test_token_error(
 )
 async def test_existing_topic_and_subscription(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
     result = await hass.config_entries.flow.async_init(
@@ -1103,8 +1090,7 @@ async def test_existing_topic_and_subscription(
 
 async def test_no_eligible_topics(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Test the case where there are no eligible pub/sub topics."""
     result = await hass.config_entries.flow.async_init(
@@ -1127,8 +1113,7 @@ async def test_no_eligible_topics(
 )
 async def test_list_topics_failure(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
     result = await hass.config_entries.flow.async_init(
@@ -1151,8 +1136,7 @@ async def test_list_topics_failure(
 )
 async def test_list_subscriptions_failure(
     hass: HomeAssistant,
-    oauth,
-    subscriber,
+    oauth: OAuthFixture,
 ) -> None:
     """Test selecting existing user managed topic and subscription."""
     result = await hass.config_entries.flow.async_init(

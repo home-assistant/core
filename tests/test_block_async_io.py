@@ -429,6 +429,12 @@ async def test_protect_loop_load_verify_locations(
         context.load_verify_locations("/dev/null")
     assert "Detected blocking call to load_verify_locations" in caplog.text
 
+    # ignore with only cadata
+    caplog.clear()
+    with pytest.raises(ssl.SSLError):
+        context.load_verify_locations(cadata="xxx")
+    assert "Detected blocking call to load_verify_locations" not in caplog.text
+
 
 async def test_protect_loop_load_cert_chain(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture

@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaSwitchEntity.SLEEP: 'sleep'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_sleep',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_sleep',
     'unit_of_measurement': None,
   })
 # ---

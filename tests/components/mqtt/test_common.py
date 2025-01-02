@@ -68,7 +68,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 
 _SENTINEL = object()
 
-DISCOVERY_COUNT = len(MQTT)
+DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())
 DEVICE_DISCOVERY_COUNT = 2
 
 type _MqttMessageType = list[tuple[str, str]]

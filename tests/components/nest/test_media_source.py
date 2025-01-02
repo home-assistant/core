@@ -13,7 +13,6 @@ from unittest.mock import patch
 
 import aiohttp
 import av
-from google_nest_sdm.event import EventMessage
 import numpy as np
 import pytest
 
@@ -31,7 +30,14 @@ from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber
+from .common import (
+    DEVICE_ID,
+    TEST_CLIP_URL,
+    TEST_IMAGE_URL,
+    CreateDevice,
+    create_nest_event,
+)
+from .conftest import FakeAuth
 
 from tests.common import MockUser, async_capture_events
 from tests.typing import ClientSessionGenerator
@@ -70,7 +76,6 @@ BATTERY_CAMERA_TRAITS = {
 PERSON_EVENT = "sdm.devices.events.CameraPerson.Person"
 MOTION_EVENT = "sdm.devices.events.CameraMotion.Motion"
 
-TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
 GENERATE_IMAGE_URL_RESPONSE = {
     "results": {
         "url": TEST_IMAGE_URL,
@@ -162,12 +167,6 @@ def mp4() -> io.BytesIO:
     return output
 
 
-@pytest.fixture(autouse=True)
-def enable_prefetch(subscriber: FakeSubscriber) -> None:
-    """Fixture to enable media fetching for tests to exercise."""
-    subscriber.cache_policy.fetch = True
-
-
 @pytest.fixture
 def cache_size() -> int:
     """Fixture for overrideing cache size."""
@@ -200,7 +199,7 @@ def create_event_message(event_data, timestamp, device_id=None):
     """Create an EventMessage for a single event type."""
     if device_id is None:
         device_id = DEVICE_ID
-    return EventMessage.create_event(
+    return create_nest_event(
         {
             "eventId": f"{EVENT_ID}-{timestamp}",
             "timestamp": timestamp.isoformat(timespec="seconds"),
@@ -209,7 +208,6 @@ def create_event_message(event_data, timestamp, device_id=None):
                 "events": event_data,
             },
         },
-        auth=None,
     )
 
 
@@ -224,7 +222,7 @@ def create_battery_event_data(
         },
         "sdm.devices.events.CameraClipPreview.ClipPreview": {
             "eventSessionId": event_session_id,
-            "previewUrl": "https://127.0.0.1/example",
+            "previewUrl": TEST_CLIP_URL,
         },
     }
 
@@ -284,7 +282,9 @@ async def test_supported_device(
     assert len(browse.children) == 0
 
 
-async def test_integration_unloaded(hass: HomeAssistant, auth, setup_platform) -> None:
+async def test_integration_unloaded(
+    hass: HomeAssistant, auth: FakeAuth, setup_platform
+) -> None:
     """Test the media player loads, but has no devices, when config unloaded."""
     await setup_platform()
 
@@ -1257,6 +1257,7 @@ async def test_media_store_save_filesystem_error(
     assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
 
 
+@pytest.mark.parametrize("device_traits", [BATTERY_CAMERA_TRAITS])
 async def test_media_store_load_filesystem_error(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

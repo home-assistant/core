@@ -68,10 +68,10 @@
         },
         "restrict_domain": {
           "name": "Restrict to domain",
-          "description": "Restrict automatic reply to domain. This only affects GSuite accounts."
+          "description": "Restrict automatic reply to domain. This only affects Google Workspace accounts."
         },
         "start": {
-          "name": "[%key:common::action::start%]",
+          "name": "Start",
           "description": "First day of the vacation."
         },
         "end": {

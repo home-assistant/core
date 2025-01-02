@@ -27,6 +27,8 @@ from .coordinator import (
     SwissPublicTransportDataUpdateCoordinator,
 )
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)

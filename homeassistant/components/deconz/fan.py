@@ -65,7 +65,6 @@ class DeconzFan(DeconzDevice[Light], FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: Light, hub: DeconzHub) -> None:
         """Set up fan."""

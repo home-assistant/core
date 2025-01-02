@@ -43,6 +43,8 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
@@ -89,7 +91,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
-    _is_on_map: dict[str | bytes, bool | None]
+    _is_on_map: dict[str | bytes | bytearray, bool | None]
     _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 

@@ -55,7 +55,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     """Representation of a coolmaster climate device."""
 
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, unit_id, info, supported_modes):
         """Initialize the climate device."""

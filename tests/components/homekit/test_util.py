@@ -159,8 +159,20 @@ def test_validate_entity_config() -> None:
     assert vec({"lock.demo": {}}) == {
         "lock.demo": {ATTR_CODE: None, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
-    assert vec({"lock.demo": {ATTR_CODE: "1234"}}) == {
-        "lock.demo": {ATTR_CODE: "1234", CONF_LOW_BATTERY_THRESHOLD: 20}
+
+    assert vec(
+        {
+            "lock.demo": {
+                ATTR_CODE: "1234",
+                CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+            }
+        }
+    ) == {
+        "lock.demo": {
+            ATTR_CODE: "1234",
+            CONF_LOW_BATTERY_THRESHOLD: 20,
+            CONF_LINKED_DOORBELL_SENSOR: "event.doorbell",
+        }
     }
 
     assert vec({"media_player.demo": {}}) == {
@@ -256,6 +268,7 @@ def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
+    assert cleanup_name_for_homekit("abc ") == "abc"
     assert cleanup_name_for_homekit("a b c") == "a b c"
     assert cleanup_name_for_homekit("ab_c") == "ab c"
     assert (
@@ -267,14 +280,16 @@ def test_cleanup_name_for_homekit() -> None:
 
 def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.46
+    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == pytest.approx(
+        33.388888888888886
+    )
 
 
 def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
     assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
-    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
+    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.36
 
 
 def test_density_to_air_quality() -> None:

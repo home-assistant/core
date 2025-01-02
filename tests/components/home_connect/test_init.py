@@ -10,7 +10,10 @@ from requests import HTTPError
 import requests_mock
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.home_connect import SCAN_INTERVAL
+from homeassistant.components.home_connect import (
+    SCAN_INTERVAL,
+    bsh_key_to_translation_key,
+)
 from homeassistant.components.home_connect.const import (
     BSH_CHILD_LOCK_STATE,
     BSH_OPERATION_STATE,
@@ -26,7 +29,9 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from script.hassfest.translations import RE_TRANSLATION_KEY
 
 from .conftest import (
     CLIENT_ID,
@@ -286,8 +291,40 @@ async def test_services(
     )
 
 
+@pytest.mark.parametrize(
+    "service_call",
+    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+)
 @pytest.mark.usefixtures("bypass_throttle")
 async def test_services_exception(
+    service_call: list[dict[str, Any]],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    problematic_appliance: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Raise a HomeAssistantError when there is an API error."""
+    get_appliances.return_value = [problematic_appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, problematic_appliance.haId)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(**service_call)
+
+
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_services_appliance_not_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -295,7 +332,7 @@ async def test_services_exception(
     get_appliances: MagicMock,
     appliance: Mock,
 ) -> None:
-    """Raise a ValueError when device id does not match."""
+    """Raise a ServiceValidationError when device id does not match."""
     get_appliances.return_value = [appliance]
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup()
@@ -305,7 +342,7 @@ async def test_services_exception(
 
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError, match=r"Appliance.*not found"):
         await hass.services.async_call(**service_call)
 
 
@@ -372,3 +409,10 @@ async def test_entity_migration(
             domain, DOMAIN, f"{appliance.haId}-{expected_unique_id_suffix}"
         )
     assert config_entry_v1_1.minor_version == 2
+
+
+async def test_bsh_key_transformations() -> None:
+    """Test that the key transformations are compatible valid translations keys and can be reversed."""
+    program = "Dishcare.Dishwasher.Program.Eco50"
+    translation_key = bsh_key_to_translation_key(program)
+    assert RE_TRANSLATION_KEY.match(translation_key)

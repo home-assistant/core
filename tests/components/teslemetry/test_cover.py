@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -13,7 +12,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,18 +58,6 @@ async def test_cover_noscope(
     mock_metadata.return_value = METADATA_NOSCOPE
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_cover_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the cover entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.COVER])
-    state = hass.states.get("cover.test_windows")
-    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

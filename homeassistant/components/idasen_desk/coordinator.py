@@ -19,27 +19,26 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        logger: logging.Logger,
         name: str,
         address: str,
     ) -> None:
         """Init IdasenDeskCoordinator."""
 
-        super().__init__(hass, logger, name=name)
-        self._address = address
+        super().__init__(hass, _LOGGER, name=name)
+        self.address = address
         self._expected_connected = False
 
         self.desk = Desk(self.async_set_updated_data)
 
     async def async_connect(self) -> bool:
         """Connect to desk."""
-        _LOGGER.debug("Trying to connect %s", self._address)
+        _LOGGER.debug("Trying to connect %s", self.address)
         self._expected_connected = True
         ble_device = bluetooth.async_ble_device_from_address(
-            self.hass, self._address, connectable=True
+            self.hass, self.address, connectable=True
         )
         if ble_device is None:
-            _LOGGER.debug("No BLEDevice for %s", self._address)
+            _LOGGER.debug("No BLEDevice for %s", self.address)
             return False
         await self.desk.connect(ble_device)
         return True
@@ -47,7 +46,7 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
     async def async_disconnect(self) -> None:
         """Disconnect from desk."""
         self._expected_connected = False
-        _LOGGER.debug("Disconnecting from %s", self._address)
+        _LOGGER.debug("Disconnecting from %s", self.address)
         await self.desk.disconnect()
 
     async def async_connect_if_expected(self) -> None:

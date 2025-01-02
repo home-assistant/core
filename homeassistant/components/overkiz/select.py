@@ -8,13 +8,12 @@ from dataclasses import dataclass
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
@@ -129,11 +128,11 @@ SUPPORTED_STATES = {description.key: description for description in SELECT_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz select from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizSelect] = []
 
     for device in data.coordinator.data.values():

@@ -7,13 +7,12 @@ from typing import Any
 from pysabnzbd import SabnzbdApiException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SabnzbdUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import SabnzbdConfigEntry, SabnzbdUpdateCoordinator
 from .entity import SabnzbdEntity
 
 
@@ -40,11 +39,11 @@ BUTTON_DESCRIPTIONS: tuple[SabnzbdButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SabnzbdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up buttons from a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SabnzbdButton(coordinator, description) for description in BUTTON_DESCRIPTIONS

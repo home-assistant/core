@@ -1764,6 +1764,23 @@ async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
     assert state.attributes.get("next_reset") == next_reset
 
 
+async def test_tz_changes(hass: HomeAssistant) -> None:
+    """Test that a timezone change changes the scheduler."""
+
+    await hass.config.async_update(time_zone="Europe/Prague")
+
+    await _test_self_reset(
+        hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
+    )
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") == "2024-10-28T00:00:00+01:00"
+
+    await hass.config.async_update(time_zone="Pacific/Fiji")
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
+
+
 async def test_self_reset_daily(hass: HomeAssistant) -> None:
     """Test daily reset of meter."""
     await _test_self_reset(

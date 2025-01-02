@@ -64,7 +64,10 @@ from homeassistant.util.dt import now
 # config_flow, diagnostics, system_health, and entity platforms are imported to
 # ensure other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
+# backup is pre-imported to ensure that the backup integration does not load
+# it from the event loop
 from . import (  # noqa: F401
+    backup,
     binary_sensor,
     config_flow,
     diagnostics,
@@ -119,7 +122,6 @@ from .handler import (  # noqa: F401
     async_create_backup,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_reboot_host,
     async_set_green_settings,
     async_set_yellow_settings,
     async_update_diagnostics,

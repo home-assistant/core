@@ -29,8 +29,6 @@ from .const import (
 )
 from .mock import MockDevice
 
-from tests.common import MockConfigEntry
-
 
 async def test_form(hass: HomeAssistant, info: dict[str, Any]) -> None:
     """Test we get the form."""
@@ -125,6 +123,8 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: IP,
         CONF_PASSWORD: "",
     }
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
@@ -139,13 +139,9 @@ async def test_abort_zeroconf_wrong_device(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("info")
-async def test_abort_if_configued(hass: HomeAssistant) -> None:
+async def test_abort_if_configured(hass: HomeAssistant) -> None:
     """Test we abort config flow if already configured."""
-    serial_number = DISCOVERY_INFO.properties["SN"]
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial_number, data={CONF_IP_ADDRESS: IP}
-    )
-    entry.add_to_hass(hass)
+    entry = configure_integration(hass)
 
     # Abort on concurrent user flow
     result = await hass.config_entries.flow.async_init(

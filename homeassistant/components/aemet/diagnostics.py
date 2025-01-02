@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aemet_opendata.const import AOD_COORDS
+from aemet_opendata.const import AOD_COORDS, AOD_IMG_BYTES
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import (
@@ -26,6 +26,7 @@ TO_REDACT_CONFIG = [
 
 TO_REDACT_COORD = [
     AOD_COORDS,
+    AOD_IMG_BYTES,
 ]
 
 

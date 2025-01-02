@@ -50,6 +50,12 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
     return False
 
 
+def _check_load_verify_locations_call_allowed(mapped_args: dict[str, Any]) -> bool:
+    # If only cadata is passed, we can ignore it
+    kwargs = mapped_args.get("kwargs")
+    return bool(kwargs and len(kwargs) == 1 and "cadata" in kwargs)
+
+
 @dataclass(slots=True, frozen=True)
 class BlockingCall:
     """Class to hold information about a blocking call."""
@@ -158,7 +164,7 @@ _BLOCKING_CALLS: tuple[BlockingCall, ...] = (
         original_func=SSLContext.load_verify_locations,
         object=SSLContext,
         function="load_verify_locations",
-        check_allowed=None,
+        check_allowed=_check_load_verify_locations_call_allowed,
         strict=False,
         strict_core=False,
         skip_for_tests=True,

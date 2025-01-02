@@ -174,6 +174,26 @@ async def test_battery_sensor_voltage(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
+@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+async def test_battery_sensor_description(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test battery replacement description sensor."""
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
+    assert state
+    assert state.state == "CR123A"
+
+    set_node_attribute(matter_node, 1, 47, 19, "CR2032")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
+    assert state
+    assert state.state == "CR2032"
+
+
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_eve_thermo_sensor(
     hass: HomeAssistant,

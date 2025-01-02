@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
@@ -9,6 +11,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -18,7 +21,7 @@ async def test_adam_select_entities(
 ) -> None:
     """Test a thermostat Select."""
 
-    state = hass.states.get("select.zone_lisa_wk_thermostat_schedule")
+    state = hass.states.get("select.woonkamer_thermostat_schedule")
     assert state
     assert state.state == "GF7  Woonkamer"
 
@@ -32,7 +35,7 @@ async def test_adam_change_select_entity(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.zone_lisa_wk_thermostat_schedule",
+            ATTR_ENTITY_ID: "select.woonkamer_thermostat_schedule",
             ATTR_OPTION: "Badkamer Schema",
         },
         blocking=True,
@@ -65,8 +68,8 @@ async def test_adam_select_regulation_mode(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            "entity_id": "select.adam_regulation_mode",
-            "option": "heating",
+            ATTR_ENTITY_ID: "select.adam_regulation_mode",
+            ATTR_OPTION: "heating",
         },
         blocking=True,
     )
@@ -86,3 +89,20 @@ async def test_legacy_anna_select_entities(
 ) -> None:
     """Test not creating a select-entity for a legacy Anna without a thermostat-schedule."""
     assert not hass.states.get("select.anna_thermostat_schedule")
+
+
+async def test_adam_select_unavailable_regulation_mode(
+    hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test a regulation_mode non-available preset."""
+
+    with pytest.raises(ServiceValidationError, match="valid options"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.anna_thermostat_schedule",
+                ATTR_OPTION: "freezing",
+            },
+            blocking=True,
+        )

@@ -16,6 +16,8 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from . import BMWConfigEntry
 from .const import CONF_REFRESH_TOKEN
 
+PARALLEL_UPDATES = 1
+
 if TYPE_CHECKING:
     from bimmer_connected.vehicle import MyBMWVehicle
 
@@ -49,7 +51,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: BMWConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     coordinator.account.config.log_responses = True
     await coordinator.account.get_vehicles(force_init=True)
@@ -75,7 +77,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: BMWConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     coordinator.account.config.log_responses = True
     await coordinator.account.get_vehicles(force_init=True)

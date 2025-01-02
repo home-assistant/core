@@ -4,7 +4,8 @@
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/easyenergy",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum",
-  "requirements": ["easyenergy==2.1.2"]
+  "requirements": ["easyenergy==2.1.2"],
+  "single_config_entry": true
 }

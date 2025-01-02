@@ -16,6 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
@@ -55,6 +56,7 @@ UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(
             BloodGlucoseConcentrationConverter.VALID_UNITS
         ),

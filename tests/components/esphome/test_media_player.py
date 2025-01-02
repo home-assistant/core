@@ -22,6 +22,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -414,3 +415,22 @@ async def test_media_player_proxy(
 
         media_args = mock_client.media_player_command.call_args.kwargs
         assert media_args["announcement"]
+
+        # test with bypass_proxy flag
+        mock_async_create_proxy_url.reset_mock()
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_mymedia_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: media_url,
+                ATTR_MEDIA_EXTRA: {
+                    "bypass_proxy": True,
+                },
+            },
+            blocking=True,
+        )
+        mock_async_create_proxy_url.assert_not_called()
+        media_args = mock_client.media_player_command.call_args.kwargs
+        assert media_args["media_url"] == media_url

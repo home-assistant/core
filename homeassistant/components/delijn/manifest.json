@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/delijn",
   "iot_class": "cloud_polling",
   "loggers": ["pydelijn"],
+  "quality_scale": "legacy",
   "requirements": ["pydelijn==1.1.0"]
 }

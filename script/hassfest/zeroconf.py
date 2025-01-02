@@ -55,19 +55,19 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
 
     # HomeKit models are matched on starting string, make sure none overlap.
     warned = set()
-    for key in homekit_dict:
+    for key, value in homekit_dict.items():
         if key in warned:
             continue
 
         # n^2 yoooo
-        for key_2 in homekit_dict:
+        for key_2, value_2 in homekit_dict.items():
             if key == key_2 or key_2 in warned:
                 continue
 
             if key.startswith(key_2) or key_2.startswith(key):
                 integration.add_error(
                     "zeroconf",
-                    f"Integrations {homekit_dict[key]} and {homekit_dict[key_2]} "
+                    f"Integrations {value} and {value_2} "
                     "have overlapping HomeKit models",
                 )
                 warned.add(key)

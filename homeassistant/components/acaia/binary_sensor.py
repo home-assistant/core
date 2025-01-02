@@ -16,6 +16,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import AcaiaConfigEntry
 from .entity import AcaiaEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class AcaiaBinarySensorEntityDescription(BinarySensorEntityDescription):

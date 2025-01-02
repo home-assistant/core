@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/thingspeak",
   "iot_class": "cloud_push",
   "loggers": ["thingspeak"],
+  "quality_scale": "legacy",
   "requirements": ["thingspeak==1.0.0"]
 }

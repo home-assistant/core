@@ -97,6 +97,7 @@ async def test_schema_update_calls(
             session_maker,
             migration.SchemaValidationStatus(
                 current_version=0,
+                initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
                 schema_errors=set(),
@@ -111,6 +112,7 @@ async def test_schema_update_calls(
             session_maker,
             migration.SchemaValidationStatus(
                 current_version=42,
+                initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
                 schema_errors=set(),
@@ -598,7 +600,7 @@ async def test_schema_migrate(
             start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
-    def _sometimes_failing_create_index(*args):
+    def _sometimes_failing_create_index(*args, **kwargs):
         """Make the first index create raise a retryable error to ensure we retry."""
         if recorder_db_url.startswith("mysql://"):
             nonlocal create_calls
@@ -607,7 +609,7 @@ async def test_schema_migrate(
                 mysql_exception = OperationalError("statement", {}, [])
                 mysql_exception.orig = Exception(1205, "retryable")
                 raise mysql_exception
-        real_create_index(*args)
+        real_create_index(*args, **kwargs)
 
     with (
         patch(
@@ -710,7 +712,7 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
         migration._create_index(
-            instance.get_session, "states", "ix_states_context_id_bin"
+            instance, instance.get_session, "states", "ix_states_context_id_bin"
         )
     engine.dispose()
 
@@ -786,7 +788,7 @@ def test_forgiving_add_index_with_other_db_types(
     with patch(
         "homeassistant.components.recorder.migration.Table", return_value=mocked_table
     ):
-        migration._create_index(Mock(), "states", "ix_states_context_id")
+        migration._create_index(Mock(), Mock(), "states", "ix_states_context_id")
 
     assert "already exists on states" in caplog.text
     assert "continuing" in caplog.text

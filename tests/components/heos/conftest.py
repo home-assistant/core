@@ -15,20 +15,63 @@ from pyheos import (
     const,
 )
 import pytest
+import pytest_asyncio
 
 from homeassistant.components import ssdp
-from homeassistant.components.heos import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.heos import (
+    CONF_PASSWORD,
+    DOMAIN,
+    ControllerManager,
+    GroupManager,
+    HeosRuntimeData,
+    SourceManager,
+)
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture(heos_runtime_data):
     """Create a mock HEOS config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, title="Controller (127.0.0.1)"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        unique_id=DOMAIN,
     )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="config_entry_options")
+def config_entry_options_fixture(heos_runtime_data):
+    """Create a mock HEOS config entry with options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        unique_id=DOMAIN,
+    )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="heos_runtime_data")
+def heos_runtime_data_fixture(controller_manager, players):
+    """Create a mock HeosRuntimeData fixture."""
+    return HeosRuntimeData(
+        controller_manager, Mock(GroupManager), Mock(SourceManager), players
+    )
+
+
+@pytest.fixture(name="controller_manager")
+def controller_manager_fixture(controller):
+    """Create a mock controller manager fixture."""
+    mock_controller_manager = Mock(ControllerManager)
+    mock_controller_manager.controller = controller
+    return mock_controller_manager
 
 
 @pytest.fixture(name="controller")
@@ -39,6 +82,7 @@ def controller_fixture(
     mock_heos = Mock(Heos)
     for player in players.values():
         player.heos = mock_heos
+    mock_heos.return_value = mock_heos
     mock_heos.dispatcher = dispatcher
     mock_heos.get_players.return_value = players
     mock_heos.players = players
@@ -51,11 +95,10 @@ def controller_fixture(
     mock_heos.connection_state = const.STATE_CONNECTED
     mock_heos.get_groups.return_value = group
     mock_heos.create_group.return_value = None
-    mock = Mock(return_value=mock_heos)
 
     with (
-        patch("homeassistant.components.heos.Heos", new=mock),
-        patch("homeassistant.components.heos.config_flow.Heos", new=mock),
+        patch("homeassistant.components.heos.Heos", new=mock_heos),
+        patch("homeassistant.components.heos.config_flow.Heos", new=mock_heos),
     ):
         yield mock_heos
 
@@ -139,8 +182,8 @@ def input_sources_fixture() -> Sequence[InputSource]:
     return [source]
 
 
-@pytest.fixture(name="dispatcher")
-def dispatcher_fixture() -> Dispatcher:
+@pytest_asyncio.fixture(name="dispatcher")
+async def dispatcher_fixture() -> Dispatcher:
     """Create a dispatcher for testing."""
     return Dispatcher()
 
@@ -155,6 +198,25 @@ def discovery_data_fixture() -> dict:
         upnp={
             ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
+            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ssdp.ATTR_UPNP_SERIAL: None,
+            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+        },
+    )
+
+
+@pytest.fixture(name="discovery_data_bedroom")
+def discovery_data_fixture_bedroom() -> dict:
+    """Return mock discovery data for testing."""
+    return ssdp.SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://127.0.0.2:60006/upnp/desc/aios_device/aios_device.xml",
+        upnp={
+            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
             ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
             ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
             ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",

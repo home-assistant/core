@@ -28,18 +28,26 @@ from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
     format_mac,
+)
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN, INTEGRATION_TITLE
-from .utils import format_unique_id
+from .utils import dispatcher_join_signal, dispatcher_unjoin_signal, format_unique_id
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -50,6 +58,11 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
+
+SERVICE_CLEAR_TIMER = "clear_sleep_timer"
+SERVICE_JOIN = "join"
+SERVICE_SET_TIMER = "set_sleep_timer"
+SERVICE_UNJOIN = "unjoin"
 
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
@@ -130,6 +143,18 @@ async def async_setup_entry(
         config_entry.runtime_data.sync_status,
     )
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_TIMER, None, "async_increase_timer"
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER, None, "async_clear_timer"
+    )
+    platform.async_register_entity_service(
+        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
+    )
+    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
+
     hass.data[DATA_BLUESOUND].append(bluesound_player)
     async_add_entities([bluesound_player], update_before_add=True)
 
@@ -175,13 +200,12 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._status: Status | None = None
         self._inputs: list[Input] = []
         self._presets: list[Preset] = []
-        self._muted = False
-        self._master: BluesoundPlayer | None = None
-        self._is_master = False
         self._group_name: str | None = None
         self._group_list: list[str] = []
         self._bluesound_device_name = sync_status.name
         self._player = player
+        self._is_leader = False
+        self._leader: BluesoundPlayer | None = None
 
         self._attr_unique_id = format_unique_id(sync_status.mac, port)
         # there should always be one player with the default port per mac
@@ -250,6 +274,22 @@ class BluesoundPlayer(MediaPlayerEntity):
             name=f"bluesound.poll_sync_status_loop_{self.host}:{self.port}",
         )
 
+        assert self._sync_status.id is not None
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                dispatcher_join_signal(self.entity_id),
+                self.async_add_follower,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                dispatcher_unjoin_signal(self._sync_status.id),
+                self.async_remove_follower,
+            )
+        )
+
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
         await super().async_will_remove_from_hass()
@@ -292,14 +332,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             self._last_status_update = dt_util.utcnow()
             self._status = status
 
-            group_name = status.group_name
-            if group_name != self._group_name:
-                _LOGGER.debug("Group name change detected on device: %s", self.id)
-                self._group_name = group_name
-
-                # rebuild ordered list of entity_ids that are in the group, master is first
-                self._group_list = self.rebuild_bluesound_group()
-
             self.async_write_ha_state()
         except PlayerUnreachableError:
             self._attr_available = False
@@ -323,25 +355,27 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         self._sync_status = sync_status
 
-        if sync_status.master is not None:
-            self._is_master = False
-            master_id = f"{sync_status.master.ip}:{sync_status.master.port}"
-            master_device = [
+        self._group_list = self.rebuild_bluesound_group()
+
+        if sync_status.leader is not None:
+            self._is_leader = False
+            leader_id = f"{sync_status.leader.ip}:{sync_status.leader.port}"
+            leader_device = [
                 device
                 for device in self.hass.data[DATA_BLUESOUND]
-                if device.id == master_id
+                if device.id == leader_id
             ]
 
-            if master_device and master_id != self.id:
-                self._master = master_device[0]
+            if leader_device and leader_id != self.id:
+                self._leader = leader_device[0]
             else:
-                self._master = None
-                _LOGGER.error("Master not found %s", master_id)
+                self._leader = None
+                _LOGGER.error("Leader not found %s", leader_id)
         else:
-            if self._master is not None:
-                self._master = None
-            slaves = self._sync_status.slaves
-            self._is_master = slaves is not None
+            if self._leader is not None:
+                self._leader = None
+            followers = self._sync_status.followers
+            self._is_leader = followers is not None
 
         self.async_write_ha_state()
 
@@ -361,7 +395,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None:
             return MediaPlayerState.OFF
 
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return MediaPlayerState.IDLE
 
         match self._status.state:
@@ -375,7 +409,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         return self._status.name
@@ -386,7 +420,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None:
             return None
 
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return self._group_name
 
         return self._status.artist
@@ -394,7 +428,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Artist of current playing media (Music track only)."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         return self._status.album
@@ -402,7 +436,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         url = self._status.image
@@ -417,7 +451,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         mediastate = self.state
@@ -436,7 +470,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         duration = self._status.total_seconds
@@ -495,7 +529,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def source_list(self) -> list[str] | None:
         """List of available input sources."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         sources = [x.text for x in self._inputs]
@@ -506,7 +540,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Name of the current input source."""
-        if self._status is None or (self.is_grouped and not self.is_master):
+        if self._status is None or (self.is_grouped and not self.is_leader):
             return None
 
         if self._status.input_id is not None:
@@ -526,7 +560,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._status is None:
             return MediaPlayerEntityFeature(0)
 
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return (
                 MediaPlayerEntityFeature.VOLUME_STEP
                 | MediaPlayerEntityFeature.VOLUME_SET
@@ -566,14 +600,17 @@ class BluesoundPlayer(MediaPlayerEntity):
         return supported
 
     @property
-    def is_master(self) -> bool:
-        """Return true if player is a coordinator."""
-        return self._is_master
+    def is_leader(self) -> bool:
+        """Return true if player is leader of a group."""
+        return self._sync_status.followers is not None
 
     @property
     def is_grouped(self) -> bool:
-        """Return true if player is a coordinator."""
-        return self._master is not None or self._is_master
+        """Return true if player is member or leader of a group."""
+        return (
+            self._sync_status.followers is not None
+            or self._sync_status.leader is not None
+        )
 
     @property
     def shuffle(self) -> bool:
@@ -586,25 +623,25 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_join(self, master: str) -> None:
         """Join the player to a group."""
-        master_device = [
-            device
-            for device in self.hass.data[DATA_BLUESOUND]
-            if device.entity_id == master
-        ]
+        if master == self.entity_id:
+            raise ServiceValidationError("Cannot join player to itself")
 
-        if len(master_device) > 0:
-            if self.id == master_device[0].id:
-                raise ServiceValidationError("Cannot join player to itself")
+        _LOGGER.debug("Trying to join player: %s", self.id)
+        async_dispatcher_send(
+            self.hass, dispatcher_join_signal(master), self.host, self.port
+        )
 
-            _LOGGER.debug(
-                "Trying to join player: %s to master: %s",
-                self.id,
-                master_device[0].id,
-            )
+    async def async_unjoin(self) -> None:
+        """Unjoin the player from a group."""
+        if self._sync_status.leader is None:
+            return
 
-            await master_device[0].async_add_slave(self)
-        else:
-            _LOGGER.error("Master not found %s", master_device)
+        leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
+
+        _LOGGER.debug("Trying to unjoin player: %s", self.id)
+        async_dispatcher_send(
+            self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -613,43 +650,46 @@ class BluesoundPlayer(MediaPlayerEntity):
         if self._group_list:
             attributes = {ATTR_BLUESOUND_GROUP: self._group_list}
 
-        attributes[ATTR_MASTER] = self._is_master
+        attributes[ATTR_MASTER] = self.is_leader
 
         return attributes
 
     def rebuild_bluesound_group(self) -> list[str]:
         """Rebuild the list of entities in speaker group."""
-        if self._group_name is None:
+        if self.sync_status.leader is None and self.sync_status.followers is None:
             return []
 
-        device_group = self._group_name.split("+")
+        player_entities: list[BluesoundPlayer] = self.hass.data[DATA_BLUESOUND]
 
-        sorted_entities: list[BluesoundPlayer] = sorted(
-            self.hass.data[DATA_BLUESOUND],
-            key=lambda entity: entity.is_master,
-            reverse=True,
-        )
-        return [
-            entity.sync_status.name
-            for entity in sorted_entities
-            if entity.bluesound_device_name in device_group
+        leader_sync_status: SyncStatus | None = None
+        if self.sync_status.leader is None:
+            leader_sync_status = self.sync_status
+        else:
+            required_id = f"{self.sync_status.leader.ip}:{self.sync_status.leader.port}"
+            for x in player_entities:
+                if x.sync_status.id == required_id:
+                    leader_sync_status = x.sync_status
+                    break
+
+        if leader_sync_status is None or leader_sync_status.followers is None:
+            return []
+
+        follower_ids = [f"{x.ip}:{x.port}" for x in leader_sync_status.followers]
+        follower_names = [
+            x.sync_status.name
+            for x in player_entities
+            if x.sync_status.id in follower_ids
         ]
+        follower_names.insert(0, leader_sync_status.name)
+        return follower_names
 
-    async def async_unjoin(self) -> None:
-        """Unjoin the player from a group."""
-        if self._master is None:
-            return
+    async def async_add_follower(self, host: str, port: int) -> None:
+        """Add follower to leader."""
+        await self._player.add_follower(host, port)
 
-        _LOGGER.debug("Trying to unjoin player: %s", self.id)
-        await self._master.async_remove_slave(self)
-
-    async def async_add_slave(self, slave_device: BluesoundPlayer) -> None:
-        """Add slave to master."""
-        await self._player.add_slave(slave_device.host, slave_device.port)
-
-    async def async_remove_slave(self, slave_device: BluesoundPlayer) -> None:
-        """Remove slave to master."""
-        await self._player.remove_slave(slave_device.host, slave_device.port)
+    async def async_remove_follower(self, host: str, port: int) -> None:
+        """Remove follower to leader."""
+        await self._player.remove_follower(host, port)
 
     async def async_increase_timer(self) -> int:
         """Increase sleep time on player."""
@@ -667,7 +707,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         # presets and inputs might have the same name; presets have priority
@@ -686,49 +726,49 @@ class BluesoundPlayer(MediaPlayerEntity):
 
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.clear()
 
     async def async_media_next_track(self) -> None:
         """Send media_next command to media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.skip()
 
     async def async_media_previous_track(self) -> None:
         """Send media_previous command to media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.back()
 
     async def async_media_play(self) -> None:
         """Send media_play command to media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.play()
 
     async def async_media_pause(self) -> None:
         """Send media_pause command to media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.pause()
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.stop()
 
     async def async_media_seek(self, position: float) -> None:
         """Send media_seek command to media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         await self._player.play(seek=int(position))
@@ -737,7 +777,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Send the play_media command to the media player."""
-        if self.is_grouped and not self.is_master:
+        if self.is_grouped and not self.is_leader:
             return
 
         if media_source.is_media_source_id(media_id):

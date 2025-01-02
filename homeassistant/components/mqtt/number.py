@@ -50,6 +50,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_MIN = "min"
 CONF_MAX = "max"
 CONF_STEP = "step"

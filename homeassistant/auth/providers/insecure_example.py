@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import hmac
-from typing import cast
 
 import voluptuous as vol
 
@@ -36,7 +35,9 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> ExampleLoginFlow:
         """Return a flow to login."""
         return ExampleLoginFlow(self)
 
@@ -93,7 +94,7 @@ class ExampleAuthProvider(AuthProvider):
         return UserMeta(name=name, is_active=True)
 
 
-class ExampleLoginFlow(LoginFlow):
+class ExampleLoginFlow(LoginFlow[ExampleAuthProvider]):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -104,7 +105,7 @@ class ExampleLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                cast(ExampleAuthProvider, self._auth_provider).async_validate_login(
+                self._auth_provider.async_validate_login(
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuthError:

@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration uses a push API. No polling required.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  # Gold
+  entity-translations:
+    status: exempt
+    comment: |
+      There are no entities to translate.
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration doesn't have enough / noisy entities that warrant being disabled by default.
+  discovery: done
+  stale-devices: todo
+  diagnostics: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      There are no entities that require icons.
+  reconfiguration-flow: done
+  dynamic-devices: todo
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: todo
+  docs-data-update: done
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      There are no known limitations beyond the push API delay noted in Troubleshooting.
+  docs-troubleshooting: done
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration uses telnet exclusively and does not make http calls.
+  strict-typing: done

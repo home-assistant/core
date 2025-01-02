@@ -5,16 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from elevenlabs.client import AsyncElevenLabs
+from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -24,6 +19,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
+from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
@@ -96,7 +92,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ElevenLabsOptionsFlow(config_entry)
@@ -105,7 +101,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 class ElevenLabsOptionsFlow(OptionsFlow):
     """ElevenLabs options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ElevenLabsConfigEntry) -> None:
         """Initialize options flow."""
         self.api_key: str = config_entry.data[CONF_API_KEY]
         # id -> name

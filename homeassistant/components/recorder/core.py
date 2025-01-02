@@ -719,6 +719,16 @@ class Recorder(threading.Thread):
         if schema_status is None:
             # Give up if we could not validate the schema
             return
+        if schema_status.current_version > SCHEMA_VERSION:
+            _LOGGER.error(
+                "The database schema version %s is newer than %s which is the maximum "
+                "database schema version supported by the installed version of "
+                "Home Assistant Core, either upgrade Home Assistant Core or restore "
+                "the database from a backup compatible with this version",
+                schema_status.current_version,
+                SCHEMA_VERSION,
+            )
+            return
         self.schema_version = schema_status.current_version
 
         if not schema_status.migration_needed and not schema_status.schema_errors:
@@ -740,7 +750,7 @@ class Recorder(threading.Thread):
             self.schema_version = schema_status.current_version
 
             # Do non-live data migration
-            migration.migrate_data_non_live(self, self.get_session, schema_status)
+            self._migrate_data_offline(schema_status)
 
             # Non-live migration is now completed, remaining steps are live
             self.migration_is_live = True
@@ -916,6 +926,13 @@ class Recorder(threading.Thread):
 
         return False
 
+    def _migrate_data_offline(
+        self, schema_status: migration.SchemaValidationStatus
+    ) -> None:
+        """Migrate data."""
+        with self.hass.timeout.freeze(DOMAIN):
+            migration.migrate_data_non_live(self, self.get_session, schema_status)
+
     def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
     ) -> tuple[bool, migration.SchemaValidationStatus]:
@@ -963,6 +980,7 @@ class Recorder(threading.Thread):
                 # which does not need migration or repair.
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
+                    initial_version=SCHEMA_VERSION,
                     migration_needed=False,
                     non_live_data_migration_needed=False,
                     schema_errors=set(),
@@ -1121,7 +1139,6 @@ class Recorder(threading.Thread):
 
         # Map the event data to the StateAttributes table
         shared_attrs = shared_attrs_bytes.decode("utf-8")
-        dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_event_data := state_attributes_manager.get_pending(shared_attrs):
             dbstate.state_attributes = pending_event_data
@@ -1424,6 +1441,7 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.recorder_runs_manager.recording_start)
             self.recorder_runs_manager.start(session)
+            self.states_manager.load_from_db(session)
 
         self._open_event_session()
 

@@ -136,7 +136,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If version is specified, but not supported by the entity.
     if (
         version is not None
-        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features_compat
+        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
     ):
         raise HomeAssistantError(
             f"Installing a specific version is not supported for {entity.entity_id}"
@@ -145,7 +145,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
-    ) and UpdateEntityFeature.BACKUP not in entity.supported_features_compat:
+    ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
         raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
@@ -279,7 +279,7 @@ class UpdateEntity(
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
-        if UpdateEntityFeature.INSTALL in self.supported_features_compat:
+        if UpdateEntityFeature.INSTALL in self.supported_features:
             return EntityCategory.CONFIG
         return EntityCategory.DIAGNOSTIC
 
@@ -336,19 +336,6 @@ class UpdateEntity(
         versus the title of the software installed.
         """
         return self._attr_title
-
-    @property
-    def supported_features_compat(self) -> UpdateEntityFeature:
-        """Return the supported features as UpdateEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = UpdateEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
 
     @cached_property
     def update_percentage(self) -> int | float | None:
@@ -451,7 +438,7 @@ class UpdateEntity(
 
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
-        if UpdateEntityFeature.PROGRESS in self.supported_features_compat:
+        if UpdateEntityFeature.PROGRESS in self.supported_features:
             in_progress = self.in_progress
             update_percentage = self.update_percentage if in_progress else None
             if type(in_progress) is not bool and isinstance(in_progress, int):
@@ -494,7 +481,7 @@ class UpdateEntity(
         Handles setting the in_progress state in case the entity doesn't
         support it natively.
         """
-        if UpdateEntityFeature.PROGRESS not in self.supported_features_compat:
+        if UpdateEntityFeature.PROGRESS not in self.supported_features:
             self.__in_progress = True
             self.async_write_ha_state()
 
@@ -539,7 +526,7 @@ async def websocket_release_notes(
         )
         return
 
-    if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features_compat:
+    if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features:
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,

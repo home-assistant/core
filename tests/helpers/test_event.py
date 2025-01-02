@@ -4387,8 +4387,8 @@ async def test_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     async_call_later(hass, delay, action)
@@ -4407,8 +4407,8 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, delay, action)
@@ -4429,8 +4429,8 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
     schedule_utctime = dt_util.utcnow()
 
     @callback
-    def action(__utcnow: datetime):
-        _current_delay = __utcnow.timestamp() - schedule_utctime.timestamp()
+    def action(utcnow: datetime, /):
+        _current_delay = utcnow.timestamp() - schedule_utctime.timestamp()
         future.set_result(delay < _current_delay < (delay + delay_tolerance))
 
     remove = async_call_later(hass, timedelta(seconds=delay), action)
@@ -4450,7 +4450,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     delay_tolerance = 0.1
 
     @callback
-    def action(__now: datetime):
+    def action(now: datetime, /):
         future.set_result(False)
 
     remove = async_call_later(hass, delay, action)
@@ -4895,7 +4895,7 @@ async def test_track_state_change_deprecated(
     assert (
         "Detected code that calls `async_track_state_change` instead "
         "of `async_track_state_change_event` which is deprecated and "
-        "will be removed in Home Assistant 2025.5. Please report this issue."
+        "will be removed in Home Assistant 2025.5. Please report this issue"
     ) in caplog.text
 
 
@@ -4946,7 +4946,8 @@ async def test_async_track_template_no_hass_deprecated(
     """Test async_track_template with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template(hass, Template("blah"), lambda x, y, z: None)
@@ -4964,7 +4965,8 @@ async def test_async_track_template_result_no_hass_deprecated(
     """Test async_track_template_result with a template without hass is deprecated."""
     message = (
         "Detected code that calls async_track_template_result with template without "
-        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+        "hass. This will stop working in Home Assistant 2025.10, please "
+        "report this issue"
     )
 
     async_track_template_result(

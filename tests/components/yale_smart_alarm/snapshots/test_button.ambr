@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button[load_platforms0][button.yale_smart_alarm_panic_button-entry]
+# name: test_button[load_platforms0][button.test_username_panic_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.yale_smart_alarm_panic_button',
+    'entity_id': 'button.test_username_panic_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,13 +32,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button[load_platforms0][button.yale_smart_alarm_panic_button-state]
+# name: test_button[load_platforms0][button.test_username_panic_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yale Smart Alarm Panic button',
+      'friendly_name': 'test-username Panic button',
     }),
     'context': <ANY>,
-    'entity_id': 'button.yale_smart_alarm_panic_button',
+    'entity_id': 'button.test_username_panic_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

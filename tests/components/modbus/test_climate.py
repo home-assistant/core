@@ -24,6 +24,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -54,6 +56,8 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -360,6 +364,47 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
     state = hass.states.get(ENTITY_ID)
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 11,
+                    CONF_HVAC_ON_VALUE: 0xAA,
+                    CONF_HVAC_OFF_VALUE: 0xFF,
+                }
+            ],
+        },
+    ],
+)
+async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off register values."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_register.assert_called_with(11, 0xAA, slave=10)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_register.assert_called_with(11, 0xFF, slave=10)
 
 
 @pytest.mark.parametrize(

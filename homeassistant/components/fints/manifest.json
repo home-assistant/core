@@ -6,5 +6,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["fints", "mt_940", "sepaxml"],
+  "quality_scale": "legacy",
   "requirements": ["fints==3.1.0"]
 }

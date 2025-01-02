@@ -140,7 +140,7 @@ async def test_create_eager_task_from_thread(hass: HomeAssistant) -> None:
     with pytest.raises(
         RuntimeError,
         match=(
-            "Detected code that attempted to create an asyncio task from a thread. Please report this issue."
+            "Detected code that attempted to create an asyncio task from a thread. Please report this issue"
         ),
     ):
         await hass.async_add_executor_job(create_task)

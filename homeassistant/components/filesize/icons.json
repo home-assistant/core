@@ -9,6 +9,9 @@
       },
       "last_updated": {
         "default": "mdi:file"
+      },
+      "created": {
+        "default": "mdi:file"
       }
     }
   }

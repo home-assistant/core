@@ -110,7 +110,6 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF, HVACMode.AUTO]
     _attr_precision = PRECISION_HALVES
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

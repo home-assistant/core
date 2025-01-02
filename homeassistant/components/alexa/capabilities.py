@@ -317,6 +317,7 @@ class Alexa(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -403,6 +404,7 @@ class AlexaPowerController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -436,7 +438,7 @@ class AlexaPowerController(AlexaCapability):
         elif self.entity.domain == remote.DOMAIN:
             is_on = self.entity.state not in (STATE_OFF, STATE_UNKNOWN)
         elif self.entity.domain == vacuum.DOMAIN:
-            is_on = self.entity.state == vacuum.STATE_CLEANING
+            is_on = self.entity.state == vacuum.VacuumActivity.CLEANING
         elif self.entity.domain == timer.DOMAIN:
             is_on = self.entity.state != STATE_IDLE
         elif self.entity.domain == water_heater.DOMAIN:
@@ -469,6 +471,7 @@ class AlexaLockController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -523,6 +526,7 @@ class AlexaSceneController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -562,6 +566,7 @@ class AlexaBrightnessController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -611,6 +616,7 @@ class AlexaColorController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -669,6 +675,7 @@ class AlexaColorTemperatureController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -715,6 +722,7 @@ class AlexaSpeaker(AlexaCapability):
         "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
         "ja-JP",
+        "nl-NL",
     }
 
     def name(self) -> str:
@@ -772,6 +780,7 @@ class AlexaStepSpeaker(AlexaCapability):
         "es-ES",
         "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
+        "nl-NL",
     }
 
     def name(self) -> str:
@@ -801,6 +810,7 @@ class AlexaPlaybackController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -816,13 +826,19 @@ class AlexaPlaybackController(AlexaCapability):
         """
         supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        operations = {
-            media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
-            media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
-            media_player.MediaPlayerEntityFeature.PLAY: "Play",
-            media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
-            media_player.MediaPlayerEntityFeature.STOP: "Stop",
-        }
+        operations: dict[
+            cover.CoverEntityFeature | media_player.MediaPlayerEntityFeature, str
+        ]
+        if self.entity.domain == cover.DOMAIN:
+            operations = {cover.CoverEntityFeature.STOP: "Stop"}
+        else:
+            operations = {
+                media_player.MediaPlayerEntityFeature.NEXT_TRACK: "Next",
+                media_player.MediaPlayerEntityFeature.PAUSE: "Pause",
+                media_player.MediaPlayerEntityFeature.PLAY: "Play",
+                media_player.MediaPlayerEntityFeature.PREVIOUS_TRACK: "Previous",
+                media_player.MediaPlayerEntityFeature.STOP: "Stop",
+            }
 
         return [
             value
@@ -853,6 +869,7 @@ class AlexaInputController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -1098,6 +1115,7 @@ class AlexaThermostatController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -1239,6 +1257,7 @@ class AlexaPowerLevelController(AlexaCapability):
         "fr-CA",
         "fr-FR",
         "it-IT",
+        "nl-NL",
         "ja-JP",
     }
 
@@ -1717,6 +1736,7 @@ class AlexaRangeController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -2060,6 +2080,7 @@ class AlexaToggleController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -2206,6 +2227,7 @@ class AlexaPlaybackStateReporter(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -2261,6 +2283,7 @@ class AlexaSeekController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -2354,6 +2377,7 @@ class AlexaEqualizerController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 
@@ -2464,6 +2488,7 @@ class AlexaCameraStreamController(AlexaCapability):
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }
 

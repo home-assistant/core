@@ -177,7 +177,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def _init_attributes(self) -> None:
         """Init common climate device attributes."""
@@ -194,12 +193,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
 
-        if (
-            self.get_airzone_value(AZD_SPEED) is not None
-            and self.get_airzone_value(AZD_SPEEDS) is not None
-        ):
-            self._initialize_fan_speeds()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
@@ -214,8 +207,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
         self._attr_hvac_action = HVAC_ACTION_LIB_TO_HASS[
             self.get_airzone_value(AZD_ACTION)
         ]
-        if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if self.get_airzone_value(AZD_POWER):
             self._attr_hvac_mode = HVAC_MODE_LIB_TO_HASS[
                 self.get_airzone_value(AZD_MODE)
@@ -251,6 +242,22 @@ class AirzoneDeviceClimate(AirzoneClimate):
     )
     _speeds: dict[int, str]
     _speeds_reverse: dict[str, int]
+
+    def _init_attributes(self) -> None:
+        """Init common climate device attributes."""
+        super()._init_attributes()
+        if (
+            self.get_airzone_value(AZD_SPEED) is not None
+            and self.get_airzone_value(AZD_SPEEDS) is not None
+        ):
+            self._initialize_fan_speeds()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update climate attributes."""
+        super()._async_update_attrs()
+        if self.supported_features & ClimateEntityFeature.FAN_MODE:
+            self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
 
     def _initialize_fan_speeds(self) -> None:
         """Initialize fan speeds."""

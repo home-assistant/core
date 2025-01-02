@@ -37,7 +37,7 @@ STATE_KEY_POSITION = "position"
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ADS_VAR): cv.string,
+        vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_POSITION): cv.string,
         vol.Optional(CONF_ADS_VAR_SET_POS): cv.string,
         vol.Optional(CONF_ADS_VAR_CLOSE): cv.string,

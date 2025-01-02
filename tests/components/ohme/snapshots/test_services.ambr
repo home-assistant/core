@@ -1,0 +1,12 @@
+# serializer version: 1
+# name: test_list_charge_slots
+  dict({
+    'slots': list([
+      dict({
+        'end': '2024-12-30T04:30:39+00:00',
+        'energy': 2.042,
+        'start': '2024-12-30T04:00:00+00:00',
+      }),
+    ]),
+  })
+# ---

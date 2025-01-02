@@ -1,9 +1,9 @@
 """Support for tracking consumption over given periods of time."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
-from croniter import croniter
+from cronsim import CronSim, CronSimError
 import voluptuous as vol
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
@@ -47,9 +47,12 @@ DEFAULT_OFFSET = timedelta(hours=0)
 
 def validate_cron_pattern(pattern):
     """Check that the pattern is well-formed."""
-    if croniter.is_valid(pattern):
-        return pattern
-    raise vol.Invalid("Invalid pattern")
+    try:
+        CronSim(pattern, datetime(2020, 1, 1))  # any date will do
+    except CronSimError as err:
+        _LOGGER.error("Invalid cron pattern %s: %s", pattern, err)
+        raise vol.Invalid("Invalid pattern") from err
+    return pattern
 
 
 def period_or_cron(config):

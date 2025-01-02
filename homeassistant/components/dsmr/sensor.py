@@ -549,7 +549,7 @@ async def async_setup_entry(
     dsmr_version = entry.data[CONF_DSMR_VERSION]
     entities: list[DSMREntity] = []
     initialized: bool = False
-    add_entities_handler: Callable[..., None] | None
+    add_entities_handler: Callable[[], None] | None
 
     @callback
     def init_async_add_entities(telegram: Telegram) -> None:

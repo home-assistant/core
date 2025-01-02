@@ -96,6 +96,29 @@ class LazyState(State):
             assert self._last_updated_ts is not None
         return dt_util.utc_from_timestamp(self._last_updated_ts)
 
+    @cached_property
+    def last_updated_timestamp(self) -> float:  # type: ignore[override]
+        """Last updated timestamp."""
+        if TYPE_CHECKING:
+            assert self._last_updated_ts is not None
+        return self._last_updated_ts
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:  # type: ignore[override]
+        """Last changed timestamp."""
+        ts = self._last_changed_ts or self._last_updated_ts
+        if TYPE_CHECKING:
+            assert ts is not None
+        return ts
+
+    @cached_property
+    def last_reported_timestamp(self) -> float:  # type: ignore[override]
+        """Last reported timestamp."""
+        ts = self._last_reported_ts or self._last_updated_ts
+        if TYPE_CHECKING:
+            assert ts is not None
+        return ts
+
     def as_dict(self) -> dict[str, Any]:  # type: ignore[override]
         """Return a dict representation of the LazyState.
 

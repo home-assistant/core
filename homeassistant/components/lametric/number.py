@@ -25,6 +25,7 @@ class LaMetricNumberEntityDescription(NumberEntityDescription):
     """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
+    has_fn: Callable[[Device], bool] = lambda device: True
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
 
 
@@ -49,7 +50,8 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        value_fn=lambda device: device.audio.volume,
+        has_fn=lambda device: bool(device.audio),
+        value_fn=lambda device: device.audio.volume if device.audio else 0,
         set_value_fn=lambda api, volume: api.audio(volume=int(volume)),
     ),
 ]

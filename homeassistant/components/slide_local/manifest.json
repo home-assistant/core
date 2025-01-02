@@ -1,0 +1,17 @@
+{
+  "domain": "slide_local",
+  "name": "Slide Local",
+  "codeowners": ["@dontinelli"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/slide_local",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "gold",
+  "requirements": ["goslide-api==0.7.0"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "slide*"
+    }
+  ]
+}

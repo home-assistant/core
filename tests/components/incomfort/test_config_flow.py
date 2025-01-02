@@ -6,8 +6,8 @@ from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
 import pytest
 
-from homeassistant.components.incomfort import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.incomfort.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -36,50 +36,6 @@ async def test_form(
     assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_incomfort: MagicMock
-) -> None:
-    """Test we van import from YAML."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
-    assert result["data"] == MOCK_CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("exc", "abort_reason"),
-    [
-        (IncomfortError(ClientResponseError(None, None, status=401)), "auth_error"),
-        (IncomfortError(ClientResponseError(None, None, status=404)), "not_found"),
-        (IncomfortError(ClientResponseError(None, None, status=500)), "unknown"),
-        (IncomfortError, "unknown"),
-        (InvalidHeaterList, "no_heaters"),
-        (ValueError, "unknown"),
-        (TimeoutError, "timeout_error"),
-    ],
-)
-async def test_import_fails(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_incomfort: MagicMock,
-    exc: Exception,
-    abort_reason: str,
-) -> None:
-    """Test YAML import fails."""
-    mock_incomfort().heaters.side_effect = exc
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_CONFIG
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == abort_reason
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_entry_already_configured(hass: HomeAssistant) -> None:

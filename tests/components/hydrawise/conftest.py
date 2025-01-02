@@ -56,7 +56,6 @@ def mock_legacy_pydrawise(
 
 @pytest.fixture
 def mock_pydrawise(
-    mock_auth: AsyncMock,
     user: User,
     controller: Controller,
     zones: list[Zone],

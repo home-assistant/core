@@ -124,6 +124,14 @@
       "motion_detection": {
         "name": "Motion detection"
       }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      },
+      "last_recording": {
+        "name": "Last recording"
+      }
     }
   },
   "issues": {

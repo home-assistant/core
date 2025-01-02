@@ -107,7 +107,6 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the thermostat."""

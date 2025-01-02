@@ -4,5 +4,6 @@
   "codeowners": ["@gjohansson-ST"],
   "documentation": "https://www.home-assistant.io/integrations/command_line",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["jsonpath==0.82.2"]
 }

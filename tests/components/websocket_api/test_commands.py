@@ -2390,6 +2390,9 @@ async def test_execute_script(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "ignore_translations", ["component.test.exceptions.test_error.message"]
+)
 async def test_execute_script_err_localization(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,

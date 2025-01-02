@@ -14,13 +14,12 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
@@ -191,11 +190,11 @@ SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz number from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizNumber] = []
 
     for device in data.coordinator.data.values():

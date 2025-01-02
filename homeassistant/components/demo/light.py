@@ -7,12 +7,14 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -28,7 +30,7 @@ LIGHT_COLORS = [(56, 86), (345, 75)]
 
 LIGHT_EFFECT_LIST = ["rainbow", "none"]
 
-LIGHT_TEMPS = [240, 380]
+LIGHT_TEMPS = [4166, 2631]
 
 SUPPORT_DEMO = {ColorMode.HS, ColorMode.COLOR_TEMP}
 SUPPORT_DEMO_HS_WHITE = {ColorMode.HS, ColorMode.WHITE}
@@ -99,6 +101,9 @@ class DemoLight(LightEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
 
     def __init__(
         self,
@@ -185,8 +190,8 @@ class DemoLight(LightEntity):
         return self._rgbww_color
 
     @property
-    def color_temp(self) -> int:
-        """Return the CT color temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         return self._ct
 
     @property
@@ -216,9 +221,9 @@ class DemoLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
             self._color_mode = ColorMode.COLOR_TEMP
-            self._ct = kwargs[ATTR_COLOR_TEMP]
+            self._ct = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]

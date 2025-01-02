@@ -6,6 +6,7 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from .patchers import (
+    HISTORY_STATS_SUCCESS_PATCHER,
     LOCATION_DATA_SUCCESS_PATCHER,
     SLEEP_DATA_SUCCESS_PATCHER,
     STATUS_DATA_SUCCESS_PATCHER,
@@ -25,6 +26,7 @@ async def test_successful_entry(hass: HomeAssistant) -> None:
         STATUS_DATA_SUCCESS_PATCHER,
         LOCATION_DATA_SUCCESS_PATCHER,
         SLEEP_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
     ):
         entry.add_to_hass(hass)
 
@@ -46,6 +48,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         STATUS_DATA_SUCCESS_PATCHER,
         LOCATION_DATA_SUCCESS_PATCHER,
         SLEEP_DATA_SUCCESS_PATCHER,
+        HISTORY_STATS_SUCCESS_PATCHER,
     ):
         entry.add_to_hass(hass)
 

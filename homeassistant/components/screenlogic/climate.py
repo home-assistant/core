@@ -56,6 +56,7 @@ async def async_setup_entry(
                 subscription_code=CODE.STATUS_CHANGED,
                 data_root=(DEVICE.BODY,),
                 key=body_index,
+                translation_key=f"body_{body_index}",
             ),
         )
         for body_index in gateway.get_data(DEVICE.BODY)
@@ -80,7 +81,6 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, entity_description) -> None:
         """Initialize a ScreenLogic climate entity."""
@@ -93,12 +93,11 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             )
         self._configured_heat_modes.append(HEAT_MODE.HEATER)
         self._attr_preset_modes = [
-            HEAT_MODE(mode_num).title for mode_num in self._configured_heat_modes
+            HEAT_MODE(mode_num).name.lower() for mode_num in self._configured_heat_modes
         ]
 
         self._attr_min_temp = self.entity_data[ATTR.MIN_SETPOINT]
         self._attr_max_temp = self.entity_data[ATTR.MAX_SETPOINT]
-        self._attr_name = self.entity_data[VALUE.HEAT_STATE][ATTR.NAME]
         self._last_preset = None
 
     @property
@@ -138,8 +137,8 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
         if self.hvac_mode == HVACMode.OFF:
-            return HEAT_MODE(self._last_preset).title
-        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).title
+            return HEAT_MODE(self._last_preset).name.lower()
+        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).name.lower()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""

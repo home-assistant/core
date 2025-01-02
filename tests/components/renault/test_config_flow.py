@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+import aiohttp
 import pytest
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon import schemas
@@ -23,20 +24,35 @@ from tests.common import MockConfigEntry, load_fixture
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (Exception, "unknown"),
+        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (
+            InvalidCredentialsException(403042, "invalid loginID or password"),
+            "invalid_credentials",
+        ),
+    ],
+)
 async def test_config_flow_single_account(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception | type[Exception],
+    error: str,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+    assert not result["errors"]
 
-    # Failed credentials
+    # Raise error
     with patch(
         "renault_api.renault_session.RenaultSession.login",
-        side_effect=InvalidCredentialsException(403042, "invalid loginID or password"),
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -48,7 +64,8 @@ async def test_config_flow_single_account(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
 
     renault_account = AsyncMock()
     type(renault_account).account_id = PropertyMock(return_value="account_id_1")
@@ -84,6 +101,7 @@ async def test_config_flow_single_account(
     assert result["data"][CONF_PASSWORD] == "test"
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_1"
     assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["context"]["unique_id"] == "account_id_1"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -172,6 +190,7 @@ async def test_config_flow_multiple_accounts(
     assert result["data"][CONF_PASSWORD] == "test"
     assert result["data"][CONF_KAMEREON_ACCOUNT_ID] == "account_id_2"
     assert result["data"][CONF_LOCALE] == "fr_FR"
+    assert result["context"]["unique_id"] == "account_id_2"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -256,3 +275,6 @@ async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> Non
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+    assert config_entry.data[CONF_USERNAME] == "email@test.com"
+    assert config_entry.data[CONF_PASSWORD] == "any"

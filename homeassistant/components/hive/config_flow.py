@@ -104,7 +104,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                if self.context["source"] == SOURCE_REAUTH:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
                 self.device_registration = True
                 return await self.async_step_configuration()
@@ -144,7 +144,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
-        if self.context["source"] == SOURCE_REAUTH:
+        if self.source == SOURCE_REAUTH:
             assert self.entry
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data
@@ -162,10 +162,6 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: entry_data[CONF_PASSWORD],
         }
         return await self.async_step_user(data)
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import user."""
-        return await self.async_step_user(import_data)
 
     @staticmethod
     @callback

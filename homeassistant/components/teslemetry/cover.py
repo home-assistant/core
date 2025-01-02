@@ -73,9 +73,6 @@ class TeslemetryWindowEntity(TeslemetryVehicleEntity, CoverEntity):
         # All closed set to closed
         elif CLOSED == fd == fp == rd == rp:
             self._attr_is_closed = True
-        # Otherwise, set to unknown
-        else:
-            self._attr_is_closed = None
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Vent windows."""

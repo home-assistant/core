@@ -187,13 +187,11 @@ class CommandSensor(ManualTriggerSensorEntity):
             SensorDeviceClass.TIMESTAMP,
         }:
             self._attr_native_value = value
-            self._process_manual_data(value)
-            return
-
-        if value is not None:
+        elif value is not None:
             self._attr_native_value = async_parse_date_datetime(
                 value, self.entity_id, self.device_class
             )
+
         self._process_manual_data(value)
         self.async_write_ha_state()
 

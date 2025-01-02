@@ -60,6 +60,8 @@ CONF_FAN_MODE_DIFFUSE = "state_fan_diffuse"
 CONF_FAN_MODE_VALUES = "values"
 CONF_HVAC_MODE_REGISTER = "hvac_mode_register"
 CONF_HVAC_ONOFF_REGISTER = "hvac_onoff_register"
+CONF_HVAC_ON_VALUE = "hvac_on_value"
+CONF_HVAC_OFF_VALUE = "hvac_off_value"
 CONF_HVAC_MODE_OFF = "state_off"
 CONF_HVAC_MODE_HEAT = "state_heat"
 CONF_HVAC_MODE_COOL = "state_cool"
@@ -139,6 +141,8 @@ DEFAULT_SCAN_INTERVAL = 15  # seconds
 DEFAULT_SLAVE = 1
 DEFAULT_STRUCTURE_PREFIX = ">f"
 DEFAULT_TEMP_UNIT = "C"
+DEFAULT_HVAC_ON_VALUE = 1
+DEFAULT_HVAC_OFF_VALUE = 0
 MODBUS_DOMAIN = "modbus"
 
 ACTIVE_SCAN_INTERVAL = 2  # limit to force an extra update

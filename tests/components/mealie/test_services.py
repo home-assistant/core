@@ -250,6 +250,12 @@ async def test_service_set_random_mealplan(
             },
             {"recipe_id": None, "note_title": "Note Title", "note_text": "Note Text"},
         ),
+        (
+            {
+                ATTR_NOTE_TITLE: "Note Title",
+            },
+            {"recipe_id": None, "note_title": "Note Title", "note_text": None},
+        ),
     ],
 )
 async def test_service_set_mealplan(

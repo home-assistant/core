@@ -10,6 +10,7 @@ from pathlib import Path
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
+from . import ast_parse_module
 from .model import Config, Integration
 
 
@@ -33,7 +34,7 @@ class ImportCollector(ast.NodeVisitor):
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
             try:
-                self.visit(ast.parse(fil.read_text()))
+                self.visit(ast_parse_module(fil))
             except SyntaxError as e:
                 e.add_note(f"File: {fil}")
                 raise

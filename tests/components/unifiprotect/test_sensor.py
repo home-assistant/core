@@ -464,7 +464,7 @@ async def test_sensor_update_alarm(
         api=ufp.api,
     )
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.set_alarm_timeout()
     new_sensor.last_alarm_event_id = event.id
 
@@ -548,7 +548,7 @@ async def test_camera_update_license_plate(
         api=ufp.api,
     )
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
         event.id
@@ -663,7 +663,7 @@ async def test_camera_update_license_plate_changes_number_during_detect(
         api=ufp.api,
     )
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
         event.id
@@ -750,7 +750,7 @@ async def test_camera_update_license_plate_multiple_updates(
         api=ufp.api,
     )
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
         event.id
@@ -873,7 +873,7 @@ async def test_camera_update_license_no_dupes(
         api=ufp.api,
     )
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_smart_detected = True
     new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
         event.id

@@ -6,15 +6,22 @@ from typing import Any
 
 from homeconnect.api import HomeConnectError
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
-from . import get_dict_from_home_connect_error
-from .api import ConfigEntryAuth
+from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
 from .const import (
+    APPLIANCES_WITH_PROGRAMS,
     ATTR_ALLOWED_VALUES,
     ATTR_CONSTRAINTS,
     ATTR_VALUE,
@@ -31,24 +38,12 @@ from .const import (
     REFRIGERATION_SUPERMODEREFRIGERATOR,
     SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY,
+    SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
 from .entity import HomeConnectDevice, HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-APPLIANCES_WITH_PROGRAMS = (
-    "CleaningRobot",
-    "CoffeeMaker",
-    "Dishwasher",
-    "Dryer",
-    "Hood",
-    "Oven",
-    "WarmingDrawer",
-    "Washer",
-    "WasherDryer",
-)
 
 
 SWITCHES = (
@@ -105,7 +100,7 @@ SWITCHES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
@@ -113,8 +108,7 @@ async def async_setup_entry(
     def get_entities() -> list[SwitchEntity]:
         """Get a list of entities."""
         entities: list[SwitchEntity] = []
-        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
-        for device in hc_api.devices:
+        for device in entry.runtime_data.devices:
             if device.appliance.type in APPLIANCES_WITH_PROGRAMS:
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()
@@ -148,13 +142,13 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_available = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_on",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -172,13 +166,13 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off: %s", err)
             self._attr_available = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
-                    SVE_TRANSLATION_PLACEHOLDER_SETTING_KEY: self.bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: self.bsh_key,
                 },
             ) from err
 
@@ -215,6 +209,55 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         self._attr_has_entity_name = False
         self.program_name = program_name
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        items = automations + scripts
+        if not items:
+            return
+
+        entity_reg: er.EntityRegistry = er.async_get(self.hass)
+        entity_automations = [
+            automation_entity
+            for automation_id in automations
+            if (automation_entity := entity_reg.async_get(automation_id))
+        ]
+        entity_scripts = [
+            script_entity
+            for script_id in scripts
+            if (script_entity := entity_reg.async_get(script_id))
+        ]
+
+        items_list = [
+            f"- [{item.original_name}](/config/automation/edit/{item.unique_id})"
+            for item in entity_automations
+        ] + [
+            f"- [{item.original_name}](/config/script/edit/{item.unique_id})"
+            for item in entity_scripts
+        ]
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_program_switch_{self.entity_id}",
+            breaks_in_ha_version="2025.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_program_switch",
+            translation_placeholders={
+                "entity_id": self.entity_id,
+                "items": "\n".join(items_list),
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity will be removed from hass."""
+        async_delete_issue(
+            self.hass, DOMAIN, f"deprecated_program_switch_{self.entity_id}"
+        )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
         _LOGGER.debug("Tried to turn on program %s", self.program_name)
@@ -223,7 +266,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 self.device.appliance.start_program, self.program_name
             )
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="start_program",
                 translation_placeholders={
@@ -239,12 +282,11 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         try:
             await self.hass.async_add_executor_job(self.device.appliance.stop_program)
         except HomeConnectError as err:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "program": self.program_name,
                 },
             ) from err
         self.async_entity_update()
@@ -292,7 +334,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = False
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_on",
                 translation_placeholders={
@@ -305,7 +347,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         if not hasattr(self, "power_off_state"):
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_retrieve_turn_off",
                 translation_placeholders={
@@ -314,7 +356,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
 
         if self.power_off_state is None:
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="turn_off_not_supported",
                 translation_placeholders={
@@ -330,7 +372,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             )
         except HomeConnectError as err:
             self._attr_is_on = True
-            raise ServiceValidationError(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="power_off",
                 translation_placeholders={

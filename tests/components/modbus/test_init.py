@@ -19,13 +19,12 @@ from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ExceptionResponse, IllegalFunctionRequest
+from pymodbus.pdu import ExceptionResponse
 import pytest
 import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.modbus import async_reset_platform
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -820,7 +819,6 @@ SERVICE = "service"
     [
         {VALUE: ReadResult([0x0001]), DATA: ""},
         {VALUE: ExceptionResponse(0x06), DATA: "Pymodbus:"},
-        {VALUE: IllegalFunctionRequest(0x06), DATA: "Pymodbus:"},
         {VALUE: ModbusException("fail write_"), DATA: "Pymodbus:"},
     ],
 )
@@ -928,7 +926,6 @@ async def mock_modbus_read_pymodbus_fixture(
     ("do_return", "do_exception", "do_expect_state", "do_expect_value"),
     [
         (ReadResult([1]), None, STATE_ON, "1"),
-        (IllegalFunctionRequest(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (ExceptionResponse(0x99), None, STATE_UNAVAILABLE, STATE_UNAVAILABLE),
         (
             ReadResult([1]),
@@ -1161,22 +1158,61 @@ async def test_integration_reload(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_modbus,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Run test for integration reload."""
 
     caplog.set_level(logging.DEBUG)
     caplog.clear()
 
-    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
         await hass.async_block_till_done()
-        for _ in range(4):
-            freezer.tick(timedelta(seconds=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert state_sensor_1
+    assert not state_sensor_2
+
+    caplog.clear()
+    yaml_path = get_fixture_path("configuration_2.yaml", DOMAIN)
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert "Modbus reloading" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert state_sensor_1
+    assert state_sensor_2
+
+    caplog.clear()
+    yaml_path = get_fixture_path("configuration_empty.yaml", DOMAIN)
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert "Modbus not present anymore" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert not state_sensor_1
+    assert not state_sensor_2
 
 
 @pytest.mark.parametrize("do_config", [{}])
@@ -1229,9 +1265,3 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
-
-
-async def test_reset_platform(hass: HomeAssistant) -> None:
-    """Run test for async_reset_platform."""
-    await async_reset_platform(hass, "modbus")
-    assert DOMAIN not in hass.data

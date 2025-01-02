@@ -182,10 +182,16 @@ def mock_problematic_appliance(request: pytest.FixtureRequest) -> Mock:
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
     mock.start_program.side_effect = HomeConnectError
+    mock.select_program.side_effect = HomeConnectError
+    mock.pause_program.side_effect = HomeConnectError
     mock.stop_program.side_effect = HomeConnectError
+    mock.set_options_active_program.side_effect = HomeConnectError
+    mock.set_options_selected_program.side_effect = HomeConnectError
     mock.get_status.side_effect = HomeConnectError
     mock.get_settings.side_effect = HomeConnectError
     mock.set_setting.side_effect = HomeConnectError
+    mock.set_setting.side_effect = HomeConnectError
+    mock.execute_command.side_effect = HomeConnectError
 
     return mock
 

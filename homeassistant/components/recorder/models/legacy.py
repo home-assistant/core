@@ -46,7 +46,7 @@ class LegacyLazyState(State):
         self.state = self._row.state or ""
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = self._row.last_updated_ts or (
-            dt_util.utc_to_timestamp(start_time) if start_time else None
+            start_time.timestamp() if start_time else None
         )
         self._last_changed_ts: float | None = (
             self._row.last_changed_ts or self._last_updated_ts
@@ -146,7 +146,7 @@ def legacy_row_to_compressed_state(
         COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row_legacy(row, attr_cache),
     }
     if start_time:
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
+        comp_state[COMPRESSED_STATE_LAST_UPDATED] = start_time.timestamp()
     else:
         row_last_updated_ts: float = row.last_updated_ts
         comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts

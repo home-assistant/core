@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aioautomower.const import API_BASE_URL
+from aioautomower.session import AutomowerEndpoint
 import pytest
 
 from homeassistant import config_entries
@@ -18,16 +20,18 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import setup_integration
 from .const import CLIENT_ID, USER_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
 @pytest.mark.parametrize(
-    ("new_scope", "amount"),
+    ("new_scope", "fixture", "exception", "amount"),
     [
-        ("iam:read amc:api", 1),
-        ("iam:read", 0),
+        ("iam:read amc:api", "mower.json", None, 1),
+        ("iam:read amc:api", "mower.json", Exception, 0),
+        ("iam:read", "mower.json", None, 0),
+        ("iam:read amc:api", "empty.json", None, 0),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host")
@@ -38,6 +42,8 @@ async def test_full_flow(
     jwt: str,
     new_scope: str,
     amount: int,
+    fixture: str,
+    exception: Exception | None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -76,11 +82,17 @@ async def test_full_flow(
             "expires_at": 1697753347,
         },
     )
-
-    with patch(
-        "homeassistant.components.husqvarna_automower.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
+    aioclient_mock.get(
+        f"{API_BASE_URL}/{AutomowerEndpoint.mowers}",
+        text=load_fixture(fixture, DOMAIN),
+        exc=exception,
+    )
+    with (
+        patch(
+            "homeassistant.components.husqvarna_automower.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+    ):
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == amount

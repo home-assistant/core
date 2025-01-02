@@ -167,7 +167,6 @@ class ThinQMQTT:
 
     async def async_handle_device_event(self, message: dict) -> None:
         """Handle received mqtt message."""
-        _LOGGER.debug("async_handle_device_event: message=%s", message)
         unique_id = (
             f"{message["deviceId"]}_{list(message["report"].keys())[0]}"
             if message["deviceType"] == DeviceType.WASHTOWER
@@ -178,6 +177,12 @@ class ThinQMQTT:
             _LOGGER.error("Failed to handle device event: No device")
             return
 
+        _LOGGER.debug(
+            "async_handle_device_event: %s, model:%s, message=%s",
+            coordinator.device_name,
+            coordinator.api.device.model_name,
+            message,
+        )
         push_type = message.get("pushType")
 
         if push_type == DEVICE_STATUS_MESSAGE:

@@ -79,7 +79,7 @@ async def test_identify_button(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             button.DOMAIN,

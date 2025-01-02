@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import RequestError
-from homewizard_energy.models import Data
+from homewizard_energy.v1.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

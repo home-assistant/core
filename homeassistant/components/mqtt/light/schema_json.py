@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
@@ -22,6 +22,8 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
@@ -273,8 +275,16 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
-        self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
+        self._attr_min_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(max_mireds)
+            if (max_mireds := config.get(CONF_MAX_MIREDS))
+            else DEFAULT_MIN_KELVIN
+        )
+        self._attr_max_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(min_mireds)
+            if (min_mireds := config.get(CONF_MIN_MIREDS))
+            else DEFAULT_MAX_KELVIN
+        )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
         self._topic = {
@@ -370,7 +380,11 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 return
             try:
                 if color_mode == ColorMode.COLOR_TEMP:
-                    self._attr_color_temp = int(values["color_temp"])
+                    self._attr_color_temp_kelvin = (
+                        color_util.color_temperature_mired_to_kelvin(
+                            values["color_temp"]
+                        )
+                    )
                     self._attr_color_mode = ColorMode.COLOR_TEMP
                 elif color_mode == ColorMode.HS:
                     hue = float(values["color"]["h"])
@@ -469,12 +483,16 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             # Deprecated color handling
             try:
                 if values["color_temp"] is None:
-                    self._attr_color_temp = None
+                    self._attr_color_temp_kelvin = None
                 else:
-                    self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
+                    self._attr_color_temp_kelvin = (
+                        color_util.color_temperature_mired_to_kelvin(
+                            values["color_temp"]  # type: ignore[arg-type]
+                        )
+                    )
             except KeyError:
                 pass
-            except ValueError:
+            except (TypeError, ValueError):
                 _LOGGER.warning(
                     "Invalid color temp value '%s' received for entity %s",
                     values["color_temp"],
@@ -496,7 +514,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._state_received,
             {
                 "_attr_brightness",
-                "_attr_color_temp",
+                "_attr_color_temp_kelvin",
                 "_attr_effect",
                 "_attr_hs_color",
                 "_attr_is_on",
@@ -522,8 +540,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_color_mode = last_attributes.get(
                 ATTR_COLOR_MODE, self.color_mode
             )
-            self._attr_color_temp = last_attributes.get(
-                ATTR_COLOR_TEMP, self.color_temp
+            self._attr_color_temp_kelvin = last_attributes.get(
+                ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
             )
             self._attr_effect = last_attributes.get(ATTR_EFFECT, self.effect)
             self._attr_hs_color = last_attributes.get(ATTR_HS_COLOR, self.hs_color)
@@ -623,7 +641,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 message["color"]["s"] = hs_color[1]
 
             if self._optimistic:
-                self._attr_color_temp = None
+                self._attr_color_temp_kelvin = None
                 self._attr_hs_color = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
@@ -690,12 +708,14 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
 
-        if ATTR_COLOR_TEMP in kwargs:
-            message["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            message["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
             if self._optimistic:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
-                self._attr_color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
                 self._attr_hs_color = None
                 should_update = True
 

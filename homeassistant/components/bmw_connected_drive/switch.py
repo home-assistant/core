@@ -14,9 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWConfigEntry
+from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
 from .entity import BMWBaseEntity
+
+PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +69,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW switch from config entry."""
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
 
     entities: list[BMWSwitch] = []
 
@@ -109,8 +111,11 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         try:
             await self.entity_description.remote_service_on(self.vehicle)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
-
+            raise HomeAssistantError(
+                translation_domain=BMW_DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         self.coordinator.async_update_listeners()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -118,6 +123,9 @@ class BMWSwitch(BMWBaseEntity, SwitchEntity):
         try:
             await self.entity_description.remote_service_off(self.vehicle)
         except MyBMWAPIError as ex:
-            raise HomeAssistantError(ex) from ex
-
+            raise HomeAssistantError(
+                translation_domain=BMW_DOMAIN,
+                translation_key="remote_service_error",
+                translation_placeholders={"exception": str(ex)},
+            ) from ex
         self.coordinator.async_update_listeners()

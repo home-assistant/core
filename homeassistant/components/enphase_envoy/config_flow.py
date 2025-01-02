@@ -31,6 +31,7 @@ from .const import (
     OPTION_DISABLE_KEEP_ALIVE,
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
+from .coordinator import EnphaseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: EnphaseConfigEntry,
     ) -> EnvoyOptionsFlowHandler:
         """Options flow handler for Enphase_Envoy."""
         return EnvoyOptionsFlowHandler()
@@ -140,9 +141,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 and entry.data[CONF_HOST] == self.ip_address
             ):
                 _LOGGER.debug(
-                    "Zeroconf update envoy with this ip and blank serial in unique_id",
+                    "Zeroconf update envoy with this ip and blank unique_id",
                 )
-                title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
+                # Found an entry with blank unique_id (prior deleted) with same ip
+                # If the title is still default shorthand 'Envoy' then append serial
+                # to differentiate multiple Envoy. Don't change the title if any other
+                # title is still present in the old entry.
+                title = f"{ENVOY} {serial}" if entry.title == ENVOY else entry.title
                 return self.async_update_reload_and_abort(
                     entry, title=title, unique_id=serial, reason="already_configured"
                 )

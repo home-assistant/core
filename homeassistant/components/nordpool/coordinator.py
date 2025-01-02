@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING
 from pynordpool import (
     Currency,
     DeliveryPeriodData,
+    DeliveryPeriodEntry,
+    DeliveryPeriodsData,
     NordPoolClient,
     NordPoolEmptyResponseError,
     NordPoolError,
@@ -28,7 +30,7 @@ if TYPE_CHECKING:
     from . import NordPoolConfigEntry
 
 
-class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
+class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     """A Nord Pool Data Update Coordinator."""
 
     config_entry: NordPoolConfigEntry
@@ -69,23 +71,53 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodData]):
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
+        data = await self.api_call()
+        if data and data.entries:
+            self.async_set_updated_data(data)
+
+    async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
+        """Make api call to retrieve data with retry if failure."""
+        data = None
         try:
-            data = await self.client.async_get_delivery_period(
-                dt_util.now(),
+            data = await self.client.async_get_delivery_periods(
+                [
+                    dt_util.now() - timedelta(days=1),
+                    dt_util.now(),
+                    dt_util.now() + timedelta(days=1),
+                ],
                 Currency(self.config_entry.data[CONF_CURRENCY]),
                 self.config_entry.data[CONF_AREAS],
             )
-        except NordPoolEmptyResponseError as error:
-            LOGGER.debug("Empty response error: %s", error)
-            self.async_set_update_error(error)
-            return
-        except NordPoolResponseError as error:
-            LOGGER.debug("Response error: %s", error)
-            self.async_set_update_error(error)
-            return
-        except NordPoolError as error:
+        except (
+            NordPoolResponseError,
+            NordPoolError,
+        ) as error:
             LOGGER.debug("Connection error: %s", error)
             self.async_set_update_error(error)
-            return
 
-        self.async_set_updated_data(data)
+        if data:
+            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+            for entry in data.entries:
+                if entry.requested_date == current_day:
+                    LOGGER.debug("Data for current day found")
+                    return data
+
+        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
+        return data
+
+    def merge_price_entries(self) -> list[DeliveryPeriodEntry]:
+        """Return the merged price entries."""
+        merged_entries: list[DeliveryPeriodEntry] = []
+        for del_period in self.data.entries:
+            merged_entries.extend(del_period.entries)
+        return merged_entries
+
+    def get_data_current_day(self) -> DeliveryPeriodData:
+        """Return the current day data."""
+        current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+        delivery_period: DeliveryPeriodData = self.data.entries[0]
+        for del_period in self.data.entries:
+            if del_period.requested_date == current_day:
+                delivery_period = del_period
+                break
+        return delivery_period

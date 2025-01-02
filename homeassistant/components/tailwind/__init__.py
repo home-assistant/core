@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
-from .typing import TailwindConfigEntry
+from .coordinator import TailwindConfigEntry, TailwindDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.COVER, Platform.NUMBER]
 
@@ -39,6 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TailwindConfigEntry) -> bool:
     """Unload Tailwind config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

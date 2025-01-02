@@ -72,7 +72,6 @@ class TasmotaFan(
     )
     _fan_speed = tasmota_const.FAN_SPEED_MEDIUM
     _tasmota_entity: tasmota_fan.TasmotaFan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the Tasmota fan."""

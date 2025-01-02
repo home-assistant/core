@@ -18,7 +18,7 @@ from renault_api.kamereon.models import KamereonVehicleDataAttributes
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-T = TypeVar("T", bound=KamereonVehicleDataAttributes | None)
+T = TypeVar("T", bound=KamereonVehicleDataAttributes)
 
 # We have potentially 7 coordinators per vehicle
 _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
@@ -26,6 +26,8 @@ _PARALLEL_SEMAPHORE = asyncio.Semaphore(1)
 
 class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
     """Handle vehicle communication with Renault servers."""
+
+    update_method: Callable[[], Awaitable[T]]
 
     def __init__(
         self,
@@ -50,8 +52,6 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
 
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
-        if self.update_method is None:
-            raise NotImplementedError("Update method not implemented")
         try:
             async with _PARALLEL_SEMAPHORE:
                 data = await self.update_method()

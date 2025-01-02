@@ -9,7 +9,7 @@
     },
     "step": {
       "user": {
-        "description": "Add a history stats sensor",
+        "description": "Create a history stats sensor",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity",

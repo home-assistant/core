@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    AREA_SQUARE_METERS,
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -108,7 +103,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="total_cleaned_area",
         translation_key="total_cleaned_area",
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: (
             None if (sqft := self.run_stats.get("sqft")) is None else sqft * 9.29
