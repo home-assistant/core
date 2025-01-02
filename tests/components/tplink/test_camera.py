@@ -346,7 +346,8 @@ async def test_camera_image_auth_error(
         patch(
             "homeassistant.components.stream.async_check_stream_client_error",
             side_effect=stream.StreamOpenClientError(
-                stream_client_error=stream.StreamClientError.Unauthorized
+                "Request was unauthorized",
+                error_code=stream.StreamClientError.Unauthorized,
             ),
         ),
         pytest.raises(HomeAssistantError),

@@ -130,7 +130,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         try:
             await stream.async_check_stream_client_error(self.hass, video_url)
         except stream.StreamOpenClientError as ex:
-            if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+            if ex.error_code is stream.StreamClientError.Unauthorized:
                 _LOGGER.debug(
                     "Camera stream failed authentication for %s",
                     self._device.host,
