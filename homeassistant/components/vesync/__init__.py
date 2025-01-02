@@ -112,6 +112,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if new_fans and not fans:
             fans.extend(new_fans)
             hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
+            hass.async_create_task(
+                forward_setups(config_entry, [Platform.BINARY_SENSOR])
+            )
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))

@@ -14,11 +14,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_FANS
+from .const import DOMAIN, VS_DISCOVERY, VS_FANS
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,12 +54,31 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary_sensor platform."""
-    entities: list[VeSyncBinarySensor] = []
-    for device in hass.data[DOMAIN][VS_FANS]:
-        for description in SENSOR_DESCRIPTIONS:
-            if rgetattr(device, description.key) is not None:
-                entities.append(VeSyncBinarySensor(device, description))  # noqa: PERF401
-    async_add_entities(entities)
+
+    @callback
+    def discover(devices):
+        """Add new devices to platform."""
+        _setup_entities(devices, async_add_entities)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+    )
+
+    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
+
+
+@callback
+def _setup_entities(devices, async_add_entities):
+    """Add entity."""
+    async_add_entities(
+        (
+            VeSyncBinarySensor(dev, description)
+            for dev in devices
+            for description in SENSOR_DESCRIPTIONS
+            if rgetattr(dev, description.key) is not None
+        ),
+        update_before_add=True,
+    )
 
 
 class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
