@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.11
+aioacaia==0.1.12
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -250,6 +250,9 @@ aiohasupervisor==0.2.2b5
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
+
+# homeassistant.components.mcp_server
+aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
 aiohue==4.7.3
@@ -438,6 +441,9 @@ anthemav==1.4.1
 
 # homeassistant.components.anthropic
 anthropic==0.31.2
+
+# homeassistant.components.mcp_server
+anyio==4.7.0
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.3
@@ -631,7 +637,7 @@ dbus-fast==2.24.3
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==10.0.1
+deebot-client==10.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -966,10 +972,10 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241231.0
+home-assistant-frontend==20250102.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.12.20
+home-assistant-intents==2025.1.1
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1135,6 +1141,9 @@ maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.mcp_server
+mcp==1.1.2
 
 # homeassistant.components.minecraft_server
 mcstatus==11.1.1
@@ -1465,7 +1474,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.4
+pyaprilaire==0.7.7
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2498,7 +2507,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.43
+zha==0.0.44
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0

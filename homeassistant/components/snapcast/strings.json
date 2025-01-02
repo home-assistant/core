@@ -24,7 +24,7 @@
   "services": {
     "join": {
       "name": "Join",
-      "description": "Groups players together.",
+      "description": "Groups players together in a single group.",
       "fields": {
         "master": {
           "name": "Master",
@@ -38,23 +38,23 @@
     },
     "unjoin": {
       "name": "Unjoin",
-      "description": "Unjoins the player from a group."
+      "description": "Removes one or more players from a group."
     },
     "snapshot": {
       "name": "Snapshot",
-      "description": "Takes a snapshot of the media player."
+      "description": "Takes a snapshot of what is currently playing on a media player."
     },
     "restore": {
       "name": "Restore",
-      "description": "Restores a snapshot of the media player."
+      "description": "Restores a previously taken snapshot of a media player."
     },
     "set_latency": {
       "name": "Set latency",
-      "description": "Sets client set_latency.",
+      "description": "Sets the latency of a speaker.",
       "fields": {
         "latency": {
           "name": "Latency",
-          "description": "Latency in master."
+          "description": "Latency in milliseconds."
         }
       }
     }

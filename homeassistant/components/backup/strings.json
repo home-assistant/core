@@ -5,8 +5,8 @@
       "description": "The automatic backup could not be created. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
     },
     "automatic_backup_failed_upload_agents": {
-      "title": "Automatic backup could not be uploaded to agents",
-      "description": "The automatic backup could not be uploaded to agents {failed_agents}. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+      "title": "Automatic backup could not be uploaded to the configured locations",
+      "description": "The automatic backup could not be uploaded to the configured locations {failed_agents}. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
     }
   },
   "services": {

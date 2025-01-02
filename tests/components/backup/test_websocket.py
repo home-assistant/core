@@ -2,13 +2,19 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import AgentBackup, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgentError,
+    BackupAgentPlatformProtocol,
+    BackupReaderWriterError,
+    Folder,
+)
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
@@ -19,6 +25,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -26,6 +33,7 @@ from .common import (
     TEST_BACKUP_DEF456,
     BackupAgentTest,
     setup_backup_integration,
+    setup_backup_platform,
 )
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -472,27 +480,45 @@ async def test_generate_calls_create(
         )
 
 
-@pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("create_backup_settings", "expected_call_params"),
+    (
+        "create_backup_settings",
+        "expected_call_params",
+        "side_effect",
+        "last_completed_automatic_backup",
+    ),
     [
         (
-            {},
             {
-                "agent_ids": [],
+                "agent_ids": ["test.remote"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["test.remote"],
+                "backup_name": ANY,
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
                 "include_addons": None,
                 "include_all_addons": False,
                 "include_database": True,
                 "include_folders": None,
                 "include_homeassistant": True,
-                "name": None,
+                "on_progress": ANY,
                 "password": None,
-                "with_automatic_settings": True,
             },
+            None,
+            "2024-11-13T12:01:01+01:00",
         ),
         (
             {
-                "agent_ids": ["test-agent"],
+                "agent_ids": ["test.remote"],
                 "include_addons": ["test-addon"],
                 "include_all_addons": False,
                 "include_database": True,
@@ -501,32 +527,78 @@ async def test_generate_calls_create(
                 "password": "test-password",
             },
             {
-                "agent_ids": ["test-agent"],
+                "agent_ids": ["test.remote"],
+                "backup_name": "test-name",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
                 "include_addons": ["test-addon"],
                 "include_all_addons": False,
                 "include_database": True,
-                "include_folders": ["media"],
+                "include_folders": [Folder.MEDIA],
                 "include_homeassistant": True,
-                "name": "test-name",
+                "on_progress": ANY,
                 "password": "test-password",
-                "with_automatic_settings": True,
             },
+            None,
+            "2024-11-13T12:01:01+01:00",
+        ),
+        (
+            {
+                "agent_ids": ["test.remote"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["test.remote"],
+                "backup_name": ANY,
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+            BackupAgentError("Boom!"),
+            None,
         ),
     ],
 )
 async def test_generate_with_default_settings_calls_create(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
     freezer: FrozenDateTimeFactory,
-    snapshot: SnapshotAssertion,
+    create_backup: AsyncMock,
     create_backup_settings: dict[str, Any],
     expected_call_params: dict[str, Any],
+    side_effect: Exception | None,
+    last_completed_automatic_backup: str,
 ) -> None:
     """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
-    await setup_backup_integration(hass, with_hassio=False)
-
     client = await hass_ws_client(hass)
-    freezer.move_to("2024-11-13 12:01:00+01:00")
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-13T12:01:00+01:00")
+    remote_agent = BackupAgentTest("remote", backups=[])
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     await client.send_json_auto_id(
@@ -535,17 +607,47 @@ async def test_generate_with_default_settings_calls_create(
     result = await client.receive_json()
     assert result["success"]
 
-    with patch(
-        "homeassistant.components.backup.manager.BackupManager.async_initiate_backup",
-        return_value=NewBackup(backup_job_id="abc123"),
-    ) as generate_backup:
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["create_backup"]
+        == create_backup_settings
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        is None
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        is None
+    )
+
+    with patch.object(remote_agent, "async_upload_backup", side_effect=side_effect):
         await client.send_json_auto_id(
             {"type": "backup/generate_with_automatic_settings"}
         )
         result = await client.receive_json()
         assert result["success"]
         assert result["result"] == {"backup_job_id": "abc123"}
-        generate_backup.assert_called_once_with(**expected_call_params)
+
+        await hass.async_block_till_done()
+
+    create_backup.assert_called_once_with(**expected_call_params)
+
+    freezer.tick()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_attempted_automatic_backup"]
+        == "2024-11-13T12:01:01+01:00"
+    )
+    assert (
+        hass_storage[DOMAIN]["data"]["config"]["last_completed_automatic_backup"]
+        == last_completed_automatic_backup
+    )
 
 
 @pytest.mark.parametrize(
@@ -1193,7 +1295,23 @@ async def test_config_update_errors(
             1,
             2,
             BACKUP_CALL,
-            [Exception("Boom"), None],
+            [BackupReaderWriterError("Boom"), None],
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test.test-agent"]},
+                "schedule": "daily",
+            },
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-13T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",  # attempted to create backup but failed
+            "2024-11-11T04:45:00+01:00",
+            1,
+            2,
+            BACKUP_CALL,
+            [Exception("Boom"), None],  # unknown error
         ),
     ],
 )
@@ -2272,7 +2390,7 @@ async def test_subscribe_event(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test generating a backup."""
+    """Test subscribe event."""
     await setup_backup_integration(hass, with_hassio=False)
 
     manager = hass.data[DATA_MANAGER]

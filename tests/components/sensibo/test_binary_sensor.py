@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -36,9 +36,6 @@ async def test_binary_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "alive", False
-    )
-    monkeypatch.setattr(
         get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "motion", False
     )
 
@@ -54,5 +51,5 @@ async def test_binary_sensor(
 
     state1 = hass.states.get("binary_sensor.hallway_motion_sensor_connectivity")
     state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
-    assert state1.state == "off"
-    assert state3.state == "off"
+    assert state1.state == STATE_ON
+    assert state3.state == STATE_OFF
