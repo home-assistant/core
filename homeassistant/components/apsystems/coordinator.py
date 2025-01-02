@@ -29,6 +29,8 @@ class ApSystemsSensorData:
 class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
+    device_version: str
+
     def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -38,7 +40,6 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             update_interval=timedelta(seconds=12),
         )
         self.api = api
-        self.device_version = None
 
     async def _async_setup(self) -> None:
         try:

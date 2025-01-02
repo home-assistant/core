@@ -19,13 +19,10 @@ class ApSystemsEntity(Entity):
         data: ApSystemsData,
     ) -> None:
         """Initialize the APsystems entity."""
-        sw_version = None
-        if data.coordinator.device_version:
-            sw_version = data.coordinator.device_version.split(" ")[1]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, data.device_id)},
             manufacturer="APsystems",
             model="EZ1-M",
             serial_number=data.device_id,
-            sw_version=sw_version,
+            sw_version=data.coordinator.device_version.split(" ")[1],
         )
