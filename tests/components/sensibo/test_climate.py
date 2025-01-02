@@ -23,6 +23,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
 from homeassistant.components.sensibo.climate import (
     ATTR_AC_INTEGRATION,
@@ -55,6 +56,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     Platform,
@@ -497,7 +499,7 @@ async def test_climate_hvac_mode(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
     mock_client.async_set_ac_state_property = AsyncMock(
         return_value={"result": {"status": "Success"}}
@@ -512,7 +514,7 @@ async def test_climate_hvac_mode(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "off"
+    assert state.state == HVACMode.OFF
 
     monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", False)
 
@@ -529,7 +531,7 @@ async def test_climate_hvac_mode(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
 
 async def test_climate_on_off(
@@ -550,7 +552,7 @@ async def test_climate_on_off(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
     mock_client.async_set_ac_state_property = AsyncMock(
         return_value={"result": {"status": "Success"}}
@@ -565,7 +567,7 @@ async def test_climate_on_off(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "off"
+    assert state.state == HVACMode.OFF
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -576,7 +578,7 @@ async def test_climate_on_off(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
 
 async def test_climate_service_failed(
@@ -597,7 +599,7 @@ async def test_climate_service_failed(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
     mock_client.async_set_ac_state_property = AsyncMock(
         return_value={"result": {"status": "Error", "failureReason": "Did not work"}}
@@ -613,7 +615,7 @@ async def test_climate_service_failed(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
 
 async def test_climate_assumed_state(
@@ -634,7 +636,7 @@ async def test_climate_assumed_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
 
     mock_client.async_set_ac_state_property = AsyncMock(
         return_value={"result": {"status": "Success"}}
@@ -649,7 +651,7 @@ async def test_climate_assumed_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "off"
+    assert state.state == HVACMode.OFF
 
 
 async def test_climate_no_fan_no_swing(
@@ -773,7 +775,7 @@ async def test_climate_pure_boost(
 
     state = hass.states.get("climate.kitchen")
     state2 = hass.states.get("switch.kitchen_pure_boost")
-    assert state2.state == "off"
+    assert state2.state == STATE_OFF
 
     mock_client.async_set_pureboost = AsyncMock()
 
@@ -1151,7 +1153,7 @@ async def test_climate_full_ac_state(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.OFF
 
     mock_client.async_set_ac_states = AsyncMock()
 
@@ -1204,7 +1206,7 @@ async def test_climate_full_ac_state(
 
     state = hass.states.get("climate.hallway")
 
-    assert state.state == "cool"
+    assert state.state == HVACMode.COOL
     assert state.attributes["temperature"] == 22
 
 

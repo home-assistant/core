@@ -49,7 +49,10 @@ async def test_binary_sensor(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("binary_sensor.hallway_motion_sensor_connectivity")
-    state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
-    assert state1.state == STATE_ON
-    assert state3.state == STATE_OFF
+    assert (
+        hass.states.get("binary_sensor.hallway_motion_sensor_connectivity").state
+        == STATE_ON
+    )
+    assert (
+        hass.states.get("binary_sensor.hallway_motion_sensor_motion").state == STATE_OFF
+    )

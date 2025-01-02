@@ -11,6 +11,7 @@ from pysensibo.exceptions import AuthenticationError, SensiboError
 from pysensibo.model import SensiboData
 import pytest
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -47,7 +48,7 @@ async def test_coordinator(
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
     mock_data.side_effect = SensiboError("info")
@@ -79,7 +80,7 @@ async def test_coordinator(
     await hass.async_block_till_done()
     mock_data.assert_called_once()
     state = hass.states.get("climate.hallway")
-    assert state.state == "heat"
+    assert state.state == HVACMode.HEAT
     mock_data.reset_mock()
 
     mock_data.side_effect = AuthenticationError("info")

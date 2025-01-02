@@ -96,7 +96,6 @@ async def test_button_update(
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state_button = hass.states.get("button.hallway_reset_filter")
     state_filter_clean = hass.states.get("binary_sensor.hallway_filter_clean_required")
@@ -113,7 +112,7 @@ async def test_button_failure(
 ) -> None:
     """Test the Sensibo button failure."""
 
-    state_button = hass.states.get("button.hallway_reset_filter")
+    state = hass.states.get("button.hallway_reset_filter")
 
     mock_client.async_reset_filter = AsyncMock(return_value={"status": "failure"})
 
@@ -124,7 +123,7 @@ async def test_button_failure(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: state_button.entity_id,
+                ATTR_ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )
