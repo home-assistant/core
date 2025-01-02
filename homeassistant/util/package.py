@@ -15,7 +15,7 @@ from urllib.parse import urlparse
 
 from packaging.requirements import InvalidRequirement, Requirement
 
-from homeassistant.helpers.system_info import is_official_image
+from .system_info import is_official_image
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,8 @@ def is_virtual_env() -> bool:
 def is_docker_env() -> bool:
     """Return True if we run in a container env."""
     return (
-        Path("/.dockerenv").exists().exists()
-        or Path("/run/.containerenv")
+        Path("/.dockerenv").exists()
+        or Path("/run/.containerenv").exists()
         or "KUBERNETES_SERVICE_HOST" in os.environ
         or is_official_image()
     )
