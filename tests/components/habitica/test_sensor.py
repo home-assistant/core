@@ -7,7 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import DOMAIN
-from homeassistant.components.habitica.sensor import HabitipySensorEntity
+from homeassistant.components.habitica.sensor import HabiticaSensorEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -64,9 +64,9 @@ async def test_sensor_deprecation_issue(
 
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabitipySensorEntity.TODOS}",
+            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.TODOS}",
         )
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_task_entity_{HabitipySensorEntity.DAILIES}",
+            issue_id=f"deprecated_task_entity_{HabiticaSensorEntity.DAILIES}",
         )
