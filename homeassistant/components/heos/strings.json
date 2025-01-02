@@ -23,7 +23,7 @@
       },
       "reauth_confirm": {
         "title": "Reauthenticate HEOS",
-        "description": "Please update your HEOS Account credentials. Alternatively, the existing credentials can be cleared to complete this action.",
+        "description": "Please update your HEOS Account credentials. Alternatively, you can clear the credentials if you do not want the integration to access favorites, playlists, and streaming services.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"

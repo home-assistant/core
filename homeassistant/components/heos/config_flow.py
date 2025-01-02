@@ -63,7 +63,7 @@ async def _validate_auth(
         errors[CONF_PASSWORD] = "password_missing"
         return False
 
-    if user_input:
+    if authentication:
         # Attempt to login
         try:
             await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
