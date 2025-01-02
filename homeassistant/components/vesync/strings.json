@@ -45,10 +45,10 @@
     },
     "binary_sensor": {
       "water_lacks": {
-        "name": "Low Water"
+        "name": "Low water"
       },
       "water_tank_lifted": {
-        "name": "Water Tank Lifted"
+        "name": "Water tank lifted"
       }
     },
     "fan": {
