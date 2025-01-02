@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
-from pysensibo.model import SensiboData
+from pysensibo import SensiboClient
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -27,7 +27,7 @@ async def test_binary_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: SensiboClient,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -35,13 +35,15 @@ async def test_binary_sensor(
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
+    data = await mock_client.async_get_devices_data()
+
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "motion", False
+        data.parsed["ABC999111"].motion_sensors["AABBCC"], "motion", False
     )
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
+        return_value=data,
     ):
         async_fire_time_changed(
             hass,
