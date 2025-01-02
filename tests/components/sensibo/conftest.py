@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,6 +18,15 @@ from . import ENTRY_CONFIG
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.sensibo.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="load_platforms")
@@ -71,14 +80,14 @@ async def get_client(
 async def get_data_from_library(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    load_json: tuple[SensiboData, dict[str, Any]],
-) -> AsyncGenerator[tuple[dict[str, Any], dict[str, Any]]]:
+    load_json: tuple[dict[str, Any], dict[str, Any]],
+) -> AsyncGenerator[tuple[SensiboData, dict[str, Any]]]:
     """Get data."""
     aioclient_mock.request(
         "GET",
         url=APIV1 + "/users/me",
         params={"apiKey": "1234567890"},
-        json=load_json[0],
+        json=load_json[1],
     )
     aioclient_mock.request(
         "GET",
