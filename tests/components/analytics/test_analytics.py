@@ -10,7 +10,10 @@ import pytest
 from syrupy import SnapshotAssertion
 from syrupy.matchers import path_type
 
-from homeassistant.components.analytics.analytics import Analytics
+from homeassistant.components.analytics.analytics import (
+    Analytics,
+    async_devices_payload,
+)
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
@@ -22,6 +25,7 @@ from homeassistant.components.analytics.const import (
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
@@ -920,3 +924,105 @@ async def test_not_check_config_entries_if_yaml(
     assert submitted_data["integrations"] == ["default_config"]
     assert submitted_data == logged_data
     assert snapshot == submitted_data
+
+
+async def test_devices_payload(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices payload."""
+    assert async_devices_payload(hass) == {
+        "version": "home-assistant:1",
+        "no_model_id": [],
+        "devices": [],
+    }
+
+    mock_config_entry = MockConfigEntry()
+    mock_config_entry.add_to_hass(hass)
+
+    # Normal entry
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        sw_version="test-sw-version",
+        hw_version="test-hw-version",
+        name="test-name",
+        manufacturer="test-manufacturer",
+        model="test-model",
+        model_id="test-model-id",
+        suggested_area="Game Room",
+        configuration_url="http://example.com/config",
+    )
+
+    # Ignored because service type
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    # Ignored because config entry is ignore list
+    ignored_config_entry = MockConfigEntry(domain="esphome")
+    ignored_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=ignored_config_entry.entry_id,
+        identifiers={("device", "3")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+
+    # Ignored because no model id
+    no_model_id_config_entry = MockConfigEntry(domain="no_model_id")
+    no_model_id_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=no_model_id_config_entry.entry_id,
+        identifiers={("device", "4")},
+        manufacturer="test-manufacturer",
+    )
+
+    # Ignored because no manufacturer
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "5")},
+        model_id="test-model-id",
+    )
+
+    # Entry with via device
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "6")},
+        manufacturer="test-manufacturer6",
+        model_id="test-model-id6",
+        via_device=("device", "1"),
+    )
+
+    assert async_devices_payload(hass) == {
+        "version": "home-assistant:1",
+        "no_model_id": ["no_model_id"],
+        "devices": [
+            {
+                "manufacturer": "test-manufacturer",
+                "model_id": "test-model-id",
+                "model": "test-model",
+                "sw_version": "test-sw-version",
+                "hw_version": "test-hw-version",
+                "integration": "test",
+                "has_suggested_area": True,
+                "has_configuration_url": True,
+                "via_device": None,
+            },
+            {
+                "manufacturer": "test-manufacturer6",
+                "model_id": "test-model-id6",
+                "model": None,
+                "sw_version": None,
+                "hw_version": None,
+                "integration": "test",
+                "has_suggested_area": False,
+                "has_configuration_url": False,
+                "via_device": 0,
+            },
+        ],
+    }
