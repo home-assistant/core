@@ -27,6 +27,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -46,6 +47,7 @@ from .const import (
     ATTR_VOICE_PROMPT_VOLUME,
     DOMAIN,
     LOGGER,
+    CONF_CODE,
 )
 from .entity import SimpliSafeEntity
 from .typing import SystemType
@@ -134,6 +136,12 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._last_event = None
         self._set_state_from_system_data()
 
+        if code := self._simplisafe.entry.options.get(CONF_CODE):
+            if code.isdigit():
+                self._attr_code_format = CodeFormat.NUMBER
+            else:
+                self._attr_code_format = CodeFormat.TEXT
+
     @callback
     def _set_state_from_system_data(self) -> None:
         """Set the state based on the latest REST API data."""
@@ -146,8 +154,26 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
             LOGGER.warning("Unexpected system state (REST API): %s", self._system.state)
             self.async_increment_error_count()
 
+    @callback
+    def _is_code_valid(self, code: str | None, state: str) -> bool:
+        """Validate that a code matches the required one."""
+        if not self._simplisafe.entry.options.get(CONF_CODE):
+            return True
+
+        if not code or code != self._simplisafe.entry.options[CONF_CODE]:
+            LOGGER.warning(
+                "Incorrect alarm code entered (target state: %s): %s", state, code
+            )
+            return False
+
+        return True
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        if self._attr_alarm_state == AlarmControlPanelState.ARMED_AWAY:
+            if not self._is_code_valid(code, AlarmControlPanelState.DISARMED):
+                return
+
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
