@@ -2504,7 +2504,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.43
+zha==0.0.44
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
