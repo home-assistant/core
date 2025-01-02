@@ -2,7 +2,8 @@
 
 import pytest
 
-from homeassistant.components.qbus.const import CONF_ID, CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.qbus.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

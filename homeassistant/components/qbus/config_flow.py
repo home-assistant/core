@@ -8,18 +8,18 @@ from typing import TYPE_CHECKING, Any
 from qbusmqttapi.discovery import QbusMqttDevice
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
-from homeassistant import config_entries
 from homeassistant.components.mqtt import client as mqtt
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ID
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from .const import CONF_ID, CONF_SERIAL_NUMBER, DOMAIN
+from .const import CONF_SERIAL_NUMBER, DOMAIN
 from .coordinator import QbusConfigCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class QbusFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Qbus config flow."""
 
     VERSION = 1

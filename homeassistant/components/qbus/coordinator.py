@@ -37,9 +37,11 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
 
     _STATE_REQUEST_DELAY = 3
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: QbusConfigEntry) -> None:
         """Initialize Qbus coordinator."""
+
         _LOGGER.debug("%s - Initializing coordinator", entry.unique_id)
+        self.config_entry: QbusConfigEntry
 
         super().__init__(
             hass,
@@ -49,18 +51,15 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             always_update=False,
         )
 
-        self.config_entry: ConfigEntry = entry
-
         self._message_factory = QbusMqttMessageFactory()
         self._topic_factory = QbusMqttTopicFactory()
 
-        self._cleanup_callbacks: list[CALLBACK_TYPE] = []
         self._controller_activated = False
         self._subscribed_to_controller_state = False
         self._controller: QbusMqttDevice | None = None
 
         # Clean up when HA stops
-        self._cleanup_callbacks.append(
+        self.config_entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         )
 
@@ -73,11 +72,6 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             "%s - Shutting down entry coordinator", self.config_entry.unique_id
         )
 
-        while self._cleanup_callbacks:
-            cleanup_callback = self._cleanup_callbacks.pop()
-            cleanup_callback()
-
-        self._cleanup_callbacks = []
         self._controller_activated = False
         self._subscribed_to_controller_state = False
         self._controller = None
@@ -132,7 +126,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[list[QbusMqttOutput]]):
             controller_state_topic,
         )
         self._subscribed_to_controller_state = True
-        self._cleanup_callbacks.append(
+        self.config_entry.async_on_unload(
             await mqtt.async_subscribe(
                 self.hass,
                 controller_state_topic,

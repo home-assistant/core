@@ -33,11 +33,7 @@ class QbusEntity(Entity, ABC):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(
-        self,
-        mqtt_output: QbusMqttOutput,
-        entity_id_format: str,
-    ) -> None:
+    def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize the Qbus entity."""
 
         self._topic_factory = QbusMqttTopicFactory()
@@ -46,10 +42,7 @@ class QbusEntity(Entity, ABC):
         ref_id = format_ref_id(mqtt_output.ref_id)
 
         self._attr_unique_id = f"ctd_{mqtt_output.device.serial_number}_{ref_id}"
-        self.entity_id = entity_id_format.format(
-            f"qbus_{mqtt_output.device.serial_number}_{ref_id}"
-        )
-        self._attr_name = mqtt_output.name.title()
+        self._attr_name = None
 
         self._attr_device_info = DeviceInfo(
             name=mqtt_output.name.title(),
@@ -66,11 +59,11 @@ class QbusEntity(Entity, ABC):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-
-        unsubscribe = await mqtt.async_subscribe(
-            self.hass, self._state_topic, self._state_received
+        self.async_on_remove(
+            await mqtt.async_subscribe(
+                self.hass, self._state_topic, self._state_received
+            )
         )
-        self.async_on_remove(unsubscribe)
 
     @abstractmethod
     async def _state_received(self, msg: ReceiveMessage) -> None:
