@@ -32,6 +32,7 @@ from .const import (
     DISCOVERY_INTERVAL,
     DISCOVERY_TASK,
     DOMAIN,
+    DOMAIN_SERVER,
     KNOWN_PLAYERS,
     KNOWN_SERVERS,
     MANUFACTURER,
@@ -118,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, lms.uuid)},
+        identifiers={(DOMAIN_SERVER, lms.uuid)},
         name=lms.name,
         manufacturer=MANUFACTURER,
         model=SERVER_MODEL,
