@@ -391,13 +391,13 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self._api.set_zone(
                 serial_number=self._serial_number,
-                zone_number=self._ac_zone.zone_number,
+                zone_number=self._ac_zone.zone_number - 1,
                 is_enabled=True,
             )
         else:
             await self._api.set_zone(
                 serial_number=self._serial_number,
-                zone_number=self._ac_zone.zone_number,
+                zone_number=self._ac_zone.zone_number - 1,
                 is_enabled=False,
             )
         self.async_write_ha_state()
