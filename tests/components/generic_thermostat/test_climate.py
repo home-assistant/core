@@ -319,6 +319,20 @@ async def test_set_target_temp(hass: HomeAssistant) -> None:
     assert state.attributes.get("temperature") == 30.0
 
 
+@pytest.mark.usefixtures("setup_comp_2")
+async def test_set_target_temp_change_preset(hass: HomeAssistant) -> None:
+    """Test the setting of the target temperature.
+
+    Verify that preset is changed.
+    """
+    await common.async_set_temperature(hass, 30)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_NONE
+    await common.async_set_temperature(hass, 20)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get("preset_mode") == PRESET_COMFORT
+
+
 @pytest.mark.parametrize(
     ("preset", "temp"),
     [
