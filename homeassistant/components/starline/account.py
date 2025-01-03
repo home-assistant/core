@@ -185,6 +185,7 @@ class StarlineAccount:
         """Attributes for engine switch."""
         return {
             "autostart": device.car_state.get("r_start"),
+            # Deprecated and should be removed in 2025.7
             "ignition": device.car_state.get("run"),
         }
 
