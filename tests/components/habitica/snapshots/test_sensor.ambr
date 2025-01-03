@@ -198,7 +198,7 @@
         }),
         'start_date': '2024-09-21T22:00:00+00:00',
         'tags': list([
-          '51076966-2970-4b40-b6ba-d58c6a756dd7',
+          '6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab',
         ]),
         'text': 'Fitnessstudio besuchen',
         'type': 'daily',
@@ -1553,6 +1553,10 @@
           'th': False,
           'w': True,
         }),
+        'tags': list([
+          '20409521-c096-447f-9a90-23e8da615710',
+          '8515e4ae-2f4b-455a-b4a4-8939e04b1bfd',
+        ]),
         'text': 'Buch zu Ende lesen',
         'type': 'todo',
       }),
