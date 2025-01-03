@@ -48,7 +48,7 @@ async def test_switch_timer(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch timer."""
@@ -114,7 +114,7 @@ async def test_switch_pure_boost(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch pure boost."""
@@ -205,7 +205,7 @@ async def test_switch_climate_react(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react."""
@@ -256,7 +256,7 @@ async def test_switch_climate_react_no_data(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react with no data."""

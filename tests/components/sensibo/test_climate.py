@@ -111,7 +111,7 @@ async def test_climate_fan(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate fan service."""
@@ -194,7 +194,7 @@ async def test_climate_swing(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate swing service."""
@@ -279,7 +279,7 @@ async def test_climate_temperatures(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate temperature service."""
@@ -404,7 +404,7 @@ async def test_climate_temperature_is_none(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
@@ -457,7 +457,7 @@ async def test_climate_hvac_mode(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate hvac mode service."""
@@ -520,7 +520,7 @@ async def test_climate_on_off(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate on/off service."""
@@ -565,7 +565,7 @@ async def test_climate_service_failed(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate service failed."""
@@ -601,7 +601,7 @@ async def test_climate_assumed_state(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate assumed state service."""
@@ -635,7 +635,7 @@ async def test_climate_no_fan_no_swing(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate fan."""
@@ -666,7 +666,7 @@ async def test_climate_set_timer(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate Set Timer service."""
@@ -741,7 +741,7 @@ async def test_climate_pure_boost(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate pure boost service."""
@@ -828,7 +828,7 @@ async def test_climate_climate_react(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate react custom service."""
@@ -976,7 +976,7 @@ async def test_climate_climate_react_fahrenheit(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate react custom service with fahrenheit."""
@@ -1107,7 +1107,7 @@ async def test_climate_full_ac_state(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate Full AC state service."""
