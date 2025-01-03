@@ -125,26 +125,6 @@ async def test_get_minute_forecast(
     )
     assert result == snapshot
 
-    # Cleanup
-    await hass.config_entries.async_unload(mock_config_entry_v30.entry_id)
-    await hass.async_block_till_done()
-
-
-@patch(
-    "pyopenweathermap.client.onecall_client.OWMOneCallClient.validate_key",
-    AsyncMock(return_value=True),
-)
-async def test_validate_key(hass: HomeAssistant) -> None:
-    """Test the validate_key method of OWMClient."""
-    # Create an instance of OWMClient
-    owm_client = OWMOneCallClient("api_key", OWM_MODE_V30)
-
-    # Call the validate_key method
-    result = await owm_client.validate_key()
-
-    # Assert the result is True
-    assert result is True
-
 
 @patch(
     "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
@@ -158,7 +138,7 @@ async def test_mode_fail(
     await setup_mock_config_entry(hass, mock_config_entry_v25)
 
     # Expect a ServiceValidationError when mode is not OWM_MODE_V30
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match=".."):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_MINUTE_FORECAST,
@@ -166,7 +146,3 @@ async def test_mode_fail(
             blocking=True,
             return_response=True,
         )
-
-    # Cleanup
-    await hass.config_entries.async_unload(mock_config_entry_v25.entry_id)
-    await hass.async_block_till_done()

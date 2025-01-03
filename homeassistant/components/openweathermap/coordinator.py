@@ -114,7 +114,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ],
         }
 
-    def _get_minute_weather_data(self, minute_forecast: list[MinutelyWeatherForecast]):
+    def _get_minute_weather_data(
+        self, minute_forecast: list[MinutelyWeatherForecast]
+    ) -> dict:
+        """Get minute weather data from the forecast."""
         return {
             ATTR_API_FORECAST: [
                 {

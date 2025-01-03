@@ -105,7 +105,6 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
             name=DEFAULT_NAME,
         )
         self.mode = mode
-        self.weather_coordinator = weather_coordinator
 
         if mode in (OWM_MODE_V30, OWM_MODE_V25):
             self._attr_supported_features = (
@@ -119,7 +118,7 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         """Return Minute forecast."""
 
         if self.mode == OWM_MODE_V30:
-            return self.weather_coordinator.data[ATTR_API_MINUTE_FORECAST]
+            return self.coordinator.data[ATTR_API_MINUTE_FORECAST]
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="service_minute_forecast_mode",
