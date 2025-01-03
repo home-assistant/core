@@ -135,6 +135,7 @@ async def build_item_response(
         item_type = CONTENT_TYPE_TO_CHILD_TYPE[search_type]
 
         children = []
+        list_playable = []
         for item in result["items"]:
             item_id = str(item.get("id", ""))
             item_thumbnail: str | None = None
@@ -151,7 +152,7 @@ async def build_item_response(
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM]
                     can_expand = True
                     can_play = True
-                elif item["hasitems"]:
+                elif item["hasitems"] and not item["isaudio"]:
                     child_item_type = "Favorites"
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS["Favorites"]
                     can_expand = True
@@ -159,8 +160,8 @@ async def build_item_response(
                 else:
                     child_item_type = "Favorites"
                     child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]
-                    can_expand = False
-                    can_play = True
+                    can_expand = item["hasitems"]
+                    can_play = item["isaudio"] and item.get("url")
 
             if search_type in ["Apps", "Radios"]:
                 # item["cmd"] contains the name of the command to use with the cli for the app
@@ -228,6 +229,7 @@ async def build_item_response(
                     thumbnail=item_thumbnail,
                 )
             )
+            list_playable.append(can_play)
 
     if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")
@@ -242,7 +244,7 @@ async def build_item_response(
         children_media_class=media_class["children"],
         media_content_id=search_id,
         media_content_type=search_type,
-        can_play=search_type not in ["Favorites", "Apps"],
+        can_play=any(list_playable),
         children=children,
         can_expand=True,
     )
