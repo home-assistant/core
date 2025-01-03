@@ -186,11 +186,11 @@ homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energenie_power_sockets.*
 homeassistant.components.energy.*
+homeassistant.components.energyid.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
-homeassistant.components.energyid.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*

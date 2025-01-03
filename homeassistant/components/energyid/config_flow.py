@@ -52,12 +52,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Get the meter catalog
         http_session = async_get_clientsession(self.hass)
-        # Temporary client without webhook URL (not yet known, but not needed for catalog)
         _client = WebhookClientAsync(webhook_url="", session=http_session)
         meter_catalog = await _client.get_meter_catalog()
 
-        # Handle the user input
         if user_input is not None:
+            # Create a unique ID combining webhook URL and entity ID
+            unique_id = f"{user_input[CONF_WEBHOOK_URL]}_{user_input[CONF_ENTITY_ID]}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+            # Validate input before attempting connection
+            if any(
+                entry.data[CONF_WEBHOOK_URL] == user_input[CONF_WEBHOOK_URL]
+                and entry.data[CONF_ENTITY_ID] == user_input[CONF_ENTITY_ID]
+                and entry.data[CONF_METRIC] == user_input[CONF_METRIC]
+                and entry.data[CONF_METRIC_KIND] == user_input[CONF_METRIC_KIND]
+                for entry in self._async_current_entries()
+            ):
+                return self.async_abort(reason="already_configured_service")
+
             client = WebhookClientAsync(
                 webhook_url=user_input[CONF_WEBHOOK_URL], session=http_session
             )

@@ -3,7 +3,9 @@
 from unittest.mock import patch
 
 import aiohttp
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from yarl import URL
 
 from homeassistant.components.energyid.__init__ import (
     WebhookDispatcher,
@@ -40,12 +42,12 @@ async def test_async_setup_entry_invalid(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.__init__.WebhookClientAsync.get_policy",
         side_effect=aiohttp.ClientResponseError(
             aiohttp.RequestInfo(
-                url=MOCK_CONFIG_ENTRY_DATA[CONF_WEBHOOK_URL],
+                url=URL(MOCK_CONFIG_ENTRY_DATA[CONF_WEBHOOK_URL]),
                 method="GET",
-                headers={},
-                real_url=MOCK_CONFIG_ENTRY_DATA[CONF_WEBHOOK_URL],
+                headers=CIMultiDictProxy(CIMultiDict({})),
+                real_url=URL(MOCK_CONFIG_ENTRY_DATA[CONF_WEBHOOK_URL]),
             ),
-            None,
+            (),
             status=404,
         ),
     ):
@@ -70,12 +72,12 @@ async def test_dispatcher(hass: HomeAssistant) -> None:
         "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
         side_effect=aiohttp.ClientResponseError(
             aiohttp.RequestInfo(
-                url=dispatcher.client.webhook_url,
+                url=URL(dispatcher.client.webhook_url),
                 method="GET",
-                headers={},
-                real_url=dispatcher.client.webhook_url,
+                headers=CIMultiDictProxy(CIMultiDict({})),
+                real_url=URL(dispatcher.client.webhook_url),
             ),
-            None,
+            (),
             status=404,
         ),
     ):
