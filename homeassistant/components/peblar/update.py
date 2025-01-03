@@ -62,6 +62,7 @@ async def async_setup_entry(
             description=description,
         )
         for description in DESCRIPTIONS
+        if description.has_fn(entry.runtime_data.version_coordinator.data)
     )
 
 
