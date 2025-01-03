@@ -262,6 +262,13 @@ MEASUREMENT_SENSORS: dict[
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.BASAL_METABOLIC_RATE: WithingsMeasurementSensorEntityDescription(
+        key="basal_metabolic_rate",
+        measurement_type=MeasurementType.BASAL_METABOLIC_RATE,
+        translation_key="basal_metabolic_rate",
+        native_unit_of_measurement="kcal",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
