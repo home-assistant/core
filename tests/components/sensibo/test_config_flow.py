@@ -37,7 +37,6 @@ async def test_basic_setup(
             CONF_API_KEY: "1234567890",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 2
@@ -197,7 +196,6 @@ async def test_reauth_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -231,7 +229,6 @@ async def test_reauth_flow_error(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -243,7 +240,6 @@ async def test_reauth_flow_error(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -301,7 +297,6 @@ async def test_flow_reauth_no_username_or_device(
             CONF_API_KEY: "1234567890",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -314,7 +309,6 @@ async def test_flow_reauth_no_username_or_device(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -340,7 +334,6 @@ async def test_reconfigure_flow(hass: HomeAssistant, mock_client: MagicMock) -> 
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -377,7 +370,6 @@ async def test_reconfigure_flow_error(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM
@@ -389,7 +381,6 @@ async def test_reconfigure_flow_error(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -447,7 +438,6 @@ async def test_flow_reconfigure_no_username_or_device(
             CONF_API_KEY: "1234567890",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM
@@ -460,7 +450,6 @@ async def test_flow_reconfigure_no_username_or_device(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
