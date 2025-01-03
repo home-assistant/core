@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 
 HOST = "192.168.1.31"
 PORT = 23
@@ -20,6 +20,8 @@ MOCK_USER_INPUT = {
     CONF_HOST: HOST,
     CONF_PORT: PORT,
 }
+
+MOCK_PIN_INPUT = {CONF_PIN: 1234}
 
 MOCK_ZEROCONF_TVM_SERVICE_INFO_V1 = zeroconf.ZeroconfServiceInfo(
     type=TVM_ZEROCONF_SERVICE_TYPE,

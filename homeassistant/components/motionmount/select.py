@@ -51,6 +51,38 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
         self._attr_options = options
 
+    async def _ensure_connected(self) -> bool:
+        """Make sure there is a connection with the MotionMount.
+
+        Returns false if the connection failed to be ensured.
+        """
+        if self.mm.is_connected:
+            return True
+        try:
+            await self.mm.connect()
+        except (ConnectionError, TimeoutError, socket.gaierror):
+            # We're not interested in exceptions here. In case of a failed connection
+            # the try/except from the caller will report it.
+            # The purpose of `_ensure_connected()` is only to make sure we try to
+            # reconnect, where failures should not be logged each time
+            return False
+
+        # Check we're properly authenticated or be able to become so
+        if not self.mm.is_authenticated:
+            if self.pin is None:
+                await self.mm.disconnect()
+                self.config_entry.async_start_reauth(self.hass)
+                return False
+            await self.mm.authenticate(self.pin)
+            if not self.mm.is_authenticated:
+                self.pin = None
+                await self.mm.disconnect()
+                self.config_entry.async_start_reauth(self.hass)
+                return False
+
+        _LOGGER.debug("Successfully reconnected to MotionMount")
+        return True
+
     async def async_update(self) -> None:
         """Get latest state from MotionMount."""
         if not await self._ensure_connected():
