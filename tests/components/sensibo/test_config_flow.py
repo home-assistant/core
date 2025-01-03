@@ -41,7 +41,7 @@ async def test_basic_setup(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 2
-    assert result["title"] == "Sensibo"
+    assert result["title"] == "firstnamelastname"
     assert result["result"].unique_id == "firstnamelastname"
     assert result["data"] == {
         CONF_API_KEY: "1234567890",
@@ -90,7 +90,7 @@ async def test_flow_fails(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "username"
+    assert result["title"] == "firstnamelastname"
     assert result["data"] == {
         CONF_API_KEY: "1234567890",
     }
@@ -127,7 +127,7 @@ async def test_flow_get_no_devices(hass: HomeAssistant, mock_client: MagicMock) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Sensibo"
+    assert result["title"] == "firstnamelastname"
     assert result["data"] == {
         CONF_API_KEY: "1234567890",
     }
@@ -166,7 +166,7 @@ async def test_flow_get_no_username(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Sensibo"
+    assert result["title"] == "firstnamelastname"
     assert result["data"] == {
         CONF_API_KEY: "1234567890",
     }
