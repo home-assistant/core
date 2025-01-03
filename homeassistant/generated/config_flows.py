@@ -432,6 +432,7 @@ FLOWS = {
         "oncue",
         "ondilo_ico",
         "onewire",
+        "onedrive",
         "onkyo",
         "onvif",
         "open_meteo",
