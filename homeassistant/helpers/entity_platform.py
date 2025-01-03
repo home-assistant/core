@@ -426,11 +426,13 @@ class EntityPlatform:
                 type(exc).__name__,
             )
             return False
-        except Exception:
+        except Exception as exc:
+            message = str(exc)
             logger.exception(
-                "Error while setting up %s platform for %s",
+                "Error while setting up %s platform for %s: %s",
                 self.platform_name,
                 self.domain,
+                message,
             )
             return False
         else:
