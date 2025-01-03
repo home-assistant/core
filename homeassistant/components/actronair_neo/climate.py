@@ -32,11 +32,10 @@ FAN_MODE_MAPPING = {
 }
 FAN_MODE_MAPPING_REVERSE = {v: k for k, v in FAN_MODE_MAPPING.items()}
 HVAC_MODE_MAPPING = {
-    "cool": HVACMode.COOL,
-    "heat": HVACMode.HEAT,
-    "dry": HVACMode.DRY,
-    "fan_only": HVACMode.FAN_ONLY,
-    "off": HVACMode.OFF,
+    "COOL": HVACMode.COOL,
+    "HEAT": HVACMode.HEAT,
+    "FAN_ONLY": HVACMode.FAN_ONLY,
+    "OFF": HVACMode.OFF,
 }
 AC_UNIT_SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
