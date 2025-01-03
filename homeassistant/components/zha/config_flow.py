@@ -102,7 +102,8 @@ def _format_backup_choice(
 
 async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
+    ports: list[ListPortInfo] = []
+    ports.extend(await hass.async_add_executor_job(serial.tools.list_ports.comports))
 
     # Add useful info to the Yellow's serial port selection screen
     try:

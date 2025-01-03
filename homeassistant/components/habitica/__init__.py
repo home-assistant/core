@@ -21,6 +21,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CALENDAR,
+    Platform.IMAGE,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TODO,
