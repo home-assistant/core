@@ -5,6 +5,7 @@ import logging
 LOGGER = logging.getLogger(__package__)
 
 ZHA_DOMAIN = "zha"
+OTBR_DOMAIN = "otbr"
 
 OTBR_ADDON_NAME = "OpenThread Border Router"
 OTBR_ADDON_MANAGER_DATA = "openthread_border_router"
