@@ -27,8 +27,9 @@ PARALLEL_UPDATES = 1
 class PeblarUpdateEntityDescription(UpdateEntityDescription):
     """Describe an Peblar update entity."""
 
-    installed_fn: Callable[[PeblarVersionInformation], str | None]
     available_fn: Callable[[PeblarVersionInformation], str | None]
+    has_fn: Callable[[PeblarVersionInformation], bool] = lambda _: True
+    installed_fn: Callable[[PeblarVersionInformation], str | None]
 
 
 DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
@@ -41,8 +42,9 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
     PeblarUpdateEntityDescription(
         key="customization",
         translation_key="customization",
-        installed_fn=lambda x: x.current.customization,
         available_fn=lambda x: x.available.customization,
+        has_fn=lambda x: x.current.customization is not None,
+        installed_fn=lambda x: x.current.customization,
     ),
 )
 
