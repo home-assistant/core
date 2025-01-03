@@ -403,7 +403,7 @@
   },
   "services": {
     "api_call": {
-      "name": "API call",
+      "name": "API name",
       "description": "Calls Habitica API.",
       "fields": {
         "name": {
