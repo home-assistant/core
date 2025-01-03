@@ -9,7 +9,9 @@ from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 
@@ -29,11 +31,15 @@ async def test_setup_start_failed(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the setup that fails during velbus connect."""
+    """Test the setup that fails during velbus start task, should result in no entries."""
     controller.return_value.start.side_effect = ConnectionError()
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
+    assert (
+        er.async_entries_for_config_entry(entity_registry, config_entry.entry_id) == []
+    )
 
 
 async def test_unload_entry(
