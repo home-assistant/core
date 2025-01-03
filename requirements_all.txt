@@ -1140,7 +1140,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250102.0
+home-assistant-frontend==20250103.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.1
@@ -1758,6 +1758,9 @@ pyEmby==1.10
 
 # homeassistant.components.hikvision
 pyHik==0.3.2
+
+# homeassistant.components.homee
+pyHomee==1.2.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2939,7 +2942,7 @@ unifi_ap==0.0.2
 # homeassistant.components.unifiled
 unifiled==0.11
 
-# homeassistant.components.zha
+# homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
