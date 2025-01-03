@@ -10,6 +10,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.monzo import MonzoConfigEntry
 from homeassistant.components.monzo.api import AuthenticatedMonzoAPI
 from homeassistant.components.monzo.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -65,9 +66,9 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture
-def polling_config_entry(expires_at: int) -> MockConfigEntry:
+def polling_config_entry(expires_at: int) -> MonzoConfigEntry:
     """Create Monzo entry in Home Assistant."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
         unique_id=str(USER_ID),
@@ -84,6 +85,8 @@ def polling_config_entry(expires_at: int) -> MockConfigEntry:
             "profile": TITLE,
         },
     )
+    entry.runtime_data = None
+    return entry
 
 
 @pytest.fixture(name="basic_monzo")

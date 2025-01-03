@@ -11,14 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MonzoCoordinator
-from .const import DOMAIN
-from .coordinator import MonzoData
+from . import MonzoConfigEntry, MonzoCoordinator
+from .const import MODEL_POT
+from .coordinator import MonzoSensorData
 from .entity import MonzoBaseEntity
 
 
@@ -59,16 +58,14 @@ POT_SENSORS = (
     ),
 )
 
-MODEL_POT = "Pot"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MonzoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: MonzoCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: MonzoCoordinator = config_entry.runtime_data.coordinator
 
     accounts = [
         MonzoSensor(
@@ -102,7 +99,7 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         entity_description: MonzoSensorEntityDescription,
         index: int,
         device_model: str,
-        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
+        data_accessor: Callable[[MonzoSensorData], list[dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, index, device_model, data_accessor)
