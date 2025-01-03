@@ -32,16 +32,13 @@ async def async_setup_entry(
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):
     """Representation of a Genius Hub binary_sensor."""
 
+    _attr_name = None
+
     def __init__(self, broker, device, state_attr) -> None:
         """Initialize the binary sensor."""
         super().__init__(broker, device)
 
         self._state_attr = state_attr
-
-        if device.type[:21] == "Dual Channel Receiver":
-            self._attr_name = f"{device.type[:21]} {device.id}"
-        else:
-            self._attr_name = f"{device.type} {device.id}"
 
     @property
     def is_on(self) -> bool:
