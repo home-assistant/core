@@ -1,0 +1,41 @@
+# serializer version: 1
+# name: test_calendar[Pacific]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'test2',
+      'end_time': '2021-12-03 00:00:00',
+      'friendly_name': 'Mock Title',
+      'location': '',
+      'message': 'test',
+      'release_type': 'physicalRelease',
+      'start_time': '2021-12-02 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mock_title',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_calendar[London]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': True,
+      'description': 'test2',
+      'end_time': '2021-12-04 00:00:00',
+      'friendly_name': 'Mock Title',
+      'location': '',
+      'message': 'test',
+      'release_type': 'physicalRelease',
+      'start_time': '2021-12-03 00:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.mock_title',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
