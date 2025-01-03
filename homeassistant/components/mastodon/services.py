@@ -97,9 +97,9 @@ def setup_services(hass: HomeAssistant) -> None:
                     partial(
                         client.status_post,
                         status=status,
-                        media_ids=mediadata["id"],
-                        spoiler_text=content_warning,
                         visibility=visibility,
+                        spoiler_text=content_warning,
+                        media_ids=mediadata["id"],
                         sensitive=media_warning,
                     )
                 )
