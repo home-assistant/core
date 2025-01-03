@@ -55,37 +55,8 @@ async def _validate_auth(
     user_input: dict[str, str], heos: Heos, errors: dict[str, str]
 ) -> bool:
     """Validate authentication by signing in or out, otherwise populate errors if needed."""
-    authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
-    if authentication and CONF_USERNAME not in user_input:
-        errors[CONF_USERNAME] = "username_missing"
-        return False
-    if authentication and CONF_PASSWORD not in user_input:
-        errors[CONF_PASSWORD] = "password_missing"
-        return False
-
-    if authentication:
-        # Attempt to login
-        try:
-            await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        except CommandFailedError as err:
-            if err.error_id in (6, 8, 10):  # Auth-specific errors
-                errors["base"] = "invalid_auth"
-                _LOGGER.warning("Failed to sign-in to HEOS Account: %s", err)
-            else:
-                errors["base"] = "unknown"
-                _LOGGER.exception("Unexpected error occurred during sign-in")
-            return False
-        except HeosError:
-            errors["base"] = "unknown"
-            _LOGGER.exception("Unexpected error occurred during sign-in")
-            return False
-        else:
-            _LOGGER.debug(
-                "Successfully signed-in to HEOS Account: %s",
-                heos.signed_in_username,
-            )
-    else:
-        # Log out
+    if not user_input:
+        # Log out (neither username nor password provided)
         try:
             await heos.sign_out()
         except HeosError:
@@ -94,7 +65,38 @@ async def _validate_auth(
             return False
         else:
             _LOGGER.debug("Successfully signed-out of HEOS Account")
-    return True
+            return True
+
+    # Ensure both username and password are provided
+    authentication = CONF_USERNAME in user_input or CONF_PASSWORD in user_input
+    if authentication and CONF_USERNAME not in user_input:
+        errors[CONF_USERNAME] = "username_missing"
+        return False
+    if authentication and CONF_PASSWORD not in user_input:
+        errors[CONF_PASSWORD] = "password_missing"
+        return False
+
+    # Attempt to login (both username and password provided)
+    try:
+        await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+    except CommandFailedError as err:
+        if err.error_id in (6, 8, 10):  # Auth-specific errors
+            errors["base"] = "invalid_auth"
+            _LOGGER.warning("Failed to sign-in to HEOS Account: %s", err)
+        else:
+            errors["base"] = "unknown"
+            _LOGGER.exception("Unexpected error occurred during sign-in")
+        return False
+    except HeosError:
+        errors["base"] = "unknown"
+        _LOGGER.exception("Unexpected error occurred during sign-in")
+        return False
+    else:
+        _LOGGER.debug(
+            "Successfully signed-in to HEOS Account: %s",
+            heos.signed_in_username,
+        )
+        return True
 
 
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
