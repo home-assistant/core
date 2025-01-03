@@ -121,3 +121,21 @@ async def test_level_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state.state == "Cold"
+    # test select option
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.laundrywasher_temperature_level",
+            "option": "Whites",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.TemperatureControl.Commands.SetTemperature(
+            targetTemperatureLevel=2
+        ),
+    )
