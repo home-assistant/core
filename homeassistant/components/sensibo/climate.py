@@ -310,9 +310,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def swing_horizontal_modes(self) -> list[str] | None:
         """Return the list of available horizontal swing modes."""
-        if modes := self.device_data.horizontal_swing_modes:
-            return modes
-        return None
+        return self.device_data.horizontal_swing_modes
 
     @property
     def min_temp(self) -> float:
