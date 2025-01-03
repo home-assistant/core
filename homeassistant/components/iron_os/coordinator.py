@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import cast
 
@@ -151,7 +152,11 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
 
         return self.data or SettingsDataResponse()
 
-    async def write(self, characteristic: CharSetting, value: bool) -> None:
+    async def write(
+        self,
+        characteristic: CharSetting,
+        value: bool | Enum | float,
+    ) -> None:
         """Write value to the settings characteristic."""
 
         try:

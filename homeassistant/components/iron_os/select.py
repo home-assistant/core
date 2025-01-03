@@ -5,14 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-from typing import Any
 
 from pynecil import (
     AnimationSpeed,
     AutostartMode,
     BatteryType,
     CharSetting,
-    CommunicationError,
     LockingMode,
     LogoDuration,
     ScreenOrientationMode,
@@ -24,11 +22,9 @@ from pynecil import (
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IronOSConfigEntry
-from .const import DOMAIN
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -41,7 +37,7 @@ class IronOSSelectEntityDescription(SelectEntityDescription):
 
     value_fn: Callable[[SettingsDataResponse], str | None]
     characteristic: CharSetting
-    raw_value_fn: Callable[[str], Any] | None = None
+    raw_value_fn: Callable[[str], Enum]
 
 
 class PinecilSelect(StrEnum):
@@ -181,18 +177,10 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
-        if raw_value_fn := self.entity_description.raw_value_fn:
-            value = raw_value_fn(option)
-        try:
-            await self.coordinator.device.write(
-                self.entity_description.characteristic, value
-            )
-        except CommunicationError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="submit_setting_failed",
-            ) from e
-        await self.settings.async_request_refresh()
+        await self.settings.write(
+            self.entity_description.characteristic,
+            self.entity_description.raw_value_fn(option),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
