@@ -29,9 +29,12 @@ rules:
       MQTT broker, this happens during integration setup,
       and only one config entry is allowed.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: >
+      We choose to early exit the entry as it can take some time for the client
+      to connect. Waiting for the client would increase the overall setup time.
   unique-config-entry: done
-
   # Silver
   config-entry-unloading: done
   log-when-unavailable: done
@@ -86,7 +89,10 @@ rules:
     comment: >
       This is not possible because the integrations generates entities
       based on a user supplied config or discovery.
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: done
+    comment: >
+      This integration can also be reconfigured via options flow.
   dynamic-devices:
     status: done
     comment: |
@@ -119,4 +125,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use web sessions.
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'paho-mqtt==1.6.1' appears untyped

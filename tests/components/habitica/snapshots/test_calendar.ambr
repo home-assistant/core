@@ -1,5 +1,21 @@
 # serializer version: 1
-# name: test_api_events[calendar.test_user_dailies]
+# name: test_api_events[date range in the past-calendar.test_user_dailies]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_daily_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_s]
+  list([
+  ])
+# ---
+# name: test_api_events[default date range-calendar.test_user_dailies]
   list([
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -577,7 +593,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_daily_reminders]
+# name: test_api_events[default date range-calendar.test_user_daily_reminders]
   list([
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -819,7 +835,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_to_do_reminders]
+# name: test_api_events[default date range-calendar.test_user_to_do_reminders]
   list([
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
@@ -837,7 +853,7 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_to_do_s]
+# name: test_api_events[default date range-calendar.test_user_to_do_s]
   list([
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',

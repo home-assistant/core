@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
     LightEntity,
 )
@@ -13,11 +13,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
 from .entity import VeSyncDevice
 
 _LOGGER = logging.getLogger(__name__)
+MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 
 
 async def async_setup_entry(
@@ -84,15 +87,16 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP_KELVIN in kwargs:
             # get white temperature from HA data
-            color_temp = int(kwargs[ATTR_COLOR_TEMP])
+            color_temp = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
             # ensure value between min-max supported Mireds
-            color_temp = max(self.min_mireds, min(color_temp, self.max_mireds))
+            color_temp = max(MIN_MIREDS, min(color_temp, MAX_MIREDS))
             # convert Mireds to Percent value that api expects
             color_temp = round(
-                ((color_temp - self.min_mireds) / (self.max_mireds - self.min_mireds))
-                * 100
+                ((color_temp - MIN_MIREDS) / (MAX_MIREDS - MIN_MIREDS)) * 100
             )
             # flip cold/warm to what pyvesync api expects
             color_temp = 100 - color_temp
@@ -138,13 +142,13 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP
-    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
-    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+    _attr_min_color_temp_kelvin = 2700  # 370 Mireds
+    _attr_max_color_temp_kelvin = 6500  # 153 Mireds
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
-    def color_temp(self) -> int:
-        """Get device white temperature."""
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
         # get value from pyvesync library api,
         result = self.device.color_temp_pct
         try:
@@ -159,15 +163,16 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
                 ),
                 result,
             )
-            return 0
+            return None
         # flip cold/warm
         color_temp_value = 100 - color_temp_value
         # ensure value between 0-100
         color_temp_value = max(0, min(color_temp_value, 100))
         # convert percent value to Mireds
         color_temp_value = round(
-            self.min_mireds
-            + ((self.max_mireds - self.min_mireds) / 100 * color_temp_value)
+            MIN_MIREDS + ((MAX_MIREDS - MIN_MIREDS) / 100 * color_temp_value)
         )
         # ensure value between minimum and maximum Mireds
-        return max(self.min_mireds, min(color_temp_value, self.max_mireds))
+        return color_util.color_temperature_mired_to_kelvin(
+            max(MIN_MIREDS, min(color_temp_value, MAX_MIREDS))
+        )

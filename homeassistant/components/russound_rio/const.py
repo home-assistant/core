@@ -16,9 +16,6 @@ RUSSOUND_RIO_EXCEPTIONS = (
     asyncio.CancelledError,
 )
 
-
-CONNECT_TIMEOUT = 15
-
 MP_FEATURES_BY_FLAG = {
     FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON: MediaPlayerEntityFeature.VOLUME_MUTE
 }

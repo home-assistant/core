@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiorussound import Controller
+from aiorussound.const import FeatureFlag
 from aiorussound.models import PlayStatus, Source
 from aiorussound.rio import ZoneControlSurface
+from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -27,6 +30,8 @@ from .const import DOMAIN, MP_FEATURES_BY_FLAG
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_platform(
@@ -146,37 +151,50 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         return MediaPlayerState.ON
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Get the currently selected source."""
         return self._source.name
 
     @property
-    def source_list(self):
+    def source_list(self) -> list[str]:
         """Return a list of available input sources."""
-        return [x.name for x in self._sources.values()]
+        if TYPE_CHECKING:
+            assert self._client.rio_version
+        available_sources = (
+            [
+                source
+                for source_id, source in self._sources.items()
+                if source_id in self._zone.enabled_sources
+            ]
+            if is_feature_supported(
+                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            )
+            else self._sources.values()
+        )
+        return [x.name for x in available_sources]
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._source.song_name
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._source.artist_name
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._source.album_name
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self._source.cover_art_url
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1).
 
         Value is returned based on a range (0..50).

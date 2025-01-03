@@ -37,16 +37,19 @@ async def validate_input(data: dict[str, Any]) -> None:
             data[CONF_PASSWORD],
             counter_id,
         )
-        if not await client.check_credentials():
-            raise InvalidAuth
-    except PySuezError as ex:
-        raise CannotConnect from ex
-
-    if counter_id is None:
         try:
-            data[CONF_COUNTER_ID] = await client.find_counter()
+            if not await client.check_credentials():
+                raise InvalidAuth
         except PySuezError as ex:
-            raise CounterNotFound from ex
+            raise CannotConnect from ex
+
+        if counter_id is None:
+            try:
+                data[CONF_COUNTER_ID] = await client.find_counter()
+            except PySuezError as ex:
+                raise CounterNotFound from ex
+    finally:
+        await client.close_session()
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -79,7 +82,10 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"tout_sur_mon_eau": "Tout sur mon Eau"},
         )
 
 

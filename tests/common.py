@@ -491,7 +491,7 @@ _MONOTONIC_RESOLUTION = time.get_clock_info("monotonic").resolution
 def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
-    timestamp = dt_util.utc_to_timestamp(utc_datetime)
+    timestamp = utc_datetime.timestamp()
     for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue

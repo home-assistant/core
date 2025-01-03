@@ -67,9 +67,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STREAM_TYPE_HLS,
-    _DEPRECATED_STREAM_TYPE_WEB_RTC,
+from .const import (
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -133,16 +131,6 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Pleease use the CameraEntityFeature enum instead.
-_DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.ON_OFF, "2025.1"
-)
-_DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.STREAM, "2025.1"
-)
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -528,19 +516,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
-    def supported_features_compat(self) -> CameraEntityFeature:
-        """Return the supported features as CameraEntityFeature.
-
-        Remove this compatibility shim in 2025.1 or later.
-        """
-        features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = CameraEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
-
     @cached_property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
@@ -594,7 +569,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
                 self._deprecate_attr_frontend_stream_type_logged = True
             return self._attr_frontend_stream_type
-        if CameraEntityFeature.STREAM not in self.supported_features_compat:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
         if (
             self._webrtc_provider
@@ -823,9 +798,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        self.__supports_stream = (
-            self.supported_features_compat & CameraEntityFeature.STREAM
-        )
+        self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
         await self.async_refresh_providers(write_state=False)
 
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
@@ -865,7 +838,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
     ) -> _T | None:
         """Get first provider that supports this camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features_compat:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
 
         return await fn(self.hass, self)
@@ -923,7 +896,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def camera_capabilities(self) -> CameraCapabilities:
         """Return the camera capabilities."""
         frontend_stream_types = set()
-        if CameraEntityFeature.STREAM in self.supported_features_compat:
+        if CameraEntityFeature.STREAM in self.supported_features:
             if self._supports_native_sync_webrtc or self._supports_native_async_webrtc:
                 # The camera has a native WebRTC implementation
                 frontend_stream_types.add(StreamType.WEB_RTC)
@@ -943,8 +916,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         super().async_write_ha_state()
         if self.__supports_stream != (
-            supports_stream := self.supported_features_compat
-            & CameraEntityFeature.STREAM
+            supports_stream := self.supported_features & CameraEntityFeature.STREAM
         ):
             self.__supports_stream = supports_stream
             self._invalidate_camera_capabilities_cache()

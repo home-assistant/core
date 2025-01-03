@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -78,7 +77,6 @@ async def test_load_unload_config_entry(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -119,7 +117,7 @@ async def test_device_in_dr(
 ) -> None:
     """Test Gateway device registry data."""
     mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(
@@ -238,7 +236,7 @@ async def test_update_device(
     data = mock_smile_adam_2.async_update.return_value
 
     mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert (

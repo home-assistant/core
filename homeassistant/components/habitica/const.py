@@ -25,8 +25,6 @@ ATTR_DATA = "data"
 MANUFACTURER = "HabitRPG, Inc."
 NAME = "Habitica"
 
-UNIT_TASKS = "tasks"
-
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_SKILL = "skill"
 ATTR_TASK = "task"
