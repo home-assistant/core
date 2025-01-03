@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'heliport',
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': 'http://192.168.0.100/config',
     'connections': set({
       tuple(

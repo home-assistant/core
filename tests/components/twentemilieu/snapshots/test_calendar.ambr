@@ -81,6 +81,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_subentries': <ANY>,
     'configuration_url': 'https://www.twentemilieu.nl',
     'connections': set({
     }),
