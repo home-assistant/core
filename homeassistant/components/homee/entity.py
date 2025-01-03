@@ -80,6 +80,14 @@ class HomeeNodeEntity(Entity):
         self._node = node
         self._attr_unique_id = f"{entry.unique_id}-{node.id}"
         self._entry = entry
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(node.id))},
+            name=node.name,
+            model=get_name_for_enum(NodeProfile, node.profile),
+            sw_version=self._get_software_version(),
+            via_device=(DOMAIN, entry.runtime_data.settings.uid),
+        )
         self._host_connected = entry.runtime_data.connected
 
     async def async_added_to_hass(self) -> None:
@@ -111,7 +119,7 @@ class HomeeNodeEntity(Entity):
     @property
     def available(self) -> bool:
         """Return the availability of the underlying node."""
-        return (self._node.state == NodeState.AVAILABLE) and self._host_connected
+        return self._node.state == NodeState.AVAILABLE and self._host_connected
 
     async def async_update(self) -> None:
         """Fetch new state data for this node."""
@@ -132,7 +140,7 @@ class HomeeNodeEntity(Entity):
             ).get_value()
         return None
 
-    def has_attribute(self, attribute_type) -> bool:
+    def has_attribute(self, attribute_type: AttributeType) -> bool:
         """Check if an attribute of the given type exists."""
         return attribute_type in self._node.attribute_map
 

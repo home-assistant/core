@@ -31,9 +31,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.homee: Homee = None
+    homee: Homee
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
