@@ -494,6 +494,16 @@
           "description": "Choose between temperature/feels like/humidity."
         }
       }
+    },
+    "get_device_capabilities": {
+      "name": "Get device mode capabilities",
+      "description": "Retrieve the device capabilities for a specific device according to api requirements.",
+      "fields": {
+        "hvac_mode": {
+          "name": "[%key:component::climate::services::set_hvac_mode::fields::hvac_mode::name%]",
+          "description": "[%key:component::climate::services::set_hvac_mode::fields::hvac_mode::description%]"
+        }
+      }
     }
   },
   "selector": {
@@ -561,6 +571,9 @@
     },
     "no_data": {
       "message": "[%key:component::sensibo::config::error::no_devices%]"
+    },
+    "mode_not_exist": {
+      "message": "The entity does not support the choosen mode"
     }
   }
 }
