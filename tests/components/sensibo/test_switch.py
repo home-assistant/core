@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -46,9 +44,7 @@ async def test_switch(
 async def test_switch_timer(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch timer."""
@@ -72,9 +68,13 @@ async def test_switch_timer(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_on", True)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_id", "SzTGE4oZ4D")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_state_on", False)
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].timer_on = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].timer_id = "SzTGE4oZ4D"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].timer_state_on = False
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -99,7 +99,7 @@ async def test_switch_timer(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_on", False)
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].timer_on = False
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -112,9 +112,7 @@ async def test_switch_timer(
 async def test_switch_pure_boost(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch pure boost."""
@@ -133,10 +131,12 @@ async def test_switch_pure_boost(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_boost_enabled", True)
-    monkeypatch.setattr(
-        get_data[0].parsed["AAZZAAZZ"], "pure_measure_integration", None
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_boost_enabled = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_measure_integration = None
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -154,7 +154,9 @@ async def test_switch_pure_boost(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_boost_enabled", False)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_boost_enabled = False
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -203,9 +205,7 @@ async def test_switch_command_failure(
 async def test_switch_climate_react(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react."""
@@ -224,7 +224,7 @@ async def test_switch_climate_react(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", True)
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = True
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -242,7 +242,7 @@ async def test_switch_climate_react(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", False)
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = False
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -255,13 +255,14 @@ async def test_switch_climate_react(
 async def test_switch_climate_react_no_data(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo switch for climate react with no data."""
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_type", None)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_type = None
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

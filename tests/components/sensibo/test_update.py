@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,8 +25,7 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_update(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -36,7 +34,9 @@ async def test_update(
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "fw_ver", "SKY30048")
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].fw_ver = "SKY30048"
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

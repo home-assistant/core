@@ -7,7 +7,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pysensibo import APIV1, APIV2, SensiboClient, SensiboData
+from pysensibo import SensiboClient, SensiboData
 import pytest
 
 from homeassistant.components.sensibo.const import DOMAIN, PLATFORMS
@@ -62,17 +62,21 @@ async def load_int(
 @pytest.fixture(name="mock_client")
 async def get_client(
     hass: HomeAssistant,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
 ) -> AsyncGenerator[MagicMock]:
     """Mock SensiboClient."""
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient",
-        autospec=True,
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.sensibo.coordinator.SensiboClient",
+            autospec=True,
+        ) as mock_client,
+        patch("homeassistant.components.sensibo.util.SensiboClient", new=mock_client),
+    ):
         client = mock_client.return_value
         client.async_get_devices_data.return_value = get_data[0]
         client.async_get_me.return_value = get_data[1]
+        client.async_get_devices.return_value = get_data[2]
         yield client
 
 
@@ -81,24 +85,23 @@ async def get_data_from_library(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     load_json: tuple[dict[str, Any], dict[str, Any]],
-) -> AsyncGenerator[tuple[SensiboData, dict[str, Any]]]:
+) -> AsyncGenerator[tuple[SensiboData, dict[str, Any], dict[str, Any]]]:
     """Get data from api."""
-    aioclient_mock.request(
-        "GET",
-        url=APIV1 + "/users/me",
-        params={"apiKey": "1234567890"},
-        json=load_json[1],
-    )
-    aioclient_mock.request(
-        "GET",
-        url=APIV2 + "/users/me/pods",
-        params={"apiKey": "1234567890", "fields": "*"},
-        json=load_json[0],
-    )
     client = SensiboClient("1234567890", aioclient_mock.create_session(hass.loop))
-    me = await client.async_get_me()
-    data = await client.async_get_devices_data()
-    yield (data, me)
+    with patch.object(
+        client,
+        "async_get_me",
+        return_value=load_json[1],
+    ):
+        me = await client.async_get_me()
+    with patch.object(
+        client,
+        "async_get_devices",
+        return_value=load_json[0],
+    ):
+        data = await client.async_get_devices_data()
+        raw_data = await client.async_get_devices()
+    yield (data, me, raw_data)
     await client._session.close()
 
 

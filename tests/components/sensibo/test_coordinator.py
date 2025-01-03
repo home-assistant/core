@@ -9,7 +9,6 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.exceptions import AuthenticationError, SensiboError
 from pysensibo.model import SensiboData
-import pytest
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.sensibo.const import DOMAIN
@@ -23,9 +22,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_coordinator(
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo coordinator with errors."""
@@ -39,8 +37,10 @@ async def test_coordinator(
 
     config_entry.add_to_hass(hass)
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "heat")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].hvac_mode = "heat"
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].device_on = True
 
     mock_data = mock_client.async_get_devices_data
     mock_data.return_value = get_data[0]
@@ -69,9 +69,6 @@ async def test_coordinator(
     state = hass.states.get("climate.hallway")
     assert state.state == STATE_UNAVAILABLE
     mock_data.reset_mock()
-
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "heat")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
 
     mock_data.return_value = get_data[0]
     mock_data.side_effect = None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
@@ -71,12 +71,10 @@ async def test_migrate_entry_fails(hass: HomeAssistant, mock_client: MagicMock) 
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        side_effect=NoUsernameError("No username returned"),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    mock_client.async_get_me.side_effect = NoUsernameError("No username returned")
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 1
