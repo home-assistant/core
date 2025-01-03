@@ -7,6 +7,34 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Geocaching integration needs to re-authenticate your account"
+      },
+      "additional_config": {
+        "title": "Configure tracked objects",
+        "description": "The integration can track caches and trackables, for which entities will be generated",
+        "sections": {
+          "nearby_settings": {
+            "name": "Nearby Geocaches Settings",
+            "description": "Configure nearby geocaches settings. Set the max count to 0 to disable generating entities for nearby geocaches",
+            "data": {
+              "nearby_caches_max_count": "Nearby Geocaches Max Count",
+              "nearby_caches_radius": "Nearby Geocaches Radius"
+            }
+          },
+          "tracked_geocache_ids": {
+            "name": "Tracked Geocaches",
+            "description": "Optionally add geocaches to track",
+            "data": {
+              "tracked_cache_ref_code": "Geocache Reference Code"
+            }
+          },
+          "tracked_trackable_ids": {
+            "name": "Tracked Trackables",
+            "description": "Optionally add trackables to track",
+            "data": {
+              "tracked_trackable_ref_code": "Trackable Reference Code"
+            }
+          }
+        }
       }
     },
     "abort": {
@@ -31,7 +59,53 @@
       "hide_count": { "name": "Total hides" },
       "favorite_points": { "name": "Favorite points" },
       "souvenir_count": { "name": "Total souvenirs" },
-      "awarded_favorite_points": { "name": "Awarded favorite points" }
+      "awarded_favorite_points": { "name": "Awarded favorite points" },
+      "nearby_caches": { "name": "Nearby caches" },
+      "total_tracked_trackables_distance_traveled": {
+        "name": "Total tracked trackables distance traveled"
+      },
+      "cache_name": {
+        "name": "Name"
+      },
+      "cache_owner": {
+        "name": "Owner"
+      },
+      "cache_found_date": {
+        "name": "Found date"
+      },
+      "cache_found": {
+        "name": "Found"
+      },
+      "cache_favorite_points": {
+        "name": "Favorite points"
+      },
+      "cache_hidden_date": {
+        "name": "Hidden date"
+      },
+      "cache_location": {
+        "name": "Location"
+      },
+      "trackable_name": {
+        "name": "Name"
+      },
+      "trackable_owner": {
+        "name": "Owner"
+      },
+      "trackable_traveled_distance": {
+        "name": "Traveled distance"
+      },
+      "trackable_current_cache_code": {
+        "name": "Current cache code"
+      },
+      "trackable_current_cache_name": {
+        "name": "Current cache name"
+      },
+      "trackable_release_date": {
+        "name": "Release date"
+      },
+      "trackable_location": {
+        "name": "Location"
+      }
     }
   }
 }

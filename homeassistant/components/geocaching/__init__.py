@@ -1,17 +1,14 @@
 """The Geocaching integration."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 from .coordinator import GeocachingDataUpdateCoordinator
-
-PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

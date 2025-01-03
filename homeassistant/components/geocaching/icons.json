@@ -15,6 +15,54 @@
       },
       "awarded_favorite_points": {
         "default": "mdi:heart"
+      },
+      "nearby_caches": {
+        "default": "mdi:near-me"
+      },
+      "total_tracked_trackables_distance_traveled": {
+        "default": "mdi:map-marker-distance"
+      },
+      "cache_name": {
+        "default": "mdi:label"
+      },
+      "cache_owner": {
+        "default": "mdi:account"
+      },
+      "cache_found_date": {
+        "default": "mdi:calendar-search"
+      },
+      "cache_found": {
+        "default": "mdi:package-variant-closed-check"
+      },
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
+      },
+      "cache_hidden_date": {
+        "default": "mdi:calendar-badge"
+      },
+      "cache_location": {
+        "default": "mdi:map-marker"
+      },
+      "trackable_name": {
+        "default": "mdi:label"
+      },
+      "trackable_owner": {
+        "default": "mdi:account"
+      },
+      "trackable_traveled_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "trackable_current_cache_code": {
+        "default": "mdi:package-variant-closed"
+      },
+      "trackable_current_cache_name": {
+        "default": "mdi:package-variant-closed"
+      },
+      "trackable_release_date": {
+        "default": "mdi:calendar-badge"
+      },
+      "trackable_location": {
+        "default": "mdi:map-marker"
       }
     }
   }
