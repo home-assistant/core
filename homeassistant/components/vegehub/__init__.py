@@ -18,8 +18,6 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_SW_VERSION,
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_MAC,
@@ -74,8 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
         manufacturer=MANUFACTURER,
         model=MODEL,
         name=entry.data[CONF_HOST],
-        sw_version=entry.data[ATTR_SW_VERSION],
-        configuration_url=entry.data[ATTR_CONFIGURATION_URL],
+        sw_version=hub.sw_version,
+        configuration_url=hub.url,
     )
 
     async def unregister_webhook(_: Any) -> None:
