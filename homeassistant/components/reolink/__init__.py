@@ -27,6 +27,7 @@ from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
+from .views import PlaybackProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,6 +189,8 @@ async def async_setup_entry(
     )
 
     migrate_entity_ids(hass, config_entry.entry_id, host)
+
+    hass.http.register_view(PlaybackProxyView(hass))
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, snapshot_platform
 
@@ -32,42 +33,39 @@ async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo select."""
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
+        get_data[0].parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
     )
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state1 = hass.states.get("select.hallway_horizontal_swing")
-    assert state1.state == "fixedleft"
+    state = hass.states.get("select.hallway_horizontal_swing")
+    assert state.state == "fixedleft"
 
 
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo select service."""
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"],
+        get_data[0].parsed["ABC999111"],
         "active_features",
         [
             "timestamp",
@@ -78,45 +76,32 @@ async def test_select_set_option(
         ],
     )
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state1 = hass.states.get("select.hallway_horizontal_swing")
-    assert state1.state == "stopped"
+    state = hass.states.get("select.hallway_horizontal_swing")
+    assert state.state == "stopped"
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-            return_value=get_data,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-            return_value={"result": {"status": "failed"}},
-        ),
-        pytest.raises(
-            HomeAssistantError,
-        ),
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "failed"}
+    }
+
+    with pytest.raises(
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "fixedleft"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
-    state2 = hass.states.get("select.hallway_horizontal_swing")
-    assert state2.state == "stopped"
+    state = hass.states.get("select.hallway_horizontal_swing")
+    assert state.state == "stopped"
 
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"],
+        get_data[0].parsed["ABC999111"],
         "active_features",
         [
             "timestamp",
@@ -128,58 +113,37 @@ async def test_select_set_option(
         ],
     )
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-            return_value={
-                "result": {"status": "Failed", "failureReason": "No connection"}
-            },
-        ),
-        pytest.raises(
-            HomeAssistantError,
-        ),
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Failed", "failureReason": "No connection"}
+    }
+
+    with pytest.raises(
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "fixedleft"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
-    state2 = hass.states.get("select.hallway_horizontal_swing")
-    assert state2.state == "stopped"
+    state = hass.states.get("select.hallway_horizontal_swing")
+    assert state.state == "stopped"
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-            return_value=get_data,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-            return_value={"result": {"status": "Success"}},
-        ),
-    ):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: state1.entity_id, ATTR_OPTION: "fixedleft"},
-            blocking=True,
-        )
-    await hass.async_block_till_done()
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
 
-    state2 = hass.states.get("select.hallway_horizontal_swing")
-    assert state2.state == "fixedleft"
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: state.entity_id, ATTR_OPTION: "fixedleft"},
+        blocking=True,
+    )
+
+    state = hass.states.get("select.hallway_horizontal_swing")
+    assert state.state == "fixedleft"

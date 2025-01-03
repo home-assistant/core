@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from unittest.mock import patch
+from datetime import timedelta
+from typing import Any
+from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
+from pysensibo import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -45,14 +46,20 @@ async def test_button(
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]],
+)
 async def test_button_update(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Sensibo button."""
+    """Test the Sensibo button press."""
 
     state_button = hass.states.get("button.hallway_reset_filter")
     state_filter_clean = hass.states.get("binary_sensor.hallway_filter_clean_required")
@@ -62,48 +69,32 @@ async def test_button_update(
     assert state_filter_clean.state is STATE_ON
     assert state_filter_last_reset.state == "2022-03-12T15:24:26+00:00"
 
-    today = datetime(datetime.now().year + 1, 6, 19, 20, 0, 0).replace(
-        tzinfo=dt_util.UTC
-    )
-    today_str = today.isoformat()
+    today = dt_util.utcnow() + timedelta(minutes=10)
+    today = today.replace(microsecond=0)
+    today_str = today.isoformat(timespec="seconds")
     freezer.move_to(today)
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-            return_value=get_data,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
-            return_value={"status": "success"},
-        ),
-    ):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: state_button.entity_id,
-            },
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    mock_client.async_reset_filter.return_value = {"status": "success"}
 
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "filter_clean", False)
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {
+            ATTR_ENTITY_ID: state_button.entity_id,
+        },
+        blocking=True,
+    )
+
+    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "filter_clean", False)
     monkeypatch.setattr(
-        get_data.parsed["ABC999111"],
+        get_data[0].parsed["ABC999111"],
         "filter_last_reset",
         today,
     )
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state_button = hass.states.get("button.hallway_reset_filter")
     state_filter_clean = hass.states.get("binary_sensor.hallway_filter_clean_required")
@@ -116,31 +107,22 @@ async def test_button_update(
 async def test_button_failure(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
 ) -> None:
-    """Test the Sensibo button fails."""
+    """Test the Sensibo button failure."""
 
-    state_button = hass.states.get("button.hallway_reset_filter")
+    state = hass.states.get("button.hallway_reset_filter")
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-            return_value=get_data,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
-            return_value={"status": "failure"},
-        ),
-        pytest.raises(
-            HomeAssistantError,
-        ),
+    mock_client.async_reset_filter.return_value = {"status": "failure"}
+
+    with pytest.raises(
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: state_button.entity_id,
+                ATTR_ENTITY_ID: state.entity_id,
             },
             blocking=True,
         )

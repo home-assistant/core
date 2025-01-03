@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import hashlib
+import logging
 from typing import Any, Self
 
 from aiohttp import ClientError, ClientTimeout, StreamReader
@@ -23,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
+_LOGGER = logging.getLogger(__name__)
 _STORAGE_BACKUP = "backup"
 
 
@@ -208,6 +210,7 @@ class CloudBackupAgent(BackupAgent):
         """List backups."""
         try:
             backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+            _LOGGER.debug("Cloud backups: %s", backups)
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
 

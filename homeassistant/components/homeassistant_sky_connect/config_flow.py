@@ -5,13 +5,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
 
-from universal_silabs_flasher.const import ApplicationType
-
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
 )
+from homeassistant.components.homeassistant_hardware.util import ApplicationType
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,

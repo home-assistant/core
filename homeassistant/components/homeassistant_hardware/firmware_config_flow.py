@@ -7,16 +7,11 @@ import asyncio
 import logging
 from typing import Any
 
-from universal_silabs_flasher.const import ApplicationType
-
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
     AddonManager,
     AddonState,
-)
-from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
-    probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -32,9 +27,11 @@ from homeassistant.helpers.hassio import is_hassio
 from . import silabs_multiprotocol_addon
 from .const import ZHA_DOMAIN
 from .util import (
+    ApplicationType,
     get_otbr_addon_manager,
     get_zha_device_path,
     get_zigbee_flasher_addon_manager,
+    probe_silabs_firmware_type,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -1116,6 +1116,15 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda status: status is not None,
     ),
+    "voltmeter_value": RpcSensorDescription(
+        key="voltmeter",
+        sub_key="xvoltage",
+        name="Voltmeter value",
+        removal_condition=lambda _config, status, key: (
+            status[key].get("xvoltage") is None
+        ),
+        unit=lambda config: config["xvoltage"]["unit"] or None,
+    ),
     "analoginput": RpcSensorDescription(
         key="input",
         sub_key="percent",

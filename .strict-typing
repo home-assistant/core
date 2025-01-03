@@ -365,6 +365,7 @@ homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*

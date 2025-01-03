@@ -13,6 +13,7 @@ from .common import async_process_devices
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_COORDINATOR,
     VS_DISCOVERY,
     VS_FANS,
     VS_LIGHTS,
@@ -20,6 +21,7 @@ from .const import (
     VS_SENSORS,
     VS_SWITCHES,
 )
+from .coordinator import VeSyncDataCoordinator
 
 PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
@@ -47,6 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
+
+    coordinator = VeSyncDataCoordinator(hass, manager)
+
+    # Store coordinator at domain level since only single integration instance is permitted.
+    hass.data[DOMAIN][VS_COORDINATOR] = coordinator
 
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []

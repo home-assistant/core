@@ -3,7 +3,7 @@
   "name": "Reolink",
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": ["http", "webhook"],
   "dhcp": [
     {
       "hostname": "reolink*"

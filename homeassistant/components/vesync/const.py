@@ -4,10 +4,25 @@ DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
 
+UPDATE_INTERVAL = 60
+"""
+Update interval for DataCoordinator.
+
+The vesync daily quota formula is 3200 + 1500 * device_count.
+
+An interval of 60 seconds amounts 1440 calls/day which
+would be below the 4700 daily quota. For 2 devices, the
+total would be 2880.
+
+Using 30 seconds interval gives 8640 for 3 devices which
+exceeds the quota of 7700.
+"""
+
 VS_SWITCHES = "switches"
 VS_FANS = "fans"
 VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
+VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
 
 DEV_TYPE_TO_HA = {
