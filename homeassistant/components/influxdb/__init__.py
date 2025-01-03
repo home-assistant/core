@@ -20,6 +20,7 @@ import requests.exceptions
 import urllib3.exceptions
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -34,13 +35,13 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import event as event_helper, state as state_helper
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.entityfilter import (
@@ -76,6 +77,7 @@ from .const import (
     CONF_TAGS_ATTRIBUTES,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
+    DEFAULT_HOST,
     DEFAULT_HOST_V2,
     DEFAULT_MEASUREMENT_ATTR,
     DEFAULT_SSL_V2,
@@ -94,8 +96,6 @@ from .const import (
     RE_DIGIT_TAIL,
     RESUMED_MESSAGE,
     RETRY_DELAY,
-    RETRY_INTERVAL,
-    RETRY_MESSAGE,
     TEST_QUERY_V1,
     TEST_QUERY_V2,
     TIMEOUT,
@@ -201,7 +201,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | None]:
+def _generate_event_to_json(
+    conf: dict,
+) -> Callable[[Event], dict[str, Any] | None]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
@@ -475,34 +477,51 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-def _retry_setup(hass: HomeAssistant, config: ConfigType) -> None:
-    setup(hass, config)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up InfluxDB from a config entry."""
+    config = dict(entry.data.items())
 
-
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the InfluxDB component."""
-    conf = config[DOMAIN]
     try:
-        influx = get_influx_connection(conf, test_write=True)
-    except ConnectionError as exc:
-        _LOGGER.error(RETRY_MESSAGE, exc)
-        event_helper.call_later(
-            hass, RETRY_INTERVAL, lambda _: _retry_setup(hass, config)
+        influx = await hass.async_add_executor_job(get_influx_connection, config, True)
+    except ConnectionError as err:
+        raise ConfigEntryNotReady(err) from err
+
+    event_to_json = _generate_event_to_json(config)
+    max_tries = config.get(CONF_RETRY_COUNT)
+    influx_thread = hass.data[DOMAIN] = InfluxThread(
+        hass, influx, event_to_json, max_tries
+    )
+    influx_thread.start()
+
+    entry.runtime_data = influx_thread
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    influx_thread = entry.runtime_data
+
+    influx_thread.shutdown()
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the InfluxDB component."""
+    conf = config.get(DOMAIN)
+
+    if conf is not None:
+        if CONF_HOST not in conf and conf[CONF_API_VERSION] == DEFAULT_API_VERSION:
+            conf[CONF_HOST] = DEFAULT_HOST
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=conf,
+            )
         )
-        return True
-
-    event_to_json = _generate_event_to_json(conf)
-    max_tries = conf.get(CONF_RETRY_COUNT)
-    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries)
-    instance.start()
-
-    def shutdown(event):
-        """Shut down the thread."""
-        instance.queue.put(None)
-        instance.join()
-        influx.close()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 
@@ -520,8 +539,18 @@ class InfluxThread(threading.Thread):
         self.event_to_json = event_to_json
         self.max_tries = max_tries
         self.write_errors = 0
-        self.shutdown = False
-        hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
+        self._shutdown = False
+        self._unsubscribe = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, self._event_listener
+        )
+
+    def shutdown(self):
+        """Shutdown the influx thread."""
+        self._unsubscribe()
+
+        self.queue.put(None)
+        self.join()
+        self.influx.close()
 
     @callback
     def _event_listener(self, event):
@@ -544,13 +573,13 @@ class InfluxThread(threading.Thread):
         dropped = 0
 
         with suppress(queue.Empty):
-            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
+            while len(json) < BATCH_BUFFER_SIZE and not self._shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
                 count += 1
 
                 if item is None:
-                    self.shutdown = True
+                    self._shutdown = True
                 elif type(item) is tuple:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
@@ -593,7 +622,7 @@ class InfluxThread(threading.Thread):
 
     def run(self):
         """Process incoming events."""
-        while not self.shutdown:
+        while not self._shutdown:
             _, json = self.get_events_json()
             if json:
                 self.write_to_influxdb(json)
