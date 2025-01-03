@@ -106,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> bool:
     """Unload a VegeHub config entry."""
 
     # Unload platforms
