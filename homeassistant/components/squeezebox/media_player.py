@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
@@ -179,6 +180,7 @@ class SqueezeBoxMediaPlayerEntity(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -428,7 +430,11 @@ class SqueezeBoxMediaPlayerEntity(
         await self.coordinator.async_refresh()
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -450,6 +456,24 @@ class SqueezeBoxMediaPlayerEntity(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
+
+        if announce:
+            if media_type not in MediaType.MUSIC:
+                raise ValueError(
+                    "Announcements must have media type of 'music'.  Playlists are not supported"
+                )
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+            cmd = "announce"
+            self._player.set_announce_volume(
+                int(extra["announce_volume"])
+                if extra.get("announce_volume", None)
+                else None
+            )
+            self._player.set_announce_timeout(
+                int(extra["announce_timeout"])
+                if extra.get("announce_timeout", None)
+                else None
+            )
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
