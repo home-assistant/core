@@ -60,6 +60,10 @@ async def test_config_flow(
             HomeeAuthFailedException("wrong username or password"),
             {"base": "invalid_auth"},
         ),
+        (
+            Exception,
+            {"base": "unknown"},
+        ),
     ],
 )
 async def test_config_flow_errors(
