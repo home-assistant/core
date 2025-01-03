@@ -20,6 +20,7 @@ from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
+from aiounifi.interfaces.traffic_routes import TrafficRoutes
 from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItemT
@@ -31,6 +32,7 @@ from aiounifi.models.event import Event, EventKey
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
+from aiounifi.models.traffic_route import TrafficRoute, TrafficRouteSaveRequest
 from aiounifi.models.traffic_rule import TrafficRule, TrafficRuleEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
@@ -170,6 +172,16 @@ async def async_traffic_rule_control_fn(
     await hub.api.traffic_rules.update()
 
 
+async def async_traffic_route_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control traffic route state."""
+    traffic_route = hub.api.traffic_routes[obj_id].raw
+    await hub.api.request(TrafficRouteSaveRequest.create(traffic_route, target))
+    # Update the traffic routes so the UI is updated appropriately
+    await hub.api.traffic_routes.update()
+
+
 async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
     """Control outlet relay."""
     await hub.api.request(WlanEnableRequest.create(obj_id, target))
@@ -262,6 +274,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda traffic_rule: traffic_rule.description,
         object_fn=lambda api, obj_id: api.traffic_rules[obj_id],
         unique_id_fn=lambda hub, obj_id: f"traffic_rule-{obj_id}",
+    ),
+    UnifiSwitchEntityDescription[TrafficRoutes, TrafficRoute](
+        key="Traffic route control",
+        translation_key="traffic_route_control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.traffic_routes,
+        control_fn=async_traffic_route_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, traffic_route: traffic_route.enabled,
+        name_fn=lambda traffic_route: traffic_route.description,
+        object_fn=lambda api, obj_id: api.traffic_routes[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"traffic_route-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Ports, Port](
         key="PoE port control",

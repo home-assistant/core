@@ -174,6 +174,7 @@ def fixture_request(
     dpi_group_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
+    traffic_route_payload: list[dict[str, Any]],
     site_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
@@ -214,6 +215,7 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
+        mock_get_request(f"/v2/api/site/{site_id}/trafficroutes", traffic_route_payload)
 
     return __mock_requests
 
@@ -288,6 +290,12 @@ def fixture_system_information_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="traffic_rule_payload")
 def traffic_rule_payload_data() -> list[dict[str, Any]]:
     """Traffic rule data."""
+    return []
+
+
+@pytest.fixture(name="traffic_route_payload")
+def traffic_route_payload_data() -> list[dict[str, Any]]:
+    """Traffic route data."""
     return []
 
 
