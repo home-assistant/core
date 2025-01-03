@@ -297,12 +297,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if "targetTemperature" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_target_temperature_in_features",
-            )
-
         temperature: float = kwargs[ATTR_TEMPERATURE]
         if temperature == self.target_temperature:
             return
@@ -317,11 +311,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if "fanLevel" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_fan_level_in_features",
-            )
         if fan_mode not in AVAILABLE_FAN_MODES:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -367,11 +356,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        if "swing" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_swing_in_features",
-            )
         if swing_mode not in AVAILABLE_SWING_MODES:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
