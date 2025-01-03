@@ -1,0 +1,6392 @@
+{
+  "code": 0,
+  "message": "Success",
+  "msgDetails": "null",
+  "requestId": "2957.1209.16505084915195977",
+  "result": [
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2124",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499102960,
+      "resourceId": "14.4.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "13.62.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2182",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2183",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2184",
+      "value": "112",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2185",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.119.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2186",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2187",
+      "value": "3",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2188",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2189",
+      "value": "3",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650432215640,
+      "resourceId": "0.13.85",
+      "value": "136.95",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650508215760,
+      "resourceId": "0.13.85",
+      "value": "175145.000000",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648378617109,
+      "resourceId": "8.0.8101",
+      "value": "\u6b21\u5367\u65e0\u7ebf\u5f00\u5173D1\uff08\u8d34\u5899\u5f0f\u53cc\u952e\u7248\uff09",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.2223",
+      "value": "0.0.0_0036",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1648378616815,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0002014d29",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2190",
+      "value": "5",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2191",
+      "value": "10",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2192",
+      "value": "3",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.2228",
+      "value": "3841",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1639323006916,
+      "resourceId": "8.0.2229",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650478432906,
+      "resourceId": "4.1.85",
+      "value": "0",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.20.85",
+      "value": "{\"mode\":1,\"cover\":1}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.66.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2175",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "0.129.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2175",
+      "value": "3",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2176",
+      "value": "168",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1623798609000,
+      "resourceId": "0.43.85",
+      "value": "458",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057176233,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650506686841,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650505865535,
+      "resourceId": "0.3.85",
+      "value": "100750",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2180",
+      "value": "1",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2181",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650388978709,
+      "resourceId": "13.2.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650423600628,
+      "resourceId": "1.1.85",
+      "value": "90",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1648347168201,
+      "resourceId": "8.0.2041",
+      "value": "352",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.516.85",
+      "value": "58",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2106",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2108",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.132.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1627317474829,
+      "resourceId": "14.18.85",
+      "value": "[1,[\"0 23 * * 1,2,3,4,5,6,0\",\"M0_T26_S1_D0\"],[\"30 23 * * 1,2,3,4,5,6,0\",\"M0_T28_S1_D0\"],[\"30 6 * * 2,3,4,5,6,0,1\",\"M0_T27_S1_D0\"],[\"0 7 * * 2,3,4,5,6,0,1\",\"M0_T27_S1_D0\"]]",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650197879771,
+      "resourceId": "14.2.85",
+      "value": "183",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1626505653710,
+      "resourceId": "14.1.1000",
+      "value": "30",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1614875090057,
+      "resourceId": "4.14.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650508074925,
+      "resourceId": "0.3.85",
+      "value": "536.000000",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1648282210074,
+      "resourceId": "8.0.8101",
+      "value": "TVOC\u4f20\u611f\u5668",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.51.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648282210074,
+      "resourceId": "8.0.8102",
+      "value": "\u5973\u513f\u623f\u95f4",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "14.129.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "0.130.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "14.130.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638441018249,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2154",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1638441018249,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2157",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2158",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650499449283,
+      "resourceId": "0.3.85",
+      "value": "134",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2175",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2193",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2194",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2195",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2196",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2197",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1630238340000,
+      "resourceId": "14.44.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1649204270037,
+      "resourceId": "14.93.85",
+      "value": "180",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2008",
+      "value": "3055",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2007",
+      "value": "132",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2006",
+      "value": "26",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1620655881236,
+      "resourceId": "14.78.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648905352735,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "0.3.85",
+      "value": "140",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650464446628,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650495641210,
+      "resourceId": "0.13.85",
+      "value": "1062.22",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1645837742556,
+      "resourceId": "14.11.85",
+      "value": "100",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2002",
+      "value": "397",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1648393141940,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.109.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1612509876008,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0018",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1646380813198,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1638439406509,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2002",
+      "value": "1780",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1637851963430,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650076442373,
+      "resourceId": "8.0.2004",
+      "value": "3",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2175",
+      "value": "3",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2176",
+      "value": "168",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2177",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.53.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2178",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.53.85",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1620655881234,
+      "resourceId": "14.110.85",
+      "value": "15",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2180",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2181",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2182",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2183",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2184",
+      "value": "112",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2185",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506956029,
+      "resourceId": "8.0.2007",
+      "value": "79",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650506956029,
+      "resourceId": "8.0.2008",
+      "value": "3005",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650492122221,
+      "resourceId": "3.2.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648287855567,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1649931936651,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1638439406509,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1630238417000,
+      "resourceId": "0.8.85",
+      "value": "57",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1638439406509,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650508097801,
+      "resourceId": "8.0.2006",
+      "value": "30",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650508097801,
+      "resourceId": "8.0.2007",
+      "value": "150",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2186",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1649237502728,
+      "resourceId": "4.1.85",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650499459762,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2187",
+      "value": "3",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2188",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2189",
+      "value": "3",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650481936910,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650508097801,
+      "resourceId": "8.0.2002",
+      "value": "5",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650067285725,
+      "resourceId": "14.6.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2190",
+      "value": "5",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2191",
+      "value": "10",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2192",
+      "value": "3",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2193",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2194",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2195",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2196",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648299384533,
+      "resourceId": "8.0.2041",
+      "value": "417",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.74.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.2002",
+      "value": "11",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650508032652,
+      "resourceId": "8.0.2244",
+      "value": "010e04cf8cdf3c7da659f33604cf8cdf3c75184c016c12951e04cf8cdf3c7b95c5011725750400158d00041bceeb012225d69904cf8cdf3c7b859a013825dd3104cf8cdf3c7a075a0137253d0904cf8cdf3c733efa014d25c7e400158d0001e6a7aa016325928500158d0001e5b69b015d25000004cf8cdf3c7a5915012224aec104cf8cdf3c78e823014a256c7d04cf8cdf3c88e1ec018e25f2c904cf8cdf3c7607f3014c25037b00158d0002013771016225e36704cf8cdf3c7b965b012e2581c335b0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2197",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.2007",
+      "value": "47",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1637851963430,
+      "resourceId": "8.0.2006",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.122.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881226,
+      "resourceId": "14.68.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c177414b",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "8.0.2002",
+      "value": "16",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1635884922784,
+      "resourceId": "8.0.2244",
+      "value": "010304cf8cdf3c7d830e304600158d00048520a1014d1a0a2904cf8cdf3c7585ed01651aeb3304cf8cdf3c7f7a25015b1ac2deaea9",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650508367230,
+      "resourceId": "8.0.2006",
+      "value": "46",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1634987928401,
+      "resourceId": "14.7.85",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1648679662836,
+      "resourceId": "8.0.2115",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1649781316917,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1623798609000,
+      "resourceId": "0.41.85",
+      "value": "57",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650492864230,
+      "resourceId": "13.1.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650508097801,
+      "resourceId": "8.0.2022",
+      "value": "93",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650508097801,
+      "resourceId": "8.0.2023",
+      "value": "17",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.134.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1626271394903,
+      "resourceId": "8.0.2019",
+      "value": "7369",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648389939613,
+      "resourceId": "4.1.600",
+      "value": "fan",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2106",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "0.1.85",
+      "value": "12",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2108",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648377396751,
+      "resourceId": "8.0.8102",
+      "value": "\u4e3b\u5367",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1626271394897,
+      "resourceId": "8.0.2018",
+      "value": "37",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650506956046,
+      "resourceId": "0.2.85",
+      "value": "7187",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648377375396,
+      "resourceId": "8.0.8101",
+      "value": "\u4e3b\u5367\u4eba\u4f53\u4f20\u611f\u5668T1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "14.132.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650506796600,
+      "resourceId": "8.0.2021",
+      "value": "time:2022-4-21 10:6:36.518,channel 0x0b, pan 0xef11, mac 0x04cf8cdf3c7d830e, version 6.16 noUartMsgCount:1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1626271394910,
+      "resourceId": "14.26.85",
+      "value": "{\"match\":1,\"models\":[{\"directs\":[1,2,3,4,5],\"disD\":0,\"disL\":1,\"disS\":0,\"mode\":0,\"speeds\":[0,1,2,3],\"supportDirect\":true,\"supportLight\":false,\"supportWindSpeed\":true,\"temps\":[16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],\"type\":2},{\"directs\":[1,2,3,4,5],\"disD\":0,\"disL\":1,\"disS\":0,\"mode\":1,\"speeds\":[0,1,2,3],\"supportDirect\":true,\"supportLight\":false,\"supportWindSpeed\":true,\"temps\":[16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],\"type\":2},{\"directs\":[1,2,3,4,5],\"disD\":0,\"disL\":1,\"disS\":0,\"mode\":2,\"speeds\":[0,1,2,3],\"supportDirect\":true,\"supportLight\":false,\"supportWindSpeed\":true,\"temps\":[],\"type\":2},{\"directs\":[1,2,3,4,5],\"disD\":0,\"disL\":1,\"disS\":0,\"mode\":3,\"speeds\":[1,2,3],\"supportDirect\":true,\"supportLight\":false,\"supportWindSpeed\":true,\"temps\":[],\"type\":2},{\"directs\":[1,2,3,4,5],\"disD\":0,\"disL\":1,\"disS\":0,\"mode\":4,\"speeds\":[0,1,2,3],\"supportDirect\":true,\"supportLight\":false,\"supportWindSpeed\":true,\"temps\":[16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],\"type\":2}],\"type\":2}",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1635081613193,
+      "resourceId": "8.0.2041",
+      "value": "19",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1648389939613,
+      "resourceId": "4.1.28",
+      "value": "\u4e3b\u5367\u65b0\u98ce\u673a",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "0.1.85",
+      "value": "2359",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2199",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508443009,
+      "resourceId": "8.0.2024",
+      "value": "11",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650508443009,
+      "resourceId": "8.0.2025",
+      "value": "6",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1642661789198,
+      "resourceId": "8.0.2002",
+      "value": "0",
+      "subjectId": "virtual.57362614367713"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "8.0.2029",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650478527777,
+      "resourceId": "0.12.85",
+      "value": "0",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650508443009,
+      "resourceId": "8.0.2026",
+      "value": "-56",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648389939613,
+      "resourceId": "4.1.29",
+      "value": "fan",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650197877560,
+      "resourceId": "4.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "4.2.85",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650492122219,
+      "resourceId": "4.4.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2124",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2188",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2189",
+      "value": "3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.9002",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.45.85",
+      "value": "19",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1635082213001,
+      "resourceId": "8.0.8101",
+      "value": "\u6b21\u5367\u7a97\u5e18",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1608909910766,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2023",
+      "value": "0",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650506956029,
+      "resourceId": "8.0.2022",
+      "value": "0",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2190",
+      "value": "5",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638437999428,
+      "resourceId": "4.2.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2193",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.39.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2194",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2191",
+      "value": "10",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2192",
+      "value": "3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499102959,
+      "resourceId": "14.2.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2197",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2195",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2196",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508433981,
+      "resourceId": "13.25.85",
+      "value": "{\"freesize\":0,\"othersize\":0,\"sdstatus\":1,\"totalsize\":0}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650505809103,
+      "resourceId": "0.3.85",
+      "value": "100400",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1648737037472,
+      "resourceId": "4.1.28",
+      "value": "\u667a\u80fd\u955c\u7535\u91cf\u7edf\u8ba1\u63d2\u5ea7",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1648737037472,
+      "resourceId": "4.1.29",
+      "value": "sweeping_robot",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650504385435,
+      "resourceId": "0.1.85",
+      "value": "23",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1646266269478,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c179afac",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650506686860,
+      "resourceId": "0.3.85",
+      "value": "68",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2182",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650202791511,
+      "resourceId": "13.4.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2183",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2180",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2181",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2186",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2187",
+      "value": "3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2184",
+      "value": "112",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2185",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648393141940,
+      "resourceId": "8.0.2011",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1648393141940,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "1.2.85",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.72.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2175",
+      "value": "3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2176",
+      "value": "168",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.124.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650492176635,
+      "resourceId": "8.0.2157",
+      "value": "42688",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2022",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "8.0.2158",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2106",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.128.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2108",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1614875050023,
+      "resourceId": "14.44.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2023",
+      "value": "0",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.55.85",
+      "value": "20",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1650500394854,
+      "resourceId": "0.3.85",
+      "value": "0",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1626271394946,
+      "resourceId": "14.28.85",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1613006572597,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1613006820010,
+      "resourceId": "8.0.8101",
+      "value": "\u5ba2\u5385\u8fc7\u9053\u4eba\u4f53\u4f20\u611f\u56681",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1626271394908,
+      "resourceId": "13.2.85",
+      "value": "2",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "4.31.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648679661790,
+      "resourceId": "14.1.85",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650506900710,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0002013771",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2157",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1649469738846,
+      "resourceId": "14.10.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1648392052350,
+      "resourceId": "8.0.2093",
+      "value": "ir.866089998112366592,1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "8.0.2094",
+      "value": "lumi.158d00048520a1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1645837742556,
+      "resourceId": "14.21.85",
+      "value": "5162041",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.1031",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.518.85",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.1032",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2124",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057172231,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d00010fd5fb"
+    },
+    {
+      "timeStamp": 1638438131032,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1637855124114,
+      "resourceId": "8.0.2002",
+      "value": "260",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650506799730,
+      "resourceId": "8.0.2007",
+      "value": "129",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650506799730,
+      "resourceId": "8.0.2008",
+      "value": "3042",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650470388141,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1637855124114,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1648978524672,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650506799730,
+      "resourceId": "8.0.2006",
+      "value": "95",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650501085437,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1648378599856,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650481936910,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2002",
+      "value": "57",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1638438131032,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1614393531270,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1638438131032,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1613006294217,
+      "resourceId": "8.0.2097",
+      "value": "5",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1638438131032,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1637855124114,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650206390374,
+      "resourceId": "8.0.2022",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1632747953837,
+      "resourceId": "14.1.113",
+      "value": "-1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.48.85",
+      "value": "30",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1632751001656,
+      "resourceId": "14.1.111",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650481936910,
+      "resourceId": "8.0.2007",
+      "value": "150",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.14.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.46.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2008",
+      "value": "3055",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1648381861581,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1626505653713,
+      "resourceId": "14.1.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1648381861581,
+      "resourceId": "8.0.2011",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1648378599417,
+      "resourceId": "8.0.2014",
+      "value": "0",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1648288644406,
+      "resourceId": "4.1.29",
+      "value": "ctrl_plug_default",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1648288644406,
+      "resourceId": "4.1.28",
+      "value": "Outlet",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.125.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1608980680373,
+      "resourceId": "8.0.2022",
+      "value": "10",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2023",
+      "value": "20",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2022",
+      "value": "9",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1630238417000,
+      "resourceId": "13.11.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648978524672,
+      "resourceId": "8.0.2033",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650206390374,
+      "resourceId": "8.0.2002",
+      "value": "314",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1632600528717,
+      "resourceId": "8.0.2244",
+      "value": "010c04cf8cdf3c7a5915000004cf8cdf3c7a5915006748d9b104cf8cdf3c8e78df02541a3d0904cf8cdf3c733efa014069aec104cf8cdf3c78e823017b69a07700158d0001e6a7aa017e69dd3104cf8cdf3c7a075a015969951e04cf8cdf3c7b95c5015169ec0a00158d0002013771018469007204cf8cdf3c7607f3016a6923ef04cf8cdf3c7b859a016069b95504cf8cdf3c7b965b01586909a200158d00041bceeb013c698ab86890",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1650205586983,
+      "resourceId": "8.0.2007",
+      "value": "122",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1650206390374,
+      "resourceId": "8.0.2006",
+      "value": "40",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.36.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650506051040,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0002014d29",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "4.32.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.9002",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1632751000615,
+      "resourceId": "14.9.111",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1589809205310,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1589809205310,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648283933460,
+      "resourceId": "8.0.2011",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.115.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "13.23.85",
+      "value": "1623885300000",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.131.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1626271499433,
+      "resourceId": "8.0.8101",
+      "value": "\u6e29\u6e7f\u5ea6\u4f20\u611f\u5668",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1626271499064,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2008",
+      "value": "2713",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1650505809103,
+      "resourceId": "0.1.85",
+      "value": "2356",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1642661789199,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "virtual.57362614367713"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2003",
+      "value": "53",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2002",
+      "value": "5",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2001",
+      "value": "14",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2007",
+      "value": "87",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1589809205310,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1605928980652,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648283933460,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648288782365,
+      "resourceId": "8.0.8101",
+      "value": "\u5ba2\u5385\u9910\u684c\u63d2\u5ea7",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2175",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1648288644422,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "4.34.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650499090581,
+      "resourceId": "0.4.85",
+      "value": "161",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1626271394905,
+      "resourceId": "14.25.85",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650503068039,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1648282757399,
+      "resourceId": "8.0.2041",
+      "value": "366",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c177414b",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1589686066920,
+      "resourceId": "8.0.8112",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1589809205310,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1626271691972,
+      "resourceId": "8.0.8101",
+      "value": "\u6b21\u5367\u7a7a\u8c03\u4f34\u4fa3p3",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1601455275978,
+      "resourceId": "8.0.8107",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1626271361121,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1626271394956,
+      "resourceId": "8.0.8103",
+      "value": "0001020304",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648730571154,
+      "resourceId": "14.11.85",
+      "value": "100",
+      "subjectId": "lumi1.7811dc93a6dd"
+    },
+    {
+      "timeStamp": 1626271394956,
+      "resourceId": "8.0.8104",
+      "value": "00010203",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1634988007504,
+      "resourceId": "8.0.8102",
+      "value": "\u751f\u6d3b\u9633\u53f0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1648283933472,
+      "resourceId": "8.0.2041",
+      "value": "417",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1650208189379,
+      "resourceId": "8.0.2045",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1630634597981,
+      "resourceId": "8.0.2041",
+      "value": "213",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1620658570927,
+      "resourceId": "14.74.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499090581,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1589809205310,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1634988007767,
+      "resourceId": "8.0.8101",
+      "value": "\u53f3 \u9633\u53f0\u7a97\u5e18",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1619625125165,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0023",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1626271394956,
+      "resourceId": "8.0.8105",
+      "value": "00101e01101e02000003000004101e",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650506480659,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0001ef7f25",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1650423600598,
+      "resourceId": "14.2.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.46.85",
+      "value": "100",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1626271343147,
+      "resourceId": "8.0.8107",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650501085437,
+      "resourceId": "0.4.85",
+      "value": "32",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.51.85",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.58.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648731909755,
+      "resourceId": "8.0.2045",
+      "value": "0",
+      "subjectId": "lumi1.7811dc93a6dd"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1619625218386,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0027",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2190",
+      "value": "5",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2191",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2192",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650501116444,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2186",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.4.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2187",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2184",
+      "value": "112",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2185",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650166498122,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2188",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2189",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "0.130.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881230,
+      "resourceId": "14.105.85",
+      "value": "15",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638438322086,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1638438322086,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1638438322086,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2182",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2183",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2180",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2181",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2175",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.34.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2176",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1634987986147,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1648615775097,
+      "resourceId": "8.0.9001",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1650506956029,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "14.21.85",
+      "value": "5162041",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650508203964,
+      "resourceId": "8.0.2008",
+      "value": "3000",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650498612044,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650506686841,
+      "resourceId": "8.0.2007",
+      "value": "68",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650197270360,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1650455539175,
+      "resourceId": "0.12.85",
+      "value": "0",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1650508203964,
+      "resourceId": "8.0.2006",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650508203964,
+      "resourceId": "8.0.2002",
+      "value": "12",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650507463328,
+      "resourceId": "8.0.2244",
+      "value": "010e04cf8cdf3c733efa000004cf8cdf3c7a5915013604198b04cf8cdf3c75b9b1017312feae00158d00012a8a3f015812951e04cf8cdf3c7b95c5013e25aec104cf8cdf3c78e8230146250eb754ef44100031821d013225f2c904cf8cdf3c7607f3013125e36704cf8cdf3c7b965b013b25dd3104cf8cdf3c7a075a013f251d8500158d0001ef7f25016025d69904cf8cdf3c7b859a010425c02104cf8cdf3c7da659014e256c7d04cf8cdf3c88e1ec014c25750400158d00041bceeb01442582f851f4",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650506480659,
+      "resourceId": "8.0.2007",
+      "value": "132",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.117.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.86.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506480659,
+      "resourceId": "8.0.2008",
+      "value": "3018",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1650506480659,
+      "resourceId": "8.0.2003",
+      "value": "17",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2002",
+      "value": "15",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1637852951904,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1648700494179,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fd1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "0.129.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.1.2044",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.6.113",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.514.85",
+      "value": "197",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650288608570,
+      "resourceId": "3.1.85",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.1.2044",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1630238393000,
+      "resourceId": "4.46.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648389939400,
+      "resourceId": "8.0.8102",
+      "value": "\u4e3b\u5367",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1648389939797,
+      "resourceId": "8.0.8101",
+      "value": "\u4e3b\u5367\u65b0\u98ce\u673a \u5899\u58c1\u63d2\u5ea7\uff08Zigbee\u7248\uff09",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.75.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.54.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648729929823,
+      "resourceId": "8.0.2002",
+      "value": "0",
+      "subjectId": "lumi1.7811dc93a6dd"
+    },
+    {
+      "timeStamp": 1614875063539,
+      "resourceId": "8.0.2030",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1644548639912,
+      "resourceId": "14.88.85",
+      "value": "{\"x\":38, \"y\":23}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1637852208999,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1619627232162,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0039",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.130.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "14.10.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1637854587172,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638438997027,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638438997027,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638438997027,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2230",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650492107128,
+      "resourceId": "4.4.85",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650405713311,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "14.11.85",
+      "value": "40",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650470399352,
+      "resourceId": "4.21.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648292453829,
+      "resourceId": "4.1.600",
+      "value": "ctrl_plug_default",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2008",
+      "value": "3090",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650503068039,
+      "resourceId": "8.0.2007",
+      "value": "150",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650492107021,
+      "resourceId": "8.0.2002",
+      "value": "145",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1626898668611,
+      "resourceId": "8.0.2244",
+      "value": "010254ef44100004c695d8ea00158d0003d3c68701641a50e400158d0003d3c5a201421af036012e",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650508152745,
+      "resourceId": "8.0.2022",
+      "value": "2",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1637854587172,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2003",
+      "value": "567",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1646268690296,
+      "resourceId": "8.0.2002",
+      "value": "21",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1648423758905,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.76.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.129.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "0.2.85",
+      "value": "8198",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1650468600378,
+      "resourceId": "14.147.85",
+      "value": "30",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648736846376,
+      "resourceId": "8.0.2107",
+      "value": "0",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "0.128.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.56.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1614875112388,
+      "resourceId": "14.49.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1649586442290,
+      "resourceId": "13.5.85",
+      "value": "4",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.77.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1635500107054,
+      "resourceId": "13.21.85",
+      "value": "{\"4.1.85\": 0}",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650505865534,
+      "resourceId": "0.2.85",
+      "value": "7183",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1637874162766,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0001ef7f25",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1648650685867,
+      "resourceId": "8.0.2033",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638437999428,
+      "resourceId": "0.1.85",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.107.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1617207175346,
+      "resourceId": "4.8.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650492167474,
+      "resourceId": "8.0.2021",
+      "value": "{\"tm_wifi_resume\":\"04-21 06:01:47\",\"wifi_loss_reason\":\"102\",\"tm_wifi_loss\":\"04-21 06:00:38\"}",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1614873234218,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1615387679624,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1614873234218,
+      "resourceId": "8.0.2022",
+      "value": "1.1.0_0021.7788",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1615387679971,
+      "resourceId": "8.0.8101",
+      "value": "Aqara\u667a\u80fd\u7761\u7720\u76d1\u6d4b\u5e26",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508487815,
+      "resourceId": "8.0.2025",
+      "value": "6",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650508203964,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c177414b",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650508487815,
+      "resourceId": "8.0.2024",
+      "value": "15",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650508487815,
+      "resourceId": "8.0.2026",
+      "value": "-55",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650357724297,
+      "resourceId": "8.0.2041",
+      "value": "62",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650492107474,
+      "resourceId": "8.0.2029",
+      "value": "0",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650508294305,
+      "resourceId": "8.0.2021",
+      "value": "time:2022-4-21 10:31:34.292,channel 0x0f, pan 0xed78, mac 0x54ef44100004c695, version 6.16 noUartMsgCount:4",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650497725899,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1645935445561,
+      "resourceId": "8.0.2025",
+      "value": "6",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650492124365,
+      "resourceId": "8.0.2024",
+      "value": "15",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1607948576344,
+      "resourceId": "8.0.2022",
+      "value": "3.0.7_0008.0515",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1648936912960,
+      "resourceId": "8.0.2029",
+      "value": "0",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650508489502,
+      "resourceId": "8.0.2026",
+      "value": "-40",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.8107",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2003",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "8.0.2002",
+      "value": "380",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638439990243,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1637854355645,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1648285915303,
+      "resourceId": "8.0.2041",
+      "value": "406",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.90.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2006",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638439990243,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1638439990243,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650057172213,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1649204269921,
+      "resourceId": "14.92.85",
+      "value": "55",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650505809103,
+      "resourceId": "8.0.2008",
+      "value": "2589",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650502546236,
+      "resourceId": "8.0.2007",
+      "value": "135",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2010",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650505809103,
+      "resourceId": "8.0.2006",
+      "value": "23",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1648717788608,
+      "resourceId": "0.1.85",
+      "value": "2577",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2011",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648284508449,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2012",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.2.1000",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648284508449,
+      "resourceId": "8.0.2004",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2013",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1638439325864,
+      "resourceId": "8.0.2003",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2010",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650505809103,
+      "resourceId": "8.0.2002",
+      "value": "18",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2011",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650212148319,
+      "resourceId": "8.0.2001",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650495641210,
+      "resourceId": "0.12.85",
+      "value": "0",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.54.85",
+      "value": "22",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650492107474,
+      "resourceId": "8.0.2002",
+      "value": "41",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1648737037472,
+      "resourceId": "4.1.600",
+      "value": "sweeping_robot",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2050",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1580716894454,
+      "resourceId": "8.0.2022",
+      "value": "10",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.131.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2029",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.73.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1619627499606,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0021",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2024",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2025",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881231,
+      "resourceId": "4.52.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2026",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881232,
+      "resourceId": "14.108.85",
+      "value": "15",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650500161372,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2027",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2028",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1614875098357,
+      "resourceId": "1.10.85",
+      "value": "34",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650492122235,
+      "resourceId": "14.67.85",
+      "value": "{\"ip\":\"192.168.50.105\",\"mac\":\"54:EF:44:26:F6:B9\",\"rssi\":-60,\"ssid\":\"laomao\"}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2083",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650492121141,
+      "resourceId": "8.0.2193",
+      "value": "54ef44100004c695",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2084",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2085",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648717820445,
+      "resourceId": "13.1.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2087",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2088",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1645938293527,
+      "resourceId": "8.0.2196",
+      "value": "0",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1645938293527,
+      "resourceId": "8.0.2195",
+      "value": "0",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1623798609000,
+      "resourceId": "0.42.85",
+      "value": "296",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650492121145,
+      "resourceId": "8.0.2194",
+      "value": "2d2fc364f60f462b9b7fb0df8250cc92",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.517.85",
+      "value": "78",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2036",
+      "value": "lumi.0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1637852014677,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1619627594166,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0014",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650462679410,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2212",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506204420,
+      "resourceId": "8.0.2006",
+      "value": "96",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650506204420,
+      "resourceId": "8.0.2007",
+      "value": "134",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650506204420,
+      "resourceId": "8.0.2008",
+      "value": "3042",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1638439990243,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650506204420,
+      "resourceId": "8.0.2002",
+      "value": "634",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650466307604,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1627577989316,
+      "resourceId": "8.0.2041",
+      "value": "418",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1649824110596,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0001ef7f25",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852355632,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1637854587172,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1648650685867,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1637854587172,
+      "resourceId": "8.0.2002",
+      "value": "2309",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650504631782,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650446823899,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2082",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2044",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057159661,
+      "resourceId": "8.0.2045",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669164,
+      "resourceId": "8.0.2046",
+      "value": "lumi1.6490c177414b",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1637852014677,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650508152745,
+      "resourceId": "8.0.2008",
+      "value": "3005",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638439325864,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1638439325864,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650508152745,
+      "resourceId": "8.0.2006",
+      "value": "26",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1638439325864,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650508152745,
+      "resourceId": "8.0.2007",
+      "value": "132",
+      "subjectId": "lumi.158d0001d90c64"
+    },
+    {
+      "timeStamp": 1650507802587,
+      "resourceId": "8.0.2008",
+      "value": "3052",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650507802587,
+      "resourceId": "8.0.2007",
+      "value": "67",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2050",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1632747952493,
+      "resourceId": "14.1.1000",
+      "value": "100",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2206",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2002",
+      "value": "14",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1648283443484,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650507802587,
+      "resourceId": "8.0.2002",
+      "value": "462",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2207",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650057180429,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1645938396293,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2003",
+      "value": "3520",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650504497758,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1648375934684,
+      "resourceId": "8.0.2041",
+      "value": "352",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2008",
+      "value": "3174",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650499442159,
+      "resourceId": "8.0.2007",
+      "value": "134",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "4.3.85",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650475915128,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.515.85",
+      "value": "83",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648347643455,
+      "resourceId": "8.0.2097",
+      "value": "5",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650500069274,
+      "resourceId": "0.4.85",
+      "value": "132",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1648284508344,
+      "resourceId": "8.0.2041",
+      "value": "353",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "14.5.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c179982b",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1648971494794,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1648283727108,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638440865294,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1638440865294,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1638440865294,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.1.2044",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1637874852933,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0001ef7f25",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1648284508449,
+      "resourceId": "8.0.2033",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.121.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508180325,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1619625881454,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0017",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1645430450481,
+      "resourceId": "4.37.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2223",
+      "value": "0.0.0_0026",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.64.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650497400165,
+      "resourceId": "8.0.2116",
+      "value": "P1_M0_T22_S3_D1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1614902471479,
+      "resourceId": "3.6.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2175",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2174",
+      "value": "168",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650506369806,
+      "resourceId": "8.0.2173",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2081",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2082",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2083",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2084",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2085",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506078437,
+      "resourceId": "8.0.2230",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1637852429554,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1648380849058,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1648390770922,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1637872291631,
+      "resourceId": "8.0.2036",
+      "value": "lumi.4cf8cdf3c733efa",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.133.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650197878667,
+      "resourceId": "14.1.85",
+      "value": "89",
+      "subjectId": "lumi.4cf8cdf3c76019a"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "14.128.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650057180429,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "0.2.85",
+      "value": "7842",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1608909347121,
+      "resourceId": "8.0.2041",
+      "value": "374",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2087",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2088",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.52.85",
+      "value": "33",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.111.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508311141,
+      "resourceId": "8.0.2223",
+      "value": "0.0.0_2530",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1637872060371,
+      "resourceId": "8.0.2036",
+      "value": "lumi.4cf8cdf3c7b95c5",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.69.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1647355569562,
+      "resourceId": "8.0.2033",
+      "value": "4",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650508431834,
+      "resourceId": "8.0.2023",
+      "value": "17",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1650508311141,
+      "resourceId": "8.0.2228",
+      "value": "4096",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650508431834,
+      "resourceId": "8.0.2022",
+      "value": "93",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1649469738846,
+      "resourceId": "14.11.85",
+      "value": "100",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1630238446348,
+      "resourceId": "14.35.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1609508199640,
+      "resourceId": "8.0.2041",
+      "value": "52",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.519.85",
+      "value": "10",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2212",
+      "value": "50",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650507001288,
+      "resourceId": "8.0.2022",
+      "value": "2",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1637852280874,
+      "resourceId": "8.0.2023",
+      "value": "0",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650455313039,
+      "resourceId": "8.0.2045",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.130.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650465685856,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d0000f246d0"
+    },
+    {
+      "timeStamp": 1650508040902,
+      "resourceId": "8.0.2022",
+      "value": "93",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650508040902,
+      "resourceId": "8.0.2023",
+      "value": "17",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1638437999428,
+      "resourceId": "4.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2083",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2084",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2082",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2087",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2088",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2085",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508431834,
+      "resourceId": "8.0.2007",
+      "value": "138",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1648347852051,
+      "resourceId": "8.0.2041",
+      "value": "366",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2003",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650508431834,
+      "resourceId": "8.0.2006",
+      "value": "29",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2006",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650508311141,
+      "resourceId": "8.0.2007",
+      "value": "81",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650280780387,
+      "resourceId": "8.0.2033",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650508431834,
+      "resourceId": "8.0.2002",
+      "value": "7",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1648288752132,
+      "resourceId": "8.0.8101",
+      "value": "TVOC \u5ba2\u5385\u7a7a\u6c14\u8d28\u91cf",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1648894013901,
+      "resourceId": "4.1.85",
+      "value": "0",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1650492107191,
+      "resourceId": "8.0.2157",
+      "value": "61201",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "8.0.2158",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1648287593799,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650508311141,
+      "resourceId": "8.0.2002",
+      "value": "5",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1649854949565,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1638438270848,
+      "resourceId": "4.1.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0002014d29",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.59.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506956042,
+      "resourceId": "0.1.85",
+      "value": "2362",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1613008595826,
+      "resourceId": "8.0.2022",
+      "value": "11",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1648737037271,
+      "resourceId": "8.0.8102",
+      "value": "\u4e3b\u5367",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.70.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648737037726,
+      "resourceId": "8.0.8101",
+      "value": "\u667a\u80fd\u955c\u63d2\u5ea7",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.520.85",
+      "value": "61",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508040902,
+      "resourceId": "8.0.2006",
+      "value": "30",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650508040902,
+      "resourceId": "8.0.2007",
+      "value": "97",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650495946677,
+      "resourceId": "0.4.85",
+      "value": "20",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.129.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "1.16.85",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648730571154,
+      "resourceId": "14.10.85",
+      "value": "1",
+      "subjectId": "lumi1.7811dc93a6dd"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.123.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2206",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508040902,
+      "resourceId": "8.0.2002",
+      "value": "5",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650502741891,
+      "resourceId": "0.2.85",
+      "value": "7823",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2025",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2026",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648261449726,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2027",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2008",
+      "value": "2981",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2028",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638439335832,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650502800622,
+      "resourceId": "8.0.2007",
+      "value": "149",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1638439335832,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1638439335832,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1637851885507,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1649204268078,
+      "resourceId": "8.0.2022",
+      "value": "25",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2024",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2050",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1648353268214,
+      "resourceId": "8.0.2011",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1627577959854,
+      "resourceId": "8.0.2211",
+      "value": "d53665ce9185",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2212",
+      "value": "50",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648353268214,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2215",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1626273186003,
+      "resourceId": "8.0.8101",
+      "value": "\u6b21\u5367\u4eba\u4f53\u4f20\u611f\u5668T1",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1626273185489,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650504932031,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1648908317200,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650444613672,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1648908308086,
+      "resourceId": "8.0.8101",
+      "value": "\u7f51\u5173 M2-1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "3.99.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1638439335832,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650508234192,
+      "resourceId": "8.0.2002",
+      "value": "10",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1650508234192,
+      "resourceId": "8.0.2007",
+      "value": "68",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2010",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650508234192,
+      "resourceId": "8.0.2008",
+      "value": "3045",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2011",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.44.85",
+      "value": "5",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650280780387,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2012",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650508234192,
+      "resourceId": "8.0.2006",
+      "value": "91",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2013",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1632751001659,
+      "resourceId": "14.9.111",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650492107195,
+      "resourceId": "8.0.2193",
+      "value": "04cf8cdf3c7d830e",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650492107199,
+      "resourceId": "8.0.2194",
+      "value": "e4daed92681c5ed3e45596f5c3099f5d",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.38.85",
+      "value": "{\"starttime\":\"00:00\",\"endtime\":\"23:59\",\"repeat\":[1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1645938293520,
+      "resourceId": "8.0.8107",
+      "value": "0",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2002",
+      "value": "39",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1650502800622,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1615387561316,
+      "resourceId": "8.0.2222",
+      "value": "120",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506087149,
+      "resourceId": "8.0.2001",
+      "value": "91",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2223",
+      "value": "0.0.0_0021",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2044",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508442239,
+      "resourceId": "8.0.2025",
+      "value": "6",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1630209600000,
+      "resourceId": "4.1.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650508442239,
+      "resourceId": "8.0.2026",
+      "value": "-31",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508442239,
+      "resourceId": "8.0.2024",
+      "value": "20",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1627115395015,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638438908742,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "8.0.2029",
+      "value": "power on",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638438908742,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1580716894356,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d00039dd20d",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1637852280874,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2027",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1627115395349,
+      "resourceId": "8.0.8101",
+      "value": "TVOC\u4f20\u611f\u5668",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638438908742,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2028",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650478527777,
+      "resourceId": "0.13.85",
+      "value": "252891.23",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650462679410,
+      "resourceId": "8.0.2033",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2044",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.113.85",
+      "value": "{\"starttime\": \"00:00\",\"endtime\": \"23:59\",\"repeat\": [1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650468600458,
+      "resourceId": "14.94.85",
+      "value": "45",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650423600627,
+      "resourceId": "14.4.85",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650499090820,
+      "resourceId": "13.3.85",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c75b9b1"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2230",
+      "value": "20",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2032",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387303144,
+      "resourceId": "8.0.2235",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648292453829,
+      "resourceId": "4.1.28",
+      "value": "\u63d2\u5ea7",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1648292453829,
+      "resourceId": "4.1.29",
+      "value": "ctrl_plug_default",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1645837742556,
+      "resourceId": "14.10.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650157931518,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650503696644,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650507001288,
+      "resourceId": "8.0.2006",
+      "value": "27",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2012",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1626271394923,
+      "resourceId": "14.17.85",
+      "value": "10",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1647355569562,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "8.0.2013",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0000a1249c"
+    },
+    {
+      "timeStamp": 1637852280874,
+      "resourceId": "8.0.2002",
+      "value": "15",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1638438908742,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650507001288,
+      "resourceId": "8.0.2008",
+      "value": "3035",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650507001288,
+      "resourceId": "8.0.2007",
+      "value": "90",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2007",
+      "value": "46",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.71.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.50.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "14.131.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2002",
+      "value": "31",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1630238393000,
+      "resourceId": "0.10.85",
+      "value": "2",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2003",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650506406504,
+      "resourceId": "8.0.2021",
+      "value": "P3_M5_T255_S4 ircode send success code=0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1631014389687,
+      "resourceId": "8.0.2006",
+      "value": "29",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881039,
+      "resourceId": "8.0.8107",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508074915,
+      "resourceId": "13.1.85",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1620655881219,
+      "resourceId": "14.61.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499102971,
+      "resourceId": "1.1.85",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c733efa"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.37.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1615388143999,
+      "resourceId": "4.33.85",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2006",
+      "value": "29",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2008",
+      "value": "2895",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650502539140,
+      "resourceId": "8.0.2007",
+      "value": "135",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.57.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2002",
+      "value": "16",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650502539140,
+      "resourceId": "8.0.2001",
+      "value": "59",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1649787390681,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1648290200425,
+      "resourceId": "8.0.2011",
+      "value": "1",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1648290200425,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650499442159,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650508311141,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881236,
+      "resourceId": "14.114.85",
+      "value": "15",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650501085437,
+      "resourceId": "0.3.85",
+      "value": "32",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1620655894466,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1620655894830,
+      "resourceId": "8.0.8101",
+      "value": "\u667a\u80fd\u6444\u50cf\u673aG3",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.73.85",
+      "value": "2",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648288644406,
+      "resourceId": "4.1.600",
+      "value": "ctrl_plug_default",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1613005948361,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650492132746,
+      "resourceId": "14.126.85",
+      "value": "1.3.2",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1613005985206,
+      "resourceId": "8.0.8101",
+      "value": "\u5ba2\u5385\u6e29\u6e7f\u5ea6-\u5927\u6c14\u538b",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1623798614000,
+      "resourceId": "13.78.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "13.22.85",
+      "value": "1623864360000",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "3.99.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499201110,
+      "resourceId": "4.1.85",
+      "value": "0",
+      "subjectId": "lumi.158d000200c14e"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "14.132.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648283437592,
+      "resourceId": "8.0.8102",
+      "value": "\u5ba2\u5385",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1648283767069,
+      "resourceId": "8.0.8101",
+      "value": "\u8fc7\u9053\u9ad8\u7cbe\u5ea6\u4eba\u4f53\u4f20\u611f\u5668",
+      "subjectId": "lumi.4cf8cdf3c884097"
+    },
+    {
+      "timeStamp": 1650475905801,
+      "resourceId": "4.1.85",
+      "value": "0",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1623798620000,
+      "resourceId": "0.47.85",
+      "value": "1",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "14.9.85",
+      "value": "120",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1648730571154,
+      "resourceId": "14.12.85",
+      "value": "+08:00",
+      "subjectId": "lumi1.7811dc93a6dd"
+    },
+    {
+      "timeStamp": 1648292453738,
+      "resourceId": "8.0.8102",
+      "value": "\u6b21\u5367",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1620655881230,
+      "resourceId": "14.104.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648736768012,
+      "resourceId": "8.0.8101",
+      "value": "\u6b21\u5367\u5899\u58c1\u63d2\u5ea7\uff08Zigbee\u7248\uff09",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1650502546236,
+      "resourceId": "0.2.85",
+      "value": "7437",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2022",
+      "value": "9",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650492107132,
+      "resourceId": "3.2.85",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.2206",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.63.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650499759347,
+      "resourceId": "0.3.85",
+      "value": "9",
+      "subjectId": "lumi.4cf8cdf3c7585ed"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2023",
+      "value": "20",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1620655881237,
+      "resourceId": "14.116.85",
+      "value": "15",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1632751000611,
+      "resourceId": "14.1.111",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1632747953835,
+      "resourceId": "14.1.1000",
+      "value": "100",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650475905500,
+      "resourceId": "13.2.85",
+      "value": "1",
+      "subjectId": "lumi.158d0003d3c6e1"
+    },
+    {
+      "timeStamp": 1650057180429,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1615933262218,
+      "resourceId": "14.8.85",
+      "value": "2",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1632747953839,
+      "resourceId": "14.1.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650502546236,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c750567"
+    },
+    {
+      "timeStamp": 1632747952497,
+      "resourceId": "14.1.113",
+      "value": "-1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650505556460,
+      "resourceId": "8.0.2036",
+      "value": "lumi.158d0001ef7f25",
+      "subjectId": "lumi.158d0003d39c9a"
+    },
+    {
+      "timeStamp": 1650496345547,
+      "resourceId": "8.0.2007",
+      "value": "148",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650492107553,
+      "resourceId": "8.0.2194",
+      "value": "1e0b632db9dc35138e8b10f664afef42",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2008",
+      "value": "3078",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2003",
+      "value": "3839",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2002",
+      "value": "24",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1650470399334,
+      "resourceId": "4.22.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1648736846376,
+      "resourceId": "8.0.2030",
+      "value": "0",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1648375685102,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1630238417000,
+      "resourceId": "0.9.85",
+      "value": "20",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1619624845080,
+      "resourceId": "8.0.2022",
+      "value": "0.0.0_0035",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1590239022131,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c179982b",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "0.1.85",
+      "value": "2354",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.128.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.75.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1617936298626,
+      "resourceId": "14.52.85",
+      "value": "255",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "0.130.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1642661789199,
+      "resourceId": "8.0.8101",
+      "value": "\u7a7a\u8c03\u4f34\u4fa3",
+      "subjectId": "virtual.57362614367713"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2008",
+      "value": "3065",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650506294417,
+      "resourceId": "8.0.2230",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1623788423000,
+      "resourceId": "13.76.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.87.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650497400167,
+      "resourceId": "14.32.85",
+      "value": "19731968",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1646915138189,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2006",
+      "value": "25",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650499459762,
+      "resourceId": "8.0.2007",
+      "value": "130",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1638438658104,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1638438658104,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650508180325,
+      "resourceId": "8.0.2022",
+      "value": "92",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1648736845947,
+      "resourceId": "8.0.2023",
+      "value": "0",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1638438658104,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650499111041,
+      "resourceId": "0.3.85",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c747fa4"
+    },
+    {
+      "timeStamp": 1615933222584,
+      "resourceId": "1.7.85",
+      "value": "81",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650504651784,
+      "resourceId": "8.0.2001",
+      "value": "97",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2002",
+      "value": "30",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2003",
+      "value": "2",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2006",
+      "value": "23",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2007",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1650507943372,
+      "resourceId": "8.0.2008",
+      "value": "2997",
+      "subjectId": "lumi.4cf8cdf3c7f7a12"
+    },
+    {
+      "timeStamp": 1638676381419,
+      "resourceId": "8.0.8102",
+      "value": "\u6d17\u624b\u95f4",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650492107108,
+      "resourceId": "14.10.85",
+      "value": "1",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1638676366462,
+      "resourceId": "8.0.8101",
+      "value": "\u667a\u80fd\u6bdb\u5dfe\u67b6 H1",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "8.0.8107",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1588651817381,
+      "resourceId": "8.0.2041",
+      "value": "409",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650508488350,
+      "resourceId": "0.11.85",
+      "value": "0.000000",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1650057183459,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1613010506258,
+      "resourceId": "8.0.2041",
+      "value": "352",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650057172170,
+      "resourceId": "8.0.2045",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1635081673452,
+      "resourceId": "8.0.2041",
+      "value": "417",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1615387669086,
+      "resourceId": "0.129.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650299941554,
+      "resourceId": "13.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "14.11.85",
+      "value": "50",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508180325,
+      "resourceId": "8.0.2002",
+      "value": "111",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1635884942359,
+      "resourceId": "8.0.2244",
+      "value": "010204cf8cdf3c7d8275d87f00158d0001293b4d015c69000004cf8cdf3c7d827501b2689ffcc442",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2036",
+      "value": "lumi.4cf8cdf3c78e823",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650508313417,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c177414b",
+      "subjectId": "lumi.4cf8cdf3c7da659"
+    },
+    {
+      "timeStamp": 1650507001288,
+      "resourceId": "8.0.9002",
+      "value": "2",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1650492107551,
+      "resourceId": "8.0.2193",
+      "value": "180cb7dede5e1ebe",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650508180325,
+      "resourceId": "8.0.2006",
+      "value": "35",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.106.85",
+      "value": "{\"detect_region\":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508180325,
+      "resourceId": "8.0.2007",
+      "value": "82",
+      "subjectId": "lumi.158d0000f29bd6"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.65.85",
+      "value": "80",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650492107530,
+      "resourceId": "8.0.2157",
+      "value": "48991",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1650492107474,
+      "resourceId": "8.0.2158",
+      "value": "0",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1608980597751,
+      "resourceId": "8.0.2022",
+      "value": "5",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650506956029,
+      "resourceId": "0.1.85",
+      "value": "2362",
+      "subjectId": "lumi.158d00048520a1"
+    },
+    {
+      "timeStamp": 1650496345547,
+      "resourceId": "8.0.9002",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c758a2d"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2023",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1609659906423,
+      "resourceId": "8.0.8101",
+      "value": "\u4e3b\u5367\u536b\u751f\u95f4\u4eba\u4f53",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1609659892104,
+      "resourceId": "8.0.8102",
+      "value": "\u4e3b\u5367",
+      "subjectId": "lumi.158d000413fca4"
+    },
+    {
+      "timeStamp": 1626271394927,
+      "resourceId": "14.22.85",
+      "value": "30",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1638441073524,
+      "resourceId": "8.0.2012",
+      "value": "4",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1637852355632,
+      "resourceId": "8.0.2013",
+      "value": "0",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650455539175,
+      "resourceId": "0.13.85",
+      "value": "0",
+      "subjectId": "lumi.158d0001e5b69b"
+    },
+    {
+      "timeStamp": 1638441073524,
+      "resourceId": "8.0.2010",
+      "value": "4",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1638441073524,
+      "resourceId": "8.0.2011",
+      "value": "2",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.118.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.2036",
+      "value": "lumi1.6490c179afac",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2033",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1626505653711,
+      "resourceId": "14.1.111",
+      "value": "1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1638441073524,
+      "resourceId": "8.0.2003",
+      "value": "0",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650114292152,
+      "resourceId": "8.0.2004",
+      "value": "1",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1638441073524,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650394460948,
+      "resourceId": "8.0.2002",
+      "value": "11493",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1623885300000,
+      "resourceId": "0.513.85",
+      "value": "77",
+      "subjectId": "lumi.54ef44100005cbf9"
+    },
+    {
+      "timeStamp": 1650492122192,
+      "resourceId": "14.21.85",
+      "value": "5162041",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650507156506,
+      "resourceId": "8.0.2007",
+      "value": "129",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650507156506,
+      "resourceId": "8.0.2008",
+      "value": "3010",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650114292152,
+      "resourceId": "8.0.2005",
+      "value": "1",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1650503516408,
+      "resourceId": "8.0.2006",
+      "value": "41",
+      "subjectId": "lumi.158d00005e91ae"
+    },
+    {
+      "timeStamp": 1638676366427,
+      "resourceId": "0.128.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1649124629874,
+      "resourceId": "13.11.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.2006",
+      "value": "23",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650492124367,
+      "resourceId": "8.0.2157",
+      "value": "60792",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2005",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638438658104,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2004",
+      "value": "0",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1637855064145,
+      "resourceId": "8.0.2002",
+      "value": "19",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650496156718,
+      "resourceId": "8.0.2003",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1632747952501,
+      "resourceId": "14.1.85",
+      "value": "0",
+      "subjectId": "lumi1.6490c179afac"
+    },
+    {
+      "timeStamp": 1645871971245,
+      "resourceId": "8.0.2154",
+      "value": "1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2003",
+      "value": "5616",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.2002",
+      "value": "30",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1647598276255,
+      "resourceId": "8.0.2001",
+      "value": "100",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650499486645,
+      "resourceId": "3.1.85",
+      "value": "1",
+      "subjectId": "lumi.158d00012a8a3f"
+    },
+    {
+      "timeStamp": 1645837742556,
+      "resourceId": "8.0.2158",
+      "value": "1",
+      "subjectId": "lumi1.54ef44cf4140"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "4.55.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.77.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1648717820446,
+      "resourceId": "0.3.85",
+      "value": "141.000000",
+      "subjectId": "lumi.4cf8cdf3c7f78f9"
+    },
+    {
+      "timeStamp": 1615933251670,
+      "resourceId": "4.46.85",
+      "value": "1",
+      "subjectId": "lumi1.54ef44ccd785"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "14.43.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.2008",
+      "value": "3062",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650506034533,
+      "resourceId": "8.0.2007",
+      "value": "90",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1650432215640,
+      "resourceId": "0.12.85",
+      "value": "0",
+      "subjectId": "lumi.158d0002014d29"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2013",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1646266615690,
+      "resourceId": "8.0.2012",
+      "value": "10",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638438861098,
+      "resourceId": "8.0.2011",
+      "value": "4",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1638438861098,
+      "resourceId": "8.0.2010",
+      "value": "3",
+      "subjectId": "lumi.4cf8cdf3c7f7a25"
+    },
+    {
+      "timeStamp": 1620655881038,
+      "resourceId": "0.128.85",
+      "value": "0",
+      "subjectId": "lumi1.54ef4426f6b9"
+    },
+    {
+      "timeStamp": 1650508298965,
+      "resourceId": "13.105.85",
+      "value": "0",
+      "subjectId": "lumi.54ef44100031821d"
+    },
+    {
+      "timeStamp": 1650506059869,
+      "resourceId": "8.0.2230",
+      "value": "1",
+      "subjectId": "lumi.4cf8cdf3c753862"
+    },
+    {
+      "timeStamp": 1650506059899,
+      "resourceId": "4.7.85",
+      "value": "1",
+      "subjectId": "lumi.12345"
+    },
+    {
+      "timeStamp": 1650506059899,
+      "resourceId": "14.48.85",
+      "value": "1",
+      "subjectId": "lumi.12345"
+    },
+    {
+      "timeStamp": 1650506059899,
+      "resourceId": "4.32.85",
+      "value": "2",
+      "subjectId": "lumi.12345"
+    }
+  ]
+}

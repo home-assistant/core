@@ -1,0 +1,221 @@
+{
+  "real1.933736748533063680": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.178263.16505260933290253",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real1.743791439074398208": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2957.26373.16505260934314539",
+    "result": {
+      "data": [
+        {
+          "positionName": "default room",
+          "positionId": "real2.743791439158284288",
+          "createTime": 1597375298059,
+          "description": "",
+          "parentPositionId": "real1.743791439074398208"
+        }
+      ],
+      "totalCount": 1
+    }
+  },
+  "real2.743791439158284288": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2957.1556.16505261187932977",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real1.5180288992707410": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1571.16505261203780521",
+    "result": {
+      "data": [
+        {
+          "positionName": "bedroom",
+          "positionId": "real2.451770883823816",
+          "createTime": 1551366457289,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "master bedroom",
+          "positionId": "real2.451764337185150",
+          "createTime": 1551366457289,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "doug",
+          "positionId": "real2.451989634869536",
+          "createTime": 1551366457413,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "daughter",
+          "positionId": "real2.453005596429570",
+          "createTime": 1551366457416,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "rest room",
+          "positionId": "real2.452054144424916",
+          "createTime": 1551366457415,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "Living Balcong",
+          "positionId": "real2.452039280534594",
+          "createTime": 1551366457415,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "balcong",
+          "positionId": "real2.452027775357474",
+          "createTime": 1551366457414,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "kitchen",
+          "positionId": "real2.452004469404149",
+          "createTime": 1551366457413,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "homekit",
+          "positionId": "real2.6195901954077567",
+          "createTime": 1551366457418,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        },
+        {
+          "positionName": "roo3",
+          "positionId": "real2.959186987169058816",
+          "createTime": 1648729598572,
+          "description": "",
+          "parentPositionId": "real1.5180288992707410"
+        }
+      ],
+      "totalCount": 10
+    }
+  },
+  "real2.451770883823816": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1204.16505261218364335",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.451764337185150": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1213.16505261226064395",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.451989634869536": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1569.16505261236240987",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.453005596429570": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.178261.16505261243620335",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.452054144424916": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2957.167014.16505261250193251",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.452039280534594": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2957.167009.16505261258733345",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.452027775357474": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1572.16505261265871117",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.452004469404149": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.124779.16505261271804621",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.6195901954077567": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2960.1574.16505261279380781",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  },
+  "real2.959186987169058816": {
+    "code": 0,
+    "message": "Success",
+    "msgDetails": "None",
+    "requestId": "2957.167008.16505261307503275",
+    "result": {
+      "data": [],
+      "totalCount": 0
+    }
+  }
+}
