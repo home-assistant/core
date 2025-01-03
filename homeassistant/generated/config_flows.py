@@ -271,6 +271,7 @@ FLOWS = {
         "husqvarna_automower_ble",
         "huum",
         "hvv_departures",
+        "hwam",
         "hydrawise",
         "hyperion",
         "ialarm",
