@@ -1,9 +1,10 @@
 """Tests for the Velbus component initialisation."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-import pytest
+from velbusaio.exceptions import VelbusConnectionFailed
 
+from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PORT
@@ -13,8 +14,21 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("controller")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_setup_connection_failed(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test the setup that fails during velbus connect.."""
+    controller.connect.side_effect = VelbusConnectionFailed()
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -29,9 +43,10 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
     assert not hass.data.get(DOMAIN)
 
 
-@pytest.mark.usefixtures("controller")
 async def test_device_identifier_migration(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test being able to unload an entry."""
     original_identifiers = {(DOMAIN, "module_address", "module_serial")}
@@ -64,8 +79,10 @@ async def test_device_identifier_migration(
     assert device_entry.sw_version == "module_sw_version"
 
 
-@pytest.mark.usefixtures("controller")
-async def test_migrate_config_entry(hass: HomeAssistant) -> None:
+async def test_migrate_config_entry(
+    hass: HomeAssistant,
+    controller: MagicMock,
+) -> None:
     """Test successful migration of entry data."""
     legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
     entry = MockConfigEntry(domain=DOMAIN, unique_id="my own id", data=legacy_config)
