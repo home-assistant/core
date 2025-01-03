@@ -1,148 +1,174 @@
 rules:
+  # Bronze
   action-setup:
     status: exempt
     comment: |
       This integration does not provide additional service actions.
-  appropriate-polling:
-    status: done
+
+  appropriate-polling: done
+
   brands:
-    status: done
-  common-modules:
-    status: done
-  config-flow-test-coverage:
-    status: done
-  config-flow:
-    status: done
-  dependency-transparency:
-    status: done
+    status: exempt
+    comment: |
+      Only necessary for large brands.
+
+  common-modules: done
+
+  config-flow-test-coverage: done
+
+  config-flow: done
+
+  dependency-transparency: done
+
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional service actions.
-  docs-high-level-description:
-    status: done
-  docs-installation-instructions:
-    status: done
-  docs-removal-instructions:
-    status: done
+
+  docs-high-level-description: done
+
+  docs-installation-instructions: done
+
+  docs-removal-instructions: done
+
   entity-event-setup:
     status: exempt
     comment: |
-      Creates only a diagnostic sensor which follows standard setup patterns.
+      This integration consumes entities but does not create them.
+
   entity-unique-id:
     status: exempt
     comment: |
-      Creates only a single diagnostic sensor tied to the config entry ID.
+      This integration consumes entities but does not create them.
+
   has-entity-name:
     status: exempt
     comment: |
-      Diagnostic sensor uses has_entity_name = True. No other entities created.
+      This integration consumes entities but does not create them.
+
   runtime-data:
     status: done
-  test-before-configure:
-    status: done
-  test-before-setup:
-    status: done
+    comment: |
+      Uses last_upload tracking in WebhookDispatcher.
+
+  test-before-configure: done
+
+  test-before-setup: done
+
   unique-config-entry:
     status: done
+    comment: |
+      Naturally enforced through unique webhook URLs.
 
+  # Silver
   action-exceptions:
     status: exempt
     comment: |
       No service actions defined.
-  config-entry-unloading:
-    status: done
-  docs-configuration-parameters:
-    status: done
-  docs-installation-parameters:
-    status: done
+
+  config-entry-unloading: done
+
+  docs-configuration-parameters: todo
+
+  docs-installation-parameters: todo
+
   entity-unavailable:
     status: exempt
     comment: |
-      Diagnostic sensor reflects connection status via attributes, not availability state.
-  integration-owner:
-    status: done
-  log-when-unavailable:
-    status: done
-  parallel-updates:
-    status: done
-  reauthentication-flow:
-    status: exempt # Reconfigure flow handles credential updates for V2 API.
-    comment: |
-      Uses provisioning credentials managed via reconfigure flow. No separate password/token reauth needed.
-  test-coverage:
-    status: done
+      This integration consumes entities but does not create them.
 
+  integration-owner: done
+
+  log-when-unavailable: done
+
+  parallel-updates: todo
+
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Uses webhook URLs, no authentication needed.
+
+  test-coverage: done
+
+  # Gold
   devices:
     status: exempt
     comment: |
-      Creates a single device entry for the EnergyID connection itself via the diagnostic sensor.
-  diagnostics:
-    status: todo
+      This integration consumes entities but does not create devices.
+
+  diagnostics: todo
+
   discovery:
     status: exempt
     comment: |
-      Requires manual entry of provisioning credentials. No discovery mechanism applicable.
+      This integration requires manual webhook URL configuration.
+
   discovery-update-info:
     status: exempt
     comment: |
       No discovery mechanism used.
-  docs-data-update:
-    status: done
-  docs-examples:
-    status: done
-  docs-known-limitations:
-    status: done
-  docs-supported-devices:
-    status: exempt
-    comment: |
-      This integration is a service bridge for HA sensor data, not tied to specific device models.
-  docs-supported-functions:
-    status: done
-  docs-troubleshooting:
-    status: done
-  docs-use-cases:
-    status: done
+
+  docs-data-update: todo
+
+  docs-examples: todo
+
+  docs-known-limitations: todo
+
+  docs-supported-devices: todo
+
+  docs-supported-functions: todo
+
+  docs-troubleshooting: todo
+
+  docs-use-cases: todo
+
   dynamic-devices:
     status: exempt
     comment: |
-      Does not dynamically add devices.
+      This integration does not create devices.
+
   entity-category:
     status: exempt
     comment: |
-      Diagnostic sensor correctly uses EntityCategory.DIAGNOSTIC.
+      This integration consumes entities but does not create them.
+
   entity-device-class:
     status: exempt
     comment: |
-      Diagnostic sensor does not require a specific device class.
+      This integration consumes entities but does not create them.
+
   entity-disabled-by-default:
     status: exempt
     comment: |
-      Diagnostic sensor is enabled by default.
+      This integration consumes entities but does not create them.
+
   entity-translations:
     status: exempt
     comment: |
-      Diagnostic sensor name "Status" is handled by core translations or not translated.
-  exception-translations:
-    status: done
+      This integration consumes entities but does not create them.
+
+  exception-translations: todo
+
   icon-translations:
     status: exempt
     comment: |
-      Diagnostic sensor uses a fixed mdi icon.
-  reconfiguration-flow:
-    status: todo
+      This integration does not define any icons.
+
+  reconfiguration-flow: todo
+
   repair-issues:
     status: exempt
     comment: |
-      No specific repair flows needed beyond standard reconfigure/reauth prompts.
+      No identified cases where repair flows would be needed.
+
   stale-devices:
     status: exempt
     comment: |
-      Only creates a single service device entry tied to the config entry.
+      This integration does not create devices.
 
-  async-dependency:
-    status: done
-  inject-websession:
-    status: done
-  strict-typing:
-    status: done
+  # Platinum
+  async-dependency: done
+
+  inject-websession: done
+
+  strict-typing: todo

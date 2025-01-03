@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import logging
+from typing import TypeVar
 
 import aiohttp
 from energyid_webhooks import WebhookClientAsync, WebhookPayload
@@ -32,35 +33,44 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Define our config entry type that stores the client in runtime_data
+T = TypeVar("T", bound=WebhookClientAsync)
+EnergyIDConfigEntry = ConfigEntry[T]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Set up EnergyID from a config entry."""
-
     hass.data.setdefault(DOMAIN, {})
+
+    # Create and validate the webhook client
+    client = WebhookClientAsync(
+        webhook_url=entry.data[CONF_WEBHOOK_URL],
+        session=async_get_clientsession(hass),
+    )
+    try:
+        await client.get_policy()
+    except aiohttp.ClientResponseError as error:
+        _LOGGER.error("Could not validate webhook client")
+        raise ConfigEntryError from error
+
+    # Store client in runtime_data
+    entry.runtime_data = client
 
     # Create the webhook dispatcher
     dispatcher = WebhookDispatcher(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = dispatcher
-
-    # Validate the webhook client
-    try:
-        await dispatcher.client.get_policy()
-    except aiohttp.ClientResponseError as error:
-        _LOGGER.error("Could not validate webhook client")
-        raise ConfigEntryError from error
 
     # Register the webhook dispatcher
     async_track_state_change_event(
         hass=hass,
         entity_ids=dispatcher.entity_id,
         action=dispatcher.async_handle_state_change,
-        # homeassistant/components/energyid/__init__.py:56: error: Argument "action" to "async_track_state_change_event" has incompatible type "Callable[[Event[Mapping[str, Any]]], Coroutine[Any, Any, bool]]"; expected "Callable[[Event[EventStateChangedData]], Any]"  [arg-type]
     )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data[DOMAIN].pop(entry.entry_id)
     return True
@@ -73,13 +83,10 @@ class WebhookDispatcher:
     Uses asyncio locks to prevent concurrent uploads of the same state.
     """
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
         """Initialize the dispatcher."""
         self.hass = hass
-        self.client = WebhookClientAsync(
-            webhook_url=entry.data[CONF_WEBHOOK_URL],
-            session=async_get_clientsession(hass),
-        )
+        self.client = entry.runtime_data  # Get client from runtime_data
         self.entity_id = entry.data[CONF_ENTITY_ID]
         self.metric = entry.data[CONF_METRIC]
         self.metric_kind = entry.data[CONF_METRIC_KIND]

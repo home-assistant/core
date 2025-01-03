@@ -1714,14 +1714,9 @@
     },
     "energyid": {
       "name": "EnergyID",
-      "integrations": {
-        "energyid": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "EnergyID"
-        }
-      }
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "energyzero": {
       "name": "EnergyZero",
