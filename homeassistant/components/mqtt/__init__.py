@@ -76,6 +76,9 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
+    ENTRY_MINOR_VERSION,
+    ENTRY_OPTION_FIELDS,
+    ENTRY_VERSION,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
 )
@@ -282,15 +285,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the options from config entry data."""
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    for key in ENTRY_OPTION_FIELDS:
+        if key not in data:
+            continue
+        options[key] = data.pop(key)
+    hass.config_entries.async_update_entry(
+        entry,
+        data=data,
+        options=options,
+        version=ENTRY_VERSION,
+        minor_version=ENTRY_MINOR_VERSION,
+    )
+    _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf: dict[str, Any]
     mqtt_data: MqttData
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
-        conf = dict(entry.data)
+        conf = dict(entry.data | entry.options)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)
