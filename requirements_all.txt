@@ -2942,7 +2942,7 @@ unifi_ap==0.0.2
 # homeassistant.components.unifiled
 unifiled==0.11
 
-# homeassistant.components.zha
+# homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
