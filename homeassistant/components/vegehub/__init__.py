@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
     assert entry.unique_id
 
-
     hub = VegeHub(device_ip, device_mac, entry.unique_id)
 
     webhook_id = webhook_generate_id()
@@ -97,13 +96,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     # Now add in all the entities for this device.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Create a task to ask the hub for an update when it can,
-    # so that we have initial data
-    hass.async_create_task(hub.request_update())
-
     entry.async_create_background_task(
         hass, register_webhook(), "vegehub_register_webhook"
     )
+
+    # Ask the hub for an update, so that we have its initial data
+    hub.request_update()
 
     return True
 
