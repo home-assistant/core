@@ -23,7 +23,13 @@ from .const import (
 )
 from .coordinator import VeSyncDataCoordinator
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
         platforms.append(Platform.FAN)
+        platforms.append(Platform.BINARY_SENSOR)
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
@@ -112,6 +119,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         if new_fans and not fans:
             fans.extend(new_fans)
             hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
+            hass.async_create_task(
+                forward_setups(config_entry, [Platform.BINARY_SENSOR])
+            )
 
         light_set = set(light_devs)
         new_lights = list(light_set.difference(lights))
@@ -147,6 +157,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         in_use_platforms.append(Platform.SWITCH)
     if hass.data[DOMAIN][VS_FANS]:
         in_use_platforms.append(Platform.FAN)
+        in_use_platforms.append(Platform.BINARY_SENSOR)
     if hass.data[DOMAIN][VS_LIGHTS]:
         in_use_platforms.append(Platform.LIGHT)
     if hass.data[DOMAIN][VS_SENSORS]:
