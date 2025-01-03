@@ -536,6 +536,7 @@ FLOWS = {
         "sensirion_ble",
         "sensorpro",
         "sensorpush",
+        "sensorpush_cloud",
         "sensoterra",
         "sentry",
         "senz",
