@@ -1,6 +1,7 @@
 {
   "domain": "frontend",
   "name": "Home Assistant Frontend",
+  "after_dependencies": ["backup"],
   "codeowners": ["@home-assistant/frontend"],
   "dependencies": [
     "api",
