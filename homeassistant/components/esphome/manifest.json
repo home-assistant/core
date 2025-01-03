@@ -18,7 +18,7 @@
   "requirements": [
     "aioesphomeapi==28.0.0",
     "esphome-dashboard-api==1.2.3",
-    "bleak-esphome==1.1.0"
+    "bleak-esphome==2.0.0"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
 }
