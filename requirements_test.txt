@@ -53,3 +53,4 @@ types-pytz==2024.2.0.20241221
 types-PyYAML==6.0.12.20241230
 types-requests==2.31.0.3
 types-xmltodict==0.13.0.3
+tuyaha==0.0.11
