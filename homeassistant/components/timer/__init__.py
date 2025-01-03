@@ -375,7 +375,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_cancel(self) -> None:
         """Cancel a timer."""
-        if self._state != STATUS_ACTIVE or self._end is None:
+        if self._state == STATUS_IDLE:
             return
 
         if self._listener:

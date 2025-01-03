@@ -221,12 +221,6 @@ async def test_methods_and_events(hass: HomeAssistant) -> None:
             "data": {},
         },
         {
-            "call": SERVICE_START,
-            "state": STATUS_ACTIVE,
-            "event": EVENT_TIMER_RESTARTED,
-            "data": {},
-        },
-        {
             "call": SERVICE_CANCEL,
             "state": STATUS_IDLE,
             "event": EVENT_TIMER_CANCELLED,
