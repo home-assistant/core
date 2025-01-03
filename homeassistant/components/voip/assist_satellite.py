@@ -177,10 +177,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             while True:
                 async with asyncio.timeout(self._audio_chunk_timeout):
                     chunk = await self._audio_queue.get()
-                    if not chunk:
-                        break
+                if not chunk:
+                    break
 
-                    yield chunk
+                yield chunk
 
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
