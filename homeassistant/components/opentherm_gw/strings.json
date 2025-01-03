@@ -158,6 +158,11 @@
         "name": "Programmed change has priority over override"
       }
     },
+    "button": {
+      "cancel_room_setpoint_override": {
+        "name": "Cancel room setpoint override"
+      }
+    },
     "select": {
       "gpio_mode_n": {
         "name": "GPIO {gpio_id} mode",

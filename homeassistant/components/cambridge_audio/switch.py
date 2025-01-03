@@ -7,11 +7,11 @@ from typing import Any
 from aiostreammagic import StreamMagicClient
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import CambridgeAudioConfigEntry
 from .entity import CambridgeAudioEntity, command
 
 PARALLEL_UPDATES = 0
@@ -45,7 +45,7 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CambridgeAudioConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Cambridge Audio switch entities based on a config entry."""

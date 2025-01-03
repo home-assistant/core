@@ -59,9 +59,7 @@ from .const import (
     CONF_SUBSCRIBER_ID,
     CONF_SUBSCRIBER_ID_IMPORTED,
     CONF_SUBSCRIPTION_NAME,
-    DATA_DEVICE_MANAGER,
     DATA_SDM,
-    DATA_SUBSCRIBER,
     DOMAIN,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
@@ -72,6 +70,7 @@ from .media_source import (
     async_get_media_source_devices,
     async_get_transcoder,
 )
+from .types import NestConfigEntry, NestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,11 +112,8 @@ THUMBNAIL_SIZE_PX = 175
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Nest components with dispatch between old/new flows."""
-    hass.data[DOMAIN] = {}
-
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
-
     return True
 
 
@@ -128,12 +124,12 @@ class SignalUpdateCallback:
         self,
         hass: HomeAssistant,
         config_reload_cb: Callable[[], Awaitable[None]],
-        config_entry_id: str,
+        config_entry: NestConfigEntry,
     ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
         self._config_reload_cb = config_reload_cb
-        self._config_entry_id = config_entry_id
+        self._config_entry = config_entry
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
@@ -181,17 +177,17 @@ class SignalUpdateCallback:
                 message["zones"] = image_event.zones
             self._hass.bus.async_fire(NEST_EVENT, message)
 
-    def _supported_traits(self, device_id: str) -> list[TraitType]:
-        if not (
-            device_manager := self._hass.data[DOMAIN]
-            .get(self._config_entry_id, {})
-            .get(DATA_DEVICE_MANAGER)
-        ) or not (device := device_manager.devices.get(device_id)):
+    def _supported_traits(self, device_id: str) -> list[str]:
+        if (
+            not self._config_entry.runtime_data
+            or not (device_manager := self._config_entry.runtime_data.device_manager)
+            or not (device := device_manager.devices.get(device_id))
+        ):
             return []
         return list(device.traits)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -215,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_config_reload() -> None:
         await hass.config_entries.async_reload(entry.entry_id)
 
-    update_callback = SignalUpdateCallback(hass, async_config_reload, entry.entry_id)
+    update_callback = SignalUpdateCallback(hass, async_config_reload, entry)
     subscriber.set_update_callback(update_callback.async_handle_event)
     try:
         await subscriber.start_async()
@@ -245,11 +241,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_SUBSCRIBER: subscriber,
-        DATA_DEVICE_MANAGER: device_manager,
-    }
+    entry.runtime_data = NestData(
+        subscriber=subscriber,
+        device_manager=device_manager,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -262,13 +257,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Legacy API
         return True
     _LOGGER.debug("Stopping nest subscriber")
-    subscriber = hass.data[DOMAIN][entry.entry_id][DATA_SUBSCRIBER]
+    subscriber = entry.runtime_data.subscriber
     subscriber.stop_async()
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

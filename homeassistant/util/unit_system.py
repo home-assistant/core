@@ -233,7 +233,6 @@ def _deprecated_unit_system(value: str) -> str:
     """Convert deprecated unit system."""
 
     if value == _CONF_UNIT_SYSTEM_IMPERIAL:
-        # need to add warning in 2023.1
         return _CONF_UNIT_SYSTEM_US_CUSTOMARY
     return value
 

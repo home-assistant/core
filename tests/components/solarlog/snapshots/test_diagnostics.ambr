@@ -5,7 +5,6 @@
       'data': dict({
         'has_password': True,
         'host': '**REDACTED**',
-        'name': 'Solarlog test 1 2 3',
         'password': 'pwd',
       }),
       'disabled_by': None,

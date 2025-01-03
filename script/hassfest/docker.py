@@ -185,12 +185,12 @@ def _generate_files(config: Config) -> list[File]:
         + 10
     ) * 1000
 
-    package_versions = _get_package_versions(Path("requirements.txt"), {"uv"})
+    package_versions = _get_package_versions(config.root / "requirements.txt", {"uv"})
     package_versions |= _get_package_versions(
-        Path("requirements_test.txt"), {"pipdeptree", "tqdm"}
+        config.root / "requirements_test.txt", {"pipdeptree", "tqdm"}
     )
     package_versions |= _get_package_versions(
-        Path("requirements_test_pre_commit.txt"), {"ruff"}
+        config.root / "requirements_test_pre_commit.txt", {"ruff"}
     )
 
     return [

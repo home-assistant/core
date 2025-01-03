@@ -381,6 +381,26 @@ async def test_bluetooth_discovery(
     }
 
 
+async def test_bluetooth_discovery_already_configured(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_cloud_client: MagicMock,
+    mock_setup_entry: Generator[AsyncMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test bluetooth discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model, mock_lamarzocco.serial_number
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_BLUETOOTH}, data=service_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_bluetooth_discovery_errors(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,

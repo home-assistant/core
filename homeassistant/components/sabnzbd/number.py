@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SabnzbdConfigEntry
 from .const import DOMAIN
-from .coordinator import SabnzbdUpdateCoordinator
+from .coordinator import SabnzbdConfigEntry, SabnzbdUpdateCoordinator
 from .entity import SabnzbdEntity
 
 

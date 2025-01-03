@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Mapping
 import copy
+from enum import IntEnum
 import logging
 import secrets
 import threading
@@ -45,6 +46,7 @@ from .const import (
     CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
     CONF_PART_DURATION,
+    CONF_PREFER_TCP,
     CONF_RTSP_TRANSPORT,
     CONF_SEGMENT_DURATION,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
@@ -74,6 +76,8 @@ from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 if TYPE_CHECKING:
+    from av.container import InputContainer, OutputContainer
+
     from homeassistant.components.camera import DynamicStreamSettings
 
 __all__ = [
@@ -93,6 +97,113 @@ __all__ = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class StreamClientError(IntEnum):
+    """Enum for stream client errors."""
+
+    BadRequest = 400
+    Unauthorized = 401
+    Forbidden = 403
+    NotFound = 404
+    Other = 4
+
+
+class StreamOpenClientError(HomeAssistantError):
+    """Raised when client error received when trying to open a stream.
+
+    :param stream_client_error: The type of client error
+    """
+
+    def __init__(
+        self, *args: Any, stream_client_error: StreamClientError, **kwargs: Any
+    ) -> None:
+        self.stream_client_error = stream_client_error
+        super().__init__(*args, **kwargs)
+
+
+async def _async_try_open_stream(
+    hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
+) -> InputContainer | OutputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
+    return await hass.loop.run_in_executor(None, _try_open_stream, source, pyav_options)
+
+
+def _try_open_stream(
+    source: str, pyav_options: dict[str, str] | None = None
+) -> InputContainer | OutputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
+    import av  # pylint: disable=import-outside-toplevel
+
+    if pyav_options is None:
+        pyav_options = {}
+
+    default_pyav_options = {
+        "rtsp_flags": CONF_PREFER_TCP,
+        "timeout": str(SOURCE_TIMEOUT),
+    }
+
+    pyav_options = {
+        **default_pyav_options,
+        **pyav_options,
+    }
+
+    try:
+        container = av.open(source, options=pyav_options, timeout=5)
+
+    except av.HTTPBadRequestError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.BadRequest
+        ) from ex
+
+    except av.HTTPUnauthorizedError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.Unauthorized
+        ) from ex
+
+    except av.HTTPForbiddenError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.Forbidden
+        ) from ex
+
+    except av.HTTPNotFoundError as ex:
+        raise StreamOpenClientError(
+            stream_client_error=StreamClientError.NotFound
+        ) from ex
+
+    except av.HTTPOtherClientError as ex:
+        raise StreamOpenClientError(stream_client_error=StreamClientError.Other) from ex
+
+    else:
+        return container
+
+
+async def async_check_stream_client_error(
+    hass: HomeAssistant, source: str, pyav_options: dict[str, str] | None = None
+) -> None:
+    """Check if a stream can be successfully opened.
+
+    Raise StreamOpenClientError if an http client error is encountered.
+    """
+    await hass.loop.run_in_executor(
+        None, _check_stream_client_error, source, pyav_options
+    )
+
+
+def _check_stream_client_error(
+    source: str, pyav_options: dict[str, str] | None = None
+) -> None:
+    """Check if a stream can be successfully opened.
+
+    Raise StreamOpenClientError if an http client error is encountered.
+    """
+    _try_open_stream(source, pyav_options).close()
 
 
 def redact_credentials(url: str) -> str:

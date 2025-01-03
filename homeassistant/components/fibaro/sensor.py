@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -27,8 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
-from . import FibaroController
-from .const import DOMAIN
+from . import FibaroConfigEntry
 from .entity import FibaroEntity
 
 # List of known sensors which represents a fibaro device
@@ -103,12 +101,12 @@ FIBARO_TO_HASS_UNIT: dict[str, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FibaroConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fibaro controller devices."""
 
-    controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
+    controller = entry.runtime_data
     entities: list[SensorEntity] = [
         FibaroSensor(device, MAIN_SENSOR_TYPES.get(device.type))
         for device in controller.fibaro_devices[Platform.SENSOR]

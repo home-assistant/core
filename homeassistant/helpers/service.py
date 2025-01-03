@@ -42,6 +42,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
+    ServiceNotSupported,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -986,9 +987,7 @@ async def entity_service_call(
         ):
             # If entity explicitly referenced, raise an error
             if referenced is not None and entity.entity_id in referenced.referenced:
-                raise HomeAssistantError(
-                    f"Entity {entity.entity_id} does not support this service."
-                )
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
 
             continue
 

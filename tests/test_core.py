@@ -68,7 +68,6 @@ from .common import (
     async_mock_service,
     help_test_all,
     import_and_test_deprecated_alias,
-    import_and_test_deprecated_constant_enum,
 )
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
@@ -1563,10 +1562,10 @@ async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> N
 
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
-    call = ha.ServiceCall("homeassistant", "start")
+    call = ha.ServiceCall(None, "homeassistant", "start")
     assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
-    call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
+    call2 = ha.ServiceCall(None, "homeassistant", "start", {"fast": "yes"})
     assert (
         str(call2)
         == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
@@ -2978,22 +2977,6 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
 def test_all() -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(ha)
-
-
-@pytest.mark.parametrize(
-    ("enum"),
-    [
-        ha.ConfigSource.DISCOVERED,
-        ha.ConfigSource.YAML,
-        ha.ConfigSource.STORAGE,
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: ha.ConfigSource,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
 
 
 def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:

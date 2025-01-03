@@ -56,6 +56,7 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
         await self._alarm_module.stop()
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._alarm_module.active
+        return True
