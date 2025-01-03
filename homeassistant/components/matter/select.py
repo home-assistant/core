@@ -84,7 +84,7 @@ class MatterModeSelectEntity(MatterSelectEntity):
         cluster: SelectCluster = self._endpoint.get_cluster(
             self._entity_info.primary_attribute.cluster_id
         )
-        # select the level ID from the label string
+        # select the mode ID from the label string
         for mode in cluster.supportedModes:
             if mode.label != option:
                 continue
