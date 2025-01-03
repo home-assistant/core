@@ -159,3 +159,20 @@ enable_climate_react:
             - "feelslike"
             - "humidity"
           translation_key: smart_type
+get_device_capabilities:
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    hvac_mode:
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan"
+            - "heat"
+          translation_key: hvac_mode

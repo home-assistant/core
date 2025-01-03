@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_MODE,
     ATTR_SWING_MODE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -21,8 +22,8 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -39,6 +40,7 @@ SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
 SERVICE_FULL_STATE = "full_state"
 SERVICE_ENABLE_CLIMATE_REACT = "enable_climate_react"
+SERVICE_GET_DEVICE_CAPABILITIES = "get_device_capabilities"
 ATTR_HIGH_TEMPERATURE_THRESHOLD = "high_temperature_threshold"
 ATTR_HIGH_TEMPERATURE_STATE = "high_temperature_state"
 ATTR_LOW_TEMPERATURE_THRESHOLD = "low_temperature_threshold"
@@ -172,7 +174,6 @@ async def async_setup_entry(
         },
         "async_full_ac_state",
     )
-
     platform.async_register_entity_service(
         SERVICE_ENABLE_CLIMATE_REACT,
         {
@@ -185,6 +186,12 @@ async def async_setup_entry(
             ),
         },
         "async_enable_climate_react",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GET_DEVICE_CAPABILITIES,
+        {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
+        "async_get_device_capabilities",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -389,6 +396,26 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             name="on",
             assumed_state=False,
         )
+
+    async def async_get_device_capabilities(
+        self, hvac_mode: HVACMode
+    ) -> dict[str, Any]:
+        """Get capabilities from device."""
+        active_features = self.device_data.active_features
+        mode_capabilities: dict[str, Any] | None = self.device_data.full_capabilities[
+            "modes"
+        ].get(hvac_mode.value)
+        if not mode_capabilities:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="mode_not_exist"
+            )
+        remote_capabilities: dict[str, Any] = {}
+        for active_feature in active_features:
+            if active_feature in mode_capabilities:
+                remote_capabilities[active_feature.lower()] = mode_capabilities[
+                    active_feature
+                ]
+        return remote_capabilities
 
     async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""
