@@ -1,4 +1,4 @@
-"""Velbus binary_sensor platform tests."""
+"""Velbus sensor platform tests."""
 
 from unittest.mock import patch
 
