@@ -27,6 +27,7 @@ class TwinklyData:
     is_on: bool
     movies: dict[int, str]
     current_movie: int | None
+    current_mode: str | None
 
 
 class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
@@ -66,6 +67,8 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             device_info = await self.client.get_details()
             brightness = await self.client.get_brightness()
             is_on = await self.client.is_on()
+            mode_data = await self.client.get_mode()
+            current_mode = mode_data.get("mode")
             if self.supports_effects:
                 movies = (await self.client.get_saved_movies())["movies"]
         except (TimeoutError, ClientError) as exception:
@@ -87,6 +90,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             is_on,
             {movie["id"]: movie["name"] for movie in movies},
             current_movie.get("id"),
+            current_mode,
         )
 
     def _async_update_device_info(self, name: str) -> None:
