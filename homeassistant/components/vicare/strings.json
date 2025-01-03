@@ -434,6 +434,27 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
+      },
+      "ventilation_level": {
+        "name": "Ventilation level",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "levelone": "1",
+          "leveltwo": "2",
+          "levelthree": "3",
+          "levelfour": "4"
+        }
+      },
+      "ventilation_reason": {
+        "name": "Ventilation reason",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "permanent": "Permanent",
+          "schedule": "Schedule",
+          "sensordriven": "Sensor-driven",
+          "silent": "Silent",
+          "forcedlevelfour": "Boost"
+        }
       }
     },
     "water_heater": {
