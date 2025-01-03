@@ -81,6 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=self._device_name, data=data)
 
+        # step_id defines which method to call
         return self.async_show_form(
             step_id="section",
             data_schema=self._get_data_schema(),
@@ -104,6 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._number_of_led = await self._get_number_of_led()
             return self._next_step()
 
+        # step_id defines which method to call
         return self.async_show_form(
             step_id="user",
             data_schema=self._get_data_schema(),
@@ -112,10 +114,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_get_device(self, url: str):
-        """Get device information from WLED device."""
-        # implement similar to wled but using websockets with the session for HTTP obtained as in _async_get_device of wled config flow
-        # wled = WLED(host, session=session)
+        """Get device information from WLED device.
+
+        Based in `_async_get_device` from homeassistant/components/wled/config_flow.py.
+        """
         # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
+        # TOD: then extract data in async_step_user, for example number of leds, from recently obtained device
         # session = async_get_clientsession(self.hass)
         # scrpi_client = ScRpiClient(session)
         # await scrpi_client.update()
