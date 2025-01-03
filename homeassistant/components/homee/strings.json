@@ -28,10 +28,10 @@
   "entity": {
     "sensor": {
       "battery_sensor": {
-        "name": "Battery"
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
       "brightness_sensor": {
-        "name": "Illuminance"
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
       "brightness_sensor_1": {
         "name": "Illuminance 1"
@@ -61,7 +61,7 @@
         "name": "Button State 4"
       },
       "current_sensor": {
-        "name": "Current"
+        "name": "[%key:component::sensor::entity_component::current::name%]"
       },
       "current_sensor_1": {
         "name": "Current 1"
@@ -82,7 +82,7 @@
         "name": "Device Temperature"
       },
       "energy_sensor": {
-        "name": "Energy"
+        "name": "[%key:component::sensor::entity_component::energy::name%]"
       },
       "energy_sensor_1": {
         "name": "Energy 1"
@@ -112,7 +112,7 @@
         "name": "Position"
       },
       "power_sensor": {
-        "name": "Power"
+        "name": "[%key:component::sensor::entity_component::power::name%]"
       },
       "power_sensor_1": {
         "name": "Power 1"
@@ -133,7 +133,7 @@
         "name": "Rainfall Today"
       },
       "temperature_sensor": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "total_current_sensor": {
         "name": "Total Current"
@@ -174,7 +174,7 @@
         "name": "Valve Position"
       },
       "voltage_sensor": {
-        "name": "Voltage"
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
       "voltage_sensor_1": {
         "name": "Voltage 1"
@@ -189,7 +189,7 @@
         "name": "Voltage 4"
       },
       "wind_speed_sensor": {
-        "name": "Wind Speed"
+        "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
       "window_position_sensor": {
         "name": "Window Position",

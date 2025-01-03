@@ -127,7 +127,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=AttributeType.UP_DOWN,
         translation_key="up_down_sensor",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=AttributeType.UV,
@@ -156,7 +155,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key=AttributeType.WINDOW_POSITION,
         translation_key="window_position_sensor",
         icon="mdi:window-closed",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -170,9 +168,11 @@ async def async_setup_entry(
 
     devices: list[HomeeSensor | HomeeNodeSensor] = []
     for node in config_entry.runtime_data.nodes:
+        # Node properties that are sensors.
         props = ["state", "protocol"]
         devices.extend(HomeeNodeSensor(node, config_entry, item) for item in props)
 
+        # Node attributes that are sensors.
         for attribute in node.attributes:
             devices.extend(
                 HomeeSensor(attribute, config_entry, sensor_descr)
@@ -196,12 +196,6 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         """Initialize a homee sensor entity."""
         super().__init__(attribute, entry)
         self.entity_description = sensor_descr
-        self._attribute = attribute
-        self._sensor_index = attribute.instance
-
-        self._attr_unique_id = (
-            f"{entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
-        )
 
     @property
     def translation_key(self) -> str | None:
@@ -216,7 +210,7 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         return trans_key
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float | int:
         """Return the native value of the sensor."""
         if self._attribute.type in [
             AttributeType.UP_DOWN,
