@@ -7,7 +7,7 @@ from .const import VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 _LOGGER = logging.getLogger(__name__)
 
 
-def rgetattr(obj, attr: str):
+def rgetattr(obj: object, attr: str):
     """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
     _this_func = rgetattr
     sp = attr.split(".", 1)
