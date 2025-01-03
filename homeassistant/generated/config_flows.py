@@ -230,6 +230,7 @@ FLOWS = {
         "google",
         "google_assistant_sdk",
         "google_cloud",
+        "google_drive",
         "google_generative_ai_conversation",
         "google_mail",
         "google_photos",
