@@ -893,7 +893,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "season",
     "sendgrid",
     "sense",
-    "sensibo",
     "sensirion_ble",
     "sensorpro",
     "sensorpush",
