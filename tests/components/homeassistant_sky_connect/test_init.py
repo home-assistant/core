@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
-    FirmwareGuess,
+    FirmwareInfo,
 )
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -32,8 +32,8 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.guess_firmware_type",
-        return_value=FirmwareGuess(
+        "homeassistant.components.homeassistant_sky_connect.guess_firmware_info",
+        return_value=FirmwareInfo(
             is_running=True,
             firmware_type=ApplicationType.SPINEL,
             source="otbr",

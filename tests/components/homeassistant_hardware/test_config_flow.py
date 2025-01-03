@@ -190,11 +190,19 @@ def mock_addon_info(
             return_value=mock_otbr_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
+            return_value=mock_otbr_manager,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_zigbee_flasher_addon_manager",
             return_value=mock_flasher_manager,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
+            return_value=is_hassio,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.is_hassio",
             return_value=is_hassio,
         ),
         patch(
