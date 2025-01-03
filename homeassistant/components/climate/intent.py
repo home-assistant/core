@@ -7,12 +7,32 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN, INTENT_GET_TEMPERATURE
+from . import (
+    ATTR_TEMPERATURE,
+    DOMAIN,
+    INTENT_GET_TEMPERATURE,
+    INTENT_SET_TEMPERATURE,
+    SERVICE_SET_TEMPERATURE,
+)
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
     """Set up the climate intents."""
     intent.async_register(hass, GetTemperatureIntent())
+
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            INTENT_SET_TEMPERATURE,
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            required_slots={
+                (ATTR_TEMPERATURE): vol.Range(0, 250),
+            },
+            description="Sets the desired temperature of a climate device or entity",
+            platforms={DOMAIN},
+        ),
+    )
 
 
 class GetTemperatureIntent(intent.IntentHandler):
