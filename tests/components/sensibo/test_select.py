@@ -207,8 +207,11 @@ async def test_deprecated_horizontal_swing_select(
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_entity_horizontalswing")
     assert issue
     assert issue.translation_key == "deprecated_entity_horizontalswing"
+    assert hass.states.get("select.hallway_horizontal_swing")
+    assert entity_registry.async_is_registered("select.hallway_horizontal_swing")
 
     # Disabling the entity should remove the entity and remove the issue
+    # once the integration is reloaded
     entity_registry.async_update_entity(
         state.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
@@ -223,6 +226,8 @@ async def test_deprecated_horizontal_swing_select(
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done(True)
 
-    # Disabling the entity and reloading should remove the issue
+    # Disabling the entity and reloading has removed the entity and issue
+    assert not hass.states.get("select.hallway_horizontal_swing")
+    assert not entity_registry.async_is_registered("select.hallway_horizontal_swing")
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_entity_horizontalswing")
     assert not issue
