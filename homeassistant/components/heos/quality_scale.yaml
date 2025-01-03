@@ -44,10 +44,7 @@ rules:
   parallel-updates:
     status: todo
     comment: Needs to be set to 0. The underlying library handles parallel updates.
-  reauthentication-flow:
-    status: exempt
-    comment: |
-      This integration doesn't require re-authentication.
+  reauthentication-flow: done
   test-coverage:
     status: todo
     comment: |
