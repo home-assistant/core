@@ -87,6 +87,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
     _attr_supported_options = [ATTR_VOICE]
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -118,7 +119,7 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
 
         # Entity attributes
         self._attr_unique_id = entry_id
-        self._attr_name = title
+        self._attr_name = f"{title} {model.name}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
             manufacturer="ElevenLabs",
