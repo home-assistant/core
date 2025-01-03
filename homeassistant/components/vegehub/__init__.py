@@ -24,6 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -57,7 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     )
 
     # Send the webhook address to the hub as its server target
-    await hub.setup("", webhook_url, retries=1)
+    try:
+        await hub.setup("", webhook_url, retries=1)
+    except ConnectionError as err:
+        raise ConfigEntryError("Error connecting to device") from err
+    except TimeoutError as err:
+        raise ConfigEntryNotReady("Device is not responding") from err
 
     # Initialize runtime data
     entry.runtime_data = hub
