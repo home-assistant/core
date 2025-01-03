@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TadoConfigEntry
 from .const import DOMAIN, SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED
-from .tado_connector import TadoConnector
+from .coordinator import TadoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,21 +61,23 @@ async def async_setup_entry(
 @callback
 def add_tracked_entities(
     hass: HomeAssistant,
-    tado: TadoConnector,
+    coordinator: TadoDataUpdateCoordinator,
     async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from Tado."""
     _LOGGER.debug("Fetching Tado devices from API for (newly) tracked entities")
     new_tracked = []
-    for device_key, device in tado.data["mobile_device"].items():
+    for device_key, device in coordinator.data["mobile_device"].items():
         if device_key in tracked:
             continue
 
         _LOGGER.debug(
             "Adding Tado device %s with deviceID %s", device["name"], device_key
         )
-        new_tracked.append(TadoDeviceTrackerEntity(device_key, device["name"], tado))
+        new_tracked.append(
+            TadoDeviceTrackerEntity(device_key, device["name"], coordinator)
+        )
         tracked.add(device_key)
 
     async_add_entities(new_tracked)
@@ -91,14 +93,14 @@ class TadoDeviceTrackerEntity(TrackerEntity):
         self,
         device_id: str,
         device_name: str,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
     ) -> None:
         """Initialize a Tado Device Tracker entity."""
         super().__init__()
         self._attr_unique_id = str(device_id)
         self._device_id = device_id
         self._device_name = device_name
-        self._tado = tado
+        self._tado = coordinator
         self._active = False
 
     @callback
