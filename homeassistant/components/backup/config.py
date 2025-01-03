@@ -124,6 +124,7 @@ class BackupConfig:
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
         self.data = BackupConfigData.from_dict(stored_config)
+        self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
     async def update(
@@ -160,8 +161,13 @@ class RetentionConfig:
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
         if self.days is not None:
+            LOGGER.debug(
+                "Scheduling next automatic delete of backups older than %s in 1 day",
+                self.days,
+            )
             self._schedule_next(manager)
         else:
+            LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
 
     def to_dict(self) -> StoredRetentionConfig:
