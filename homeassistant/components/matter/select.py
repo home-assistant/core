@@ -84,7 +84,7 @@ class MatterModeSelectEntity(MatterSelectEntity):
         cluster: SelectCluster = self._endpoint.get_cluster(
             self._entity_info.primary_attribute.cluster_id
         )
-        # select the mode ID from the label string
+        # select the level ID from the label string
         for mode in cluster.supportedModes:
             if mode.label != option:
                 continue
@@ -109,6 +109,35 @@ class MatterModeSelectEntity(MatterSelectEntity):
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
+
+
+class MatterLevelSelectEntity(MatterSelectEntity):
+    """Representation of a select entity from Matter (TemperatureControl) Cluster attribute(s)."""
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected level."""
+        # select the level ID from the label string
+        level_id = self._attr_options.index(option)
+
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=clusters.TemperatureControl.Commands.SetTemperature(
+                targetTemperatureLevel=level_id
+            ),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        temperature_level_list = self.get_matter_attribute_value(
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels
+        )
+        selected_level = self.get_matter_attribute_value(
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel
+        )
+        self._attr_options = list(temperature_level_list)
+        self._attr_current_option = temperature_level_list[selected_level]
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -253,5 +282,17 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="TemperatureControlSelectedTemperatureLevel",
+            translation_key="temperature_level",
+        ),
+        entity_class=MatterLevelSelectEntity,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+        ),
     ),
 ]
