@@ -254,6 +254,9 @@ aioftp==0.21.3
 # homeassistant.components.github
 aiogithubapi==24.6.0
 
+# homeassistant.components.google_drive
+aiogoogle==5.13.2
+
 # homeassistant.components.guardian
 aioguardian==2022.07.0
 
