@@ -958,16 +958,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_values["config_entries"] = config_entries
             old_values["config_entries"] = old.config_entries
 
-        for attr_name, setvalue in (
-            ("connections", merge_connections),
-            ("identifiers", merge_identifiers),
-        ):
-            old_value = getattr(old, attr_name)
-            # If not undefined, check if `value` contains new items.
-            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
-                new_values[attr_name] = old_value | setvalue
-                old_values[attr_name] = old_value
-
         if merge_connections is not UNDEFINED:
             normalized_connections = self._validate_connections(
                 device_id,
