@@ -9,13 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_SW_VERSION,
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_MAC,
-)
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_MAC
 
 from .const import DOMAIN
 
@@ -30,7 +24,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hub: VegeHub | None = None
         self._hostname: str = ""
         self._properties: dict = {}
-        self._config_url: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,7 +58,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 self._hostname = self._hub.ip_address
-                self._config_url = f"http://{self._hub.ip_address}"
 
             if self._hub is not None:
                 if len(self._hub.ip_address) <= 0 or len(self._hub.mac_address) <= 0:
@@ -91,8 +83,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data[CONF_MAC] = self._hub.mac_address
                     info_data[CONF_IP_ADDRESS] = self._hub.ip_address
                     info_data[CONF_HOST] = self._hostname
-                    info_data[ATTR_SW_VERSION] = self._properties.get("version")
-                    info_data[ATTR_CONFIGURATION_URL] = self._config_url
 
                     # Create the config entry for the new device
                     return self.async_create_entry(
@@ -123,9 +113,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_ip = discovery_info.host
 
         self._hostname = discovery_info.hostname.removesuffix(".local.")
-        self._config_url = (
-            f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
-        )
+        config_url = f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
         self._properties = discovery_info.properties
 
         self._async_abort_entries_match({CONF_IP_ADDRESS: discovery_info.host})
@@ -149,7 +137,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {"host": self._hostname + " (" + device_ip + ")"},
-                "configuration_url": (self._config_url),
+                "configuration_url": (config_url),
             }
         )
 
