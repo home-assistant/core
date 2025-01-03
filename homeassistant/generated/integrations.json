@@ -2600,6 +2600,12 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "homee": {
+      "name": "Homee",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
@@ -4587,7 +4593,7 @@
       "name": "Overseerr",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ovo_energy": {
       "name": "OVO Energy",
