@@ -28,6 +28,9 @@
     },
     {
       "local_name": "MELK-*"
+    },
+    {
+      "local_name": "LD-0003"
     }
   ],
   "codeowners": ["@bdraco"],
