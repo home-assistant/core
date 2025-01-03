@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
 
@@ -13,7 +14,6 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -21,8 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
 from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes custom switch entities."""
 
-    is_on: Callable[[VeSyncSwitch], bool]
+    is_on: Callable[[VeSyncBaseDevice], bool]
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
@@ -86,10 +86,13 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     """VeSync sensor class."""
 
     def __init__(
-        self, device: VeSyncSwitch, description: VeSyncSwitchEntityDescription
+        self,
+        device: VeSyncBaseDevice,
+        description: VeSyncSwitchEntityDescription,
+        coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device)
+        super().__init__(device, coordinator)
         self.entity_description: VeSyncSwitchEntityDescription = description
         if isinstance(self.device, VeSyncOutlet):
             self._attr_device_class = SwitchDeviceClass.OUTLET
