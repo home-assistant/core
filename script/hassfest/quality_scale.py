@@ -2421,7 +2421,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "This integration is graded and should be removed from script/hassfest/quality_scale.py",
+            "This integration is graded and should be removed from `INTEGRATIONS_WITHOUT_SCALE`"
+            " in script/hassfest/quality_scale.py",
         )
         return
     if (
