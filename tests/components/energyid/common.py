@@ -1,6 +1,8 @@
 """Common Mock Objects for all tests."""
 
+from dataclasses import dataclass
 import datetime as dt
+from typing import Any
 
 from energyid_webhooks.metercatalog import MeterCatalog
 from energyid_webhooks.webhookpolicy import WebhookPolicy
@@ -13,6 +15,8 @@ from homeassistant.components.energyid.const import (
     CONF_WEBHOOK_URL,
     DOMAIN,
 )
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, EventStateChangedData, State
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +33,10 @@ class MockEnergyIDConfigEntry(MockConfigEntry):
     """Mock config entry for EnergyID."""
 
     def __init__(
-        self, *, data: dict | None = None, options: dict | None = None
+        self,
+        *,
+        data: dict[str, Any] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the config entry."""
         super().__init__(
@@ -42,7 +49,7 @@ class MockEnergyIDConfigEntry(MockConfigEntry):
 class MockMeterCatalog(MeterCatalog):
     """Mock Meter Catalog."""
 
-    def __init__(self, meters: list[dict] | None = None) -> None:
+    def __init__(self, meters: list[dict[str, Any]] | None = None) -> None:
         """Initialize the Meter Catalog."""
         super().__init__(
             meters or [{"metrics": {"test-metric": {"units": ["test-unit"]}}}]
@@ -52,12 +59,14 @@ class MockMeterCatalog(MeterCatalog):
 class MockWebhookPolicy(WebhookPolicy):
     """Mock Webhook Policy."""
 
-    def __init__(self, policy: dict | None = None) -> None:
+    def __init__(self, policy: dict[str, Any] | None = None) -> None:
         """Initialize the Webhook Policy."""
         super().__init__(policy or {"allowedInterval": "P1D"})
 
     @classmethod
-    async def async_init(cls, policy: dict | None = None) -> "MockWebhookPolicy":
+    async def async_init(
+        cls, policy: dict[str, Any] | None = None
+    ) -> "MockWebhookPolicy":
         """Mock async_init."""
         return cls(policy=policy)
 
@@ -68,31 +77,53 @@ class MockHass:
     class MockStates:
         """Mock States."""
 
-        def async_entity_ids(self) -> list:
+        def async_entity_ids(self) -> list[str]:
             """Mock async_entity_ids."""
             return ["test-entity-id"]
 
     states = MockStates()
 
 
-class MockState:
-    """Mock State."""
+@dataclass
+class MockState(State):
+    """Mock State that inherits from Home Assistant State."""
+
+    state: str
+    attributes: dict[str, Any]
+    last_changed: dt.datetime
 
     def __init__(
         self,
-        state,
+        state: Any,
         last_changed: dt.datetime | None = None,
-        attributes: dict | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the state."""
-        self.state = state
+        # Convert state to string as required by Home Assistant
+        str_state = str(state)
+        # Initialize with required attributes
+        self.attributes = attributes or {"unit_of_measurement": "kWh"}
         self.last_changed = last_changed or dt.datetime.now()
-        self.attributes = attributes or {}
+        # Use a valid entity ID format
+        super().__init__("sensor.test_entity_id", str_state, self.attributes)
 
 
-class MockEvent:
-    """Mock Event."""
+class MockEvent(Event[EventStateChangedData]):
+    """Mock Event that properly implements Event[EventStateChangedData]."""
 
-    def __init__(self, *, data: dict | None = None) -> None:
+    def __init__(self, *, data: dict[str, Any] | None = None) -> None:
         """Initialize the event."""
-        self.data = data or {"new_state": MockState(1.0)}
+        if data is None:
+            data = {"new_state": MockState(1.0)}
+
+        # Ensure we have the correct event data structure
+        event_data = EventStateChangedData(
+            entity_id="test-entity-id",
+            new_state=data.get("new_state"),
+            old_state=data.get("old_state"),
+        )
+
+        super().__init__(
+            event_type=EVENT_STATE_CHANGED,
+            data=event_data,
+        )

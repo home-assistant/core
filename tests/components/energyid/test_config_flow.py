@@ -3,7 +3,9 @@
 from unittest.mock import patch
 
 import aiohttp
+from multidict import CIMultiDict, CIMultiDictProxy
 import pytest
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import hass_entity_ids
@@ -36,8 +38,8 @@ async def test_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {}
+        assert result.get("type") == FlowResultType.FORM
+        assert result.get("errors") == {}
 
         # Patch policy request to return True
         with patch(
@@ -49,12 +51,12 @@ async def test_form(hass: HomeAssistant) -> None:
             )
             await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2.get("type") == FlowResultType.CREATE_ENTRY
         assert (
-            result2["title"]
+            result2.get("title")
             == f"Send {MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]} to EnergyID"
         )
-        assert result2["data"] == MOCK_CONFIG_ENTRY_DATA
+        assert result2.get("data") == MOCK_CONFIG_ENTRY_DATA
 
 
 @pytest.mark.parametrize(
@@ -62,7 +64,13 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (
             aiohttp.ClientResponseError(
-                aiohttp.RequestInfo(url="", method="GET", headers={}, real_url=""), None
+                aiohttp.RequestInfo(
+                    url=URL(""),
+                    method="GET",
+                    headers=CIMultiDictProxy(CIMultiDict({})),
+                    real_url=URL(""),
+                ),
+                (),
             ),
             {"base": "cannot_connect"},
         ),
@@ -91,8 +99,8 @@ async def test_form__where_api_returns_error(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {}
+        assert result.get("type") == FlowResultType.FORM
+        assert result.get("errors") == {}
 
         # Patch policy request to raise the exception
         with patch(
@@ -105,12 +113,12 @@ async def test_form__where_api_returns_error(
             )
             await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == expected_error
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("errors") == expected_error
 
 
 async def test_hass_entity_ids() -> None:
     """Test hass entity ids."""
-    ids = hass_entity_ids(MockHass())
+    ids = hass_entity_ids(MockHass())  # type: ignore[arg-type]
     assert isinstance(ids, list)
     assert isinstance(ids[0], str)

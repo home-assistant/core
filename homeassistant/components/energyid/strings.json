@@ -8,13 +8,26 @@
           "metric": "EnergyID metric",
           "metric_kind": "EnergyID metric kind",
           "unit": "Unit of measurement"
+        },
+        "data_description": {
+          "webhook_url": "The URL to receive webhook data from EnergyID",
+          "entity_id": "The ID of the entity to be monitored",
+          "metric": "The metric to be monitored",
+          "metric_kind": "The kind of metric to be monitored",
+          "unit": "The unit of measurement for the metric"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_url": "Invalid Webhook URL",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Failed to connect to EnergyID",
+      "invalid_url": "Invalid webhook URL",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured_entity": "This entity is already configured",
+      "already_configured_webhook": "This webhook URL is already configured",
+      "already_configured": "This webhook URL or entity is already configured",
+      "already_configured_service": "This exact combination of webhook URL, entity, and metric is already configured"
     }
   },
   "options": {
