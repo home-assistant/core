@@ -1,0 +1,85 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities doesn't subscribe to events.
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: |
+      No integrations services.
+  common-modules: done
+  docs-high-level-description: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  docs-actions: done
+  brands: done
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Move to base entity for common handling
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage:
+    status: done
+    comment: |
+      Tests are very complex and needs a rewrite for future additions
+  integration-owner: done
+  docs-installation-parameters:
+    status: todo
+    comment: configuration_basic
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration has no options flow.
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices: todo
+  diagnostics:
+    status: done
+    comment: |
+      Change to only use redact once
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No local network connection, cloud based.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

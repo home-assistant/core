@@ -8,9 +8,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "No devices discovered",
-      "no_username": "Could not get username",
-      "incorrect_api_key": "Invalid API key for selected account"
+      "no_devices": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined",
+      "no_username": "Could not retrieve username, ensure your Sensibo account has a proper username and try again",
+      "incorrect_api_key": "The provided API key does not match for this account"
     },
     "step": {
       "user": {
@@ -535,17 +535,8 @@
     }
   },
   "exceptions": {
-    "no_target_temperature_in_features": {
-      "message": "Current mode doesn't support setting target temperature"
-    },
-    "no_fan_level_in_features": {
-      "message": "Current mode doesn't support setting fan level"
-    },
     "fan_mode_not_supported": {
       "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
-    },
-    "no_swing_in_features": {
-      "message": "Current mode doesn't support setting swing"
     },
     "swing_not_supported": {
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
@@ -569,7 +560,7 @@
       "message": "There was an error updating from the Sensibo API with the error: {error}"
     },
     "no_data": {
-      "message": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined"
+      "message": "[%key:component::sensibo::config::error::no_devices%]"
     }
   }
 }
