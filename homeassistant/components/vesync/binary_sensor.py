@@ -19,7 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_DISCOVERY, VS_FANS
+from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_FANS
+from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary_sensor platform."""
 
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+
     @callback
     def discover(devices):
         """Add new devices to platform."""
@@ -64,15 +67,15 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities, coordinator)
 
 
 @callback
-def _setup_entities(devices, async_add_entities):
+def _setup_entities(devices, async_add_entities, coordinator):
     """Add entity."""
     async_add_entities(
         (
-            VeSyncBinarySensor(dev, description)
+            VeSyncBinarySensor(dev, description, coordinator)
             for dev in devices
             for description in SENSOR_DESCRIPTIONS
             if rgetattr(dev, description.key) is not None
@@ -88,9 +91,10 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         self,
         device: VeSyncBaseDevice,
         description: VeSyncBinarySensorEntityDescription,
+        coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device)
+        super().__init__(device, coordinator)
         self.entity_description: VeSyncBinarySensorEntityDescription = description
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 

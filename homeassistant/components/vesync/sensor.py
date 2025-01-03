@@ -238,7 +238,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         self,
         device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
         description: VeSyncSensorEntityDescription,
-        coordinator,
+        coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the VeSync outlet device."""
         super().__init__(device, coordinator)
