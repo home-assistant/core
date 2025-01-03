@@ -1,5 +1,6 @@
 """The tests for the bluetooth WebSocket API."""
 
+import asyncio
 from unittest.mock import ANY
 
 from freezegun.api import FrozenDateTimeFactory
@@ -45,10 +46,12 @@ async def test_subscribe_advertisements(
             "type": "bluetooth/subscribe_advertisements",
         }
     )
-    response = await client.receive_json()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
     assert response["success"]
 
-    response = await client.receive_json()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
     assert response["event"] == {
         "add": [
             {
@@ -77,7 +80,8 @@ async def test_subscribe_advertisements(
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci1"
     )
-    response = await client.receive_json()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
     assert response["event"] == {
         "add": [
             {
@@ -100,5 +104,6 @@ async def test_subscribe_advertisements(
     freezer.tick(3600)
     manager._async_check_unavailable()
     await hass.async_block_till_done()
-    response = await client.receive_json()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
     assert response["event"] == {"remove": [{"address": "44:44:33:11:23:12"}]}
