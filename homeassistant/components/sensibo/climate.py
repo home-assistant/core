@@ -407,7 +407,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="horizontal_swing_not_supported",
-                translation_placeholders={"swing_mode": swing_horizontal_mode},
+                translation_placeholders={
+                    "horizontal_swing_mode": swing_horizontal_mode
+                },
             )
 
         transformation = self.device_data.horizontal_swing_modes_translated
