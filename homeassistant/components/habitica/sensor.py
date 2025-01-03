@@ -34,6 +34,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import StateType
 
 from .const import ASSETS_URL, DOMAIN
+from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 from .util import entity_used_in, get_attribute_points, get_attributes_total
@@ -224,13 +225,11 @@ TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS,
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.HABIT],
-        entity_registry_enabled_default=False,
     ),
     HabiticaTaskSensorEntityDescription(
         key=HabiticaSensorEntity.REWARDS,
         translation_key=HabiticaSensorEntity.REWARDS,
         value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.REWARD],
-        entity_registry_enabled_default=False,
     ),
 )
 
@@ -246,51 +245,22 @@ async def async_setup_entry(
     ent_reg = er.async_get(hass)
     entities: list[SensorEntity] = []
     description: SensorEntityDescription
-    for description in SENSOR_DESCRIPTIONS:
-        if description.key is HabiticaSensorEntity.HEALTH_MAX:
-            if entity_id := ent_reg.async_get_entity_id(
-                SENSOR_DOMAIN,
-                DOMAIN,
-                f"{config_entry.unique_id}_{description.key}",
-            ):
-                entity_entry = ent_reg.async_get(entity_id)
-                assert entity_entry
-                if entity_entry.disabled:
-                    ent_reg.async_remove(entity_id)
-                    async_delete_issue(
-                        hass,
-                        DOMAIN,
-                        f"deprecated_entity_{description.key}",
-                    )
-                else:
-                    entities.append(HabiticaSensor(coordinator, description))
-                    if entity_used_in(hass, entity_id):
-                        async_create_issue(
-                            hass,
-                            DOMAIN,
-                            f"deprecated_entity_{description.key}",
-                            breaks_in_ha_version="2025.8.0",
-                            is_fixable=False,
-                            severity=IssueSeverity.WARNING,
-                            translation_key="deprecated_entity",
-                            translation_placeholders={
-                                "name": str(
-                                    entity_entry.name or entity_entry.original_name
-                                ),
-                                "entity": entity_id,
-                            },
-                        )
-        else:
-            entities.append(HabiticaSensor(coordinator, description))
 
-    for description in TASK_SENSOR_DESCRIPTION:
+    def add_deprecated_entity(
+        description: SensorEntityDescription,
+        entity_cls: Callable[
+            [HabiticaDataUpdateCoordinator, SensorEntityDescription], SensorEntity
+        ],
+    ) -> None:
+        """Add deprecated entities."""
         if entity_id := ent_reg.async_get_entity_id(
             SENSOR_DOMAIN,
             DOMAIN,
             f"{config_entry.unique_id}_{description.key}",
         ):
             entity_entry = ent_reg.async_get(entity_id)
-            assert entity_entry
+            if TYPE_CHECKING:
+                assert entity_entry
             if entity_entry.disabled:
                 ent_reg.async_remove(entity_id)
                 async_delete_issue(
@@ -299,7 +269,7 @@ async def async_setup_entry(
                     f"deprecated_entity_{description.key}",
                 )
             else:
-                entities.append(HabiticaTaskSensor(coordinator, description))
+                entities.append(entity_cls(coordinator, description))
                 if entity_used_in(hass, entity_id):
                     async_create_issue(
                         hass,
@@ -316,6 +286,15 @@ async def async_setup_entry(
                             "entity": entity_id,
                         },
                     )
+
+    for description in SENSOR_DESCRIPTIONS:
+        if description.key is HabiticaSensorEntity.HEALTH_MAX:
+            add_deprecated_entity(description, HabiticaSensor)
+        else:
+            entities.append(HabiticaSensor(coordinator, description))
+
+    for description in TASK_SENSOR_DESCRIPTION:
+        add_deprecated_entity(description, HabiticaTaskSensor)
 
     async_add_entities(entities, True)
 

@@ -27,17 +27,16 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.fixture
-def inject_deprecated_entities(
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
+async def test_sensors(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-) -> Generator[None]:
-    """Inject deprecated entities to entity registry."""
+) -> None:
+    """Test setup of the Habitica sensor platform."""
 
-    entity_registry = er.async_get(hass)
     for entity in (
-        ("test_user_dailies", "dailys"),
-        ("test_user_to_do_s", "todos"),
         ("test_user_habits", "habits"),
         ("test_user_rewards", "rewards"),
         ("test_user_health_max", "health_max"),
@@ -50,18 +49,6 @@ def inject_deprecated_entities(
             disabled_by=None,
         )
 
-
-@pytest.mark.usefixtures(
-    "habitica", "entity_registry_enabled_by_default", "inject_deprecated_entities"
-)
-async def test_sensors(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test setup of the Habitica sensor platform."""
-
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -71,16 +58,31 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.usefixtures(
-    "habitica", "entity_registry_enabled_by_default", "inject_deprecated_entities"
+@pytest.mark.parametrize(
+    ("entity_id", "key"),
+    [
+        ("test_user_habits", HabiticaSensorEntity.HABITS),
+        ("test_user_rewards", HabiticaSensorEntity.REWARDS),
+        ("test_user_health_max", HabiticaSensorEntity.HEALTH_MAX),
+    ],
 )
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
 async def test_sensor_deprecation_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
     entity_registry: er.EntityRegistry,
+    entity_id: str,
+    key: HabiticaSensorEntity,
 ) -> None:
-    """Test task sensor deprecation issue."""
+    """Test sensor deprecation issue."""
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"a380546a-94be-4b8e-8a0b-23e0d5c03303_{key}",
+        suggested_object_id=entity_id,
+        disabled_by=None,
+    )
 
     assert entity_registry is not None
     with patch(
@@ -93,15 +95,57 @@ async def test_sensor_deprecation_issue(
 
         assert config_entry.state is ConfigEntryState.LOADED
 
+        assert entity_registry.async_get(f"sensor.{entity_id}") is not None
         assert issue_registry.async_get_issue(
             domain=DOMAIN,
-            issue_id=f"deprecated_entity_{HabiticaSensorEntity.HABITS}",
+            issue_id=f"deprecated_entity_{key}",
         )
-        assert issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{HabiticaSensorEntity.REWARDS}",
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "key"),
+    [
+        ("test_user_habits", HabiticaSensorEntity.HABITS),
+        ("test_user_rewards", HabiticaSensorEntity.REWARDS),
+        ("test_user_health_max", HabiticaSensorEntity.HEALTH_MAX),
+    ],
+)
+@pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
+async def test_sensor_deprecation_delete_disabled(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    key: HabiticaSensorEntity,
+) -> None:
+    """Test sensor deletion ."""
+
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"a380546a-94be-4b8e-8a0b-23e0d5c03303_{key}",
+        suggested_object_id=entity_id,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert entity_registry is not None
+    with patch(
+        "homeassistant.components.habitica.sensor.entity_used_in", return_value=True
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        assert (
+            issue_registry.async_get_issue(
+                domain=DOMAIN,
+                issue_id=f"deprecated_entity_{key}",
+            )
+            is None
         )
-        assert issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=f"deprecated_entity_{HabiticaSensorEntity.HEALTH_MAX}",
-        )
+
+        assert entity_registry.async_get(f"sensor.{entity_id}") is None
