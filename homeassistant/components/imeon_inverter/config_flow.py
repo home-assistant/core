@@ -51,30 +51,18 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             title=user_input[CONF_ADDRESS], data=user_input
                         )
                     errors["base"] = "invalid_auth"
-                    return self.async_show_form(
-                        step_id="user", data_schema=schema, errors=errors
-                    )
 
                 except TimeoutError:
                     errors["base"] = "cannot_connect"
-                    return self.async_show_form(
-                        step_id="user", data_schema=schema, errors=errors
-                    )
 
                 except ValueError as e:
                     if "Host invalid" in str(e):
                         errors["base"] = "invalid_host"
-                        return self.async_show_form(
-                            step_id="user", data_schema=schema, errors=errors
-                        )
-                    if "Route invalid" in str(e):
-                        errors["base"] = "invalid_route"
-                        return self.async_show_form(
-                            step_id="user", data_schema=schema, errors=errors
-                        )
-                    errors["base"] = "unknown"
-                    return self.async_show_form(
-                        step_id="user", data_schema=schema, errors=errors
-                    )
 
-        return self.async_show_form(step_id="user", data_schema=schema)
+                    elif "Route invalid" in str(e):
+                        errors["base"] = "invalid_route"
+
+                    else:
+                        errors["base"] = "unknown"
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

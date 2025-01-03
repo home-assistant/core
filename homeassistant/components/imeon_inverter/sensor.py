@@ -348,8 +348,8 @@ ENTITY_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="monitoring_self_production",
-        translation_key="monitoring_self_production",
+        key="monitoring_self_sufficiency",
+        translation_key="monitoring_self_sufficiency",
         native_unit_of_measurement="%",
         state_class=SensorStateClass.MEASUREMENT,
     ),

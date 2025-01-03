@@ -12,7 +12,7 @@ from imeon_inverter_api.inverter import Inverter
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TIMEOUT
 
@@ -24,12 +24,9 @@ type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 # HUB CREATION #
 class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
-    """Abstract representation of an inverter.
+    """Each inverter is it's own HUB, thus it's own data set.
 
-    A HUB or a data update coordinator is a HASS Object that automatically polls
-    data at regular intervals. Entities representing the different sensors and
-    settings then all poll data from their HUB. Each inverter is it's own HUB
-    thus it's own data set. This allows this integration to handle as many
+    This allows this integration to handle as many
     inverters as possible in parallel.
     """
 
@@ -55,33 +52,14 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
 
         self.api = Inverter(entry.data[CONF_ADDRESS])  # API calls
 
-        # Store request data
-        self.data = {}
-
     def update(self, entry: InverterConfigEntry) -> None:
         """Update HUB data based on user input."""
         self.api = Inverter(entry.data[CONF_ADDRESS])
 
-    def store_data(self, entity_dict):
-        """Store in data for entities to use."""
-        for key in entity_dict:
-            if key != "timeline":
-                val = entity_dict[key]
-                for sub_key, sub_val in val.items():
-                    self.data[key + "_" + sub_key] = sub_val
-            else:  # Timeline is a list not a dict
-                self.data[key] = entity_dict[key]
-
-    async def init_and_store(self) -> dict[str, str | float | int]:
-        """Init API and store the data provided."""
-        await self.api.init()
-        self.store_data(self.api.storage)
-        return self.data
-
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
-            async with timeout(TIMEOUT):
+            async with timeout(TIMEOUT * 2):
                 if self.config_entry is not None:
                     # Am I logged in ? If not log in
                     await self.api.login(
@@ -89,12 +67,12 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
                         self.config_entry.data[CONF_PASSWORD],
                     )
 
-                    self.hass.async_create_task(self.init_and_store())
+                    await self.api.init()
 
-        except TimeoutError:
-            _LOGGER.error(
-                "Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection"
-            )
+        except TimeoutError as e:
+            raise UpdateFailed(
+                "Connection failed, please check credentials. If the error persists check the network connection"
+            ) from e
 
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch and store newest data from API.
@@ -102,6 +80,8 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         This is the place to where entities can get their data.
         It also includes the login process.
         """
+
+        data = {}
 
         try:
             if self.config_entry is not None:
@@ -115,12 +95,18 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
                     # Fetch data using distant API
                     await self.api.update()
 
-        except TimeoutError:
-            _LOGGER.error(
-                "Timeout Error: Reconnection failed, please check credentials. If the error persists check the network connection"
-            )
+                    # Store data
+                    for key, val in self.api.storage.items():
+                        if key != "timeline":
+                            val = self.api.storage[key]
+                            for sub_key, sub_val in val.items():
+                                data[key + "_" + sub_key] = sub_val
+                        else:  # Timeline is a list of dict, not a dict
+                            data[key] = self.api.storage[key]
 
-        # Store in data for entities to use
-        self.store_data(self.api.storage)
+        except TimeoutError as e:
+            raise UpdateFailed(
+                "Reconnection failed, please check credentials. If the error persists check the network connection"
+            ) from e
 
-        return self.data  # send stored data so entities can poll it
+        return data  # send stored data so entities can poll it
