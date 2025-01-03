@@ -35,7 +35,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     time_zone = str(hass.config.time_zone)
 
-    manager = VeSync(username, password, time_zone)
+    manager = VeSync(
+        username,
+        password,
+        time_zone,
+        debug=lambda: logging.getLogger("pyvesync").level == logging.DEBUG,
+        redact=True,
+    )
 
     login = await hass.async_add_executor_job(manager.login)
 
