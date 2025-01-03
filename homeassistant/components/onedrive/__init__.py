@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload a OneDrive config entry."""
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
     return True
 
