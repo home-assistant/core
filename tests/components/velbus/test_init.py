@@ -19,10 +19,21 @@ async def test_setup_connection_failed(
     config_entry: VelbusConfigEntry,
     controller: MagicMock,
 ) -> None:
-    """Test the setup that fails during velbus connect.."""
-    controller.connect.side_effect = VelbusConnectionFailed()
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    """Test the setup that fails during velbus connect."""
+    controller.return_value.connect.side_effect = VelbusConnectionFailed()
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_start_failed(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    controller: MagicMock,
+) -> None:
+    """Test the setup that fails during velbus connect."""
+    controller.return_value.start.side_effect = ConnectionError()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
