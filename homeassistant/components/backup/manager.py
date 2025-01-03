@@ -1294,6 +1294,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
             tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
             await async_add_executor_job(shutil.move, temp_file, tar_file_path)
         else:
             tar_file_path = temp_file
