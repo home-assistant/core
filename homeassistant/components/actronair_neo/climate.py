@@ -34,9 +34,11 @@ FAN_MODE_MAPPING_REVERSE = {v: k for k, v in FAN_MODE_MAPPING.items()}
 HVAC_MODE_MAPPING = {
     "COOL": HVACMode.COOL,
     "HEAT": HVACMode.HEAT,
-    "FAN_ONLY": HVACMode.FAN_ONLY,
+    "FAN": HVACMode.FAN_ONLY,
+    "AUTO": HVACMode.AUTO,
     "OFF": HVACMode.OFF,
 }
+HVAC_MODE_MAPPING_REVERSE = {v: k for k, v in HVAC_MODE_MAPPING.items()}
 AC_UNIT_SUPPORTED_FEATURES = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.FAN_MODE
@@ -202,12 +204,17 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
+        ac_mode = HVAC_MODE_MAPPING_REVERSE.get(hvac_mode)
+        if not ac_mode:
+            raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
+
         if hvac_mode == HVACMode.OFF:
             await self._api.set_system_mode(self._serial_number, is_on=False)
         else:
             await self._api.set_system_mode(
-                self._serial_number, is_on=True, mode=hvac_mode
+                self._serial_number, is_on=True, mode=ac_mode
             )
+
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
