@@ -311,6 +311,8 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp_server.*
+homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
@@ -361,8 +363,11 @@ homeassistant.components.openuv.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
+homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
+homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*

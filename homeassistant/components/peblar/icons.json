@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "active_error_codes": {
+        "default": "mdi:alert"
+      },
+      "active_warning_codes": {
+        "default": "mdi:alert"
+      }
+    },
+    "number": {
+      "charge_current_limit": {
+        "default": "mdi:speedometer"
+      }
+    },
+    "select": {
+      "smart_charging": {
+        "default": "mdi:lightning-bolt",
+        "state": {
+          "fast_solar": "mdi:solar-power",
+          "pure_solar": "mdi:solar-power-variant",
+          "scheduled": "mdi:calendar-clock",
+          "smart_solar": "mdi:solar-power"
+        }
+      }
+    },
+    "sensor": {
+      "cp_state": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "charge_current_limit_source": {
+        "default": "mdi:arrow-collapse-up"
+      },
+      "uptime": {
+        "default": "mdi:timer"
+      }
+    },
+    "switch": {
+      "force_single_phase": {
+        "default": "mdi:power-cycle"
+      }
+    },
+    "update": {
+      "customization": {
+        "default": "mdi:palette"
+      }
+    }
+  }
+}

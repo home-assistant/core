@@ -17,21 +17,27 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
 
+from .actions import register_actions
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
 
+    from homeassistant.helpers.typing import ConfigType
+
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 
@@ -42,6 +48,12 @@ class MusicAssistantEntryData:
 
     mass: MusicAssistantClient
     listen_task: asyncio.Task
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Music Assistant component."""
+    register_actions(hass)
+    return True
 
 
 async def async_setup_entry(

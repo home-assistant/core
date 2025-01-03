@@ -15,6 +15,8 @@ from homeassistant.components.light import (
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
@@ -129,12 +131,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
             if (max_mireds := config.get(CONF_MAX_MIREDS))
-            else super().min_color_temp_kelvin
+            else DEFAULT_MIN_KELVIN
         )
         self._attr_max_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(min_mireds)
             if (min_mireds := config.get(CONF_MIN_MIREDS))
-            else super().max_color_temp_kelvin
+            else DEFAULT_MAX_KELVIN
         )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 

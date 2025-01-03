@@ -20,6 +20,8 @@ from . import VelbusConfigEntry
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

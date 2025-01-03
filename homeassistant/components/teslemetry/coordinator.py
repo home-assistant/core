@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import ENERGY_HISTORY_FIELDS, LOGGER
 from .helpers import flatten
 
-VEHICLE_INTERVAL = timedelta(seconds=30)
+VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)

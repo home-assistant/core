@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
-from .models import Folder
+from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
@@ -33,8 +33,8 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     create_backup: StoredCreateBackupConfig
-    last_attempted_strategy_backup: str | None
-    last_completed_strategy_backup: str | None
+    last_attempted_automatic_backup: str | None
+    last_completed_automatic_backup: str | None
     retention: StoredRetentionConfig
     schedule: StoredBackupSchedule
 
@@ -44,8 +44,8 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     create_backup: CreateBackupConfig
-    last_attempted_strategy_backup: datetime | None = None
-    last_completed_strategy_backup: datetime | None = None
+    last_attempted_automatic_backup: datetime | None = None
+    last_completed_automatic_backup: datetime | None = None
     retention: RetentionConfig
     schedule: BackupSchedule
 
@@ -59,12 +59,12 @@ class BackupConfigData:
             include_folders = None
         retention = data["retention"]
 
-        if last_attempted_str := data["last_attempted_strategy_backup"]:
+        if last_attempted_str := data["last_attempted_automatic_backup"]:
             last_attempted = dt_util.parse_datetime(last_attempted_str)
         else:
             last_attempted = None
 
-        if last_attempted_str := data["last_completed_strategy_backup"]:
+        if last_attempted_str := data["last_completed_automatic_backup"]:
             last_completed = dt_util.parse_datetime(last_attempted_str)
         else:
             last_completed = None
@@ -79,8 +79,8 @@ class BackupConfigData:
                 name=data["create_backup"]["name"],
                 password=data["create_backup"]["password"],
             ),
-            last_attempted_strategy_backup=last_attempted,
-            last_completed_strategy_backup=last_completed,
+            last_attempted_automatic_backup=last_attempted,
+            last_completed_automatic_backup=last_completed,
             retention=RetentionConfig(
                 copies=retention["copies"],
                 days=retention["days"],
@@ -90,20 +90,20 @@ class BackupConfigData:
 
     def to_dict(self) -> StoredBackupConfig:
         """Convert backup config data to a dict."""
-        if self.last_attempted_strategy_backup:
-            last_attempted = self.last_attempted_strategy_backup.isoformat()
+        if self.last_attempted_automatic_backup:
+            last_attempted = self.last_attempted_automatic_backup.isoformat()
         else:
             last_attempted = None
 
-        if self.last_completed_strategy_backup:
-            last_completed = self.last_completed_strategy_backup.isoformat()
+        if self.last_completed_automatic_backup:
+            last_completed = self.last_completed_automatic_backup.isoformat()
         else:
             last_completed = None
 
         return StoredBackupConfig(
             create_backup=self.create_backup.to_dict(),
-            last_attempted_strategy_backup=last_attempted,
-            last_completed_strategy_backup=last_completed,
+            last_attempted_automatic_backup=last_attempted,
+            last_completed_automatic_backup=last_completed,
             retention=self.retention.to_dict(),
             schedule=self.schedule.to_dict(),
         )
@@ -124,6 +124,7 @@ class BackupConfig:
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
         self.data = BackupConfigData.from_dict(stored_config)
+        self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
     async def update(
@@ -160,8 +161,13 @@ class RetentionConfig:
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
         if self.days is not None:
+            LOGGER.debug(
+                "Scheduling next automatic delete of backups older than %s in 1 day",
+                self.days,
+            )
             self._schedule_next(manager)
         else:
+            LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
 
     def to_dict(self) -> StoredRetentionConfig:
@@ -286,7 +292,7 @@ class BackupSchedule:
         self._unschedule_next(manager)
         now = dt_util.now()
         if (cron_event := self.cron_event) is None:
-            seed_time = manager.config.data.last_completed_strategy_backup or now
+            seed_time = manager.config.data.last_completed_automatic_backup or now
             cron_event = self.cron_event = CronSim(cron_pattern, seed_time)
         next_time = next(cron_event)
 
@@ -316,31 +322,12 @@ class BackupSchedule:
                     include_homeassistant=True,  # always include HA
                     name=config_data.create_backup.name,
                     password=config_data.create_backup.password,
-                    with_strategy_settings=True,
+                    with_automatic_settings=True,
                 )
+            except BackupManagerError as err:
+                LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001
-                # another more specific exception will be added
-                # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
-
-            # delete old backups more numerous than copies
-
-            def _backups_filter(
-                backups: dict[str, ManagerBackup],
-            ) -> dict[str, ManagerBackup]:
-                """Return oldest backups more numerous than copies to delete."""
-                # we need to check here since we await before
-                # this filter is applied
-                if config_data.retention.copies is None:
-                    return {}
-                return dict(
-                    sorted(
-                        backups.items(),
-                        key=lambda backup_item: backup_item[1].date,
-                    )[: len(backups) - config_data.retention.copies]
-                )
-
-            await _delete_filtered_backups(manager, _backups_filter)
 
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
@@ -423,14 +410,14 @@ async def _delete_filtered_backups(
             get_agent_errors,
         )
 
-    # only delete backups that are created by the backup strategy
+    # only delete backups that are created with the saved automatic settings
     backups = {
         backup_id: backup
         for backup_id, backup in backups.items()
-        if backup.with_strategy_settings
+        if backup.with_automatic_settings
     }
 
-    LOGGER.debug("Total strategy backups: %s", backups)
+    LOGGER.debug("Total automatic backups: %s", backups)
 
     filtered_backups = backup_filter(backups)
 
@@ -469,3 +456,24 @@ async def _delete_filtered_backups(
             "Error deleting old copies: %s",
             agent_errors,
         )
+
+
+async def delete_backups_exceeding_configured_count(manager: BackupManager) -> None:
+    """Delete backups exceeding the configured retention count."""
+
+    def _backups_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return oldest backups more numerous than copies to delete."""
+        # we need to check here since we await before
+        # this filter is applied
+        if manager.config.data.retention.copies is None:
+            return {}
+        return dict(
+            sorted(
+                backups.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )[: max(len(backups) - manager.config.data.retention.copies, 0)]
+        )
+
+    await _delete_filtered_backups(manager, _backups_filter)

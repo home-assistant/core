@@ -61,6 +61,5 @@ async def test_diagnostics(
             "created_at": entry.created_at.isoformat(),
             "modified_at": entry.modified_at.isoformat(),
             "discovery_keys": {},
-            "subentries": [],
         },
     }

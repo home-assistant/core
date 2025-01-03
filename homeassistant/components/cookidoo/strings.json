@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Login to {cookidoo}",
+        "title": "Setup {cookidoo}",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -11,11 +11,11 @@
         "data_description": {
           "email": "Email used to access your {cookidoo} account.",
           "password": "Password used to access your {cookidoo} account.",
-          "country": "Pick your language for the {cookidoo} content."
+          "country": "Pick your country for the {cookidoo} content."
         }
       },
       "language": {
-        "title": "Set language for {cookidoo}",
+        "title": "Setup {cookidoo}",
         "data": {
           "language": "[%key:common::config_flow::data::language%]"
         },
@@ -48,6 +48,11 @@
     }
   },
   "entity": {
+    "button": {
+      "todo_clear": {
+        "name": "Clear shopping list and additional purchases"
+      }
+    },
     "todo": {
       "ingredient_list": {
         "name": "Shopping list"
@@ -58,6 +63,9 @@
     }
   },
   "exceptions": {
+    "button_clear_todo_failed": {
+      "message": "Failed to clear all items from the Cookidoo shopping list"
+    },
     "todo_save_item_failed": {
       "message": "Failed to save {name} to Cookidoo shopping list"
     },

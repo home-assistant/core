@@ -3,14 +3,14 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.2.2b0
+aiohasupervisor==0.2.2b5
 aiohttp-fast-zlib==0.2.0
-aiohttp==3.11.10
+aiohttp==3.11.11
 aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
-async-upnp-client==0.41.0
+async-upnp-client==0.42.0
 atomicwrites-homeassistant==1.4.1
 attrs==24.2.0
 audioop-lts==0.2.1;python_version>='3.13'
@@ -25,6 +25,7 @@ bluetooth-data-tools==1.20.0
 cached-ipaddress==0.8.0
 certifi>=2021.5.30
 ciso8601==2.3.2
+cronsim==2.6
 cryptography==44.0.0
 dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
@@ -32,19 +33,19 @@ go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.6.0
 hass-nabucasa==0.87.0
-hassil==2.0.5
+hassil==2.1.0
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20241127.8
-home-assistant-intents==2024.12.9
+home-assistant-frontend==20250103.0
+home-assistant-intents==2025.1.1
 httpx==0.27.2
 ifaddr==0.2.0
-Jinja2==3.1.4
+Jinja2==3.1.5
 lru-dict==1.3.0
 mutagen==1.47.0
 orjson==3.10.12
 packaging>=23.1
 paho-mqtt==1.6.1
-Pillow==11.0.0
+Pillow==11.1.0
 propcache==0.2.1
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
@@ -106,7 +107,7 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.6.2.post1
+anyio==4.7.0
 h11==0.14.0
 httpcore==1.0.5
 
@@ -115,7 +116,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.0
+numpy==2.2.1
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -126,7 +127,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.3
+pydantic==2.10.4
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -145,7 +146,7 @@ pyOpenSSL>=24.0.0
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.28.3
+protobuf==5.29.2
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
