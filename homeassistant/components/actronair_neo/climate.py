@@ -197,7 +197,10 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         """Set a new fan mode."""
         api_fan_mode = FAN_MODE_MAPPING.get(fan_mode.lower())
         await self._api.set_fan_mode(self._serial_number, fan_mode=api_fan_mode)
+        self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
+
+        await self._coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
@@ -207,7 +210,10 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
             await self._api.set_system_mode(
                 self._serial_number, is_on=True, mode=hvac_mode
             )
+        self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
+
+        await self._coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
@@ -234,7 +240,10 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
             )
         else:
             raise ValueError(f"Mode {hvac_mode} is invalid.")
+        self._attr_target_temperature = temp
         self.async_write_ha_state()
+
+        await self._coordinator.async_request_refresh()
 
     async def async_turn_on_continuous(self, continuous: bool) -> None:
         """Set the continuous mode."""
@@ -400,7 +409,10 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
                 zone_number=self._ac_zone.zone_number - 1,
                 is_enabled=True,
             )
+        self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
+
+        await self._coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
@@ -435,4 +447,7 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
             )
         else:
             raise ValueError(f"Mode {hvac_mode} is invalid.")
+        self._attr_target_temperature = temp
         self.async_write_ha_state()
+
+        await self._coordinator.async_request_refresh()
