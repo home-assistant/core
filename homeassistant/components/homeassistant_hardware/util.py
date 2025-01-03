@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
@@ -133,6 +134,14 @@ class FirmwareInfo:
     source: str
     owners: list[OwningAddon | OwningIntegration]
 
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the firmware owner is running."""
+        states = await asyncio.gather(*(o.is_running(hass) for o in self.owners))
+        if not states:
+            return False
+
+        return all(states)
+
 
 async def get_zha_firmware_info(
     hass: HomeAssistant, config_entry: ConfigEntry
@@ -155,7 +164,7 @@ async def get_zha_firmware_info(
     if config_entry.data["radio_type"] != "ezsp":
         return None
 
-    device = config_entry.data.get("device", {}).get("device_path", None)
+    device = config_entry.data.get("device", {}).get("path", None)
     if device is None:
         return None
 
@@ -209,6 +218,7 @@ async def guess_hardware_owners(
         if firmware_info is not None:
             device_guesses[firmware_info.device].append(firmware_info)
 
+    # We assume that the OTBR integration will always be set up, even without the addon
     for otbr_config_entry in hass.config_entries.async_entries(OTBR_DOMAIN):
         firmware_info = await get_otbr_firmware_info(hass, otbr_config_entry)
 
