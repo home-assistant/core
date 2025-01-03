@@ -40,9 +40,7 @@ rules:
     comment: no service action and coordinator updates
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters:
-    status: todo
-    comment: missing user/password
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: no configuration option
@@ -51,8 +49,8 @@ rules:
   entity-translations: done
   entity-device-class: done
   devices:
-    status: todo
-    comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
+    status: done
+    comment: create one device corresponding to given meter
   entity-category:
     status: done
     comment: default class is fine
@@ -62,9 +60,7 @@ rules:
   discovery:
     status: exempt
     comment: api only, nothing on local network to discover services
-  stale-devices:
-    status: todo
-    comment: see devices
+  stale-devices: done
   diagnostics: todo
   exception-translations: todo
   icon-translations:
@@ -73,9 +69,7 @@ rules:
   reconfiguration-flow:
     status: todo
     comment: reconfigure every configurations input
-  dynamic-devices:
-    status: todo
-    comment: see devices
+  dynamic-devices: done
   discovery-update-info:
     status: exempt
     comment: devices are not network dependent and will not be updated during their lives
@@ -83,7 +77,7 @@ rules:
     status: exempt
     comment: No repair issues to be raised
   docs-use-cases: done
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update:
     status: todo

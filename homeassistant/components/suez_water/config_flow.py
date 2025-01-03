@@ -5,14 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pysuez import PySuezError, SuezClient
+from pysuez import ContractResult, PySuezError, SuezClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,36 +20,38 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_COUNTER_ID): str,
     }
 )
 
 
-async def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(username: str, password: str) -> ContractResult:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     try:
-        counter_id = data.get(CONF_COUNTER_ID)
-        client = SuezClient(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            counter_id,
-        )
+        client = SuezClient(username=username, password=password, counter_id=None)
         try:
             if not await client.check_credentials():
                 raise InvalidAuth
         except PySuezError as ex:
             raise CannotConnect from ex
 
-        if counter_id is None:
-            try:
-                data[CONF_COUNTER_ID] = await client.find_counter()
-            except PySuezError as ex:
-                raise CounterNotFound from ex
+        try:
+            contract = await client.contract_data()
+            if not contract.isCurrentContract:
+                raise NoActiveContract
+        except PySuezError as ex:
+            raise NoActiveContract from ex
+
+        try:
+            await client.find_counter()
+        except PySuezError as ex:
+            raise CounterNotFound from ex
     finally:
         await client.close_session()
+
+    return contract
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -65,21 +67,27 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(user_input)
+                contract = await validate_input(
+                    username=user_input[CONF_USERNAME],
+                    password=user_input[CONF_PASSWORD],
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except CounterNotFound:
                 errors["base"] = "counter_not_found"
+            except NoActiveContract:
+                errors["base"] = "no_active_contract"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                counter_id = str(user_input[CONF_COUNTER_ID])
-                await self.async_set_unique_id(counter_id)
+                await self.async_set_unique_id(contract.fullRefFormat)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=counter_id, data=user_input)
+                return self.async_create_entry(
+                    title=contract.fullRefFormat, data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -99,3 +107,7 @@ class InvalidAuth(HomeAssistantError):
 
 class CounterNotFound(HomeAssistantError):
     """Error to indicate we failed to automatically find the counter id."""
+
+
+class NoActiveContract(HomeAssistantError):
+    """Error to indicate we failed to find an active contract."""
