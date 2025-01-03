@@ -253,15 +253,17 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     headers[hdrs.X_FORWARDED_FOR] = _forwarded_for_header(forward_for, peername[0])
 
     # Set X-Forwarded-Host
-    if not (forward_host := request.headers.get(hdrs.X_FORWARDED_HOST)):
-        forward_host = request.host
-    headers[hdrs.X_FORWARDED_HOST] = forward_host
+    # Avoid calling request.host as it can fallback to doing blocking DNS lookups
+    # https://github.com/aio-libs/aiohttp/issues/9308
+    if forward_host := request.headers.get(
+        hdrs.X_FORWARDED_HOST
+    ) or request.headers.get(hdrs.HOST):
+        headers[hdrs.X_FORWARDED_HOST] = forward_host
 
     # Set X-Forwarded-Proto
-    forward_proto = request.headers.get(hdrs.X_FORWARDED_PROTO)
-    if not forward_proto:
-        forward_proto = request.scheme
-    headers[hdrs.X_FORWARDED_PROTO] = forward_proto
+    headers[hdrs.X_FORWARDED_PROTO] = (
+        request.headers.get(hdrs.X_FORWARDED_PROTO) or request.scheme
+    )
 
     return headers
 
