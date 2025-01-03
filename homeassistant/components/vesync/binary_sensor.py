@@ -99,8 +99,6 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        if self.entity_description.is_on is not None:
-            return self.entity_description.is_on(self.device)
-        return None
+        return self.entity_description.is_on(self.device)
