@@ -577,5 +577,11 @@
     "no_data": {
       "message": "[%key:component::sensibo::config::error::no_devices%]"
     }
+  },
+  "issues": {
+    "deprecated_entity_horizontalswing": {
+      "title": "The Sensibo {name} entity is deprecated",
+      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
+    }
   }
 }

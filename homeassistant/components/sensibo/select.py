@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import SensiboDevice
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SelectEntity,
@@ -17,6 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from . import SensiboConfigEntry
 from .const import DOMAIN
@@ -77,17 +84,41 @@ async def async_setup_entry(
             entity = entity_registry.async_get(entity_id)
             if entity and entity.disabled:
                 entity_registry.async_remove(entity_id)
+                async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_entity_horizontalswing",
+                )
             elif entity and HORIZONTAL_SWING_MODE_TYPE.key in device_data.full_features:
                 entities.append(
                     SensiboSelect(coordinator, device_id, HORIZONTAL_SWING_MODE_TYPE)
                 )
+                if automations_with_entity(hass, entity_id) or scripts_with_entity(
+                    hass, entity_id
+                ):
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        "deprecated_entity_horizontalswing",
+                        breaks_in_ha_version="2025.8.0",
+                        is_fixable=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="deprecated_entity_horizontalswing",
+                        translation_placeholders={
+                            "name": str(entity.name or entity.original_name),
+                            "entity": entity_id,
+                        },
+                    )
 
-    async_add_entities(
-        SensiboSelect(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_SELECT_TYPES
-        if description.key in device_data.full_features
+    entities.extend(
+        [
+            SensiboSelect(coordinator, device_id, description)
+            for device_id, device_data in coordinator.data.parsed.items()
+            for description in DEVICE_SELECT_TYPES
+            if description.key in device_data.full_features
+        ]
     )
+    async_add_entities(entities)
 
 
 class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):

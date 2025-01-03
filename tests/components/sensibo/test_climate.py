@@ -13,12 +13,14 @@ from voluptuous import MultipleInvalid
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -262,6 +264,95 @@ async def test_climate_swing(
 
     state = hass.states.get("climate.hallway")
     assert "swing_mode" not in state.attributes
+
+
+async def test_climate_horizontal_swing(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any]],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Sensibo climate horizontal swing service."""
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "stopped"
+
+    monkeypatch.setattr(
+        get_data[0].parsed["ABC999111"],
+        "horizontal_swing_modes",
+        ["stopped", "fixedleft", "fixedcenter", "fixedright", "not_in_ha"],
+    )
+    monkeypatch.setattr(
+        get_data[0].parsed["ABC999111"],
+        "swing_modes_translated",
+        {
+            "stopped": "stopped",
+            "fixedleft": "fixedLeft",
+            "fixedcenter": "fixedCenter",
+            "fixedright": "fixedRight",
+            "not_in_ha": "not_in_ha",
+        },
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Climate horizontal swing mode not_in_ha is not supported by the integration",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "not_in_ha"},
+            blocking=True,
+        )
+
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "fixedleft"},
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "fixedleft"
+
+    monkeypatch.setattr(
+        get_data[0].parsed["ABC999111"],
+        "active_features",
+        [
+            "timestamp",
+            "on",
+            "mode",
+            "targetTemperature",
+            "swing",
+            "light",
+        ],
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_SWING_HORIZONTAL_MODE: "fixedcenter",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "fixedleft"
 
 
 async def test_climate_temperatures(
