@@ -81,6 +81,11 @@
       ]),
       'max_temp': 20,
       'min_temp': 10,
+      'swing_horizontal_modes': list([
+        'stopped',
+        'fixedleft',
+        'fixedcenterleft',
+      ]),
       'swing_modes': list([
         'stopped',
         'fixedtop',
@@ -109,7 +114,7 @@
     'original_name': None,
     'platform': 'sensibo',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 425>,
+    'supported_features': <ClimateEntityFeature: 937>,
     'translation_key': 'climate_device',
     'unique_id': 'ABC999111',
     'unit_of_measurement': None,
@@ -137,7 +142,13 @@
       ]),
       'max_temp': 20,
       'min_temp': 10,
-      'supported_features': <ClimateEntityFeature: 425>,
+      'supported_features': <ClimateEntityFeature: 937>,
+      'swing_horizontal_mode': 'stopped',
+      'swing_horizontal_modes': list([
+        'stopped',
+        'fixedleft',
+        'fixedcenterleft',
+      ]),
       'swing_mode': 'stopped',
       'swing_modes': list([
         'stopped',
