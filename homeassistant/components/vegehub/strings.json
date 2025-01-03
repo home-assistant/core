@@ -1,0 +1,30 @@
+{
+  "title": "VegeHub",
+  "config": {
+    "flow_title": "{host}",
+    "step": {
+      "user": {
+        "title": "Set up VegeHub",
+        "description": "Do you want to set up this VegeHub?",
+        "data": {
+          "ip_address": "Enter the IP address of target VegeHub"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Ensure Hub is awake, and try again.",
+      "timeout_connect": "Timeout establishing connection. Ensure Hub is awake, and try again.",
+      "missing_data": "Unable to complete setup due to missing data."
+    },
+    "abort": {
+      "cannot_connect": "Failed to connect to the device. Please try again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "analog_sensor": {
+        "name": "VegeHub Sensor {index}"
+      }
+    }
+  }
+}
