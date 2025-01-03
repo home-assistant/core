@@ -535,17 +535,8 @@
     }
   },
   "exceptions": {
-    "no_target_temperature_in_features": {
-      "message": "Current mode doesn't support setting target temperature"
-    },
-    "no_fan_level_in_features": {
-      "message": "Current mode doesn't support setting fan level"
-    },
     "fan_mode_not_supported": {
       "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
-    },
-    "no_swing_in_features": {
-      "message": "Current mode doesn't support setting swing"
     },
     "swing_not_supported": {
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"

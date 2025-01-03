@@ -177,7 +177,7 @@ async def test_climate_fan(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -186,7 +186,7 @@ async def test_climate_fan(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["fan_mode"] == "low"
+    assert "fan_mode" not in state.attributes
 
 
 async def test_climate_swing(
@@ -262,7 +262,7 @@ async def test_climate_swing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
@@ -271,7 +271,7 @@ async def test_climate_swing(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["swing_mode"] == "fixedtop"
+    assert "swing_mode" not in state.attributes
 
 
 async def test_climate_temperatures(
@@ -387,7 +387,7 @@ async def test_climate_temperatures(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -396,7 +396,7 @@ async def test_climate_temperatures(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["temperature"] == 20
+    assert "temperature" not in state.attributes
 
 
 async def test_climate_temperature_is_none(
