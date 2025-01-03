@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         username,
         password,
         time_zone,
-        debug=lambda: logging.getLogger("pyvesync").level == logging.DEBUG,
+        debug=logging.getLogger("pyvesync").level == logging.DEBUG,
         redact=True,
     )
 
