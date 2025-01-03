@@ -403,11 +403,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing operation."""
-        if "horizontalSwing" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_horizontal_swing_in_features",
-            )
         if swing_horizontal_mode not in AVAILABLE_HORIZONTAL_SWING_MODES:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
