@@ -58,8 +58,10 @@ class OneDriveBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
         """Initialize the OneDrive backup agent."""
         super().__init__()
-        self._graph_client = entry.runtime_data
-        self._drive_item = self._graph_client.drives.by_drive_id("drive-id")
+        self._graph_client = entry.runtime_data.graph_client
+        self._drive_item = self._graph_client.drives.by_drive_id(
+            entry.runtime_data.drive_id
+        )
         self.name = entry.title
         self._hass = hass
 
@@ -71,8 +73,14 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
         item_id = await self._get_drive_item_from_name(f"{backup_id}.tar")
         content = await self._drive_item.items.by_drive_item_id(item_id).content.get()
-        for chunk in await self._hass.async_add_executor_job(content, 1024):
-            yield chunk
+        return self._bytes_to_async_iterator(content)
+
+    async def _bytes_to_async_iterator(
+        self, data: bytes, chunk_size: int = 1024
+    ) -> AsyncIterator[bytes]:
+        """Convert a bytes object into an AsyncIterator[bytes]."""
+        for i in range(0, len(data), chunk_size):
+            yield data[i : i + chunk_size]
 
     async def async_upload_backup(
         self,
@@ -92,9 +100,6 @@ class OneDriveBackupAgent(BackupAgent):
 
         if backup.extra_metadata:
             backup_dict["extra_metadata"] = json.dumps(backup.extra_metadata)
-
-        # ensure dict is [str, str]
-        backup_dict = {str(k): str(v) for k, v in backup_dict.items()}
 
         stream = await open_stream()
 
