@@ -573,7 +573,7 @@
       "message": "[%key:component::sensibo::config::error::no_devices%]"
     },
     "mode_not_exist": {
-      "message": "The entity does not support the choosen mode"
+      "message": "The entity does not support the chosen mode"
     }
   }
 }
