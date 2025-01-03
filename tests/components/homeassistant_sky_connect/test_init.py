@@ -34,9 +34,11 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.homeassistant_sky_connect.guess_firmware_info",
         return_value=FirmwareInfo(
-            is_running=True,
+            device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            firmware_version=None,
             firmware_type=ApplicationType.SPINEL,
             source="otbr",
+            owners=[],
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

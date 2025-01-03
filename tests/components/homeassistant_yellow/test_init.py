@@ -51,9 +51,11 @@ async def test_setup_entry(
         patch(
             "homeassistant.components.homeassistant_yellow.guess_firmware_info",
             return_value=FirmwareInfo(  # Nothing is setup
-                is_running=False,
+                device="/dev/ttyAMA1",
+                firmware_version=None,
                 firmware_type=ApplicationType.EZSP,
                 source="unknown",
+                owners=[],
             ),
         ),
     ):
