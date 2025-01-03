@@ -9,7 +9,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: |
-      Refresh docstrings, example test_form, add test unique id
+      Refresh docstrings, example test_form, add test unique id, end in entry or abort
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
