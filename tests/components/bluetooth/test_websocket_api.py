@@ -1,20 +1,23 @@
 """The tests for the bluetooth WebSocket API."""
 
 import asyncio
-from unittest.mock import ANY
+from datetime import timedelta
+import time
+from unittest.mock import ANY, patch
 
-from freezegun.api import FrozenDateTimeFactory
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
 from . import (
-    _get_manager,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_source,
 )
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -24,7 +27,6 @@ async def test_subscribe_advertisements(
     register_hci0_scanner: None,
     register_hci1_scanner: None,
     hass_ws_client: WebSocketGenerator,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test bluetooth subscribe_advertisements."""
     address = "44:44:33:11:23:12"
@@ -76,7 +78,6 @@ async def test_subscribe_advertisements(
         service_uuids=[],
         rssi=-80,
     )
-    freezer.tick(1)
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci1"
     )
@@ -100,10 +101,16 @@ async def test_subscribe_advertisements(
     }
     new_time = response["event"]["add"][0]["time"]
     assert new_time > adv_time
-    manager = _get_manager()
-    freezer.tick(3600)
-    manager._async_check_unavailable()
-    await hass.async_block_till_done()
+    future_time = utcnow() + timedelta(seconds=3600)
+    future_monotonic_time = time.monotonic() + 3600
+    with (
+        freeze_time(future_time),
+        patch(
+            "habluetooth.manager.monotonic_time_coarse",
+            return_value=future_monotonic_time,
+        ),
+    ):
+        async_fire_time_changed(hass, future_time)
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {"remove": [{"address": "44:44:33:11:23:12"}]}
