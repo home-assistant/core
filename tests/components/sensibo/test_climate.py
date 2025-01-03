@@ -43,6 +43,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
     SERVICE_FULL_STATE,
+    SERVICE_GET_DEVICE_CAPABILITIES,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -1187,3 +1188,34 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
     assert state.attributes["swing_mode"] == "stopped"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_get_device_capabilities(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Sensibo climate Get device capabilitites service."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_DEVICE_CAPABILITIES,
+        {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+    with pytest.raises(
+        ServiceValidationError, match="The entity does not support the chosen mode"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_DEVICE_CAPABILITIES,
+            {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat_cool"},
+            blocking=True,
+            return_response=True,
+        )

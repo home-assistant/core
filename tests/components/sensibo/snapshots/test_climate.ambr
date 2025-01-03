@@ -227,3 +227,23 @@
     'state': 'off',
   })
 # ---
+# name: test_climate_get_device_capabilities
+  dict({
+    'climate.hallway': dict({
+      'horizontalswing': list([
+        'stopped',
+        'fixedLeft',
+        'fixedCenterLeft',
+      ]),
+      'light': list([
+        'on',
+        'off',
+      ]),
+      'swing': list([
+        'stopped',
+        'fixedTop',
+        'fixedMiddleTop',
+      ]),
+    }),
+  })
+# ---

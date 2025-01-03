@@ -169,7 +169,6 @@ get_device_capabilities:
       selector:
         select:
           options:
-            - "off"
             - "auto"
             - "cool"
             - "dry"
