@@ -1387,7 +1387,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
 
         await self._hass.async_add_executor_job(_write_restore_file)
-        await self._hass.services.async_call("homeassistant", "restart", {})
+        await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
 
 def _generate_backup_id(date: str, name: str) -> str:
