@@ -58,6 +58,24 @@
           "description": "The style of the generated image"
         }
       }
+    },
+    "generate_content": {
+      "name": "Prompt service",
+      "description": "Send a prompt to ChatGPT",
+      "fields": {
+        "config_entry": {
+          "name": "Config Entry",
+          "description": "The config entry to use for this service"
+        },
+        "prompt": {
+          "name": "Prompt",
+          "description": "The prompt to send"
+        },
+        "image_filename": {
+          "name": "Files",
+          "description": "List of image files to upload"
+        }
+      }
     }
   },
   "exceptions": {
