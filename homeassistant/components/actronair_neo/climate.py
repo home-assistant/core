@@ -200,8 +200,6 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
-        await self._coordinator.async_request_refresh()
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if hvac_mode == HVACMode.OFF:
@@ -212,8 +210,6 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
             )
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
-
-        await self._coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
@@ -242,8 +238,6 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
             raise ValueError(f"Mode {hvac_mode} is invalid.")
         self._attr_target_temperature = temp
         self.async_write_ha_state()
-
-        await self._coordinator.async_request_refresh()
 
     async def async_turn_on_continuous(self, continuous: bool) -> None:
         """Set the continuous mode."""
@@ -412,8 +406,6 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
-        await self._coordinator.async_request_refresh()
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get("temperature")
@@ -449,5 +441,3 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
             raise ValueError(f"Mode {hvac_mode} is invalid.")
         self._attr_target_temperature = temp
         self.async_write_ha_state()
-
-        await self._coordinator.async_request_refresh()
