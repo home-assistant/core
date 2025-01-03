@@ -33,7 +33,7 @@ Mastodon.py==1.8.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.0.0
+Pillow==11.1.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -173,7 +173,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.11
+aioacaia==0.1.13
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -265,6 +265,9 @@ aiohasupervisor==0.2.2b5
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
+
+# homeassistant.components.mcp_server
+aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
 aiohue==4.7.3
@@ -465,6 +468,9 @@ anthemav==1.4.1
 
 # homeassistant.components.anthropic
 anthropic==0.31.2
+
+# homeassistant.components.mcp_server
+anyio==4.7.0
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.3
@@ -738,7 +744,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==10.0.1
+deebot-client==10.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1134,10 +1140,10 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241231.0
+home-assistant-frontend==20250103.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.12.20
+home-assistant-intents==2025.1.1
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1354,6 +1360,9 @@ maxcube-api==0.4.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.mcp_server
+mcp==1.1.2
 
 # homeassistant.components.minecraft_server
 mcstatus==11.1.1
@@ -1606,7 +1615,7 @@ panasonic-viera==0.4.2
 pdunehd==1.3.2
 
 # homeassistant.components.peblar
-peblar==0.3.0
+peblar==0.3.2
 
 # homeassistant.components.peco
 peco==0.0.30
@@ -1620,7 +1629,7 @@ pescea==1.0.12
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
-pexpect==4.6.0
+pexpect==4.9.0
 
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
@@ -1676,7 +1685,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.0
+psutil==6.1.1
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1750,6 +1759,9 @@ pyEmby==1.10
 # homeassistant.components.hikvision
 pyHik==0.3.2
 
+# homeassistant.components.homee
+pyHomee==1.2.0
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
 
@@ -1782,7 +1794,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.4
+pyaprilaire==0.7.7
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -2246,7 +2258,7 @@ pyschlage==2024.11.0
 pysensibo==1.1.0
 
 # homeassistant.components.serial
-pyserial-asyncio-fast==0.13
+pyserial-asyncio-fast==0.14
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
@@ -2412,7 +2424,7 @@ python-opensky==1.0.1
 python-otbr-api==2.6.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.4.0
+python-overseerr==0.5.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2930,7 +2942,7 @@ unifi_ap==0.0.2
 # homeassistant.components.unifiled
 unifiled==0.11
 
-# homeassistant.components.zha
+# homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
@@ -3018,7 +3030,7 @@ webmin-xmlrpc==0.0.2
 weheat==2024.12.22
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.8
+whirlpool-sixth-sense==0.18.11
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -3106,7 +3118,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.43
+zha==0.0.44
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

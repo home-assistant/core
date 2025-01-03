@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import TextSelector
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 DATA_SCHEMA = vol.Schema(
@@ -126,7 +126,7 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=DEFAULT_NAME,
+                    title=username,
                     data={CONF_API_KEY: api_key},
                 )
 

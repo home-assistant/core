@@ -13,14 +13,16 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_DISCOVERY, VS_SWITCHES
+from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
 from .entity import VeSyncBaseEntity
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,24 +50,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch platform."""
 
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+
     @callback
     def discover(devices):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SWITCHES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
+    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities, coordinator)
 
 
 @callback
-def _setup_entities(devices, async_add_entities):
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities,
+    coordinator: VeSyncDataCoordinator,
+):
     """Check if device is online and add entity."""
     async_add_entities(
         (
-            VeSyncSwitchEntity(dev, description)
+            VeSyncSwitchEntity(dev, description, coordinator)
             for dev in devices
             for description in SENSOR_DESCRIPTIONS
             if rgetattr(dev, description.key) is not None
@@ -103,9 +111,3 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.device.turn_on()
-
-    def update(self) -> None:
-        """Update outlet details and energy usage."""
-        self.device.update()
-        if isinstance(self.device, VeSyncOutlet):
-            self.device.update_energy()
