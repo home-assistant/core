@@ -268,6 +268,8 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
         """Return the CT color value."""
         if self._device.color_temp is None:
             return None
+        if self._device.color_temp == 0:
+            return None
         return color_temperature_mired_to_kelvin(self._device.color_temp)
 
     @property
