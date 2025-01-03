@@ -1,0 +1,7 @@
+{
+  "services": {
+    "cognitive_task": {
+      "service": "mdi:wizard-hat"
+    }
+  }
+}
