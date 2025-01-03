@@ -53,7 +53,7 @@ class OhmeChargeSessionCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Charge Sessions"
     _default_update_interval = timedelta(seconds=30)
 
-    async def _internal_update_data(self):
+    async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_get_charge_session()
 
@@ -63,7 +63,7 @@ class OhmeAdvancedSettingsCoordinator(OhmeBaseCoordinator):
 
     coordinator_name = "Advanced Settings"
 
-    async def _internal_update_data(self):
+    async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_get_advanced_settings()
 
@@ -74,6 +74,6 @@ class OhmeDeviceInfoCoordinator(OhmeBaseCoordinator):
     coordinator_name = "Device Info"
     _default_update_interval = timedelta(minutes=30)
 
-    async def _internal_update_data(self):
+    async def _internal_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update_device_info()

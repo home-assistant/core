@@ -1,10 +1,9 @@
 """Platform for switch."""
 
-from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from ohme import ApiException, OhmeApiClient
+from ohme import ApiException
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -23,9 +22,7 @@ PARALLEL_UPDATES = 1
 class OhmeSwitchDescription(OhmeEntityDescription, SwitchEntityDescription):
     """Class describing Ohme switch entities."""
 
-    is_on_fn: Callable[[OhmeApiClient], bool]
-    turn_on_fn: Callable[[OhmeApiClient], Coroutine[Any, Any, Any]]
-    turn_off_fn: Callable[[OhmeApiClient], Coroutine[Any, Any, Any]]
+    configuration_key: str
 
 
 SWITCH_DEVICE_INFO = [
@@ -34,39 +31,21 @@ SWITCH_DEVICE_INFO = [
         translation_key="lock_buttons",
         entity_category=EntityCategory.CONFIG,
         is_supported_fn=lambda client: client.is_capable("buttonsLockable"),
-        is_on_fn=lambda client: client.configuration_value("buttonsLocked"),
-        turn_on_fn=lambda client: client.async_set_configuration_value(
-            {"buttonsLocked": True}
-        ),
-        turn_off_fn=lambda client: client.async_set_configuration_value(
-            {"buttonsLocked": False}
-        ),
+        configuration_key="buttonsLocked",
     ),
     OhmeSwitchDescription(
         key="require_approval",
         translation_key="require_approval",
         entity_category=EntityCategory.CONFIG,
         is_supported_fn=lambda client: client.is_capable("pluginsRequireApprovalMode"),
-        is_on_fn=lambda client: client.configuration_value("pluginsRequireApproval"),
-        turn_on_fn=lambda client: client.async_set_configuration_value(
-            {"pluginsRequireApproval": True}
-        ),
-        turn_off_fn=lambda client: client.async_set_configuration_value(
-            {"pluginsRequireApproval": False}
-        ),
+        configuration_key="pluginsRequireApproval",
     ),
     OhmeSwitchDescription(
         key="sleep_when_inactive",
         translation_key="sleep_when_inactive",
         entity_category=EntityCategory.CONFIG,
         is_supported_fn=lambda client: client.is_capable("stealth"),
-        is_on_fn=lambda client: client.configuration_value("stealthEnabled"),
-        turn_on_fn=lambda client: client.async_set_configuration_value(
-            {"stealthEnabled": True}
-        ),
-        turn_off_fn=lambda client: client.async_set_configuration_value(
-            {"stealthEnabled": False}
-        ),
+        configuration_key="stealthEnabled",
     ),
 ]
 
@@ -98,22 +77,24 @@ class OhmeSwitch(OhmeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the entity value to represent the entity state."""
-        return self.entity_description.is_on_fn(self.coordinator.client)
+        return self.coordinator.client.configuration_value(
+            self.entity_description.configuration_key
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.entity_description.turn_on_fn(self.coordinator.client)
-        except ApiException as e:
-            raise HomeAssistantError(
-                translation_key="api_failed", translation_domain=DOMAIN
-            ) from e
-        await self.coordinator.async_request_refresh()
+        await self._toggle(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        await self._toggle(False)
+
+    async def _toggle(self, on: bool) -> None:
+        """Toggle the switch."""
         try:
-            await self.entity_description.turn_off_fn(self.coordinator.client)
+            await self.coordinator.client.async_set_configuration_value(
+                {self.entity_description.configuration_key: on}
+            )
         except ApiException as e:
             raise HomeAssistantError(
                 translation_key="api_failed", translation_domain=DOMAIN
