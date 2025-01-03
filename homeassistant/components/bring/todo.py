@@ -11,6 +11,7 @@ from bring_api import (
     BringNotificationType,
     BringRequestException,
 )
+from bring_api.types import BringList
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -19,7 +20,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,14 +45,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    async_add_entities(
-        BringTodoListEntity(
-            coordinator,
-            bring_list=bring_list,
-        )
-        for bring_list in coordinator.data.values()
-    )
+    @callback
+    def add_entities() -> None:
+        """Add or remove todo list entities."""
+        nonlocal lists_added
+        entities = []
+
+        for bring_list in coordinator.lists:
+            if bring_list["listUuid"] not in lists_added:
+                entities.append(BringTodoListEntity(coordinator, bring_list))
+                lists_added.add(bring_list["listUuid"])
+
+        if entities:
+            async_add_entities(entities)
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
     platform = entity_platform.async_get_current_platform()
 
@@ -80,7 +91,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     )
 
     def __init__(
-        self, coordinator: BringDataUpdateCoordinator, bring_list: BringData
+        self, coordinator: BringDataUpdateCoordinator, bring_list: BringList
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, bring_list)
@@ -119,7 +130,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         """Add an item to the To-do list."""
         try:
             await self.coordinator.bring.save_item(
-                self.bring_list["listUuid"],
+                self._list_uuid,
                 item.summary or "",
                 item.description or "",
                 str(uuid.uuid4()),
@@ -173,7 +184,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         if item.summary == current_item["itemId"]:
             try:
                 await self.coordinator.bring.batch_update_list(
-                    bring_list["listUuid"],
+                    self._list_uuid,
                     BringItem(
                         itemId=item.summary or "",
                         spec=item.description or "",
@@ -192,7 +203,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         else:
             try:
                 await self.coordinator.bring.batch_update_list(
-                    bring_list["listUuid"],
+                    self._list_uuid,
                     [
                         BringItem(
                             itemId=current_item["itemId"],
@@ -225,7 +236,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
 
         try:
             await self.coordinator.bring.batch_update_list(
-                self.bring_list["listUuid"],
+                self._list_uuid,
                 [
                     BringItem(
                         itemId=uid,

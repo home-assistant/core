@@ -1,7 +1,9 @@
 """Unit tests for the bring integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.bring import (
@@ -14,8 +16,13 @@ from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+import homeassistant.helpers.device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 
 
 async def setup_integration(
@@ -133,3 +140,70 @@ async def test_config_entry_not_ready_auth_error(
     await hass.async_block_till_done()
 
     assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_purge_devices(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test removing device entry of deleted list."""
+    list_uuid = "b4776778-7f6c-496e-951b-92a35d3db0dd"
+    await setup_integration(hass, bring_config_entry)
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    assert device_registry.async_get_device(
+        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    )
+
+    mock_bring_client.load_lists.return_value = load_json_object_fixture(
+        "lists2.json", DOMAIN
+    )
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        )
+        is None
+    )
+
+
+async def test_create_devices(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test create device entry for new lists."""
+    list_uuid = "b4776778-7f6c-496e-951b-92a35d3db0dd"
+    mock_bring_client.load_lists.return_value = load_json_object_fixture(
+        "lists2.json", DOMAIN
+    )
+    await setup_integration(hass, bring_config_entry)
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+        )
+        is None
+    )
+
+    mock_bring_client.load_lists.return_value = load_json_object_fixture(
+        "lists.json", DOMAIN
+    )
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(
+        {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
+    )
