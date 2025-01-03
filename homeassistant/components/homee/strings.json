@@ -24,5 +24,181 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_sensor": {
+        "name": "Battery"
+      },
+      "brightness_sensor": {
+        "name": "Illuminance"
+      },
+      "brightness_sensor_1": {
+        "name": "Illuminance 1"
+      },
+      "brightness_sensor_2": {
+        "name": "Illuminance 2"
+      },
+      "brightness_sensor_3": {
+        "name": "Illuminance 3"
+      },
+      "brightness_sensor_4": {
+        "name": "Illuminance 4"
+      },
+      "button_state_sensor": {
+        "name": "Button State"
+      },
+      "button_state_sensor_1": {
+        "name": "Button State 1"
+      },
+      "button_state_sensor_2": {
+        "name": "Button State 2"
+      },
+      "button_state_sensor_3": {
+        "name": "Button State 3"
+      },
+      "button_state_sensor_4": {
+        "name": "Button State 4"
+      },
+      "current_sensor": {
+        "name": "Current"
+      },
+      "current_sensor_1": {
+        "name": "Current 1"
+      },
+      "current_sensor_2": {
+        "name": "Current 2"
+      },
+      "current_sensor_3": {
+        "name": "Current 3"
+      },
+      "current_sensor_4": {
+        "name": "Current 4"
+      },
+      "dawn_sensor": {
+        "name": "Dawn"
+      },
+      "device_temperature_sensor": {
+        "name": "Device Temperature"
+      },
+      "energy_sensor": {
+        "name": "Energy"
+      },
+      "energy_sensor_1": {
+        "name": "Energy 1"
+      },
+      "energy_sensor_2": {
+        "name": "Energy 2"
+      },
+      "energy_sensor_3": {
+        "name": "Energy 3"
+      },
+      "energy_sensor_4": {
+        "name": "Energy 4"
+      },
+      "relative_humidity_sensor": {
+        "name": "Relative Humidity"
+      },
+      "link_quality_sensor": {
+        "name": "Link Quality"
+      },
+      "node_sensor_protocol": {
+        "name": "Node Protocol"
+      },
+      "node_sensor_state": {
+        "name": "Node State"
+      },
+      "position_sensor": {
+        "name": "Position"
+      },
+      "power_sensor": {
+        "name": "Power"
+      },
+      "power_sensor_1": {
+        "name": "Power 1"
+      },
+      "power_sensor_2": {
+        "name": "Power 2"
+      },
+      "power_sensor_3": {
+        "name": "Power 3"
+      },
+      "power_sensor_4": {
+        "name": "Power 4"
+      },
+      "rainfall_hour_sensor": {
+        "name": "Rainfall Last Hour"
+      },
+      "rainfall_day_sensor": {
+        "name": "Rainfall Today"
+      },
+      "temperature_sensor": {
+        "name": "Temperature"
+      },
+      "total_current_sensor": {
+        "name": "Total Current"
+      },
+      "total_energy_sensor": {
+        "name": "Total Energy"
+      },
+      "total_power_sensor": {
+        "name": "Total Power"
+      },
+      "total_voltage_sensor": {
+        "name": "Total Voltage"
+      },
+      "up_down_sensor": {
+        "name": "State",
+        "state": {
+          "0": "Open",
+          "1": "Closed",
+          "2": "Partially Open",
+          "3": "Opening",
+          "4": "Closing"
+        }
+      },
+      "up_down_sensor_rev": {
+        "name": "State",
+        "state": {
+          "0": "Closed",
+          "1": "Open",
+          "2": "Partially Open",
+          "3": "Closing",
+          "4": "Opening"
+        }
+      },
+      "uv_sensor": {
+        "name": "Ultraviolet"
+      },
+      "valve_position_sensor": {
+        "name": "Valve Position"
+      },
+      "voltage_sensor": {
+        "name": "Voltage"
+      },
+      "voltage_sensor_1": {
+        "name": "Voltage 1"
+      },
+      "voltage_sensor_2": {
+        "name": "Voltage 2"
+      },
+      "voltage_sensor_3": {
+        "name": "Voltage 3"
+      },
+      "voltage_sensor_4": {
+        "name": "Voltage 4"
+      },
+      "wind_speed_sensor": {
+        "name": "Wind Speed"
+      },
+      "window_position_sensor": {
+        "name": "Window Position",
+        "state": {
+          "0": "Closed",
+          "1": "Open",
+          "2": "Tilted"
+        }
+      }
+    }
   }
 }
