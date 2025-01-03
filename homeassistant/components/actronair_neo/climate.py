@@ -143,7 +143,8 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         api_fan_mode = (
             self._coordinator.data.get("UserAirconSettings", {}).get("FanMode").upper()
         )
-        return FAN_MODE_MAPPING_REVERSE.get(api_fan_mode, "auto")
+        fan_mode_without_cont = api_fan_mode.split("+")[0]
+        return FAN_MODE_MAPPING_REVERSE.get(fan_mode_without_cont, "AUTO")
 
     @property
     def fan_modes(self) -> list[str]:
