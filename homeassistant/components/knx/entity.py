@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import DOMAIN
 from .storage.config_store import PlatformControllerBase
-from .storage.const import CONF_DEVICE_INFO
+from .storage.const import CONF_DEVICE_CLASS, CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
     from . import KNXModule
@@ -103,12 +103,19 @@ class KnxUiEntity(_KnxEntityBase):
     _attr_has_entity_name = True
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        entity_config: dict[str, Any],
     ) -> None:
         """Initialize the UI entity."""
         self._knx_module = knx_module
         self._attr_unique_id = unique_id
-        if entity_category := entity_config.get(CONF_ENTITY_CATEGORY):
-            self._attr_entity_category = EntityCategory(entity_category)
-        if device_info := entity_config.get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+
+        # If no entity description is defined, fall back to the entity_config dictionary
+        if entity_config and not getattr(self, "entity_description", None):
+            if category := entity_config.get(CONF_ENTITY_CATEGORY):
+                self._attr_entity_category = EntityCategory(category)
+            if device_info := entity_config.get(CONF_DEVICE_INFO):
+                self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+            self._attr_device_class = entity_config.get(CONF_DEVICE_CLASS)
