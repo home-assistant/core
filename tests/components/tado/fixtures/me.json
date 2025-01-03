@@ -10,7 +10,7 @@
         "model": "OnePlus_GM1917"
       },
       "settings": {
-        "geoTrackingEnabled": false
+        "geoTrackingEnabled": true
       },
       "id": 1
     }

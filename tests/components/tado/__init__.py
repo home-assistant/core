@@ -1,1 +1,1 @@
-"""Tests for the tado integration."""
+"""Tests for the Tado integration."""
