@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
     assert entry.unique_id
 
-    hub: VegeHub | None = None
 
     hub = VegeHub(device_ip, device_mac, entry.unique_id)
 
