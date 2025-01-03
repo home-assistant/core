@@ -30,6 +30,8 @@ from . import async_init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+pytest.mark.usefixtures("init_integration")
+
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MICRA])
@@ -64,9 +66,6 @@ async def test_steam_boiler_level(
     )
 
     mock_lamarzocco.set_steam_level.assert_called_once_with(level=SteamLevel.LEVEL_2)
-
-
-pytest.mark.usefixtures("init_integration")
 
 
 @pytest.mark.parametrize(

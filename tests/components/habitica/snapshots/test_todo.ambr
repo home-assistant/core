@@ -129,7 +129,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 92>,
     'translation_key': <HabiticaTodoList.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': None,
   })
 # ---
@@ -176,7 +176,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 95>,
     'translation_key': <HabiticaTodoList.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': None,
   })
 # ---

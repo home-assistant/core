@@ -433,13 +433,13 @@
       "name": "Go to position",
       "description": "Send the vacuum to a specific position.",
       "fields": {
-        "x_coord": {
+        "x": {
           "name": "X-coordinate",
-          "description": ""
+          "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position."
         },
-        "y_coord": {
+        "y": {
           "name": "Y-coordinate",
-          "description": ""
+          "description": "[%key:component::roborock::services::set_vacuum_goto_position::fields::x::description%]"
         }
       }
     },
