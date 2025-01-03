@@ -1,7 +1,9 @@
 """Tests for the LG Thinq sensor platform."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -23,7 +25,11 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SENSOR]):
+    hass.config.time_zone = "UTC"
+    with (
+        patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SENSOR]),
+        freeze_time(datetime(2024, 10, 10, tzinfo=UTC)),
+    ):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
