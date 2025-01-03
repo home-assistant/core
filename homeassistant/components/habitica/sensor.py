@@ -284,6 +284,7 @@ async def async_setup_entry(
                                 entity_entry.name or entity_entry.original_name
                             ),
                             "entity": entity_id,
+                            "breaks_in_ha_version": "2025.8.0",
                         },
                     )
 
