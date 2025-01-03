@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -39,6 +39,7 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.DRY: 8,
     HVACMode.FAN_ONLY: 7,
 }
+
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     # Some devices only have a single setpoint while the matter spec
@@ -157,6 +158,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
 ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
+TemperatureControlFeature = clusters.TemperatureControl.Bitmaps.Feature
 
 
 class ThermostatRunningState(IntEnum):
@@ -179,6 +181,21 @@ async def async_setup_entry(
     """Set up Matter climate platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
+
+
+class TCTLMode(StrEnum):
+    """TemperatureControl mode for climate devices."""
+
+    TN = "TemperatureNumber"
+    TL = "TemperatureLevel"
+    STEP = "TemperatureStep"
+
+
+TCTL_SYSTEM_MODE_MAP = {
+    TCTLMode.TN: 0,
+    TCTLMode.TL: 1,
+    TCTLMode.STEP: 2,
+}
 
 
 class MatterClimate(MatterEntity, ClimateEntity):
@@ -393,7 +410,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
-        if feature_map & ThermostatFeature.kHeating:
+        if feature_map & (
+            ThermostatFeature.kHeating
+            | TemperatureControlFeature.kTemperatureLevel
+            | TemperatureControlFeature.kTemperatureNumber
+            | TemperatureControlFeature.kTemperatureStep
+        ):
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
@@ -447,5 +469,29 @@ DISCOVERY_SCHEMAS = [
             clusters.OnOff.Attributes.OnOff,
         ),
         device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.CLIMATE,
+        entity_description=ClimateEntityDescription(
+            key="MatterTemperatureControl",
+            translation_key="thermostat",
+        ),
+        entity_class=MatterClimate,
+        required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
+        optional_attributes=(
+            clusters.TemperatureControl.Attributes.MinTemperature,
+            clusters.TemperatureControl.Attributes.MaxTemperature,
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
+            clusters.TemperatureControl.Attributes.Step,
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
+        ),
+        device_type=(
+            device_types.CookSurface,
+            device_types.Dishwasher,
+            device_types.HeatingCoolingUnit,
+            device_types.LaundryDryer,
+            device_types.LaundryWasher,
+        ),
     ),
 ]
