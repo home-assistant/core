@@ -1188,7 +1188,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'invalid',
   })
 # ---
 # name: test_sensors[door_lock_with_unbolt][sensor.mock_door_lock_battery_type-entry]
@@ -1234,7 +1234,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'invalid',
   })
 # ---
 # name: test_sensors[eve_contact_sensor][sensor.eve_door_battery-entry]
@@ -1331,7 +1331,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'invalid',
   })
 # ---
 # name: test_sensors[eve_contact_sensor][sensor.eve_door_voltage-entry]
@@ -1926,7 +1926,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'invalid',
   })
 # ---
 # name: test_sensors[eve_thermo][sensor.eve_thermo_valve_position-entry]
@@ -2124,7 +2124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '',
+    'state': 'invalid',
   })
 # ---
 # name: test_sensors[eve_weather_sensor][sensor.eve_weather_humidity-entry]
