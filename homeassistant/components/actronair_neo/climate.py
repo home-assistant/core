@@ -27,7 +27,7 @@ DEFAULT_TEMP_MAX = 32.0
 FAN_MODE_MAPPING = {
     "auto": "AUTO",
     "low": "LOW",
-    "medium": "MEDIUM",
+    "medium": "MED",
     "high": "HIGH",
 }
 FAN_MODE_MAPPING_REVERSE = {v: k for k, v in FAN_MODE_MAPPING.items()}
