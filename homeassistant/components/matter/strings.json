@@ -196,6 +196,9 @@
           "toggle": "[%key:common::action::toggle%]",
           "previous": "Previous"
         }
+      },
+      "temperature_level": {
+        "name": "Temperature level"
       }
     },
     "sensor": {

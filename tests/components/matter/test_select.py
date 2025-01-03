@@ -103,3 +103,39 @@ async def test_attribute_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_level_select_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entities are created for the TemperatureControl cluster attributes."""
+    state = hass.states.get("select.laundrywasher_temperature_level")
+    assert state
+    assert state.state == "Colors"
+    assert state.attributes["options"] == ["Cold", "Colors", "Whites"]
+    # Change temperature_level
+    set_node_attribute(matter_node, 1, 86, 4, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_temperature_level")
+    assert state.state == "Cold"
+    # test select option
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.laundrywasher_temperature_level",
+            "option": "Whites",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.TemperatureControl.Commands.SetTemperature(
+            targetTemperatureLevel=2
+        ),
+    )
