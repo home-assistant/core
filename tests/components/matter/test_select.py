@@ -115,3 +115,9 @@ async def test_level_select_entities(
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state
     assert state.state == "Colors"
+    assert state.attributes["options"] == ["Cold", "Colors", "Whites"]
+    # Change temperature_level
+    set_node_attribute(matter_node, 1, 86, 4, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_temperature_level")
+    assert state.state == "Cold"
