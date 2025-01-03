@@ -77,10 +77,10 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._channel.set_temp(temp)
-        self.async_write_ha_state()
+        target_temp: float | None = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is not None:
+            await self._channel.set_temp(target_temp)
+            self.async_write_ha_state()
 
     @api_call
     async def async_set_preset_mode(self, preset_mode: str) -> None:
