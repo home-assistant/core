@@ -68,7 +68,7 @@ async def test_select_set_option(
     """Test the Sensibo select service."""
 
     monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
+        get_data[0].parsed["AAZZAAZZ"],
         "active_features",
         [
             "timestamp",
@@ -104,7 +104,7 @@ async def test_select_set_option(
     assert state.state == "on"
 
     monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
+        get_data[0].parsed["AAZZAAZZ"],
         "active_features",
         [
             "timestamp",

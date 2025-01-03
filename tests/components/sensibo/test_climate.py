@@ -350,7 +350,7 @@ async def test_climate_horizontal_swing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_HORIZONTAL_MODE,
@@ -362,7 +362,7 @@ async def test_climate_horizontal_swing(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["swing_horizontal_mode"] == "fixedleft"
+    assert "swing_horizontal_mode" not in state.attributes
 
 
 async def test_climate_temperatures(

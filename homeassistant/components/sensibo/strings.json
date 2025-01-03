@@ -556,6 +556,9 @@
     "swing_not_supported": {
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
     },
+    "horizontal_swing_not_supported": {
+      "message": "Climate horizontal swing mode {horizontal_swing_mode} is not supported by the integration, please open an issue"
+    },
     "service_result_not_true": {
       "message": "Could not perform action for {name}"
     },
