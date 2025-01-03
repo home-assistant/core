@@ -5,6 +5,7 @@ Based on homeassistant/components/wled/button.py to create a configuration like 
 Based on homeassistant/components/wled/number.py to create a configuration like WLED "Intensity"
 
 """
+
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,6 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
+from .coordinator import ScpRpiDataUpdateCoordinator
 from .device import async_create_sc_rpi_device
 
 # TOD List the platforms that you want to support.
@@ -22,7 +24,10 @@ PLATFORMS: list[str] = [Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Strip Controller from a config entry."""
+    """Set up Strip Controller from a config entry.
+
+    Most code here is based on upnp and wled integration
+    """
 
     hass.data.setdefault(DOMAIN, {})
     # TOD 1. Create API instance
@@ -31,7 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # hass.data[DOMAIN][entry.entry_id] = MyApi()
 
     # TOD set name for device
-    # Most code here is based on upnp integration
+
+    entry.runtime_data = ScpRpiDataUpdateCoordinator(hass, entry=entry)
 
     try:
         device = await async_create_sc_rpi_device(hass, entry)
@@ -65,9 +71,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-# TOD: implement unloading device
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

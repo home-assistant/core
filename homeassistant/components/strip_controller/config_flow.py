@@ -23,8 +23,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# TOD: Set custom icon/logo upgrade HA version to 2024.x and set icon (more info: https://developers.home-assistant.io/blog/2024/01/19/icon-translations/)
-# TOD: Create  OptionsFlow to edit sections (check homeassistant/components/met/config_flow.py).
 # TOD: validate connection at first step so the user don't need to pass all steps to validate ip and port
 # TOD: Load section (also with their colors) configuration from file in ConfigFlow so the user don't need to reconfigure the same sections twice. Loading sections from the generic configuration.yml of Home Assistant is enough
 
@@ -120,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
         # session = async_get_clientsession(self.hass)
         # scrpi_client = ScRpiClient(session)
-        # await scrpi_client.connect()
+        # await scrpi_client.update()
 
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
