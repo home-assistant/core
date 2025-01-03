@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware.const import ZHA_DOMAIN
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -550,8 +551,8 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
 
     # Set up ZHA as well
     zha_config_entry = MockConfigEntry(
-        domain="zha",
-        data={"device": {"path": TEST_DEVICE}},
+        domain=ZHA_DOMAIN,
+        data={"device": {"path": TEST_DEVICE}, "radio_type": "ezsp"},
     )
     zha_config_entry.add_to_hass(hass)
 

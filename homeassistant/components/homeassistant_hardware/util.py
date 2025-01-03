@@ -147,10 +147,20 @@ async def get_zha_firmware_info(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> FirmwareInfo | None:
     """Return firmware information for the ZHA instance."""
+
+    # We only support EZSP firmware for now
+    if config_entry.data.get("radio_type", None) != "ezsp":
+        return None
+
+    device = config_entry.data.get("device", {}).get("path", None)
+    if device is None:
+        return None
+
     try:
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.zha.helpers import get_zha_gateway
     except ImportError:
+        # A ZHA config entry exists but ZHA isn't installed, it was probably ignored
         return None
 
     try:
@@ -159,14 +169,6 @@ async def get_zha_firmware_info(
         firmware_version = None
     else:
         firmware_version = gateway.state.node_info.version
-
-    # We only support EZSP firmware for now
-    if config_entry.data["radio_type"] != "ezsp":
-        return None
-
-    device = config_entry.data.get("device", {}).get("path", None)
-    if device is None:
-        return None
 
     return FirmwareInfo(
         device=device,
@@ -218,12 +220,37 @@ async def guess_hardware_owners(
         if firmware_info is not None:
             device_guesses[firmware_info.device].append(firmware_info)
 
-    # We assume that the OTBR integration will always be set up, even without the addon
     for otbr_config_entry in hass.config_entries.async_entries(OTBR_DOMAIN):
         firmware_info = await get_otbr_firmware_info(hass, otbr_config_entry)
 
         if firmware_info is not None:
             device_guesses[firmware_info.device].append(firmware_info)
+
+    # It may be possible for the OTBR addon to be present without the integration
+    if is_hassio(hass):
+        otbr_addon_manager = get_otbr_addon_manager(hass)
+
+        try:
+            otbr_addon_info = await otbr_addon_manager.async_get_addon_info()
+        except AddonError:
+            pass
+        else:
+            if otbr_addon_info.state != AddonState.NOT_INSTALLED:
+                otbr_path = otbr_addon_info.options.get("device")
+
+                # Only create a new entry if there are no existing OTBR ones
+                if otbr_path is not None and not any(
+                    info.source == "otbr" for info in device_guesses[otbr_path]
+                ):
+                    device_guesses[otbr_path].append(
+                        FirmwareInfo(
+                            device=otbr_path,
+                            firmware_type=ApplicationType.SPINEL,
+                            firmware_version=None,
+                            source="otbr",
+                            owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
+                        )
+                    )
 
     if is_hassio(hass):
         multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
