@@ -284,6 +284,7 @@ FLOWS = {
         "imgw_pib",
         "improv_ble",
         "incomfort",
+        "inels",
         "inkbird",
         "insteon",
         "intellifire",
