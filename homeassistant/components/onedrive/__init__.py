@@ -18,7 +18,6 @@ from .const import DATA_BACKUP_AGENT_LISTENERS
 type OneDriveConfigEntry = ConfigEntry[GraphServiceClient]
 
 
-# # TODO Update entry annotation
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Set up OneDrive from a config entry."""
     implementation = (
