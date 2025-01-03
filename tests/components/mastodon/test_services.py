@@ -13,6 +13,7 @@ from homeassistant.components.mastodon.const import (
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_integration
 
@@ -67,3 +68,38 @@ async def test_service_post(
     mock_mastodon_client.status_post.assert_called_with(**kwargs)
 
     mock_mastodon_client.status_post.reset_mock()
+
+
+async def test_service_entry_availability(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the services without valid entry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry2 = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot"}
+
+    with pytest.raises(ServiceValidationError, match="Mock Title is not loaded"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry2.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
+
+    with pytest.raises(
+        ServiceValidationError, match='Integration "mastodon" not found in registry'
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: "bad-config_id"} | payload,
+            blocking=True,
+            return_response=False,
+        )

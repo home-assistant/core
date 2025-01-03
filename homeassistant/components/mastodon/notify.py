@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import mimetypes
 from typing import Any, cast
 
 from mastodon import Mastodon
@@ -27,6 +26,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
 )
+from .utils import get_media_type
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"
@@ -137,7 +137,7 @@ class MastodonNotificationService(BaseNotificationService):
     def _upload_media(self, media_path: Any = None) -> Any:
         """Upload media."""
         with open(media_path, "rb"):
-            media_type = self._media_type(media_path)
+            media_type = get_media_type(media_path)
         try:
             mediadata = self.client.media_post(media_path, mime_type=media_type)
         except MastodonAPIError as err:
@@ -148,9 +148,3 @@ class MastodonNotificationService(BaseNotificationService):
             ) from err
 
         return mediadata
-
-    def _media_type(self, media_path: Any = None) -> Any:
-        """Get media Type."""
-        (media_type, _) = mimetypes.guess_type(media_path)
-
-        return media_type

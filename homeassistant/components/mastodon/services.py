@@ -2,7 +2,6 @@
 
 from enum import StrEnum
 from functools import partial
-import mimetypes
 from typing import Any, cast
 
 from mastodon import Mastodon
@@ -23,6 +22,7 @@ from .const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
+from .utils import get_media_type
 
 
 class StatusVisibility(StrEnum):
@@ -128,7 +128,7 @@ def setup_services(hass: HomeAssistant) -> None:
     async def _upload_media(client: Mastodon, media_path: Any = None) -> Any:
         """Upload media."""
 
-        media_type = _media_type(media_path)
+        media_type = get_media_type(media_path)
         try:
             mediadata = await hass.async_add_executor_job(
                 partial(client.media_post, media_file=media_path, mime_type=media_type)
@@ -142,13 +142,6 @@ def setup_services(hass: HomeAssistant) -> None:
             ) from err
 
         return mediadata
-
-    def _media_type(media_path: Any = None) -> Any:
-        """Get media Type."""
-
-        (media_type, _) = mimetypes.guess_type(media_path)
-
-        return media_type
 
     hass.services.async_register(
         DOMAIN, SERVICE_POST, async_post, schema=SERVICE_POST_SCHEMA
