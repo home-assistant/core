@@ -66,8 +66,6 @@ class HabiticaSensorEntity(StrEnum):
     GOLD = "gold"
     CLASS = "class"
     HABITS = "habits"
-    DAILIES = "dailys"
-    TODOS = "todos"
     REWARDS = "rewards"
     GEMS = "gems"
     TRINKETS = "trinkets"
