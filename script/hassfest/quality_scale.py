@@ -1622,7 +1622,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "iss",
     "isy994",
     "itach",
-    "ituran",
     "itunes",
     "izone",
     "jellyfin",
