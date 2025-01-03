@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRadioactivityConcentration,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -81,6 +82,9 @@ _ML_TO_CUBIC_METER = 0.001 * _L_TO_CUBIC_METER  # 1 mL = 0.001 L
 _GALLON_TO_CUBIC_METER = 231 * pow(_IN_TO_M, 3)  # US gallon is 231 cubic inches
 _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a US gallon
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
+
+# Radioactivity concentration conversion constants
+_BQ_PER_CUBIC_METER_TO_PCI_PER_LITER = 2.7027027e-2  # 100 Bq/m³ = 2.7027 pCi/L
 
 
 class BaseUnitConverter:
@@ -702,4 +706,19 @@ class DurationConverter(BaseUnitConverter):
         UnitOfTime.HOURS,
         UnitOfTime.DAYS,
         UnitOfTime.WEEKS,
+    }
+
+
+class RadioactivityConcentrationConverter(BaseUnitConverter):
+    """Utility to convert radioactivity concentration values."""
+
+    UNIT_CLASS = "radioactivity_concentration"
+    # units in terms of Bq/m³
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER: 1,
+        UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER: _BQ_PER_CUBIC_METER_TO_PCI_PER_LITER,
+    }
+    VALID_UNITS = {
+        UnitOfRadioactivityConcentration.BECQUERELS_PER_CUBIC_METER,
+        UnitOfRadioactivityConcentration.PICOCURIES_PER_LITER,
     }
