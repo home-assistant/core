@@ -7,7 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
-from .scrpi import ScRpiClient, ScRpiDevice
+from .scrpi.sc_rpi import Device as ScRpiDevice, ScRpiClient
 
 # TOD: implement a listen mechanism like in homeassistant/components/wled/coordinator.py
 

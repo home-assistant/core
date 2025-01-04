@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_NUMBER_OF_SECTIONS,
@@ -20,6 +21,7 @@ from .const import (
     CONF_SECTIONS,
     DOMAIN,
 )
+from .scrpi.sc_rpi import ScRpiClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,11 +120,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Based in `_async_get_device` from homeassistant/components/wled/config_flow.py.
         """
-        # TOD: CONTINUE https://developers.home-assistant.io/docs/integration_fetching_data/
+        # TOD: CONTINUE implementing "update" method in ScRpiClient (fix "status" command in sc-rpi if necessary)
         # TOD: then extract data in async_step_user, for example number of leds, from recently obtained device
-        # session = async_get_clientsession(self.hass)
-        # scrpi_client = ScRpiClient(session)
-        # await scrpi_client.update()
+        # Registering a callback like this await self.wled.listen(callback=self.async_set_updated_data) in _use_websocket method from homeassistant/components/wled/coordinator.py,
+        # data will be updated asynchronously instead of polling it (see https://developers.home-assistant.io/docs/integration_fetching_data/),
+        session = async_get_clientsession(self.hass)
+        scrpi_client = ScRpiClient(url, session)
+        return await scrpi_client.update()
 
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
