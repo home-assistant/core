@@ -5,9 +5,12 @@ from __future__ import annotations
 import datetime as dt
 from typing import Final
 
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.typing import UNDEFINED
 from systembridgemodels.media_control import MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
+    ENTITY_ID_FORMAT,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityDescription,
@@ -102,6 +105,9 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             description.key,
         )
         self.entity_description = description
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
+        if description.name != UNDEFINED:
+            self._attr_has_entity_name = False
 
     @property
     def available(self) -> bool:

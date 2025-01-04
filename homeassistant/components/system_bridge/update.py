@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.components.update import UpdateEntity
+from homeassistant.components.update import ENTITY_ID_FORMAT, UpdateEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -49,6 +50,7 @@ class SystemBridgeUpdateEntity(SystemBridgeEntity, UpdateEntity):
             "update",
         )
         self._attr_name = coordinator.data.system.hostname
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
 
     @property
     def installed_version(self) -> str | None:

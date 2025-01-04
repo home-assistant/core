@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
+    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -13,7 +14,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -106,6 +109,9 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
             description.key,
         )
         self.entity_description = description
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
+        if description.name != UNDEFINED:
+            self._attr_has_entity_name = False
 
     @property
     def is_on(self) -> bool:

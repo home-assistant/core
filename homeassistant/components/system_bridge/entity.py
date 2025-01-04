@@ -1,5 +1,6 @@
 """Base entity for the system bridge integration."""
 
+from propcache import cached_property
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,7 +24,7 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
+        self._key = key
         self._configuration_url = (
             f"http://{self._hostname}:{api_port}/app/settings.html"
         )
@@ -31,12 +32,12 @@ class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
         self._uuid = coordinator.data.system.uuid
         self._version = coordinator.data.system.version
 
-    @property
+    @cached_property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return self._key
+        return f"sbe_{self.coordinator.host_id}_{self._key}"
 
-    @property
+    @cached_property
     def device_info(self) -> DeviceInfo:
         """Return device information about this System Bridge instance."""
         return DeviceInfo(
