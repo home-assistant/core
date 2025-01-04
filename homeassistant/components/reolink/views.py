@@ -66,7 +66,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = parse.unquote(filename.replace("|", "/"))
+        filename = parse.unquote(filename).replace("|", "/")
         ch = int(channel)
         try:
             host = get_host(self.hass, config_entry_id)
