@@ -61,9 +61,13 @@ class OneDriveBackupAgent(BackupAgent):
         super().__init__()
         self._graph_client = entry.runtime_data
         self._drive_item = self._graph_client.drives.by_drive_id(entry.unique_id)
-        self._backup_folder = f"{entry.data[CONF_BACKUP_FOLDER]}"
+        self._backup_folder = f"root:/{str(entry.data[CONF_BACKUP_FOLDER]).strip('/')}"
         self.name = entry.title
         self._hass = hass
+
+    def _get_file_path(self, backup_id: str) -> str:
+        """Return the file path for a backup."""
+        return f"{self._backup_folder}/{backup_id}.tar:"
 
     async def async_download_backup(
         self,
@@ -71,8 +75,9 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        item_id = await self._get_drive_item_from_name(f"{backup_id}.tar")
-        content = await self._drive_item.items.by_drive_item_id(item_id).content.get()
+        content = await self._drive_item.items.by_drive_item_id(
+            self._get_file_path(backup_id)
+        ).content.get()
         if content is None:
             raise BackupAgentError("Failed to download backup")
         return bytes_to_async_iterator(content)
@@ -105,7 +110,7 @@ class OneDriveBackupAgent(BackupAgent):
             item=uploadable_properties
         )
         upload_session = await self._drive_item.items.by_drive_item_id(
-            f"{backup.backup_id}.tar"
+            self._get_file_path(backup.backup_id)
         ).create_upload_session.post(upload_session_request_body)
 
         if upload_session is None:
@@ -130,8 +135,9 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        item_id = await self._get_drive_item_from_name(f"{backup_id}.tar")
-        await self._drive_item.items.by_drive_item_id(item_id).delete()
+        await self._drive_item.items.by_drive_item_id(
+            self._get_file_path(backup_id)
+        ).delete()
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
@@ -150,20 +156,9 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup:
         """Return a backup."""
-        item_id = await self._get_drive_item_from_name(f"{backup_id}.tar")
-        blob_properties = await self._drive_item.items.by_drive_item_id(item_id).get()
+        blob_properties = await self._drive_item.items.by_drive_item_id(
+            self._get_file_path(backup_id)
+        ).get()
         if blob_properties is None:
             raise BackupAgentError("Backup not found")
         return parse_backup_metadata(blob_properties.additional_data)
-
-    async def _get_drive_item_from_name(self, name: str) -> str:
-        """Get a drive item by name."""
-        item_id: str | None = None
-        items = await self._drive_item.items.get()
-        if items and (values := items.value):
-            for item in values:
-                if item.name == name:
-                    item_id = item.id
-        if item_id is None:
-            raise BackupAgentError("Backup not found")
-        return item_id

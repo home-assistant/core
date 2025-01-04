@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import logging
+
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
+from msgraph.generated.models.drive_item import DriveItem
+from msgraph.generated.models.folder import Folder
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,9 +17,11 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .api import OneDriveConfigEntryAccessTokenProvider
-from .const import DATA_BACKUP_AGENT_LISTENERS, OAUTH_SCOPES
+from .const import CONF_BACKUP_FOLDER, DATA_BACKUP_AGENT_LISTENERS, OAUTH_SCOPES
 
 type OneDriveConfigEntry = ConfigEntry[GraphServiceClient]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
@@ -40,13 +46,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         scopes=OAUTH_SCOPES,
     )
 
+    # check the backup folder exists, if it does not exist, create it
+    backup_folder = str(entry.data[CONF_BACKUP_FOLDER]).strip("/")
     try:
-        drives = await graph_client.drives.get()
+        await (
+            graph_client.drives.by_drive_id(entry.unique_id)
+            .items.by_drive_item_id(f"root:/{backup_folder}:")
+            .get()
+        )
     except APIError as err:
-        raise ConfigEntryNotReady from err
-
-    if not drives or not drives.value or entry.unique_id not in drives.value:
-        raise ConfigEntryError("No drives found")
+        if err.response_status_code != 404:
+            raise ConfigEntryNotReady from err
+        # did not exist, create it
+        _LOGGER.debug("Creating backup folder %s", backup_folder)
+        folders = backup_folder.split("/")
+        for i, folder in enumerate(folders):
+            try:
+                await (
+                    graph_client.drives.by_drive_id(entry.unique_id)
+                    .items.by_drive_item_id(f"root:/{"/".join(folders[: i + 1])}:")
+                    .get()
+                )
+            except APIError as get_folder_err:
+                if err.response_status_code != 404:
+                    raise ConfigEntryNotReady from get_folder_err
+                # is 404 not found, create folder
+                _LOGGER.debug("Creating folder %s", folder)
+                request_body = DriveItem(
+                    name=folder,
+                    folder=Folder(),
+                    additional_data={
+                        "@microsoft_graph_conflict_behavior": "fail",
+                    },
+                )
+                try:
+                    await (
+                        graph_client.drives.by_drive_id(entry.unique_id)
+                        .items.by_drive_item_id(f"root:/{"/".join(folders[:i])}:")
+                        .children.post(request_body)
+                    )
+                except APIError as create_err:
+                    raise ConfigEntryError(
+                        f"Failed to create folder {folder}"
+                    ) from create_err
+                _LOGGER.debug("Created folder %s", folder)
+            else:
+                _LOGGER.debug("Found folder %s", folder)
 
     entry.runtime_data = graph_client
 

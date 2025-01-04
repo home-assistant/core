@@ -4,20 +4,12 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "drive_selection": {
-        "data": {
-          "drive_id": "Drive"
-        },
-        "data_description": {
-          "drive_id": "Select the drive you want to use for backups."
-        }
-      },
       "folder_selection": {
         "data": {
           "drive_id": "Folder"
         },
         "data_description": {
-          "drive_id": "Input the folder you want to use for backups."
+          "drive_id": "Input the folder you want to use for backups. Will be created if it does not exist."
         }
       }
     },
@@ -32,7 +24,7 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "no_drives": "No possible OneDrives found in your account",
+      "no_drive": "No possible OneDrive found in your account",
       "connection_error": "Could not fetch drives for your account."
     },
     "create_entry": {
