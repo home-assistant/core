@@ -17,11 +17,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  entity-event-setup:
-    status: todo
-    comment: |
-      Simplify by using async_on_remove instead of keeping track of listeners to remove
-      later in async_will_remove_from_hass.
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done

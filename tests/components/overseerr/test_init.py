@@ -128,3 +128,25 @@ async def test_webhook_failing_test(
 
     mock_overseerr_client.test_webhook_notification_config.assert_called_once()
     mock_overseerr_client.set_webhook_notification_config.assert_not_called()
+
+
+async def test_prefer_internal_ip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_overseerr_client: AsyncMock,
+) -> None:
+    """Test the integration prefers internal IP."""
+    mock_overseerr_client.test_webhook_notification_config.return_value = False
+    hass.config.internal_url = "http://192.168.0.123:8123"
+    hass.config.external_url = "https://www.example.com"
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        mock_overseerr_client.test_webhook_notification_config.call_args_list[0][0][0]
+        == "http://192.168.0.123:8123/api/webhook/test-webhook-id"
+    )
+    assert (
+        mock_overseerr_client.test_webhook_notification_config.call_args_list[1][0][0]
+        == "https://www.example.com/api/webhook/test-webhook-id"
+    )
