@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,8 +30,7 @@ from tests.common import async_fire_time_changed, snapshot_platform
 async def test_select(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -42,9 +39,9 @@ async def test_select(
 
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"], "horizontal_swing_mode", "fixedleft"
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].horizontal_swing_mode = "fixedleft"
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -57,24 +54,20 @@ async def test_select(
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo select service."""
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "targetTemperature",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "light",
+    ]
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -100,18 +93,16 @@ async def test_select_set_option(
     state = hass.states.get("select.hallway_horizontal_swing")
     assert state.state == "stopped"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "targetTemperature",
-            "horizontalSwing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "horizontalSwing",
+        "light",
+    ]
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

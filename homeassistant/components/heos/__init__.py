@@ -168,7 +168,6 @@ class ControllerManager:
         self._device_registry = None
         self._entity_registry = None
         self.controller = controller
-        self._signals = []
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
@@ -176,23 +175,17 @@ class ControllerManager:
         self._entity_registry = er.async_get(self._hass)
 
         # Handle controller events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
         )
+
         # Handle connection-related events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_HEOS_EVENT, self._heos_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_HEOS_EVENT, self._heos_event
         )
 
     async def disconnect(self):
         """Disconnect subscriptions."""
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
         self.controller.dispatcher.disconnect_all()
         await self.controller.disconnect()
 
