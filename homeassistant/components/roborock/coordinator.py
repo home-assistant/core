@@ -127,6 +127,12 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4
 
+    def get_current_map_info(self) -> RoborockMapInfo | None:
+        """Get the current map info."""
+        if self.current_map is not None:
+            return self.maps.get(self.current_map)
+        return None
+
     async def get_maps(self) -> None:
         """Add a map to the coordinators mapping."""
         maps = await self.api.get_multi_maps_list()
