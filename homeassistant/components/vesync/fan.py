@@ -90,12 +90,7 @@ def _setup_entities(
     entities = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan":
-            entities.append(VeSyncFanHA(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
+            entities.append(VeSyncFanHA(dev, coordinator))  # noqa: PERF401
 
     async_add_entities(entities, update_before_add=True)
 
