@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> b
         imgwpib = await ImgwPib.create(
             client_session,
             hydrological_station_id=station_id,
-            hydro_details=False,
+            hydrological_details=False,
         )
     except (ClientError, TimeoutError, ApiError) as err:
         raise ConfigEntryNotReady from err

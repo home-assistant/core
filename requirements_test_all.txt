@@ -1019,7 +1019,7 @@ ifaddr==0.2.0
 igloohome-api==0.0.6
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.8
+imgw_pib==1.0.9
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4
