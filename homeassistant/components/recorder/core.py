@@ -712,12 +712,14 @@ class Recorder(threading.Thread):
         setup_result = self._setup_recorder()
 
         if not setup_result:
+            _LOGGER.error("Recorder setup failed, recorder shutting down")
             # Give up if we could not connect
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
+            _LOGGER.error("Failed to validate schema, recorder shutting down")
             return
         if schema_status.current_version > SCHEMA_VERSION:
             _LOGGER.error(
