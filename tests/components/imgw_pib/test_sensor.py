@@ -70,6 +70,7 @@ async def test_availability(
 
 async def test_remove_entity(
     hass: HomeAssistant,
+    mock_imgw_pib_client: AsyncMock,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -79,7 +80,7 @@ async def test_remove_entity(
     entity_registry.async_get_or_create(
         SENSOR_PLATFORM,
         DOMAIN,
-        "151140030_flood_alarm_level",
+        "123_flood_alarm_level",
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
         config_entry=mock_config_entry,
     )
