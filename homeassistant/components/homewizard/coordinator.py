@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from homewizard_energy import HomeWizardEnergyV1
+from homewizard_energy import HomeWizardEnergy, HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError
-from homewizard_energy.homewizard_energy import HomeWizardEnergy
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry

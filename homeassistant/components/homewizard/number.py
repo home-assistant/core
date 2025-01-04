@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from homewizard_energy.models import SystemUpdate
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
@@ -47,20 +45,21 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.coordinator.api.system(SystemUpdate(brightness=value))
+        await self.coordinator.api.system(status_led_brightness_pct=int(value))
         await self.coordinator.async_refresh()
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.coordinator.data.state is not None
+        return super().available and self.coordinator.data.system is not None
 
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
         if (
-            not self.coordinator.data.state
-            or (brightness := self.coordinator.data.state.brightness) is None
+            not self.coordinator.data.system
+            or (brightness := self.coordinator.data.system.status_led_brightness_pct)
+            is None
         ):
             return None
         return round(brightness)

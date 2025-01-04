@@ -7,11 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.models import (
-    CombinedModels as DeviceResponseEntry,
-    StateUpdate,
-    SystemUpdate,
-)
+from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -48,7 +44,7 @@ SWITCHES = [
         create_fn=lambda x: x.device.supports_state(),
         available_fn=lambda x: x.state is not None and not x.state.switch_lock,
         is_on_fn=lambda x: x.state.power_on if x.state else None,
-        set_fn=lambda api, active: api.state(StateUpdate(power_on=active)),
+        set_fn=lambda api, active: api.state(power_on=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="switch_lock",
@@ -57,7 +53,7 @@ SWITCHES = [
         create_fn=lambda x: x.device.supports_state(),
         available_fn=lambda x: x.state is not None,
         is_on_fn=lambda x: x.state.switch_lock if x.state else None,
-        set_fn=lambda api, active: api.state(StateUpdate(switch_lock=active)),
+        set_fn=lambda api, active: api.state(switch_lock=active),
     ),
     HomeWizardSwitchEntityDescription(
         key="cloud_connection",
@@ -66,7 +62,7 @@ SWITCHES = [
         create_fn=lambda _: True,
         available_fn=lambda x: x.system is not None,
         is_on_fn=lambda x: x.system.cloud_enabled if x.system else None,
-        set_fn=lambda api, active: api.system(SystemUpdate(cloud_enabled=active)),
+        set_fn=lambda api, active: api.system(cloud_enabled=active),
     ),
 ]
 
