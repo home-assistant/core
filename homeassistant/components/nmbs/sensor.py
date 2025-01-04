@@ -35,6 +35,7 @@ from .const import (  # noqa: F401
     DOMAIN,
     PLATFORMS,
     find_station,
+    find_station_by_name,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ async def async_setup_platform(
 
         for station_type in station_types:
             station = (
-                find_station(hass, config[station_type])
+                find_station_by_name(hass, config[station_type])
                 if station_type in config
                 else None
             )
