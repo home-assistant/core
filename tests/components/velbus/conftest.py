@@ -15,6 +15,7 @@ from velbusaio.channels import (
     SensorNumber,
     Temperature,
 )
+from velbusaio.module import Module
 
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
@@ -38,6 +39,8 @@ def mock_controller(
     mock_sensornumber: AsyncMock,
     mock_lightsensor: AsyncMock,
     mock_dimmer: AsyncMock,
+    mock_module_no_subdevices: AsyncMock,
+    mock_module_subdevices: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock a successful velbus controller."""
     with (
@@ -62,7 +65,42 @@ def mock_controller(
         ]
         cont.get_all_light.return_value = [mock_dimmer]
         cont.get_all_led.return_value = [mock_button]
+        cont.get_modules.return_value = {
+            1: mock_module_no_subdevices,
+            2: mock_module_no_subdevices,
+            3: mock_module_no_subdevices,
+            4: mock_module_no_subdevices,
+            99: mock_module_subdevices,
+        }
         yield controller
+
+
+@pytest.fixture
+def mock_module_no_subdevices(
+    mock_relay: AsyncMock,
+) -> AsyncMock:
+    """Mock a velbus module."""
+    module = AsyncMock(spec=Module)
+    module.get_type_name.return_value = "VMB4RYLD"
+    module.get_addresses.return_value = [1, 2, 3, 4]
+    module.get_name.return_value = "BedRoom"
+    module.get_sw_version.return_value = "1.0.0"
+    module.is_loaded.return_value = True
+    module.get_channels.return_value = {}
+    return module
+
+
+@pytest.fixture
+def mock_module_subdevices() -> AsyncMock:
+    """Mock a velbus module."""
+    module = AsyncMock(spec=Module)
+    module.get_type_name.return_value = "VMB2BLE"
+    module.get_addresses.return_value = [99]
+    module.get_name.return_value = "Kitchen"
+    module.get_sw_version.return_value = "2.0.0"
+    module.is_loaded.return_value = True
+    module.get_channels.return_value = {}
+    return module
 
 
 @pytest.fixture
