@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from kasa import Credentials
+
 from .coordinator import TPLinkDataUpdateCoordinator
 
 
@@ -13,3 +15,5 @@ class TPLinkData:
 
     parent_coordinator: TPLinkDataUpdateCoordinator
     children_coordinators: list[TPLinkDataUpdateCoordinator]
+    camera_credentials: Credentials | None
+    live_view: bool | None

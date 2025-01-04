@@ -2,6 +2,7 @@
   "domain": "microsoft",
   "name": "Microsoft",
   "integrations": [
+    "azure_data_explorer",
     "azure_devops",
     "azure_event_hub",
     "azure_service_bus",
