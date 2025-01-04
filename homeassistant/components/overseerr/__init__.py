@@ -16,12 +16,23 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.http import HomeAssistantView
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, JSON_PAYLOAD, LOGGER, REGISTERED_NOTIFICATIONS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
+from .services import setup_services
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Overseerr component."""
+    setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) -> bool:
