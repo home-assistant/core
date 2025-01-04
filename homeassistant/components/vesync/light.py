@@ -54,7 +54,7 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
-    entities: list[VeSyncBaseLight] = []
+    entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
@@ -69,7 +69,7 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLight(VeSyncBaseEntity, LightEntity):
+class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     _attr_name = None
@@ -78,11 +78,6 @@ class VeSyncBaseLight(VeSyncBaseEntity, LightEntity):
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.device_status == "on"
-
-    @property
-    def details(self):
-        """Provide access to the device details dictionary."""
-        return self.device.details
 
     @property
     def brightness(self) -> int:
@@ -154,14 +149,14 @@ class VeSyncBaseLight(VeSyncBaseEntity, LightEntity):
         self.device.turn_off()
 
 
-class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
+class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync dimmable light device."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
 
-class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
+class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP

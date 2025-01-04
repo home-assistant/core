@@ -3,7 +3,6 @@
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN

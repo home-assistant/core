@@ -112,7 +112,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
-    def __init__(self, fan, coordinator: VeSyncDataCoordinator) -> None:
+    def __init__(
+        self, fan: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
+    ) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan, coordinator)
         self.smartfan = fan
@@ -121,11 +123,6 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.device_status == "on"
-
-    @property
-    def details(self):
-        """Provide access to the device details dictionary."""
-        return self.device.details
 
     @property
     def percentage(self) -> int | None:
