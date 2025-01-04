@@ -2,7 +2,7 @@
   "services": {
     "create_task": {
       "name": "Create task",
-      "description": "Creates (or update) a new task in your Remember The Milk account. If you want to update a task later on, you have to set an \"id\" when creating the task. Note: Updating a tasks does not support the smart syntax.",
+      "description": "Creates a new task in your Remember The Milk account or updates an existing one. If you want to update a task later on, you have to set an \"ID\" when creating the task. Note: Updating a task does not support the smart syntax.",
       "fields": {
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
