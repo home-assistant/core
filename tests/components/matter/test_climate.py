@@ -348,3 +348,46 @@ async def test_room_airconditioner(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner")
     assert state.attributes["supported_features"] & ClimateEntityFeature.TURN_ON
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_refrigerator"])
+async def test_temperature_control(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test TemperatureControl base attributes and state updates."""
+    # test entity attributes
+    state = hass.states.get("climate.refrigerator_thermostat_2")
+    assert state.state == HVACMode.HEAT_COOL
+
+    # test common state updates from device
+    set_node_attribute(matter_node, 2, 86, 1, -1700)
+    set_node_attribute(matter_node, 2, 86, 2, -1600)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.refrigerator_thermostat_2")
+    assert state
+    assert state.attributes["min_temp"] == -17
+    assert state.attributes["max_temp"] == -16
+
+    # change target_temp
+    matter_client.send_device_command.reset_mock()
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {
+            "entity_id": "climate.refrigerator_thermostat_2",
+            "temperature": -17,
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.TemperatureControl.Commands.SetTemperature(
+            targetTemperature=-1700
+        ),
+    )
+    matter_client.write_attribute.reset_mock()
