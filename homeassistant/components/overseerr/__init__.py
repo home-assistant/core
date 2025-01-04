@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+from typing import cast
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web_request import Request
 from aiohttp.web_response import Response
 from python_overseerr import OverseerrConnectionError
 
+from homeassistant.components import cloud
 from homeassistant.components.webhook import (
     async_generate_url,
     async_register,
@@ -25,6 +27,7 @@ from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .services import setup_services
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -85,6 +88,8 @@ class OverseerrWebhookManager:
         for url in urls:
             if url not in res:
                 res.append(url)
+        if CONF_CLOUDHOOK_URL in self.entry.data:
+            res.append(self.entry.data[CONF_CLOUDHOOK_URL])
         return res
 
     async def register_webhook(self) -> None:
@@ -100,16 +105,15 @@ class OverseerrWebhookManager:
         if not await self.check_need_change():
             return
         for url in self.webhook_urls:
-            if await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
-                LOGGER.debug("Setting Overseerr webhook to %s", url)
-                await self.client.set_webhook_notification_config(
-                    enabled=True,
-                    types=REGISTERED_NOTIFICATIONS,
-                    webhook_url=url,
-                    json_payload=JSON_PAYLOAD,
-                )
+            if await self.test_and_set_webhook(url):
                 return
-        LOGGER.error("Failed to set Overseerr webhook")
+        LOGGER.info("Failed to register Overseerr webhook")
+        if cloud.async_active_subscription(self.hass):
+            LOGGER.info("Trying to register a cloudhook URL")
+            url = await _async_cloudhook_generate_url(self.hass, self.entry)
+            if await self.test_and_set_webhook(url):
+                return
+        LOGGER.error("Failed to register Overseerr webhook")
 
     async def check_need_change(self) -> bool:
         """Check if webhook needs to be changed."""
@@ -120,6 +124,19 @@ class OverseerrWebhookManager:
             or current_config.options.json_payload != json.loads(JSON_PAYLOAD)
             or current_config.types != REGISTERED_NOTIFICATIONS
         )
+
+    async def test_and_set_webhook(self, url: str) -> bool:
+        """Test and set webhook."""
+        if await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
+            LOGGER.debug("Setting Overseerr webhook to %s", url)
+            await self.client.set_webhook_notification_config(
+                enabled=True,
+                types=REGISTERED_NOTIFICATIONS,
+                webhook_url=url,
+                json_payload=JSON_PAYLOAD,
+            )
+            return True
+        return False
 
     async def handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -134,3 +151,16 @@ class OverseerrWebhookManager:
     async def unregister_webhook(self) -> None:
         """Unregister webhook."""
         async_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+
+
+async def _async_cloudhook_generate_url(
+    hass: HomeAssistant, entry: OverseerrConfigEntry
+) -> str:
+    """Generate the full URL for a webhook_id."""
+    if CONF_CLOUDHOOK_URL not in entry.data:
+        webhook_id = entry.data[CONF_WEBHOOK_ID]
+        webhook_url = await cloud.async_create_cloudhook(hass, webhook_id)
+        data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
+        hass.config_entries.async_update_entry(entry, data=data)
+        return webhook_url
+    return cast(str, entry.data[CONF_CLOUDHOOK_URL])
