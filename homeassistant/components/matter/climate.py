@@ -40,7 +40,6 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.FAN_ONLY: 7,
 }
 
-
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
     # Some devices only have a single setpoint while the matter spec
     # assumes that you need separate setpoints for heating and cooling.
