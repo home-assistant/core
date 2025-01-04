@@ -15,7 +15,12 @@ OAUTH2_AUTHORIZE: Final = (
 )
 OAUTH2_TOKEN: Final = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
 
-OAUTH_SCOPES: Final = ["files.readwrite", "offline_access", "openid"]
+OAUTH_SCOPES: Final = [
+    "https://graph.microsoft.com/files.readwrite",
+    # "files.readwrite",
+    "offline_access",
+    "openid",
+]
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"

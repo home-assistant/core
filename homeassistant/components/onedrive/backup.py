@@ -1,7 +1,7 @@
 """Support for OneDrive backup."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import json
 import logging
 from typing import Any
@@ -20,7 +20,11 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import OneDriveConfigEntry
 from .const import CONF_BACKUP_FOLDER, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
-from .util import bytes_to_async_iterator, parse_backup_metadata
+from .util import (
+    async_iterator_to_bytesio,
+    bytes_to_async_iterator,
+    parse_backup_metadata,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,13 +105,11 @@ class OneDriveBackupAgent(BackupAgent):
         if backup.extra_metadata:
             backup_dict["extra_metadata"] = json.dumps(backup.extra_metadata)
 
-        stream = await open_stream()
-
-        uploadable_properties = DriveItemUploadableProperties(
-            additional_data=backup_dict
-        )
         upload_session_request_body = CreateUploadSessionPostRequestBody(
-            item=uploadable_properties
+            item=DriveItemUploadableProperties(
+                additional_data={"@microsoft.graph.conflictBehavior": "fail"}
+            ),
+            additional_data={"description": json.dumps(backup_dict)},
         )
         upload_session = await self._drive_item.items.by_drive_item_id(
             self._get_file_path(backup.backup_id)
@@ -118,14 +120,16 @@ class OneDriveBackupAgent(BackupAgent):
 
         large_file_upload_session = LargeFileUploadSession(
             upload_url=upload_session.upload_url,
-            expiration_date_time=datetime.now() + timedelta(days=1),
+            expiration_date_time=datetime.now(UTC) + timedelta(hours=1),
             additional_data=upload_session.additional_data,
             is_cancelled=False,
             next_expected_ranges=upload_session.next_expected_ranges,
         )
 
         task = LargeFileUploadTask(
-            large_file_upload_session, self._graph_client.request_adapter, stream=stream
+            large_file_upload_session,
+            self._graph_client.request_adapter,
+            stream=await async_iterator_to_bytesio(await open_stream()),
         )
         await task.upload()
 
@@ -142,12 +146,15 @@ class OneDriveBackupAgent(BackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
-        items = await self._drive_item.items.get()
+        items = await self._drive_item.items.by_drive_item_id(
+            f"{self._backup_folder}:"
+        ).children.get()
         if items and (values := items.value):
             for item in values:
-                additional_data = item.additional_data
-                if "homeassistant_version" in additional_data:
-                    backups.append(parse_backup_metadata(additional_data))
+                _LOGGER.warning("Item: %s", item.name)
+                description = item.description
+                if "homeassistant_version" in description:
+                    backups.append(parse_backup_metadata(description))
         return backups
 
     async def async_get_backup(
@@ -161,4 +168,4 @@ class OneDriveBackupAgent(BackupAgent):
         ).get()
         if blob_properties is None:
             raise BackupAgentError("Backup not found")
-        return parse_backup_metadata(blob_properties.additional_data)
+        return parse_backup_metadata(blob_properties.description)

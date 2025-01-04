@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
 import voluptuous as vol
@@ -45,7 +46,7 @@ class OneDriveConfigFlow(
         """Handle the initial step."""
         auth_provider = BaseBearerTokenAuthenticationProvider(
             access_token_provider=OneDriveConfigFlowAccessTokenProvider(
-                data[CONF_TOKEN]
+                str(data[CONF_TOKEN]["access_token"])
             )
         )
         adapter = GraphRequestAdapter(
@@ -61,10 +62,15 @@ class OneDriveConfigFlow(
         self._data = data
         try:
             drive = await graph_client.me.drive.get()
-        except Exception:  # noqa: BLE001
-            self.async_abort(reason="connection_error")
+        except APIError:
+            self.logger.exception("Failed to connect to OneDrive")
+            return self.async_abort(reason="connection_error")
+        except Exception:
+            self.logger.exception("Unknown error")
+            return self.async_abort(reason="unknown_error")
+
         if drive is None or not drive.id:
-            self.async_abort(reason="no_drive")
+            return self.async_abort(reason="no_drive")
 
         await self.async_set_unique_id(drive.id)
         self._abort_if_unique_id_configured()
@@ -81,7 +87,7 @@ class OneDriveConfigFlow(
             )
 
         return self.async_show_form(
-            step_id="drive_selection",
+            step_id="folder_selection",
             data_schema=vol.Schema(
                 {
                     vol.Required(
