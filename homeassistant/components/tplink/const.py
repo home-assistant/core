@@ -41,6 +41,7 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 UNIT_MAPPING = {
