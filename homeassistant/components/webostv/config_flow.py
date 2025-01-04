@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any, Self
 from urllib.parse import urlparse
 
@@ -19,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from . import async_control_connect, update_client_key
@@ -33,8 +31,6 @@ DATA_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -68,28 +64,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    @callback
-    def _async_check_configured_entry(self) -> None:
-        """Check if entry is configured, update unique_id if needed."""
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] != self._host:
-                continue
-
-            if self._uuid and not entry.unique_id:
-                _LOGGER.debug(
-                    "Updating unique_id for host %s, unique_id: %s",
-                    self._host,
-                    self._uuid,
-                )
-                self.hass.config_entries.async_update_entry(entry, unique_id=self._uuid)
-
-            raise AbortFlow("already_configured")
-
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Display pairing form."""
-        self._async_check_configured_entry()
+        self._async_abort_entries_match({CONF_HOST: self._host})
 
         self.context["title_placeholders"] = {"name": self._name}
         errors = {}
