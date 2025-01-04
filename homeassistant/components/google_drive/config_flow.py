@@ -69,10 +69,12 @@ class OAuth2FlowHandler(
             reauth_entry = self._get_reauth_entry()
             try:
                 resp = await async_get_clientsession(self.hass).get(
-                    f"{DRIVE_API_FILES}/{reauth_entry.unique_id}?fields=",
+                    f"{DRIVE_API_FILES}/{reauth_entry.unique_id}",
+                    params={"fields": ""},
                     headers=headers,
                 )
                 resp.raise_for_status()
+                await resp.json()
             except ClientError as err:
                 self.logger.error(
                     "Could not find folder '%s%s': %s",
@@ -85,7 +87,8 @@ class OAuth2FlowHandler(
 
         try:
             resp = await async_get_clientsession(self.hass).post(
-                f"{DRIVE_API_FILES}?fields=id",
+                DRIVE_API_FILES,
+                params={"fields": "id"},
                 json={
                     "name": "Home Assistant",
                     "mimeType": "application/vnd.google-apps.folder",

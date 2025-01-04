@@ -8,7 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google_drive",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["aiogoogle"],
-  "quality_scale": "bronze",
-  "requirements": ["aiogoogle==5.13.2"]
+  "quality_scale": "bronze"
 }

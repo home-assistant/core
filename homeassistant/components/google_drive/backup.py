@@ -6,10 +6,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from typing import Any, Self
 
-from aiogoogle import Aiogoogle
-from aiogoogle.auth import UserCreds
-from aiogoogle.excs import AiogoogleError
-from aiohttp import ClientError, StreamReader
+from aiohttp import ClientError, MultipartWriter, StreamReader
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -17,8 +14,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
-from .api import AsyncConfigEntryAuth, convert_to_user_creds
-from .const import DOMAIN
+from .api import AsyncConfigEntryAuth
+from .const import DOMAIN, DRIVE_API_FILES, DRIVE_API_UPLOAD_FILES
 
 # Google Drive only supports string key value pairs as properties.
 # We convert any other fields to JSON strings.
@@ -134,42 +131,54 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
+        headers = await self._async_headers()
         properties = _convert_agent_backup_to_properties(backup)
-        async with Aiogoogle(user_creds=await self._creds()) as aiogoogle:
-            drive_v3 = await aiogoogle.discover("drive", "v3")
-            req = drive_v3.files.create(
-                pipe_from=await open_stream(),
-                fields="",
-                json={
+        with MultipartWriter() as mpwriter:
+            mpwriter.append_json(
+                {
                     "name": f"{backup.name} {backup.date}.tar",
                     "parents": [self._folder_id],
                     "properties": properties,
-                },
+                }
+            )
+            mpwriter.append(await open_stream())
+            headers.update(
+                {"Content-Type": f"multipart/related; boundary={mpwriter.boundary}"}
             )
             try:
-                await aiogoogle.as_user(req, timeout=12 * 3600)
-            except (AiogoogleError, TimeoutError) as err:
+                resp = await async_get_clientsession(self._hass).post(
+                    DRIVE_API_UPLOAD_FILES,
+                    params={"fields": ""},
+                    data=mpwriter,
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                await resp.json()
+            except ClientError as err:
                 raise BackupAgentError("Failed to upload backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        async with Aiogoogle(user_creds=await self._creds()) as aiogoogle:
-            drive_v3 = await aiogoogle.discover("drive", "v3")
-            query = f"'{self._folder_id}' in parents and trashed=false"
-            try:
-                res = await aiogoogle.as_user(
-                    drive_v3.files.list(q=query, fields="files(properties)"),
-                    full_res=True,
-                )
-            except AiogoogleError as err:
-                raise BackupAgentError("Failed to list backups") from err
+        headers = await self._async_headers()
+        try:
+            resp = await async_get_clientsession(self._hass).get(
+                DRIVE_API_FILES,
+                params={
+                    "q": f"'{self._folder_id}' in parents and trashed=false",
+                    "fields": "files(properties)",
+                },
+                headers=headers,
+            )
+            resp.raise_for_status()
+            res = await resp.json()
+        except ClientError as err:
+            raise BackupAgentError("Failed to list backups") from err
         backups = []
-        async for page in res:
-            for file in page["files"]:
-                if "properties" not in file or "backup_id" not in file["properties"]:
-                    continue
-                backup = _convert_properties_to_agent_backup(file["properties"])
-                backups.append(backup)
+        for file in res["files"]:
+            if "properties" not in file or "backup_id" not in file["properties"]:
+                continue
+            backup = _convert_properties_to_agent_backup(file["properties"])
+            backups.append(backup)
         return backups
 
     async def async_get_backup(
@@ -178,20 +187,9 @@ class GoogleDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup | None:
         """Return a backup."""
-        async with Aiogoogle(user_creds=await self._creds()) as aiogoogle:
-            drive_v3 = await aiogoogle.discover("drive", "v3")
-            try:
-                res = await aiogoogle.as_user(
-                    drive_v3.files.list(
-                        q=self._query(backup_id),
-                        fields="files(properties)",
-                    )
-                )
-            except AiogoogleError as err:
-                raise BackupAgentError("Failed to get backup") from err
-            for file in res["files"]:
-                return _convert_properties_to_agent_backup(file["properties"])
-        return None
+        headers = await self._async_headers()
+        _, backup = await self._async_get_file_id_and_properties(backup_id, headers)
+        return backup
 
     async def async_download_backup(
         self,
@@ -203,32 +201,20 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
-        user_creds = await self._creds()
-        async with Aiogoogle(user_creds=user_creds) as aiogoogle:
-            drive_v3 = await aiogoogle.discover("drive", "v3")
-            try:
-                res = await aiogoogle.as_user(
-                    drive_v3.files.list(
-                        q=self._query(backup_id),
-                        fields="files(id)",
-                    )
-                )
-            except AiogoogleError as err:
-                raise BackupAgentError("Failed to get backup") from err
-            for file in res["files"]:
-                # Intentionally not passing pipe_to and not wrapping this via aiogoogle.as_user
-                # to avoid downloading the whole file in memory
-                req = drive_v3.files.get(fileId=file["id"], alt="media")
-                req = aiogoogle.oauth2.authorize(req, user_creds)
-                try:
-                    resp = await async_get_clientsession(self._hass).get(
-                        req.url, headers=req.headers
-                    )
-                    resp.raise_for_status()
-                except ClientError as err:
-                    raise BackupAgentError("Failed to download backup") from err
-                return ChunkAsyncStreamIterator(resp.content)
-        raise BackupAgentError("Backup not found")
+        headers = await self._async_headers()
+        file_id, _ = await self._async_get_file_id_and_properties(backup_id, headers)
+        if file_id is None:
+            raise BackupAgentError("Backup not found")
+        try:
+            resp = await async_get_clientsession(self._hass).get(
+                f"{DRIVE_API_FILES}/{file_id}",
+                params={"alt": "media"},
+                headers=headers,
+            )
+            resp.raise_for_status()
+        except ClientError as err:
+            raise BackupAgentError("Failed to download backup") from err
+        return ChunkAsyncStreamIterator(resp.content)
 
     async def async_delete_backup(
         self,
@@ -239,34 +225,49 @@ class GoogleDriveBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        async with Aiogoogle(user_creds=await self._creds()) as aiogoogle:
-            drive_v3 = await aiogoogle.discover("drive", "v3")
-            try:
-                res = await aiogoogle.as_user(
-                    drive_v3.files.list(
-                        q=self._query(backup_id),
-                        fields="files(id)",
-                    )
-                )
-            except AiogoogleError as err:
-                raise BackupAgentError("Failed to get backup") from err
-            for file in res["files"]:
-                try:
-                    await aiogoogle.as_user(drive_v3.files.delete(fileId=file["id"]))
-                except AiogoogleError as err:
-                    raise BackupAgentError("Failed to delete backup") from err
+        headers = await self._async_headers()
+        file_id, _ = await self._async_get_file_id_and_properties(backup_id, headers)
+        if file_id is None:
+            return
+        try:
+            resp = await async_get_clientsession(self._hass).delete(
+                f"{DRIVE_API_FILES}/{file_id}",
+                headers=headers,
+            )
+            resp.raise_for_status()
+            await resp.json()
+        except ClientError as err:
+            raise BackupAgentError("Failed to delete backup") from err
 
-    def _query(self, backup_id: str) -> str:
-        return " and ".join(
+    async def _async_headers(self) -> dict[str, str]:
+        try:
+            access_token = await self._auth.check_and_refresh_token()
+        except HomeAssistantError as err:
+            raise BackupAgentError("Failed to refresh token") from err
+        return {"Authorization": f"Bearer {access_token}"}
+
+    async def _async_get_file_id_and_properties(
+        self, backup_id: str, headers: dict[str, str]
+    ) -> tuple[str | None, AgentBackup | None]:
+        query = " and ".join(
             [
                 f"'{self._folder_id}' in parents",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]
         )
-
-    async def _creds(self) -> UserCreds:
         try:
-            await self._auth.check_and_refresh_token()
-        except HomeAssistantError as err:
-            raise BackupAgentError("Failed to authorize") from err
-        return convert_to_user_creds(self._auth.oauth_session.token)
+            resp = await async_get_clientsession(self._hass).get(
+                DRIVE_API_FILES,
+                params={
+                    "q": query,
+                    "fields": "files(id,properties)",
+                },
+                headers=headers,
+            )
+            resp.raise_for_status()
+            res = await resp.json()
+        except ClientError as err:
+            raise BackupAgentError("Failed to get backup") from err
+        for file in res["files"]:
+            return file["id"], _convert_properties_to_agent_backup(file["properties"])
+        return None, None

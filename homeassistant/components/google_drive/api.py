@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any
-
-from aiogoogle.auth import UserCreds
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 
@@ -18,14 +14,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
-
-
-def convert_to_user_creds(token: dict[str, Any]) -> UserCreds:
-    """Convert an OAuth2Session token to UserCreds."""
-    return UserCreds(
-        access_token=token["access_token"],
-        expires_at=datetime.fromtimestamp(token["expires_at"]).isoformat(),
-    )
 
 
 class AsyncConfigEntryAuth:
@@ -43,7 +31,7 @@ class AsyncConfigEntryAuth:
     @property
     def access_token(self) -> str:
         """Return the access token."""
-        return self.oauth_session.token[CONF_ACCESS_TOKEN]
+        return str(self.oauth_session.token[CONF_ACCESS_TOKEN])
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""
