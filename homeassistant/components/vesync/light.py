@@ -19,7 +19,7 @@ from homeassistant.util import color as color_util
 
 from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_LIGHTS
 from .coordinator import VeSyncDataCoordinator
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
@@ -54,7 +54,7 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
-    entities: list[VeSyncBaseLight] = []
+    entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
@@ -69,10 +69,15 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncBaseLight(VeSyncDevice, LightEntity):
+class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
     """Base class for VeSync Light Devices Representations."""
 
     _attr_name = None
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
 
     @property
     def brightness(self) -> int:
@@ -139,15 +144,19 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         # send turn_on command to pyvesync api
         self.device.turn_on()
 
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self.device.turn_off()
 
-class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
+
+class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync dimmable light device."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
 
-class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
+class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
 
     _attr_color_mode = ColorMode.COLOR_TEMP
