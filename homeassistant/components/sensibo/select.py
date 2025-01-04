@@ -56,7 +56,7 @@ async def async_setup_entry(
     entry: SensiboConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Sensibo number platform."""
+    """Set up Sensibo select platform."""
 
     coordinator = entry.runtime_data
 

@@ -591,7 +591,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==1.1.0
+bleak-esphome==2.0.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.6.0
@@ -1079,7 +1079,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.4.post1;python_version<'3.13'
+guppy3==3.1.5
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1181,7 +1181,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.2.0
+ical==8.3.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -2913,7 +2913,7 @@ ttn_client==1.2.0
 tuya-device-sharing-sdk==0.2.1
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.2.0
+twentemilieu==2.2.1
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2928,7 +2928,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.1.0
+uiprotect==7.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
