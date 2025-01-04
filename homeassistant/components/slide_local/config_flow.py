@@ -186,6 +186,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._mac)
 
         ip = str(discovery_info.ip_address)
+        _LOGGER.debug("Slide device discovered, ip %s", ip)
 
         self._abort_if_unique_id_configured({CONF_HOST: ip}, reload_on_update=True)
 
