@@ -76,21 +76,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     return await hassio.update_diagnostics(diagnostics)
 
 
-@bind_hass
-@api_data
-async def async_create_backup(
-    hass: HomeAssistant, payload: dict, partial: bool = False
-) -> dict:
-    """Create a full or partial backup.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    backup_type = "partial" if partial else "full"
-    command = f"/backups/new/{backup_type}"
-    return await hassio.send_command(command, payload=payload, timeout=None)
-
-
 @api_data
 async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Green."""

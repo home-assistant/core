@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, call
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions, Discovery
+from aiohasupervisor.models import AddonsOptions, Discovery, PartialBackupOptions
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
@@ -17,7 +17,6 @@ from homeassistant.components.hassio.addon_manager import (
     AddonManager,
     AddonState,
 )
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.core import HomeAssistant
 
 
@@ -502,7 +501,7 @@ async def test_update_addon(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon."""
@@ -511,9 +510,8 @@ async def test_update_addon(
     await addon_manager.async_update_addon()
 
     assert addon_info.call_count == 2
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -522,7 +520,7 @@ async def test_update_addon_no_update(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon without update available."""
@@ -531,7 +529,7 @@ async def test_update_addon_no_update(
     await addon_manager.async_update_addon()
 
     assert addon_info.call_count == 1
-    assert create_backup.call_count == 0
+    assert create_partial_backup.call_count == 0
     assert update_addon.call_count == 0
 
 
@@ -540,7 +538,7 @@ async def test_update_addon_error(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
     """Test update addon raises error."""
@@ -553,9 +551,8 @@ async def test_update_addon_error(
     assert str(err.value) == "Failed to update the Test add-on: Boom"
 
     assert addon_info.call_count == 2
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -565,7 +562,7 @@ async def test_schedule_update_addon(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
     """Test schedule update addon."""
@@ -591,9 +588,8 @@ async def test_schedule_update_addon(
 
     assert addon_manager.task_in_progress() is False
     assert addon_info.call_count == 3
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -607,15 +603,15 @@ async def test_schedule_update_addon(
 
 @pytest.mark.parametrize(
     (
-        "create_backup_error",
-        "create_backup_calls",
+        "create_partial_backup_error",
+        "create_partial_backup_calls",
         "update_addon_error",
         "update_addon_calls",
         "error_message",
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -633,17 +629,17 @@ async def test_schedule_update_addon(
 async def test_schedule_update_addon_error(
     addon_manager: AddonManager,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
-    create_backup_error: Exception | None,
-    create_backup_calls: int,
+    create_partial_backup_error: Exception | None,
+    create_partial_backup_calls: int,
     update_addon_error: Exception | None,
     update_addon_calls: int,
     error_message: str,
 ) -> None:
     """Test schedule update addon raises error."""
     addon_installed.return_value.update_available = True
-    create_backup.side_effect = create_backup_error
+    create_partial_backup.side_effect = create_partial_backup_error
     update_addon.side_effect = update_addon_error
 
     with pytest.raises(AddonError) as err:
@@ -651,21 +647,21 @@ async def test_schedule_update_addon_error(
 
     assert str(err.value) == error_message
 
-    assert create_backup.call_count == create_backup_calls
+    assert create_partial_backup.call_count == create_partial_backup_calls
     assert update_addon.call_count == update_addon_calls
 
 
 @pytest.mark.parametrize(
     (
-        "create_backup_error",
-        "create_backup_calls",
+        "create_partial_backup_error",
+        "create_partial_backup_calls",
         "update_addon_error",
         "update_addon_calls",
         "error_log",
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -683,10 +679,10 @@ async def test_schedule_update_addon_error(
 async def test_schedule_update_addon_logs_error(
     addon_manager: AddonManager,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
     update_addon: AsyncMock,
-    create_backup_error: Exception | None,
-    create_backup_calls: int,
+    create_partial_backup_error: Exception | None,
+    create_partial_backup_calls: int,
     update_addon_error: Exception | None,
     update_addon_calls: int,
     error_log: str,
@@ -694,13 +690,13 @@ async def test_schedule_update_addon_logs_error(
 ) -> None:
     """Test schedule update addon logs error."""
     addon_installed.return_value.update_available = True
-    create_backup.side_effect = create_backup_error
+    create_partial_backup.side_effect = create_partial_backup_error
     update_addon.side_effect = update_addon_error
 
     await addon_manager.async_schedule_update_addon(catch_error=True)
 
     assert error_log in caplog.text
-    assert create_backup.call_count == create_backup_calls
+    assert create_partial_backup.call_count == create_partial_backup_calls
     assert update_addon.call_count == update_addon_calls
 
 
@@ -709,15 +705,14 @@ async def test_create_backup(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
 ) -> None:
     """Test creating a backup of the addon."""
     await addon_manager.async_create_backup()
 
     assert addon_info.call_count == 1
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
 
 
@@ -726,10 +721,10 @@ async def test_create_backup_error(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
     addon_installed: AsyncMock,
-    create_backup: AsyncMock,
+    create_partial_backup: AsyncMock,
 ) -> None:
     """Test creating a backup of the addon raises error."""
-    create_backup.side_effect = HassioAPIError("Boom")
+    create_partial_backup.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_create_backup()
@@ -737,9 +732,8 @@ async def test_create_backup_error(
     assert str(err.value) == "Failed to create a backup of the Test add-on: Boom"
 
     assert addon_info.call_count == 1
-    assert create_backup.call_count == 1
-    assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+    create_partial_backup.assert_called_once_with(
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
 
 
