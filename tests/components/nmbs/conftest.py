@@ -54,5 +54,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_STATION_FROM: "BE.NMBS.008812005",
             CONF_STATION_TO: "BE.NMBS.008814001",
         },
-        unique_id="BE.NMBS.008812005-BE.NMBS.008814001",
+        unique_id="BE.NMBS.008812005_BE.NMBS.008814001",
     )
