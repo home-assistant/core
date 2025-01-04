@@ -1407,7 +1407,7 @@ py-aosmith==1.0.12
 py-canary==0.5.4
 
 # homeassistant.components.ccm15
-py-ccm15==0.0.9
+py-ccm15-2025==0.1.0
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
