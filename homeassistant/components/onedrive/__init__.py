@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from kiota_abstractions.api_error import APIError
+from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,11 +14,8 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .api import (
-    OneDriveBearerTokenAuthenticationProvider,
-    OneDriveConfigEntryAccessTokenProvider,
-)
-from .const import DATA_BACKUP_AGENT_LISTENERS
+from .api import OneDriveConfigEntryAccessTokenProvider
+from .const import DATA_BACKUP_AGENT_LISTENERS, OAUTH_SCOPES
 
 
 @dataclass
@@ -41,14 +39,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    auth_provider = OneDriveBearerTokenAuthenticationProvider(
+    auth_provider = BaseBearerTokenAuthenticationProvider(
         access_token_provider=OneDriveConfigEntryAccessTokenProvider(session)
     )
     adapter = GraphRequestAdapter(
         auth_provider=auth_provider, client=get_async_client(hass)
     )
 
-    graph_client = GraphServiceClient(request_adapter=adapter)
+    graph_client = GraphServiceClient(
+        request_adapter=adapter,
+        scopes=OAUTH_SCOPES,
+    )
 
     try:
         drives = await graph_client.drives.get()
