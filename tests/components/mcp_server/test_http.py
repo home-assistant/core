@@ -10,6 +10,7 @@ import aiohttp
 import mcp
 import mcp.client.session
 import mcp.client.sse
+from mcp.shared.exceptions import McpError
 import pytest
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
@@ -389,3 +390,16 @@ async def test_prompt_get(
     assert result.messages[0].role == "assistant"
     assert result.messages[0].content.type == "text"
     assert "When controlling Home Assistant" in result.messages[0].content.text
+
+
+async def test_get_unknwon_prompt(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the get prompt endpoint."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        with pytest.raises(McpError):
+            await session.get_prompt(name="Unknown")
