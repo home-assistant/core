@@ -1,0 +1,34 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "bucket": {
+        "data": {
+          "bucket": "Bucket"
+        },
+        "data_description": {
+          "bucket": "Select the bucket to store backups in."
+        },
+        "description": "Pick the bucket you want to use for backups. Please note, it is best to create a dedicated bucket for Home Assistant backups."
+      },
+      "user": {
+        "data": {
+          "access_key": "S3 access key",
+          "secret_key": "S3 secret key",
+          "s3_url": "S3 URL"
+        },
+        "data_description": {
+          "access_key": "The access key for the S3 bucket.",
+          "secret_key": "the secret key for the S3 bucket.",
+          "s3_url": "The URL for the S3 bucket."
+        },
+        "description": "Set up your S3 to store backups.\n\nTo do so, you will need to create acccess and secret keys in the S3 account. This key will be used to access the bucket you want to use for backups."
+      }
+    }
+  }
+}
