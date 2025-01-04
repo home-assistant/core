@@ -76,6 +76,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
+            description_placeholders={},
             errors=errors,
         )
 
