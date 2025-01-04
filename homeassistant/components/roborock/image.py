@@ -160,15 +160,16 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 async def refresh_coordinators(
     hass: HomeAssistant, coord: RoborockDataUpdateCoordinator
 ) -> None:
-    """Ensure coordinators have all the necessary state for the integration."""
+    """Get the starting map information for all maps for this device.
+
+    The following steps must be done synchronously.
+    Only one map can be loaded at a time per device.
+    """
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
     map_flags = sorted(coord.maps, key=lambda data: data == cur_map, reverse=True)
-    for map_flag in (
-        map_flags
-    ):  # Only get the map data on startup if a) we haven't added the entity before
-        # b) The entity does not have the needed restore data.
+    for map_flag in map_flags:
         if map_flag != cur_map:
             # Only change the map and sleep if we have multiple maps.
             await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
@@ -176,5 +177,11 @@ async def refresh_coordinators(
             # We cannot get the map until the roborock servers fully process the
             # map change.
             await asyncio.sleep(MAP_SLEEP)
-            # Get the map data
         await coord.get_rooms()
+
+    if len(coord.maps) != 1:
+        # Set the map back to the map the user previously had selected so that it
+        # does not change the end user's app.
+        # Only needs to happen when we changed maps above.
+        await coord.cloud_api.send_command(RoborockCommand.LOAD_MULTI_MAP, [cur_map])
+        coord.current_map = cur_map
