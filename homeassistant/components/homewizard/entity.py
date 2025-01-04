@@ -22,8 +22,8 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
             manufacturer="HomeWizard",
             sw_version=coordinator.data.device.firmware_version,
             model_id=coordinator.data.device.product_type,
-            model=coordinator.data.device.product.name
-            if coordinator.data.device.product
+            model=coordinator.data.device.model_name
+            if coordinator.data.device.model_name
             else None,
         )
 

@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.errors import NotFoundError
-from homewizard_energy.v1.models import Data, Device, State, System
+from homewizard_energy.models import Device, Measurement, State, System
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -40,7 +40,7 @@ def mock_homewizardenergy(
         client.device.return_value = Device.from_dict(
             load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
         )
-        client.data.return_value = Data.from_dict(
+        client.measurement.return_value = Measurement.from_dict(
             load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
         )
 

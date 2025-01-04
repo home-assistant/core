@@ -8,7 +8,7 @@ from typing import Any, NamedTuple
 
 from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.v1.models import Device
+from homewizard_energy.models import Device
 import voluptuous as vol
 
 from homeassistant.components import onboarding, zeroconf
