@@ -427,12 +427,11 @@ class EntityPlatform:
             )
             return False
         except Exception as exc:
-            message = str(exc)
             logger.exception(
                 "Error while setting up %s platform for %s: %s",
                 self.platform_name,
                 self.domain,
-                message,
+                exc,  # noqa: TRY401
             )
             return False
         else:
