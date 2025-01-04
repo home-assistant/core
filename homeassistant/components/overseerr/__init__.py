@@ -64,19 +64,17 @@ class OverseerrWebhookManager:
     @property
     def webhook_urls(self) -> list[str]:
         """Return webhook URLs."""
-        urls: set[str] = set()
-        res = [
+        urls = [
             async_generate_url(
                 self.hass, self.entry.data[CONF_WEBHOOK_ID], prefer_external=external
             )
             for external in (False, True)
         ]
-        ress = []
-        for url in res:
-            if url not in urls:
-                urls.add(url)
-                ress.append(url)
-        return ress
+        res = []
+        for url in urls:
+            if url not in res:
+                res.append(url)
+        return res
 
     async def register_webhook(self) -> None:
         """Register webhook."""
