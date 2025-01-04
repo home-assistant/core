@@ -50,7 +50,9 @@ class SystemBridgeUpdateEntity(SystemBridgeEntity, UpdateEntity):
             "update",
         )
         self._attr_name = coordinator.data.system.hostname
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass
+        )
 
     @property
     def installed_version(self) -> str | None:

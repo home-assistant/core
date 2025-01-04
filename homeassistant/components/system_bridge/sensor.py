@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
+from homeassistant.helpers.entity import async_generate_entity_id
 from systembridgemodels.modules.cpu import PerCPU
 from systembridgemodels.modules.displays import Display
 from systembridgemodels.modules.gpus import GPU
@@ -422,49 +423,51 @@ async def async_setup_entry(
     if coordinator.data.displays is not None:
         for index, display in enumerate(coordinator.data.displays):
             display_unique_id = slugify(display.id)
-            entities.extend([
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display_unique_id}_resolution_x",
-                        name=f"Display {display.id} resolution x",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PIXELS,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_resolution_horizontal(
-                            data, k
+            entities.extend(
+                [
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_resolution_x",
+                            name=f"Display {display.id} resolution x",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=PIXELS,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_resolution_horizontal(
+                                data, k
+                            ),
                         ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display_unique_id}_resolution_y",
-                        name=f"Display {display.id} resolution y",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PIXELS,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_resolution_vertical(
-                            data, k
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_resolution_y",
+                            name=f"Display {display.id} resolution y",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=PIXELS,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_resolution_vertical(
+                                data, k
+                            ),
                         ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display_unique_id}_refresh_rate",
-                        name=f"Display {display.id} refresh rate",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-                        device_class=SensorDeviceClass.FREQUENCY,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_refresh_rate(data, k),
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_refresh_rate",
+                            name=f"Display {display.id} refresh rate",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=UnitOfFrequency.HERTZ,
+                            device_class=SensorDeviceClass.FREQUENCY,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_refresh_rate(data, k),
+                        ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-            ])
+                ]
+            )
 
     for index, gpu in enumerate(coordinator.data.gpus):
         entities.extend(
@@ -644,7 +647,9 @@ class SystemBridgeSensor(SystemBridgeEntity, SensorEntity):
             description.key,
         )
         self.entity_description = description
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass
+        )
         if description.name != UNDEFINED:
             self._attr_has_entity_name = False
 

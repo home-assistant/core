@@ -109,7 +109,9 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
             description.key,
         )
         self.entity_description = description
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, self.unique_id, hass=coordinator.hass
+        )
         if description.name != UNDEFINED:
             self._attr_has_entity_name = False
 
