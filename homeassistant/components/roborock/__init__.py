@@ -22,7 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
-from .roborock_storage import RoborockStorage
+from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -255,14 +255,6 @@ async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> No
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
     """Handle removal of an entry."""
-    roborock_storage = RoborockStorage(hass, entry.entry_id)
     # If the user only has a01 devices and no v1 devices,
     # they will get an warning in their log.
-    # Since runtime_data is not accessible here,
-    # there isn't a easy way to know if the user has a v1 device.
-    await asyncio.gather(
-        *(
-            roborock_storage.async_remove_maps(),
-            roborock_storage.async_remove_map_info(),
-        )
-    )
+    await async_remove_map_storage(hass, entry.entry_id)

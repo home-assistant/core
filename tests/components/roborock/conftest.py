@@ -1,6 +1,8 @@
 """Global fixtures for Roborock integration."""
 
+from collections.abc import Generator
 from copy import deepcopy
+import pathlib
 import shutil
 from unittest.mock import patch
 import uuid
@@ -176,6 +178,7 @@ async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
+    cleanup_map_storage: pathlib.Path,
 ) -> MockConfigEntry:
     """Set up the Roborock platform."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -183,12 +186,17 @@ async def setup_entry(
     return mock_roborock_entry
 
 
-@pytest.fixture(autouse=True)
-def cleanup_map_storage(hass: HomeAssistant):
+@pytest.fixture
+def cleanup_map_storage(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> Generator[pathlib.Path]:
     """Test cleanup, remove any map storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
     with patch(
-        "homeassistant.components.roborock.roborock_storage.MAP_PATH", new=tmp_path
+        "homeassistant.components.roborock.roborock_storage.STORAGE_PATH", new=tmp_path
     ):
-        yield tmp_path
-        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
+        storage_path = (
+            pathlib.Path(hass.config.path(tmp_path)) / mock_roborock_entry.entry_id
+        )
+        yield storage_path
+        shutil.rmtree(str(storage_path), ignore_errors=True)
