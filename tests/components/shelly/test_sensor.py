@@ -428,14 +428,16 @@ async def test_rpc_sensor_error(
 
     assert hass.states.get(entity_id).state == "4.321"
 
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "voltmeter", "voltage", None)
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "voltmeter:100", "voltage", None
+    )
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-voltmeter-voltmeter"
+    assert entry.unique_id == "123456789ABC-voltmeter:100-voltmeter"
 
 
 async def test_rpc_polling_sensor(
@@ -1383,3 +1385,23 @@ async def test_rpc_device_sensor_goes_unavailable_on_disconnect(
     await hass.async_block_till_done()
     temp_sensor_state = hass.states.get("sensor.test_name_temperature")
     assert temp_sensor_state.state != STATE_UNAVAILABLE
+
+
+async def test_rpc_voltmeter_value(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC voltmeter value sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter_value"
+
+    await init_integration(hass, 2)
+
+    state = hass.states.get(entity_id)
+
+    assert state.state == "12.34"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "ppm"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-voltmeter:100-voltmeter_value"

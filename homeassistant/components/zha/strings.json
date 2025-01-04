@@ -879,6 +879,12 @@
       },
       "regulator_set_point": {
         "name": "Regulator set point"
+      },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "fading_time": {
+        "name": "Fading time"
       }
     },
     "select": {
@@ -1237,6 +1243,9 @@
       },
       "local_temperature_floor": {
         "name": "Floor temperature"
+      },
+      "self_test": {
+        "name": "Self test result"
       }
     },
     "switch": {

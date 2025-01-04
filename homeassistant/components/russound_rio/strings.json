@@ -15,6 +15,9 @@
           "port": "The port of the Russound controller."
         }
       },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name}?"
+      },
       "reconfigure": {
         "description": "Reconfigure your Russound controller.",
         "data": {

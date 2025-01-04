@@ -266,7 +266,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        if self._device.color_temp is None:
+        if self._device.color_temp is None or self._device.color_temp == 0:
             return None
         return color_temperature_mired_to_kelvin(self._device.color_temp)
 

@@ -26,14 +26,14 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class SensiboMotionBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Motion binary sensor entity."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
 @dataclass(frozen=True, kw_only=True)
 class SensiboDeviceBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Motion binary sensor entity."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
 
