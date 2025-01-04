@@ -33,7 +33,7 @@ Mastodon.py==1.8.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-Pillow==11.0.0
+Pillow==11.1.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -161,7 +161,7 @@ aio-geojson-usgs-earthquakes==0.3
 aio-georss-gdacs==0.10
 
 # homeassistant.components.acaia
-aioacaia==0.1.11
+aioacaia==0.1.13
 
 # homeassistant.components.airq
 aioairq==0.4.3
@@ -522,7 +522,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==1.1.0
+bleak-esphome==2.0.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.6.0
@@ -606,7 +606,7 @@ colorthief==0.2.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.10.0
+cookidoo-api==0.11.2
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -634,7 +634,7 @@ dbus-fast==2.24.3
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==10.0.1
+deebot-client==10.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -645,7 +645,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.1.0
+demetriek==1.1.1
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
@@ -920,7 +920,7 @@ growattServer==1.5.0
 gspread==5.5.0
 
 # homeassistant.components.profiler
-guppy3==3.1.4.post1;python_version<'3.13'
+guppy3==3.1.5
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -969,7 +969,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20241231.0
+home-assistant-frontend==20250103.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.1
@@ -1001,7 +1001,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.2.0
+ical==8.3.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1342,7 +1342,7 @@ panasonic-viera==0.4.2
 pdunehd==1.3.2
 
 # homeassistant.components.peblar
-peblar==0.3.0
+peblar==0.3.3
 
 # homeassistant.components.peco
 peco==0.0.30
@@ -1389,7 +1389,7 @@ prometheus-client==0.21.0
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==6.1.0
+psutil==6.1.1
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
@@ -1448,6 +1448,9 @@ pyDuotecno==2024.10.1
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
 
+# homeassistant.components.homee
+pyHomee==1.2.0
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
 
@@ -1471,7 +1474,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
-pyaprilaire==0.7.4
+pyaprilaire==0.7.7
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
@@ -1954,7 +1957,7 @@ python-opensky==1.0.1
 python-otbr-api==2.6.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.4.0
+python-overseerr==0.5.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2332,7 +2335,7 @@ ttn_client==1.2.0
 tuya-device-sharing-sdk==0.2.1
 
 # homeassistant.components.twentemilieu
-twentemilieu==2.2.0
+twentemilieu==2.2.1
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2347,16 +2350,13 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.1.0
+uiprotect==7.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
 unifi-discovery==1.2.0
-
-# homeassistant.components.zha
-universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
 upb-lib==0.5.9
@@ -2431,7 +2431,7 @@ webmin-xmlrpc==0.0.2
 weheat==2024.12.22
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.8
+whirlpool-sixth-sense==0.18.11
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2504,7 +2504,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.43
+zha==0.0.44
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
