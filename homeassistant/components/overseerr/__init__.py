@@ -61,6 +61,21 @@ class OverseerrWebhookManager:
         self.entry = entry
         self.client = entry.runtime_data.client
 
+    @property
+    def webhook_urls(self) -> list[str]:
+        """Return webhook URLs."""
+        urls = [
+            async_generate_url(
+                self.hass, self.entry.data[CONF_WEBHOOK_ID], prefer_external=external
+            )
+            for external in (False, True)
+        ]
+        res = []
+        for url in urls:
+            if url not in res:
+                res.append(url)
+        return res
+
     async def register_webhook(self) -> None:
         """Register webhook."""
         async_register(
@@ -71,26 +86,26 @@ class OverseerrWebhookManager:
             self.handle_webhook,
             allowed_methods=[METH_POST],
         )
-        url = async_generate_url(self.hass, self.entry.data[CONF_WEBHOOK_ID])
-        if not await self.check_need_change(url):
+        if not await self.check_need_change():
             return
-        LOGGER.debug("Setting Overseerr webhook to %s", url)
-        if not await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
-            LOGGER.debug("Failed to set Overseerr webhook")
-            return
-        await self.client.set_webhook_notification_config(
-            enabled=True,
-            types=REGISTERED_NOTIFICATIONS,
-            webhook_url=url,
-            json_payload=JSON_PAYLOAD,
-        )
+        for url in self.webhook_urls:
+            if await self.client.test_webhook_notification_config(url, JSON_PAYLOAD):
+                LOGGER.debug("Setting Overseerr webhook to %s", url)
+                await self.client.set_webhook_notification_config(
+                    enabled=True,
+                    types=REGISTERED_NOTIFICATIONS,
+                    webhook_url=url,
+                    json_payload=JSON_PAYLOAD,
+                )
+                return
+        LOGGER.error("Failed to set Overseerr webhook")
 
-    async def check_need_change(self, url: str) -> bool:
+    async def check_need_change(self) -> bool:
         """Check if webhook needs to be changed."""
         current_config = await self.client.get_webhook_notification_config()
         return (
             not current_config.enabled
-            or current_config.options.webhook_url != url
+            or current_config.options.webhook_url not in self.webhook_urls
             or current_config.options.json_payload != json.loads(JSON_PAYLOAD)
             or current_config.types != REGISTERED_NOTIFICATIONS
         )
