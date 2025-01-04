@@ -31,6 +31,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -60,6 +61,12 @@ class HeosRuntimeData:
 
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEOS component."""
+    services.register(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
@@ -141,7 +148,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         controller_manager, group_manager, source_manager, players
     )
 
-    services.register(hass, controller)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
 
@@ -153,9 +159,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     await entry.runtime_data.controller_manager.disconnect()
-
-    services.remove(hass)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
