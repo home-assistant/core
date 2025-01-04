@@ -189,6 +189,8 @@ class NMBSLiveBoard(SensorEntity):
         self._attrs = {}
         self._state = None
 
+        self.entity_registry_enabled_default = False
+
     @property
     def name(self):
         """Return the sensor default name."""
