@@ -85,9 +85,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             credentials=credentials,
         )
     )
+
+    # Auth failure handler must be added before connecting to the host, otherwise
+    # the event will be missed when login fails during connection.
+    async def auth_failure(event: str) -> None:
+        """Handle authentication failure."""
+        if event == heos_const.EVENT_USER_CREDENTIALS_INVALID:
+            entry.async_start_reauth(hass)
+
+    entry.async_on_unload(
+        controller.dispatcher.connect(heos_const.SIGNAL_HEOS_EVENT, auth_failure)
+    )
+
     try:
+        # Auto reconnect only operates if initial connection was successful.
         await controller.connect()
-    # Auto reconnect only operates if initial connection was successful.
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
@@ -156,7 +168,6 @@ class ControllerManager:
         self._device_registry = None
         self._entity_registry = None
         self.controller = controller
-        self._signals = []
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
@@ -164,23 +175,17 @@ class ControllerManager:
         self._entity_registry = er.async_get(self._hass)
 
         # Handle controller events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
         )
+
         # Handle connection-related events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_HEOS_EVENT, self._heos_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_HEOS_EVENT, self._heos_event
         )
 
     async def disconnect(self):
         """Disconnect subscriptions."""
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
         self.controller.dispatcher.disconnect_all()
         await self.controller.disconnect()
 

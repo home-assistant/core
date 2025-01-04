@@ -167,6 +167,11 @@
         "name": "Daily reminders"
       }
     },
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
@@ -422,7 +427,7 @@
     },
     "cast_skill": {
       "name": "Cast a skill",
-      "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
+      "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -440,7 +445,7 @@
     },
     "accept_quest": {
       "name": "Accept a quest invitation",
-      "description": "Accept a pending invitation to a quest.",
+      "description": "Accepts a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -450,7 +455,7 @@
     },
     "reject_quest": {
       "name": "Reject a quest invitation",
-      "description": "Reject a pending invitation to a quest.",
+      "description": "Rejects a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -460,7 +465,7 @@
     },
     "leave_quest": {
       "name": "Leave a quest",
-      "description": "Leave the current quest you are participating in.",
+      "description": "Leaves the current quest you are participating in.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -470,7 +475,7 @@
     },
     "abort_quest": {
       "name": "Abort an active quest",
-      "description": "Terminate your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Terminates your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -480,7 +485,7 @@
     },
     "cancel_quest": {
       "name": "Cancel a pending quest",
-      "description": "Cancel a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Cancels a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -490,7 +495,7 @@
     },
     "start_quest": {
       "name": "Force-start a pending quest",
-      "description": "Begin the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
+      "description": "Begins the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -500,7 +505,7 @@
     },
     "score_habit": {
       "name": "Track a habit",
-      "description": "Increase the positive or negative streak of a habit to track its progress.",
+      "description": "Increases the positive or negative streak of a habit to track its progress.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -518,7 +523,7 @@
     },
     "score_reward": {
       "name": "Buy a reward",
-      "description": "Reward yourself and buy one of your custom rewards with gold earned by fulfilling tasks.",
+      "description": "Buys one of your custom rewards with gold earned by fulfilling tasks.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -532,7 +537,7 @@
     },
     "transformation": {
       "name": "Use a transformation item",
-      "description": "Use a transformation item from your Habitica character's inventory on a member of your party or yourself.",
+      "description": "Uses a transformation item from your Habitica character's inventory on a member of your party or yourself.",
       "fields": {
         "config_entry": {
           "name": "Select character",
@@ -550,7 +555,7 @@
     },
     "get_tasks": {
       "name": "Get tasks",
-      "description": "Retrieve tasks from your Habitica character.",
+      "description": "Retrieves tasks from your Habitica character.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
