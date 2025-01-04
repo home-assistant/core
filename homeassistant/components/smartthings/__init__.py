@@ -10,7 +10,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import Attribute, Capability, SmartThings, AppEntity
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -106,7 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # to import the modules.
     await async_get_loaded_integration(hass, DOMAIN).async_get_platforms(PLATFORMS)
 
-    remove_entry = False
     try:
         # See if the app is already setup. This occurs when there are
         # installs in multiple SmartThings locations (valid use-case)
@@ -114,7 +113,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         smart_app = manager.smartapps.get(entry.data[CONF_APP_ID])
         if not smart_app:
             # Validate and setup the app.
-            app = await api.app(entry.data[CONF_APP_ID])
+            app = AppEntity(
+                api._service,
+                {
+                    "appId": entry.data[CONF_APP_ID],
+                    "appName": entry.title,
+                    "description": "Home Assistant integration",
+                    "appType": "WEBHOOK_SMART_APP",
+                    "classifications": ["AUTOMATION"],
+                    "displayName": entry.title,
+                    "webhookSmartApp": {
+                        "targetUrl": "a/webhook",
+                        "publicKey": entry.data["public_key"],
+                    }
+                }
+            )
             smart_app = setup_smartapp(hass, app)
 
         # Validate and retrieve the installed app.
@@ -131,12 +144,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_CLIENT_SECRET],
             entry.data[CONF_REFRESH_TOKEN],
         )
+        print(token.__dict__)
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_REFRESH_TOKEN: token.refresh_token}
+            entry,
+            data={
+                **entry.data,
+                CONF_ACCESS_TOKEN: token.access_token,
+                CONF_REFRESH_TOKEN: token.refresh_token,
+            },
         )
 
         # Get devices and their current status
-        devices = await api.devices(location_ids=[installed_app.location_id])
+        devices = await api.devices()
+        print(devices)
 
         async def retrieve_device_status(device):
             try:
@@ -184,24 +204,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ),
                 entry.title,
             )
-            remove_entry = True
-        else:
-            _LOGGER.debug(ex, exc_info=True)
             raise ConfigEntryNotReady from ex
+        _LOGGER.debug(ex, exc_info=True)
+        raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady from ex
-
-    if remove_entry:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        # only create new flow if there isn't a pending one for SmartThings.
-        if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}
-                )
-            )
-        return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

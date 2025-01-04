@@ -507,5 +507,6 @@ async def smartapp_webhook(hass: HomeAssistant, webhook_id: str, request):
     """
     manager = hass.data[DOMAIN][DATA_MANAGER]
     data = await request.json()
+    _LOGGER.info(data)
     result = await manager.handle_request(data, request.headers)
     return web.json_response(result)
