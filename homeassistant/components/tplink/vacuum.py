@@ -8,13 +8,8 @@ from kasa import Device, Module
 from kasa.smart.modules.vacuum import Status, Vacuum
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
@@ -24,14 +19,14 @@ from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
-VACUUM_STATUS_TO_HA_STATE = {
-    Status.Idle: STATE_IDLE,
-    Status.Cleaning: STATE_CLEANING,
-    Status.GoingHome: STATE_RETURNING,
-    Status.Charging: STATE_DOCKED,
-    Status.Charged: STATE_DOCKED,
-    Status.Paused: STATE_PAUSED,
-    Status.Error: STATE_ERROR,
+STATUS_TO_ACTIVITY = {
+    Status.Idle: VacuumActivity.IDLE,
+    Status.Cleaning: VacuumActivity.CLEANING,
+    Status.GoingHome: VacuumActivity.RETURNING,
+    Status.Charging: VacuumActivity.DOCKED,
+    Status.Charged: VacuumActivity.DOCKED,
+    Status.Paused: VacuumActivity.PAUSED,
+    Status.Error: VacuumActivity.ERROR,
 }
 
 
@@ -92,5 +87,5 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
 
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_state = VACUUM_STATUS_TO_HA_STATE.get(self._vacuum_module.status)
+        self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)
         return True
