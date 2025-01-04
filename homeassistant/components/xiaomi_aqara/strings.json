@@ -7,7 +7,7 @@
         "data": {
           "interface": "The network interface to use",
           "host": "IP address (optional)",
-          "mac": "MAC Address (optional)"
+          "mac": "MAC address (optional)"
         }
       },
       "settings": {
