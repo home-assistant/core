@@ -1,21 +1,46 @@
 """Support for VeSync switches."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, Final
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncoutlet import VeSyncOutlet
+from pyvesync.vesyncswitch import VeSyncSwitch
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
+from .common import rgetattr
+from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
 from .coordinator import VeSyncDataCoordinator
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class VeSyncSwitchEntityDescription(SwitchEntityDescription):
+    """A class that describes custom switch entities."""
+
+    is_on: Callable[[VeSyncBaseDevice], bool]
+
+
+SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
+    VeSyncSwitchEntityDescription(
+        key="device_status",
+        translation_key="on",
+        is_on=lambda device: device.device_status == "on",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -23,7 +48,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up switch platform."""
 
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
@@ -46,44 +71,46 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
-    entities: list[VeSyncBaseSwitch] = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
-            entities.append(VeSyncSwitchHA(dev, coordinator))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
-            entities.append(VeSyncLightSwitch(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
-
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(
+        (
+            VeSyncSwitchEntity(dev, description, coordinator)
+            for dev in devices
+            for description in SENSOR_DESCRIPTIONS
+            if rgetattr(dev, description.key) is not None
+        ),
+        update_before_add=True,
+    )
 
 
-class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
-    """Base class for VeSync switch Device Representations."""
+class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
+    """VeSync sensor class."""
 
-    _attr_name = None
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        description: VeSyncSwitchEntityDescription,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(device, coordinator)
+        self.entity_description: VeSyncSwitchEntityDescription = description
+        if isinstance(self.device, VeSyncOutlet):
+            self._attr_device_class = SwitchDeviceClass.OUTLET
+        if isinstance(self.device, VeSyncSwitch):
+            self._attr_device_class = SwitchDeviceClass.SWITCH
+        self._attr_name = None
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the entity value to represent the entity state."""
+        if self.entity_description.is_on is not None:
+            return self.entity_description.is_on(self.device)
+        return None
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        self.device.turn_off()
 
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+        """Turn the entity off."""
         self.device.turn_on()
-
-
-class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
-    """Representation of a VeSync switch."""
-
-    def __init__(self, plug, coordinator: VeSyncDataCoordinator) -> None:
-        """Initialize the VeSync switch device."""
-        super().__init__(plug, coordinator)
-        self.smartplug = plug
-
-
-class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
-    """Handle representation of VeSync Light Switch."""
-
-    def __init__(self, switch, coordinator: VeSyncDataCoordinator) -> None:
-        """Initialize Light Switch device class."""
-        super().__init__(switch, coordinator)
-        self.switch = switch
