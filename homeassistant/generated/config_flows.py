@@ -81,6 +81,7 @@ FLOWS = {
         "baf",
         "balboa",
         "bang_olufsen",
+        "bizkaibus",
         "blebox",
         "blink",
         "blue_current",

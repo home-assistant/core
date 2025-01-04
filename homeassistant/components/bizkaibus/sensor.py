@@ -5,32 +5,14 @@ from __future__ import annotations
 from contextlib import suppress
 
 from bizkaibus.bizkaibus import BizkaibusData
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-ATTR_DUE_IN = "Due in"
-
-CONF_STOP_ID = "stopid"
-CONF_ROUTE = "route"
-
-DEFAULT_NAME = "Next bus"
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STOP_ID): cv.string,
-        vol.Required(CONF_ROUTE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from .const import ATTR_DUE_IN, CONF_STOP_ID
 
 
 def setup_platform(
@@ -40,20 +22,21 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Bizkaibus public transport sensor."""
-    name = config[CONF_NAME]
     stop = config[CONF_STOP_ID]
-    route = config[CONF_ROUTE]
 
-    data = Bizkaibus(stop, route)
-    add_entities([BizkaibusSensor(data, name)], True)
+    data = Bizkaibus(stop)
+    add_entities([BizkaibusSensor(data, "hola")], True)
 
 
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_should_poll = True
 
-    def __init__(self, data, name):
+    def __init__(self, data, name) -> None:
         """Initialize the sensor."""
         self.data = data
         self._attr_name = name
@@ -68,14 +51,13 @@ class BizkaibusSensor(SensorEntity):
 class Bizkaibus:
     """The class for handling the data retrieval."""
 
-    def __init__(self, stop, route):
+    def __init__(self, stop) -> None:
         """Initialize the data object."""
         self.stop = stop
-        self.route = route
         self.info = None
 
     def update(self):
         """Retrieve the information from API."""
-        bridge = BizkaibusData(self.stop, self.route)
+        bridge = BizkaibusData(self.stop)
         bridge.getNextBus()
         self.info = bridge.info
