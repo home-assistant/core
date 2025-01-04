@@ -19,7 +19,7 @@ from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgen
 from homeassistant.core import HomeAssistant, callback
 
 from . import OneDriveConfigEntry
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BACKUP_FOLDER, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .util import bytes_to_async_iterator, parse_backup_metadata
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,10 +59,9 @@ class OneDriveBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
         """Initialize the OneDrive backup agent."""
         super().__init__()
-        self._graph_client = entry.runtime_data.graph_client
-        self._drive_item = self._graph_client.drives.by_drive_id(
-            entry.runtime_data.drive_id
-        )
+        self._graph_client = entry.runtime_data
+        self._drive_item = self._graph_client.drives.by_drive_id(entry.unique_id)
+        self._backup_folder = f"{entry.data[CONF_BACKUP_FOLDER]}"
         self.name = entry.title
         self._hass = hass
 

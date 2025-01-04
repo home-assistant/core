@@ -7,6 +7,7 @@ from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "onedrive"
 
+CONF_DRIVE_ID: Final = "drive_id"
 CONF_BACKUP_FOLDER: Final = "backup_folder"
 
 # replace "consumers" with "common", when adding SharePoint or OneDrive for Business support

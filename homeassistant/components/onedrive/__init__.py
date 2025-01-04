@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
@@ -17,16 +15,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .api import OneDriveConfigEntryAccessTokenProvider
 from .const import DATA_BACKUP_AGENT_LISTENERS, OAUTH_SCOPES
 
-
-@dataclass
-class OneDriveConfigEntryData:
-    """Data for OneDrive config entry."""
-
-    graph_client: GraphServiceClient
-    drive_id: str
-
-
-type OneDriveConfigEntry = ConfigEntry[OneDriveConfigEntryData]
+type OneDriveConfigEntry = ConfigEntry[GraphServiceClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
@@ -56,13 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     except APIError as err:
         raise ConfigEntryNotReady from err
 
-    if not drives or not drives.value or not drives.value[0].id:
+    if not drives or not drives.value or entry.unique_id not in drives.value:
         raise ConfigEntryError("No drives found")
 
-    entry.runtime_data = OneDriveConfigEntryData(
-        graph_client=graph_client,
-        drive_id=drives.value[0].id,  # TODO: Select drive
-    )
+    entry.runtime_data = graph_client
 
     return True
 
