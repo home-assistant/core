@@ -354,3 +354,38 @@ async def test_mcp_tool_call_failed(
     assert len(result.content) == 1
     assert result.content[0].type == "text"
     assert "Error calling tool" in result.content[0].text
+
+
+async def test_prompt_list(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the list prompt endpoint."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        result = await session.list_prompts()
+
+    assert len(result.prompts) == 1
+    prompt = result.prompts[0]
+    assert prompt.name == "Assist"
+    assert prompt.description == "Default prompt for the Home Assistant LLM API Assist"
+
+
+async def test_prompt_get(
+    hass: HomeAssistant,
+    setup_integration: None,
+    mcp_sse_url: str,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test the get prompt endpoint."""
+
+    async with mcp_session(mcp_sse_url, hass_supervisor_access_token) as session:
+        result = await session.get_prompt(name="Assist")
+
+    assert result.description == "Default prompt for the Home Assistant LLM API Assist"
+    assert len(result.messages) == 1
+    assert result.messages[0].role == "assistant"
+    assert result.messages[0].content.type == "text"
+    assert "When controlling Home Assistant" in result.messages[0].content.text
