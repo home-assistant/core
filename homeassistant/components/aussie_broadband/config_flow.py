@@ -8,6 +8,7 @@ from typing import Any
 from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB, AuthenticationException
 from aussiebb.const import FETCH_TYPES
+from pydantic.types import SecretStr
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -35,7 +36,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
         """Reusable Auth Helper."""
         self.client = AussieBB(
             user_input[CONF_USERNAME],
-            user_input[CONF_PASSWORD],
+            SecretStr(user_input[CONF_PASSWORD]),
             async_get_clientsession(self.hass),
         )
         try:

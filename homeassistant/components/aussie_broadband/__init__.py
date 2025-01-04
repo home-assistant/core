@@ -6,6 +6,7 @@ from aiohttp import ClientError
 from aussiebb.asyncio import AussieBB
 from aussiebb.const import FETCH_TYPES
 from aussiebb.exceptions import AuthenticationException
+from pydantic.types import SecretStr
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,7 @@ async def async_setup_entry(
     # Login to the Aussie Broadband API and retrieve the current service list
     client = AussieBB(
         entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
+        SecretStr(entry.data[CONF_PASSWORD]),
         async_get_clientsession(hass),
     )
 
