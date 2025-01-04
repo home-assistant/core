@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
@@ -42,6 +43,8 @@ class DVSPortalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except AbortFlow:
+                raise
             except Exception:  # pylint: disable=broad-except
                 logging.exception("Error in async step user")
                 errors["base"] = "unknown"
@@ -60,16 +63,15 @@ class DVSPortalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{api_host}.{identifier}")
         self._abort_if_unique_id_configured()
 
-        dvs_portal = DVSPortal(
-            api_host=api_host,
-            identifier=identifier,
-            password=password,
-            user_agent=user_agent,
-        )
         try:
-            await dvs_portal.token()
+            async with DVSPortal(
+                api_host=api_host,
+                identifier=identifier,
+                password=password,
+                user_agent=user_agent,
+            ) as dvs_portal:
+                await dvs_portal.token()
         except DVSPortalAuthError:
             raise InvalidAuth from None
-        finally:
-            await dvs_portal.close()
+
         return {"title": identifier}

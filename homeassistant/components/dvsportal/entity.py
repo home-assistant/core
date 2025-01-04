@@ -29,10 +29,13 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
         super().__init__(config_entry.runtime_data["coordinator"])
 
         self._license_plate = license_plate
-        self._reset_attributes()
         self._attr_unique_id = (
             f"dvsportal_{config_entry.entry_id}_carsensor_{license_plate.lower()}"
         )
+        self._attr_extra_state_attributes = {}
+
+        self._reset_attributes()
+        self._set_state()
 
     @property
     def icon(self) -> str:
@@ -48,9 +51,9 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
     def name(self) -> str:
         """Return the human readable name."""
         return (
-            f"Car {self._license_plate}"
-            if self._attr_extra_state_attributes.get("name") is None
-            else f"{self._attr_extra_state_attributes.get('name')} ({self._license_plate})"
+            f"{self._attr_extra_state_attributes.get('name')} ({self._license_plate})"
+            if self._attr_extra_state_attributes.get("name")
+            else f"Car {self._license_plate}"
         )
 
     def _reset_attributes(self):
@@ -67,11 +70,9 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
             {f"previous_{k}": v for k, v in history.items()}
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator.
+    def _set_state(self):
+        """Set the current state of this car (license plate).
 
-        The current state of this car (license plate).
         The state can be present, reserved or not present.
         """
         reservation = self.coordinator.data.get("active_reservations", {}).get(
@@ -101,5 +102,11 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
                 self._attr_state = "present"
             else:
                 self._attr_state = "reserved"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._reset_attributes()
+        self._set_state()
 
         self.async_write_ha_state()

@@ -1,6 +1,8 @@
 """TypedDict definitions for DVSPortal integration."""
 
-from typing import Any, TypedDict
+from typing import TypedDict
+
+from dvsportal import HistoricReservation, Reservation
 
 
 class DVSPortalData(TypedDict):
@@ -8,7 +10,7 @@ class DVSPortalData(TypedDict):
 
     default_code: str
     default_type_id: str
-    balance: dict[str, Any]  # Assuming balance has nested data
-    active_reservations: dict[str, Any]
-    historic_reservations: dict[str, Any]
+    balance: float
+    active_reservations: dict[str, Reservation]
+    historic_reservations: dict[str, HistoricReservation]
     known_license_plates: dict[str, str]

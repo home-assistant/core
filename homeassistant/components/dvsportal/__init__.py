@@ -198,33 +198,38 @@ async def async_setup_entry(
     )
 
     try:
+        # Verify login still works
         await dvs_portal.token()
-    except dvs_exceptions.DVSPortalConnectionError as ex:
-        _LOGGER.exception("Error while connecting to server")
-        raise exceptions.ConfigEntryNotReady("Device is offline") from ex
-    except dvs_exceptions.DVSPortalAuthError as ex:
-        _LOGGER.error("Authentication failed for DVSPortal")
-        raise exceptions.ConfigEntryAuthFailed("Invalid authentication") from ex
+
+        # Setup and init stuff
+        coordinator = DVSPortalCoordinator(hass, dvs_portal)
+
+        entry.runtime_data = DVSPortalRuntimeData(
+            dvs_portal=dvs_portal,
+            coordinator=coordinator,
+            ha_registered_license_plates=set(),
+        )
+        await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+
+        # Check if the first refresh is successful
+        await coordinator.async_config_entry_first_refresh()
     except dvs_exceptions.DVSPortalError as ex:
-        _LOGGER.exception("Unknown error occurred while setting up DVSPortal")
-        raise exceptions.ConfigEntryError("Unknown error occurred") from ex
-
-    coordinator = DVSPortalCoordinator(hass, dvs_portal)
-
-    await coordinator.async_refresh()
-
-    entry.runtime_data = DVSPortalRuntimeData(
-        dvs_portal=dvs_portal,
-        coordinator=coordinator,
-        ha_registered_license_plates=set(),
-    )
-
-    await hass.config_entries.async_forward_entry_setups(entry, ["sensor"])
+        await dvs_portal.close()
+        raise exceptions.ConfigEntryNotReady("Failed to initialize DVSPortal") from ex
 
     async def async_unload_entry(
         hass: core.HomeAssistant, entry: config_entries.ConfigEntry
     ) -> bool:
         """Unload a config entry."""
+        runtime_data: DVSPortalRuntimeData = entry.runtime_data
+
+        # Ensure dvs_portal.close() is called to clean up the session
+        if dvs_portal := runtime_data.get("dvs_portal"):
+            try:
+                await dvs_portal.close()
+            except Exception as ex:  # noqa: BLE001
+                _LOGGER.warning("Failed to close DVSPortal session: %s", ex)
+
         unload_ok = await hass.config_entries.async_forward_entry_unload(
             entry, "sensor"
         )

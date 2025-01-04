@@ -83,8 +83,8 @@ class BalanceSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_extra_state_attributes = self.coordinator.data["balance"]
-        self._attr_native_value = self.coordinator.data["balance"]["balance"]
+
+        self._attr_native_value = self.coordinator.data["balance"]
         self.async_write_ha_state()
 
     @property
@@ -123,12 +123,8 @@ class ActiveReservationsSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEn
         """Amount of current active reservations."""
         return "Reservations"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator.
-
-        Calculate count of current and future reservations
-        """
+    def _set_state(self) -> None:
+        """Calculate count of current and future reservations."""
         active_reservations = [
             v for k, v in self.coordinator.data.get("active_reservations", {}).items()
         ]
@@ -164,6 +160,11 @@ class ActiveReservationsSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEn
             "future_reservationsthe": future_licenseplates,
         }
         self._attr_native_value = len(active_licenseplates) + len(future_licenseplates)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._set_state()
         self.async_write_ha_state()
 
     @property

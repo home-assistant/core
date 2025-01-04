@@ -33,6 +33,7 @@ class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
         try:
             await self.dvs_portal.update()
         except Exception as e:
+            _LOGGER.exception("Error communicating with API")
             raise UpdateFailed("Error communicating with API") from e
         return {
             "default_code": self.dvs_portal.default_code,
