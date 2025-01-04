@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntEnum, StrEnum
+from enum import IntEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -181,21 +181,6 @@ async def async_setup_entry(
     """Set up Matter climate platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.CLIMATE, async_add_entities)
-
-
-class TCTLMode(StrEnum):
-    """TemperatureControl mode for climate devices."""
-
-    TN = "TemperatureNumber"
-    TL = "TemperatureLevel"
-    STEP = "TemperatureStep"
-
-
-TCTL_SYSTEM_MODE_MAP = {
-    TCTLMode.TN: 0,
-    TCTLMode.TL: 1,
-    TCTLMode.STEP: 2,
-}
 
 
 class MatterClimate(MatterEntity, ClimateEntity):
@@ -410,12 +395,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
-        if feature_map & (
-            ThermostatFeature.kHeating
-            | TemperatureControlFeature.kTemperatureLevel
-            | TemperatureControlFeature.kTemperatureNumber
-            | TemperatureControlFeature.kTemperatureStep
-        ):
+        if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
             self._attr_hvac_modes.append(HVACMode.COOL)
@@ -433,6 +413,87 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 )
         if any(mode for mode in self.hvac_modes if mode != HVACMode.OFF):
             self._attr_supported_features |= ClimateEntityFeature.TURN_ON
+
+    @callback
+    def _get_temperature_in_degrees(
+        self, attribute: type[clusters.ClusterAttributeDescriptor]
+    ) -> float | None:
+        """Return the scaled temperature value for the given attribute."""
+        if value := self.get_matter_attribute_value(attribute):
+            return float(value) / TEMPERATURE_SCALING_FACTOR
+        return None
+
+
+class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
+    """Representation of a Matter climate entity."""
+
+    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    _attr_hvac_mode: HVACMode = HVACMode.HEAT_COOL
+    _attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT_COOL]
+    _attr_target_temperature_step: float | None
+    _feature_map: int | None = None
+
+    _platform_translation_key = "thermostat"
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
+        target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
+
+        if target_hvac_mode is not None:
+            await self.async_set_hvac_mode(target_hvac_mode)
+
+        if target_temperature is not None:
+            # single setpoint control
+            if self.target_temperature != target_temperature:
+                await self.matter_client.send_device_command(
+                    node_id=self._endpoint.node.node_id,
+                    endpoint_id=self._endpoint.endpoint_id,
+                    command=clusters.TemperatureControl.Commands.SetTemperature(
+                        targetTemperature=int(
+                            target_temperature * TEMPERATURE_SCALING_FACTOR
+                        )
+                    ),
+                )
+            return
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        self._calculate_features()
+
+        self._attr_hvac_action = None
+        # update target_temperature
+        self._attr_target_temperature = self._get_temperature_in_degrees(
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint
+        )
+        # update min_temp
+        attribute = clusters.TemperatureControl.Attributes.MinTemperature
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_min_temp = value
+        # update max_temp
+        attribute = clusters.TemperatureControl.Attributes.MaxTemperature
+        if (value := self._get_temperature_in_degrees(attribute)) is not None:
+            self._attr_max_temp = value
+
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Thermostat platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(
+                clusters.TemperatureControl.Attributes.FeatureMap
+            )
+        )
+        self._feature_map = feature_map
+        self._attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT_COOL]
+        if feature_map & TemperatureControlFeature.kTemperatureNumber:
+            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if feature_map & TemperatureControlFeature.kTemperatureStep:
+            self._attr_target_temperature_step = self._get_temperature_in_degrees(
+                clusters.TemperatureControl.Attributes.Step
+            )
 
     @callback
     def _get_temperature_in_degrees(
@@ -474,24 +535,15 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.CLIMATE,
         entity_description=ClimateEntityDescription(
             key="MatterTemperatureControl",
-            translation_key="thermostat",
+            name=None,
         ),
-        entity_class=MatterClimate,
-        required_attributes=(clusters.TemperatureControl.Attributes.FeatureMap,),
-        optional_attributes=(
+        entity_class=MatterTemperatureControlClimate,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.FeatureMap,
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
-            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
-            clusters.TemperatureControl.Attributes.Step,
-            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
             clusters.TemperatureControl.Attributes.TemperatureSetpoint,
         ),
-        device_type=(
-            device_types.CookSurface,
-            device_types.Dishwasher,
-            device_types.HeatingCoolingUnit,
-            device_types.LaundryDryer,
-            device_types.LaundryWasher,
-        ),
+        optional_attributes=(clusters.TemperatureControl.Attributes.Step,),
     ),
 ]
