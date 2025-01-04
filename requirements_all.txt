@@ -591,7 +591,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==1.1.0
+bleak-esphome==2.0.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.6.0
@@ -1140,7 +1140,7 @@ hole==0.8.0
 holidays==0.63
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250102.0
+home-assistant-frontend==20250103.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.1
@@ -1181,7 +1181,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==8.2.0
+ical==8.3.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -1758,6 +1758,9 @@ pyEmby==1.10
 
 # homeassistant.components.hikvision
 pyHik==0.3.2
+
+# homeassistant.components.homee
+pyHomee==1.2.0
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -2925,7 +2928,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.1.0
+uiprotect==7.2.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2939,7 +2942,7 @@ unifi_ap==0.0.2
 # homeassistant.components.unifiled
 unifiled==0.11
 
-# homeassistant.components.zha
+# homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
@@ -3027,7 +3030,7 @@ webmin-xmlrpc==0.0.2
 weheat==2024.12.22
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.8
+whirlpool-sixth-sense==0.18.11
 
 # homeassistant.components.whois
 whois==0.9.27
