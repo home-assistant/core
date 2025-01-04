@@ -1,4 +1,4 @@
-"""Support for Sensibo wifi-enabled home thermostats."""
+"""Support for Sensibo climate devices."""
 
 from __future__ import annotations
 
@@ -154,7 +154,7 @@ async def async_setup_entry(
             vol.Required(ATTR_GEO_INTEGRATION): bool,
             vol.Required(ATTR_INDOOR_INTEGRATION): bool,
             vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
+            vol.Required(ATTR_SENSITIVITY): vol.In(["normal", "sensitive"]),
         },
         "async_enable_pure_boost",
     )
@@ -168,7 +168,7 @@ async def async_setup_entry(
             vol.Optional(ATTR_FAN_MODE): str,
             vol.Optional(ATTR_SWING_MODE): str,
             vol.Optional(ATTR_HORIZONTAL_SWING_MODE): str,
-            vol.Optional(ATTR_LIGHT): vol.In(["on", "off"]),
+            vol.Optional(ATTR_LIGHT): vol.In(["on", "off", "dim"]),
         },
         "async_full_ac_state",
     )
@@ -189,7 +189,7 @@ async def async_setup_entry(
 
 
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
-    """Representation of a Sensibo device."""
+    """Representation of a Sensibo climate device."""
 
     _attr_name = None
     _attr_precision = PRECISION_TENTHS
@@ -206,12 +206,12 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             if self.device_data.temp_unit == "C"
             else UnitOfTemperature.FAHRENHEIT
         )
-        self._attr_supported_features = self.get_features()
 
-    def get_features(self) -> ClimateEntityFeature:
-        """Get supported features."""
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
         features = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        for key in self.device_data.full_features:
+        for key in self.device_data.active_features:
             if key in FIELD_TO_FLAG:
                 features |= FIELD_TO_FLAG[key]
         return features
@@ -295,19 +295,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Return the maximum temperature."""
         return self.device_data.temp_list[-1]
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.device_data.available and super().available
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if "targetTemperature" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_target_temperature_in_features",
-            )
-
         temperature: float = kwargs[ATTR_TEMPERATURE]
         if temperature == self.target_temperature:
             return
@@ -322,11 +311,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if "fanLevel" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_fan_level_in_features",
-            )
         if fan_mode not in AVAILABLE_FAN_MODES:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -372,11 +356,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        if "swing" not in self.device_data.active_features:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="no_swing_in_features",
-            )
         if swing_mode not in AVAILABLE_SWING_MODES:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -478,7 +457,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             "enabled": True,
         }
         if sensitivity is not None:
-            params["sensitivity"] = sensitivity[0]
+            params["sensitivity"] = sensitivity[0].upper()
         if indoor_integration is not None:
             params["measurementsIntegration"] = indoor_integration
         if ac_integration is not None:
@@ -517,6 +496,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 UnitOfTemperature.FAHRENHEIT,
                 UnitOfTemperature.CELSIUS,
             )
+
+        if smart_type == "feelslike":
+            smart_type = "feelsLike"
 
         params: dict[str, str | bool | float | dict] = {
             "enabled": True,
