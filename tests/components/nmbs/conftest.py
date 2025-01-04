@@ -5,8 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.nmbs import CONF_STATION_FROM, CONF_STATION_TO
-from homeassistant.components.nmbs.const import DOMAIN
+from homeassistant.components.nmbs.const import (
+    CONF_STATION_FROM,
+    CONF_STATION_TO,
+    DOMAIN,
+)
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -48,8 +51,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi",
         data={
-            CONF_STATION_FROM: "Brussel-Noord/Bruxelles-Nord",
-            CONF_STATION_TO: "Brussel-Zuid/Bruxelles-Midi",
+            CONF_STATION_FROM: "BE.NMBS.008812005",
+            CONF_STATION_TO: "BE.NMBS.008814001",
         },
-        unique_id="Brussel-Noord/Bruxelles-Nord_Brussel-Zuid/Bruxelles-Midi",
+        unique_id="BE.NMBS.008812005-BE.NMBS.008814001",
     )

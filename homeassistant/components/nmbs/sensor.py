@@ -108,7 +108,7 @@ async def async_setup_platform(
                     hass,
                     DOMAIN,
                     "deprecated_yaml_import_issue_station_not_found",
-                    breaks_in_ha_version="2025.6.0",
+                    breaks_in_ha_version="2025.7.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
@@ -134,7 +134,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.6.0",
+        breaks_in_ha_version="2025.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
@@ -155,10 +155,11 @@ async def async_setup_entry(
     api_client = iRail()
 
     name = config_entry.data.get(CONF_NAME, None)
-    show_on_map = config_entry.data[CONF_SHOW_ON_MAP]
-    station_from = config_entry.data[CONF_STATION_FROM]
-    station_to = config_entry.data[CONF_STATION_TO]
-    excl_vias = config_entry.data[CONF_EXCLUDE_VIAS]
+    show_on_map = config_entry.data.get(CONF_SHOW_ON_MAP, False)
+    excl_vias = config_entry.data.get(CONF_EXCLUDE_VIAS, False)
+
+    station_from = find_station(hass, config_entry.data[CONF_STATION_FROM])
+    station_to = find_station(hass, config_entry.data[CONF_STATION_TO])
 
     # setup the connection from station to station
     # setup a disabled liveboard for both from and to station
@@ -167,8 +168,8 @@ async def async_setup_entry(
             NMBSSensor(
                 api_client, name, show_on_map, station_from, station_to, excl_vias
             ),
-            NMBSLiveBoard(api_client, station_from, station_from, station_to),
-            NMBSLiveBoard(api_client, station_to, station_from, station_to),
+            NMBSLiveBoard(api_client, station_from),
+            NMBSLiveBoard(api_client, station_to),
         ]
     )
 
@@ -178,12 +179,10 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station, station_from=None, station_to=None):
+    def __init__(self, api_client, live_station):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-        self._station_from = station_from
-        self._station_to = station_to
         self._attrs = {}
         self._state = None
 
@@ -192,15 +191,12 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def name(self):
         """Return the sensor default name."""
-        return f"Trains in {self._station}"
+        return f"Trains in {self._station["standardname"]}"
 
     @property
     def unique_id(self):
         """Return the unique ID."""
-        if self._station_from is not None and self._station_to is not None:
-            unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
-        else:
-            unique_id = f"{self._station}"
+        unique_id = f"{self._station["id"]}"
 
         return f"nmbs_live_{unique_id}"
 
@@ -231,7 +227,7 @@ class NMBSLiveBoard(SensorEntity):
             "departure_minutes": departure,
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
-            "monitored_station": self._station,
+            "monitored_station": self._station["standardname"],
         }
 
         if delay > 0:
@@ -242,7 +238,7 @@ class NMBSLiveBoard(SensorEntity):
 
     def update(self) -> None:
         """Set the state equal to the next departure."""
-        liveboard = self._api_client.get_liveboard(self._station)
+        liveboard = self._api_client.get_liveboard(self._station["id"])
 
         if liveboard == API_FAILURE:
             _LOGGER.warning("API failed in NMBSLiveBoard")
@@ -287,7 +283,7 @@ class NMBSSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID."""
-        unique_id = f"{self._station_from}_{self._station_to}"
+        unique_id = f"{self._station_from["id"]}_{self._station_to["id"]}"
 
         return f"nmbs_connection_{unique_id}"
 
@@ -295,7 +291,7 @@ class NMBSSensor(SensorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         if self._name is None:
-            return f"Train from {self._station_from} to {self._station_to}"
+            return f"Train from {self._station_from["standardname"]} to {self._station_to["standardname"]}"
         return self._name
 
     @property
@@ -381,7 +377,7 @@ class NMBSSensor(SensorEntity):
     def update(self) -> None:
         """Set the state to the duration of a connection."""
         connections = self._api_client.get_connections(
-            self._station_from, self._station_to
+            self._station_from["id"], self._station_to["id"]
         )
 
         if connections == API_FAILURE:

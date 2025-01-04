@@ -18,10 +18,16 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-DUMMY_DATA: dict[str, Any] = {
+DUMMY_DATA_IMPORT: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
     "STAT_BRUSSELS_CENTRAL": "Brussel-Centraal/Bruxelles-Central",
     "STAT_BRUSSELS_SOUTH": "Brussel-Zuid/Bruxelles-Midi",
+}
+
+DUMMY_DATA: dict[str, Any] = {
+    "STAT_BRUSSELS_NORTH": "BE.NMBS.008812005",
+    "STAT_BRUSSELS_CENTRAL": "BE.NMBS.008813003",
+    "STAT_BRUSSELS_SOUTH": "BE.NMBS.008814001",
 }
 
 
@@ -49,12 +55,12 @@ async def test_full_flow(
         == "Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi"
     )
     assert result["data"] == {
-        CONF_STATION_FROM: "Brussel-Noord/Bruxelles-Nord",
-        CONF_STATION_TO: "Brussel-Zuid/Bruxelles-Midi",
+        CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+        CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
     }
     assert (
         result["result"].unique_id
-        == "Brussel-Noord/Bruxelles-Nord_Brussel-Zuid/Bruxelles-Midi"
+        == f"{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
     )
 
 
@@ -128,9 +134,9 @@ async def test_import(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_LIVE: DUMMY_DATA["STAT_BRUSSELS_CENTRAL"],
-            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_LIVE: DUMMY_DATA_IMPORT["STAT_BRUSSELS_CENTRAL"],
+            CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
         },
     )
 
@@ -140,14 +146,11 @@ async def test_import(
         == "Train from Brussel-Noord/Bruxelles-Nord to Brussel-Zuid/Bruxelles-Midi"
     )
     assert result["data"] == {
-        CONF_STATION_FROM: "Brussel-Noord/Bruxelles-Nord",
+        CONF_STATION_FROM: "BE.NMBS.008812005",
         CONF_STATION_LIVE: "Brussel-Centraal/Bruxelles-Central",
-        CONF_STATION_TO: "Brussel-Zuid/Bruxelles-Midi",
+        CONF_STATION_TO: "BE.NMBS.008814001",
     }
-    assert (
-        result["result"].unique_id
-        == "Brussel-Noord/Bruxelles-Nord_Brussel-Zuid/Bruxelles-Midi"
-    )
+    assert result["result"].unique_id == "BE.NMBS.008812005_BE.NMBS.008814001"
 
 
 async def test_step_import_abort_if_already_setup(
@@ -155,13 +158,12 @@ async def test_step_import_abort_if_already_setup(
 ) -> None:
     """Test starting a flow by user which filled in data for connection for already existing connection."""
     mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -177,9 +179,9 @@ async def test_unavailable_api_import(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
-            CONF_STATION_LIVE: DUMMY_DATA["STAT_BRUSSELS_CENTRAL"],
-            CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+            CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_LIVE: DUMMY_DATA_IMPORT["STAT_BRUSSELS_CENTRAL"],
+            CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
         },
     )
 
@@ -192,7 +194,7 @@ async def test_unavailable_api_import(
     [
         (
             {
-                CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+                CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
                 CONF_STATION_TO: "Utrecht Centraal",
             },
             "invalid_station",
@@ -200,14 +202,14 @@ async def test_unavailable_api_import(
         (
             {
                 CONF_STATION_FROM: "Utrecht Centraal",
-                CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
+                CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
             },
             "invalid_station",
         ),
         (
             {
-                CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
-                CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
+                CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+                CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
             },
             "same_station",
         ),

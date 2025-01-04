@@ -1,23 +1,19 @@
 """The NMBS component."""
 
 import logging
+from typing import Any
 
 from pyrail import iRail
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_STATION_FROM,
-    CONF_STATION_LIVE,
-    CONF_STATION_TO,
-    DOMAIN,
-    find_station,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
@@ -42,19 +38,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NMBS from a config entry."""
-
-    station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
-
-    for station_type in station_types:
-        station = (
-            find_station(hass, entry.data[station_type])
-            if station_type in entry.data
-            else None
-        )
-        if station is None and station_type in entry.data:
-            raise ConfigEntryError(
-                f"Station {entry.data[station_type]} cannot be found."
-            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
