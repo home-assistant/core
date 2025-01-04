@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .util import bytes_to_async_iterator, parse_backup_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,14 +76,7 @@ class OneDriveBackupAgent(BackupAgent):
         content = await self._drive_item.items.by_drive_item_id(item_id).content.get()
         if content is None:
             raise BackupAgentError("Failed to download backup")
-        return self._bytes_to_async_iterator(content)
-
-    async def _bytes_to_async_iterator(
-        self, data: bytes, chunk_size: int = 1024
-    ) -> AsyncIterator[bytes]:
-        """Convert a bytes object into an AsyncIterator[bytes]."""
-        for i in range(0, len(data), chunk_size):
-            yield data[i : i + chunk_size]
+        return bytes_to_async_iterator(content)
 
     async def async_upload_backup(
         self,
@@ -148,7 +142,7 @@ class OneDriveBackupAgent(BackupAgent):
             for item in values:
                 additional_data = item.additional_data
                 if "homeassistant_version" in additional_data:
-                    backups.append(self._parse_blob_metadata(additional_data))
+                    backups.append(parse_backup_metadata(additional_data))
         return backups
 
     async def async_get_backup(
@@ -161,14 +155,7 @@ class OneDriveBackupAgent(BackupAgent):
         blob_properties = await self._drive_item.items.by_drive_item_id(item_id).get()
         if blob_properties is None:
             raise BackupAgentError("Backup not found")
-        return self._parse_blob_metadata(blob_properties.additional_data)
-
-    def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
-        """Parse backup metadata."""
-        metadata["folders"] = json.loads(metadata.get("folders", "[]"))
-        metadata["addons"] = json.loads(metadata.get("addons", "[]"))
-        metadata["extra_metadata"] = json.loads(metadata.get("extra_metadata", "{}"))
-        return AgentBackup.from_dict(metadata)
+        return parse_backup_metadata(blob_properties.additional_data)
 
     async def _get_drive_item_from_name(self, name: str) -> str:
         """Get a drive item by name."""
