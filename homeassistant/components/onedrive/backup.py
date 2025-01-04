@@ -73,6 +73,8 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
         item_id = await self._get_drive_item_from_name(f"{backup_id}.tar")
         content = await self._drive_item.items.by_drive_item_id(item_id).content.get()
+        if content is None:
+            raise BackupAgentError("Failed to download backup")
         return self._bytes_to_async_iterator(content)
 
     async def _bytes_to_async_iterator(
