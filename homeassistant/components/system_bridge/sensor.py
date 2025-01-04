@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
 from systembridgemodels.modules.cpu import PerCPU
-from systembridgemodels.modules.displays import Display
+from systembridgemodels.modules.displays import Display, InputSource, PowerMode
 from systembridgemodels.modules.gpus import GPU
 
 from homeassistant.components.sensor import (
@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -123,6 +123,48 @@ def display_resolution_vertical(display: Display) -> int | None:
 def display_refresh_rate(display: Display) -> float | None:
     """Return the Display refresh rate."""
     return display.refresh_rate
+
+
+@with_display
+def display_brightness(display: Display) -> int | None:
+    """Return the Display brightness."""
+    return display.brightness
+
+
+@with_display
+def display_contrast(display: Display) -> int | None:
+    """Return the Display contrast."""
+    return display.contrast
+
+
+@with_display
+def display_volume(display: Display) -> int | None:
+    """Return the Display volume."""
+    return display.volume
+
+
+@with_display
+def display_power_state(display: Display) -> str | None:
+    """Return the Display power state."""
+    return (
+        PowerMode(display.power_state).name if display.power_state is not None else None
+    )
+
+
+@with_display
+def display_input_source(display: Display) -> str | None:
+    """Return the Display input source."""
+    return (
+        InputSource(display.input_source).name
+        if display.power_state is not None
+        else None
+    )
+
+
+@with_display
+def display_sdr_white_level(display: Display) -> int | None:
+    """Return the Display sdr white level."""
+    return display.sdr_white_level
 
 
 def with_gpu(func) -> Callable:
@@ -419,50 +461,118 @@ async def async_setup_entry(
 
     if coordinator.data.displays is not None:
         for index, display in enumerate(coordinator.data.displays):
-            entities = [
-                *entities,
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display.id}_resolution_x",
-                        name=f"Display {display.id} resolution x",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PIXELS,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_resolution_horizontal(
-                            data, k
+            display_unique_id = slugify(display.id)
+            entities.extend(
+                [
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_resolution_x",
+                            name=f"Display {display.id} resolution x",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=PIXELS,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_resolution_horizontal(
+                                data, k
+                            ),
                         ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display.id}_resolution_y",
-                        name=f"Display {display.id} resolution y",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=PIXELS,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_resolution_vertical(
-                            data, k
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_resolution_y",
+                            name=f"Display {display.id} resolution y",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=PIXELS,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_resolution_vertical(
+                                data, k
+                            ),
                         ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-                SystemBridgeSensor(
-                    coordinator,
-                    SystemBridgeSensorEntityDescription(
-                        key=f"display_{display.id}_refresh_rate",
-                        name=f"Display {display.id} refresh rate",
-                        state_class=SensorStateClass.MEASUREMENT,
-                        native_unit_of_measurement=UnitOfFrequency.HERTZ,
-                        device_class=SensorDeviceClass.FREQUENCY,
-                        icon="mdi:monitor",
-                        value=lambda data, k=index: display_refresh_rate(data, k),
+                    SystemBridgeSensor(
+                        coordinator,
+                        SystemBridgeSensorEntityDescription(
+                            key=f"display_{display_unique_id}_refresh_rate",
+                            name=f"Display {display.id} refresh rate",
+                            state_class=SensorStateClass.MEASUREMENT,
+                            native_unit_of_measurement=UnitOfFrequency.HERTZ,
+                            device_class=SensorDeviceClass.FREQUENCY,
+                            icon="mdi:monitor",
+                            value=lambda data, k=index: display_refresh_rate(data, k),
+                        ),
+                        entry.data[CONF_PORT],
                     ),
-                    entry.data[CONF_PORT],
-                ),
-            ]
+                ]
+            )
+
+            if display.vcp_supported:
+                entities.extend(
+                    [
+                        SystemBridgeSensor(
+                            coordinator,
+                            SystemBridgeSensorEntityDescription(
+                                key=f"display_{display_unique_id}_brightness",
+                                name=f"Display {display.id} Brightness",
+                                state_class=SensorStateClass.MEASUREMENT,
+                                native_unit_of_measurement=PERCENTAGE,
+                                icon="mdi:brightness-percent",
+                                value=lambda data, k=index: display_brightness(data, k),
+                            ),
+                            entry.data[CONF_PORT],
+                        ),
+                        SystemBridgeSensor(
+                            coordinator,
+                            SystemBridgeSensorEntityDescription(
+                                key=f"display_{display_unique_id}_contrast",
+                                name=f"Display {display.id} Contrast",
+                                state_class=SensorStateClass.MEASUREMENT,
+                                native_unit_of_measurement=PERCENTAGE,
+                                icon="mdi:contrast-circle",
+                                value=lambda data, k=index: display_contrast(data, k),
+                            ),
+                            entry.data[CONF_PORT],
+                        ),
+                        SystemBridgeSensor(
+                            coordinator,
+                            SystemBridgeSensorEntityDescription(
+                                key=f"display_{display_unique_id}_volume",
+                                name=f"Display {display.id} Volume",
+                                state_class=SensorStateClass.MEASUREMENT,
+                                native_unit_of_measurement=PERCENTAGE,
+                                icon="mdi:volume-high",
+                                value=lambda data, k=index: display_volume(data, k),
+                            ),
+                            entry.data[CONF_PORT],
+                        ),
+                        SystemBridgeSensor(
+                            coordinator,
+                            SystemBridgeSensorEntityDescription(
+                                key=f"display_{display_unique_id}_power_state",
+                                name=f"Display {display.id} Power State",
+                                icon="mdi:power-settings",
+                                value=lambda data, k=index: display_power_state(
+                                    data, k
+                                ),
+                            ),
+                            entry.data[CONF_PORT],
+                        ),
+                        SystemBridgeSensor(
+                            coordinator,
+                            SystemBridgeSensorEntityDescription(
+                                key=f"display_{display_unique_id}_input_source",
+                                name=f"Display {display.id} Input Source",
+                                icon="mdi:video-input-hdmi",
+                                value=lambda data, k=index: display_input_source(
+                                    data, k
+                                ),
+                            ),
+                            entry.data[CONF_PORT],
+                        ),
+                    ]
+                )
 
     for index, gpu in enumerate(coordinator.data.gpus):
         entities.extend(

@@ -89,3 +89,33 @@ power_command:
             - "restart"
             - "shutdown"
             - "sleep"
+display_control:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    monitor_id:
+      required: true
+      example: 0
+      selector:
+        number:
+    setting:
+      required: true
+      example: "brightness"
+      selector:
+        select:
+          translation_key: display_setting_keys
+          options:
+            - "brightness"
+            - "contrast"
+            - "volume"
+            - "power_state"
+            - "input_source"
+            - "sdr_white_level"
+    value:
+      required: true
+      example: 0
+      selector:
+        text:
