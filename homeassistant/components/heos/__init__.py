@@ -27,10 +27,12 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -46,6 +48,8 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,6 +64,12 @@ class HeosRuntimeData:
 
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEOS component."""
+    services.register(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
@@ -141,7 +151,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         controller_manager, group_manager, source_manager, players
     )
 
-    services.register(hass, controller)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
 
@@ -153,9 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     await entry.runtime_data.controller_manager.disconnect()
-
-    services.remove(hass)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
