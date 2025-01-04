@@ -2,10 +2,11 @@
 
 from datetime import datetime as dt
 import logging
+from typing import Any
 
 import jwt
 from pyflick import FlickAPI
-from pyflick.authentication import AbstractFlickAuth
+from pyflick.authentication import SimpleFlickAuth
 from pyflick.const import DEFAULT_CLIENT_ID, DEFAULT_CLIENT_SECRET
 
 from homeassistant.config_entries import ConfigEntry
@@ -93,16 +94,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-class HassFlickAuth(AbstractFlickAuth):
+class HassFlickAuth(SimpleFlickAuth):
     """Implementation of AbstractFlickAuth based on a Home Assistant entity config."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: FlickConfigEntry) -> None:
         """Flick authentication based on a Home Assistant entity config."""
-        super().__init__(aiohttp_client.async_get_clientsession(hass))
+        super().__init__(
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            client_id=entry.data.get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID),
+            client_secret=entry.data.get(CONF_CLIENT_SECRET, DEFAULT_CLIENT_SECRET),
+            websession=aiohttp_client.async_get_clientsession(hass),
+        )
         self._entry = entry
         self._hass = hass
 
-    async def _get_entry_token(self):
+    async def _get_entry_token(self) -> dict[str, Any]:
         # No token saved, generate one
         if (
             CONF_TOKEN_EXPIRY not in self._entry.data
@@ -119,13 +126,8 @@ class HassFlickAuth(AbstractFlickAuth):
     async def _update_token(self):
         _LOGGER.debug("Fetching new access token")
 
-        token = await self.get_new_token(
-            username=self._entry.data[CONF_USERNAME],
-            password=self._entry.data[CONF_PASSWORD],
-            client_id=self._entry.data.get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID),
-            client_secret=self._entry.data.get(
-                CONF_CLIENT_SECRET, DEFAULT_CLIENT_SECRET
-            ),
+        token = await super().get_new_token(
+            self._username, self._password, self._client_id, self._client_secret
         )
 
         _LOGGER.debug("New token: %s", token)
