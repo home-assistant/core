@@ -179,11 +179,11 @@
         },
         "led": {
           "name": "[%key:component::lcn::services::led::name%]",
-          "description": "LED."
+          "description": "The LED port of the device."
         },
         "state": {
           "name": "State",
-          "description": "LED state."
+          "description": "The LED state to set."
         }
       }
     },
