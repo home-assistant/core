@@ -1,0 +1,17 @@
+resources:
+  - url: /local/custom_cards/weather-activities-card.js
+    type: module
+
+views:
+  - title: Overview
+    path: overview
+    badges: []
+    cards:
+      - type: entities
+        title: Weather Activities
+        entities:
+          - input_text.activity_clear_night
+          - input_text.activity_rainy
+          - input_text.activity_cloudy
+          - input_text.activity_snowy
+          - input_text.activity_windy

@@ -1,0 +1,37 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+sensor:
+  - platform: weather_activities
+
+input_text:
+  activity_clear_night:
+    name: Activity for Clear Night
+    initial: "Go for a run"
+  activity_rainy:
+    name: Activity for Rainy Weather
+    initial: "Stay indoors"
+  activity_cloudy:
+    name: Activity for Cloudy Weather
+    initial: "Take a short walk"
+  activity_snowy:
+    name: Activity for Snowy Weather
+    initial: "Build a snowman"
+  activity_windy:
+    name: Activity for Windy Weather
+    initial: "Fly a kite"
+
+# Logger configuration to debug automations and integrations
+logger:
+  default: info
+  logs:
+    homeassistant.components.automation: debug
+    custom_components.weather_activities: debug

@@ -1,0 +1,9 @@
+- alias: Notify for activities
+  trigger:
+    platform: state
+    entity_id: sensor.weather_activities
+  action:
+    service: notify.persistent_notification
+    data:
+      message: "Activities for today: {{ states('sensor.weather_activities') }}"
+      title: "Weather Activities"

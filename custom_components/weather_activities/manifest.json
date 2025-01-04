@@ -1,0 +1,8 @@
+{ 
+"domain": "weather_activities", 
+"name": "Weather Activities", 
+"version": "1.0.0", 
+"dependencies": [], 
+"codeowners": ["@Rizasss"], 
+"requirements": [] 
+} 
