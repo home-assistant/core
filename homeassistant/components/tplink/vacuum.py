@@ -90,6 +90,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         """Return battery level."""
         return self._vacuum_module.battery
 
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_state = VACUUM_STATUS_TO_HA_STATE.get(self._vacuum_module.status)
+        return True
