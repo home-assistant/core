@@ -57,8 +57,7 @@ async def _sign_in_handler(service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
 
     _LOGGER.warning(
-        "The service calls 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release; "
-        "enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically"
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release"
     )
     ir.async_create_issue(
         service.hass,
@@ -88,8 +87,7 @@ async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
 
     _LOGGER.warning(
-        "The service calls 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release; "
-        "enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically"
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release"
     )
     ir.async_create_issue(
         service.hass,
