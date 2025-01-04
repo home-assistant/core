@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
-from homeassistant.helpers.entity import async_generate_entity_id
 from systembridgemodels.modules.cpu import PerCPU
 from systembridgemodels.modules.displays import Display
 from systembridgemodels.modules.gpus import GPU
@@ -31,10 +30,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
-from homeassistant.util import dt as dt_util
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -470,12 +469,13 @@ async def async_setup_entry(
             )
 
     for index, gpu in enumerate(coordinator.data.gpus):
+        gpu_unique_id = gpu.id.replace("gpu-", "")
         entities.extend(
             [
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_core_clock_speed",
+                        key=f"gpu_{gpu_unique_id}_core_clock_speed",
                         name=f"{gpu.name} clock speed",
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
@@ -489,7 +489,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_memory_clock_speed",
+                        key=f"gpu_{gpu_unique_id}_memory_clock_speed",
                         name=f"{gpu.name} memory clock speed",
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
@@ -503,7 +503,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_memory_free",
+                        key=f"gpu_{gpu_unique_id}_memory_free",
                         name=f"{gpu.name} memory free",
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -516,7 +516,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_memory_used_percentage",
+                        key=f"gpu_{gpu_unique_id}_memory_used_percentage",
                         name=f"{gpu.name} memory used %",
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
@@ -528,7 +528,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_memory_used",
+                        key=f"gpu_{gpu_unique_id}_memory_used",
                         name=f"{gpu.name} memory used",
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
@@ -542,7 +542,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_fan_speed",
+                        key=f"gpu_{gpu_unique_id}_fan_speed",
                         name=f"{gpu.name} fan speed",
                         entity_registry_enabled_default=False,
                         state_class=SensorStateClass.MEASUREMENT,
@@ -555,7 +555,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_power_usage",
+                        key=f"gpu_{gpu_unique_id}_power_usage",
                         name=f"{gpu.name} power usage",
                         entity_registry_enabled_default=False,
                         device_class=SensorDeviceClass.POWER,
@@ -568,7 +568,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_temperature",
+                        key=f"gpu_{gpu_unique_id}_temperature",
                         name=f"{gpu.name} temperature",
                         entity_registry_enabled_default=False,
                         device_class=SensorDeviceClass.TEMPERATURE,
@@ -581,7 +581,7 @@ async def async_setup_entry(
                 SystemBridgeSensor(
                     coordinator,
                     SystemBridgeSensorEntityDescription(
-                        key=f"gpu_{gpu.id}_usage_percentage",
+                        key=f"gpu_{gpu_unique_id}_usage_percentage",
                         name=f"{gpu.name} usage %",
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
