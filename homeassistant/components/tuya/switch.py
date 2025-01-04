@@ -80,7 +80,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Pet Water Feeder
+    # Pet Fountain
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
     "cwysj": (
         SwitchEntityDescription(
