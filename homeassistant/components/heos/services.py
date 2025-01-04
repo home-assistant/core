@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from .const import (
     ATTR_PASSWORD,
@@ -47,7 +47,9 @@ def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     if not entry or not entry.state == ConfigEntryState.LOADED:
-        raise HomeAssistantError("The HEOS integration is not loaded")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="integration_not_loaded"
+        )
     return entry.runtime_data.controller_manager.controller
 
 
@@ -55,8 +57,17 @@ async def _sign_in_handler(service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
 
     _LOGGER.warning(
-        "The action 'heos.sign_in' is deprecated and will be removed in the 2025.4 release; "
-        "set the credentials in the configuration options and the integration will sign in automatically"
+        "The service calls 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release; "
+        "enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically"
+    )
+    ir.async_create_issue(
+        service.hass,
+        DOMAIN,
+        "sign_in_out_deprecated",
+        breaks_in_ha_version="2025.4.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="sign_in_out_deprecated",
     )
 
     controller = _get_controller(service.hass)
@@ -77,7 +88,17 @@ async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
 
     _LOGGER.warning(
-        "The action 'heos.sign_out' is deprecated and will be removed in the 2025.4 release"
+        "The service calls 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release; "
+        "enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically"
+    )
+    ir.async_create_issue(
+        service.hass,
+        DOMAIN,
+        "sign_in_out_deprecated",
+        breaks_in_ha_version="2025.4.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="sign_in_out_deprecated",
     )
 
     controller = _get_controller(service.hass)

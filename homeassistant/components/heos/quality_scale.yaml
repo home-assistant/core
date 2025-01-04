@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: Future enhancement to move custom actions for login/out into an options flow.
+  action-setup: done
   appropriate-polling:
     status: done
     comment: Integration is a local push integration

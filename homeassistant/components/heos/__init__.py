@@ -27,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -46,6 +47,8 @@ from .const import (
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
