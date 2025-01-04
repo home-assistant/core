@@ -6,6 +6,8 @@ from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -18,6 +20,7 @@ from .const import (
     CONF_EXCLUDE_VIAS,
     CONF_SHOW_ON_MAP,
     CONF_STATION_FROM,
+    CONF_STATION_LIVE,
     CONF_STATION_TO,
     DOMAIN,
 )
@@ -120,6 +123,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         station_from = None
         station_to = None
+        station_live = None
         for station in self.stations:
             if user_input[CONF_STATION_FROM] in (
                 station["standardname"],
@@ -131,6 +135,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 station["name"],
             ):
                 station_to = station
+            if CONF_STATION_LIVE in user_input and user_input[CONF_STATION_LIVE] in (
+                station["standardname"],
+                station["name"],
+            ):
+                station_live = station
 
         if station_from is None or station_to is None:
             return self.async_abort(reason="invalid_station")
@@ -140,6 +149,29 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         # config flow uses id and not the standard name
         user_input[CONF_STATION_FROM] = station_from["id"]
         user_input[CONF_STATION_TO] = station_to["id"]
+
+        if station_live:
+            user_input[CONF_STATION_LIVE] = station_live["id"]
+            entity_registry = er.async_get(self.hass)
+            prefix = "live"
+            if entity_id := entity_registry.async_get_entity_id(
+                Platform.SENSOR,
+                DOMAIN,
+                f"{prefix}_{station_live["standardname"]}_{station_from["standardname"]}_{station_to["standardname"]}",
+            ):
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=new_unique_id
+                )
+            if entity_id := entity_registry.async_get_entity_id(
+                Platform.SENSOR,
+                DOMAIN,
+                f"{prefix}_{station_live["name"]}_{station_from["name"]}_{station_to["name"]}",
+            ):
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=new_unique_id
+                )
 
         return await self.async_step_user(user_input)
 

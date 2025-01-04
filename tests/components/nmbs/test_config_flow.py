@@ -12,9 +12,11 @@ from homeassistant.components.nmbs.const import (
     CONF_STATION_TO,
     DOMAIN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -22,6 +24,12 @@ DUMMY_DATA_IMPORT: dict[str, Any] = {
     "STAT_BRUSSELS_NORTH": "Brussel-Noord/Bruxelles-Nord",
     "STAT_BRUSSELS_CENTRAL": "Brussel-Centraal/Bruxelles-Central",
     "STAT_BRUSSELS_SOUTH": "Brussel-Zuid/Bruxelles-Midi",
+}
+
+DUMMY_DATA_ALTERNATIVE_IMPORT: dict[str, Any] = {
+    "STAT_BRUSSELS_NORTH": "Brussels-North",
+    "STAT_BRUSSELS_CENTRAL": "Brussels-Central",
+    "STAT_BRUSSELS_SOUTH": "Brussels-South/Brussels-Midi",
 }
 
 DUMMY_DATA: dict[str, Any] = {
@@ -147,7 +155,7 @@ async def test_import(
     )
     assert result["data"] == {
         CONF_STATION_FROM: "BE.NMBS.008812005",
-        CONF_STATION_LIVE: "Brussel-Centraal/Bruxelles-Central",
+        CONF_STATION_LIVE: "BE.NMBS.008813003",
         CONF_STATION_TO: "BE.NMBS.008814001",
     }
     assert result["result"].unique_id == "BE.NMBS.008812005_BE.NMBS.008814001"
@@ -230,3 +238,73 @@ async def test_invalid_station_name(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_sensor_id_migration_standardname(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating unique id."""
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"live_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"]}",
+        config_entry=mock_config_entry,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_STATION_LIVE: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_FROM: DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 1
+    assert (
+        entities[0].unique_id
+        == f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+    )
+
+
+async def test_sensor_id_migration_localized_name(
+    hass: HomeAssistant,
+    mock_nmbs_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migrating unique id."""
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_SOUTH"]}",
+        config_entry=mock_config_entry,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_STATION_LIVE: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_FROM: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"],
+            CONF_STATION_TO: DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_SOUTH"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entities) == 1
+    assert (
+        entities[0].unique_id
+        == f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+    )

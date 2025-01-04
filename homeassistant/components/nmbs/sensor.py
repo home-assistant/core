@@ -169,8 +169,8 @@ async def async_setup_entry(
             NMBSSensor(
                 api_client, name, show_on_map, station_from, station_to, excl_vias
             ),
-            NMBSLiveBoard(api_client, station_from),
-            NMBSLiveBoard(api_client, station_to),
+            NMBSLiveBoard(api_client, station_from, station_from, station_to),
+            NMBSLiveBoard(api_client, station_to, station_from, station_to),
         ]
     )
 
@@ -180,14 +180,14 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station):
+    def __init__(self, api_client, live_station, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
+        self._station_from = station_from
+        self._station_to = station_to
         self._attrs = {}
         self._state = None
-
-        self.entity_registry_enabled_default = False
 
     @property
     def name(self):
@@ -197,8 +197,8 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def unique_id(self):
         """Return the unique ID."""
-        unique_id = f"{self._station["id"]}"
 
+        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
         return f"nmbs_live_{unique_id}"
 
     @property
