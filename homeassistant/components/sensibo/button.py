@@ -37,7 +37,7 @@ async def async_setup_entry(
     entry: SensiboConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Sensibo binary sensor platform."""
+    """Set up Sensibo button platform."""
 
     coordinator = entry.runtime_data
 
@@ -48,7 +48,7 @@ async def async_setup_entry(
 
 
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
-    """Representation of a Sensibo Device Binary Sensor."""
+    """Representation of a Sensibo Device button."""
 
     entity_description: SensiboButtonEntityDescription
 

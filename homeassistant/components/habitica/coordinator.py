@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from io import BytesIO
 import logging
 from typing import Any
 
@@ -18,6 +19,7 @@ from habiticalib import (
     TaskFilter,
     TooManyRequestsError,
     UserData,
+    UserStyles,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -130,3 +132,13 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             ) from e
         else:
             await self.async_request_refresh()
+
+    async def generate_avatar(self, user_styles: UserStyles) -> bytes:
+        """Generate Avatar."""
+
+        avatar = BytesIO()
+        await self.habitica.generate_avatar(
+            fp=avatar, user_styles=user_styles, fmt="PNG"
+        )
+
+        return avatar.getvalue()

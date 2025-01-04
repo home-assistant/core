@@ -3,9 +3,10 @@
   "name": "Overseerr",
   "codeowners": ["@joostlek"],
   "config_flow": true,
+  "dependencies": ["http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/overseerr",
   "integration_type": "service",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["python-overseerr==0.4.0"]
+  "requirements": ["python-overseerr==0.5.0"]
 }

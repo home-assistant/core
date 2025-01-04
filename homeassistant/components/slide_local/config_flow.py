@@ -73,7 +73,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}
 
         # API version 2 is not working, try API version 1 instead
-        await slide.slide_del(user_input[CONF_HOST])
         await slide.slide_add(
             user_input[CONF_HOST],
             user_input.get(CONF_PASSWORD, ""),
