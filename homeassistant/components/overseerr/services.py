@@ -69,8 +69,6 @@ async def get_media(
     except OverseerrConnectionError:
         LOGGER.error("Could not find data for %s %s", media_type, identifier)
         return {}
-    if not media:
-        return {}
     media["media_info"].pop("requests")
     return media
 
@@ -95,6 +93,7 @@ def setup_services(hass: HomeAssistant) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
+                translation_placeholders={"error": str(err)},
             ) from err
         result: list[dict[str, Any]] = []
         for request in requests:
