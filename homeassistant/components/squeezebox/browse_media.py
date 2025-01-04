@@ -28,6 +28,7 @@ LIBRARY = [
     "Playlists",
     "Genres",
     "New Music",
+    "Album Artists",
     "Apps",
     "Radios",
 ]
@@ -40,6 +41,7 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     "Playlists": "playlists",
     "Genres": "genres",
     "New Music": "new music",
+    "Album Artists": "album artists",
     MediaType.ALBUM: "album",
     MediaType.ARTIST: "artist",
     MediaType.TRACK: "title",
@@ -71,6 +73,7 @@ CONTENT_TYPE_MEDIA_CLASS: dict[str | MediaType, dict[str, MediaClass | None]] = 
     "Playlists": {"item": MediaClass.DIRECTORY, "children": MediaClass.PLAYLIST},
     "Genres": {"item": MediaClass.DIRECTORY, "children": MediaClass.GENRE},
     "New Music": {"item": MediaClass.DIRECTORY, "children": MediaClass.ALBUM},
+    "Album Artists": {"item": MediaClass.DIRECTORY, "children": MediaClass.ARTIST},
     MediaType.ALBUM: {"item": MediaClass.ALBUM, "children": MediaClass.TRACK},
     MediaType.ARTIST: {"item": MediaClass.ARTIST, "children": MediaClass.ALBUM},
     MediaType.TRACK: {"item": MediaClass.TRACK, "children": None},
@@ -95,6 +98,7 @@ CONTENT_TYPE_TO_CHILD_TYPE = {
     "Radios": MediaClass.APP,
     "App": None,  # can only be determined after inspecting the item
     "New Music": MediaType.ALBUM,
+    "Album Artists": MediaType.ARTIST,
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
 }
