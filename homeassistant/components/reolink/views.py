@@ -31,7 +31,7 @@ def async_generate_playback_proxy_url(
     return url_format.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        filename=parse.quote(filename, safe=""),
+        filename=parse.quote(filename.replace("/", "|"), safe=""),
         stream_res=stream_res,
         vod_type=vod_type,
     )
@@ -66,7 +66,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = parse.unquote(filename)
+        filename = parse.unquote(filename.replace("|", "/"))
         ch = int(channel)
         try:
             host = get_host(self.hass, config_entry_id)
