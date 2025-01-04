@@ -45,6 +45,20 @@ def register(hass: HomeAssistant):
 
 def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
+
+    _LOGGER.warning(
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.5.0 release"
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "sign_in_out_deprecated",
+        breaks_in_ha_version="2025.5.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="sign_in_out_deprecated",
+    )
+
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     if not entry or not entry.state == ConfigEntryState.LOADED:
         raise HomeAssistantError(
@@ -55,19 +69,6 @@ def _get_controller(hass: HomeAssistant) -> Heos:
 
 async def _sign_in_handler(service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
-
-    _LOGGER.warning(
-        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release"
-    )
-    ir.async_create_issue(
-        service.hass,
-        DOMAIN,
-        "sign_in_out_deprecated",
-        breaks_in_ha_version="2025.4.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="sign_in_out_deprecated",
-    )
 
     controller = _get_controller(service.hass)
     if controller.connection_state != const.STATE_CONNECTED:
@@ -85,19 +86,6 @@ async def _sign_in_handler(service: ServiceCall) -> None:
 
 async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
-
-    _LOGGER.warning(
-        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.4.0 release"
-    )
-    ir.async_create_issue(
-        service.hass,
-        DOMAIN,
-        "sign_in_out_deprecated",
-        breaks_in_ha_version="2025.4.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="sign_in_out_deprecated",
-    )
 
     controller = _get_controller(service.hass)
     if controller.connection_state != const.STATE_CONNECTED:
