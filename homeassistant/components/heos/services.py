@@ -47,13 +47,13 @@ def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
 
     _LOGGER.warning(
-        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.5.0 release"
+        "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release"
     )
     ir.async_create_issue(
         hass,
         DOMAIN,
         "sign_in_out_deprecated",
-        breaks_in_ha_version="2025.5.0",
+        breaks_in_ha_version="2025.8.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="sign_in_out_deprecated",
