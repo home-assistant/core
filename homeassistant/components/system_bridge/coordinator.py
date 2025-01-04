@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import Task
+from binascii import crc32
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -61,6 +62,8 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
         )
 
         self._host = entry.data[CONF_HOST]
+
+        self.host_id = f"{crc32(self._host.encode()):08x}"
 
         super().__init__(
             hass,
