@@ -167,7 +167,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             string_keys_count = len(string_keys)
             string_keys.update(strings)
             if len(string_keys) != string_keys_count:
-                strings_discovery = [{"{#KEY}": string_key} for string_key in string_keys]
+                strings_discovery = [
+                    {"{#KEY}": string_key} for string_key in string_keys
+                ]
                 metric = ItemValue(
                     publish_states_host,
                     "homeassistant.strings_discovery",
