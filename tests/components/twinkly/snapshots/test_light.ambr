@@ -6,6 +6,8 @@
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
       ]),
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
@@ -43,8 +45,10 @@
     'attributes': ReadOnlyDict({
       'brightness': 26,
       'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': None,
+      'effect': '1 Rainbow',
       'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
       ]),
       'friendly_name': 'Tree 1',
       'hs_color': tuple(

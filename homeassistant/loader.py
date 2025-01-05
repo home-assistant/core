@@ -65,14 +65,15 @@ _LOGGER = logging.getLogger(__name__)
 # This list can be extended by calling async_register_preload_platform
 #
 BASE_PRELOAD_PLATFORMS = [
+    "backup",
     "config",
     "config_flow",
     "diagnostics",
     "energy",
     "group",
-    "logbook",
     "hardware",
     "intent",
+    "logbook",
     "media_source",
     "recorder",
     "repairs",

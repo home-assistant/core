@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_error_codes',
-    'unique_id': '23-45-A4O-MOF-active_error_codes',
+    'unique_id': '23-45-A4O-MOF_active_error_codes',
     'unit_of_measurement': None,
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'active_warning_codes',
-    'unique_id': '23-45-A4O-MOF-active_warning_codes',
+    'unique_id': '23-45-A4O-MOF_active_warning_codes',
     'unit_of_measurement': None,
   })
 # ---

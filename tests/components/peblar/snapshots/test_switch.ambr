@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'force_single_phase',
-    'unique_id': '23-45-A4O-MOF-force_single_phase',
+    'unique_id': '23-45-A4O-MOF_force_single_phase',
     'unit_of_measurement': None,
   })
 # ---
