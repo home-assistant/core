@@ -19,6 +19,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .services import setup_hass_services, unload_hass_services
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
@@ -67,6 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     # Reload entry when it is updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
+    # setup the nephase_envoy action services
+    await setup_hass_services(hass, entry)
+
     return True
 
 
@@ -79,6 +83,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     """Unload a config entry."""
     coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
+    await unload_hass_services(hass, coordinator.envoy)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
