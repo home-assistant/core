@@ -1,6 +1,6 @@
 """Tests for the Mastodon services."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from mastodon.Mastodon import MastodonAPIError
 import pytest
@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.mastodon.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
+    ATTR_MEDIA,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -42,6 +43,20 @@ from tests.common import MockConfigEntry
             },
             {"status": "test toot", "spoiler_text": "Spoiler", "visibility": "private"},
         ),
+        (
+            {
+                ATTR_STATUS: "test toot",
+                ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_MEDIA: "/image.jpg",
+            },
+            {
+                "status": "test toot",
+                "spoiler_text": "Spoiler",
+                "visibility": None,
+                "media_ids": "1",
+                "sensitive": None,
+            },
+        ),
     ],
 )
 async def test_service_post(
@@ -54,6 +69,9 @@ async def test_service_post(
     """Test the post service."""
 
     await setup_integration(hass, mock_config_entry)
+
+    hass.config.is_allowed_path = Mock(return_value=True)
+    mock_mastodon_client.media_post.return_value = {"id": "1"}
 
     await hass.services.async_call(
         DOMAIN,
