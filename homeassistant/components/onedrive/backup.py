@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any
 
+from kiota_abstractions.api_error import APIError
 from msgraph.generated.drives.item.items.item.create_upload_session.create_upload_session_post_request_body import (
     CreateUploadSessionPostRequestBody,
 )
@@ -107,10 +108,17 @@ class OneDriveBackupAgent(BackupAgent):
 
         upload_session_request_body = CreateUploadSessionPostRequestBody(
             item=DriveItemUploadableProperties(
-                additional_data={"@microsoft.graph.conflictBehavior": "fail"}
-            ),
-            additional_data={"description": json.dumps(backup_dict)},
+                additional_data={
+                    "@microsoft.graph.conflictBehavior": "fail",
+                    # "description": json.dumps(backup_dict),
+                    # "name": f"{backup.backup_id}.tar",
+                }
+            )
         )
+        # small file upload -> works
+        # await self._drive_item.items.by_drive_item_id(
+        #     self._get_file_path("test")
+        # ).content.put(body=b"Hello world")
         upload_session = await self._drive_item.items.by_drive_item_id(
             self._get_file_path(backup.backup_id)
         ).create_upload_session.post(upload_session_request_body)
@@ -120,18 +128,32 @@ class OneDriveBackupAgent(BackupAgent):
 
         large_file_upload_session = LargeFileUploadSession(
             upload_url=upload_session.upload_url,
-            expiration_date_time=datetime.now(UTC) + timedelta(hours=1),
+            expiration_date_time=datetime.now(UTC) + timedelta(days=1),
             additional_data=upload_session.additional_data,
-            is_cancelled=False,
             next_expected_ranges=upload_session.next_expected_ranges,
         )
 
         task = LargeFileUploadTask(
-            large_file_upload_session,
-            self._graph_client.request_adapter,
+            upload_session=large_file_upload_session,
+            request_adapter=self._graph_client.request_adapter,
             stream=await async_iterator_to_bytesio(await open_stream()),
         )
-        await task.upload()
+
+        def progress_callback(uploaded_byte_range: tuple[int, int]):
+            _LOGGER.warning(
+                "Uploaded %s bytes of %s bytes of backup %s",
+                uploaded_byte_range[0],
+                backup.size,
+                backup.name,
+            )
+
+        try:
+            await task.upload(progress_callback)
+        except APIError as err:
+            _LOGGER.exception(
+                "Error during upload: %s, %s", err.response_status_code, err.message
+            )
+            raise BackupAgentError("Upload failed") from err
 
     async def async_delete_backup(
         self,
@@ -151,8 +173,9 @@ class OneDriveBackupAgent(BackupAgent):
         ).children.get()
         if items and (values := items.value):
             for item in values:
-                _LOGGER.warning("Item: %s", item.name)
                 description = item.description
+                if description is None:
+                    continue
                 if "homeassistant_version" in description:
                     backups.append(parse_backup_metadata(description))
         return backups
