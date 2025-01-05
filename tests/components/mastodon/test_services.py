@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from mastodon.Mastodon import MastodonAPIError
 import pytest
 
 from homeassistant.components.mastodon.const import (
@@ -13,7 +14,7 @@ from homeassistant.components.mastodon.const import (
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -68,6 +69,30 @@ async def test_service_post(
     mock_mastodon_client.status_post.assert_called_with(**kwargs)
 
     mock_mastodon_client.status_post.reset_mock()
+
+
+async def test_post_service_failed(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service raising an error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot"}
+
+    getattr(mock_mastodon_client, "status_post").side_effect = MastodonAPIError
+
+    with pytest.raises(HomeAssistantError, match="Unable to send message"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
 
 
 async def test_service_entry_availability(
