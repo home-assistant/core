@@ -32,7 +32,7 @@ rules:
     comment: >
       There is no state in the TTS platform and we can't check poll if the TTS service is available.
   action-exceptions: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   parallel-updates: done
   test-coverage: todo
   integration-owner: done
