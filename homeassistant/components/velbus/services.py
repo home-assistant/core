@@ -11,13 +11,16 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import STORAGE_DIR
 
 if TYPE_CHECKING:
     from . import VelbusConfigEntry
 
 from .const import (
+    CONF_CONFIG_ENTRY,
     CONF_INTERFACE,
     CONF_MEMO_TEXT,
     DOMAIN,
@@ -32,6 +35,7 @@ def setup_services(hass: HomeAssistant) -> None:
     """Register the velbus services."""
 
     def check_entry_id(interface: str) -> str:
+        """Check the config_entry for a specific interface."""
         for config_entry in hass.config_entries.async_entries(DOMAIN):
             if "port" in config_entry.data and config_entry.data["port"] == interface:
                 return config_entry.entry_id
@@ -39,51 +43,68 @@ def setup_services(hass: HomeAssistant) -> None:
             "The interface provided is not defined as a port in a Velbus integration"
         )
 
-    def get_config_entry(interface: str) -> VelbusConfigEntry | None:
-        for config_entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in config_entry.data and config_entry.data["port"] == interface:
-                return config_entry
-        return None
+    async def get_config_entry(call: ServiceCall) -> VelbusConfigEntry:
+        """Get the config entry for this service call."""
+        if CONF_CONFIG_ENTRY in call.data:
+            entry_id = call.data[CONF_CONFIG_ENTRY]
+        elif CONF_INTERFACE in call.data:
+            # Deprecated in 2025.2, to remove in 2025.9
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_interface_parameter",
+                breaks_in_ha_version="2025.9.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_interface_parameter",
+            )
+            entry_id = call.data[CONF_INTERFACE]
+        else:
+            entry_id = None
+        if entry_id is None:
+            raise ServiceValidationError(
+                "Either config entry or interface must be provided"
+            )
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry and entry.domain == DOMAIN:
+            return entry
+        raise ServiceValidationError("Config entry not found")
 
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
-        entry = get_config_entry(call.data[CONF_INTERFACE])
-        if entry:
-            await entry.runtime_data.controller.scan()
+        entry = await get_config_entry(call)
+        await entry.runtime_data.controller.scan()
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
-        entry = get_config_entry(call.data[CONF_INTERFACE])
-        if entry:
-            await entry.runtime_data.controller.sync_clock()
+        entry = await get_config_entry(call)
+        await entry.runtime_data.controller.sync_clock()
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
-        entry = get_config_entry(call.data[CONF_INTERFACE])
-        if entry:
-            memo_text = call.data[CONF_MEMO_TEXT]
-            module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
-            if module:
-                await module.set_memo_text(memo_text.async_render())
+        entry = await get_config_entry(call)
+        memo_text = call.data[CONF_MEMO_TEXT]
+        module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
+        if not module:
+            raise ServiceValidationError("Module not found")
+        await module.set_memo_text(memo_text.async_render())
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
-        # clear the cache
+        entry = await get_config_entry(call)
         with suppress(FileNotFoundError):
             if call.data.get(CONF_ADDRESS):
                 await hass.async_add_executor_job(
                     os.unlink,
                     hass.config.path(
                         STORAGE_DIR,
-                        f"velbuscache-{call.data[CONF_INTERFACE]}/{call.data[CONF_ADDRESS]}.p",
+                        f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
                     ),
                 )
             else:
                 await hass.async_add_executor_job(
                     shutil.rmtree,
-                    hass.config.path(
-                        STORAGE_DIR, f"velbuscache-{call.data[CONF_INTERFACE]}/"
-                    ),
+                    hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
                 )
         # call a scan to repopulate
         await scan(call)
@@ -92,14 +113,32 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SCAN,
         scan,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
+        vol.Schema(
+            {
+                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+            }
+        ),
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SYNC,
         syn_clock,
-        vol.Schema({vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id)}),
+        vol.Schema(
+            {
+                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
+            }
+        ),
     )
 
     hass.services.async_register(
@@ -108,7 +147,12 @@ def setup_services(hass: HomeAssistant) -> None:
         set_memo_text,
         vol.Schema(
             {
-                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
@@ -123,7 +167,12 @@ def setup_services(hass: HomeAssistant) -> None:
         clear_cache,
         vol.Schema(
             {
-                vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                    {
+                        "integration": DOMAIN,
+                    }
+                ),
                 vol.Optional(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
