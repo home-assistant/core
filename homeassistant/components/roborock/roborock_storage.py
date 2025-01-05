@@ -30,9 +30,9 @@ class RoborockMapStorage:
             _storage_path_prefix(hass, entry_id) / MAPS_PATH / device_id_slug
         )
 
-    async def async_load_map(self, map_name: str) -> bytes | None:
+    async def async_load_map(self, map_flag: int) -> bytes | None:
         """Load maps from disk."""
-        filename = self._path_prefix / map_name
+        filename = self._path_prefix / str(map_flag)
         return await self._hass.async_add_executor_job(self._load_map, filename)
 
     def _load_map(self, filename: Path) -> bytes | None:
@@ -45,9 +45,9 @@ class RoborockMapStorage:
             _LOGGER.debug("Unable to read map file: %s %s", filename, err)
             return None
 
-    async def async_save_map(self, map_name: str, content: bytes) -> None:
+    async def async_save_map(self, map_flag: int, content: bytes) -> None:
         """Write map if it should be updated."""
-        filename = self._path_prefix / map_name
+        filename = self._path_prefix / str(map_flag)
         await self._hass.async_add_executor_job(self._save_map, filename, content)
 
     def _save_map(self, filename: Path, content: bytes) -> None:

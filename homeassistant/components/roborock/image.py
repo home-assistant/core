@@ -107,7 +107,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
         await super().async_added_to_hass()
-        content = await self.coordinator.map_storage.async_load_map(self._attr_name)
+        content = await self.coordinator.map_storage.async_load_map(self.map_flag)
         self.cached_map = content or b""
         self._attr_image_last_updated = dt_util.utcnow()
 
@@ -138,7 +138,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             if self.cached_map != content:
                 self.cached_map = content
                 await self.coordinator.map_storage.async_save_map(
-                    self._attr_name,
+                    self.map_flag,
                     content,
                 )
         return self.cached_map
