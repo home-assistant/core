@@ -32,7 +32,7 @@ from .const import (
     VeSyncHumidifierDevice,
 )
 from .coordinator import VeSyncDataCoordinator
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ def _get_vs_mode(ha_mode: str) -> str | None:
     return vs_mode
 
 
-class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
+class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
     # The base VeSyncBaseEntity has _attr_has_entity_name and this is to prevent
