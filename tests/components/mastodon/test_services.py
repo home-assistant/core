@@ -167,6 +167,30 @@ async def test_post_media_upload_failed(
         )
 
 
+async def test_post_path_not_whitelisted(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service raising an error because the file path is not whitelisted."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot", "media": "/fail.jpg"}
+
+    with pytest.raises(
+        HomeAssistantError, match="/fail.jpg is not a whitelisted directory"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
+
+
 async def test_service_entry_availability(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
