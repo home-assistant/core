@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from typing import Any, Self
 
-from aiohttp import ClientError, MultipartWriter, StreamReader
+from aiohttp import ClientError, ClientTimeout, MultipartWriter, StreamReader
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -17,33 +17,20 @@ from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
 from .api import create_headers
 from .const import DOMAIN, DRIVE_API_FILES, DRIVE_API_UPLOAD_FILES
 
+_UPLOAD_TIMEOUT = 12 * 3600
+
+
 # Google Drive only supports string key value pairs as properties.
-# We convert any other fields to JSON strings.
-_AGENT_BACKUP_SIMPLE_FIELDS = [
-    "backup_id",
-    "date",
-    "database_included",
-    "homeassistant_included",
-    "homeassistant_version",
-    "name",
-    "protected",
-    "size",
-]
-
-
+# Convert every field to JSON strings except backup_id so that we can query it.
 def _convert_agent_backup_to_properties(backup: AgentBackup) -> dict[str, str]:
     return {
-        k: v if k in _AGENT_BACKUP_SIMPLE_FIELDS else json.dumps(v)
-        for k, v in backup.as_dict().items()
+        k: v if k == "backup_id" else json.dumps(v) for k, v in backup.as_dict().items()
     }
 
 
 def _convert_properties_to_agent_backup(d: dict[str, str]) -> AgentBackup:
     return AgentBackup.from_dict(
-        {
-            k: v if k in _AGENT_BACKUP_SIMPLE_FIELDS else json.loads(v)
-            for k, v in d.items()
-        }
+        {k: v if k == "backup_id" else json.loads(v) for k, v in d.items()}
     )
 
 
@@ -151,9 +138,11 @@ class GoogleDriveBackupAgent(BackupAgent):
                     params={"fields": ""},
                     data=mpwriter,
                     headers=headers,
+                    timeout=ClientTimeout(total=_UPLOAD_TIMEOUT),
                 )
                 resp.raise_for_status()
-            except ClientError as err:
+                await resp.json()
+            except (ClientError, TimeoutError) as err:
                 raise BackupAgentError("Failed to upload backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
