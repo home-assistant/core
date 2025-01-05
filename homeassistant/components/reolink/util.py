@@ -167,6 +167,10 @@ def raise_translated_error(
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected",
+                translation_placeholders={"err": str(err)},
+            ) from err
 
     return decorator_raise_translated_error
