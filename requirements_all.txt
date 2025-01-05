@@ -968,7 +968,7 @@ gardena-bluetooth==1.5.0
 gassist-text==0.0.11
 
 # homeassistant.components.google
-gcal-sync==6.2.0
+gcal-sync==7.0.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -1573,7 +1573,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.3.0
+openwebifpy==4.3.1
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.17
@@ -1662,7 +1662,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==1.0.0
+powerfox==1.1.0
 
 # homeassistant.components.reddit
 praw==7.5.0
