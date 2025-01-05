@@ -1,23 +1,24 @@
 """Support for OneDrive backup."""
 
 from collections.abc import AsyncIterator, Callable, Coroutine
-from datetime import UTC, datetime, timedelta
 import json
 import logging
 from typing import Any
 
 from kiota_abstractions.api_error import APIError
+from kiota_abstractions.authentication import AnonymousAuthenticationProvider
+from msgraph import GraphRequestAdapter
 from msgraph.generated.drives.item.items.item.create_upload_session.create_upload_session_post_request_body import (
     CreateUploadSessionPostRequestBody,
 )
 from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
 )
-from msgraph_core.models import LargeFileUploadSession
 from msgraph_core.tasks import LargeFileUploadTask
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.httpx_client import get_async_client
 
 from . import OneDriveConfigEntry
 from .const import CONF_BACKUP_FOLDER, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
@@ -69,6 +70,10 @@ class OneDriveBackupAgent(BackupAgent):
         self._backup_folder = f"root:/{str(entry.data[CONF_BACKUP_FOLDER]).strip('/')}"
         self.name = entry.title
         self._hass = hass
+        self._anonymous_adapter = GraphRequestAdapter(
+            auth_provider=AnonymousAuthenticationProvider,
+            client=get_async_client(hass),
+        )
 
     def _get_file_path(self, backup_id: str) -> str:
         """Return the file path for a backup."""
@@ -115,10 +120,6 @@ class OneDriveBackupAgent(BackupAgent):
                 }
             )
         )
-        # small file upload -> works
-        # await self._drive_item.items.by_drive_item_id(
-        #     self._get_file_path("test")
-        # ).content.put(body=b"Hello world")
         upload_session = await self._drive_item.items.by_drive_item_id(
             self._get_file_path(backup.backup_id)
         ).create_upload_session.post(upload_session_request_body)
@@ -126,21 +127,15 @@ class OneDriveBackupAgent(BackupAgent):
         if upload_session is None:
             raise BackupAgentError("Failed to create upload session")
 
-        large_file_upload_session = LargeFileUploadSession(
-            upload_url=upload_session.upload_url,
-            expiration_date_time=datetime.now(UTC) + timedelta(days=1),
-            additional_data=upload_session.additional_data,
-            next_expected_ranges=upload_session.next_expected_ranges,
-        )
-
         task = LargeFileUploadTask(
-            upload_session=large_file_upload_session,
-            request_adapter=self._graph_client.request_adapter,
+            upload_session=upload_session,
+            request_adapter=self._anonymous_adapter,
             stream=await async_iterator_to_bytesio(await open_stream()),
+            max_chunk_size=320 * 1024,
         )
 
-        def progress_callback(uploaded_byte_range: tuple[int, int]):
-            _LOGGER.warning(
+        def progress_callback(uploaded_byte_range: tuple[int, int]) -> None:
+            _LOGGER.debug(
                 "Uploaded %s bytes of %s bytes of backup %s",
                 uploaded_byte_range[0],
                 backup.size,
@@ -154,6 +149,7 @@ class OneDriveBackupAgent(BackupAgent):
                 "Error during upload: %s, %s", err.response_status_code, err.message
             )
             raise BackupAgentError("Upload failed") from err
+        _LOGGER.debug("Backup %s uploaded", backup.name)
 
     async def async_delete_backup(
         self,
