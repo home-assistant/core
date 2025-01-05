@@ -423,9 +423,7 @@ class ESPHomeManager:
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
-                async_connect_scanner(
-                    hass, entry_data, cli, device_info, self.domain_data.bluetooth_cache
-                )
+                async_connect_scanner(hass, entry_data, cli, device_info)
             )
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (

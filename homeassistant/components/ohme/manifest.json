@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["ohme==1.2.0"]
+  "requirements": ["ohme==1.2.3"]
 }
