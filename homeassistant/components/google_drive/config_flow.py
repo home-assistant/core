@@ -74,7 +74,6 @@ class OAuth2FlowHandler(
                     headers=headers,
                 )
                 resp.raise_for_status()
-                await resp.json()
             except ClientError as err:
                 self.logger.error(
                     "Could not find folder '%s%s': %s",
@@ -94,9 +93,7 @@ class OAuth2FlowHandler(
                     "mimeType": "application/vnd.google-apps.folder",
                     # Adding a property to be able to identify this folder
                     # if needed in the future.
-                    # 1 instead of true to avoid hitting char limits
-                    # if we ever need to add more properties.
-                    "properties": {"ha_root": "1"},
+                    "properties": {"ha": "root"},
                 },
                 headers=headers,
             )

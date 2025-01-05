@@ -14,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, DRIVE_API_FILES, DRIVE_API_UPLOAD_FILES
 
 # Google Drive only supports string key value pairs as properties.
@@ -117,7 +116,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         self.name = config_entry.title
         self._hass = hass
         self._folder_id = config_entry.unique_id
-        self._auth: AsyncConfigEntryAuth = config_entry.runtime_data
+        self._auth = config_entry.runtime_data
 
     async def async_upload_backup(
         self,
@@ -153,7 +152,6 @@ class GoogleDriveBackupAgent(BackupAgent):
                     headers=headers,
                 )
                 resp.raise_for_status()
-                await resp.json()
             except ClientError as err:
                 raise BackupAgentError("Failed to upload backup") from err
 
@@ -235,7 +233,6 @@ class GoogleDriveBackupAgent(BackupAgent):
                 headers=headers,
             )
             resp.raise_for_status()
-            await resp.json()
         except ClientError as err:
             raise BackupAgentError("Failed to delete backup") from err
 
