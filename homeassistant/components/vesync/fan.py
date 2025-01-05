@@ -28,7 +28,7 @@ from .const import (
     VS_FANS,
 )
 from .coordinator import VeSyncDataCoordinator
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def _setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncFanHA(VeSyncDevice, FanEntity):
+class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = (
@@ -107,10 +107,17 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
-    def __init__(self, fan, coordinator: VeSyncDataCoordinator) -> None:
+    def __init__(
+        self, fan: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
+    ) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan, coordinator)
         self.smartfan = fan
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -224,3 +231,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if percentage is None:
             percentage = 50
         self.set_percentage(percentage)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self.device.turn_off()

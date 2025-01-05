@@ -21,7 +21,7 @@
       },
       "user_auth_confirm": {
         "title": "Authenticate",
-        "description": "The device requires authentication, please input your TP-Link credentials below.",
+        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
