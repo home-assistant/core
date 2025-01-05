@@ -153,11 +153,7 @@ async def test_select_set_option(
 async def test_deprecated_horizontal_swing_select(
     hass: HomeAssistant,
     load_platforms: list[Platform],
-    monkeypatch: pytest.MonkeyPatch,
-    mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the deprecated horizontal swing select entity."""
