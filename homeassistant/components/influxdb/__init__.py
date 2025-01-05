@@ -499,7 +499,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     event_to_json = _generate_event_to_json(conf)
     max_tries = conf.get(CONF_RETRY_COUNT)
-    instance = hass.data[DOMAIN] = InfluxThread(hass, influx, event_to_json, max_tries, conf)
+    instance = hass.data[DOMAIN] = InfluxThread(
+        hass, influx, event_to_json, max_tries, conf
+    )
     instance.start()
 
     def shutdown(event):
@@ -527,7 +529,7 @@ class InfluxThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self.shutdown = False
-        self.batch_timeout = config[CONF_BATCH_TIMEOUT]
+        self._batch_timeout = config[CONF_BATCH_TIMEOUT]
         self.batch_buffer_size = config[CONF_BATCH_BUFFER_SIZE]
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
@@ -537,15 +539,16 @@ class InfluxThread(threading.Thread):
         item = (time.monotonic(), event)
         self.queue.put(item)
 
-    def get_batch_timeout(self):
+    @property
+    def batch_timeout(self):
         """Return number of seconds to wait for more events."""
-        return self.batch_timeout
+        return self._batch_timeout
 
     def get_events_json(self):
         """Return a batch of events formatted for writing."""
         queue_seconds = QUEUE_BACKLOG_SECONDS + self.max_tries * RETRY_DELAY
         start_time = time.monotonic()
-        batch_timeout = self.get_batch_timeout()
+        batch_timeout = self.batch_timeout()
 
         count = 0
         json = []
@@ -553,11 +556,14 @@ class InfluxThread(threading.Thread):
 
         with suppress(queue.Empty):
             while len(json) < self.batch_buffer_size and not self.shutdown:
-                # Check if we've exceeded batch_timeout
                 if count > 0 and time.monotonic() - start_time >= batch_timeout:
                     break
 
-                timeout = None if count == 0 else batch_timeout - (time.monotonic() - start_time)
+                timeout = (
+                    None
+                    if count == 0
+                    else batch_timeout - (time.monotonic() - start_time)
+                )
                 item = self.queue.get(timeout=timeout)
                 count += 1
 
