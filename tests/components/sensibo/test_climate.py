@@ -269,9 +269,7 @@ async def test_climate_swing(
 async def test_climate_horizontal_swing(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate horizontal swing service."""
@@ -279,22 +277,25 @@ async def test_climate_horizontal_swing(
     state = hass.states.get("climate.hallway")
     assert state.attributes["swing_horizontal_mode"] == "stopped"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "horizontal_swing_modes",
-        ["stopped", "fixedleft", "fixedcenter", "fixedright", "not_in_ha"],
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "swing_modes_translated",
-        {
-            "stopped": "stopped",
-            "fixedleft": "fixedLeft",
-            "fixedcenter": "fixedCenter",
-            "fixedright": "fixedRight",
-            "not_in_ha": "not_in_ha",
-        },
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].horizontal_swing_modes = [
+        "stopped",
+        "fixedleft",
+        "fixedcenter",
+        "fixedright",
+        "not_in_ha",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_modes_translated = {
+        "stopped": "stopped",
+        "fixedleft": "fixedLeft",
+        "fixedcenter": "fixedCenter",
+        "fixedright": "fixedRight",
+        "not_in_ha": "not_in_ha",
+    }
+
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -324,18 +325,17 @@ async def test_climate_horizontal_swing(
     state = hass.states.get("climate.hallway")
     assert state.attributes["swing_horizontal_mode"] == "fixedleft"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "targetTemperature",
-            "swing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "swing",
+        "light",
+    ]
+
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
