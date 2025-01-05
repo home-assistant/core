@@ -166,6 +166,8 @@ get_device_capabilities:
       domain: climate
   fields:
     hvac_mode:
+      required: true
+      example: "heat"
       selector:
         select:
           options:
