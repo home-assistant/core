@@ -1,4 +1,4 @@
-"""Define tests for the generic general setup."""
+"""Define tests for the generic (IP camera) integration."""
 
 import pytest
 
