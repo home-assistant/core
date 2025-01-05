@@ -39,7 +39,6 @@ from .const import (
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
-    VeSyncHumidifierDevice,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -52,15 +51,15 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     """Describe VeSync sensor entity."""
 
     value_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncHumidifierDevice],
+        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice],
         StateType,
     ]
 
     exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncHumidifierDevice], bool
+        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice], bool
     ] = lambda _: True
     update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncHumidifierDevice], None
+        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice], None
     ] = lambda _: None
 
 
@@ -250,7 +249,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncHumidifierDevice,
+        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice,
         description: VeSyncSensorEntityDescription,
         coordinator,
     ) -> None:
