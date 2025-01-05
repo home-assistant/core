@@ -14,7 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -83,6 +86,8 @@ async def async_setup_entry(
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 
+    migrate_entity_unique_ids(hass, entry.entry_id)
+
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -138,6 +143,44 @@ async def async_setup_entry(
 
     return True
 
+def migrate_entity_unique_ids(
+    hass: HomeAssistant, ConfigEntryId: str) -> None:
+    """Migrate old non-unique identifiers to new unique identifiers."""
+    
+    device_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_reg, ConfigEntryId):
+        #Remove non-primary config entry ID from config_entries if present
+        config_entries = device.config_entries
+        if (len(config_entries) > 1):
+            #Non-primary config entry exists, remove it
+            for config_entry in config_entries:
+                if (config_entry != ConfigEntryId):
+                    device_reg.async_update_device(
+                        device.id, remove_config_entry_id=config_entry)
+
+    entity_reg = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_reg, ConfigEntryId):
+        #4 types of unique_id:
+        #1) <Tradfri gateway ID>
+        #2) light-<Tradfri gateway ID>-<Tradfri gateway's own device ID>
+        #3) <Tradfri gateway ID>-<Tradfri gateway's own device ID>
+        #4) <Tradfri gateway ID>-<Tradfri gateway's own device ID>-battery_level
+        #Need to extract 'Tradfri gateway's own device ID' from string and match against device.
+        #If device is found, update device's identifiers to:
+        #{DOMAIN, "<Tradfri gateway ID>-<Tradfri gateway's own device ID>"}
+        unique_id_parts = entity.unique_id.split('-')
+        if (len(unique_id_parts) > 1):
+            if (unique_id_parts[0].find('light') > -1):
+                tradfri_device_id = unique_id_parts[2]
+                tradfri_gateway_id = unique_id_parts[1]
+            else:
+                tradfri_device_id = unique_id_parts[1]
+                tradfri_gateway_id = unique_id_parts[0]
+            
+            if device := device_reg.async_get_device(identifiers={(DOMAIN, int(tradfri_device_id))}):
+                device_reg.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, f"{tradfri_gateway_id}-{tradfri_device_id}")}
+                )
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
