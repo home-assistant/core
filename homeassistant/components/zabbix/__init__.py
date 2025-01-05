@@ -40,6 +40,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
+CONF_INCLUDE_STRINGS = "include_strings"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
@@ -64,6 +65,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
+                vol.Optional(CONF_INCLUDE_STRINGS): cv.boolean,
             }
         )
     },
@@ -82,6 +84,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password = conf.get(CONF_PASSWORD)
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
+    include_strings = conf.get(CONF_INCLUDE_STRINGS, False)
 
     entities_filter = convert_include_exclude_filter(conf)
 
@@ -126,7 +129,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _state_as_value = float(state_helper.state_as_number(state))
                 floats[entity_id] = _state_as_value
             except ValueError:
-                strings[entity_id] = state.state
+                strings[entity_id] = str(state.state)
 
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
@@ -138,7 +141,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             except (ValueError, TypeError):
                 float_value = None
             if float_value is None or not math.isfinite(float_value):
-                strings[attribute_id] = str(value)
+                # Don't store string attributes for now
+                pass
+                # strings[attribute_id] = str(value)
             else:
                 floats[attribute_id] = float_value
 
@@ -159,7 +164,23 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             metrics.append(metric)
 
-        string_keys.update(strings)
+        if include_strings:
+            string_keys_count = len(string_keys)
+            string_keys.update(strings)
+            if len(string_keys) != string_keys_count:
+                strings_discovery = [{"{#KEY}": string_key} for string_key in string_keys]
+                metric = ItemValue(
+                    publish_states_host,
+                    "homeassistant.strings_discovery",
+                    json.dumps(strings_discovery),
+                )
+                metrics.append(metric)
+            for key, value in strings.items():
+                metric = ItemValue(
+                    publish_states_host, f"homeassistant.string[{key}]", value
+                )
+                metrics.append(metric)
+
         return metrics
 
     if publish_states_host:
