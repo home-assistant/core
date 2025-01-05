@@ -44,7 +44,7 @@ async def test_select(
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
     mock_client.async_get_devices_data.return_value.parsed[
-        "ABC999111"
+        "AAZZAAZZ"
     ].light_mode = "dim"
 
     freezer.tick(timedelta(minutes=5))
@@ -55,7 +55,6 @@ async def test_select(
     assert state.state == "dim"
 
 
-# @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_set_option(
     hass: HomeAssistant,
     load_int: ConfigEntry,
@@ -153,6 +152,7 @@ async def test_select_set_option(
 async def test_deprecated_horizontal_swing_select(
     hass: HomeAssistant,
     load_platforms: list[Platform],
+    mock_client: MagicMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
