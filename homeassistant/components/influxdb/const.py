@@ -47,6 +47,9 @@ CONF_FUNCTION = "function"
 CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
+CONF_BATCH_BUFFER_SIZE = "batch_buffer_size"
+CONF_BATCH_TIMEOUT = "batch_timeout"
+
 DEFAULT_DATABASE = "home_assistant"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
 DEFAULT_SSL_V2 = True
@@ -59,6 +62,9 @@ DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
 DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
 DEFAULT_MEASUREMENT_ATTR = "unit_of_measurement"
+
+DEFAULT_BATCH_BUFFER_SIZE = 100
+DEFAULT_BATCH_TIMEOUT = 1
 
 INFLUX_CONF_MEASUREMENT = "measurement"
 INFLUX_CONF_TAGS = "tags"
@@ -76,8 +82,6 @@ TIMEOUT = 10  # seconds
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 RETRY_INTERVAL = 60  # seconds
-BATCH_TIMEOUT = 1
-BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW DATABASES;"
@@ -151,4 +155,9 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
+}
+
+COMPONENT_CONFIG_SCHEMA_BATCH = {
+    vol.Optional(CONF_BATCH_BUFFER_SIZE, default=DEFAULT_BATCH_BUFFER_SIZE): cv.positive_int,
+    vol.Optional(CONF_BATCH_TIMEOUT, default=DEFAULT_BATCH_TIMEOUT): cv.positive_float,
 }
