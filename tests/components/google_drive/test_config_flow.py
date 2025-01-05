@@ -97,7 +97,7 @@ async def test_full_flow(
     assert aioclient_mock.mock_calls[1][2] == {
         "name": "Home Assistant",
         "mimeType": "application/vnd.google-apps.folder",
-        "properties": {"ha_root": "1"},
+        "properties": {"ha": "root"},
     }
     assert aioclient_mock.mock_calls[1][3] == {
         "Authorization": "Bearer mock-access-token"
