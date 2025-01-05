@@ -138,11 +138,11 @@
       }
     },
     "play_chime": {
-      "name": "Play Chime",
+      "name": "Play chime",
       "description": "Plays a ringtone on a Reolink Chime.",
       "fields": {
         "device_id": {
-          "name": "Target Chime",
+          "name": "Target chime",
           "description": "The Reolink Chime to play the ringtone on."
         },
         "ringtone": {
