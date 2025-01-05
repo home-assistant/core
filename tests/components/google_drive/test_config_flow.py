@@ -213,7 +213,7 @@ async def test_reauth(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    # Config flow will lookup existing key to make sure it still exists
+    # Config flow will lookup existing folder to make sure it still exists
     aioclient_mock.get(
         f"https://www.googleapis.com/drive/v3/files/{FOLDER_ID}?fields=",
         json={},
