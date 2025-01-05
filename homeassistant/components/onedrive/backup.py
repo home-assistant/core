@@ -65,15 +65,10 @@ class OneDriveBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
         """Initialize the OneDrive backup agent."""
         super().__init__()
-        self._graph_client = entry.runtime_data
-        self._drive_item = self._graph_client.drives.by_drive_id(entry.unique_id)
+        self._items = entry.runtime_data
         self._backup_folder = f"root:/{str(entry.data[CONF_BACKUP_FOLDER]).strip('/')}"
         self.name = entry.title
         self._hass = hass
-        self._anonymous_adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider,
-            client=get_async_client(hass),
-        )
 
     def _get_file_path(self, backup_id: str) -> str:
         """Return the file path for a backup."""
@@ -85,7 +80,7 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        content = await self._drive_item.items.by_drive_item_id(
+        content = await self._items.by_drive_item_id(
             self._get_file_path(backup_id)
         ).content.get()
         if content is None:
@@ -120,7 +115,7 @@ class OneDriveBackupAgent(BackupAgent):
                 }
             )
         )
-        upload_session = await self._drive_item.items.by_drive_item_id(
+        upload_session = await self._items.by_drive_item_id(
             self._get_file_path(backup.backup_id)
         ).create_upload_session.post(upload_session_request_body)
 
@@ -129,7 +124,10 @@ class OneDriveBackupAgent(BackupAgent):
 
         task = LargeFileUploadTask(
             upload_session=upload_session,
-            request_adapter=self._anonymous_adapter,
+            request_adapter=GraphRequestAdapter(
+                auth_provider=AnonymousAuthenticationProvider,
+                client=get_async_client(self._hass),
+            ),
             stream=await async_iterator_to_bytesio(await open_stream()),
             max_chunk_size=320 * 1024,
         )
@@ -157,14 +155,12 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._drive_item.items.by_drive_item_id(
-            self._get_file_path(backup_id)
-        ).delete()
+        await self._items.by_drive_item_id(self._get_file_path(backup_id)).delete()
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
-        items = await self._drive_item.items.by_drive_item_id(
+        items = await self._items.by_drive_item_id(
             f"{self._backup_folder}:"
         ).children.get()
         if items and (values := items.value):
@@ -182,7 +178,7 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup:
         """Return a backup."""
-        blob_properties = await self._drive_item.items.by_drive_item_id(
+        blob_properties = await self._items.by_drive_item_id(
             self._get_file_path(backup_id)
         ).get()
         if blob_properties is None:
