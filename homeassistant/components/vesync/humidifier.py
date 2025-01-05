@@ -194,3 +194,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         success = self.smarthumidifier.turn_off()
         if not success:
             raise ValueError("An error occurred while turning off.")
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
