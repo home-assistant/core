@@ -81,8 +81,6 @@ def _setup_entities(
         update_before_add=True,
     )
 
-class VeSyncBaseSwitch(VeSyncBaseEntity, SwitchEntity):
-    """Base class for VeSync switch Device Representations."""
 
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     """VeSync sensor class."""
@@ -114,36 +112,5 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         self.device.turn_off()
 
     def turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Turn the entity on."""
         self.device.turn_on()
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if device is on."""
-        return self.device.device_status == "on"
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self.device.turn_off()
-
-
-class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
-    """Representation of a VeSync switch."""
-
-    def __init__(
-        self, plug: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
-    ) -> None:
-        """Initialize the VeSync switch device."""
-        super().__init__(plug, coordinator)
-        self.smartplug = plug
-
-
-class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
-    """Handle representation of VeSync Light Switch."""
-
-    def __init__(
-        self, switch: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
-    ) -> None:
-        """Initialize Light Switch device class."""
-        super().__init__(switch, coordinator)
-        self.switch = switch
