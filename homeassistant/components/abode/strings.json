@@ -60,7 +60,7 @@
       "name": "Trigger automation",
       "description": "Triggers an Abode automation.",
       "fields": {
-        "entity_": {
+        "entity_id": {
           "name": "Entity",
           "description": "Entity ID of the automation to trigger."
         }
