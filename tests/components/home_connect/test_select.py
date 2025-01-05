@@ -67,12 +67,16 @@ async def test_filter_unknown_programs(
     appliance: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test select that programs that are not part of the official Home Connect API specification are filtered out."""
+    """Test select that programs that are not part of the official Home Connect API specification are filtered out.
+
+    We use two programs to ensure that programs are iterated over a copy of the list,
+    and it does not raise problems when removing an element from the original list.
+    """
     appliance.status.update(SETTINGS_STATUS)
     appliance.get_programs_available.return_value = [
         PROGRAM,
         "NonOfficialProgram",
-        "AntotherNonOfficialProgram",  # We use another program to ensure that programs are iterated over a copy of the list.
+        "AntotherNonOfficialProgram",
     ]
     get_appliances.return_value = [appliance]
 
