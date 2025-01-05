@@ -89,21 +89,75 @@ async def test_service_post(
     mock_mastodon_client.status_post.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("payload", "kwargs"),
+    [
+        (
+            {
+                ATTR_STATUS: "test toot",
+            },
+            {"status": "test toot", "spoiler_text": None, "visibility": None},
+        ),
+        (
+            {
+                ATTR_STATUS: "test toot",
+                ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_MEDIA: "/image.jpg",
+            },
+            {
+                "status": "test toot",
+                "spoiler_text": "Spoiler",
+                "visibility": None,
+                "media_ids": "1",
+                "sensitive": None,
+            },
+        ),
+    ],
+)
 async def test_post_service_failed(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    payload: dict[str, str],
+    kwargs: dict[str, str | None],
 ) -> None:
     """Test the post service raising an error."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    payload = {"status": "test toot"}
+    hass.config.is_allowed_path = Mock(return_value=True)
+    mock_mastodon_client.media_post.return_value = {"id": "1"}
 
     getattr(mock_mastodon_client, "status_post").side_effect = MastodonAPIError
 
     with pytest.raises(HomeAssistantError, match="Unable to send message"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | payload,
+            blocking=True,
+            return_response=False,
+        )
+
+
+async def test_post_media_upload_failed(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service raising an error because media upload fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    payload = {"status": "test toot", "media": "/fail.jpg"}
+
+    hass.config.is_allowed_path = Mock(return_value=True)
+
+    getattr(mock_mastodon_client, "media_post").side_effect = MastodonAPIError
+
+    with pytest.raises(HomeAssistantError, match="Unable to upload image /fail.jpg"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
