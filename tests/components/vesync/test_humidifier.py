@@ -37,7 +37,7 @@ async def test_humidifier_state(
         "switch.humidifier_200s_auto_mode",
         "switch.humidifier_200s_automatic_stop",
         "switch.humidifier_200s_display",
-        "sensor.humidifier_200s_humidity",
+        "sensor.humidifier_200s_current_humidity",
     ]
 
     assert humidifier_config_entry.state is ConfigEntryState.LOADED
@@ -45,7 +45,7 @@ async def test_humidifier_state(
     for entity_id in expected_entities:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
+    assert hass.states.get("sensor.humidifier_200s_current_humidity").state == "35"
     assert hass.states.get("switch.humidifier_200s_auto_mode").state == "off"
     assert hass.states.get("switch.humidifier_200s_automatic_stop").state == "on"
     assert hass.states.get("switch.humidifier_200s_display").state == "on"
