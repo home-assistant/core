@@ -250,7 +250,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
+        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncHumidifierDevice,
         description: VeSyncSensorEntityDescription,
         coordinator,
     ) -> None:
