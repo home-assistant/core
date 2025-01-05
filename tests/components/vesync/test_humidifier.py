@@ -36,6 +36,7 @@ async def test_humidifier_state(
     expected_entities = [
         humidifier_id,
         "sensor.humidifier_200s_humidity",
+        "number.humidifier_200s_mist_level",
     ]
 
     assert humidifier_config_entry.state is ConfigEntryState.LOADED
@@ -44,6 +45,7 @@ async def test_humidifier_state(
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
+    assert hass.states.get("number.humidifier_200s_mist_level").state == "6"
 
     state = hass.states.get(humidifier_id)
 
