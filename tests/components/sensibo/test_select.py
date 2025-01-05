@@ -26,7 +26,6 @@ from . import ENTRY_CONFIG
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-# @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "load_platforms",
     [[Platform.SELECT]],
@@ -144,7 +143,6 @@ async def test_select_set_option(
     assert state.state == "dim"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "load_platforms",
     [[Platform.SELECT]],
