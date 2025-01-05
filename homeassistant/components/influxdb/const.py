@@ -158,6 +158,8 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
 }
 
 COMPONENT_CONFIG_SCHEMA_BATCH = {
-    vol.Optional(CONF_BATCH_BUFFER_SIZE, default=DEFAULT_BATCH_BUFFER_SIZE): cv.positive_int,
+    vol.Optional(
+        CONF_BATCH_BUFFER_SIZE, default=DEFAULT_BATCH_BUFFER_SIZE
+    ): cv.positive_int,
     vol.Optional(CONF_BATCH_TIMEOUT, default=DEFAULT_BATCH_TIMEOUT): cv.positive_float,
 }
