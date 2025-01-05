@@ -306,7 +306,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     elif isinstance(deprecated_const, DeprecatedConstantEnum):
-        value = deprecated_const.enum.value
+        value = deprecated_const.enum
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
