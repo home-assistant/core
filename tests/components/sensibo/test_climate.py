@@ -1190,7 +1190,6 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     assert state.attributes["swing_mode"] == "stopped"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_get_device_capabilities(
     hass: HomeAssistant,
     load_int: ConfigEntry,
