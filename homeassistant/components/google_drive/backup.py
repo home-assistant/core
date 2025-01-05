@@ -141,7 +141,6 @@ class GoogleDriveBackupAgent(BackupAgent):
                     timeout=ClientTimeout(total=_UPLOAD_TIMEOUT),
                 )
                 resp.raise_for_status()
-                await resp.json()
             except (ClientError, TimeoutError) as err:
                 raise BackupAgentError("Failed to upload backup") from err
 
