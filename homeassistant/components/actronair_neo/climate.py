@@ -71,15 +71,13 @@ async def async_setup_entry(
     entities: list[ClimateEntity] = []
 
     # Add system-wide climate entity
-    entities.append(ActronSystemClimate(
-        coordinator, api, ac_unit, serial_number))
+    entities.append(ActronSystemClimate(coordinator, api, ac_unit, serial_number))
 
     for zone_number, zone in enumerate(zones, start=1):
         if zone["NV_Exists"]:
             zone_name = zone["NV_Title"]
             ac_zone = ACZone(ac_unit, zone_number, zone_name)
-            entities.append(ActronZoneClimate(
-                coordinator, api, ac_zone, serial_number))
+            entities.append(ActronZoneClimate(coordinator, api, ac_zone, serial_number))
 
     # Add all switches
     async_add_entities(entities)
@@ -105,8 +103,7 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         self._api = api
         self._serial_number = serial_number
         self._ac_unit = ac_unit
-        self._attr_translation_placeholders = {
-            "serial_number": self._serial_number}
+        self._attr_translation_placeholders = {"serial_number": self._serial_number}
         self._attr_name = f"AC Unit {self._serial_number}"
         self._attr_unique_id = f"{DOMAIN}_{self._serial_number}_climate"
 
@@ -144,8 +141,7 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         api_fan_mode = (
-            self._coordinator.data.get(
-                "UserAirconSettings", {}).get("FanMode").upper()
+            self._coordinator.data.get("UserAirconSettings", {}).get("FanMode").upper()
         )
         fan_mode_without_cont = api_fan_mode.split("+")[0]
         return FAN_MODE_MAPPING_REVERSE.get(fan_mode_without_cont, "AUTO")
@@ -315,13 +311,11 @@ class ActronZoneClimate(CoordinatorEntity, ClimateEntity):
 
         status = self.coordinator.data
         if status:
-            enabled_zones = status.get(
-                "UserAirconSettings", {}).get("EnabledZones", [])
+            enabled_zones = status.get("UserAirconSettings", {}).get("EnabledZones", [])
             if isinstance(enabled_zones, list):
                 zone_state = enabled_zones[self._ac_zone.zone_number - 1]
                 if zone_state:
-                    hvac_mode = self._status.get(
-                        "UserAirconSettings", {}).get("Mode")
+                    hvac_mode = self._status.get("UserAirconSettings", {}).get("Mode")
                     return HVAC_MODE_MAPPING.get(hvac_mode, HVACMode.OFF)
         return HVACMode.OFF
 
