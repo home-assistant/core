@@ -8,7 +8,6 @@ from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.module import Module as VelbusModule
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import VelbusConfigEntry
 
@@ -20,28 +19,18 @@ async def async_get_config_entry_diagnostics(
     controller = entry.runtime_data.controller
     data: dict[str, Any] = {"entry": entry.as_dict(), "modules": []}
     for module in controller.get_modules().values():
-        data["modules"].append(_build_module_diagnostics_info(module))
+        data["modules"].append(await _build_module_diagnostics_info(module))
     return data
 
 
-async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: VelbusConfigEntry, device: DeviceEntry
-) -> dict[str, Any]:
-    """Return diagnostics for a device entry."""
-    controller = entry.runtime_data.controller
-    channel = list(next(iter(device.identifiers)))[1]
-    modules = controller.get_modules()
-    return _build_module_diagnostics_info(modules[int(channel)])
-
-
-def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
+async def _build_module_diagnostics_info(module: VelbusModule) -> dict[str, Any]:
     """Build per module diagnostics info."""
     data: dict[str, Any] = {
         "type": module.get_type_name(),
         "address": module.get_addresses(),
         "name": module.get_name(),
         "sw_version": module.get_sw_version(),
-        "is_loaded": module.is_loaded(),
+        "is_loaded": await module.is_loaded(),
         "channels": _build_channels_diagnostics_info(module.get_channels()),
     }
     return data
