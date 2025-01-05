@@ -14,10 +14,11 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
-from aiohttp.resolver import AsyncResolver
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
+from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
@@ -331,13 +332,17 @@ def _async_get_connector(
     else:
         ssl_context = ssl_util.client_context_no_verify(ssl_cipher)
 
-    connector = HomeAssistantTCPConnector(
+    resolver = AsyncMDNSResolver(
+        async_zeroconf=zeroconf.async_get_existing_async_instance(hass)
+    )
+
+    connector = aiohttp.TCPConnector(
         family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
-        resolver=AsyncResolver(),
+        resolver=resolver,
     )
     connectors[connector_key] = connector
 

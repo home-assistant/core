@@ -154,6 +154,12 @@ async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     return await _async_get_instance(hass)
 
 
+@callback
+def async_get_existing_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf | None:
+    """Get existing zeroconf instance."""
+    return hass.data.get(DOMAIN)
+
+
 async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
         return cast(HaAsyncZeroconf, hass.data[DOMAIN])
