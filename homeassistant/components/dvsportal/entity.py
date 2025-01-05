@@ -1,7 +1,6 @@
 """Setup car sensors."""
 
 from datetime import datetime
-import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -9,10 +8,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DVSPortalConfigEntry
 from .coordinator import DVSPortalCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "dvsportal"
 
 
 class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):

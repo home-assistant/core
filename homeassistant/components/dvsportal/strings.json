@@ -19,47 +19,5 @@
     "abort": {
       "already_configured": "Device is already configured"
     }
-  },
-  "services": {
-    "create_reservation": {
-      "name": "Create Reservation",
-      "description": "Create a new reservation for a vehicle.",
-      "fields": {
-        "entry_id": {
-          "name": "Entry ID",
-          "description": "The entry ID of the DVSPortal configuration."
-        },
-        "entity_id": {
-          "name": "Entity ID",
-          "description": "The sensor entity linked to the reservation."
-        },
-        "license_plate_value": {
-          "name": "License Plate Value",
-          "description": "The license plate number of the vehicle."
-        },
-        "license_plate_name": {
-          "name": "License Plate Name",
-          "description": "A friendly name for the license plate."
-        },
-        "date_from": {
-          "name": "Start Date",
-          "description": "The start time of the reservation."
-        },
-        "date_until": {
-          "name": "End Date",
-          "description": "The end time of the reservation."
-        }
-      }
-    },
-    "end_reservation": {
-      "name": "End Reservation",
-      "description": "End an existing reservation.",
-      "fields": {
-        "entity_id": {
-          "name": "Entity ID",
-          "description": "The sensor entity linked to the reservation."
-        }
-      }
-    }
   }
 }
