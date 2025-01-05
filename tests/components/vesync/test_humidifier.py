@@ -31,7 +31,7 @@ async def test_humidifier_state(
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
-    humidifier_id = "humidifier.humidifier_200s_none"
+    humidifier_id = "humidifier.humidifier_200s"
     expected_entities = [
         humidifier_id,
         "switch.humidifier_200s_auto_mode",
@@ -64,7 +64,7 @@ async def test_set_target_humidity_invalid(
 ) -> None:
     """Test handling of invalid value in set_humidify method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s_none"
+    humidifier_entity_id = "humidifier.humidifier_200s"
 
     # Setting value out of range results in ServiceValidationError and
     # VeSyncHumid200300S.set_humidity does not get called.
@@ -98,7 +98,7 @@ async def test_set_target_humidity_VeSync(
 ) -> None:
     """Test handling of return value from VeSyncHumid200300S.set_humidity."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s_none"
+    humidifier_entity_id = "humidifier.humidifier_200s"
 
     # If VeSyncHumid200300S.set_humidity fails (returns False), then ValueError is raised
     # and schedule_update_ha_state is not called.
@@ -136,7 +136,7 @@ async def test_turn_on_off(
 ) -> None:
     """Test turn_on/off methods."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s_none"
+    humidifier_entity_id = "humidifier.humidifier_200s"
 
     # turn_on/turn_off returns False indicating failure in which case humidifier.turn_on/turn_off
     # raises ValueError. HA state update is scheduled for success.
@@ -169,7 +169,7 @@ async def test_set_mode_invalid(
 ) -> None:
     """Test handling of invalid value in set_mode method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s_none"
+    humidifier_entity_id = "humidifier.humidifier_200s"
 
     # Setting invalid value results in ServiceValidationError and
     # VeSyncHumid200300S.set_humidity_mode does not get called.
@@ -203,7 +203,7 @@ async def test_set_mode_VeSync(
 ) -> None:
     """Test handling of value in set_mode method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s_none"
+    humidifier_entity_id = "humidifier.humidifier_200s"
 
     # If VeSyncHumid200300S.set_humidity_mode itself fails, then we should get ValueError
     expectation = nullcontext() if success else pytest.raises(ValueError)

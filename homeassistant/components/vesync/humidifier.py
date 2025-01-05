@@ -104,6 +104,10 @@ def _get_vs_mode(ha_mode: str) -> str | None:
 class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
+    # The base VeSyncBaseEntity has _attr_has_entity_name and this is to prevent
+    # none being appended to entity id.
+    _attr_name = ""
+
     _attr_max_humidity = MAX_HUMIDITY
     _attr_min_humidity = MIN_HUMIDITY
     _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(
