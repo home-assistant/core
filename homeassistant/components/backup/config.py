@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
-from .models import Folder
+from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
@@ -124,6 +124,7 @@ class BackupConfig:
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
         self.data = BackupConfigData.from_dict(stored_config)
+        self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
     async def update(
@@ -160,8 +161,13 @@ class RetentionConfig:
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
         if self.days is not None:
+            LOGGER.debug(
+                "Scheduling next automatic delete of backups older than %s in 1 day",
+                self.days,
+            )
             self._schedule_next(manager)
         else:
+            LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
 
     def to_dict(self) -> StoredRetentionConfig:
@@ -318,9 +324,9 @@ class BackupSchedule:
                     password=config_data.create_backup.password,
                     with_automatic_settings=True,
                 )
+            except BackupManagerError as err:
+                LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001
-                # another more specific exception will be added
-                # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
 
         manager.remove_next_backup_event = async_track_point_in_time(

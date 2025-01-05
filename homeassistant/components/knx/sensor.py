@@ -211,7 +211,7 @@ class KNXSystemSensor(SensorEntity):
             return True
         return self.knx.xknx.connection_manager.state is XknxConnectionState.CONNECTED
 
-    def after_update_callback(self, _: XknxConnectionState) -> None:
+    def after_update_callback(self, device: XknxConnectionState) -> None:
         """Call after device was updated."""
         self.async_write_ha_state()
 

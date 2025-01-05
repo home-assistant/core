@@ -34,7 +34,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The mac address of the device does not match the previous mac address"
+      "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     }
   },
   "options": {
@@ -54,7 +54,7 @@
       "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
-      "message": "Reolink play_chime error: {device_name} is not a chime"
+      "message": "Reolink play_chime error: {device_name} is not a Chime"
     },
     "invalid_parameter": {
       "message": "Invalid input parameter: {err}"
@@ -129,7 +129,7 @@
   "services": {
     "ptz_move": {
       "name": "PTZ move",
-      "description": "Move the camera with a specific speed.",
+      "description": "Moves the camera with a specific speed.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -139,11 +139,11 @@
     },
     "play_chime": {
       "name": "Play chime",
-      "description": "Play a ringtone on a chime.",
+      "description": "Plays a ringtone on a Reolink Chime.",
       "fields": {
         "device_id": {
           "name": "Target chime",
-          "description": "The chime to play the ringtone on."
+          "description": "The Reolink Chime to play the ringtone on."
         },
         "ringtone": {
           "name": "Ringtone",
@@ -210,6 +210,13 @@
       },
       "package": {
         "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "cry": {
+        "name": "Baby crying",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -567,6 +574,7 @@
           "stayoff": "Stay off",
           "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
