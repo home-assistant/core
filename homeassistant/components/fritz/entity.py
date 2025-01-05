@@ -69,7 +69,11 @@ class FritzBoxBaseEntity:
         self._avm_wrapper = avm_wrapper
         self._device_name = device_name
         self.mac_address = self._avm_wrapper.mac
-        self._attr_device_info = DeviceInfo(
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self._avm_wrapper.unique_id)},
         )
