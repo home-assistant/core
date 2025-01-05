@@ -6,13 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientError
+from aiohttp.client_exceptions import ClientError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import async_check_file_exists, create_headers
 from .const import (
     DEFAULT_NAME,
     DOMAIN,
@@ -61,19 +62,14 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
 
-        headers = {
-            "Authorization": f"Bearer {data[CONF_TOKEN][CONF_ACCESS_TOKEN]}",
-        }
+        session = async_get_clientsession(self.hass)
+        headers = create_headers(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
+            assert reauth_entry.unique_id
             try:
-                resp = await async_get_clientsession(self.hass).get(
-                    f"{DRIVE_API_FILES}/{reauth_entry.unique_id}",
-                    params={"fields": ""},
-                    headers=headers,
-                )
-                resp.raise_for_status()
+                await async_check_file_exists(session, headers, reauth_entry.unique_id)
             except ClientError as err:
                 self.logger.error(
                     "Could not find folder '%s%s': %s",
@@ -85,7 +81,7 @@ class OAuth2FlowHandler(
             return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         try:
-            resp = await async_get_clientsession(self.hass).post(
+            resp = await session.post(
                 DRIVE_API_FILES,
                 params={"fields": "id"},
                 json={

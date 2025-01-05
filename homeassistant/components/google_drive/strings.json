@@ -27,10 +27,18 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
-      "default": "Successfully authenticated and created Home Assistant folder at: {url}\nFeel free to rename it in Google Drive as you wish."
+      "default": "Successfully authenticated and created 'Home Assistant' folder at: {url}\nFeel free to rename it in Google Drive as you wish."
     }
   },
   "application_credentials": {
     "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Drive. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+  },
+  "exceptions": {
+    "config_entry_error_folder_not_found": {
+      "message": "Google Drive folder not found. Remove the Google Drive integration and re-add it for a new 'Home Assistant' folder to be created in Google Drive."
+    },
+    "config_entry_error_folder_4xx": {
+      "message": "Unexpected error. Open an issue."
+    }
   }
 }

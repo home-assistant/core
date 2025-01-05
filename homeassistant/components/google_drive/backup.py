@@ -14,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
+from .api import create_headers
 from .const import DOMAIN, DRIVE_API_FILES, DRIVE_API_UPLOAD_FILES
 
 # Google Drive only supports string key value pairs as properties.
@@ -241,7 +242,7 @@ class GoogleDriveBackupAgent(BackupAgent):
             access_token = await self._auth.check_and_refresh_token()
         except HomeAssistantError as err:
             raise BackupAgentError("Failed to refresh token") from err
-        return {"Authorization": f"Bearer {access_token}"}
+        return create_headers(access_token)
 
     async def _async_get_file_id_and_properties(
         self, backup_id: str, headers: dict[str, str]

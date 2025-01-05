@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from google.auth.exceptions import RefreshError
 
@@ -14,6 +15,30 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .const import DRIVE_API_FILES
+
+
+def create_headers(access_token: str) -> dict[str, str]:
+    """Create headers with the provided access token."""
+    return {
+        "Authorization": f"Bearer {access_token}",
+    }
+
+
+async def async_check_file_exists(
+    session: ClientSession, headers: dict[str, str], file_id: str
+) -> None:
+    """Check the provided file or folder exists.
+
+    :raises ClientError: if there is any error, including 404
+    """
+    resp = await session.get(
+        f"{DRIVE_API_FILES}/{file_id}",
+        params={"fields": ""},
+        headers=headers,
+    )
+    resp.raise_for_status()
 
 
 class AsyncConfigEntryAuth:
