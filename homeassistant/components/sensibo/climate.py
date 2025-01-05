@@ -1,4 +1,4 @@
-"""Support for Sensibo wifi-enabled home thermostats."""
+"""Support for Sensibo climate devices."""
 
 from __future__ import annotations
 
@@ -189,7 +189,7 @@ async def async_setup_entry(
 
 
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
-    """Representation of a Sensibo device."""
+    """Representation of a Sensibo climate device."""
 
     _attr_name = None
     _attr_precision = PRECISION_TENTHS

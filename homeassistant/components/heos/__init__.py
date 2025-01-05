@@ -27,10 +27,12 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -46,6 +48,8 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,6 +64,12 @@ class HeosRuntimeData:
 
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEOS component."""
+    services.register(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
@@ -141,7 +151,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         controller_manager, group_manager, source_manager, players
     )
 
-    services.register(hass, controller)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
 
@@ -153,9 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     await entry.runtime_data.controller_manager.disconnect()
-
-    services.remove(hass)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -168,7 +174,6 @@ class ControllerManager:
         self._device_registry = None
         self._entity_registry = None
         self.controller = controller
-        self._signals = []
 
     async def connect_listeners(self):
         """Subscribe to events of interest."""
@@ -176,23 +181,17 @@ class ControllerManager:
         self._entity_registry = er.async_get(self._hass)
 
         # Handle controller events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_CONTROLLER_EVENT, self._controller_event
         )
+
         # Handle connection-related events
-        self._signals.append(
-            self.controller.dispatcher.connect(
-                heos_const.SIGNAL_HEOS_EVENT, self._heos_event
-            )
+        self.controller.dispatcher.connect(
+            heos_const.SIGNAL_HEOS_EVENT, self._heos_event
         )
 
     async def disconnect(self):
         """Disconnect subscriptions."""
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
         self.controller.dispatcher.disconnect_all()
         await self.controller.disconnect()
 
