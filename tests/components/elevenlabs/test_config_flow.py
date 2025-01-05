@@ -172,3 +172,63 @@ async def test_options_flow_voice_settings_default(
         CONF_STYLE: DEFAULT_STYLE,
         CONF_USE_SPEAKER_BOOST: DEFAULT_USE_SPEAKER_BOOST,
     }
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_async_client: AsyncMock,
+) -> None:
+    """Test we can reauth."""
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_fails(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    mock_async_client_api_error: AsyncMock,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test we can reauth."""
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_api_key"}
+
+    # Reset the client to a working one
+    request.getfixturevalue("mock_async_client")
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "api_key",
+        },
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
