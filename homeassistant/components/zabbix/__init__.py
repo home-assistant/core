@@ -143,7 +143,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if float_value is None or not math.isfinite(float_value):
                 # Don't store string attributes for now
                 pass
-                # strings[attribute_id] = str(value)
             else:
                 floats[attribute_id] = float_value
 
