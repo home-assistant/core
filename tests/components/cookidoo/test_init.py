@@ -7,9 +7,12 @@ import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
 
 from tests.common import MockConfigEntry
 
@@ -100,3 +103,91 @@ async def test_config_entry_not_ready_auth_error(
     await hass.async_block_till_done()
 
     assert cookidoo_config_entry.state is status
+
+
+MOCK_CONFIG_ENTRY_MIGRATION = {
+    CONF_EMAIL: EMAIL,
+    CONF_PASSWORD: PASSWORD,
+    CONF_COUNTRY: COUNTRY,
+    CONF_LANGUAGE: LANGUAGE,
+}
+
+
+@pytest.mark.parametrize(
+    (
+        "from_version",
+        "from_minor_version",
+        "config_data",
+        "unique_id",
+        "login_exception",
+        "result",
+    ),
+    [
+        (
+            1,
+            1,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            None,
+            CookidooRequestException,
+            ConfigEntryState.MIGRATION_ERROR,
+        ),
+        (1, 1, MOCK_CONFIG_ENTRY_MIGRATION, None, None, ConfigEntryState.LOADED),
+        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID, None, ConfigEntryState.LOADED),
+    ],
+)
+async def test_migration_from(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    from_version,
+    from_minor_version,
+    config_data,
+    unique_id,
+    login_exception: Exception,
+    result: ConfigEntryState,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test different expected migration paths."""
+    # Migration can fail due to connection issues as we have to fetch the uuid
+    if login_exception:
+        mock_cookidoo_client.login.side_effect = login_exception
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        title=f"MIGRATION_TEST from {from_version}.{from_minor_version} with login exception '{login_exception}' expecting result '{result}'",
+        version=from_version,
+        minor_version=from_minor_version,
+        unique_id=unique_id,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert entry.state is result
+
+    if result == ConfigEntryState.LOADED:
+        # Check change in config entry and verify most recent version
+        assert config_entry.version == 1
+        assert config_entry.minor_version == 2
+        assert config_entry.unique_id == TEST_UUID
+
+
+async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
+    """Test a future version isn't migrated."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id="some_crazy_future_unique_id",
+        data=MOCK_CONFIG_ENTRY_MIGRATION,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
