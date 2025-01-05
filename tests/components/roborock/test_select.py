@@ -115,4 +115,4 @@ async def test_selected_map_without_name(
 
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
-    assert select_entity.state == "Room 0"
+    assert select_entity.state == "Map 0"

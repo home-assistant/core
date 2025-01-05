@@ -134,7 +134,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             for roborock_map in maps.map_info:
                 self.maps[roborock_map.mapFlag] = RoborockMapInfo(
                     flag=roborock_map.mapFlag,
-                    name=roborock_map.name or f"Room {roborock_map.mapFlag}",
+                    name=roborock_map.name or f"Map {roborock_map.mapFlag}",
                     rooms={},
                 )
 
