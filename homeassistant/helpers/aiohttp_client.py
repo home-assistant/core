@@ -332,9 +332,7 @@ def _async_get_connector(
     else:
         ssl_context = ssl_util.client_context_no_verify(ssl_cipher)
 
-    resolver = AsyncMDNSResolver(
-        async_zeroconf=zeroconf.async_get_existing_async_instance(hass)
-    )
+    resolver = AsyncMDNSResolver(async_zeroconf=zeroconf.async_async_instance(hass))
 
     connector = aiohttp.TCPConnector(
         family=family,

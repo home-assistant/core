@@ -145,22 +145,22 @@ class ZeroconfServiceInfo(BaseServiceInfo):
 @bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
-    return cast(HaZeroconf, (await _async_get_instance(hass)).zeroconf)
+    return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
 @bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Zeroconf instance to be shared with other integrations that use it."""
-    return await _async_get_instance(hass)
+    return _async_get_instance(hass)
 
 
 @callback
-def async_get_existing_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf | None:
+def async_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Get existing zeroconf instance."""
-    return hass.data.get(DOMAIN)
+    return _async_get_instance(hass)
 
 
-async def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
+def _async_get_instance(hass: HomeAssistant, **zcargs: Any) -> HaAsyncZeroconf:
     if DOMAIN in hass.data:
         return cast(HaAsyncZeroconf, hass.data[DOMAIN])
 
@@ -227,7 +227,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         ]
 
-    aio_zc = await _async_get_instance(hass, **zc_args)
+    aio_zc = _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
     zeroconf_types = await async_get_zeroconf(hass)
     homekit_models = await async_get_homekit(hass)
