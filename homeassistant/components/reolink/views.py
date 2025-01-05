@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
-from urllib import parse
 
 from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
@@ -31,7 +31,7 @@ def async_generate_playback_proxy_url(
     return url_format.format(
         config_entry_id=config_entry_id,
         channel=channel,
-        filename=parse.quote(filename.replace("/", "|"), safe=""),
+        filename=urlsafe_b64encode(filename.encode("utf-8")).decode("utf-8"),
         stream_res=stream_res,
         vod_type=vod_type,
     )
@@ -66,7 +66,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = parse.unquote(filename).replace("|", "/")
+        filename = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
         ch = int(channel)
         try:
             host = get_host(self.hass, config_entry_id)
