@@ -66,7 +66,7 @@ class PlaybackProxyView(HomeAssistantView):
         """Get playback proxy video response."""
         retry = retry - 1
 
-        filename = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
+        filename_decoded = urlsafe_b64decode(filename.encode("utf-8")).decode("utf-8")
         ch = int(channel)
         try:
             host = get_host(self.hass, config_entry_id)
@@ -77,7 +77,7 @@ class PlaybackProxyView(HomeAssistantView):
 
         try:
             mime_type, reolink_url = await host.api.get_vod_source(
-                ch, filename, stream_res, VodRequestType(vod_type)
+                ch, filename_decoded, stream_res, VodRequestType(vod_type)
             )
         except ReolinkError as err:
             _LOGGER.warning("Reolink playback proxy error: %s", str(err))
