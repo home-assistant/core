@@ -12,12 +12,12 @@ from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DOMAIN
+from .const import DOMAIN, SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS
 from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
@@ -28,9 +28,35 @@ async def async_get_backup_agents(
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
     if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
-        LOGGER.debug("No config entry found or entry is not loaded")
+        LOGGER.debug("No proper config entry found")
         return []
-    return [SynologyDSMBackupAgent(hass, entry) for entry in entries]
+    agents: list[BackupAgent] = []
+    for entry in entries:
+        syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        if syno_data.api.file_station:
+            agents.append(SynologyDSMBackupAgent(hass, entry))
+    return agents
+
+
+@callback
+def async_register_backup_agents_listener(
+    hass: HomeAssistant,
+    *,
+    listener: Callable[[], None],
+    **kwargs: Any,
+) -> Callable[[], None]:
+    """Register a listener to be called when agents are added or removed.
+
+    :return: A function to unregister the listener.
+    """
+    hass.data.setdefault(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []).append(listener)
+
+    @callback
+    def remove_listener() -> None:
+        """Remove the listener."""
+        hass.data[SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+
+    return remove_listener
 
 
 class SynologyDSMBackupAgent(BackupAgent):
@@ -41,6 +67,7 @@ class SynologyDSMBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Synology DSM backup agent."""
         super().__init__()
+        LOGGER.debug("Initializing Synology DSM backup agent for %s", entry.unique_id)
         self.name = entry.title
         self.path = "/home/backup"  # To-Do: Replace with actual path from entry
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
