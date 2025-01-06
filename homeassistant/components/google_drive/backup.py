@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import json
-from typing import Any, Self
+from typing import Any
 
-from aiohttp import ClientError, ClientTimeout, MultipartWriter, StreamReader
+from aiohttp import ClientError, ClientTimeout, MultipartWriter
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    ChunkAsyncStreamIterator,
+    async_get_clientsession,
+)
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
 from .api import create_headers
@@ -64,31 +67,6 @@ def async_register_backup_agents_listener(
         hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
 
     return remove_listener
-
-
-class ChunkAsyncStreamIterator:
-    """Async iterator for chunked streams.
-
-    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
-    bytes instead of tuple[bytes, bool].
-    """
-
-    __slots__ = ("_stream",)
-
-    def __init__(self, stream: StreamReader) -> None:
-        """Initialize."""
-        self._stream = stream
-
-    def __aiter__(self) -> Self:
-        """Iterate."""
-        return self
-
-    async def __anext__(self) -> bytes:
-        """Yield next chunk."""
-        rv = await self._stream.readchunk()
-        if rv == (b"", False):
-            raise StopAsyncIteration
-        return rv[0]
 
 
 class GoogleDriveBackupAgent(BackupAgent):
