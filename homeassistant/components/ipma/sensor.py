@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import asdict, dataclass
 import logging
-from typing import Any
+from typing import Any, Never
 
 from pyipma.api import IPMA_API
 from pyipma.location import Location
@@ -29,38 +29,41 @@ _LOGGER = logging.getLogger(__name__)
 class IPMASensorEntityDescription(SensorEntityDescription):
     """Describes a IPMA sensor entity."""
 
-    value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
-    value_extractor: Callable[[Any], Any] | None = None
-    extra_attr_fn: Callable[[Any], dict[str, Any]] | None = None
+    value_fn: Callable[
+        [Location, IPMA_API], Coroutine[Location, IPMA_API, tuple[Any, Any]]
+    ]
 
 
-async def async_retrieve_rcm(location: Location, api: IPMA_API) -> int | None:
+async def async_retrieve_rcm(
+    location: Location, api: IPMA_API
+) -> tuple[int, None] | tuple[None, None]:
     """Retrieve RCM."""
     fire_risk: RCM = await location.fire_risk(api)
     if fire_risk:
-        return fire_risk.rcm
-    return None
+        return fire_risk.rcm, None
+    return None, None
 
 
-async def async_retrieve_uvi(location: Location, api: IPMA_API) -> int | None:
+async def async_retrieve_uvi(
+    location: Location, api: IPMA_API
+) -> tuple[int, None] | tuple[None, None]:
     """Retrieve UV."""
     uv_risk: UV = await location.uv_risk(api)
     if uv_risk:
-        return round(uv_risk.iUv)
-    return None
+        return round(uv_risk.iUv), None
+    return None, None
 
 
-async def async_retrieve_warning(location: Location, api: IPMA_API) -> int | None:
+async def async_retrieve_warning(
+    location: Location, api: IPMA_API
+) -> tuple[Any, dict[str, str]] | tuple[str, list[Never]]:
     """Retrieve Warning."""
     warnings = await location.warnings(api)
     if len(warnings):
-        return warnings[0]
-    return None
-
-
-def get_extra_attr(data: Any) -> dict[str, Any]:
-    """Return the extra attributes."""
-    return {k: str(v) for k, v in asdict(data).items()}
+        return warnings[0].awarenessLevelID, {
+            k: str(v) for k, v in asdict(warnings[0]).items()
+        }
+    return "green", []
 
 
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
@@ -78,8 +81,6 @@ SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
         key="alert",
         translation_key="weather_alert",
         value_fn=async_retrieve_warning,
-        value_extractor=lambda data: data.awarenessLevelID if data else "green",
-        extra_attr_fn=get_extra_attr,
     ),
 )
 
@@ -112,29 +113,13 @@ class IPMASensor(SensorEntity, IPMADevice):
         IPMADevice.__init__(self, api, location)
         self.entity_description = description
         self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self.entity_description.key}"
-        self._ipma_data: Any | None = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Update sensors."""
         async with asyncio.timeout(10):
-            self._ipma_data = await self.entity_description.value_fn(
+            state, attrs = await self.entity_description.value_fn(
                 self._location, self._api
             )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the state of the sensor."""
-        if self.entity_description.value_extractor is not None:
-            return self.entity_description.value_extractor(self._ipma_data)
-        return self._ipma_data
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if (
-            self.entity_description.extra_attr_fn is not None
-            and self._ipma_data is not None
-        ):
-            return self.entity_description.extra_attr_fn(self._ipma_data)
-        return None
+            self._attr_native_value = state
+            self._attr_extra_state_attributes = attrs
