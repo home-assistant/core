@@ -31,5 +31,13 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "exceptions": {
+    "backup_failure": "Failed to create backup",
+    "backup_not_found": "Backup not found",
+    "backup_no_content": "Backup has no content",
+    "backup_no_upload_session": "Failed to start backup upload",
+    "authentication_failed": "Authentication failed",
+    "failed_to_get_folder": "Failed to get backup folder"
   }
 }

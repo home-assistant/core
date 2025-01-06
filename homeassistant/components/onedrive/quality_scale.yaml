@@ -37,7 +37,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -94,7 +94,10 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  docs-troubleshooting: done
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      No issues known to troubleshoot.
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -116,7 +119,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: |

@@ -7,8 +7,6 @@ from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "onedrive"
 
-CONF_BACKUP_FOLDER: Final = "backup_folder"
-
 # replace "consumers" with "common", when adding SharePoint or OneDrive for Business support
 OAUTH2_AUTHORIZE: Final = (
     "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize"
@@ -16,8 +14,7 @@ OAUTH2_AUTHORIZE: Final = (
 OAUTH2_TOKEN: Final = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
 
 OAUTH_SCOPES: Final = [
-    "https://graph.microsoft.com/files.readwrite",
-    # "files.readwrite",
+    "https://graph.microsoft.com/files.readwrite.AppFolder",
     "offline_access",
     "openid",
 ]
