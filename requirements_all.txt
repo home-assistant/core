@@ -488,7 +488,7 @@ apsystems-ez1==2.4.0
 aqualogic==2.6
 
 # homeassistant.components.aranet
-aranet4==2.4.0
+aranet4==2.5.0
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.5.2
@@ -1573,7 +1573,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.3.0
+openwebifpy==4.3.1
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.17
@@ -1662,7 +1662,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==1.0.0
+powerfox==1.1.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -2378,7 +2378,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v7.0.0
+python-homewizard-energy==v7.0.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3118,7 +3118,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.44
+zha==0.0.45
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
