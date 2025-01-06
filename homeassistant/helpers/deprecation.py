@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from enum import Enum, EnumType, _EnumDict
+from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
@@ -255,7 +255,7 @@ class DeprecatedConstant(NamedTuple):
 class DeprecatedConstantEnum(NamedTuple):
     """Deprecated constant."""
 
-    enum: Enum
+    enum: StrEnum | IntEnum | IntFlag
     breaks_in_ha_version: str | None
 
 
