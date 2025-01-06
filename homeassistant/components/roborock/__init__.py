@@ -68,13 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         ) from err
     except RoborockInvalidUserAgreement as err:
         raise ConfigEntryNotReady(
-            "User agreement must be accepted again. Open your Roborock app and accept the agreement.",
             translation_domain=DOMAIN,
             translation_key="invalid_user_agreement",
         ) from err
     except RoborockNoUserAgreement as err:
         raise ConfigEntryNotReady(
-            "You have not valid user agreement. Open your Roborock app and accept the agreement.",
             translation_domain=DOMAIN,
             translation_key="no_user_agreement",
         ) from err
