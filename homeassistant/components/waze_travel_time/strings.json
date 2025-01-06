@@ -32,7 +32,7 @@
           "realtime": "Realtime travel time?",
           "avoid_toll_roads": "Avoid toll roads?",
           "avoid_ferries": "Avoid ferries?",
-          "avoid_subscription_roads": "Avoid roads needing a vignette / dubscription?"
+          "avoid_subscription_roads": "Avoid roads needing a vignette / subscription?"
         }
       }
     }
