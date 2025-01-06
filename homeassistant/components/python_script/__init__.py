@@ -180,7 +180,7 @@ def guarded_import(
     # Allow import of _strptime needed by datetime.datetime.strptime
     if name == "_strptime":
         return __import__(name, globals, locals, fromlist, level)
-    raise ScriptError(f"Not allowed to import {name}")
+    raise ImportError(f"Not allowed to import {name}")
 
 
 def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
