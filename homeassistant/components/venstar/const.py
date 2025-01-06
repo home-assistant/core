@@ -6,6 +6,7 @@ DOMAIN = "venstar"
 
 ATTR_FAN_STATE = "fan_state"
 ATTR_HVAC_STATE = "hvac_mode"
+ATTR_HUMIDIFIER_STATE = "humidifier_state"
 
 CONF_HUMIDIFIER = "humidifier"
 

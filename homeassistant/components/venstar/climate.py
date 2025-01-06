@@ -39,6 +39,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import (
     _LOGGER,
     ATTR_FAN_STATE,
+    ATTR_HUMIDIFIER_STATE,
     ATTR_HVAC_STATE,
     CONF_HUMIDIFIER,
     DEFAULT_SSL,
@@ -196,6 +197,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
         return {
             ATTR_FAN_STATE: self._client.fanstate,
             ATTR_HVAC_STATE: self._client.state,
+            ATTR_HUMIDIFIER_STATE: self._client.hum_active,
         }
 
     @property
