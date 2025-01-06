@@ -1225,7 +1225,7 @@ def disable_translations_once(
 def mock_zeroconf_resolver() -> Generator[_patch]:
     """Mock out the zeroconf resolver."""
     patcher = patch(
-        "homeassistant.helpers.aiohttp_client._make_resolver",
+        "homeassistant.helpers.aiohttp_client._async_make_resolver",
         return_value=AsyncResolver(),
     )
     patcher.start()

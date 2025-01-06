@@ -338,7 +338,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
-        resolver=_make_resolver(hass),
+        resolver=_async_make_resolver(hass),
     )
     connectors[connector_key] = connector
 
@@ -351,5 +351,6 @@ def _async_get_connector(
     return connector
 
 
-def _make_resolver(hass: HomeAssistant) -> AsyncMDNSResolver:
+@callback
+def _async_make_resolver(hass: HomeAssistant) -> AsyncMDNSResolver:
     return AsyncMDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
