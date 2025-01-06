@@ -1092,15 +1092,30 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.tts = tts
 
-    async def get(self, request: web.Request, filename: str) -> web.Response:
-        """Start a get request."""
+    async def _get_tts_content(self, filename: str) -> tuple[str | None, bytes]:
+        """Get TTS content and handle errors.
+
+        Return:
+            Tuple of (content_type, data)
+
+        """
         try:
             # filename is actually token, but we keep its name for compatibility
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
-            return web.Response(status=HTTPStatus.NOT_FOUND)
+            raise web.HTTPNotFound from err
+        else:
+            return content, data
 
+    async def head(self, request: web.Request, filename: str) -> web.Response:
+        """Start a head request."""
+        content, _ = await self._get_tts_content(filename)
+        return web.Response(content_type=content)
+
+    async def get(self, request: web.Request, filename: str) -> web.Response:
+        """Start a get request."""
+        content, data = await self._get_tts_content(filename)
         return web.Response(body=data, content_type=content)
 
 
