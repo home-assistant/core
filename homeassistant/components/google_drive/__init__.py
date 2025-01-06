@@ -16,8 +16,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.util.hass_dict import HassKey
 
-from .api import AsyncConfigEntryAuth, async_check_file_exists, create_headers
-from .const import DOMAIN
+from .api import AsyncConfigEntryAuth, create_headers
+from .const import DOMAIN, DRIVE_API_FILES
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
@@ -33,12 +33,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) 
     auth = AsyncConfigEntryAuth(hass, session)
     access_token = await auth.check_and_refresh_token()
     try:
-        assert entry.unique_id
-        await async_check_file_exists(
-            async_get_clientsession(hass),
-            create_headers(access_token),
-            entry.unique_id,
+        resp = await async_get_clientsession(hass).get(
+            f"{DRIVE_API_FILES}/{entry.unique_id}",
+            params={"fields": ""},
+            headers=create_headers(access_token),
         )
+        resp.raise_for_status()
     except ClientError as err:
         if isinstance(err, ClientResponseError) and 400 <= err.status < 500:
             if err.status == 404:

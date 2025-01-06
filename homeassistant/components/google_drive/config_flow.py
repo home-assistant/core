@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import async_check_file_exists, create_headers
+from .api import create_headers
 from .const import (
     DEFAULT_NAME,
     DOMAIN,
@@ -66,19 +66,9 @@ class OAuth2FlowHandler(
         headers = create_headers(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
-            assert reauth_entry.unique_id
-            try:
-                await async_check_file_exists(session, headers, reauth_entry.unique_id)
-            except ClientError as err:
-                self.logger.error(
-                    "Could not find folder '%s%s': %s",
-                    DRIVE_FOLDER_URL_PREFIX,
-                    reauth_entry.unique_id,
-                    str(err),
-                )
-                return self.async_abort(reason="get_folder_failure")
-            return self.async_update_reload_and_abort(reauth_entry, data=data)
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
         try:
             resp = await session.post(
