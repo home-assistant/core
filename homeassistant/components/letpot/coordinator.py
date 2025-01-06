@@ -42,7 +42,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         )
         self._info = info
         self.device = device
-        self.deviceclient = LetPotDeviceClient(self._info, self.device.serial_number)
+        self.deviceclient = LetPotDeviceClient(info, device.serial_number)
 
     def _handle_status_update(self, status: LetPotDeviceStatus) -> None:
         """Distribute status update to entities."""

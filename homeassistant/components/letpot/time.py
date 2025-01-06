@@ -58,7 +58,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LetPot time entities based on a config entry."""
-    coordinators: list[LetPotDeviceCoordinator] = entry.runtime_data
+    coordinators = entry.runtime_data
     async_add_entities(
         LetPotTimeEntity(coordinator, description)
         for description in TIME_SENSORS

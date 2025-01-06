@@ -85,7 +85,7 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(data_dict[CONF_USER_ID])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=str(data_dict[CONF_EMAIL]), data=data_dict
+                    title=data_dict[CONF_EMAIL], data=data_dict
                 )
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
