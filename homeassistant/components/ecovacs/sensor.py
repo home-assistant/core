@@ -16,6 +16,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    station,
 )
 from sucks import VacBot
 
@@ -26,11 +27,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
     CONF_DESCRIPTION,
     PERCENTAGE,
     EntityCategory,
+    UnitOfArea,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -46,7 +47,7 @@ from .entity import (
     EcovacsLegacyEntity,
     EventT,
 )
-from .util import get_supported_entitites
+from .util import get_name_key, get_options, get_supported_entitites
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -67,7 +68,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.area,
         translation_key="stats_area",
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     EcovacsSensorEntityDescription[StatsEvent](
         key="stats_time",
@@ -84,7 +85,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.area,
         key="total_stats_area",
         translation_key="total_stats_area",
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     EcovacsSensorEntityDescription[TotalStatsEvent](
@@ -135,6 +136,15 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         translation_key="network_ssid",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    # Station
+    EcovacsSensorEntityDescription[station.StationEvent](
+        capability_fn=lambda caps: caps.station.state if caps.station else None,
+        value_fn=lambda e: get_name_key(e.state),
+        key="station_state",
+        translation_key="station_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=get_options(station.State),
     ),
 )
 

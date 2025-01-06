@@ -51,8 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, "
-            f"found {envoy.serial_number}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "host": host,
+                "expected_serial": str(entry.unique_id),
+                "actual_serial": str(envoy.serial_number),
+            },
         )
 
     entry.runtime_data = coordinator
@@ -72,7 +77,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator: EnphaseUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

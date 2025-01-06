@@ -23,8 +23,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, LOGGER
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
-from .typing import TailwindConfigEntry
 
 
 async def async_setup_entry(

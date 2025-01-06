@@ -1,0 +1,46 @@
+{
+  "entity": {
+    "button": {
+      "approve": {
+        "default": "mdi:check-decagram"
+      }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:car",
+        "state": {
+          "unplugged": "mdi:power-plug-off",
+          "plugged_in": "mdi:power-plug",
+          "charging": "mdi:battery-charging-100",
+          "paused": "mdi:pause",
+          "pending_approval": "mdi:alert-decagram"
+        }
+      },
+      "ct_current": {
+        "default": "mdi:gauge"
+      }
+    },
+    "switch": {
+      "lock_buttons": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open"
+        }
+      },
+      "require_approval": {
+        "default": "mdi:check-decagram"
+      },
+      "sleep_when_inactive": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "list_charge_slots": {
+      "service": "mdi:clock-start"
+    }
+  }
+}

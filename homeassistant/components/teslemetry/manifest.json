@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/teslemetry",
   "iot_class": "cloud_polling",
   "loggers": ["tesla-fleet-api"],
-  "quality_scale": "platinum",
-  "requirements": ["tesla-fleet-api==0.8.4", "teslemetry-stream==0.4.2"]
+  "requirements": ["tesla-fleet-api==0.9.2", "teslemetry-stream==0.4.2"]
 }

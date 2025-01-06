@@ -36,6 +36,18 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+OTA_MESSAGE_BATTERY_POWERED = (
+    "Battery powered devices can sometimes take multiple hours to update and you may"
+    " need to wake the device for the update to begin."
+)
+
+ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
+OTA_MESSAGE_RELIABILITY = (
+    "If you are having issues updating a specific device, make sure that you've"
+    f" eliminated [common environmental issues]({ZHA_DOCS_NETWORK_RELIABILITY}) that"
+    " could be affecting network reliability. OTA updates require a reliable network."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -149,7 +161,21 @@ class ZHAFirmwareUpdateEntity(
         This is suitable for a long changelog that does not fit in the release_summary
         property. The returned string can contain markdown.
         """
-        return self.entity_data.entity.release_notes
+
+        if self.entity_data.device_proxy.device.is_mains_powered:
+            header = (
+                "<ha-alert alert-type='info'>"
+                f"{OTA_MESSAGE_RELIABILITY}"
+                "</ha-alert>"
+            )
+        else:
+            header = (
+                "<ha-alert alert-type='info'>"
+                f"{OTA_MESSAGE_BATTERY_POWERED} {OTA_MESSAGE_RELIABILITY}"
+                "</ha-alert>"
+            )
+
+        return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
 
     @property
     def release_url(self) -> str | None:

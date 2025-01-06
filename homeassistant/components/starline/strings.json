@@ -124,6 +124,12 @@
     "button": {
       "horn": {
         "name": "Horn"
+      },
+      "flex": {
+        "name": "Flex logic {num}"
+      },
+      "panic": {
+        "name": "Panic mode"
       }
     }
   },

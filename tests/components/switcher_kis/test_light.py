@@ -86,7 +86,7 @@ async def test_light(
 
     # Test turning on light
     with patch(
-        "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light",
     ) as mock_set_light:
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -99,7 +99,7 @@ async def test_light(
 
     # Test turning off light
     with patch(
-        "homeassistant.components.switcher_kis.light.SwitcherType2Api.set_light"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light"
     ) as mock_set_light:
         await hass.services.async_call(
             LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -153,7 +153,7 @@ async def test_light_control_fail(
 
     # Test exception during turn on
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_light",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):
@@ -178,7 +178,7 @@ async def test_light_control_fail(
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_light",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_light",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):

@@ -50,7 +50,6 @@ class LutronCasetaFan(LutronCasetaUpdatableEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

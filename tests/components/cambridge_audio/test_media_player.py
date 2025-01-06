@@ -7,7 +7,6 @@ from aiostreammagic import (
     ShuffleMode,
     TransportControl,
 )
-from aiostreammagic.models import CallbackType
 import pytest
 
 from homeassistant.components.media_player import (
@@ -49,16 +48,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from . import setup_integration
+from . import mock_state_update, setup_integration
 from .const import ENTITY_ID
 
 from tests.common import MockConfigEntry
-
-
-async def mock_state_update(client: AsyncMock) -> None:
-    """Trigger a callback in the media player."""
-    for callback in client.register_state_update_callbacks.call_args_list:
-        await callback[0][0](client, CallbackType.STATE)
 
 
 async def test_entity_supported_features(

@@ -14,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-11].1
@@ -51,7 +51,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
-    'unique_id': 'aabbccddeeff_status_light_brightness',
+    'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
     'unit_of_measurement': '%',
   })
 # ---
@@ -63,7 +63,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -73,7 +73,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,
@@ -106,7 +106,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-21].1
@@ -143,7 +143,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
-    'unique_id': 'aabbccddeeff_status_light_brightness',
+    'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
     'unit_of_measurement': '%',
   })
 # ---
@@ -155,7 +155,7 @@
     'connections': set({
       tuple(
         'mac',
-        '3c:39:e7:aa:bb:cc',
+        '5c:2f:af:ab:cd:ef',
       ),
     }),
     'disabled_by': None,
@@ -165,7 +165,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        '3c39e7aabbcc',
+        '5c2fafabcdef',
       ),
     }),
     'is_new': False,

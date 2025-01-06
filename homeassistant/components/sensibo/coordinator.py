@@ -29,11 +29,12 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
 
     config_entry: SensiboConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SensiboConfigEntry) -> None:
         """Initialize the Sensibo coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             # We don't want an immediate refresh since the device
@@ -53,10 +54,17 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
         try:
             data = await self.client.async_get_devices_data()
         except AuthenticationError as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from error
         except SensiboError as error:
-            raise UpdateFailed from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
         if not data.raw:
-            raise UpdateFailed("No devices found")
+            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_data")
         return data

@@ -7,9 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 from pyschlage.exceptions import UnknownError
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+
+from . import MockSchlageConfigEntry
 
 from tests.common import async_fire_time_changed
 
@@ -18,7 +19,7 @@ async def test_keypad_disabled_binary_sensor(
     hass: HomeAssistant,
     mock_schlage: Mock,
     mock_lock: Mock,
-    mock_added_config_entry: ConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
@@ -42,7 +43,7 @@ async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
     hass: HomeAssistant,
     mock_schlage: Mock,
     mock_lock: Mock,
-    mock_added_config_entry: ConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the keypad_disabled binary_sensor."""
