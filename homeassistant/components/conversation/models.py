@@ -40,6 +40,9 @@ class ConversationInput:
     agent_id: str | None = None
     """Agent to use for processing."""
 
+    extra_system_prompt: str | None = None
+    """Extra prompt to provide extra info to LLMs how to understand the command."""
+
     def as_dict(self) -> dict[str, Any]:
         """Return input as a dict."""
         return {
@@ -49,6 +52,7 @@ class ConversationInput:
             "device_id": self.device_id,
             "language": self.language,
             "agent_id": self.agent_id,
+            "extra_system_prompt": self.extra_system_prompt,
         }
 
 
