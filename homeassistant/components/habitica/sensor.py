@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from habiticalib import (
     ContentData,
@@ -17,6 +17,8 @@ from habiticalib import (
     deserialize_task,
 )
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -37,7 +39,7 @@ from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import entity_used_in, get_attribute_points, get_attributes_total
+from .util import get_attribute_points, get_attributes_total
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -234,6 +236,13 @@ TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
 )
 
 
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts."""
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
@@ -259,16 +268,14 @@ async def async_setup_entry(
             f"{config_entry.unique_id}_{description.key}",
         ):
             entity_entry = ent_reg.async_get(entity_id)
-            if TYPE_CHECKING:
-                assert entity_entry
-            if entity_entry.disabled:
+            if entity_entry and entity_entry.disabled:
                 ent_reg.async_remove(entity_id)
                 async_delete_issue(
                     hass,
                     DOMAIN,
                     f"deprecated_entity_{description.key}",
                 )
-            else:
+            elif entity_entry:
                 entities.append(entity_cls(coordinator, description))
                 if entity_used_in(hass, entity_id):
                     async_create_issue(
@@ -284,7 +291,6 @@ async def async_setup_entry(
                                 entity_entry.name or entity_entry.original_name
                             ),
                             "entity": entity_id,
-                            "breaks_in_ha_version": "2025.8.0",
                         },
                     )
 
