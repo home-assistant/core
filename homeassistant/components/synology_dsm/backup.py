@@ -155,7 +155,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                 path=self.path, filename=f"{backup_id}_meta.json"
             )
         except SynologyDSMAPIErrorException as err:
-            raise BackupAgentError("Failed to list backups") from err
+            raise BackupAgentError("Failed to delete the backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
