@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
@@ -48,12 +49,12 @@ def setup_services(hass: HomeAssistant) -> None:
         if CONF_CONFIG_ENTRY in call.data:
             entry_id = call.data[CONF_CONFIG_ENTRY]
         elif CONF_INTERFACE in call.data:
-            # Deprecated in 2025.2, to remove in 2025.9
+            # Deprecated in 2025.2, to remove in 2025.8
             async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_interface_parameter",
-                breaks_in_ha_version="2025.9.0",
+                breaks_in_ha_version="2025.8.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_interface_parameter",
@@ -63,10 +64,19 @@ def setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 "Either config entry or interface must be provided"
             )
-        entry = hass.config_entries.async_get_entry(entry_id)
-        if entry and entry.domain == DOMAIN:
-            return entry
-        raise ServiceValidationError("Config entry not found")
+        if not (entry := hass.config_entries.async_get_entry(entry_id)):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="integration_not_found",
+                translation_placeholders={"target": DOMAIN},
+            )
+        if entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="not_loaded",
+                translation_placeholders={"target": entry.title},
+            )
+        return entry
 
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
