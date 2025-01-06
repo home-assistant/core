@@ -812,7 +812,7 @@ fritzconnection[qr]==1.14.0
 fyta_cli==0.7.0
 
 # homeassistant.components.google_translate
-gTTS==2.2.4
+gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
 gardena-bluetooth==1.5.0
