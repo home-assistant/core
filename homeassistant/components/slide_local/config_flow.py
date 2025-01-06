@@ -73,7 +73,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}
 
         # API version 2 is not working, try API version 1 instead
-        await slide.slide_del(user_input[CONF_HOST])
         await slide.slide_add(
             user_input[CONF_HOST],
             user_input.get(CONF_PASSWORD, ""),
@@ -185,14 +184,15 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(self._mac)
 
-        self._abort_if_unique_id_configured(
-            {CONF_HOST: discovery_info.host}, reload_on_update=True
-        )
+        ip = str(discovery_info.ip_address)
+        _LOGGER.debug("Slide device discovered, ip %s", ip)
+
+        self._abort_if_unique_id_configured({CONF_HOST: ip}, reload_on_update=True)
 
         errors = {}
         if errors := await self.async_test_connection(
             {
-                CONF_HOST: self._host,
+                CONF_HOST: ip,
             }
         ):
             return self.async_abort(
@@ -202,7 +202,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._host = discovery_info.host
+        self._host = ip
 
         return await self.async_step_zeroconf_confirm()
 
