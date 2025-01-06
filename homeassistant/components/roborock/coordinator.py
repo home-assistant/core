@@ -86,9 +86,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         # Rooms names populated later with calls to `set_current_map_rooms` for each map
         self.maps = {
             roborock_map.mapFlag: RoborockMapInfo(
-                    flag=roborock_map.mapFlag,
-                    name=roborock_map.name or f"Map {roborock_map.mapFlag}",
-                    rooms={},
+                flag=roborock_map.mapFlag,
+                name=roborock_map.name or f"Map {roborock_map.mapFlag}",
+                rooms={},
             )
             for roborock_map in (maps.map_info if (maps and maps.map_info) else ())
         }
