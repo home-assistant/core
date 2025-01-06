@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.vodafone_station.coordinator import CONSIDER_HOME_SECONDS
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 
 from .const import DEVICE_1, DEVICE_1_MAC, DEVICE_DATA_QUERY, MOCK_USER_DATA
@@ -36,7 +37,7 @@ async def test_coordinator_consider_home(
 
         state = hass.states.get(device_tracker)
         assert state
-        assert state.state == "home"
+        assert state.state == STATE_HOME
 
         DEVICE_1[DEVICE_1_MAC].connected = False
         DEVICE_DATA_QUERY.update(DEVICE_1)
@@ -48,4 +49,4 @@ async def test_coordinator_consider_home(
 
         state = hass.states.get(device_tracker)
         assert state
-        assert state.state == "not_home"
+        assert state.state == STATE_NOT_HOME
