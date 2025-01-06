@@ -44,7 +44,7 @@
         }
       },
       "apps": {
-        "title": "Configure Android Apps",
+        "title": "Configure Android apps",
         "description": "Configure application ID {app_id}",
         "data": {
           "app_name": "Application name",
