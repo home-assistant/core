@@ -56,7 +56,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         request_adapter=adapter,
         scopes=OAUTH_SCOPES,
     )
+    assert entry.unique_id
     drive_item = graph_client.drives.by_drive_id(entry.unique_id)
+
     try:
         approot = await drive_item.special.by_drive_item_id("approot").get()
     except APIError as err:
@@ -67,7 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="failed_to_get_folder"
         ) from err
-    assert entry.unique_id
+
+    if approot is None or not approot.id:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+        )
 
     entry.runtime_data = OneDriveRuntimeData(
         items=drive_item.items,

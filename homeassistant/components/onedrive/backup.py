@@ -65,7 +65,7 @@ def handle_backup_errors(func: _T) -> _T:
     """Handle backup errors."""
 
     @wraps(func)
-    async def inner(*args: Any, **kwargs: Any):
+    async def inner(*args: Any, **kwargs: Any) -> Any:
         try:
             return await func(*args, **kwargs)
         except APIError as err:
@@ -94,7 +94,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.folder_id
         self._anonymous_auth_adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider,
+            auth_provider=AnonymousAuthenticationProvider,  # type: ignore[arg-type]
             client=get_async_client(hass),
         )
         self.name = entry.title

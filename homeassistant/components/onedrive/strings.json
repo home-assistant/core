@@ -33,11 +33,23 @@
     }
   },
   "exceptions": {
-    "backup_failure": "Failed to create backup",
-    "backup_not_found": "Backup not found",
-    "backup_no_content": "Backup has no content",
-    "backup_no_upload_session": "Failed to start backup upload",
-    "authentication_failed": "Authentication failed",
-    "failed_to_get_folder": "Failed to get backup folder"
+    "backup_failure": {
+      "message": "Failed to create backup"
+    },
+    "backup_not_found": {
+      "message": "Backup not found"
+    },
+    "backup_no_content": {
+      "message": "Backup has no content"
+    },
+    "backup_no_upload_session": {
+      "message": "Failed to start backup upload"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed"
+    },
+    "failed_to_get_folder": {
+      "message": "Failed to get backup folder"
+    }
   }
 }
