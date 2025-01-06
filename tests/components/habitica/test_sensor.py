@@ -39,7 +39,7 @@ async def test_sensors(
     for entity in (
         ("test_user_habits", "habits"),
         ("test_user_rewards", "rewards"),
-        ("test_user_health_max", "health_max"),
+        ("test_user_max_health", "health_max"),
     ):
         entity_registry.async_get_or_create(
             SENSOR_DOMAIN,
@@ -63,7 +63,7 @@ async def test_sensors(
     [
         ("test_user_habits", HabiticaSensorEntity.HABITS),
         ("test_user_rewards", HabiticaSensorEntity.REWARDS),
-        ("test_user_health_max", HabiticaSensorEntity.HEALTH_MAX),
+        ("test_user_max_health", HabiticaSensorEntity.HEALTH_MAX),
     ],
 )
 @pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")
@@ -107,7 +107,7 @@ async def test_sensor_deprecation_issue(
     [
         ("test_user_habits", HabiticaSensorEntity.HABITS),
         ("test_user_rewards", HabiticaSensorEntity.REWARDS),
-        ("test_user_health_max", HabiticaSensorEntity.HEALTH_MAX),
+        ("test_user_max_health", HabiticaSensorEntity.HEALTH_MAX),
     ],
 )
 @pytest.mark.usefixtures("habitica", "entity_registry_enabled_by_default")

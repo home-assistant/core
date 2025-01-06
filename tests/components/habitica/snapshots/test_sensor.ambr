@@ -564,53 +564,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[sensor.test_user_health_max-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_user_health_max',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Max. health',
-    'platform': 'habitica',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.HEALTH_MAX: 'health_max'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
-    'unit_of_measurement': 'HP',
-  })
-# ---
-# name: test_sensors[sensor.test_user_health_max-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Max. health',
-      'unit_of_measurement': 'HP',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_user_health_max',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '50',
-  })
-# ---
 # name: test_sensors[sensor.test_user_intelligence-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -760,6 +713,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.9',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_max_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Max. health',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HEALTH_MAX: 'health_max'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_health_max',
+    'unit_of_measurement': 'HP',
+  })
+# ---
+# name: test_sensors[sensor.test_user_max_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'test-user Max. health',
+      'unit_of_measurement': 'HP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_max_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
   })
 # ---
 # name: test_sensors[sensor.test_user_max_mana-entry]
