@@ -33,6 +33,7 @@ def rgetattr(obj, attr):
 
     return obj
 
+
 async def async_process_devices(
     hass: HomeAssistant, manager: VeSync
 ) -> dict[str, list[VeSyncBaseDevice]]:
