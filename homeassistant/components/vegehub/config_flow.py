@@ -36,6 +36,11 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_IP_ADDRESS in user_input and self._hub is None:
                 # When the user has input the IP manually, we need to gather more information
                 # from the Hub before we can continue setup.
+                if len(user_input[CONF_IP_ADDRESS]) <= 0:
+                    _LOGGER.error("Missing IP address for device")
+                    errors["base"] = "missing_data"
+                    return self.async_show_form(step_id="user", errors=errors)
+
                 self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
 
                 try:
@@ -50,6 +55,9 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "cannot_connect"
 
+                if len(errors) > 0:
+                    return self.async_show_form(step_id="user", errors=errors)
+
                 self._async_abort_entries_match({CONF_IP_ADDRESS: self._hub.ip_address})
 
                 # Set the unique ID for the manual configuration
@@ -60,22 +68,18 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._hostname = self._hub.ip_address
 
             if self._hub is not None:
-                if len(self._hub.ip_address) <= 0 or len(self._hub.mac_address) <= 0:
-                    _LOGGER.error("Missing IP address or MAC address for device")
-                    errors["base"] = "missing_data"
-                else:
-                    try:
-                        # Attempt communication with the Hub before creating the entry to
-                        # make sure it's awake and ready to be set up.
-                        await self._hub.retrieve_mac_address()
-                    except ConnectionError:
-                        _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
-                        errors["base"] = "cannot_connect"
-                    except TimeoutError:
-                        _LOGGER.error(
-                            "Timed out trying to connect to %s", self._hub.ip_address
-                        )
-                        errors["base"] = "timeout_connect"
+                try:
+                    # Attempt communication with the Hub before creating the entry to
+                    # make sure it's awake and ready to be set up.
+                    await self._hub.retrieve_mac_address()
+                except ConnectionError:
+                    _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
+                    errors["base"] = "cannot_connect"
+                except TimeoutError:
+                    _LOGGER.error(
+                        "Timed out trying to connect to %s", self._hub.ip_address
+                    )
+                    errors["base"] = "timeout_connect"
 
                 if len(errors) == 0:
                     info_data: dict[str, Any] = {}
