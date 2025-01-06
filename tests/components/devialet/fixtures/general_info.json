@@ -6,6 +6,7 @@
   "groupId": "12345678-901a-2b3c-def4-567g89h0i12j",
   "installationId": "abc1eca1-1234-5251-a123-12ac1a3e9fe8",
   "ipControlVersion": "1",
+  "isSystemLeader": true,
   "model": "Phantom I Silver",
   "modelFamily": "Phantom I",
   "powerRating": "105 dB",

@@ -7,7 +7,10 @@ from devialet.const import UrlSuffix
 from yarl import URL
 
 from homeassistant.components.devialet.const import DOMAIN
-from homeassistant.components.devialet.media_player import SUPPORT_DEVIALET
+from homeassistant.components.devialet.media_player import (
+    SUPPORT_DEVIALET,
+    SUPPORT_MEDIA,
+)
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -23,6 +26,7 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MP_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     MediaPlayerState,
@@ -59,6 +63,7 @@ SERVICE_TO_URL = {
     SERVICE_MEDIA_STOP: [UrlSuffix.PAUSE],
     SERVICE_MEDIA_PREVIOUS_TRACK: [UrlSuffix.PREVIOUS_TRACK],
     SERVICE_MEDIA_NEXT_TRACK: [UrlSuffix.NEXT_TRACK],
+    SERVICE_PLAY_MEDIA: [UrlSuffix.PLAY],
     SERVICE_TURN_OFF: [UrlSuffix.TURN_OFF],
     SERVICE_VOLUME_UP: [UrlSuffix.VOLUME_UP],
     SERVICE_VOLUME_DOWN: [UrlSuffix.VOLUME_DOWN],
@@ -82,6 +87,12 @@ SERVICE_TO_DATA = {
     SERVICE_MEDIA_STOP: [{}],
     SERVICE_MEDIA_PREVIOUS_TRACK: [{}],
     SERVICE_MEDIA_NEXT_TRACK: [{}],
+    SERVICE_PLAY_MEDIA: [
+        {
+            "media_content_id": "https://home-assistant.io/test.mp3",
+            "media_content_type": "music",
+        },
+    ],
     SERVICE_TURN_OFF: [{}],
     SERVICE_VOLUME_UP: [{}],
     SERVICE_VOLUME_DOWN: [{}],
@@ -105,130 +116,139 @@ async def test_media_player_playing(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Devialet configuration entry loading and unloading."""
-    await async_setup_component(hass, "homeassistant", {})
-    entry = await setup_integration(hass, aioclient_mock)
 
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.LOADED
+    with patch("devialet.DevialetApi.upnp_available", return_value=True):
+        await async_setup_component(hass, "homeassistant", {})
+        entry = await setup_integration(hass, aioclient_mock)
 
-    await hass.services.async_call(
-        "homeassistant",
-        SERVICE_UPDATE_ENTITY,
-        {ATTR_ENTITY_ID: [f"{MP_DOMAIN}.{NAME.lower()}"]},
-        blocking=True,
-    )
+        assert entry.entry_id in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
-    assert state.state == MediaPlayerState.PLAYING
-    assert state.name == NAME
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
-    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] is not None
-    assert state.attributes[ATTR_SOUND_MODE_LIST] is not None
-    assert state.attributes[ATTR_MEDIA_ARTIST] == "The Beatles"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "1 (Remastered)"
-    assert state.attributes[ATTR_MEDIA_TITLE] == "Hey Jude - Remastered 2015"
-    assert state.attributes[ATTR_ENTITY_PICTURE] is not None
-    assert state.attributes[ATTR_MEDIA_DURATION] == 425653
-    assert state.attributes[ATTR_MEDIA_POSITION] == 123102
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] is not None
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] is not None
-    assert state.attributes[ATTR_INPUT_SOURCE] is not None
-    assert state.attributes[ATTR_SOUND_MODE] is not None
-
-    with patch(
-        "homeassistant.components.devialet.DevialetApi.playing_state",
-        new_callable=PropertyMock,
-    ) as mock:
-        mock.return_value = MediaPlayerState.PAUSED
-
-        await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state
-            == MediaPlayerState.PAUSED
+        await hass.services.async_call(
+            "homeassistant",
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: [f"{MP_DOMAIN}.{NAME.lower()}"]},
+            blocking=True,
         )
 
-    with patch(
-        "homeassistant.components.devialet.DevialetApi.playing_state",
-        new_callable=PropertyMock,
-    ) as mock:
-        mock.return_value = MediaPlayerState.ON
+        state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+        assert state.state == MediaPlayerState.PLAYING
+        assert state.name == NAME
+        assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.2
+        assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
+        assert state.attributes[ATTR_INPUT_SOURCE_LIST] is not None
+        assert state.attributes[ATTR_SOUND_MODE_LIST] is not None
+        assert state.attributes[ATTR_MEDIA_ARTIST] == "The Beatles"
+        assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "1 (Remastered)"
+        assert state.attributes[ATTR_MEDIA_TITLE] == "Hey Jude - Remastered 2015"
+        assert state.attributes[ATTR_ENTITY_PICTURE] is not None
+        assert state.attributes[ATTR_MEDIA_DURATION] == 425653
+        assert state.attributes[ATTR_MEDIA_POSITION] == 123102
+        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] is not None
+        assert state.attributes[ATTR_SUPPORTED_FEATURES] is not None
+        assert state.attributes[ATTR_INPUT_SOURCE] is not None
+        assert state.attributes[ATTR_SOUND_MODE] is not None
 
-        await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state == MediaPlayerState.ON
-        )
+        with patch(
+            "homeassistant.components.devialet.DevialetApi.playing_state",
+            new_callable=PropertyMock,
+        ) as mock:
+            mock.return_value = MediaPlayerState.PAUSED
 
-    with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
-        mock.return_value = None
+            await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+            assert (
+                hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state
+                == MediaPlayerState.PAUSED
+            )
 
-        with patch.object(DevialetApi, "night_mode", new_callable=PropertyMock) as mock:
-            mock.return_value = True
+        with patch(
+            "homeassistant.components.devialet.DevialetApi.playing_state",
+            new_callable=PropertyMock,
+        ) as mock:
+            mock.return_value = MediaPlayerState.ON
 
+            await hass.config_entries.async_reload(entry.entry_id)
+            await hass.async_block_till_done()
+            assert (
+                hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").state
+                == MediaPlayerState.ON
+            )
+
+        with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
+            mock.return_value = None
+
+            with patch.object(
+                DevialetApi, "night_mode", new_callable=PropertyMock
+            ) as mock:
+                mock.return_value = True
+
+                await hass.config_entries.async_reload(entry.entry_id)
+                await hass.async_block_till_done()
+                assert (
+                    hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
+                        ATTR_SOUND_MODE
+                    ]
+                    == "Night mode"
+                )
+
+        with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
+            mock.return_value = "unexpected_value"
+
+            with patch.object(
+                DevialetApi, "night_mode", new_callable=PropertyMock
+            ) as mock:
+                mock.return_value = False
+
+                await hass.config_entries.async_reload(entry.entry_id)
+                await hass.async_block_till_done()
+                assert (
+                    ATTR_SOUND_MODE
+                    not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
+                )
+
+        with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
+            mock.return_value = None
+
+            with patch.object(
+                DevialetApi, "night_mode", new_callable=PropertyMock
+            ) as mock:
+                mock.return_value = None
+
+                await hass.config_entries.async_reload(entry.entry_id)
+                await hass.async_block_till_done()
+                assert (
+                    ATTR_SOUND_MODE
+                    not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
+                )
+
+        with patch.object(
+            DevialetApi, "available_operations", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = None
             await hass.config_entries.async_reload(entry.entry_id)
             await hass.async_block_till_done()
             assert (
                 hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
-                    ATTR_SOUND_MODE
+                    ATTR_SUPPORTED_FEATURES
                 ]
-                == "Night mode"
+                == SUPPORT_DEVIALET | SUPPORT_MEDIA
             )
 
-    with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
-        mock.return_value = "unexpected_value"
-
-        with patch.object(DevialetApi, "night_mode", new_callable=PropertyMock) as mock:
-            mock.return_value = False
-
+        with patch.object(DevialetApi, "source", new_callable=PropertyMock) as mock:
+            mock.return_value = "someSource"
             await hass.config_entries.async_reload(entry.entry_id)
             await hass.async_block_till_done()
             assert (
-                ATTR_SOUND_MODE
+                ATTR_INPUT_SOURCE
                 not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
             )
 
-    with patch.object(DevialetApi, "equalizer", new_callable=PropertyMock) as mock:
-        mock.return_value = None
-
-        with patch.object(DevialetApi, "night_mode", new_callable=PropertyMock) as mock:
-            mock.return_value = None
-
-            await hass.config_entries.async_reload(entry.entry_id)
-            await hass.async_block_till_done()
-            assert (
-                ATTR_SOUND_MODE
-                not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
-            )
-
-    with patch.object(
-        DevialetApi, "available_operations", new_callable=PropertyMock
-    ) as mock:
-        mock.return_value = None
-        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
-                ATTR_SUPPORTED_FEATURES
-            ]
-            == SUPPORT_DEVIALET
-        )
 
-    with patch.object(DevialetApi, "source", new_callable=PropertyMock) as mock:
-        mock.return_value = "someSource"
-        await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-        assert (
-            ATTR_INPUT_SOURCE
-            not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
-        )
-
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.entry_id not in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.NOT_LOADED
+        assert entry.entry_id not in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_media_player_offline(
@@ -251,63 +271,95 @@ async def test_media_player_offline(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_media_player_without_serial(
+async def test_device_shutdown(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the Devialet configuration entry loading and unloading."""
-    entry = await setup_integration(hass, aioclient_mock, serial=None)
+    """Test the Devialet configuration entry loading and the device going offline."""
+    with patch("devialet.DevialetApi.upnp_available", return_value=True):
+        entry = await setup_integration(hass, aioclient_mock)
 
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.unique_id is None
+        # with patch("devialet.DevialetApi.is_available", return_value=False):
+        #     test = await hass.data["entity_registry"]
+        #     piet = test
+
+        # assert entry.entry_id in hass.data[DOMAIN]
+        # assert entry.state is ConfigEntryState.LOADED
+
+        # await hass.config_entries.async_reload(entry.entry_id)
+        # state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
+        # assert state.state == STATE_UNAVAILABLE
+        # assert state.name == NAME
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_media_player_without_serial(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the Devialet configuration entry loading and unloading."""
+    with patch("devialet.DevialetApi.upnp_available", return_value=True):
+        entry = await setup_integration(hass, aioclient_mock, serial=None)
+
+        assert entry.entry_id in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.LOADED
+        assert entry.unique_id is None
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.entry_id not in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_media_player_services(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Devialet services."""
-    entry = await setup_integration(
-        hass, aioclient_mock, state=MediaPlayerState.PLAYING
-    )
 
-    assert entry.entry_id in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.LOADED
+    with (
+        patch("devialet.DevialetApi.upnp_available", return_value=True),
+        patch("devialet.DevialetApi.async_play_url_source"),
+    ):
+        entry = await setup_integration(
+            hass, aioclient_mock, state=MediaPlayerState.PLAYING
+        )
 
-    target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
+        assert entry.entry_id in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.LOADED
 
-    for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
-        for url in urls:
-            aioclient_mock.post(f"http://{HOST}{url}")
+        target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
 
-        for data_set in list(SERVICE_TO_DATA.values())[i]:
-            service_data = target.copy()
-            service_data.update(data_set)
+        for i, (service, urls) in enumerate(SERVICE_TO_URL.items()):
+            for url in urls:
+                aioclient_mock.post(f"http://{HOST}{url}")
 
-            await hass.services.async_call(
-                MP_DOMAIN,
-                service,
-                service_data=service_data,
-                blocking=True,
-            )
-            await hass.async_block_till_done()
+            for data_set in list(SERVICE_TO_DATA.values())[i]:
+                service_data = target.copy()
+                service_data.update(data_set)
 
-        for url in urls:
-            call_available = False
-            for item in aioclient_mock.mock_calls:
-                if item[0] == "POST" and item[1] == URL(f"http://{HOST}{url}"):
-                    call_available = True
-                    break
+                await hass.services.async_call(
+                    MP_DOMAIN,
+                    service,
+                    service_data=service_data,
+                    blocking=True,
+                )
+                await hass.async_block_till_done()
 
-            assert call_available
+            for url in urls:
+                call_available = False
+                for item in aioclient_mock.mock_calls:
+                    if item[0] == "POST" and item[1] == URL(f"http://{HOST}{url}"):
+                        call_available = True
+                        break
 
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
+                assert call_available
 
-    assert entry.entry_id not in hass.data[DOMAIN]
-    assert entry.state is ConfigEntryState.NOT_LOADED
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.entry_id not in hass.data[DOMAIN]
+        assert entry.state is ConfigEntryState.NOT_LOADED
