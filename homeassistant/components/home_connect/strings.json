@@ -23,7 +23,7 @@
   },
   "exceptions": {
     "appliance_not_found": {
-      "message": "Appliance for device id {device_id} not found"
+      "message": "Appliance for device ID {device_id} not found"
     },
     "turn_on_light": {
       "message": "Error turning on {entity_id}: {description}"
@@ -103,7 +103,7 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "Id of the device."
+          "description": "ID of the device."
         },
         "program": { "name": "Program", "description": "Program to select." },
         "key": { "name": "Option key", "description": "Key of the option." },
