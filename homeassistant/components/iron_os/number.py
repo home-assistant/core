@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
-from pynecil import CharSetting, LiveDataResponse, SettingsDataResponse
+from pynecil import CharSetting, LiveDataResponse, SettingsDataResponse, TempUnit
 
 from homeassistant.components.number import (
-    DEFAULT_MAX_VALUE,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -24,9 +24,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import IronOSConfigEntry
-from .const import MAX_TEMP, MIN_TEMP
+from .const import MAX_TEMP, MAX_TEMP_F, MIN_TEMP, MIN_TEMP_F
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -38,9 +39,11 @@ class IronOSNumberEntityDescription(NumberEntityDescription):
     """Describes IronOS number entity."""
 
     value_fn: Callable[[LiveDataResponse, SettingsDataResponse], float | int | None]
-    max_value_fn: Callable[[LiveDataResponse], float | int] | None = None
     characteristic: CharSetting
     raw_value_fn: Callable[[float], float | int] | None = None
+    has_fahrenheit: bool = False
+    native_max_value_f: float | None = None
+    native_min_value_f: float | None = None
 
 
 class PinecilNumber(StrEnum):
@@ -78,39 +81,45 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         key=PinecilNumber.SETPOINT_TEMP,
         translation_key=PinecilNumber.SETPOINT_TEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda data, _: data.setpoint_temp,
         characteristic=CharSetting.SETPOINT_TEMP,
         mode=NumberMode.BOX,
         native_min_value=MIN_TEMP,
+        native_max_value=MAX_TEMP,
+        native_min_value_f=MIN_TEMP_F,
+        native_max_value_f=MAX_TEMP_F,
         native_step=5,
-        max_value_fn=lambda data: min(data.max_tip_temp_ability or MAX_TEMP, MAX_TEMP),
+        has_fahrenheit=True,
     ),
     IronOSNumberEntityDescription(
         key=PinecilNumber.SLEEP_TEMP,
         translation_key=PinecilNumber.SLEEP_TEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda _, settings: settings.get("sleep_temp"),
         characteristic=CharSetting.SLEEP_TEMP,
         mode=NumberMode.BOX,
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
+        native_min_value_f=MIN_TEMP_F,
+        native_max_value_f=MAX_TEMP_F,
         native_step=10,
         entity_category=EntityCategory.CONFIG,
+        has_fahrenheit=True,
     ),
     IronOSNumberEntityDescription(
         key=PinecilNumber.BOOST_TEMP,
         translation_key=PinecilNumber.BOOST_TEMP,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=NumberDeviceClass.TEMPERATURE,
         value_fn=lambda _, settings: settings.get("boost_temp"),
         characteristic=CharSetting.BOOST_TEMP,
         mode=NumberMode.BOX,
         native_min_value=0,
+        native_min_value_f=0,
         native_max_value=MAX_TEMP,
+        native_max_value_f=MAX_TEMP_F,
         native_step=10,
         entity_category=EntityCategory.CONFIG,
+        has_fahrenheit=True,
     ),
     IronOSNumberEntityDescription(
         key=PinecilNumber.QC_MAX_VOLTAGE,
@@ -308,6 +317,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_step=1,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        has_fahrenheit=True,
     ),
     IronOSNumberEntityDescription(
         key=PinecilNumber.TEMP_INCREMENT_LONG,
@@ -321,6 +331,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         native_step=5,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        has_fahrenheit=True,
     ),
 )
 
@@ -390,12 +401,40 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
 
     @property
     def native_max_value(self) -> float:
-        """Return sensor state."""
+        """Return the maximum value."""
 
-        if self.entity_description.max_value_fn is not None:
-            return self.entity_description.max_value_fn(self.coordinator.data)
+        if (
+            self.entity_description.key is PinecilNumber.SETPOINT_TEMP
+            and (max_value := self.coordinator.data.max_tip_temp_ability) is not None
+        ):
+            if TYPE_CHECKING:
+                assert self.entity_description.native_max_value_f
+            if self.is_fahrenheit:
+                return min(
+                    TemperatureConverter.convert(
+                        max_value,
+                        UnitOfTemperature.CELSIUS,
+                        UnitOfTemperature.FAHRENHEIT,
+                    ),
+                    self.entity_description.native_max_value_f,
+                )
+            return min(max_value, super().native_max_value)
 
-        return self.entity_description.native_max_value or DEFAULT_MAX_VALUE
+        if self.is_fahrenheit:
+            return (
+                self.entity_description.native_max_value_f or super().native_max_value
+            )
+
+        return super().native_max_value
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        if self.is_fahrenheit:
+            return (
+                self.entity_description.native_min_value_f or super().native_min_value
+            )
+        return super().native_min_value
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -407,3 +446,20 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
             )
         )
         await self.settings.async_request_refresh()
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor, if any."""
+
+        if self.is_fahrenheit:
+            return UnitOfTemperature.FAHRENHEIT
+
+        return super().native_unit_of_measurement
+
+    @property
+    def is_fahrenheit(self) -> bool:
+        """True if the device is returning values in Fahrenheit."""
+        return (
+            self.entity_description.has_fahrenheit
+            and self.settings.data.get("temp_unit") is TempUnit.FAHRENHEIT
+        )
