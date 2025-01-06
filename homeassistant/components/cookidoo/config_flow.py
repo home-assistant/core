@@ -10,7 +10,6 @@ from cookidoo_api import (
     Cookidoo,
     CookidooAuthException,
     CookidooConfig,
-    CookidooLocalizationConfig,
     CookidooRequestException,
     get_country_options,
     get_localization_options,
@@ -219,18 +218,19 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             data_input[CONF_LANGUAGE] = (
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
-            )[0]  # Pick any language to test login
+            )[0].language  # Pick any language to test login
 
-        session = async_get_clientsession(self.hass)
+        localizations = await get_localization_options(
+            country=data_input[CONF_COUNTRY].lower(),
+            language=data_input[CONF_LANGUAGE],
+        )
+
         cookidoo = Cookidoo(
-            session,
+            async_get_clientsession(self.hass),
             CookidooConfig(
                 email=data_input[CONF_EMAIL],
                 password=data_input[CONF_PASSWORD],
-                localization=CookidooLocalizationConfig(
-                    country_code=data_input[CONF_COUNTRY].lower(),
-                    language=data_input[CONF_LANGUAGE],
-                ),
+                localization=localizations[0],
             ),
         )
         try:
