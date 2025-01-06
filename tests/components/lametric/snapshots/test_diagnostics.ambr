@@ -2,6 +2,7 @@
 # name: test_diagnostics
   dict({
     'audio': dict({
+      'available': True,
       'volume': 100,
       'volume_limit': dict({
         'range_max': 100,
