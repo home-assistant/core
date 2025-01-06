@@ -57,7 +57,7 @@ async def test_global_services_with_interface(
         )
 
     # Test missing interface
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SCAN,
@@ -99,7 +99,7 @@ async def test_global_survices_with_config_entry(
         )
 
     # Test missing interface
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(vol.error.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SCAN,
