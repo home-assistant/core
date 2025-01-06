@@ -25,7 +25,7 @@ STATUS_TO_ACTIVITY = {
     Status.GoingHome: VacuumActivity.RETURNING,
     Status.Charging: VacuumActivity.DOCKED,
     Status.Charged: VacuumActivity.DOCKED,
-    Status.Docked: VacuumActivity.DOCKED,
+    Status.Undocked: VacuumActivity.IDLE,
     Status.Paused: VacuumActivity.PAUSED,
     Status.Error: VacuumActivity.ERROR,
 }
