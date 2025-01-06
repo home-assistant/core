@@ -66,11 +66,11 @@
   "services": {
     "upload": {
       "name": "Upload media",
-      "description": "Upload images or videos to Google Photos.",
+      "description": "Uploads images or videos to Google Photos.",
       "fields": {
         "config_entry_id": {
-          "name": "Integration Id",
-          "description": "The Google Photos integration id."
+          "name": "Integration ID",
+          "description": "The Google Photos integration ID."
         },
         "filename": {
           "name": "Filename",
