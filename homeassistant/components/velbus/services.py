@@ -121,15 +121,21 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SCAN,
         scan,
-        vol.Schema(
-            {
-                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                    {
-                        "integration": DOMAIN,
-                    }
-                ),
-            }
+        vol.Any(
+            vol.Schema(
+                {
+                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                        {
+                            "integration": DOMAIN,
+                        }
+                    )
+                }
+            ),
         ),
     )
 
@@ -137,15 +143,21 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SYNC,
         syn_clock,
-        vol.Schema(
-            {
-                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                    {
-                        "integration": DOMAIN,
-                    }
-                ),
-            }
+        vol.Any(
+            vol.Schema(
+                {
+                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                        {
+                            "integration": DOMAIN,
+                        }
+                    )
+                }
+            ),
         ),
     )
 
@@ -153,19 +165,29 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_MEMO_TEXT,
         set_memo_text,
-        vol.Schema(
-            {
-                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                    {
-                        "integration": DOMAIN,
-                    }
-                ),
-                vol.Required(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
-                ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
-            }
+        vol.Any(
+            vol.Schema(
+                {
+                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                    vol.Required(CONF_ADDRESS): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=255)
+                    ),
+                    vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                        {
+                            "integration": DOMAIN,
+                        }
+                    ),
+                    vol.Required(CONF_ADDRESS): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=255)
+                    ),
+                    vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                }
+            ),
         ),
     )
 
@@ -173,17 +195,26 @@ def setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_CLEAR_CACHE,
         clear_cache,
-        vol.Schema(
-            {
-                vol.Optional(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
-                vol.Optional(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
-                    {
-                        "integration": DOMAIN,
-                    }
-                ),
-                vol.Optional(CONF_ADDRESS): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=255)
-                ),
-            }
+        vol.Any(
+            vol.Schema(
+                {
+                    vol.Required(CONF_INTERFACE): vol.All(cv.string, check_entry_id),
+                    vol.Optional(CONF_ADDRESS): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=255)
+                    ),
+                }
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+                        {
+                            "integration": DOMAIN,
+                        }
+                    ),
+                    vol.Optional(CONF_ADDRESS): vol.All(
+                        vol.Coerce(int), vol.Range(min=0, max=255)
+                    ),
+                }
+            ),
         ),
     )
