@@ -52,7 +52,7 @@ class ConversationInput:
             "device_id": self.device_id,
             "language": self.language,
             "agent_id": self.agent_id,
-            "extra_prompt": self.extra_prompt,
+            "extra_system_prompt": self.extra_system_prompt,
         }
 
 
