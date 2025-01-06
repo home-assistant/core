@@ -249,7 +249,7 @@ async def test_already_configured(
     aioclient_mock: AiohttpClientMocker,
     setup_credentials,
 ) -> None:
-    """Test case where config flow discovers unique id was already configured."""
+    """Test case for single_instance_allowed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=FOLDER_ID,
@@ -264,42 +264,5 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         "google_drive", context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    assert result["url"] == (
-        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
-        "&access_type=offline&prompt=consent"
-    )
-
-    client = await hass_client_no_auth()
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    # Prepare API response when creating the folder
-    aioclient_mock.post(
-        "https://www.googleapis.com/drive/v3/files?fields=id",
-        json={"id": FOLDER_ID},
-    )
-
-    aioclient_mock.post(
-        GOOGLE_TOKEN_URI,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("reason") == "single_instance_allowed"
