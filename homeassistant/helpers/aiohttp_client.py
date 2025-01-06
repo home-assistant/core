@@ -9,7 +9,7 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
 from aiohttp import web
@@ -80,6 +80,31 @@ class HassClientResponse(aiohttp.ClientResponse):
     ) -> Any:
         """Send a json request and parse the json response."""
         return await super().json(*args, loads=loads, **kwargs)
+
+
+class ChunkAsyncStreamIterator:
+    """Async iterator for chunked streams.
+
+    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
+    bytes instead of tuple[bytes, bool].
+    """
+
+    __slots__ = ("_stream",)
+
+    def __init__(self, stream: aiohttp.StreamReader) -> None:
+        """Initialize."""
+        self._stream = stream
+
+    def __aiter__(self) -> Self:
+        """Iterate."""
+        return self
+
+    async def __anext__(self) -> bytes:
+        """Yield next chunk."""
+        rv = await self._stream.readchunk()
+        if rv == (b"", False):
+            raise StopAsyncIteration
+        return rv[0]
 
 
 @callback
