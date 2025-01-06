@@ -40,9 +40,9 @@ from .util import (
 )
 
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorMode.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
+    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # there's a bug in (at least) Espressif's implementation of light transitions
@@ -355,21 +355,21 @@ class MatterLight(MatterEntity, LightEntity):
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
                 ):
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
                 ):
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
