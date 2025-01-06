@@ -332,7 +332,7 @@ def _async_get_connector(
     else:
         ssl_context = ssl_util.client_context_no_verify(ssl_cipher)
 
-    connector = aiohttp.TCPConnector(
+    connector = HomeAssistantTCPConnector(
         family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
