@@ -1,0 +1,25 @@
+{
+  "actuators": [
+    {
+      "slot": 0,
+      "state": 0,
+      "last_run": 1730911079,
+      "next_window_start": 1730916000,
+      "next_window_end": 1730916600,
+      "cur_ma": 0,
+      "typ_ma": 0,
+      "error": 0
+    },
+    {
+      "slot": 1,
+      "state": 0,
+      "last_run": 1730911079,
+      "next_window_start": 1730916000,
+      "next_window_end": 1730916600,
+      "cur_ma": 0,
+      "typ_ma": 0,
+      "error": 0
+    }
+  ],
+  "error": "success"
+}
