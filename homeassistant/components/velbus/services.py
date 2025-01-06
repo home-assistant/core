@@ -60,10 +60,6 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_key="deprecated_interface_parameter",
             )
             entry_id = call.data[CONF_INTERFACE]
-        else:
-            raise ServiceValidationError(
-                "Either config entry or interface must be provided"
-            )
         if not (entry := hass.config_entries.async_get_entry(entry_id)):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
