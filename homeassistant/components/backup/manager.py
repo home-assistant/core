@@ -436,7 +436,7 @@ class BackupManager:
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
                 LOGGER.error(
-                    "Error uploading to %s: %s", agent_ids[idx], result,
+                    "Error uploading to %s: %s", agent_ids[idx], result
                 )
                 agent_errors[agent_ids[idx]] = result
                 continue
