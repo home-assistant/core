@@ -1097,7 +1097,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.2
 
 # homeassistant.components.bluetooth
-habluetooth==3.6.0
+habluetooth==3.7.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.87.0
@@ -2928,7 +2928,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.2.0
+uiprotect==7.4.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3118,7 +3118,7 @@ zeroconf==0.136.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.44
+zha==0.0.45
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
