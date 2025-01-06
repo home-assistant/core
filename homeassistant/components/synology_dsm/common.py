@@ -160,6 +160,25 @@ class SynoApi:
             self.dsm.reset(SynoCoreUpgrade.API_KEY)
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
 
+        # check if file station is used and permitted
+        self._with_file_station = bool(self.dsm.apis.get(SynoFileStation.LIST_API_KEY))
+        if self._with_file_station:
+            try:
+                await self.dsm.file.get_shared_folders(only_writable=True)
+            except SYNOLOGY_CONNECTION_EXCEPTIONS:
+                self._with_file_station = False
+                self.dsm.reset(SynoFileStation.API_KEY)
+                LOGGER.debug(
+                    "File Station found, but disabled due to missing user"
+                    " permissions or no writable shared folders available"
+                )
+
+        LOGGER.debug(
+            "State of File Station during setup of '%s': %s",
+            self._entry.unique_id,
+            self._with_file_station,
+        )
+
         await self._fetch_device_configuration()
 
         try:
