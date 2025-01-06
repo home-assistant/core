@@ -60,8 +60,6 @@ def setup_services(hass: HomeAssistant) -> None:
             )
             entry_id = call.data[CONF_INTERFACE]
         else:
-            entry_id = None
-        if entry_id is None:
             raise ServiceValidationError(
                 "Either config entry or interface must be provided"
             )
