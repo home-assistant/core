@@ -2199,7 +2199,7 @@ soco==0.30.6
 solarlog_cli==0.4.0
 
 # homeassistant.components.solax
-solax==3.2.1
+solax==3.2.3
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
