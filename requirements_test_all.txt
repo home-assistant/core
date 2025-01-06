@@ -1717,7 +1717,7 @@ pymicro-vad==1.0.1
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.8.2
+pymodbus==3.8.3
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
