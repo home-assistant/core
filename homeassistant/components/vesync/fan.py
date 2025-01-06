@@ -88,9 +88,11 @@ def _setup_entities(
 ):
     """Check if device is online and add entity."""
     entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan":
-            entities.append(VeSyncFanHA(dev, coordinator))  # noqa: PERF401
+    entities = [
+        VeSyncFanHA(dev, coordinator)
+        for dev in devices
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
+    ]
 
     async_add_entities(entities, update_before_add=True)
 
