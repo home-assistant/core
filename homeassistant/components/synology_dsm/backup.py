@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import Any, Self
+from typing import Any
 
 from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
@@ -13,6 +13,7 @@ from synology_dsm.exceptions import SynologyDSMAPIErrorException
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
@@ -30,31 +31,6 @@ async def async_get_backup_agents(
         LOGGER.debug("No config entry found or entry is not loaded")
         return []
     return [SynologyDSMBackupAgent(hass, entry) for entry in entries]
-
-
-class ChunkAsyncStreamIterator:
-    """Async iterator for chunked streams.
-
-    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
-    bytes instead of tuple[bytes, bool].
-    """
-
-    __slots__ = ("_stream",)
-
-    def __init__(self, stream: StreamReader) -> None:
-        """Initialize."""
-        self._stream = stream
-
-    def __aiter__(self) -> Self:
-        """Iterate."""
-        return self
-
-    async def __anext__(self) -> bytes:
-        """Yield next chunk."""
-        rv = await self._stream.readchunk()
-        if rv == (b"", False):
-            raise StopAsyncIteration
-        return rv[0]
 
 
 class SynologyDSMBackupAgent(BackupAgent):
