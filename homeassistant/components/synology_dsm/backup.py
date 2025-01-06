@@ -97,6 +97,7 @@ class SynologyDSMBackupAgent(BackupAgent):
                 path=self.path,
                 filename=f"{backup.backup_id}.tar",
                 source=await open_stream(),
+                create_parents=True,
             )
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to upload backup") from err
