@@ -92,7 +92,7 @@ SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
                 [x.lower() for x in MealplanEntryType]
             ),
             vol.Required(ATTR_NOTE_TITLE): str,
-            vol.Required(ATTR_NOTE_TEXT): str,
+            vol.Optional(ATTR_NOTE_TEXT): str,
         }
     ),
 )

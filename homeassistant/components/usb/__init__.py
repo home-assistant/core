@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Coroutine, Sequence
 import dataclasses
 import fnmatch
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
@@ -116,6 +116,7 @@ class UsbServiceInfo(BaseServiceInfo):
     description: str | None
 
 
+@overload
 def human_readable_device_name(
     device: str,
     serial_number: str | None,
@@ -123,11 +124,32 @@ def human_readable_device_name(
     description: str | None,
     vid: str | None,
     pid: str | None,
+) -> str: ...
+
+
+@overload
+def human_readable_device_name(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: int | None,
+    pid: int | None,
+) -> str: ...
+
+
+def human_readable_device_name(
+    device: str,
+    serial_number: str | None,
+    manufacturer: str | None,
+    description: str | None,
+    vid: str | int | None,
+    pid: str | int | None,
 ) -> str:
     """Return a human readable name from USBDevice attributes."""
     device_details = f"{device}, s/n: {serial_number or 'n/a'}"
     manufacturer_details = f" - {manufacturer}" if manufacturer else ""
-    vendor_details = f" - {vid}:{pid}" if vid else ""
+    vendor_details = f" - {vid}:{pid}" if vid is not None else ""
     full_details = f"{device_details}{manufacturer_details}{vendor_details}"
 
     if not description:
@@ -360,7 +382,7 @@ class USBDiscovery:
                 service_info,
             )
 
-    async def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
+    async def _async_process_ports(self, ports: Sequence[ListPortInfo]) -> None:
         """Process each discovered port."""
         usb_devices = [
             usb_device_from_port(port)
