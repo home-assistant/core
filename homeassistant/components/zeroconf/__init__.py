@@ -144,19 +144,23 @@ class ZeroconfServiceInfo(BaseServiceInfo):
 
 @bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
-    """Zeroconf instance to be shared with other integrations that use it."""
+    """Get or create the shared HaZeroconf instance."""
     return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
 @bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    """Zeroconf instance to be shared with other integrations that use it."""
+    """Get or create the shared HaAsyncZeroconf instance."""
     return _async_get_instance(hass)
 
 
 @callback
-def async_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    """Get existing zeroconf instance."""
+def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
+    """Get or create the shared HaAsyncZeroconf instance.
+
+    This method must be run in the event loop, and is an alternative
+    to the async_get_async_instance method when a coroutine cannot be used.
+    """
     return _async_get_instance(hass)
 
 

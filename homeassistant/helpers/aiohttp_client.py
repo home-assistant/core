@@ -332,15 +332,13 @@ def _async_get_connector(
     else:
         ssl_context = ssl_util.client_context_no_verify(ssl_cipher)
 
-    resolver = AsyncMDNSResolver(async_zeroconf=zeroconf.async_async_instance(hass))
-
     connector = aiohttp.TCPConnector(
         family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
-        resolver=resolver,
+        resolver=_make_resolver(hass),
     )
     connectors[connector_key] = connector
 
@@ -351,3 +349,7 @@ def _async_get_connector(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
 
     return connector
+
+
+def _make_resolver(hass: HomeAssistant) -> AsyncMDNSResolver:
+    return AsyncMDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))
