@@ -211,8 +211,7 @@ async def test_invalid_user_agreement(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
         side_effect=RoborockInvalidUserAgreement(),
     ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
         assert (
             mock_roborock_entry.error_reason_translation_key == "invalid_user_agreement"
@@ -229,7 +228,6 @@ async def test_no_user_agreement(
         "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
         side_effect=RoborockNoUserAgreement(),
     ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
         assert mock_roborock_entry.error_reason_translation_key == "no_user_agreement"
