@@ -39,6 +39,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         key="device_status",
         translation_key="on",
         is_on=lambda device: device.device_status == "on",
+        name=None,
     ),
 )
 
@@ -78,12 +79,11 @@ def _setup_entities(
             for description in SENSOR_DESCRIPTIONS
             if rgetattr(dev, description.key) is not None
         ),
-        update_before_add=True,
     )
 
 
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
-    """VeSync sensor class."""
+    """VeSync switch entity class."""
 
     def __init__(
         self,
@@ -98,14 +98,11 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
             self._attr_device_class = SwitchDeviceClass.OUTLET
         if isinstance(self.device, VeSyncSwitch):
             self._attr_device_class = SwitchDeviceClass.SWITCH
-        self._attr_name = None
 
     @property
     def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
-        if self.entity_description.is_on is not None:
-            return self.entity_description.is_on(self.device)
-        return None
+        return self.entity_description.is_on(self.device)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
