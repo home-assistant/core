@@ -1,6 +1,6 @@
 """Test deprecation helpers."""
 
-from enum import Enum, StrEnum
+from enum import StrEnum
 import logging
 import sys
 from typing import Any
@@ -277,7 +277,7 @@ def test_deprecated_function_called_from_custom_integration(
     ) in caplog.text
 
 
-class TestDeprecatedConstantEnum(Enum):
+class TestDeprecatedConstantEnum(StrEnum):
     """Test deprecated constant enum."""
 
     __test__ = False  # prevent test collection of class by pytest
