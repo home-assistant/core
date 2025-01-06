@@ -21,7 +21,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
     'platform': 'fyta',
@@ -35,7 +35,6 @@
 # name: test_all_entities[binary_sensor.gummibaum_light_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Gummibaum Light notification',
     }),
     'context': <ANY>,
@@ -115,7 +114,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
     'platform': 'fyta',
@@ -129,7 +128,6 @@
 # name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Gummibaum Nutrition notification',
     }),
     'context': <ANY>,
@@ -301,7 +299,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
     'platform': 'fyta',
@@ -315,7 +313,6 @@
 # name: test_all_entities[binary_sensor.gummibaum_temperature_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Gummibaum Temperature notification',
     }),
     'context': <ANY>,
@@ -348,7 +345,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',
     'platform': 'fyta',
@@ -362,7 +359,6 @@
 # name: test_all_entities[binary_sensor.gummibaum_water_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Gummibaum Water notification',
     }),
     'context': <ANY>,
@@ -395,7 +391,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Light notification',
     'platform': 'fyta',
@@ -409,7 +405,6 @@
 # name: test_all_entities[binary_sensor.kakaobaum_light_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Kakaobaum Light notification',
     }),
     'context': <ANY>,
@@ -489,7 +484,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nutrition notification',
     'platform': 'fyta',
@@ -503,7 +498,6 @@
 # name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Kakaobaum Nutrition notification',
     }),
     'context': <ANY>,
@@ -675,7 +669,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature notification',
     'platform': 'fyta',
@@ -689,7 +683,6 @@
 # name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Kakaobaum Temperature notification',
     }),
     'context': <ANY>,
@@ -722,7 +715,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Water notification',
     'platform': 'fyta',
@@ -736,7 +729,6 @@
 # name: test_all_entities[binary_sensor.kakaobaum_water_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
       'friendly_name': 'Kakaobaum Water notification',
     }),
     'context': <ANY>,
