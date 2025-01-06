@@ -109,16 +109,30 @@ async def async_setup_entry(
                             "entity": entity_id,
                         },
                     )
-
-    entities.extend(
-        [
-            SensiboSelect(coordinator, device_id, description)
-            for device_id, device_data in coordinator.data.parsed.items()
-            for description in DEVICE_SELECT_TYPES
-            if description.key in device_data.full_features
-        ]
-    )
     async_add_entities(entities)
+
+    added_devices: set[str] = set()
+
+    def _add_devices() -> None:
+        """Handle additions of devices and sensors."""
+        add_entities: list[SensiboSelect] = []
+
+        for device_id, device_data in coordinator.data.parsed.items():
+            if device_id in added_devices:
+                continue
+            added_devices.add(device_id)
+            add_entities.extend(
+                [
+                    SensiboSelect(coordinator, device_id, description)
+                    for description in DEVICE_SELECT_TYPES
+                    if description.key in device_data.full_features
+                ]
+            )
+
+        async_add_entities(add_entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
+    _add_devices()
 
 
 class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):

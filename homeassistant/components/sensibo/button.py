@@ -41,10 +41,23 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
-        for device_id, device_data in coordinator.data.parsed.items()
-    )
+    added_devices: set[str] = set()
+
+    def _add_devices() -> None:
+        """Handle additions of devices and sensors."""
+        entities: list[SensiboDeviceButton] = []
+
+        for device_id in coordinator.data.parsed:
+            if device_id in added_devices:
+                continue
+            added_devices.add(device_id)
+            entities.append(
+                SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
+            )
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
+    _add_devices()
 
 
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):

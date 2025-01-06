@@ -84,13 +84,28 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboDeviceSwitch(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DESCRIPTION_BY_MODELS.get(
-            device_data.model, DEVICE_SWITCH_TYPES
-        )
-    )
+    added_devices: set[str] = set()
+
+    def _add_devices() -> None:
+        """Handle additions of devices and sensors."""
+        entities: list[SensiboDeviceSwitch] = []
+
+        for device_id, device_data in coordinator.data.parsed.items():
+            if device_id in added_devices:
+                continue
+            added_devices.add(device_id)
+            entities.extend(
+                [
+                    SensiboDeviceSwitch(coordinator, device_id, description)
+                    for description in DESCRIPTION_BY_MODELS.get(
+                        device_data.model, DEVICE_SWITCH_TYPES
+                    )
+                ]
+            )
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
+    _add_devices()
 
 
 class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):

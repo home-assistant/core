@@ -239,25 +239,41 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+    added_devices: set[str] = set()
+    added_motion_sensors: set[str] = set()
 
-    for device_id, device_data in coordinator.data.parsed.items():
-        if device_data.motion_sensors:
+    def _add_devices() -> None:
+        """Handle additions of devices and sensors."""
+
+        entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+
+        for device_id, device_data in coordinator.data.parsed.items():
+            if device_data.motion_sensors:
+                for sensor_id, sensor_data in device_data.motion_sensors.items():
+                    if sensor_id in added_motion_sensors:
+                        continue
+                    added_motion_sensors.add(sensor_id)
+                    entities.extend(
+                        SensiboMotionSensor(
+                            coordinator, device_id, sensor_id, sensor_data, description
+                        )
+                        for description in MOTION_SENSOR_TYPES
+                    )
+
+            if device_id in added_devices:
+                continue
+            added_devices.add(device_id)
             entities.extend(
-                SensiboMotionSensor(
-                    coordinator, device_id, sensor_id, sensor_data, description
+                SensiboDeviceSensor(coordinator, device_id, description)
+                for description in DESCRIPTION_BY_MODELS.get(
+                    device_data.model, DEVICE_SENSOR_TYPES
                 )
-                for sensor_id, sensor_data in device_data.motion_sensors.items()
-                for description in MOTION_SENSOR_TYPES
             )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DESCRIPTION_BY_MODELS.get(
-            device_data.model, DEVICE_SENSOR_TYPES
-        )
-    )
-    async_add_entities(entities)
+
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
+    _add_devices()
 
 
 class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):

@@ -144,12 +144,22 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities = [
-        SensiboClimate(coordinator, device_id)
-        for device_id, device_data in coordinator.data.parsed.items()
-    ]
+    added_devices: set[str] = set()
 
-    async_add_entities(entities)
+    def _add_devices() -> None:
+        """Handle additions of devices and sensors."""
+        entities: list[SensiboClimate] = []
+
+        for device_id in coordinator.data.parsed:
+            if device_id in added_devices:
+                continue
+            added_devices.add(device_id)
+            entities.append(SensiboClimate(coordinator, device_id))
+
+        async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
+    _add_devices()
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
