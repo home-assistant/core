@@ -422,6 +422,12 @@
     },
     "update_options_failed": {
       "message": "Failed to update Roborock options"
+    },
+    "invalid_user_agreement": {
+      "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+    },
+    "no_user_agreement": {
+      "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
     }
   },
   "services": {
