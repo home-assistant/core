@@ -52,9 +52,9 @@ async def async_retrieve_uvi(location: Location, api: IPMA_API) -> int | None:
 
 async def async_retrieve_warning(location: Location, api: IPMA_API) -> int | None:
     """Retrieve Warning."""
-    warning = await location.warnings(api)
-    if len(warning):
-        return warning[0]
+    warnings = await location.warnings(api)
+    if len(warnings):
+        return warnings[0]
     return None
 
 
