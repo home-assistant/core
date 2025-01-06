@@ -157,6 +157,11 @@ class CloudBackupAgent(BackupAgent):
                 headers=details["headers"] | {"content-length": str(backup.size)},
                 timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
             )
+            _LOGGER.log(
+                logging.DEBUG if upload_status.status < 400 else logging.WARNING,
+                "Backup upload status: %s",
+                upload_status.status,
+            )
             upload_status.raise_for_status()
         except (TimeoutError, ClientError) as err:
             raise BackupAgentError("Failed to upload backup") from err
