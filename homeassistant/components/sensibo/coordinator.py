@@ -12,6 +12,7 @@ from pysensibo.model import SensiboData
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -48,6 +49,8 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
             session=async_get_clientsession(hass),
             timeout=TIMEOUT,
         )
+        self.previous_devices: set[str] = set()
+        self.previous_motion_sensors: set[str] = set()
 
     async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
@@ -67,4 +70,22 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
 
         if not data.raw:
             raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_data")
+
+        current_devices = set(data.parsed)
+        for device_data in data.parsed.values():
+            if device_data.motion_sensors:
+                for motion_sensor_id in device_data.motion_sensors:
+                    current_devices.add(motion_sensor_id)
+
+        if stale_devices := self.previous_devices - current_devices:
+            device_registry = dr.async_get(self.hass)
+            for _id in stale_devices:
+                device = device_registry.async_get_device(identifiers={(DOMAIN, _id)})
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+            self.previous_devices = current_devices
+
         return data
