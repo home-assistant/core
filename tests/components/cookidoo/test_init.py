@@ -7,9 +7,15 @@ import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_COUNTRY,
+    CONF_EMAIL,
+    CONF_LANGUAGE,
+    CONF_PASSWORD,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
@@ -112,6 +118,8 @@ MOCK_CONFIG_ENTRY_MIGRATION = {
     CONF_LANGUAGE: LANGUAGE,
 }
 
+OLD_ENTRY_ID = "OLD_OLD_ENTRY_ID"
+
 
 @pytest.mark.parametrize(
     (
@@ -137,6 +145,7 @@ MOCK_CONFIG_ENTRY_MIGRATION = {
 )
 async def test_migration_from(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     from_version,
     from_minor_version,
@@ -158,13 +167,40 @@ async def test_migration_from(
         version=from_version,
         minor_version=from_minor_version,
         unique_id=unique_id,
+        entry_id=OLD_ENTRY_ID,
     )
     config_entry.add_to_hass(hass)
 
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, OLD_ENTRY_ID)},
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="todo",
+        unique_id=f"{OLD_ENTRY_ID}_ingredients",
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="todo",
+        unique_id=f"{OLD_ENTRY_ID}_additional_items",
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="button",
+        unique_id=f"{OLD_ENTRY_ID}_todo_clear",
+        device_id=device.id,
+    )
+
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert entry.state is result
+    assert config_entry.state is result
 
     if result == ConfigEntryState.LOADED:
         # Check change in config entry and verify most recent version
@@ -172,22 +208,30 @@ async def test_migration_from(
         assert config_entry.minor_version == 2
         assert config_entry.unique_id == TEST_UUID
 
-
-async def test_migrate_error_from_future(hass: HomeAssistant) -> None:
-    """Test a future version isn't migrated."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        minor_version=1,
-        unique_id="some_crazy_future_unique_id",
-        data=MOCK_CONFIG_ENTRY_MIGRATION,
-    )
-
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+        assert entity_registry.async_is_registered(
+            entity_registry.entities.get_entity_id(
+                (
+                    Platform.TODO,
+                    DOMAIN,
+                    f"{TEST_UUID}_ingredients",
+                )
+            )
+        )
+        assert entity_registry.async_is_registered(
+            entity_registry.entities.get_entity_id(
+                (
+                    Platform.TODO,
+                    DOMAIN,
+                    f"{TEST_UUID}_additional_items",
+                )
+            )
+        )
+        assert entity_registry.async_is_registered(
+            entity_registry.entities.get_entity_id(
+                (
+                    Platform.BUTTON,
+                    DOMAIN,
+                    f"{TEST_UUID}_todo_clear",
+                )
+            )
+        )
