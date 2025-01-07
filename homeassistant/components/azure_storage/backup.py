@@ -61,7 +61,6 @@ class AzureStorageBackupAgent(BackupAgent):
         """Download a backup file."""
         try:
             download_stream = await self._client.download_blob(f"{backup_id}.tar")
-            return download_stream.chunks()
         except HttpResponseError as err:
             _LOGGER.debug(
                 "Failed to download backup %s: %s", backup_id, err, exc_info=True
@@ -71,6 +70,7 @@ class AzureStorageBackupAgent(BackupAgent):
                 translation_key="backup_download_error",
                 translation_placeholders={"backup_id": backup_id},
             ) from err
+        return download_stream.chunks()
 
     async def async_upload_backup(
         self,
