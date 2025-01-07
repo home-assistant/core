@@ -127,6 +127,111 @@ OLD_ENTRY_ID = "OLD_OLD_ENTRY_ID"
         "from_minor_version",
         "config_data",
         "unique_id",
+    ),
+    [
+        (
+            1,
+            1,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            None,
+        ),
+        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID),
+    ],
+)
+async def test_migration_from(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    from_version,
+    from_minor_version,
+    config_data,
+    unique_id,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test different expected migration paths."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config_data,
+        title=f"MIGRATION_TEST from {from_version}.{from_minor_version}",
+        version=from_version,
+        minor_version=from_minor_version,
+        unique_id=unique_id,
+        entry_id=OLD_ENTRY_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, OLD_ENTRY_ID)},
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="todo",
+        unique_id=f"{OLD_ENTRY_ID}_ingredients",
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="todo",
+        unique_id=f"{OLD_ENTRY_ID}_additional_items",
+        device_id=device.id,
+    )
+    entity_registry.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="button",
+        unique_id=f"{OLD_ENTRY_ID}_todo_clear",
+        device_id=device.id,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Check change in config entry and verify most recent version
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.unique_id == TEST_UUID
+
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.TODO,
+                DOMAIN,
+                f"{TEST_UUID}_ingredients",
+            )
+        )
+    )
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.TODO,
+                DOMAIN,
+                f"{TEST_UUID}_additional_items",
+            )
+        )
+    )
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.BUTTON,
+                DOMAIN,
+                f"{TEST_UUID}_todo_clear",
+            )
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "from_version",
+        "from_minor_version",
+        "config_data",
+        "unique_id",
         "login_exception",
         "result",
     ),
@@ -139,11 +244,17 @@ OLD_ENTRY_ID = "OLD_OLD_ENTRY_ID"
             CookidooRequestException,
             ConfigEntryState.MIGRATION_ERROR,
         ),
-        (1, 1, MOCK_CONFIG_ENTRY_MIGRATION, None, None, ConfigEntryState.LOADED),
-        (1, 2, MOCK_CONFIG_ENTRY_MIGRATION, TEST_UUID, None, ConfigEntryState.LOADED),
+        (
+            1,
+            1,
+            MOCK_CONFIG_ENTRY_MIGRATION,
+            None,
+            CookidooAuthException,
+            ConfigEntryState.MIGRATION_ERROR,
+        ),
     ],
 )
-async def test_migration_from(
+async def test_migration_from_with_error(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -155,10 +266,9 @@ async def test_migration_from(
     result: ConfigEntryState,
     mock_cookidoo_client: AsyncMock,
 ) -> None:
-    """Test different expected migration paths."""
+    """Test different expected migration paths but with connection issues."""
     # Migration can fail due to connection issues as we have to fetch the uuid
-    if login_exception:
-        mock_cookidoo_client.login.side_effect = login_exception
+    mock_cookidoo_client.login.side_effect = login_exception
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -201,37 +311,3 @@ async def test_migration_from(
     await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is result
-
-    if result == ConfigEntryState.LOADED:
-        # Check change in config entry and verify most recent version
-        assert config_entry.version == 1
-        assert config_entry.minor_version == 2
-        assert config_entry.unique_id == TEST_UUID
-
-        assert entity_registry.async_is_registered(
-            entity_registry.entities.get_entity_id(
-                (
-                    Platform.TODO,
-                    DOMAIN,
-                    f"{TEST_UUID}_ingredients",
-                )
-            )
-        )
-        assert entity_registry.async_is_registered(
-            entity_registry.entities.get_entity_id(
-                (
-                    Platform.TODO,
-                    DOMAIN,
-                    f"{TEST_UUID}_additional_items",
-                )
-            )
-        )
-        assert entity_registry.async_is_registered(
-            entity_registry.entities.get_entity_id(
-                (
-                    Platform.BUTTON,
-                    DOMAIN,
-                    f"{TEST_UUID}_todo_clear",
-                )
-            )
-        )
