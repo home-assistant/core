@@ -14,25 +14,21 @@ rules:
   test-before-setup: done
   appropriate-polling:
     status: todo
-    comment: Under review
-  entity-unique-id:
-    status: todo
-    comment: Under review
-  has-entity-name:
-    status: todo
-    comment: Under review
+    comment: In progress - see PR 134953
+  entity-unique-id: done
+  has-entity-name: done
   entity-event-setup:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: entities do not subscribe to events
   dependency-transparency:
     status: todo
-    comment: Under review
+    comment: The package is not built and published inside a CI pipeline
   action-setup:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: No service actions currently available
   common-modules:
-    status: todo
-    comment: Under review
+    status: done
+    comment: base entity available, but no coordinator
   docs-high-level-description:
     status: todo
     comment: Under review
@@ -45,9 +41,7 @@ rules:
   docs-actions:
     status: todo
     comment: Under review
-  brands:
-    status: todo
-    comment: Under review
+  brands: done
 
   ## Silver
   config-entry-unloading:
@@ -67,7 +61,7 @@ rules:
     comment: Under review
   parallel-updates:
     status: todo
-    comment: Under review
+    comment: In progress - see PR 134953
   test-coverage:
     status: todo
     comment: Under review
