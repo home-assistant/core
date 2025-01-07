@@ -11,18 +11,21 @@ from homeassistant.components.onewire.const import (
     INPUT_ENTRY_DEVICE_SELECTION,
     MANUFACTURER_MAXIM,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture
 async def filled_device_registry(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_registry: dr.DeviceRegistry
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> dr.DeviceRegistry:
     """Fill device registry with mock devices."""
     for key in ("28.111111111111", "28.222222222222", "28.222222222223"):
@@ -79,7 +82,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
 
 
 async def test_user_duplicate(
-    hass: HomeAssistant, config_entry: ConfigEntry, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user duplicate flow."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -104,7 +107,7 @@ async def test_user_duplicate(
 
 @pytest.mark.usefixtures("filled_device_registry")
 async def test_user_options_clear(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test clearing the options."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -128,7 +131,7 @@ async def test_user_options_clear(
 
 @pytest.mark.usefixtures("filled_device_registry")
 async def test_user_options_empty_selection(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test leaving the selection of devices empty."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -153,7 +156,7 @@ async def test_user_options_empty_selection(
 
 @pytest.mark.usefixtures("filled_device_registry")
 async def test_user_options_set_single(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test configuring a single device."""
     # Clear config options to certify functionality when starting from scratch
@@ -191,7 +194,7 @@ async def test_user_options_set_single(
 
 async def test_user_options_set_multiple(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     filled_device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test configuring multiple consecutive devices in a row."""
@@ -254,7 +257,7 @@ async def test_user_options_set_multiple(
 
 
 async def test_user_options_no_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that options does not change when no devices are available."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
