@@ -38,9 +38,15 @@
         }
       },
       "person": {
-        "default": "mdi:motion-sensor-off",
+        "default": "mdi:account-off",
         "state": {
-          "on": "mdi:motion-sensor"
+          "on": "mdi:account"
+        }
+      },
+      "cry": {
+        "default": "mdi:emoticon-happy-outline",
+        "state": {
+          "on": "mdi:emoticon-cry-outline"
         }
       },
       "sleep": {

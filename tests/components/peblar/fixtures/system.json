@@ -1,0 +1,12 @@
+{
+  "ActiveErrorCodes": [],
+  "ActiveWarningCodes": [],
+  "CellularSignalStrength": null,
+  "FirmwareVersion": "1.6.1+1+WL-1",
+  "Force1PhaseAllowed": true,
+  "PhaseCount": 3,
+  "ProductPn": "6004-2300-8002",
+  "ProductSn": "23-45-A4O-MOF",
+  "Uptime": 322094,
+  "WlanSignalStrength": null
+}

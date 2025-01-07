@@ -56,7 +56,6 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
     _attr_precision = PRECISION_TENTHS
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
