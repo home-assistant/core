@@ -13,6 +13,9 @@
       "moisture_status": {
         "default": "mdi:water-percent-alert"
       },
+      "nutrients_status": {
+        "default": "mdi:emoticon-poop"
+      },
       "salinity_status": {
         "default": "mdi:sprout-outline"
       },
@@ -21,6 +24,12 @@
       },
       "salinity": {
         "default": "mdi:sprout-outline"
+      },
+      "last_fertilised": {
+        "default": "mdi:calendar-check"
+      },
+      "next_fertilisation": {
+        "default": "mdi:calendar-end"
       }
     }
   }
