@@ -32,6 +32,17 @@
       "preLaunchTask": "Compile English translations"
     },
     {
+      "name": "Hassfest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "script.hassfest",
+      "justMyCode": false,
+      "args": [
+        "--action", "validate",
+        //"--integration-path", "homeassistant/components/tplink/"
+      ],
+    },    
+    {
       "name": "Home Assistant: Changed tests",
       "type": "debugpy",
       "request": "launch",
