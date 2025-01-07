@@ -16,32 +16,19 @@ from homeassistant.components.onedrive.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    OAUTH_SCOPES,
 )
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+from .const import CLIENT_ID, CLIENT_SECRET
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
-
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-
-
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
 
 
 async def _setup_oauth_step(
@@ -66,9 +53,7 @@ async def _setup_oauth_step(
         },
     )
 
-    scope = (
-        "https://graph.microsoft.com/files.readwrite.AppFolder+offline_access+openid"
-    )
+    scope = "+".join(OAUTH_SCOPES)
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"

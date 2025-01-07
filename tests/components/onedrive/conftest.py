@@ -16,6 +16,8 @@ from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .const import CLIENT_ID, CLIENT_SECRET
+
 from tests.common import MockConfigEntry
 
 
@@ -32,7 +34,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     await async_import_client_credential(
         hass,
         DOMAIN,
-        ClientCredential("1234", "5678"),
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
         DOMAIN,
     )
 
