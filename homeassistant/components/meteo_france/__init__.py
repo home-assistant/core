@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.warning(
             "1 hour rain forecast not available. %s is not in covered zone. _next_rain sensor will not be created",
             entry.title,
-        )    
+        )
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
