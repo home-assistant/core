@@ -1,0 +1,164 @@
+rules:
+  ## Bronze
+  config-flow:
+    status: todo
+    comment: Under review
+  test-before-configure:
+    status: todo
+    comment: Under review
+  unique-config-entry:
+    status: todo
+    comment: Under review
+  config-flow-test-coverage:
+    status: todo
+    comment: Under review
+  runtime-data:
+    status: todo
+    comment: Under review
+  test-before-setup:
+    status: todo
+    comment: Under review
+  appropriate-polling:
+    status: todo
+    comment: Under review
+  entity-unique-id:
+    status: todo
+    comment: Under review
+  has-entity-name:
+    status: todo
+    comment: Under review
+  entity-event-setup:
+    status: todo
+    comment: Under review
+  dependency-transparency:
+    status: todo
+    comment: Under review
+  action-setup:
+    status: todo
+    comment: Under review
+  common-modules:
+    status: todo
+    comment: Under review
+  docs-high-level-description:
+    status: todo
+    comment: Under review
+  docs-installation-instructions:
+    status: todo
+    comment: Under review
+  docs-removal-instructions:
+    status: todo
+    comment: Under review
+  docs-actions:
+    status: todo
+    comment: Under review
+  brands:
+    status: todo
+    comment: Under review
+
+  ## Silver
+  config-entry-unloading:
+    status: todo
+    comment: Under review
+  log-when-unavailable:
+    status: todo
+    comment: Under review
+  entity-unavailable:
+    status: todo
+    comment: Under review
+  action-exceptions:
+    status: todo
+    comment: Under review
+  reauthentication-flow:
+    status: todo
+    comment: Under review
+  parallel-updates:
+    status: todo
+    comment: Under review
+  test-coverage:
+    status: todo
+    comment: Under review
+  integration-owner:
+    status: todo
+    comment: Under review
+  docs-installation-parameters:
+    status: todo
+    comment: Under review
+  docs-configuration-parameters:
+    status: todo
+    comment: Under review
+
+  ## Gold
+  entity-translations:
+    status: todo
+    comment: Under review
+  entity-device-class:
+    status: todo
+    comment: Under review
+  devices:
+    status: todo
+    comment: Under review
+  entity-category:
+    status: todo
+    comment: Under review
+  entity-disabled-by-default:
+    status: todo
+    comment: Under review
+  discovery:
+    status: todo
+    comment: Under review
+  stale-devices:
+    status: todo
+    comment: Under review
+  diagnostics:
+    status: todo
+    comment: Under review
+  exception-translations:
+    status: todo
+    comment: Under review
+  icon-translations:
+    status: todo
+    comment: Under review
+  reconfiguration-flow:
+    status: todo
+    comment: Under review
+  dynamic-devices:
+    status: todo
+    comment: Under review
+  discovery-update-info:
+    status: todo
+    comment: Under review
+  repair-issues:
+    status: todo
+    comment: Under review
+  docs-use-cases:
+    status: todo
+    comment: Under review
+  docs-supported-devices:
+    status: todo
+    comment: Under review
+  docs-supported-functions:
+    status: todo
+    comment: Under review
+  docs-data-update:
+    status: todo
+    comment: Under review
+  docs-known-limitations:
+    status: todo
+    comment: Under review
+  docs-troubleshooting:
+    status: todo
+    comment: Under review
+  docs-examples:
+    status: todo
+    comment: Under review
+
+  ## Platinum
+  async-dependency:
+    status: todo
+    comment: Under review
+  inject-websession:
+    status: todo
+    comment: Under review
+  strict-typing:
+    status: todo
+    comment: Under review
