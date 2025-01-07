@@ -84,7 +84,7 @@ def _setup_entities(
         VeSyncHumidifierHA(dev, coordinator) for dev in devices if is_humidifier(dev)
     ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def _get_ha_mode(vs_mode: str) -> str | None:
