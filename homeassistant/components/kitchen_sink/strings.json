@@ -10,7 +10,7 @@
     }
   },
   "config_subentries": {
-    "add_entity": {
+    "entity": {
       "title": "Add entity",
       "step": {
         "add_sensor": {

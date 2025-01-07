@@ -116,7 +116,7 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "add_entity"),
+        (config_entry.entry_id, "entity"),
         context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
@@ -132,7 +132,7 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
         subentry_id: config_entries.ConfigSubentry(
             data={"state": 15},
             subentry_id=subentry_id,
-            subentry_type="add_entity",
+            subentry_type="entity",
             title="Sensor 1",
             unique_id=None,
         )
@@ -151,7 +151,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
             config_entries.ConfigSubentryData(
                 data={"state": 15},
                 subentry_id="mock_id",
-                subentry_type="add_entity",
+                subentry_type="entity",
                 title="Sensor 1",
                 unique_id=None,
             )
@@ -163,7 +163,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await config_entry.start_subentry_reconfigure_flow(
-        hass, "add_entity", subentry_id
+        hass, "entity", subentry_id
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_sensor"
@@ -179,7 +179,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
         subentry_id: config_entries.ConfigSubentry(
             data={"state": 5},
             subentry_id=subentry_id,
-            subentry_type="add_entity",
+            subentry_type="entity",
             title="Renamed sensor 1",
             unique_id=None,
         )
