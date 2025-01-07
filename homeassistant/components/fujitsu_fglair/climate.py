@@ -76,7 +76,6 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_HALVES
     _attr_target_temperature_step = 0.5
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:

@@ -12,6 +12,8 @@ from .coordinator import FGLairCoordinator
 class FGLairEntity(CoordinatorEntity[FGLairCoordinator]):
     """Generic Fglair entity (base class)."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
         """Store the representation of the device."""
         super().__init__(coordinator, context=device.device_serial_number)

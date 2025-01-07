@@ -34,7 +34,6 @@ class FGLairOutsideTemperature(FGLairEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_has_entity_name = True
     _attr_translation_key = "fglair_outside_temp"
 
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
