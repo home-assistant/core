@@ -62,8 +62,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle 1-Wire config flow start."""
         errors: dict[str, str] = {}
         if user_input:
-            # Prevent duplicate entries (host+port)
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
 
             await validate_input(self.hass, user_input, errors)
             if not errors:
@@ -74,6 +75,32 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle 1-Wire reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+
+            await validate_input(self.hass, user_input, errors)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data | (user_input or {})
+            ),
+            description_placeholders={"name": reconfigure_entry.title},
             errors=errors,
         )
 
