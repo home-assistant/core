@@ -7,9 +7,6 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncfan import VeSyncAirBypass
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -51,16 +48,12 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     """Describe VeSync sensor entity."""
 
     value_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice],
+        [VeSyncBaseDevice],
         StateType,
     ]
 
-    exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice], bool
-    ] = lambda _: True
-    update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice], None
-    ] = lambda _: None
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
+    update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
 
 
 def update_energy(device):
@@ -248,9 +241,9 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch | VeSyncBaseDevice,
+        device: VeSyncBaseDevice,
         description: VeSyncSensorEntityDescription,
-        coordinator,
+        coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the VeSync outlet device."""
         super().__init__(device, coordinator)
