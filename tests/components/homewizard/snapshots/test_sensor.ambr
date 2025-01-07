@@ -257,7 +257,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.705',
+    'state': '255.551',
   })
 # ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_energy_import:device-registry]
@@ -1733,7 +1733,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.101',
+    'state': '0.523',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_energy_import:device-registry]
@@ -13664,7 +13664,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '63.651',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_energy_import:device-registry]
@@ -15745,7 +15745,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.705',
+    'state': '255.551',
   })
 # ---
 # name: test_sensors[SDM230-entity_ids5][sensor.device_energy_import:device-registry]
@@ -17221,7 +17221,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.101',
+    'state': '0.523',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_energy_import:device-registry]
