@@ -131,7 +131,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': "<AsyncMock name='HomeWizardEnergyV1().device().product_type' id='4443413760'>_<AsyncMock name='HomeWizardEnergyV1().device().serial' id='4444163440'>",
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '2.2.2.2',
@@ -158,11 +158,11 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'title': "<AsyncMock name='HomeWizardEnergyV1().device().product_name' id='4432227472'>",
-      'unique_id': "<AsyncMock name='HomeWizardEnergyV1().device().product_type' id='4443413760'>_<AsyncMock name='HomeWizardEnergyV1().device().serial' id='4444163440'>",
+      'title': 'P1 meter',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
-    'title': "<AsyncMock name='HomeWizardEnergyV1().device().product_name' id='4432227472'>",
+    'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
   })

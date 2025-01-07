@@ -55,6 +55,9 @@ def mock_homewizardenergy(
             else None,
         )
 
+        # device() call is used during configuration flow
+        client.device.return_value = client.combined.return_value.device
+
         yield client
 
 

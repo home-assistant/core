@@ -206,6 +206,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
