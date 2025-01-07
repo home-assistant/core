@@ -11,7 +11,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
+from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -182,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Run all first refreshes
     await asyncio.gather(
-        *(async_setup_stream(vehicle) for vehicle in vehicles),
+        *(async_setup_stream(hass, entry, vehicle) for vehicle in vehicles),
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
@@ -271,12 +271,13 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
     return handle_vehicle_stream
 
 
-async def async_setup_stream(vehicle: TeslemetryVehicleData) -> None:
+async def async_setup_stream(
+    hass: HomeAssistant, entry: ConfigEntry, vehicle: TeslemetryVehicleData
+):
     """Set up the stream for a vehicle."""
 
-    # Create TeslemetryStreamVehicle directly so it can be patched for testing
-    vehicle.stream.vehicles[vehicle.vin] = TeslemetryStreamVehicle(
-        vehicle.stream, vehicle.vin
+    vehicle_stream = vehicle.stream.get_vehicle(vehicle.vin)
+    await vehicle_stream.get_config()
+    entry.async_create_background_task(
+        hass, vehicle_stream.prefer_typed(True), f"Prefer typed for {vehicle.vin}"
     )
-    await vehicle.stream.vehicles[vehicle.vin].get_config()
-    await vehicle.stream.vehicles[vehicle.vin].prefer_typed(True)
