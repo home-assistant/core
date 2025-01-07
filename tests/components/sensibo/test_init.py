@@ -128,10 +128,10 @@ async def test_automatic_device_addition_and_removal(
     assert entity_registry.async_get(entity_id)
     assert device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
 
+    # Remove one of the devices
     new_device_list = [
         device for device in get_data[2]["result"] if device["id"] != "ABC999111"
     ]
-
     mock_client.async_get_devices.return_value = {
         "status": "success",
         "result": new_device_list,
@@ -149,6 +149,7 @@ async def test_automatic_device_addition_and_removal(
     assert not entity_registry.async_get(entity_id)
     assert not device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
 
+    # Add the device back
     mock_client.async_get_devices.return_value = get_data[2]
     mock_client.async_get_devices_data.return_value = get_data[0]
 
