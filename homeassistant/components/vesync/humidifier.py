@@ -95,10 +95,7 @@ def _get_ha_mode(vs_mode: str) -> str | None:
 
 
 def _get_vs_mode(ha_mode: str) -> str | None:
-    vs_mode = HA_TO_VS_MODE_MAP.get(ha_mode)
-    if vs_mode is None:
-        _LOGGER.warning("Unknown mode '%s'", ha_mode)
-    return vs_mode
+    return HA_TO_VS_MODE_MAP.get(ha_mode)
 
 
 class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
