@@ -186,11 +186,6 @@ class TriggerBaseEntity(Entity):
                     variables,
                     parse_result=key in self._parse_result,
                 )
-            elif key in self._to_render_complex:
-                rendered[key] = render_complex(
-                    self._config[key],
-                    variables,
-                )
         except TemplateError as err:
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
