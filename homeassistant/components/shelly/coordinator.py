@@ -371,7 +371,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -456,7 +456,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 return
             await self.device.update_shelly()
         except (DeviceConnectionError, MacAddressMismatchError) as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
