@@ -396,7 +396,7 @@ class ConfigEntry[_DataT = Any]:
     supports_remove_device: bool | None
     _supports_options: bool | None
     _supports_reconfigure: bool | None
-    _supported_subentry_flows: dict[str, dict[str, bool]] | None
+    _supported_subentry_types: dict[str, dict[str, bool]] | None
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
@@ -508,7 +508,7 @@ class ConfigEntry[_DataT = Any]:
         _setter(self, "_supports_reconfigure", None)
 
         # Supports subentries
-        _setter(self, "_supported_subentry_flows", None)
+        _setter(self, "_supported_subentry_types", None)
 
         # Listeners to call on update
         _setter(self, "update_listeners", [])
@@ -583,16 +583,16 @@ class ConfigEntry[_DataT = Any]:
         return self._supports_reconfigure or False
 
     @property
-    def supported_subentry_flows(self) -> dict[str, dict[str, bool]]:
-        """Return supported subentries."""
-        if self._supported_subentry_flows is None and (
+    def supported_subentry_types(self) -> dict[str, dict[str, bool]]:
+        """Return supported subentry types."""
+        if self._supported_subentry_types is None and (
             handler := HANDLERS.get(self.domain)
         ):
             # work out sub entries supported by the handler
-            supported_flows = handler.async_get_supported_subentry_flows(self)
+            supported_flows = handler.async_get_supported_subentry_types(self)
             object.__setattr__(
                 self,
-                "_supported_subentry_flows",
+                "_supported_subentry_types",
                 {
                     subentry_flow_type: {
                         "supports_reconfigure": hasattr(
@@ -602,7 +602,7 @@ class ConfigEntry[_DataT = Any]:
                     for subentry_flow_type, subentry_flow_handler in supported_flows.items()
                 },
             )
-        return self._supported_subentry_flows or {}
+        return self._supported_subentry_types or {}
 
     def clear_state_cache(self) -> None:
         """Clear cached properties that are included in as_json_fragment."""
@@ -623,7 +623,7 @@ class ConfigEntry[_DataT = Any]:
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
             "supports_reconfigure": self.supports_reconfigure,
-            "supported_subentry_flows": self.supported_subentry_flows,
+            "supported_subentry_types": self.supported_subentry_types,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -2832,7 +2832,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
 
     @classmethod
     @callback
-    def async_get_supported_subentry_flows(
+    def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
@@ -3318,12 +3318,12 @@ class ConfigSubentryFlowManager(
         entry_id, subentry_type = handler_key
         entry = self._async_get_config_entry(entry_id)
         handler = await _async_get_flow_handler(self.hass, entry.domain, {})
-        subentry_flows = handler.async_get_supported_subentry_flows(entry)
-        if subentry_type not in subentry_flows:
+        subentry_types = handler.async_get_supported_subentry_types(entry)
+        if subentry_type not in subentry_types:
             raise data_entry_flow.UnknownHandler(
                 f"Config entry '{entry.domain}' does not support subentry '{subentry_type}'"
             )
-        subentry_flow = subentry_flows[subentry_type]()
+        subentry_flow = subentry_types[subentry_type]()
         subentry_flow.init_step = context["source"]
         return subentry_flow
 

@@ -1968,7 +1968,7 @@ async def test_create_entry_subentries(
 
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
-        assert entries[0].supported_subentry_flows == {}
+        assert entries[0].supported_subentry_types == {}
         assert entries[0].data == {"example": "data"}
         assert len(entries[0].subentries) == 1
         subentry_id = list(entries[0].subentries)[0]
@@ -1999,7 +1999,7 @@ async def test_entry_subentry(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2033,7 +2033,7 @@ async def test_entry_subentry(
                 unique_id="test",
             )
         }
-        assert entry.supported_subentry_flows == {
+        assert entry.supported_subentry_types == {
             "test": {"supports_reconfigure": False}
         }
 
@@ -2055,7 +2055,7 @@ async def test_entry_subentry_non_string(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2097,7 +2097,7 @@ async def test_entry_subentry_no_context(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2144,7 +2144,7 @@ async def test_entry_subentry_duplicate(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2185,7 +2185,7 @@ async def test_entry_subentry_abort(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2232,7 +2232,7 @@ async def test_entry_subentry_deleted_config_entry(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -2275,7 +2275,7 @@ async def test_entry_subentry_unsupported_subentry_type(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: ConfigEntry
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
