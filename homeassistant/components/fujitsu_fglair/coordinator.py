@@ -3,7 +3,7 @@
 import logging
 
 from ayla_iot_unofficial import AylaApi, AylaAuthError
-from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
+from ayla_iot_unofficial.fujitsu_hvac import DeviceOffline, FujitsuHVAC
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -56,7 +56,10 @@ class FGLairCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
 
         try:
             for dev in devices:
-                await dev.async_update()
+                try:
+                    await dev.async_update()
+                except DeviceOffline:
+                    continue
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
