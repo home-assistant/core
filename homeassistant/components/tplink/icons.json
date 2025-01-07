@@ -113,6 +113,12 @@
         "state": {
           "on": "mdi:baby-face"
         }
+      },
+      "double_click": {
+        "default": "mdi:gesture-tap",
+        "state": {
+          "on": "mdi:gesture-double-tap"
+        }
       }
     },
     "sensor": {

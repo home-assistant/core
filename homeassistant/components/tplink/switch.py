@@ -66,6 +66,9 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="baby_cry_detection",
     ),
+    TPLinkSwitchEntityDescription(
+        key="double_click",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}
@@ -79,6 +82,7 @@ async def async_setup_entry(
     """Set up switches."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
+    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
     entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
@@ -88,6 +92,7 @@ async def async_setup_entry(
         feature_type=Feature.Switch,
         entity_class=TPLinkSwitch,
         descriptions=SWITCH_DESCRIPTIONS_MAP,
+        child_coordinators=children_coordinators,
     )
 
     async_add_entities(entities)

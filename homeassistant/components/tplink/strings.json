@@ -245,6 +245,9 @@
       },
       "baby_cry_detection": {
         "name": "Baby cry detection"
+      },
+      "double_click": {
+        "name": "Double tap"
       }
     },
     "number": {

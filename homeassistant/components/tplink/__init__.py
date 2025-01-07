@@ -228,6 +228,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             for child in device.children
         ]
 
+    # Querying hub devices directly every 5 seconds could drain batteries so
+    # create child coordinators here. Coordinators will refresh automatically
+    # after settings are changed.
+    if device.device_type is Device.Type.Hub:
+        child_coordinators = [
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(minutes=5))
+            for child in device.children
+        ]
+
     camera_creds: Credentials | None = None
     if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
         camera_creds = Credentials(
