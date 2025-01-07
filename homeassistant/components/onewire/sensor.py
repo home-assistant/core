@@ -42,7 +42,7 @@ from .const import (
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
