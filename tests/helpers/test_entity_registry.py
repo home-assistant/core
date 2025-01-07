@@ -1570,24 +1570,15 @@ async def test_remove_config_subentry_from_device_removes_entities(
     )
     config_entry_1.add_to_hass(hass)
 
-    # Create device with three config subentries
-    device_registry.async_get_or_create(
+    # Create device connected to a config subentry
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_1.entry_id,
         config_subentry_id="mock-subentry-id-1",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_1.entry_id,
-        config_subentry_id="mock-subentry-id-2",
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry_1.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
     assert device_entry.config_entries == {config_entry_1.entry_id}
     assert device_entry.config_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+        config_entry_1.entry_id: "mock-subentry-id-1"
     }
 
     # Create one entity for each config entry
@@ -1618,44 +1609,22 @@ async def test_remove_config_subentry_from_device_removes_entities(
         device_id=device_entry.id,
     )
 
+    # Check the device is still there, and the subentry connection was not changed
+    device_entry = device_registry.async_get(device_entry.id)
+    assert device_entry.config_entries == {config_entry_1.entry_id}
+    assert device_entry.config_subentries == {
+        config_entry_1.entry_id: "mock-subentry-id-1"
+    }
+
     assert entity_registry.async_is_registered(entry_1.entity_id)
     assert entity_registry.async_is_registered(entry_2.entity_id)
     assert entity_registry.async_is_registered(entry_3.entity_id)
 
-    # Remove the first config subentry from the device, the entity associated with it
+    # Remove the config entry from the device, the entity associated with it
     # should be removed
     device_registry.async_update_device(
         device_entry.id,
         remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id="mock-subentry-id-1",
-    )
-    await hass.async_block_till_done()
-
-    assert device_registry.async_get(device_entry.id)
-    assert not entity_registry.async_is_registered(entry_1.entity_id)
-    assert entity_registry.async_is_registered(entry_2.entity_id)
-    assert entity_registry.async_is_registered(entry_3.entity_id)
-
-    # Remove the second config subentry from the device, the entity associated with it
-    # should be removed
-    device_registry.async_update_device(
-        device_entry.id,
-        remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id=None,
-    )
-    await hass.async_block_till_done()
-
-    assert device_registry.async_get(device_entry.id)
-    assert not entity_registry.async_is_registered(entry_1.entity_id)
-    assert entity_registry.async_is_registered(entry_2.entity_id)
-    assert not entity_registry.async_is_registered(entry_3.entity_id)
-
-    # Remove the third config subentry from the device, the entity associated with it
-    # (and the device itself) should be removed
-    device_registry.async_update_device(
-        device_entry.id,
-        remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id="mock-subentry-id-2",
     )
     await hass.async_block_till_done()
 
@@ -1689,25 +1658,26 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
         ],
     )
     config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
-    # Create device with three config subentries
+    # Create device connected to a config subentry
     device_registry.async_get_or_create(
         config_entry_id=config_entry_1.entry_id,
         config_subentry_id="mock-subentry-id-1",
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry_1.entry_id,
-        config_subentry_id="mock-subentry-id-2",
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
     device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry_1.entry_id,
+        config_entry_id=config_entry_2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    assert device_entry.config_entries == {config_entry_1.entry_id}
+    assert device_entry.config_entries == {
+        config_entry_1.entry_id,
+        config_entry_2.entry_id,
+    }
     assert device_entry.config_subentries == {
-        config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
+        config_entry_1.entry_id: "mock-subentry-id-1",
+        config_entry_2.entry_id: None,
     }
 
     # Create an entity without config entry or subentry
@@ -1720,22 +1690,10 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
 
     assert entity_registry.async_is_registered(entry_1.entity_id)
 
-    # Remove the first config subentry from the device
+    # Remove the config entry from the device
     device_registry.async_update_device(
         device_entry.id,
         remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id=None,
-    )
-    await hass.async_block_till_done()
-
-    assert device_registry.async_get(device_entry.id)
-    assert entity_registry.async_is_registered(entry_1.entity_id)
-
-    # Remove the second config subentry from the device
-    device_registry.async_update_device(
-        device_entry.id,
-        remove_config_entry_id=config_entry_1.entry_id,
-        remove_config_subentry_id="mock-subentry-id-1",
     )
     await hass.async_block_till_done()
 
