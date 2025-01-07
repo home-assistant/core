@@ -111,7 +111,9 @@ async def _async_create_folder_if_not_exists(
         folder_item = await items.by_drive_item_id(f"{base_folder_id}:/{folder}:").get()
     except APIError as err:
         if err.response_status_code != 404:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+            ) from err
         # is 404 not found, create folder
         _LOGGER.debug("Creating folder %s", folder)
         request_body = DriveItem(
