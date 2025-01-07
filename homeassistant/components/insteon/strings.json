@@ -164,7 +164,7 @@
     },
     "x10_all_units_off": {
       "name": "X10 all units off",
-      "description": "[%key:component::insteon::services::add_all_link::description%]",
+      "description": "Sends X10 All Units Off command.",
       "fields": {
         "housecode": {
           "name": "Housecode",
