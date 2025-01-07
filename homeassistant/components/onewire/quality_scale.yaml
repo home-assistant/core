@@ -12,9 +12,7 @@ rules:
     comment: Under review
   runtime-data: done
   test-before-setup: done
-  appropriate-polling:
-    status: todo
-    comment: In progress - see PR 134953
+  appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
   entity-event-setup:
@@ -53,9 +51,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: Local polling without authentication
-  parallel-updates:
-    status: todo
-    comment: In progress - see PR 134953
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters:
