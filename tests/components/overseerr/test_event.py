@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from future.backports.datetime import timedelta
 import pytest
+from python_overseerr import OverseerrConnectionError
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.overseerr import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -80,3 +81,29 @@ async def test_event_does_not_write_state(
     assert hass.states.get(
         "event.overseerr_last_media_event"
     ).last_reported == datetime(2023, 10, 21, 0, 0, 0, tzinfo=UTC)
+
+
+async def test_event_goes_unavailable(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test event entities go unavailable when we can't fetch data."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("event.overseerr_last_media_event").state != STATE_UNAVAILABLE
+    )
+
+    mock_overseerr_client.get_request_count.side_effect = OverseerrConnectionError(
+        "Boom"
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("event.overseerr_last_media_event").state == STATE_UNAVAILABLE
+    )
