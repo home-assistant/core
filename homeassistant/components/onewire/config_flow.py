@@ -77,6 +77,31 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle 1-Wire reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input:
+            # Prevent duplicate entries (host+port)
+            self._async_abort_entries_match(user_input)
+
+            await validate_input(self.hass, user_input, errors)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data | (user_input or {})
+            ),
+            description_placeholders={"name": reconfigure_entry.title},
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
