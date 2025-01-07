@@ -61,9 +61,7 @@ def async_register_backup_agents_listener(
     return remove_listener
 
 
-def handle_backup_errors[
-    _R, **P
-](
+def handle_backup_errors[_R, **P](
     func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
     """Handle backup errors."""
@@ -96,7 +94,7 @@ class OneDriveBackupAgent(BackupAgent):
         """Initialize the OneDrive backup agent."""
         super().__init__()
         self._items = entry.runtime_data.items
-        self._folder_id = entry.runtime_data.folder_id
+        self._folder_id = entry.runtime_data.backup_folder_id
         self._anonymous_auth_adapter = GraphRequestAdapter(
             auth_provider=AnonymousAuthenticationProvider,  # type: ignore[arg-type]
             client=get_async_client(hass),
