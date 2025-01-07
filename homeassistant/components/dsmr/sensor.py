@@ -460,7 +460,6 @@ def rename_old_gas_to_mbus(
                         ent_reg.async_update_entity(
                             entity.entity_id,
                             new_unique_id=mbus_device_id,
-                            device_id=mbus_device_id,
                         )
                     except ValueError:
                         LOGGER.debug(
