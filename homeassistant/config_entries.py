@@ -326,6 +326,7 @@ class ConfigSubentryData(TypedDict):
     """
 
     data: Mapping[str, Any]
+    subentry_type: str
     title: str
     unique_id: str | None
 
@@ -358,6 +359,7 @@ class ConfigSubentry:
 
     data: MappingProxyType[str, Any]
     subentry_id: str = field(default_factory=ulid_util.ulid_now)
+    subentry_type: str
     title: str
     unique_id: str | None
 
@@ -366,6 +368,7 @@ class ConfigSubentry:
         return {
             "data": dict(self.data),
             "subentry_id": self.subentry_id,
+            "subentry_type": self.subentry_type,
             "title": self.title,
             "unique_id": self.unique_id,
         }
@@ -462,6 +465,7 @@ class ConfigEntry(Generic[_DataT]):
                 subentry_kwargs["subentry_id"] = subentry_data["subentry_id"]  # type: ignore[typeddict-item]
             subentry = ConfigSubentry(
                 data=MappingProxyType(subentry_data["data"]),
+                subentry_type=subentry_data["subentry_type"],
                 title=subentry_data["title"],
                 unique_id=subentry_data.get("unique_id"),
                 **subentry_kwargs,
@@ -3345,7 +3349,7 @@ class ConfigSubentryFlowManager(
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
-        entry_id = flow.handler[0]
+        entry_id, subentry_type = flow.handler
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             raise UnknownEntry(entry_id)
@@ -3358,6 +3362,7 @@ class ConfigSubentryFlowManager(
             entry,
             ConfigSubentry(
                 data=MappingProxyType(result["data"]),
+                subentry_type=subentry_type,
                 title=result["title"],
                 unique_id=unique_id,
             ),

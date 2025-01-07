@@ -84,6 +84,7 @@ def test_get_or_create_updates_data(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id=config_subentry_id,
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             )
@@ -718,6 +719,7 @@ async def test_removing_config_subentry_id(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             )
@@ -762,12 +764,14 @@ async def test_deleted_entity_removing_config_subentry_id(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1557,12 +1561,14 @@ async def test_remove_config_subentry_from_device_removes_entities(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1646,12 +1652,14 @@ async def test_remove_config_subentry_from_device_removes_entities_2(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2135,6 +2143,7 @@ def test_migrate_entity_to_new_platform(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2169,6 +2178,7 @@ def test_migrate_entity_to_new_platform(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2234,6 +2244,7 @@ def test_migrate_entity_to_new_platform_error_handling(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2263,6 +2274,7 @@ def test_migrate_entity_to_new_platform_error_handling(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2327,6 +2339,7 @@ async def test_restore_entity(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2690,12 +2703,14 @@ async def test_subentry(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2709,6 +2724,7 @@ async def test_subentry(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             )
