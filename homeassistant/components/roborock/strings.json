@@ -28,7 +28,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -228,6 +228,9 @@
       "total_cleaning_area": {
         "name": "Total cleaning area"
       },
+      "total_cleaning_count": {
+        "name": "Total cleaning count"
+      },
       "vacuum_error": {
         "name": "Vacuum error",
         "state": {
@@ -422,6 +425,12 @@
     },
     "update_options_failed": {
       "message": "Failed to update Roborock options"
+    },
+    "invalid_user_agreement": {
+      "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+    },
+    "no_user_agreement": {
+      "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
     }
   },
   "services": {
