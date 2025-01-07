@@ -7,12 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -29,7 +24,7 @@ from .const import (
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
 )
-from .onewirehub import CannotConnect, OneWireHub
+from .onewirehub import CannotConnect, OneWireConfigEntry, OneWireHub
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -80,7 +75,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OneWireConfigEntry,
     ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
@@ -104,7 +99,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
     current_device: str
     """Friendly name of the currently selected device."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: OneWireConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
 
