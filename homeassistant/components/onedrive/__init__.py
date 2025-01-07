@@ -106,38 +106,32 @@ async def _async_create_folder_if_not_exists(
     folder: str,
 ) -> str:
     """Check if a folder exists and create it if it does not exist."""
-    folder_path = f"{base_folder_id}:/{folder}:"
     folder_item: DriveItem | None = None
     try:
-        folder_item = await items.by_drive_item_id(folder_path).get()
+        folder_item = await items.by_drive_item_id(
+            f"{base_folder_id}:/{folder}:"
+        ).get()
     except APIError as err:
         if err.response_status_code != 404:
             raise ConfigEntryNotReady from err
-        # did not exist, create it
-        _LOGGER.debug("Creating backup folder %s", folder)
+        # is 404 not found, create folder
+        _LOGGER.debug("Creating folder %s", folder)
+        request_body = DriveItem(
+            name=folder,
+            folder=Folder(),
+            additional_data={
+                "@microsoft_graph_conflict_behavior": "fail",
+            },
+        )
         try:
-            await items.by_drive_item_id(folder_path).get()
-        except APIError as get_folder_err:
-            if err.response_status_code != 404:
-                raise ConfigEntryNotReady from get_folder_err
-            # is 404 not found, create folder
-            _LOGGER.debug("Creating folder %s", folder)
-            request_body = DriveItem(
-                name=folder,
-                folder=Folder(),
-                additional_data={
-                    "@microsoft_graph_conflict_behavior": "fail",
-                },
-            )
-            try:
-                folder_item = await items.by_drive_item_id(
-                    base_folder_id
-                ).children.post(request_body)
-            except APIError as create_err:
-                raise ConfigEntryError(
-                    translation_domain=DOMAIN, translation_key="failed_to_get_folder"
-                ) from create_err
-            _LOGGER.debug("Created folder %s", folder)
+            folder_item = await items.by_drive_item_id(
+                base_folder_id
+            ).children.post(request_body)
+        except APIError as create_err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+            ) from create_err
+        _LOGGER.debug("Created folder %s", folder)
     else:
         _LOGGER.debug("Found folder %s", folder)
     if folder_item is None or not folder_item.id:
