@@ -142,7 +142,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if self.device.set_humidity(humidity):
             self.schedule_update_ha_state()
         else:
-            raise HomeAssistantError("An error occurred while setting humidity.")
+            raise HomeAssistantError(
+                f"An error occurred while setting humidity {humidity}."
+            )
 
     def set_mode(self, mode: str) -> None:
         """Set the mode of the device."""
@@ -153,7 +155,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if self.device.set_humidity_mode(_get_vs_mode(mode)):
             self.schedule_update_ha_state()
         else:
-            raise HomeAssistantError("An error occurred while setting mode.")
+            raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
 
     def turn_on(
         self,
