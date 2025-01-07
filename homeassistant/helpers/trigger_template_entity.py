@@ -178,7 +178,7 @@ class TriggerBaseEntity(Entity):
 
     def _render_availability_template(self, variables: dict[str, Any]) -> None:
         """Render availability template."""
-        rendered = dict(self._static_rendered)
+        rendered = dict(self._rendered)
         key = CONF_AVAILABILITY
         try:
             if key in self._to_render_simple:
@@ -200,8 +200,7 @@ class TriggerBaseEntity(Entity):
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
         rendered = dict(self._rendered)
-        if CONF_AVAILABILITY in rendered and rendered[CONF_AVAILABILITY] == "off":
-            self._rendered = self._static_rendered
+        if CONF_AVAILABILITY in rendered and rendered[CONF_AVAILABILITY] is False:
             return
         try:
             for key in self._to_render_simple:
@@ -229,8 +228,6 @@ class TriggerBaseEntity(Entity):
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
-            # Availability property specifically checks if self._rendered is not self._static_rendered
-            self._rendered = self._static_rendered
             return
         self._rendered = rendered
 
