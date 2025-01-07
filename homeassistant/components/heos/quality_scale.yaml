@@ -14,7 +14,7 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -60,14 +60,12 @@ rules:
     status: todo
     comment: Explore if this is possible.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: Has some troublehsooting setps, but needs to be improved
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
