@@ -161,6 +161,7 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USER_DATA: USER_DATA.as_dict(),
             CONF_BASE_URL: BASE_URL,
         },
+        unique_id=USER_EMAIL,
     )
     mock_entry.add_to_hass(hass)
     return mock_entry

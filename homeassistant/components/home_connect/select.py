@@ -220,7 +220,7 @@ async def async_setup_entry(
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()
                     if programs:
-                        for program in programs:
+                        for program in programs.copy():
                             if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
                                 programs.remove(program)
                                 if program not in programs_not_found:
