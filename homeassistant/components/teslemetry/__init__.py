@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     scopes = calls[0]["scopes"]
     region = calls[0]["region"]
-    metadata = calls[0]["vehicles"]
+    vehicle_metadata = calls[0]["vehicles"]
     products = calls[1]["response"]
 
     device_registry = dr.async_get(hass)
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     for product in products:
         if (
             "vin" in product
-            and metadata.get(product["vin"], {}).get("access")
+            and vehicle_metadata.get(product["vin"], {}).get("access")
             and Scope.VEHICLE_DEVICE_DATA in scopes
         ):
             # Remove the protobuff 'cached_data' that we do not use to save memory

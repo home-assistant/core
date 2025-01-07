@@ -1,4 +1,4 @@
-"""Test the Whirlpool Sixth Sense climate domain."""
+"""Test the Honeywell climate domain."""
 
 import datetime
 from unittest.mock import MagicMock

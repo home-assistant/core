@@ -2162,7 +2162,7 @@ async def test_setup_with_advanced_settings(
 async def test_change_websockets_transport_to_tcp(
     hass: HomeAssistant, mock_try_connection: MagicMock
 ) -> None:
-    """Test option flow setup with websockets transport settings."""
+    """Test reconfiguration flow changing websockets transport settings."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)
     config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
@@ -2178,7 +2178,7 @@ async def test_change_websockets_transport_to_tcp(
 
     mock_try_connection.return_value = True
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await config_entry.start_reconfigure_flow(hass, show_advanced_options=True)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
     assert result["data_schema"].schema["transport"]
@@ -2186,7 +2186,7 @@ async def test_change_websockets_transport_to_tcp(
     assert result["data_schema"].schema["ws_headers"]
 
     # Change transport to tcp
-    result = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             mqtt.CONF_BROKER: "test-broker",
@@ -2196,23 +2196,61 @@ async def test_change_websockets_transport_to_tcp(
             mqtt.CONF_WS_PATH: "/some_path",
         },
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "options"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_DISCOVERY: True,
-            mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     # Check config entry result
     assert config_entry.data == {
         mqtt.CONF_BROKER: "test-broker",
         CONF_PORT: 1234,
         mqtt.CONF_TRANSPORT: "tcp",
-        mqtt.CONF_DISCOVERY: True,
-        mqtt.CONF_DISCOVERY_PREFIX: "homeassistant_test",
     }
+
+
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
+@pytest.mark.parametrize(
+    "mqtt_config_entry_data",
+    [
+        {
+            mqtt.CONF_BROKER: "test-broker",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+            mqtt.CONF_WS_PATH: "/some_path",
+        }
+    ],
+)
+async def test_reconfigure_flow_form(
+    hass: HomeAssistant,
+    mock_try_connection: MagicMock,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test reconfigure flow."""
+    await mqtt_mock_entry()
+    entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    result = await entry.start_reconfigure_flow(hass, show_advanced_options=True)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "broker"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            mqtt.CONF_BROKER: "10.10.10,10",
+            CONF_PORT: 1234,
+            mqtt.CONF_TRANSPORT: "websockets",
+            mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
+            mqtt.CONF_WS_PATH: "/some_new_path",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        mqtt.CONF_BROKER: "10.10.10,10",
+        CONF_PORT: 1234,
+        mqtt.CONF_TRANSPORT: "websockets",
+        mqtt.CONF_WS_HEADERS: {"header_1": "custom_header1"},
+        mqtt.CONF_WS_PATH: "/some_new_path",
+    }
+    await hass.async_block_till_done(wait_background_tasks=True)

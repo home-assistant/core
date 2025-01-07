@@ -162,7 +162,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         return sorted(unordered_services)
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> NotifySetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -268,7 +268,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         await self.hass.services.async_call("notify", notify_service, data)
 
 
-class NotifySetupFlow(SetupFlow):
+class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
     """Handler for the setup flow."""
 
     def __init__(
@@ -280,8 +280,6 @@ class NotifySetupFlow(SetupFlow):
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
-        # to fix typing complaint
-        self._auth_module: NotifyAuthModule = auth_module
         self._available_notify_services = available_notify_services
         self._secret: str | None = None
         self._count: int | None = None

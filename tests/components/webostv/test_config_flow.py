@@ -218,22 +218,6 @@ async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
     assert result2["reason"] == "already_in_progress"
 
 
-async def test_ssdp_update_uuid(hass: HomeAssistant, client) -> None:
-    """Test that ssdp updates existing host entry uuid."""
-    entry = await setup_webostv(hass, None)
-    assert client
-    assert entry.unique_id is None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_SSDP}, data=MOCK_DISCOVERY_INFO
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
-
-
 async def test_ssdp_not_update_uuid(hass: HomeAssistant, client) -> None:
     """Test that ssdp not updates different host."""
     entry = await setup_webostv(hass, None)

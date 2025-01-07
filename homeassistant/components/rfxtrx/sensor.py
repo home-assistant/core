@@ -182,13 +182,11 @@ SENSOR_TYPES = (
         key="Count",
         translation_key="count",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
         translation_key="counter_value",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",

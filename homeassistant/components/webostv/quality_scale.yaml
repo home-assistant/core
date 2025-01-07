@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  action-setup:
+    status: todo
+    comment: move actions to entity services
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: exempt
+    comment: The integration does not use common patterns.
+  config-flow-test-coverage: todo
+  config-flow:
+    status: todo
+    comment: remove duplicated config flow start in tests, make sure tests ends with CREATE_ENTRY or ABORT, remove name parameter, use hass.config_entries.async_setup instead of async_setup_component, snapshot in diagnostics (and other tests when possible), test_client_disconnected validate no error in log, make reauth flow more graceful
+  dependency-transparency: done
+  docs-actions:
+    status: todo
+    comment: add description for parameters
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+  entity-category:
+    status: exempt
+    comment: The integration only registers one entity.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration only registers one entity.
+  entity-translations:
+    status: exempt
+    comment: There are no entities to translate.
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: The only entity can use the device class.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration does not have anything to repair.
+  stale-devices:
+    status: exempt
+    comment: The integration connects to a single device.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: need to check if it is needed for websockets or migrate to aiohttp
+  strict-typing:
+    status: todo
+    comment: aiowebostv is not fully typed

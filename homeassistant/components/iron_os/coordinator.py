@@ -5,19 +5,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import cast
 
-from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 from pynecil import (
+    CharSetting,
     CommunicationError,
     DeviceInfoResponse,
+    IronOSUpdate,
+    LatestRelease,
     LiveDataResponse,
     Pynecil,
     SettingsDataResponse,
+    UpdateException,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -104,10 +108,10 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         return False
 
 
-class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
     """IronOS coordinator for retrieving update information from github."""
 
-    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
+    def __init__(self, hass: HomeAssistant, github: IronOSUpdate) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(
             hass,
@@ -118,21 +122,13 @@ class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel])
         )
         self.github = github
 
-    async def _async_update_data(self) -> GitHubReleaseModel:
+    async def _async_update_data(self) -> LatestRelease:
         """Fetch data from Github."""
 
         try:
-            release = await self.github.repos.releases.latest("Ralim/IronOS")
-
-        except GitHubException as e:
-            raise UpdateFailed(
-                "Failed to retrieve latest release data from Github"
-            ) from e
-
-        if TYPE_CHECKING:
-            assert release.data
-
-        return release.data
+            return await self.github.latest_release()
+        except UpdateException as e:
+            raise UpdateFailed("Failed to check for latest IronOS update") from e
 
 
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
@@ -154,3 +150,21 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
                 _LOGGER.debug("Failed to fetch settings", exc_info=e)
 
         return self.data or SettingsDataResponse()
+
+    async def write(self, characteristic: CharSetting, value: bool) -> None:
+        """Write value to the settings characteristic."""
+
+        try:
+            await self.device.write(characteristic, value)
+        except CommunicationError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="submit_setting_failed",
+            ) from e
+
+        # prevent switch bouncing while waiting for coordinator to finish refresh
+        self.data.update(
+            cast(SettingsDataResponse, {characteristic.name.lower(): value})
+        )
+        self.async_update_listeners()
+        await self.async_request_refresh()

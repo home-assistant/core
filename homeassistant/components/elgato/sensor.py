@@ -21,8 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElgatorConfigEntry
-from .coordinator import ElgatoData, ElgatoDataUpdateCoordinator
+from .coordinator import ElgatoConfigEntry, ElgatoData, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
 # Coordinator is used to centralize the data updates
@@ -104,7 +103,7 @@ SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ElgatorConfigEntry,
+    entry: ElgatoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato sensor based on a config entry."""

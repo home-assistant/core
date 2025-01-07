@@ -25,6 +25,7 @@ class LaMetricSwitchEntityDescription(SwitchEntityDescription):
     """Class describing LaMetric switch entities."""
 
     available_fn: Callable[[Device], bool] = lambda device: True
+    has_fn: Callable[[Device], bool] = lambda device: True
     is_on_fn: Callable[[Device], bool]
     set_fn: Callable[[LaMetricDevice, bool], Awaitable[Any]]
 
@@ -34,8 +35,11 @@ SWITCHES = [
         key="bluetooth",
         translation_key="bluetooth",
         entity_category=EntityCategory.CONFIG,
-        available_fn=lambda device: device.bluetooth.available,
-        is_on_fn=lambda device: device.bluetooth.active,
+        available_fn=lambda device: bool(
+            device.bluetooth and device.bluetooth.available
+        ),
+        has_fn=lambda device: bool(device.bluetooth),
+        is_on_fn=lambda device: bool(device.bluetooth and device.bluetooth.active),
         set_fn=lambda api, active: api.bluetooth(active=active),
     ),
 ]
@@ -54,6 +58,7 @@ async def async_setup_entry(
             description=description,
         )
         for description in SWITCHES
+        if description.has_fn(coordinator.data)
     )
 
 
