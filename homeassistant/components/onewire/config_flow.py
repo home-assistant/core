@@ -62,13 +62,8 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle 1-Wire config flow start."""
         errors: dict[str, str] = {}
         if user_input:
-            # Prevent duplicate entries
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-            )
+            # Prevent duplicate entries (host+port)
+            self._async_abort_entries_match(user_input)
 
             await validate_input(self.hass, user_input, errors)
             if not errors:
