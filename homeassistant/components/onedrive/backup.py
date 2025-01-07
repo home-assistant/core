@@ -67,9 +67,11 @@ def handle_backup_errors[_R, **P](
     """Handle backup errors."""
 
     @wraps(func)
-    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
+    async def wrapper(
+        self: OneDriveBackupAgent, *args: P.args, **kwargs: P.kwargs
+    ) -> _R:
         try:
-            return await func(*args, **kwargs)
+            return await func(self, *args, **kwargs)
         except APIError as err:
             _LOGGER.error(
                 "Error during backup in %s: Status %s, message %s",
