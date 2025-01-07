@@ -685,7 +685,7 @@ async def config_subentry_list(
             "title": subentry.title,
             "unique_id": subentry.unique_id,
         }
-        for subentry_id, subentry in entry.subentries.items()
+        for subentry in entry.subentries.values()
     ]
     connection.send_result(msg["id"], result)
 
