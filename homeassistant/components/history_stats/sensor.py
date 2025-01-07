@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Mapping
 import datetime
 from typing import Any
 
@@ -23,7 +24,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
@@ -183,6 +184,7 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         self._attr_native_unit_of_measurement = UNITS[sensor_type]
         self._type = sensor_type
         self._attr_unique_id = unique_id
+        self._source_entity_id = source_entity_id
         self._attr_device_info = async_device_info_to_link_from_entity(
             hass,
             source_entity_id,
@@ -191,6 +193,27 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
         if self._type == CONF_TYPE_TIME:
             self._attr_device_class = SensorDeviceClass.DURATION
             self._attr_suggested_display_precision = 2
+
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+
+    async def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is no entity_id
+        # as without we can't track changes
+        # or either size or max_age is not set
+        if not self._source_entity_id:
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        self._process_update()
+        return self._call_on_remove_callbacks
 
     @callback
     def _process_update(self) -> None:
