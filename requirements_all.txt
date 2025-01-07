@@ -1137,7 +1137,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.63
+holidays==0.64
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250106.0
@@ -1662,7 +1662,7 @@ pmsensor==0.4
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==1.1.0
+powerfox==1.2.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -2079,7 +2079,7 @@ pylitejet==0.6.3
 pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.22.0
+pylutron-caseta==0.23.0
 
 # homeassistant.components.lutron
 pylutron==0.2.16
