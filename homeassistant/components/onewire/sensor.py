@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import timedelta
 import logging
 import os
 from types import MappingProxyType
@@ -40,6 +41,9 @@ from .const import (
 )
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
+
+PARALLEL_UPDATES = 1
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclasses.dataclass(frozen=True)

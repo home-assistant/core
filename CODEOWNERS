@@ -637,6 +637,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
+/homeassistant/components/homee/ @Taraman17
+/tests/components/homee/ @Taraman17
 /homeassistant/components/homekit/ @bdraco
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
@@ -686,6 +688,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
+/homeassistant/components/igloohome/ @keithle888
+/tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
 /homeassistant/components/image/ @home-assistant/core
@@ -887,6 +891,8 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mcp_server/ @allenporter
+/tests/components/mcp_server/ @allenporter
 /homeassistant/components/mealie/ @joostlek @andrew-codechimp
 /tests/components/mealie/ @joostlek @andrew-codechimp
 /homeassistant/components/meater/ @Sotolotl @emontnemery
@@ -1105,6 +1111,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
+/homeassistant/components/overseerr/ @joostlek
+/tests/components/overseerr/ @joostlek
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1478,8 +1486,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
-/homeassistant/components/tado/ @chiefdragon @erwindouna
-/tests/components/tado/ @chiefdragon @erwindouna
+/homeassistant/components/tado/ @erwindouna
+/tests/components/tado/ @erwindouna
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck

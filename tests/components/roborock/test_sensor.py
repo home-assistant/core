@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from roborock import DeviceData, HomeDataDevice
 from roborock.const import (
     FILTER_REPLACE_TIME,
@@ -12,11 +13,18 @@ from roborock.const import (
 from roborock.roborock_message import RoborockMessage, RoborockMessageProtocol
 from roborock.version_1_apis import RoborockMqttClientV1
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .mock_data import CONSUMABLE, STATUS, USER_DATA
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SENSOR]
 
 
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
