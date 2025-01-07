@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, TeslemetryState
+from .const import DOMAIN
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -245,7 +245,9 @@ class TeslemetryVehicleStreamEntity(Entity):
     ) -> None:
         """Initialize common aspects of a Teslemetry entity."""
         self.streaming_key = streaming_key
-        self.coordinator = data.coordinator
+        self.vehicle = data
+
+        self.api = data.api
         self.stream = data.stream
         self.vin = data.vin
         self.add_field = data.stream.get_vehicle(self.vin).add_field
@@ -257,22 +259,21 @@ class TeslemetryVehicleStreamEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        # Listen for this field in the stream
         self.async_on_remove(
             self.stream.async_add_listener(
                 self._handle_stream_update,
                 {"vin": self.vin, "data": {self.streaming_key: None}},
             )
         )
-        # Ensure this field is enabled on the vehicle
-        self.hass.async_create_task(self.add_field(self.streaming_key))
+        self.vehicle.config_entry.async_create_background_task(
+            self.hass,
+            self.add_field(self.streaming_key),
+            f"Adding field {self.streaming_key.value} to {self.vehicle.vin}",
+        )
 
     def _handle_stream_update(self, data: dict[str, Any]) -> None:
         """Handle updated data from the stream."""
-        # Listener filter ensures this value exists
         self._async_value_from_stream(data["data"][self.streaming_key])
-        # Getting any stream data means the vehicle is awake
-        self.coordinator.data["state"] = TeslemetryState.ONLINE
         self.async_write_ha_state()
 
     def _async_value_from_stream(self, value: Any) -> None:
