@@ -55,34 +55,6 @@ def mock_homewizardenergy(
             else None,
         )
 
-        # client.device.return_value = Device.from_dict(
-        #     load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
-        # )
-        # client.measurement.return_value = Measurement.from_dict(
-        #     load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
-        # )
-
-        # if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
-        #     client.state.return_value = State.from_dict(
-        #         load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
-        #     )
-        # else:
-        #     client.state.side_effect = NotFoundError
-
-        # if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
-        #     client.system.return_value = System.from_dict(
-        #         load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
-        #     )
-        # else:
-        #     client.system.side_effect = NotFoundError
-
-        # client.combined.return_value = CombinedModels(
-        #     device=client.device.return_value,
-        #     measurement=client.measurement.return_value,
-        #     state=client.state.return_value,
-        #     system=client.system.return_value,
-        # )
-
         yield client
 
 
