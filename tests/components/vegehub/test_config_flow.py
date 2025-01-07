@@ -70,7 +70,7 @@ async def test_user_flow_success(
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session
 ) -> None:
-    """Test the user flow when the device cannot be connected."""
+    """Test the user flow with bad data."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -90,7 +90,7 @@ async def test_user_flow_cannot_connect(
 async def test_user_flow_cannot_connect_404(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session_404
 ) -> None:
-    """Test the user flow when the device cannot be connected."""
+    """Test the user flow with bad responses."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -110,7 +110,7 @@ async def test_user_flow_cannot_connect_404(
 async def test_user_flow_no_ip_entered(
     hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
 ) -> None:
-    """Test the user flow with successful configuration."""
+    """Test the user flow with blank IP."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -149,7 +149,7 @@ async def test_zeroconf_flow_success(
 async def test_zeroconf_flow_abort_same_id(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
 ) -> None:
-    """Test the zeroconf discovery flow with successful configuration."""
+    """Test when zeroconf gets the same device twice."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -168,7 +168,7 @@ async def test_zeroconf_flow_abort_same_id(
 async def test_zeroconf_flow_abort_cannot_connect(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session
 ) -> None:
-    """Test the zeroconf discovery flow with successful configuration."""
+    """Test when zeroconf gets bad data."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -181,7 +181,7 @@ async def test_zeroconf_flow_abort_cannot_connect(
 async def test_zeroconf_flow_abort_cannot_connect_404(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session_404
 ) -> None:
-    """Test the zeroconf discovery flow with successful configuration."""
+    """Test when zeroconf gets bad responses."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -194,7 +194,7 @@ async def test_zeroconf_flow_abort_cannot_connect_404(
 async def test_zeroconf_flow_device_error_response(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
 ) -> None:
-    """Test the zeroconf discovery flow with successful configuration."""
+    """Test when zeroconf detects the device, but the communication fails at setup."""
 
     mocker = mock_aiohttp_session
 
@@ -222,7 +222,7 @@ async def test_zeroconf_flow_device_error_response(
 async def test_zeroconf_flow_device_stopped_responding(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
 ) -> None:
-    """Test the zeroconf discovery flow with successful configuration."""
+    """Test when the zeroconf detects a device, but then the device goes to sleep before setup."""
 
     mocker = mock_aiohttp_session
 

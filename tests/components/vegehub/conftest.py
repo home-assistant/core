@@ -42,7 +42,7 @@ def mock_aiohttp_session():
 
 @pytest.fixture
 def mock_aiohttp_bad_session():
-    """Set up mocked client session."""
+    """Set up mocked client session that returns bad data."""
     mocker = AiohttpClientMocker()
 
     with patch(
@@ -65,7 +65,7 @@ def mock_aiohttp_bad_session():
 
 @pytest.fixture
 def mock_aiohttp_bad_session_404():
-    """Set up mocked client session."""
+    """Set up mocked client session where responses are errors."""
     mocker = AiohttpClientMocker()
 
     with patch(
