@@ -138,7 +138,11 @@ class CloudBackupAgent(BackupAgent):
             raise BackupAgentError("Failed to get download details") from err
 
         try:
-            resp = await self._cloud.websession.get(details["url"])
+            resp = await self._cloud.websession.get(
+                details["url"],
+                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
+            )
+
             resp.raise_for_status()
         except ClientError as err:
             raise BackupAgentError("Failed to download backup") from err
