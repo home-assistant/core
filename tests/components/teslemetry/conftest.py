@@ -138,7 +138,7 @@ def mock_add_listener():
 def mock_stream_get_config():
     """Mock Teslemetry Stream listen method."""
     with patch(
-        "homeassistant.components.teslemetry.TeslemetryStreamVehicle.get_config",
+        "teslemetry_stream.TeslemetryStreamVehicle.get_config",
     ) as mock_stream_get_config:
         yield mock_stream_get_config
 
@@ -147,7 +147,7 @@ def mock_stream_get_config():
 def mock_stream_update_config():
     """Mock Teslemetry Stream listen method."""
     with patch(
-        "homeassistant.components.teslemetry.TeslemetryStreamVehicle.update_config",
+        "teslemetry_stream.TeslemetryStreamVehicle.update_config",
     ) as mock_stream_update_config:
         yield mock_stream_update_config
 
