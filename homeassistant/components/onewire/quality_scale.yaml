@@ -66,48 +66,38 @@ rules:
     comment: Under review
 
   ## Gold
-  entity-translations:
-    status: todo
-    comment: Under review
-  entity-device-class:
-    status: todo
-    comment: Under review
-  devices:
-    status: todo
-    comment: Under review
-  entity-category:
-    status: todo
-    comment: Under review
-  entity-disabled-by-default:
-    status: todo
-    comment: Under review
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
   discovery:
     status: todo
-    comment: Under review
+    comment: mDNS should be possible - https://owfs.org/index_php_page_avahi-discovery.html
   stale-devices:
-    status: todo
-    comment: Under review
+    status: done
+    comment: Manual removal
   diagnostics:
     status: todo
-    comment: Under review
+    comment: config-entry diagnostics level available, might be nice to have device-level diagnostics
   exception-translations:
     status: todo
     comment: Under review
   icon-translations:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: It doesn't make sense to override defaults
   reconfiguration-flow:
     status: todo
-    comment: Under review
+    comment: Not yet implemented
   dynamic-devices:
     status: todo
-    comment: Under review
+    comment: Not yet implemented
   discovery-update-info:
     status: todo
     comment: Under review
   repair-issues:
-    status: todo
-    comment: Under review
+    status: exempt
+    comment: No repairs available
   docs-use-cases:
     status: todo
     comment: Under review
