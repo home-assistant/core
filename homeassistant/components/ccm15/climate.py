@@ -144,9 +144,10 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
+        hvac: HVACMode = kwargs.get("hvac_mode")
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.coordinator.async_set_temperature(
-                self._ac_index, self.data, temperature
+                self._ac_index, self.data, temperature, hvac
             )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
