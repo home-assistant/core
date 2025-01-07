@@ -5,9 +5,10 @@ from __future__ import annotations
 import base64
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import hashlib
-from typing import Any, Self
+import logging
+from typing import Any
 
-from aiohttp import ClientError, ClientTimeout, StreamReader
+from aiohttp import ClientError, ClientTimeout
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.cloud_api import (
     async_files_delete_file,
@@ -18,11 +19,13 @@ from hass_nabucasa.cloud_api import (
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
+_LOGGER = logging.getLogger(__name__)
 _STORAGE_BACKUP = "backup"
 
 
@@ -71,31 +74,6 @@ def async_register_backup_agents_listener(
     return unsub
 
 
-class ChunkAsyncStreamIterator:
-    """Async iterator for chunked streams.
-
-    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
-    bytes instead of tuple[bytes, bool].
-    """
-
-    __slots__ = ("_stream",)
-
-    def __init__(self, stream: StreamReader) -> None:
-        """Initialize."""
-        self._stream = stream
-
-    def __aiter__(self) -> Self:
-        """Iterate."""
-        return self
-
-    async def __anext__(self) -> bytes:
-        """Yield next chunk."""
-        rv = await self._stream.readchunk()
-        if rv == (b"", False):
-            raise StopAsyncIteration
-        return rv[0]
-
-
 class CloudBackupAgent(BackupAgent):
     """Cloud backup agent."""
 
@@ -136,7 +114,11 @@ class CloudBackupAgent(BackupAgent):
             raise BackupAgentError("Failed to get download details") from err
 
         try:
-            resp = await self._cloud.websession.get(details["url"])
+            resp = await self._cloud.websession.get(
+                details["url"],
+                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
+            )
+
             resp.raise_for_status()
         except ClientError as err:
             raise BackupAgentError("Failed to download backup") from err
@@ -179,6 +161,11 @@ class CloudBackupAgent(BackupAgent):
                 headers=details["headers"] | {"content-length": str(backup.size)},
                 timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
             )
+            _LOGGER.log(
+                logging.DEBUG if upload_status.status < 400 else logging.WARNING,
+                "Backup upload status: %s",
+                upload_status.status,
+            )
             upload_status.raise_for_status()
         except (TimeoutError, ClientError) as err:
             raise BackupAgentError("Failed to upload backup") from err
@@ -208,6 +195,7 @@ class CloudBackupAgent(BackupAgent):
         """List backups."""
         try:
             backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+            _LOGGER.debug("Cloud backups: %s", backups)
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
 

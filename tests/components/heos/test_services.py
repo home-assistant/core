@@ -11,6 +11,7 @@ from homeassistant.components.heos.const import (
     SERVICE_SIGN_OUT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -91,6 +92,20 @@ async def test_sign_in_unknown_error(
     assert "Unable to sign in" in caplog.text
 
 
+async def test_sign_in_not_loaded_raises(hass: HomeAssistant, config_entry) -> None:
+    """Test the sign-in service when entry not loaded raises exception."""
+    await setup_component(hass, config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    with pytest.raises(HomeAssistantError, match="The HEOS integration is not loaded"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SIGN_IN,
+            {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
+            blocking=True,
+        )
+
+
 async def test_sign_out(hass: HomeAssistant, config_entry, controller) -> None:
     """Test the sign-out service."""
     await setup_component(hass, config_entry)
@@ -111,6 +126,15 @@ async def test_sign_out_not_connected(
 
     assert controller.sign_out.call_count == 0
     assert "Unable to sign out because HEOS is not connected" in caplog.text
+
+
+async def test_sign_out_not_loaded_raises(hass: HomeAssistant, config_entry) -> None:
+    """Test the sign-out service when entry not loaded raises exception."""
+    await setup_component(hass, config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    with pytest.raises(HomeAssistantError, match="The HEOS integration is not loaded"):
+        await hass.services.async_call(DOMAIN, SERVICE_SIGN_OUT, {}, blocking=True)
 
 
 async def test_sign_out_unknown_error(
