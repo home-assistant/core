@@ -76,14 +76,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     # Check rain forecast.
-    coordinator_rain = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"Météo-France rain for city {entry.title}",
-        update_method=_async_update_data_rain,
-        update_interval=SCAN_INTERVAL_RAIN,
-    )
-    await coordinator_rain.async_config_entry_first_refresh()
+    try:
+        await hass.async_add_executor_job(client.get_rain, latitude, longitude)
+        coordinator_rain = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            name=f"Météo-France rain for city {entry.title}",
+            update_method=_async_update_data_rain,
+            update_interval=SCAN_INTERVAL_RAIN,
+        )
+        await coordinator_rain.async_config_entry_first_refresh()
+    except:  # noqa: E722
+        _LOGGER.warning(
+            "1 hour rain forecast not available. %s is not in covered zone. _next_rain sensor will not be created",
+            entry.title,
+        )    
 
     department = coordinator_forecast.data.position.get("dept")
     _LOGGER.debug(
