@@ -698,7 +698,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.humidifier_200s_current_humidity',
+      'entity_id': 'sensor.humidifier_200s_humidity',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -710,26 +710,26 @@
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
       'original_icon': None,
-      'original_name': 'Current humidity',
+      'original_name': 'Humidity',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'current_humidity',
+      'translation_key': None,
       'unique_id': '200s-humidifier-humidity',
       'unit_of_measurement': '%',
     }),
   ])
 # ---
-# name: test_sensor_state[Humidifier 200s][sensor.humidifier_200s_current_humidity]
+# name: test_sensor_state[Humidifier 200s][sensor.humidifier_200s_humidity]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'Humidifier 200s Current humidity',
+      'friendly_name': 'Humidifier 200s Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.humidifier_200s_current_humidity',
+    'entity_id': 'sensor.humidifier_200s_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -785,7 +785,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.humidifier_600s_current_humidity',
+      'entity_id': 'sensor.humidifier_600s_humidity',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -797,26 +797,26 @@
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
       'original_icon': None,
-      'original_name': 'Current humidity',
+      'original_name': 'Humidity',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'current_humidity',
+      'translation_key': None,
       'unique_id': '600s-humidifier-humidity',
       'unit_of_measurement': '%',
     }),
   ])
 # ---
-# name: test_sensor_state[Humidifier 600S][sensor.humidifier_600s_current_humidity]
+# name: test_sensor_state[Humidifier 600S][sensor.humidifier_600s_humidity]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'Humidifier 600S Current humidity',
+      'friendly_name': 'Humidifier 600S Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.humidifier_600s_current_humidity',
+    'entity_id': 'sensor.humidifier_600s_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

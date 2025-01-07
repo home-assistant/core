@@ -41,9 +41,6 @@
       },
       "current_voltage": {
         "name": "Current voltage"
-      },
-      "current_humidity": {
-        "name": "Current humidity"
       }
     },
     "fan": {

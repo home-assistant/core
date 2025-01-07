@@ -192,7 +192,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="humidity",
-        translation_key="current_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
