@@ -1,10 +1,67 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import Generator
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from msgraph.generated.models.drive import Drive
+from msgraph.generated.models.drive_item import DriveItem
 import pytest
+
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="scopes")
+def mock_scopes() -> list[str]:
+    """Fixture to set the scopes present in the OAuth token."""
+    return OAUTH_SCOPES
+
+
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("1234", "5678"),
+        DOMAIN,
+    )
+
+
+@pytest.fixture(name="expires_at")
+def mock_expires_at() -> int:
+    """Fixture to set the oauth token expiration time."""
+    return time.time() + 3600
+
+
+@pytest.fixture
+def mock_config_entry(
+    expires_at: int, scopes: list[str], mock_drive: Drive
+) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title=DOMAIN,
+        domain=DOMAIN,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+        unique_id=mock_drive.id,
+    )
 
 
 @pytest.fixture
@@ -29,8 +86,19 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         ),
     ):
         client = graph_client.return_value
-        client.me.drive.get = AsyncMock()
-        client.me.drive.get.return_value = mock_drive
+        client.me.drive.get = AsyncMock(return_value=mock_drive)
+
+        client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get = AsyncMock(
+            return_value=DriveItem(id="approot")
+        )
+        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.get = AsyncMock(
+            return_value=DriveItem(id="folder_id")
+        )
+
+        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.post = AsyncMock(
+            return_value=DriveItem(id="folder_id")
+        )
+
         yield client
 
 

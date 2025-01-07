@@ -23,6 +23,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -164,20 +166,10 @@ async def test_already_configured(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_graph_client: MagicMock,
-    mock_drive: Drive,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test already configured account."""
-
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id="mock_drive_id",
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_drive.id = "mock_drive_id"
+    await setup_integration(hass, mock_config_entry)
 
     result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
