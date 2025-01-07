@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import os
 
 from homeassistant.components.binary_sensor import (
@@ -18,6 +19,9 @@ from . import OneWireConfigEntry
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
+
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass(frozen=True)
