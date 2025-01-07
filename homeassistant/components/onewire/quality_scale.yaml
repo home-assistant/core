@@ -84,7 +84,7 @@ rules:
     comment: It doesn't make sense to override defaults
   reconfiguration-flow:
     status: todo
-    comment: Not yet implemented
+    comment: see PR 134996
   dynamic-devices:
     status: todo
     comment: Not yet implemented
