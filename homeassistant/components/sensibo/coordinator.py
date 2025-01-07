@@ -50,7 +50,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
             timeout=TIMEOUT,
         )
         self.previous_devices: set[str] = set()
-        self.previous_motion_sensors: set[str] = set()
 
     async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
@@ -86,6 +85,6 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
-            self.previous_devices = current_devices
+        self.previous_devices = current_devices
 
         return data

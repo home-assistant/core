@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
+from pysensibo.model import SensiboData
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
@@ -13,7 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from . import ENTRY_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -103,3 +108,55 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, load_int.entry_id)
     assert response["success"]
+
+
+async def test_automatic_device_addition_and_removal(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for automatic device addition and removal."""
+
+    entity_id = "climate.hallway"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert entity_registry.async_get(entity_id)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
+
+    new_device_list = [
+        device for device in get_data[2]["result"] if device["id"] != "ABC999111"
+    ]
+
+    mock_client.async_get_devices.return_value = {
+        "status": "success",
+        "result": new_device_list,
+    }
+    new_data = {k: v for k, v in get_data[0].parsed.items() if k != "ABC999111"}
+    new_raw = mock_client.async_get_devices.return_value["result"]
+    mock_client.async_get_devices_data.return_value = SensiboData(new_raw, new_data)
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert not state
+    assert not entity_registry.async_get(entity_id)
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
+
+    mock_client.async_get_devices.return_value = get_data[2]
+    mock_client.async_get_devices_data.return_value = get_data[0]
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert entity_registry.async_get(entity_id)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})

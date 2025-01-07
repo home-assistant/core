@@ -113,9 +113,14 @@ async def async_setup_entry(
 
     added_devices: set[str] = set()
 
-    def _add_devices() -> None:
+    def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
         add_entities: list[SensiboSelect] = []
+        _added_devices = added_devices.copy()
+
+        for device_id in _added_devices:
+            if device_id not in coordinator.previous_devices:
+                added_devices.discard(device_id)
 
         for device_id, device_data in coordinator.data.parsed.items():
             if device_id in added_devices:
@@ -131,8 +136,8 @@ async def async_setup_entry(
 
         async_add_entities(add_entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
-    _add_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):

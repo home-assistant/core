@@ -123,19 +123,23 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     added_devices: set[str] = set()
-    added_motion_sensors: set[str] = set()
 
-    def _add_devices() -> None:
+    def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
 
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+        _added_devices = added_devices.copy()
+
+        for device_id in _added_devices:
+            if device_id not in coordinator.previous_devices:
+                added_devices.discard(device_id)
 
         for device_id, device_data in coordinator.data.parsed.items():
             if device_data.motion_sensors:
                 for sensor_id, sensor_data in device_data.motion_sensors.items():
-                    if sensor_id in added_motion_sensors:
+                    if sensor_id in added_devices:
                         continue
-                    added_motion_sensors.add(sensor_id)
+                    added_devices.add(sensor_id)
                     entities.extend(
                         SensiboMotionSensor(
                             coordinator, device_id, sensor_id, sensor_data, description
@@ -160,8 +164,8 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(_add_devices))
-    _add_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboMotionSensor(SensiboMotionBaseEntity, BinarySensorEntity):
