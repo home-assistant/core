@@ -3,21 +3,15 @@ rules:
   config-flow:
     status: todo
     comment: Under review
-  test-before-configure:
-    status: todo
-    comment: Under review
+  test-before-configure: done
   unique-config-entry:
-    status: todo
-    comment: Under review
+    status: done
+    comment: unique ID is not available, but duplicates are prevented based on host/port
   config-flow-test-coverage:
     status: todo
     comment: Under review
-  runtime-data:
-    status: todo
-    comment: Under review
-  test-before-setup:
-    status: todo
-    comment: Under review
+  runtime-data: done
+  test-before-setup: done
   appropriate-polling:
     status: todo
     comment: Under review
