@@ -143,7 +143,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": True,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -163,7 +163,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": "Unsupported API",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -183,7 +183,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -203,7 +203,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -223,7 +223,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla5",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -587,7 +587,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -673,7 +673,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "reason": None,
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -1123,7 +1123,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: core_ce.ConfigEntry
         ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -1179,7 +1179,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: core_ce.ConfigEntry
         ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -1250,7 +1250,7 @@ async def test_subentry_flow_unauth(
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: core_ce.ConfigEntry
         ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -1296,7 +1296,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: core_ce.ConfigEntry
         ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -1376,7 +1376,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
 
         @classmethod
         @callback
-        def async_get_supported_subentry_flows(
+        def async_get_supported_subentry_types(
             cls, config_entry: core_ce.ConfigEntry
         ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
@@ -1462,7 +1462,7 @@ async def test_get_single(
         "reason": None,
         "source": "user",
         "state": "loaded",
-        "supported_subentry_flows": {},
+        "supported_subentry_types": {},
         "supports_options": False,
         "supports_reconfigure": False,
         "supports_remove_device": False,
@@ -1824,7 +1824,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1845,7 +1845,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1866,7 +1866,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1887,7 +1887,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1908,7 +1908,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1940,7 +1940,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1971,7 +1971,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1992,7 +1992,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2023,7 +2023,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2044,7 +2044,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2081,7 +2081,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2102,7 +2102,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2123,7 +2123,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2144,7 +2144,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2165,7 +2165,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentry_flows": {},
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2274,7 +2274,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2298,7 +2298,7 @@ async def test_subscribe_entries_ws(
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2322,7 +2322,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2352,7 +2352,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2383,7 +2383,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2413,7 +2413,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2505,7 +2505,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2529,7 +2529,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2561,7 +2561,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2589,7 +2589,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2621,7 +2621,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2651,7 +2651,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentry_flows": {},
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
