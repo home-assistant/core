@@ -17,7 +17,7 @@ from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
