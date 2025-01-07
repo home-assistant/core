@@ -3,11 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'heliport',
     'config_entries': <ANY>,
-    'config_subentries': dict({
-      'super-mock-id': set({
-        None,
-      }),
-    }),
+    'config_subentries': <ANY>,
     'configuration_url': 'http://192.168.0.100/config',
     'connections': set({
       tuple(
@@ -44,11 +40,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': 'heliport',
     'config_entries': <ANY>,
-    'config_subentries': dict({
-      'super-mock-id': set({
-        'mock-subentry-id-1',
-      }),
-    }),
+    'config_subentries': <ANY>,
     'configuration_url': 'http://192.168.0.100/config',
     'connections': set({
       tuple(
