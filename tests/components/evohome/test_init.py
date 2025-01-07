@@ -4,80 +4,129 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+import aiohttp
 from evohomeasync2 import EvohomeClient, exceptions as exc
-from evohomeasync2.broker import _ERR_MSG_LOOKUP_AUTH, _ERR_MSG_LOOKUP_BASE
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome import DOMAIN, EvoService
+from homeassistant.components.evohome.const import DOMAIN, EvoService
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .conftest import mock_post_request
 from .const import TEST_INSTALLS
 
-SETUP_FAILED_ANTICIPATED = (
+LOG_USER_HINT_429 = (
+    "evohome.auth",
+    logging.ERROR,
+    "You have exceeded the server's API rate limit. Wait a while "
+    "and try again (consider reducing your polling interval).",
+)
+LOG_USER_HINT_OTH = (
+    "evohome.auth",
+    logging.ERROR,
+    "Unable to contact the vendor's server. Check your network "
+    "and review the vendor's status page, https://status.resideo.com.",
+)
+LOG_USER_HINT_USR = (
+    "evohome.auth",
+    logging.ERROR,
+    "Failed to authenticate. Check the username/password. Note that some "
+    "special characters accepted via the vendor's website are not valid here.",
+)
+
+LOG_FAIL_CONNECTION = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "Authenticator response is invalid: Connection error",
+)
+LOG_FAIL_CREDENTIALS = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "Authenticator response is invalid: {'error': 'invalid_grant'}",
+)
+LOG_FAIL_GATEWAY = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "Authenticator response is invalid: 502 Bad Gateway, response=None",
+)
+LOG_FAIL_TOO_MANY = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "Authenticator response is invalid: 429 Too Many Requests, response=None",
+)
+
+LOG_FGET_CONNECTION = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
+    "Connection error",
+)
+LOG_FGET_GATEWAY = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
+    "502 Bad Gateway, response=None",
+)
+LOG_FGET_TOO_MANY = (
+    "homeassistant.components.evohome",
+    logging.ERROR,
+    "Failed to fetch initial data: "
+    "GET https://tccna.resideo.com/WebAPI/emea/api/v1/userAccount: "
+    "429 Too Many Requests, response=None",
+)
+
+
+LOG_SETUP_FAILED = (
     "homeassistant.setup",
     logging.ERROR,
     "Setup failed for 'evohome': Integration failed to initialize.",
 )
-SETUP_FAILED_UNEXPECTED = (
-    "homeassistant.setup",
-    logging.ERROR,
-    "Error during setup of component evohome: ",
+
+EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
+    "Connection error",
 )
-AUTHENTICATION_FAILED = (
-    "homeassistant.components.evohome.helpers",
-    logging.ERROR,
-    "Failed to authenticate with the vendor's server. Check your username"
-    " and password. NB: Some special password characters that work"
-    " correctly via the website will not work via the web API. Message"
-    " is: ",
+EXC_BAD_CREDENTIALS = exc.AuthenticationFailedError(
+    "Authenticator response is invalid: {'error': 'invalid_grant'}",
+    status=HTTPStatus.BAD_REQUEST,
 )
-REQUEST_FAILED_NONE = (
-    "homeassistant.components.evohome.helpers",
-    logging.WARNING,
-    "Unable to connect with the vendor's server. "
-    "Check your network and the vendor's service status page. "
-    "Message is: ",
+EXC_TOO_MANY_REQUESTS = aiohttp.ClientResponseError(
+    Mock(),
+    (),
+    status=HTTPStatus.TOO_MANY_REQUESTS,
+    message=HTTPStatus.TOO_MANY_REQUESTS.phrase,
 )
-REQUEST_FAILED_503 = (
-    "homeassistant.components.evohome.helpers",
-    logging.WARNING,
-    "The vendor says their server is currently unavailable. "
-    "Check the vendor's service status page",
-)
-REQUEST_FAILED_429 = (
-    "homeassistant.components.evohome.helpers",
-    logging.WARNING,
-    "The vendor's API rate limit has been exceeded. "
-    "If this message persists, consider increasing the scan_interval",
+EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
+    Mock(), (), status=HTTPStatus.BAD_GATEWAY, message=HTTPStatus.BAD_GATEWAY.phrase
 )
 
-REQUEST_FAILED_LOOKUP = {
-    None: [
-        REQUEST_FAILED_NONE,
-        SETUP_FAILED_ANTICIPATED,
-    ],
-    HTTPStatus.SERVICE_UNAVAILABLE: [
-        REQUEST_FAILED_503,
-        SETUP_FAILED_ANTICIPATED,
-    ],
-    HTTPStatus.TOO_MANY_REQUESTS: [
-        REQUEST_FAILED_429,
-        SETUP_FAILED_ANTICIPATED,
-    ],
+AUTHENTICATION_TESTS: dict[Exception, list] = {
+    EXC_BAD_CONNECTION: [LOG_USER_HINT_OTH, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
+    EXC_BAD_CREDENTIALS: [LOG_USER_HINT_USR, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
+    EXC_TOO_MANY_REQUESTS: [LOG_USER_HINT_429, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
+    EXC_BAD_GATEWAY: [LOG_USER_HINT_OTH, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
+}
+
+CLIENT_REQUEST_TESTS: dict[Exception, list] = {
+    EXC_BAD_CONNECTION: [LOG_USER_HINT_OTH, LOG_FGET_CONNECTION, LOG_SETUP_FAILED],
+    EXC_BAD_GATEWAY: [LOG_USER_HINT_OTH, LOG_FGET_GATEWAY, LOG_SETUP_FAILED],
+    EXC_TOO_MANY_REQUESTS: [LOG_USER_HINT_429, LOG_FGET_TOO_MANY, LOG_SETUP_FAILED],
 }
 
 
-@pytest.mark.parametrize(
-    "status", [*sorted([*_ERR_MSG_LOOKUP_AUTH, HTTPStatus.BAD_GATEWAY]), None]
-)
+@pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
 async def test_authentication_failure_v2(
     hass: HomeAssistant,
     config: dict[str, str],
-    status: HTTPStatus,
+    exception: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failure to setup an evohome-compatible system.
@@ -85,27 +134,22 @@ async def test_authentication_failure_v2(
     In this instance, the failure occurs in the v2 API.
     """
 
-    with patch("evohomeasync2.broker.Broker.get") as mock_fcn:
-        mock_fcn.side_effect = exc.AuthenticationFailed("", status=status)
-
-        with caplog.at_level(logging.WARNING):
-            result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    with (
+        patch("evohome.auth.CredentialsManagerBase._request", side_effect=exception),
+        caplog.at_level(logging.WARNING),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
     assert result is False
 
-    assert caplog.record_tuples == [
-        AUTHENTICATION_FAILED,
-        SETUP_FAILED_ANTICIPATED,
-    ]
+    assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
 
-@pytest.mark.parametrize(
-    "status", [*sorted([*_ERR_MSG_LOOKUP_BASE, HTTPStatus.BAD_GATEWAY]), None]
-)
+@pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
 async def test_client_request_failure_v2(
     hass: HomeAssistant,
     config: dict[str, str],
-    status: HTTPStatus,
+    exception: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test failure to setup an evohome-compatible system.
@@ -113,17 +157,19 @@ async def test_client_request_failure_v2(
     In this instance, the failure occurs in the v2 API.
     """
 
-    with patch("evohomeasync2.broker.Broker.get") as mock_fcn:
-        mock_fcn.side_effect = exc.RequestFailed("", status=status)
-
-        with caplog.at_level(logging.WARNING):
-            result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("evohome.auth.AbstractAuth._request", side_effect=exception),
+        caplog.at_level(logging.WARNING),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
     assert result is False
 
-    assert caplog.record_tuples == REQUEST_FAILED_LOOKUP.get(
-        status, [SETUP_FAILED_UNEXPECTED]
-    )
+    assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
 
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
@@ -148,7 +194,7 @@ async def test_service_refresh_system(
     """Test EvoService.REFRESH_SYSTEM of an evohome system."""
 
     # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.refresh_status") as mock_fcn:
+    with patch("evohomeasync2.location.Location.update") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.REFRESH_SYSTEM,
@@ -157,8 +203,8 @@ async def test_service_refresh_system(
         )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        assert mock_fcn.await_args.args == ()  # type: ignore[union-attr]
+        assert mock_fcn.await_args.kwargs == {}  # type: ignore[union-attr]
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -169,7 +215,7 @@ async def test_service_reset_system(
     """Test EvoService.RESET_SYSTEM of an evohome system."""
 
     # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.RESET_SYSTEM,
@@ -178,5 +224,5 @@ async def test_service_reset_system(
         )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ("AutoWithReset",)
-        assert mock_fcn.await_args.kwargs == {"until": None}
+        assert mock_fcn.await_args.args == ("AutoWithReset",)  # type: ignore[union-attr]
+        assert mock_fcn.await_args.kwargs == {"until": None}  # type: ignore[union-attr]
