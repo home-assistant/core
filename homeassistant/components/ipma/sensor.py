@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import asdict, dataclass
 import logging
-from typing import Any, Never
+from typing import Any
 
 from pyipma.api import IPMA_API
 from pyipma.location import Location
@@ -30,40 +30,40 @@ class IPMASensorEntityDescription(SensorEntityDescription):
     """Describes a IPMA sensor entity."""
 
     value_fn: Callable[
-        [Location, IPMA_API], Coroutine[Location, IPMA_API, tuple[Any, Any]]
+        [Location, IPMA_API], Coroutine[Location, IPMA_API, tuple[Any, dict[str, Any]]]
     ]
 
 
 async def async_retrieve_rcm(
     location: Location, api: IPMA_API
-) -> tuple[int, None] | tuple[None, None]:
+) -> tuple[int, dict[str, Any]] | tuple[None, dict[str, Any]]:
     """Retrieve RCM."""
     fire_risk: RCM = await location.fire_risk(api)
     if fire_risk:
-        return fire_risk.rcm, None
-    return None, None
+        return fire_risk.rcm, {}
+    return None, {}
 
 
 async def async_retrieve_uvi(
     location: Location, api: IPMA_API
-) -> tuple[int, None] | tuple[None, None]:
+) -> tuple[int, dict[str, Any]] | tuple[None, dict[str, Any]]:
     """Retrieve UV."""
     uv_risk: UV = await location.uv_risk(api)
     if uv_risk:
-        return round(uv_risk.iUv), None
-    return None, None
+        return round(uv_risk.iUv), {}
+    return None, {}
 
 
 async def async_retrieve_warning(
     location: Location, api: IPMA_API
-) -> tuple[Any, dict[str, str]] | tuple[str, list[Never]]:
+) -> tuple[Any, dict[str, str]]:
     """Retrieve Warning."""
     warnings = await location.warnings(api)
     if len(warnings):
         return warnings[0].awarenessLevelID, {
             k: str(v) for k, v in asdict(warnings[0]).items()
         }
-    return "green", []
+    return "green", {}
 
 
 SENSOR_TYPES: tuple[IPMASensorEntityDescription, ...] = (
