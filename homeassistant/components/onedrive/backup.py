@@ -1,10 +1,12 @@
 """Support for OneDrive backup."""
 
-from collections.abc import AsyncIterator, Awaitable, Callable, Coroutine
+from __future__ import annotations
+
+from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, TypeVar
+from typing import Any, Concatenate
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import AnonymousAuthenticationProvider
@@ -31,8 +33,6 @@ from .util import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T", bound=Callable[..., Awaitable[Any]])
 
 
 async def async_get_backup_agents(
@@ -61,11 +61,15 @@ def async_register_backup_agents_listener(
     return remove_listener
 
 
-def handle_backup_errors(func: _T) -> _T:
+def handle_backup_errors[
+    _R, **P
+](
+    func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
     """Handle backup errors."""
 
     @wraps(func)
-    async def inner(*args: Any, **kwargs: Any) -> Any:
+    async def wrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
         try:
             return await func(*args, **kwargs)
         except APIError as err:
@@ -80,7 +84,7 @@ def handle_backup_errors(func: _T) -> _T:
                 translation_domain=DOMAIN, translation_key="backup_failure"
             ) from err
 
-    return inner
+    return wrapper
 
 
 class OneDriveBackupAgent(BackupAgent):
