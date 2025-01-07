@@ -5,7 +5,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
-        'id': 'appliance/energymeter/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
         'product_name': 'kWh meter',
         'product_type': 'HWE-KWH1',
@@ -95,7 +95,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
-        'id': 'appliance/energymeter/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
         'product_name': 'KWh meter 3-phase',
         'product_type': 'HWE-KWH3',
@@ -185,7 +185,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '4.19',
-        'id': 'appliance/p1dongle/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi P1 Meter',
         'product_name': 'P1 meter',
         'product_type': 'HWE-P1',
@@ -326,7 +326,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.03',
-        'id': 'appliance/energysocket/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
         'product_name': 'Energy Socket',
         'product_type': 'HWE-SKT',
@@ -420,7 +420,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '4.07',
-        'id': 'appliance/energysocket/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
         'product_name': 'Energy Socket',
         'product_type': 'HWE-SKT',
@@ -514,7 +514,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '2.03',
-        'id': 'appliance/watermeter/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi Watermeter',
         'product_name': 'Watermeter',
         'product_type': 'HWE-WTR',
@@ -604,7 +604,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
-        'id': 'appliance/energymeter/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
         'product_name': 'kWh meter',
         'product_type': 'SDM230-wifi',
@@ -694,7 +694,7 @@
       'device': dict({
         'api_version': 'v1',
         'firmware_version': '3.06',
-        'id': 'appliance/energymeter/5c2fafabcdef',
+        'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
         'product_name': 'KWh meter 3-phase',
         'product_type': 'SDM630-wifi',

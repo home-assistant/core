@@ -13,11 +13,12 @@ from . import HomeWizardConfigEntry
 
 TO_REDACT = {
     CONF_IP_ADDRESS,
-    "serial",
-    "wifi_ssid",
-    "unique_meter_id",
-    "unique_id",
     "gas_unique_id",
+    "id",
+    "serial",
+    "unique_id",
+    "unique_meter_id",
+    "wifi_ssid",
 }
 
 
