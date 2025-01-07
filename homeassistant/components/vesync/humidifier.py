@@ -113,6 +113,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_min_humidity = MIN_HUMIDITY
     _attr_supported_features = HumidifierEntityFeature(HumidifierEntityFeature.MODES)
 
+    device: VeSyncHumidifierDevice
+
     def __init__(
         self,
         humidifier: VeSyncHumidifierDevice,
@@ -120,35 +122,32 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     ) -> None:
         """Initialize the VeSync humidifier device."""
         super().__init__(humidifier, coordinator)
-        self.smarthumidifier = humidifier
 
     @property
     def available_modes(self) -> list[str]:
         """Return the available mist modes."""
         return [
             ha_mode
-            for ha_mode in (
-                _get_ha_mode(vs_mode) for vs_mode in self.smarthumidifier.mist_modes
-            )
+            for ha_mode in (_get_ha_mode(vs_mode) for vs_mode in self.device.mist_modes)
             if ha_mode
         ]
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self.smarthumidifier.config["auto_target_humidity"]
+        return self.device.config["auto_target_humidity"]
 
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.smarthumidifier.details["mode"])
+        return _get_ha_mode(self.device.details["mode"])
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the humidifier."""
 
         attr = {}
-        for k, v in self.smarthumidifier.details.items():
+        for k, v in self.device.details.items():
             if k in VS_TO_HA_ATTRIBUTES:
                 attr[VS_TO_HA_ATTRIBUTES[k]] = v
             elif k in self.state_attributes:
@@ -159,7 +158,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
-        if self.smarthumidifier.set_humidity(humidity):
+        if self.device.set_humidity(humidity):
             self.schedule_update_ha_state()
         else:
             raise HomeAssistantError("An error occurred while setting humidity.")
@@ -170,7 +169,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             raise HomeAssistantError(
                 "{mode} is not one of the valid available modes: {self.available_modes}"
             )
-        if self.smarthumidifier.set_humidity_mode(_get_vs_mode(mode)):
+        if self.device.set_humidity_mode(_get_vs_mode(mode)):
             self.schedule_update_ha_state()
         else:
             raise HomeAssistantError("An error occurred while setting mode.")
@@ -180,13 +179,13 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        success = self.smarthumidifier.turn_on()
+        success = self.device.turn_on()
         if not success:
             raise HomeAssistantError("An error occurred while turning on.")
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        success = self.smarthumidifier.turn_off()
+        success = self.device.turn_off()
         if not success:
             raise HomeAssistantError("An error occurred while turning off.")
 
