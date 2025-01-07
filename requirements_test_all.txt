@@ -966,10 +966,10 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.63
+holidays==0.64
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250103.0
+home-assistant-frontend==20250106.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.1
@@ -1372,7 +1372,7 @@ plumlightpad==0.0.11
 poolsense==0.0.8
 
 # homeassistant.components.powerfox
-powerfox==1.1.0
+powerfox==1.2.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -1434,7 +1434,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.5.3
+py-synologydsm-api==2.6.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1489,7 +1489,7 @@ pyatmo==8.1.0
 pyatv==0.16.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.1.4
+pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
 pybalboa==1.0.2
@@ -1693,7 +1693,7 @@ pylitejet==0.6.3
 pylitterbot==2023.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.22.0
+pylutron-caseta==0.23.0
 
 # homeassistant.components.lutron
 pylutron==0.2.16
@@ -2084,7 +2084,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.8
+renault-api==0.2.9
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2498,7 +2498,7 @@ yt-dlp[default]==2024.12.23
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.136.2
+zeroconf==0.137.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
