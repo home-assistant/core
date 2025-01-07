@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -255,8 +255,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        if not self.device_data.hvac_modes:
-            return [HVACMode.OFF]
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
         return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
 
     @property
