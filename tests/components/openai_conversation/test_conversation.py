@@ -149,6 +149,107 @@ async def test_template_variables(
     )
 
 
+async def test_extra_systen_prompt(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that template variables work."""
+    extra_system_prompt = "Garage door cover.garage_door has been left open for 30 minutes. We asked the user if they want to close it."
+    extra_system_prompt2 = (
+        "User person.paulus came home. Asked him what he wants to do."
+    )
+
+    with (
+        patch(
+            "openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "openai.resources.chat.completions.AsyncCompletions.create",
+            new_callable=AsyncMock,
+        ) as mock_create,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+            extra_system_prompt=extra_system_prompt,
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
+        extra_system_prompt
+    )
+
+    conversation_id = result.conversation_id
+
+    # Verify that follow-up conversations with no system prompt take previous one
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+            extra_system_prompt=None,
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
+        extra_system_prompt
+    )
+
+    # Verify that we take new system prompts
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+            extra_system_prompt=extra_system_prompt2,
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
+        extra_system_prompt2
+    )
+
+    # Verify that follow-up conversations with no system prompt take previous one
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert (
+        result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    ), result
+    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
+        extra_system_prompt2
+    )
+
+
 async def test_conversation_agent(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

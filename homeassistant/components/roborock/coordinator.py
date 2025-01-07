@@ -133,7 +133,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         if maps and maps.map_info:
             for roborock_map in maps.map_info:
                 self.maps[roborock_map.mapFlag] = RoborockMapInfo(
-                    flag=roborock_map.mapFlag, name=roborock_map.name, rooms={}
+                    flag=roborock_map.mapFlag,
+                    name=roborock_map.name or f"Map {roborock_map.mapFlag}",
+                    rooms={},
                 )
 
     async def get_rooms(self) -> None:
