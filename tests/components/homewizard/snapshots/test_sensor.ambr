@@ -6668,7 +6668,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.GAS_METER_G001',
+        'gas_meter_G001',
       ),
     }),
     'is_new': False,
@@ -6680,7 +6680,7 @@
     'name': 'Gas meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.GAS_METER_G001',
+    'serial_number': 'gas_meter_G001',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -6717,7 +6717,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.GAS_METER_G001',
+    'unique_id': 'homewizard_gas_meter_G001',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -6751,7 +6751,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.HEAT_METER_H001',
+        'heat_meter_H001',
       ),
     }),
     'is_new': False,
@@ -6763,7 +6763,7 @@
     'name': 'Heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.HEAT_METER_H001',
+    'serial_number': 'heat_meter_H001',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -6800,7 +6800,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.HEAT_METER_H001',
+    'unique_id': 'homewizard_heat_meter_H001',
     'unit_of_measurement': 'GJ',
   })
 # ---
@@ -6834,7 +6834,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.INLET_HEAT_METER_IH001',
+        'inlet_heat_meter_IH001',
       ),
     }),
     'is_new': False,
@@ -6846,7 +6846,7 @@
     'name': 'Inlet heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.INLET_HEAT_METER_IH001',
+    'serial_number': 'inlet_heat_meter_IH001',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -6883,7 +6883,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.INLET_HEAT_METER_IH001',
+    'unique_id': 'homewizard_inlet_heat_meter_IH001',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -6916,7 +6916,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.WARM_WATER_METER_WW001',
+        'warm_water_meter_WW001',
       ),
     }),
     'is_new': False,
@@ -6928,7 +6928,7 @@
     'name': 'Warm water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.WARM_WATER_METER_WW001',
+    'serial_number': 'warm_water_meter_WW001',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -6965,7 +6965,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.WARM_WATER_METER_WW001',
+    'unique_id': 'homewizard_warm_water_meter_WW001',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -6999,7 +6999,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.WATER_METER_W001',
+        'water_meter_W001',
       ),
     }),
     'is_new': False,
@@ -7011,7 +7011,7 @@
     'name': 'Water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.WATER_METER_W001',
+    'serial_number': 'water_meter_W001',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -7048,7 +7048,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.WATER_METER_W001',
+    'unique_id': 'homewizard_water_meter_W001',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -10428,7 +10428,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.GAS_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+        'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
     'is_new': False,
@@ -10440,7 +10440,7 @@
     'name': 'Gas meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.GAS_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'serial_number': 'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -10477,7 +10477,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.GAS_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'unique_id': 'homewizard_gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -10511,7 +10511,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+        'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
     'is_new': False,
@@ -10523,7 +10523,7 @@
     'name': 'Heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'serial_number': 'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -10560,7 +10560,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'unique_id': 'homewizard_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'unit_of_measurement': 'GJ',
   })
 # ---
@@ -10594,7 +10594,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.INLET_HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+        'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
     'is_new': False,
@@ -10606,7 +10606,7 @@
     'name': 'Inlet heat meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.INLET_HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'serial_number': 'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -10643,7 +10643,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.INLET_HEAT_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'unique_id': 'homewizard_inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -10676,7 +10676,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.WARM_WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+        'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
     'is_new': False,
@@ -10688,7 +10688,7 @@
     'name': 'Warm water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.WARM_WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'serial_number': 'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -10725,7 +10725,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.WARM_WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'unique_id': 'homewizard_warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
@@ -10759,7 +10759,7 @@
     'identifiers': set({
       tuple(
         'homewizard',
-        'DeviceType.WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+        'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
     'is_new': False,
@@ -10771,7 +10771,7 @@
     'name': 'Water meter',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 'DeviceType.WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'serial_number': 'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
@@ -10808,7 +10808,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'homewizard_DeviceType.WATER_METER_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
+    'unique_id': 'homewizard_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---

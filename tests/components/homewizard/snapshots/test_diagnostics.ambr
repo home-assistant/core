@@ -215,52 +215,37 @@
         'energy_import_t3_kwh': 2948.827,
         'energy_import_t4_kwh': 2948.827,
         'external_devices': dict({
-          'DeviceType.GAS_METER_G001': dict({
+          'gas_meter_G001': dict({
             'timestamp': '2023-01-25T22:09:57',
-            'type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': "<DeviceType.GAS_METER: 'gas_meter'>",
-            }),
+            'type': 'gas_meter',
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 111.111,
           }),
-          'DeviceType.HEAT_METER_H001': dict({
+          'heat_meter_H001': dict({
             'timestamp': '2023-01-25T22:09:57',
-            'type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': "<DeviceType.HEAT_METER: 'heat_meter'>",
-            }),
+            'type': 'heat_meter',
             'unique_id': '**REDACTED**',
             'unit': 'GJ',
             'value': 444.444,
           }),
-          'DeviceType.INLET_HEAT_METER_IH001': dict({
+          'inlet_heat_meter_IH001': dict({
             'timestamp': '2023-01-25T22:09:57',
-            'type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': "<DeviceType.INLET_HEAT_METER: 'inlet_heat_meter'>",
-            }),
+            'type': 'inlet_heat_meter',
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 555.555,
           }),
-          'DeviceType.WARM_WATER_METER_WW001': dict({
+          'warm_water_meter_WW001': dict({
             'timestamp': '2023-01-25T22:09:57',
-            'type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': "<DeviceType.WARM_WATER_METER: 'warm_water_meter'>",
-            }),
+            'type': 'warm_water_meter',
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 333.333,
           }),
-          'DeviceType.WATER_METER_W001': dict({
+          'water_meter_W001': dict({
             'timestamp': '2023-01-25T22:09:57',
-            'type': dict({
-              '__type': "<enum 'DeviceType'>",
-              'repr': "<DeviceType.WATER_METER: 'water_meter'>",
-            }),
+            'type': 'water_meter',
             'unique_id': '**REDACTED**',
             'unit': 'm3',
             'value': 222.222,
