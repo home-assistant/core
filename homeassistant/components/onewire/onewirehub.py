@@ -44,6 +44,8 @@ DEVICE_MANUFACTURER = {
 
 _LOGGER = logging.getLogger(__name__)
 
+type OneWireConfigEntry = ConfigEntry[OneWireHub]
+
 
 def _is_known_device(device_family: str, device_type: str | None) -> bool:
     """Check if device family/type is known to the library."""
@@ -70,7 +72,7 @@ class OneWireHub:
         except protocol.ConnError as exc:
             raise CannotConnect from exc
 
-    async def initialize(self, config_entry: ConfigEntry) -> None:
+    async def initialize(self, config_entry: OneWireConfigEntry) -> None:
         """Initialize a config entry."""
         host = config_entry.data[CONF_HOST]
         port = config_entry.data[CONF_PORT]
