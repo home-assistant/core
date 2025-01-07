@@ -13,7 +13,7 @@ from homeassistant.components.vodafone_station.const import (
     LINE_TYPES,
     SCAN_INTERVAL,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_USER_DATA, SENSOR_DATA_QUERY
@@ -48,7 +48,7 @@ async def test_active_connection_type(
 
     state = hass.states.get(active_connection_entity)
     assert state
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     sensor_data = deepcopy(SENSOR_DATA_QUERY)
     sensor_data[connection_type] = "1.1.1.1"
