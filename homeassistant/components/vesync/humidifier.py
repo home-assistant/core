@@ -110,9 +110,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     _attr_max_humidity = MAX_HUMIDITY
     _attr_min_humidity = MIN_HUMIDITY
-    _attr_supported_features: HumidifierEntityFeature = HumidifierEntityFeature(
-        HumidifierEntityFeature.MODES
-    )
+    _attr_supported_features = HumidifierEntityFeature(HumidifierEntityFeature.MODES)
 
     def __init__(
         self,
