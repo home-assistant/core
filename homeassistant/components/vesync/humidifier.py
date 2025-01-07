@@ -16,6 +16,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -158,25 +159,21 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
-        if humidity not in range(int(self.min_humidity), int(self.max_humidity + 1)):
-            raise ValueError(
-                "{humidity} is not between {self.min_humidity} and {self.max_humidity} (inclusive)"
-            )
         if self.smarthumidifier.set_humidity(humidity):
             self.schedule_update_ha_state()
         else:
-            raise ValueError("An error occurred while setting humidity.")
+            raise HomeAssistantError("An error occurred while setting humidity.")
 
     def set_mode(self, mode: str) -> None:
         """Set the mode of the device."""
         if mode not in self.available_modes:
-            raise ValueError(
+            raise HomeAssistantError(
                 "{mode} is not one of the valid available modes: {self.available_modes}"
             )
         if self.smarthumidifier.set_humidity_mode(_get_vs_mode(mode)):
             self.schedule_update_ha_state()
         else:
-            raise ValueError("An error occurred while setting mode.")
+            raise HomeAssistantError("An error occurred while setting mode.")
 
     def turn_on(
         self,
@@ -185,13 +182,13 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Turn the device on."""
         success = self.smarthumidifier.turn_on()
         if not success:
-            raise ValueError("An error occurred while turning on.")
+            raise HomeAssistantError("An error occurred while turning on.")
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = self.smarthumidifier.turn_off()
         if not success:
-            raise ValueError("An error occurred while turning off.")
+            raise HomeAssistantError("An error occurred while turning off.")
 
     @property
     def is_on(self) -> bool:

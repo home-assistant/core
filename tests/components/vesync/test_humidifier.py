@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -62,8 +62,6 @@ async def test_set_target_humidity_invalid(
 
     # Setting value out of range results in ServiceValidationError and
     # VeSyncHumid200300S.set_humidity does not get called.
-    # humidifier.async_service_humidity_set throws ServiceValidationError if the value
-    # is outside MIN_HUMIDITY..MAX_HUMIDITY.
     with patch("pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity") as method_mock:
         with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
@@ -94,9 +92,9 @@ async def test_set_target_humidity_VeSync(
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
-    # If VeSyncHumid200300S.set_humidity fails (returns False), then ValueError is raised
+    # If VeSyncHumid200300S.set_humidity fails (returns False), then HomeAssistantError is raised
     # and schedule_update_ha_state is not called.
-    expectation = nullcontext() if success else pytest.raises(ValueError)
+    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
     with (
         expectation,
         patch(
@@ -133,8 +131,8 @@ async def test_turn_on_off(
     humidifier_entity_id = "humidifier.humidifier_200s"
 
     # turn_on/turn_off returns False indicating failure in which case humidifier.turn_on/turn_off
-    # raises ValueError. HA state update is scheduled for success.
-    expectation = nullcontext() if success else pytest.raises(ValueError)
+    # raises HomeAssistantError. HA state update is scheduled for success.
+    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
     with (
         expectation,
         patch(
@@ -165,12 +163,10 @@ async def test_set_mode_invalid(
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
-    # Setting invalid value results in ServiceValidationError and
-    # VeSyncHumid200300S.set_humidity_mode does not get called.
     with patch(
         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
     ) as method_mock:
-        with pytest.raises(ValueError):
+        with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 SERVICE_SET_MODE,
@@ -199,8 +195,8 @@ async def test_set_mode_VeSync(
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
-    # If VeSyncHumid200300S.set_humidity_mode itself fails, then we should get ValueError
-    expectation = nullcontext() if success else pytest.raises(ValueError)
+    # If VeSyncHumid200300S.set_humidity_mode itself fails, then we should get HomeAssistantError
+    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
     with patch(
         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode", return_value=success
     ) as method_mock:
