@@ -42,10 +42,7 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
 ) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+    """Validate the user input allows us to connect."""
 
     hub = OneWireHub(hass)
     try:
