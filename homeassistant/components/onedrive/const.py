@@ -19,6 +19,8 @@ OAUTH_SCOPES: Final = [
     "openid",
 ]
 
+CONF_APPROOT_ID: Final = "approot_id"
+
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
