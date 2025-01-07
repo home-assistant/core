@@ -1,6 +1,5 @@
 """Support for VeSync humidifiers."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -140,20 +139,6 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     def mode(self) -> str | None:
         """Get the current preset mode."""
         return _get_ha_mode(self.device.details["mode"])
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return the state attributes of the humidifier."""
-
-        attr = {}
-        for k, v in self.device.details.items():
-            if k in VS_TO_HA_ATTRIBUTES:
-                attr[VS_TO_HA_ATTRIBUTES[k]] = v
-            elif k in self.state_attributes:
-                attr[f"vs_{k}"] = v
-            else:
-                attr[k] = v
-        return attr
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""

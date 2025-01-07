@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.humidifier import (
-    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MODE,
     DOMAIN as HUMIDIFIER_DOMAIN,
@@ -45,7 +44,9 @@ async def test_humidifier_state(
     assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
 
     state = hass.states.get(humidifier_id)
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == 35
+
+    # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
+    assert state.attributes.get(ATTR_HUMIDITY) == 40
 
 
 @patch(
