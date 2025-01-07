@@ -39,21 +39,16 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
+) -> None:
+    """Validate the user input allows us to connect."""
 
     hub = OneWireHub(hass)
-
-    host = data[CONF_HOST]
-    port = data[CONF_PORT]
-    # Raises CannotConnect exception on failure
-    await hub.connect(host, port)
-
-    # Return info that you want to store in the config entry.
-    return {"title": host}
+    try:
+        await hub.connect(data[CONF_HOST], data[CONF_PORT])
+    except CannotConnect:
+        errors["base"] = "cannot_connect"
 
 
 class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -61,41 +56,24 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize 1-Wire config flow."""
-        self.onewire_config: dict[str, Any] = {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle 1-Wire config flow start.
-
-        Let user manually input configuration.
-        """
+        """Handle 1-Wire config flow start."""
         errors: dict[str, str] = {}
         if user_input:
-            # Prevent duplicate entries
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-            )
+            # Prevent duplicate entries (host+port)
+            self._async_abort_entries_match(user_input)
 
-            self.onewire_config.update(user_input)
-
-            try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            else:
+            await validate_input(self.hass, user_input, errors)
+            if not errors:
                 return self.async_create_entry(
-                    title=info["title"], data=self.onewire_config
+                    title=user_input[CONF_HOST], data=user_input
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(DATA_SCHEMA, user_input),
             errors=errors,
         )
 
