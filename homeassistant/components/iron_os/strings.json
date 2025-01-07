@@ -128,8 +128,8 @@
       "temp_unit": {
         "name": "Temperature display unit",
         "state": {
-          "celsius": "Celsius (C°)",
-          "fahrenheit": "Fahrenheit (F°)"
+          "celsius": "Celsius (°C)",
+          "fahrenheit": "Fahrenheit (°F)"
         }
       },
       "desc_scroll_speed": {

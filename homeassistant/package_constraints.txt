@@ -31,11 +31,11 @@ dbus-fast==2.24.3
 fnv-hash-fast==1.0.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.6.0
+habluetooth==3.7.0
 hass-nabucasa==0.87.0
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20250103.0
+home-assistant-frontend==20250106.0
 home-assistant-intents==2025.1.1
 httpx==0.27.2
 ifaddr==0.2.0
