@@ -38,6 +38,11 @@
     }
   },
   "entity": {
+    "button": {
+      "silent": {
+        "name": "Silent"
+      }
+    },
     "climate": {
       "palazzetti": {
         "state_attributes": {
