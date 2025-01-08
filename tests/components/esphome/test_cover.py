@@ -28,7 +28,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TOGGLE
 from homeassistant.core import HomeAssistant
 
 from .conftest import MockESPHomeDevice
@@ -49,6 +49,7 @@ async def test_cover_entity(
             key=1,
             name="my cover",
             unique_id="my_cover",
+            supports_toggle=True,
             supports_position=True,
             supports_tilt=True,
             supports_stop=True,
@@ -91,6 +92,15 @@ async def test_cover_entity(
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, position=1.0)])
+    mock_client.cover_command.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_has_calls([call(key=1, toggle=True)])
     mock_client.cover_command.reset_mock()
 
     await hass.services.async_call(
@@ -163,6 +173,50 @@ async def test_cover_entity(
     state = hass.states.get("cover.test_mycover")
     assert state is not None
     assert state.state == CoverState.OPEN
+
+
+async def test_cover_entity_without_toggle(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a generic cover entity that does not support toggle."""
+    entity_info = [
+        CoverInfo(
+            object_id="mycover",
+            key=1,
+            name="my cover",
+            unique_id="my_cover",
+            supports_toggle=False,
+        )
+    ]
+    states = [
+        ESPHomeCoverState(
+            key=1,
+            current_operation=CoverOperation.IS_OPENING,
+        )
+    ]
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("cover.test_mycover")
+    assert state is not None
+    assert state.state == CoverState.OPENING
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_TOGGLE,
+        {ATTR_ENTITY_ID: "cover.test_mycover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_not_called()
 
 
 async def test_cover_entity_without_position(
