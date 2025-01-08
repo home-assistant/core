@@ -3,8 +3,12 @@ rules:
   config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage: done
-  runtime-data: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Clean up stale docstrings
+  runtime-data:
+    status: todo
+    comment: Use typed config entry in coordinator
   test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
@@ -30,7 +34,12 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: Move test constants to const.py, mock_init \
+      docstrings, entity_registry fixture, unused freezers \
+      match exceptions, use freezer in test_fan, use async_setup \
+      remove if statements from light tests, use constants in service calls
   integration-owner: done
   docs-installation-parameters: todo
   docs-configuration-parameters:
@@ -38,7 +47,10 @@ rules:
     comment: The integration does not have any options configuration parameters.
 
   # Gold
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: Use device class translations, remove unused translations \
+      translate Unnamed, setup exceptions, mac mismatch, async_set_hvac_mode
   entity-device-class: done
   devices: done
   entity-category: done
