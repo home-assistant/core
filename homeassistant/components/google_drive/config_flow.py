@@ -77,9 +77,9 @@ class OAuth2FlowHandler(
                 json={
                     "name": "Home Assistant",
                     "mimeType": "application/vnd.google-apps.folder",
-                    # Adding a property to be able to identify this folder
-                    # if needed in the future.
-                    "properties": {"ha": "root"},
+                    "properties": {
+                        "ha": "root",
+                    },
                 },
                 headers=headers,
             )
