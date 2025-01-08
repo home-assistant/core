@@ -50,6 +50,7 @@ def mock_smarty() -> Generator[AsyncMock]:
         client.filter_timer = 31
         client.get_configuration_version.return_value = 111
         client.get_software_version.return_value = 127
+        client.reset_filters_timer.return_value = True
         yield client
 
 

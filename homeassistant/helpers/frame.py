@@ -15,9 +15,13 @@ from typing import Any, cast
 
 from propcache import cached_property
 
-from homeassistant.core import async_get_hass_or_none
+from homeassistant.core import HomeAssistant, async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_suggest_report_issue
+from homeassistant.loader import (
+    Integration,
+    async_get_issue_integration,
+    async_suggest_report_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,25 +185,52 @@ class ReportBehavior(enum.Enum):
 def report_usage(
     what: str,
     *,
+    breaks_in_ha_version: str | None = None,
     core_behavior: ReportBehavior = ReportBehavior.ERROR,
     core_integration_behavior: ReportBehavior = ReportBehavior.LOG,
     custom_integration_behavior: ReportBehavior = ReportBehavior.LOG,
     exclude_integrations: set[str] | None = None,
+    integration_domain: str | None = None,
     level: int = logging.WARNING,
 ) -> None:
     """Report incorrect code usage.
 
-    Similar to `report` but allows more fine-grained reporting.
+    :param what: will be wrapped with "Detected that integration 'integration' {what}.
+    Please create a bug report at https://..."
+    :param breaks_in_ha_version: if set, the report will be adjusted to specify the
+    breaking version
+    :param exclude_integrations: skip specified integration when reviewing the stack.
+    If no integration is found, the core behavior will be applied
+    :param integration_domain: fallback for identifying the integration if the
+    frame is not found
     """
     try:
         integration_frame = get_integration_frame(
             exclude_integrations=exclude_integrations
         )
     except MissingIntegrationFrame as err:
-        msg = f"Detected code that {what}. Please report this issue."
+        if integration := async_get_issue_integration(
+            hass := async_get_hass_or_none(), integration_domain
+        ):
+            _report_integration_domain(
+                hass,
+                what,
+                breaks_in_ha_version,
+                integration,
+                core_integration_behavior,
+                custom_integration_behavior,
+                level,
+            )
+            return
+        msg = f"Detected code that {what}. Please report this issue"
         if core_behavior is ReportBehavior.ERROR:
             raise RuntimeError(msg) from err
         if core_behavior is ReportBehavior.LOG:
+            if breaks_in_ha_version:
+                msg = (
+                    f"Detected code that {what}. This will stop working in Home "
+                    f"Assistant {breaks_in_ha_version}, please report this issue"
+                )
             _LOGGER.warning(msg, stack_info=True)
         return
 
@@ -208,18 +239,73 @@ def report_usage(
         integration_behavior = custom_integration_behavior
 
     if integration_behavior is not ReportBehavior.IGNORE:
-        _report_integration(
-            what, integration_frame, level, integration_behavior is ReportBehavior.ERROR
+        _report_integration_frame(
+            what,
+            breaks_in_ha_version,
+            integration_frame,
+            level,
+            integration_behavior is ReportBehavior.ERROR,
         )
 
 
-def _report_integration(
+def _report_integration_domain(
+    hass: HomeAssistant | None,
     what: str,
+    breaks_in_ha_version: str | None,
+    integration: Integration,
+    core_integration_behavior: ReportBehavior,
+    custom_integration_behavior: ReportBehavior,
+    level: int,
+) -> None:
+    """Report incorrect usage in an integration (identified via domain).
+
+    Async friendly.
+    """
+    integration_behavior = core_integration_behavior
+    if not integration.is_built_in:
+        integration_behavior = custom_integration_behavior
+
+    if integration_behavior is ReportBehavior.IGNORE:
+        return
+
+    # Keep track of integrations already reported to prevent flooding
+    key = f"{integration.domain}:{what}"
+    if (
+        integration_behavior is not ReportBehavior.ERROR
+        and key in _REPORTED_INTEGRATIONS
+    ):
+        return
+    _REPORTED_INTEGRATIONS.add(key)
+
+    report_issue = async_suggest_report_issue(hass, integration=integration)
+    integration_type = "" if integration.is_built_in else "custom "
+    _LOGGER.log(
+        level,
+        "Detected that %sintegration '%s' %s. %s %s",
+        integration_type,
+        integration.domain,
+        what,
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
+        else "Please",
+        report_issue,
+    )
+
+    if integration_behavior is ReportBehavior.ERROR:
+        raise RuntimeError(
+            f"Detected that {integration_type}integration "
+            f"'{integration.domain}' {what}. Please {report_issue}"
+        )
+
+
+def _report_integration_frame(
+    what: str,
+    breaks_in_ha_version: str | None,
     integration_frame: IntegrationFrame,
     level: int = logging.WARNING,
     error: bool = False,
 ) -> None:
-    """Report incorrect usage in an integration.
+    """Report incorrect usage in an integration (identified via frame).
 
     Async friendly.
     """
@@ -237,13 +323,16 @@ def _report_integration(
     integration_type = "custom " if integration_frame.custom_integration else ""
     _LOGGER.log(
         level,
-        "Detected that %sintegration '%s' %s at %s, line %s: %s, please %s",
+        "Detected that %sintegration '%s' %s at %s, line %s: %s. %s %s",
         integration_type,
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
         integration_frame.line_number,
         integration_frame.line,
+        f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+        if breaks_in_ha_version
+        else "Please",
         report_issue,
     )
     if not error:
@@ -253,7 +342,7 @@ def _report_integration(
         f"'{integration_frame.integration}' {what} at "
         f"{integration_frame.relative_filename}, line "
         f"{integration_frame.line_number}: {integration_frame.line}. "
-        f"Please {report_issue}."
+        f"Please {report_issue}"
     )
 
 

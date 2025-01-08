@@ -43,10 +43,11 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
-        self._name: str | None = None
         self._password: str | None = None
         self._username: str | None = None
 
@@ -158,7 +159,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
-                assert self._name is not None
                 return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)

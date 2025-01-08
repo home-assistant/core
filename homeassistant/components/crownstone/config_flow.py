@@ -49,7 +49,7 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
     cloud: CrownstoneCloud
 
     def __init__(
-        self, flow_type: str, create_entry_cb: Callable[..., ConfigFlowResult]
+        self, flow_type: str, create_entry_cb: Callable[[], ConfigFlowResult]
     ) -> None:
         """Set up flow instance."""
         self.flow_type = flow_type

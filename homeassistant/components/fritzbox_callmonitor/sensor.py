@@ -20,7 +20,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FritzBoxCallMonitorConfigEntry
-from .base import FritzBoxPhonebook
+from .base import Contact, FritzBoxPhonebook
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
@@ -96,7 +96,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._host = host
         self._port = port
         self._monitor: FritzBoxCallMonitor | None = None
-        self._attributes: dict[str, str | list[str]] = {}
+        self._attributes: dict[str, str | list[str] | bool] = {}
 
         self._attr_translation_placeholders = {"phonebook_name": phonebook_name}
         self._attr_unique_id = unique_id
@@ -152,20 +152,20 @@ class FritzBoxCallSensor(SensorEntity):
         """Set the state."""
         self._attr_native_value = state
 
-    def set_attributes(self, attributes: Mapping[str, str]) -> None:
+    def set_attributes(self, attributes: Mapping[str, str | bool]) -> None:
         """Set the state attributes."""
         self._attributes = {**attributes}
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | list[str]]:
+    def extra_state_attributes(self) -> dict[str, str | list[str] | bool]:
         """Return the state attributes."""
         if self._prefixes:
             self._attributes[ATTR_PREFIXES] = self._prefixes
         return self._attributes
 
-    def number_to_name(self, number: str) -> str:
-        """Return a name for a given phone number."""
-        return self._fritzbox_phonebook.get_name(number)
+    def number_to_contact(self, number: str) -> Contact:
+        """Return a contact for a given phone number."""
+        return self._fritzbox_phonebook.get_contact(number)
 
     def update(self) -> None:
         """Update the phonebook if it is defined."""
@@ -225,35 +225,42 @@ class FritzBoxCallMonitor:
         df_in = "%d.%m.%y %H:%M:%S"
         df_out = "%Y-%m-%dT%H:%M:%S"
         isotime = datetime.strptime(line[0], df_in).strftime(df_out)
+        att: dict[str, str | bool]
         if line[1] == FritzState.RING:
             self._sensor.set_state(CallState.RINGING)
+            contact = self._sensor.number_to_contact(line[3])
             att = {
                 "type": "incoming",
                 "from": line[3],
                 "to": line[4],
                 "device": line[5],
                 "initiated": isotime,
-                "from_name": self._sensor.number_to_name(line[3]),
+                "from_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.CALL:
             self._sensor.set_state(CallState.DIALING)
+            contact = self._sensor.number_to_contact(line[5])
             att = {
                 "type": "outgoing",
                 "from": line[4],
                 "to": line[5],
                 "device": line[6],
                 "initiated": isotime,
-                "to_name": self._sensor.number_to_name(line[5]),
+                "to_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.CONNECT:
             self._sensor.set_state(CallState.TALKING)
+            contact = self._sensor.number_to_contact(line[4])
             att = {
                 "with": line[4],
                 "device": line[3],
                 "accepted": isotime,
-                "with_name": self._sensor.number_to_name(line[4]),
+                "with_name": contact.name,
+                "vip": contact.vip,
             }
             self._sensor.set_attributes(att)
         elif line[1] == FritzState.DISCONNECT:

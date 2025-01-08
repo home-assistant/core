@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from kasa import Feature
 
@@ -29,6 +29,9 @@ class TPLinkSensorEntityDescription(
 ):
     """Base class for a TPLink feature based sensor entity description."""
 
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
@@ -153,7 +156,7 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
     entity_description: TPLinkSensorEntityDescription
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         value = self._feature.value
         if value is not None and self._feature.precision_hint is not None:
@@ -161,7 +164,14 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
 
+        if TYPE_CHECKING:
+            # pylint: disable-next=import-outside-toplevel
+            from datetime import date, datetime
+
+            assert isinstance(value, str | int | float | date | datetime | None)
+
         self._attr_native_value = value
         # Map to homeassistant units and fallback to upstream one if none found
         if (unit := self._feature.unit) is not None:
             self._attr_native_unit_of_measurement = UNIT_MAPPING.get(unit, unit)
+        return True

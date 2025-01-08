@@ -8,11 +8,7 @@ from pyheos.error import HeosError
 import pytest
 
 from homeassistant.components.heos import media_player
-from homeassistant.components.heos.const import (
-    DATA_SOURCE_MANAGER,
-    DOMAIN,
-    SIGNAL_HEOS_UPDATED,
-)
+from homeassistant.components.heos.const import DOMAIN, SIGNAL_HEOS_UPDATED
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -55,6 +51,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
@@ -106,7 +103,7 @@ async def test_state_attributes(
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+        == config_entry.runtime_data.source_manager.source_list
     )
 
 
@@ -118,7 +115,7 @@ async def test_updates_from_signals(
     player = controller.players[1]
 
     # Test player does not update for other players
-    player.state = const.PLAY_STATE_PLAY
+    player.state = const.PlayState.PLAY
     player.heos.dispatcher.send(
         const.SIGNAL_PLAYER_EVENT, 2, const.EVENT_PLAYER_STATE_CHANGED
     )
@@ -127,7 +124,7 @@ async def test_updates_from_signals(
     assert state.state == STATE_IDLE
 
     # Test player_update standard events
-    player.state = const.PLAY_STATE_PLAY
+    player.state = const.PlayState.PLAY
     player.heos.dispatcher.send(
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
@@ -219,7 +216,7 @@ async def test_updates_from_sources_updated(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 2
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -244,7 +241,7 @@ async def test_updates_from_players_changed(
     async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     assert hass.states.get("media_player.test_player").state == STATE_IDLE
-    player.state = const.PLAY_STATE_PLAY
+    player.state = const.PlayState.PLAY
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
@@ -318,7 +315,7 @@ async def test_updates_from_user_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
     )
     await event.wait()
-    source_list = hass.data[DOMAIN][DATA_SOURCE_MANAGER].source_list
+    source_list = config_entry.runtime_data.source_manager.source_list
     assert len(source_list) == 1
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -554,7 +551,7 @@ async def test_select_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(1)
+    player.play_preset_station.assert_called_once_with(1)
     # Test state is matched by station name
     player.now_playing_media.station = favorite.name
     player.heos.dispatcher.send(
@@ -579,7 +576,7 @@ async def test_select_radio_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(2)
+    player.play_preset_station.assert_called_once_with(2)
     # Test state is matched by album id
     player.now_playing_media.station = "Classical"
     player.now_playing_media.album_id = favorite.media_id
@@ -604,14 +601,14 @@ async def test_select_radio_favorite_command_error(
     player = controller.players[1]
     # Test set radio preset
     favorite = favorites[2]
-    player.play_favorite.side_effect = CommandFailedError(None, "Failure", 1)
+    player.play_preset_station.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(2)
+    player.play_preset_station.assert_called_once_with(2)
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
@@ -632,7 +629,7 @@ async def test_select_input_source(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source)
+    player.play_input_source.assert_called_once_with(input_source.media_id)
     # Test state is matched by media id
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.media_id = const.INPUT_AUX_IN_1
@@ -684,7 +681,7 @@ async def test_select_input_command_error(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source)
+    player.play_input_source.assert_called_once_with(input_source.media_id)
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
@@ -834,7 +831,7 @@ async def test_play_media_playlist(
         blocking=True,
     )
     player.add_to_queue.assert_called_once_with(
-        playlist, const.ADD_QUEUE_REPLACE_AND_PLAY
+        playlist, const.AddCriteriaType.REPLACE_AND_PLAY
     )
     # Play with enqueuing
     player.add_to_queue.reset_mock()
@@ -849,7 +846,9 @@ async def test_play_media_playlist(
         },
         blocking=True,
     )
-    player.add_to_queue.assert_called_once_with(playlist, const.ADD_QUEUE_ADD_TO_END)
+    player.add_to_queue.assert_called_once_with(
+        playlist, const.AddCriteriaType.ADD_TO_END
+    )
     # Invalid name
     player.add_to_queue.reset_mock()
     await hass.services.async_call(
@@ -891,9 +890,9 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(index)
+    player.play_preset_station.assert_called_once_with(index)
     # Play by name
-    player.play_favorite.reset_mock()
+    player.play_preset_station.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -904,9 +903,9 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(index)
+    player.play_preset_station.assert_called_once_with(index)
     # Invalid name
-    player.play_favorite.reset_mock()
+    player.play_preset_station.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -917,7 +916,7 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    assert player.play_favorite.call_count == 0
+    assert player.play_preset_station.call_count == 0
     assert "Unable to play media: Invalid favorite 'Invalid'" in caplog.text
 
 
@@ -1055,3 +1054,34 @@ async def test_media_player_unjoin_group(
         blocking=True,
     )
     assert "Failed to ungroup media_player.test_player" in caplog.text
+
+
+async def test_media_player_group_fails_when_entity_removed(
+    hass: HomeAssistant,
+    config_entry,
+    config,
+    controller,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping fails when entity removed."""
+    await setup_platform(hass, config_entry, config)
+
+    # Remove one of the players
+    entity_registry.async_remove("media_player.test_player_2")
+
+    # Attempt to group
+    with pytest.raises(
+        HomeAssistantError,
+        match="The group member media_player.test_player_2 could not be resolved to a HEOS player.",
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            },
+            blocking=True,
+        )
+    controller.create_group.assert_not_called()

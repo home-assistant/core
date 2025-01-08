@@ -45,6 +45,7 @@ from . import (
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
     DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_DICT_KLAP,
     DEVICE_CONFIG_KLAP,
     DEVICE_CONFIG_LEGACY,
     DEVICE_ID,
@@ -53,10 +54,12 @@ from . import (
     MAC_ADDRESS,
     MODEL,
     _mocked_device,
+    _mocked_feature,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
 )
+from .conftest import override_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -68,6 +71,7 @@ async def test_configuring_tplink_causes_discovery(
     with (
         patch("homeassistant.components.tplink.Discover.discover") as discover,
         patch("homeassistant.components.tplink.Discover.discover_single"),
+        patch("homeassistant.components.tplink.Device.connect"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -219,8 +223,12 @@ async def test_config_entry_with_stored_credentials(
 
     hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.tplink.async_create_clientsession", return_value="Foo"
+    with (
+        patch(
+            "homeassistant.components.tplink.async_create_clientsession",
+            return_value="Foo",
+        ),
+        override_side_effect(mock_discovery["discover"], lambda *_, **__: {}),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -334,7 +342,14 @@ async def test_update_attrs_fails_in_init(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
     p = PropertyMock(side_effect=KasaException)
     type(light_module).color_temp = p
@@ -362,7 +377,14 @@ async def test_update_attrs_fails_on_update(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
 
     with _patch_discovery(device=light), _patch_connect(device=light):
@@ -538,9 +560,8 @@ async def test_move_credentials_hash(
     from the device.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -586,9 +607,8 @@ async def test_move_credentials_hash_auth_error(
     in async_setup_entry.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -630,9 +650,8 @@ async def test_move_credentials_hash_other_error(
     at the end of the test.
     """
     device_config = {
-        **DEVICE_CONFIG_KLAP.to_dict(
-            exclude_credentials=True, credentials_hash="theHash"
-        )
+        **DEVICE_CONFIG_DICT_KLAP,
+        "credentials_hash": "theHash",
     }
     entry_data = {**CREATE_ENTRY_DATA_KLAP, CONF_DEVICE_CONFIG: device_config}
 
@@ -729,7 +748,7 @@ async def test_credentials_hash_auth_error(
         await hass.async_block_till_done()
 
     expected_config = DeviceConfig.from_dict(
-        DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True, credentials_hash="theHash")
+        {**DEVICE_CONFIG_DICT_KLAP, "credentials_hash": "theHash"}
     )
     expected_config.uses_http = False
     expected_config.http_client = "Foo"
@@ -767,7 +786,9 @@ async def test_migrate_remove_device_config(
         CONF_HOST: expected_entry_data[CONF_HOST],
         CONF_ALIAS: ALIAS,
         CONF_MODEL: MODEL,
-        CONF_DEVICE_CONFIG: device_config.to_dict(exclude_credentials=True),
+        CONF_DEVICE_CONFIG: {
+            k: v for k, v in device_config.to_dict().items() if k != "credentials"
+        },
     }
 
     entry = MockConfigEntry(

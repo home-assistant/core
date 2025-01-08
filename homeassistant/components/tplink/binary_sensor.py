@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
 from kasa import Feature
 
@@ -25,6 +25,9 @@ class TPLinkBinarySensorEntityDescription(
 ):
     """Base class for a TPLink feature based sensor entity description."""
 
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
@@ -96,6 +99,7 @@ class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntit
     entity_description: TPLinkBinarySensorEntityDescription
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_is_on = self._feature.value
+        self._attr_is_on = cast(bool | None, self._feature.value)
+        return True

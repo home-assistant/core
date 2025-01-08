@@ -174,7 +174,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,
@@ -185,7 +185,7 @@ async def test_switch_entities(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             switch.DOMAIN,

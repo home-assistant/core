@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_entities[climate.temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'eco',
+        'away',
+        'home',
+        'comfort',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.temperature',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'velbus',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': None,
+    'unique_id': 'asdfghjk-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[climate.temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Temperature',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'eco',
+        'away',
+        'home',
+        'comfort',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---

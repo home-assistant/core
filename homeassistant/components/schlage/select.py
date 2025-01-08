@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import SchlageConfigEntry
 from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -33,11 +32,11 @@ _DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SchlageConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up selects based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     def _add_new_locks(locks: dict[str, LockData]) -> None:
         async_add_entities(
