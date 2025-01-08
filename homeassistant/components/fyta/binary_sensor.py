@@ -110,10 +110,10 @@ async def async_setup_entry(
 class FytaPlantBinarySensor(FytaPlantEntity, BinarySensorEntity):
     """Represents a Fyta binary sensor."""
 
-    entity_description: BinarySensorEntityDescription
+    entity_description: FytaBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:
         """Return value of the binary sensor."""
 
-        return bool(getattr(self.plant, self.entity_description.key))
+        return self.entity_description.value_fn(self.plant)
