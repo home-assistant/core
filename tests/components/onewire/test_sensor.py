@@ -9,13 +9,14 @@ from pyownet.protocol import OwnetError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_owproxy_mock_devices
 from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +28,7 @@ def override_platforms() -> Generator[None]:
 
 async def test_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
     device_registry: dr.DeviceRegistry,
@@ -66,7 +67,7 @@ async def test_sensors(
 @pytest.mark.parametrize("device_id", ["12.111111111111"])
 async def test_tai8570_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
     entity_registry: er.EntityRegistry,

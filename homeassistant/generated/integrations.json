@@ -1144,6 +1144,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "decorquip": {
+      "name": "Decorquip Dream",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "delijn": {
       "name": "De Lijn",
       "integration_type": "hub",
@@ -2610,6 +2615,12 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homee": {
+      "name": "Homee",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "homematic": {
       "name": "Homematic",
@@ -4598,7 +4609,7 @@
       "name": "Overseerr",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -6188,7 +6199,8 @@
       "name": "System Monitor",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "tado": {
       "name": "Tado",

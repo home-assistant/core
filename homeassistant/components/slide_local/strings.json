@@ -32,7 +32,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "discovery_connection_failed": "The setup of the discovered device failed with the following error: {error}. Please try to set it up manually.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The mac address of the device ({mac}) does not match the previous mac address."
+      "unique_id_mismatch": "The MAC address of the device ({mac}) does not match the previous MAC address."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -49,7 +49,7 @@
           "invert_position": "Invert position"
         },
         "data_description": {
-          "invert_position": "Invert the position of your slide cover."
+          "invert_position": "Inverts the position of your Slide cover."
         }
       }
     }

@@ -7,7 +7,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
@@ -20,6 +19,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_owproxy_mock_devices
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
@@ -30,7 +31,7 @@ def override_platforms() -> Generator[None]:
 
 async def test_switches(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
     device_registry: dr.DeviceRegistry,
@@ -70,7 +71,7 @@ async def test_switches(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_toggle(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
 ) -> None:

@@ -199,6 +199,7 @@ MOCK_CONFIG = {
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
+    "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
 }
 
 MOCK_SHELLY_COAP = {
@@ -280,7 +281,7 @@ MOCK_STATUS_RPC = {
         },
         "relay_in_thermostat": True,
     },
-    "voltmeter": {"voltage": 4.321},
+    "voltmeter:100": {"voltage": 4.321, "xvoltage": 12.34},
     "wifi": {"rssi": -63},
 }
 

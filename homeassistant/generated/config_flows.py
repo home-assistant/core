@@ -256,6 +256,7 @@ FLOWS = {
         "holiday",
         "home_connect",
         "homeassistant_sky_connect",
+        "homee",
         "homekit",
         "homekit_controller",
         "homematicip_cloud",
