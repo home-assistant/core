@@ -202,7 +202,7 @@ class CloudBackupAgent(BackupAgent):
                     raise
                 tries += 1
                 retry_timer = random.randint(60, 600)
-                _LOGGER.debug(
+                _LOGGER.info(
                     "Failed to upload backup, retrying (%s/%s) in %ss: %s",
                     tries,
                     _RETRY_LIMIT,
