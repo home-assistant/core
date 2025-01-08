@@ -7,14 +7,9 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.google_drive import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -50,21 +45,15 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
 
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    setup_credentials,
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential("client-id", "client-secret"),
-        DOMAIN,
-    )
-
     async def func() -> None:
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     return func

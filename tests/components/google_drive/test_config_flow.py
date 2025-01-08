@@ -6,37 +6,21 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
+
+from .conftest import CLIENT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
 GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 FOLDER_ID = "google-folder-id"
 TITLE = "Google Drive"
-
-
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -48,7 +32,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_drive", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -123,7 +107,7 @@ async def test_create_folder_error(
 ) -> None:
     """Test case where creating the folder fails."""
     result = await hass.config_entries.flow.async_init(
-        "google_drive", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -262,7 +246,7 @@ async def test_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "google_drive", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"

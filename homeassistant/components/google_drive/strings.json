@@ -37,7 +37,7 @@
       "message": "Google Drive folder not found. Remove the Google Drive integration and re-add it for a new 'Home Assistant' folder to be created in Google Drive."
     },
     "config_entry_error_folder_4xx": {
-      "message": "Unexpected error. Open an issue."
+      "message": "Unexpected error while setting up Google Drive."
     }
   }
 }
