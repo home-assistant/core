@@ -140,7 +140,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '25.1',
+      'state': '25.123',
     }),
   ])
 # ---
@@ -264,7 +264,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '25.1',
+      'state': '25.123',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -280,7 +280,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1025.1',
+      'state': '1025.123',
     }),
   ])
 # ---
@@ -1106,7 +1106,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '25.1',
+      'state': '25.123',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1122,7 +1122,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '72.8',
+      'state': '72.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1138,7 +1138,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '73.8',
+      'state': '73.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1154,7 +1154,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '74.8',
+      'state': '74.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1170,7 +1170,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '75.8',
+      'state': '75.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1202,7 +1202,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '969.3',
+      'state': '969.265',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1218,7 +1218,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '65.9',
+      'state': '65.8839',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1234,7 +1234,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '3.0',
+      'state': '2.97',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1250,7 +1250,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '4.7',
+      'state': '4.74',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1266,7 +1266,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.1',
+      'state': '0.12',
     }),
   ])
 # ---
@@ -1357,7 +1357,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '27.0',
+      'state': '26.984',
     }),
   ])
 # ---
@@ -1448,7 +1448,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '27.0',
+      'state': '26.984',
     }),
   ])
 # ---
@@ -1539,7 +1539,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '27.0',
+      'state': '26.984',
     }),
   ])
 # ---
@@ -1771,7 +1771,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '27.0',
+      'state': '26.984',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1787,7 +1787,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '173.8',
+      'state': '173.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1803,7 +1803,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '3.0',
+      'state': '2.97',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -1819,7 +1819,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.1',
+      'state': '0.12',
     }),
   ])
 # ---
@@ -1952,7 +1952,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '28.2',
+      'state': '28.243',
     }),
   ])
 # ---
@@ -2043,7 +2043,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '29.1',
+      'state': '29.123',
     }),
   ])
 # ---
@@ -2233,7 +2233,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '13.9',
+      'state': '13.9375',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2249,7 +2249,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1012.2',
+      'state': '1012.21',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2265,7 +2265,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '65.9',
+      'state': '65.8839',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2281,7 +2281,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '41.4',
+      'state': '41.375',
     }),
   ])
 # ---
@@ -2405,7 +2405,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '13.9',
+      'state': '13.9375',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2421,7 +2421,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '1012.2',
+      'state': '1012.21',
     }),
   ])
 # ---
@@ -2842,7 +2842,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '25.1',
+      'state': '25.123',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2858,7 +2858,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '72.8',
+      'state': '72.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2874,7 +2874,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '73.8',
+      'state': '73.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2890,7 +2890,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '74.8',
+      'state': '74.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2906,7 +2906,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '75.8',
+      'state': '75.7563',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2938,7 +2938,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '969.3',
+      'state': '969.265',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2954,7 +2954,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '65.9',
+      'state': '65.8839',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2970,7 +2970,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '3.0',
+      'state': '2.97',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -2986,7 +2986,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '4.7',
+      'state': '4.74',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3002,7 +3002,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '0.1',
+      'state': '0.12',
     }),
   ])
 # ---
@@ -3159,7 +3159,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '67.7',
+      'state': '67.745',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3175,7 +3175,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '65.5',
+      'state': '65.541',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3191,7 +3191,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '25.1',
+      'state': '25.123',
     }),
   ])
 # ---
@@ -3381,7 +3381,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '41.7',
+      'state': '41.745',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3397,7 +3397,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '42.5',
+      'state': '42.541',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3413,7 +3413,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '43.1',
+      'state': '43.123',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -3429,7 +3429,7 @@
       'last_changed': <ANY>,
       'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': '44.1',
+      'state': '44.123',
     }),
   ])
 # ---

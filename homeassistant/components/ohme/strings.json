@@ -57,11 +57,26 @@
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
           "charging": "Charging",
+          "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval"
         }
       },
       "ct_current": {
         "name": "CT current"
+      },
+      "vehicle_battery": {
+        "name": "Vehicle battery"
+      }
+    },
+    "switch": {
+      "lock_buttons": {
+        "name": "Lock buttons"
+      },
+      "require_approval": {
+        "name": "Require approval"
+      },
+      "sleep_when_inactive": {
+        "name": "Sleep when inactive"
       }
     }
   },

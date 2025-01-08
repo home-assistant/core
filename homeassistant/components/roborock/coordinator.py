@@ -73,7 +73,27 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
 
-    async def verify_api(self) -> None:
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        # Verify we can communicate locally - if we can't, switch to cloud api
+        await self._verify_api()
+        self.api.is_available = True
+
+        try:
+            maps = await self.api.get_multi_maps_list()
+        except RoborockException as err:
+            raise UpdateFailed("Failed to get map data: {err}") from err
+        # Rooms names populated later with calls to `set_current_map_rooms` for each map
+        self.maps = {
+            roborock_map.mapFlag: RoborockMapInfo(
+                flag=roborock_map.mapFlag,
+                name=roborock_map.name or f"Map {roborock_map.mapFlag}",
+                rooms={},
+            )
+            for roborock_map in (maps.map_info if (maps and maps.map_info) else ())
+        }
+
+    async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
         if isinstance(self.api, RoborockLocalClientV1):
             try:
@@ -96,12 +116,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""
-        device_prop = await self.api.get_prop()
-        if device_prop:
-            if self.roborock_device_info.props:
-                self.roborock_device_info.props.update(device_prop)
-            else:
-                self.roborock_device_info.props = device_prop
+        if (device_prop := await self.api.get_prop()) is not None:
+            self.roborock_device_info.props.update(device_prop)
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
@@ -111,7 +127,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # Set the new map id from the updated device props
             self._set_current_map()
             # Get the rooms for that map id.
-            await self.get_rooms()
+            await self.set_current_map_rooms()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         return self.roborock_device_info.props
@@ -127,27 +143,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4
 
-    async def get_maps(self) -> None:
-        """Add a map to the coordinators mapping."""
-        maps = await self.api.get_multi_maps_list()
-        if maps and maps.map_info:
-            for roborock_map in maps.map_info:
-                self.maps[roborock_map.mapFlag] = RoborockMapInfo(
-                    flag=roborock_map.mapFlag, name=roborock_map.name, rooms={}
-                )
-
-    async def get_rooms(self) -> None:
-        """Get all of the rooms for the current map."""
+    async def set_current_map_rooms(self) -> None:
+        """Fetch all of the rooms for the current map and set on RoborockMapInfo."""
         # The api is only able to access rooms for the currently selected map
         # So it is important this is only called when you have the map you care
         # about selected.
-        if self.current_map in self.maps:
-            iot_rooms = await self.api.get_room_mapping()
-            if iot_rooms is not None:
-                for room in iot_rooms:
-                    self.maps[self.current_map].rooms[room.segment_id] = (
-                        self._home_data_rooms.get(room.iot_id, "Unknown")
-                    )
+        if self.current_map is None or self.current_map not in self.maps:
+            return
+        room_mapping = await self.api.get_room_mapping()
+        self.maps[self.current_map].rooms = {
+            room.segment_id: self._home_data_rooms.get(room.iot_id, "Unknown")
+            for room in room_mapping or ()
+        }
 
     @cached_property
     def duid(self) -> str:

@@ -5,34 +5,65 @@ from __future__ import annotations
 from collections.abc import Sequence
 from unittest.mock import Mock, patch
 
-from pyheos import (
-    Dispatcher,
-    Heos,
-    HeosGroup,
-    HeosPlayer,
-    HeosSource,
-    InputSource,
-    const,
-)
+from pyheos import Dispatcher, Heos, HeosGroup, HeosPlayer, MediaItem, const
 import pytest
 import pytest_asyncio
 
 from homeassistant.components import ssdp
-from homeassistant.components.heos import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.heos import (
+    CONF_PASSWORD,
+    DOMAIN,
+    ControllerManager,
+    GroupManager,
+    HeosRuntimeData,
+    SourceManager,
+)
+from homeassistant.const import CONF_HOST, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture():
+def config_entry_fixture(heos_runtime_data):
     """Create a mock HEOS config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
         unique_id=DOMAIN,
     )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="config_entry_options")
+def config_entry_options_fixture(heos_runtime_data):
+    """Create a mock HEOS config entry with options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title="HEOS System (via 127.0.0.1)",
+        options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        unique_id=DOMAIN,
+    )
+    entry.runtime_data = heos_runtime_data
+    return entry
+
+
+@pytest.fixture(name="heos_runtime_data")
+def heos_runtime_data_fixture(controller_manager, players):
+    """Create a mock HeosRuntimeData fixture."""
+    return HeosRuntimeData(
+        controller_manager, Mock(GroupManager), Mock(SourceManager), players
+    )
+
+
+@pytest.fixture(name="controller_manager")
+def controller_manager_fixture(controller):
+    """Create a mock controller manager fixture."""
+    mock_controller_manager = Mock(ControllerManager)
+    mock_controller_manager.controller = controller
+    return mock_controller_manager
 
 
 @pytest.fixture(name="controller")
@@ -43,6 +74,7 @@ def controller_fixture(
     mock_heos = Mock(Heos)
     for player in players.values():
         player.heos = mock_heos
+    mock_heos.return_value = mock_heos
     mock_heos.dispatcher = dispatcher
     mock_heos.get_players.return_value = players
     mock_heos.players = players
@@ -55,11 +87,10 @@ def controller_fixture(
     mock_heos.connection_state = const.STATE_CONNECTED
     mock_heos.get_groups.return_value = group
     mock_heos.create_group.return_value = None
-    mock = Mock(return_value=mock_heos)
 
     with (
-        patch("homeassistant.components.heos.Heos", new=mock),
-        patch("homeassistant.components.heos.config_flow.Heos", new=mock),
+        patch("homeassistant.components.heos.Heos", new=mock_heos),
+        patch("homeassistant.components.heos.config_flow.Heos", new=mock_heos),
     ):
         yield mock_heos
 
@@ -85,12 +116,13 @@ def player_fixture(quick_selects):
         player.version = "1.0.0"
         player.is_muted = False
         player.available = True
-        player.state = const.PLAY_STATE_STOP
+        player.state = const.PlayState.STOP
         player.ip_address = f"127.0.0.{i}"
         player.network = "wired"
         player.shuffle = False
-        player.repeat = const.REPEAT_OFF
+        player.repeat = const.RepeatType.OFF
         player.volume = 25
+        player.now_playing_media = Mock()
         player.now_playing_media.supported_controls = const.CONTROLS_ALL
         player.now_playing_media.album_id = 1
         player.now_playing_media.queue_id = 1
@@ -112,34 +144,52 @@ def player_fixture(quick_selects):
 @pytest.fixture(name="group")
 def group_fixture(players):
     """Create a HEOS group consisting of two players."""
-    group = Mock(HeosGroup)
-    group.leader = players[1]
-    group.members = [players[2]]
-    group.group_id = 999
+    group = HeosGroup(
+        name="Group", group_id=999, lead_player_id=1, member_player_ids=[2]
+    )
+
     return {group.group_id: group}
 
 
 @pytest.fixture(name="favorites")
-def favorites_fixture() -> dict[int, HeosSource]:
+def favorites_fixture() -> dict[int, MediaItem]:
     """Create favorites fixture."""
-    station = Mock(HeosSource)
-    station.type = const.TYPE_STATION
-    station.name = "Today's Hits Radio"
-    station.media_id = "123456789"
-    radio = Mock(HeosSource)
-    radio.type = const.TYPE_STATION
-    radio.name = "Classical MPR (Classical Music)"
-    radio.media_id = "s1234"
+    station = MediaItem(
+        source_id=const.MUSIC_SOURCE_PANDORA,
+        name="Today's Hits Radio",
+        media_id="123456789",
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
+    radio = MediaItem(
+        source_id=const.MUSIC_SOURCE_TUNEIN,
+        name="Classical MPR (Classical Music)",
+        media_id="s1234",
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
     return {1: station, 2: radio}
 
 
 @pytest.fixture(name="input_sources")
-def input_sources_fixture() -> Sequence[InputSource]:
+def input_sources_fixture() -> Sequence[MediaItem]:
     """Create a set of input sources for testing."""
-    source = Mock(InputSource)
-    source.player_id = 1
-    source.input_name = const.INPUT_AUX_IN_1
-    source.name = "HEOS Drive - Line In 1"
+    source = MediaItem(
+        source_id=1,
+        name="HEOS Drive - Line In 1",
+        media_id=const.INPUT_AUX_IN_1,
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
     return [source]
 
 
@@ -201,11 +251,17 @@ def quick_selects_fixture() -> dict[int, str]:
 
 
 @pytest.fixture(name="playlists")
-def playlists_fixture() -> Sequence[HeosSource]:
+def playlists_fixture() -> Sequence[MediaItem]:
     """Create favorites fixture."""
-    playlist = Mock(HeosSource)
-    playlist.type = const.TYPE_PLAYLIST
-    playlist.name = "Awesome Music"
+    playlist = MediaItem(
+        source_id=const.MUSIC_SOURCE_PLAYLISTS,
+        name="Awesome Music",
+        type=const.MediaType.PLAYLIST,
+        playable=True,
+        browsable=True,
+        image_url="",
+        heos=None,
+    )
     return [playlist]
 
 
