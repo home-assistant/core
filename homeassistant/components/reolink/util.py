@@ -82,7 +82,8 @@ def get_device_uid_and_ch(
         ch = int(device_uid[1][5:])
         is_chime = True
     else:
-        ch = host.api.channel_for_uid(device_uid[1])
+        device_uid_part = "_".join(device_uid[1:])
+        ch = host.api.channel_for_uid(device_uid_part)
     return (device_uid, ch, is_chime)
 
 
