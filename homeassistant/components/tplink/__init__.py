@@ -325,7 +325,9 @@ def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TPLinkConfigEntry
+) -> bool:
     """Migrate old entry."""
     entry_version = config_entry.version
     entry_minor_version = config_entry.minor_version
