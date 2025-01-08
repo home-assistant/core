@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
@@ -18,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SensiboConfigEntry
+from .const import LOGGER
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
@@ -128,38 +130,57 @@ async def async_setup_entry(
         """Handle additions of devices and sensors."""
 
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
-        _added_devices = added_devices.copy()
+        nonlocal added_devices
 
-        for device_id in _added_devices:
-            if device_id not in coordinator.previous_devices:
-                added_devices.discard(device_id)
+        motion_sensors = {
+            sensor_id
+            for device_data in coordinator.data.parsed.values()
+            if device_data.motion_sensors
+            for sensor_id in device_data.motion_sensors
+        }
+        devices = set(coordinator.data.parsed)
+        new_devices = motion_sensors | devices - added_devices
+        remove_devices = added_devices - devices - motion_sensors
+        added_devices = (added_devices - remove_devices) | new_devices
 
-        for device_id, device_data in coordinator.data.parsed.items():
-            if device_data.motion_sensors:
-                for sensor_id, sensor_data in device_data.motion_sensors.items():
-                    if sensor_id in added_devices:
-                        continue
-                    added_devices.add(sensor_id)
-                    entities.extend(
-                        SensiboMotionSensor(
-                            coordinator, device_id, sensor_id, sensor_data, description
-                        )
-                        for description in MOTION_SENSOR_TYPES
-                    )
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(
+                "New devices: %s, Removed devices: %s, Existing devices: %s",
+                new_devices,
+                remove_devices,
+                added_devices,
+            )
 
-            if device_id in added_devices:
-                continue
-            added_devices.add(device_id)
+        if new_devices:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator,
+                    device_id,
+                    sensor_id,
+                    sensor_data,
+                    description,
+                )
+                for description in MOTION_SENSOR_TYPES
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_data.motion_sensors
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                if sensor_id in new_devices
+            )
+
             entities.extend(
                 SensiboDeviceSensor(coordinator, device_id, description)
                 for description in MOTION_DEVICE_SENSOR_TYPES
+                for device_id, device_data in coordinator.data.parsed.items()
                 if device_data.motion_sensors
+                if device_id in new_devices
             )
             entities.extend(
                 SensiboDeviceSensor(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
                 for description in DESCRIPTION_BY_MODELS.get(
                     device_data.model, DEVICE_SENSOR_TYPES
                 )
+                if device_id in new_devices
             )
 
         async_add_entities(entities)

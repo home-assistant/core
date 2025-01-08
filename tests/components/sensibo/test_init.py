@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysensibo.model import SensiboData
+import pytest
 
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.components.sensibo.util import NoUsernameError
@@ -110,6 +111,20 @@ async def test_device_remove_devices(
     assert response["success"]
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "device_id"),
+    [
+        # Device is ABC999111
+        ("climate.hallway", "ABC999111"),
+        ("binary_sensor.hallway_filter_clean_required", "ABC999111"),
+        ("number.hallway_temperature_calibration", "ABC999111"),
+        ("sensor.hallway_filter_last_reset", "ABC999111"),
+        ("update.hallway_firmware", "ABC999111"),
+        # Device is AABBCC belonging to device ABC999111
+        ("binary_sensor.hallway_motion_sensor_motion", "ABC999111"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_automatic_device_addition_and_removal(
     hass: HomeAssistant,
     load_int: ConfigEntry,
@@ -118,25 +133,25 @@ async def test_automatic_device_addition_and_removal(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    entity_id: str,
+    device_id: str,
 ) -> None:
     """Test for automatic device addition and removal."""
-
-    entity_id = "climate.hallway"
 
     state = hass.states.get(entity_id)
     assert state
     assert entity_registry.async_get(entity_id)
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
 
     # Remove one of the devices
     new_device_list = [
-        device for device in get_data[2]["result"] if device["id"] != "ABC999111"
+        device for device in get_data[2]["result"] if device["id"] != device_id
     ]
     mock_client.async_get_devices.return_value = {
         "status": "success",
         "result": new_device_list,
     }
-    new_data = {k: v for k, v in get_data[0].parsed.items() if k != "ABC999111"}
+    new_data = {k: v for k, v in get_data[0].parsed.items() if k != device_id}
     new_raw = mock_client.async_get_devices.return_value["result"]
     mock_client.async_get_devices_data.return_value = SensiboData(new_raw, new_data)
 
@@ -147,7 +162,7 @@ async def test_automatic_device_addition_and_removal(
     state = hass.states.get(entity_id)
     assert not state
     assert not entity_registry.async_get(entity_id)
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
 
     # Add the device back
     mock_client.async_get_devices.return_value = get_data[2]
@@ -160,4 +175,4 @@ async def test_automatic_device_addition_and_removal(
     state = hass.states.get(entity_id)
     assert state
     assert entity_registry.async_get(entity_id)
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "ABC999111")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
