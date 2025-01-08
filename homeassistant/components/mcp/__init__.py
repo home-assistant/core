@@ -23,6 +23,8 @@ __all__ = [
     "async_unload_entry",
 ]
 
+API_PROMPT = "The following tools are available from a remote server named {name}."
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ModelContextProtocolConfigEntry
@@ -53,9 +55,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return True
-
-
-API_PROMPT = "The following tools are available from a remote server named {name}."
 
 
 class ModelContextProtocolTool(llm.Tool):
