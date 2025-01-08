@@ -199,7 +199,7 @@ async def async_setup_entry(
             vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
             vol.Required(ATTR_SMART_TYPE): vol.In(
-                ["temperature", "feelsLike", "humidity"]
+                ["temperature", "feelslike", "humidity"]
             ),
         },
         "async_enable_climate_react",
