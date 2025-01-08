@@ -1356,6 +1356,17 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "dreo": {
+      "name": "Dreo",
+      "integrations": {
+        "dreo": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Dreo"
+        }
+      }
+    },
     "drop_connect": {
       "name": "DROP",
       "integration_type": "hub",
