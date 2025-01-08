@@ -2,8 +2,13 @@
 
 from ipaddress import ip_address
 
+from rokuecp import Device as RokuDevice
+
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 NAME = "Roku 3"
 NAME_ROKUTV = '58" Onn Roku TV'
@@ -36,3 +41,16 @@ MOCK_HOMEKIT_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     },
     type="mock_type",
 )
+
+
+async def setup_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, device: RokuDevice
+) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, unique_id=device.info.serial_number
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

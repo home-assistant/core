@@ -1,0 +1,369 @@
+# serializer version: 1
+# name: test_entities[roku3][binary_sensor.my_roku_3_headphones_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.my_roku_3_headphones_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Headphones connected',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'headphones_connected',
+    'unique_id': '1GU48T017973_headphones_connected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_headphones_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Headphones connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_roku_3_headphones_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_airplay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_airplay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports AirPlay',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_airplay',
+    'unique_id': '1GU48T017973_supports_airplay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_airplay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Supports AirPlay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_airplay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_ethernet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_ethernet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports ethernet',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_ethernet',
+    'unique_id': '1GU48T017973_supports_ethernet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_ethernet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Supports ethernet',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_ethernet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_find_remote-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_find_remote',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports find remote',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_find_remote',
+    'unique_id': '1GU48T017973_supports_find_remote',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][binary_sensor.my_roku_3_supports_find_remote-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Supports find remote',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_roku_3_supports_find_remote',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_headphones_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_headphones_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Headphones connected',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'headphones_connected',
+    'unique_id': 'YN00H5555555_headphones_connected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_headphones_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Headphones connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_headphones_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_airplay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_airplay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports AirPlay',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_airplay',
+    'unique_id': 'YN00H5555555_supports_airplay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_airplay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Supports AirPlay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_airplay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_ethernet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_ethernet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports ethernet',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_ethernet',
+    'unique_id': 'YN00H5555555_supports_ethernet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_ethernet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Supports ethernet',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_ethernet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_find_remote-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_find_remote',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Supports find remote',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supports_find_remote',
+    'unique_id': 'YN00H5555555_supports_find_remote',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][binary_sensor.58_onn_roku_tv_supports_find_remote-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Supports find remote',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.58_onn_roku_tv_supports_find_remote',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

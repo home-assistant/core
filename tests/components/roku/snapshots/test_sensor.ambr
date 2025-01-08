@@ -1,0 +1,185 @@
+# serializer version: 1
+# name: test_entities[roku3][sensor.my_roku_3_active_app-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_roku_3_active_app',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active app',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_app',
+    'unique_id': '1GU48T017973_active_app',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][sensor.my_roku_3_active_app-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Active app',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_roku_3_active_app',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Roku',
+  })
+# ---
+# name: test_entities[roku3][sensor.my_roku_3_active_app_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_roku_3_active_app_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active app ID',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_app_id',
+    'unique_id': '1GU48T017973_active_app_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[roku3][sensor.my_roku_3_active_app_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My Roku 3 Active app ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_roku_3_active_app_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[rokutv-7820x][sensor.58_onn_roku_tv_active_app-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.58_onn_roku_tv_active_app',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active app',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_app',
+    'unique_id': 'YN00H5555555_active_app',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][sensor.58_onn_roku_tv_active_app-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Active app',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.58_onn_roku_tv_active_app',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Antenna TV',
+  })
+# ---
+# name: test_entities[rokutv-7820x][sensor.58_onn_roku_tv_active_app_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.58_onn_roku_tv_active_app_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active app ID',
+    'platform': 'roku',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_app_id',
+    'unique_id': 'YN00H5555555_active_app_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[rokutv-7820x][sensor.58_onn_roku_tv_active_app_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '58" Onn Roku TV Active app ID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.58_onn_roku_tv_active_app_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'tvinput.dtv',
+  })
+# ---
