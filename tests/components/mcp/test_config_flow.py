@@ -52,10 +52,6 @@ async def test_form(
     [
         (httpx.TimeoutException("Some timeout"), "timeout_connect"),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
-            "invalid_auth",
-        ),
-        (
             httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
             "cannot_connect",
         ),
@@ -85,9 +81,7 @@ async def test_form_mcp_client_error(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
+    # Reset the error and make sure the config flow can resume successfully.
     mock_mcp_client.side_effect = None
     response = Mock()
     response.serverInfo.name = TEST_API_NAME
@@ -107,6 +101,38 @@ async def test_form_mcp_client_error(
         CONF_URL: "http://1.1.1.1/sse",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (
+            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
+            "invalid_auth",
+        ),
+    ],
+)
+async def test_form_mcp_client_error_abort(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test we handle different client library errors that end with an abort."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "http://1.1.1.1/sse",
+        },
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == expected_error
 
 
 @pytest.mark.parametrize(
@@ -133,9 +159,7 @@ async def test_input_form_validation_error(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_URL: "invalid_url"}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
+    # Reset the error and make sure the config flow can resume successfully.
     response = Mock()
     response.serverInfo.name = TEST_API_NAME
     mock_mcp_client.return_value.initialize.return_value = response
@@ -210,5 +234,5 @@ async def test_server_missing_capbilities(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "missing_capabilities"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "missing_capabilities"

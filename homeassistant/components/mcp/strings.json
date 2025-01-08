@@ -12,13 +12,13 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "missing_capabilities": "The MCP server does not support the required capabilities (Tools)",
       "invalid_url": "Must be a valid MCP server URL e.g. https://example.com/sse"
     },
     "abort": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_capabilities": "The MCP server does not support a required capability (Tools)",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }

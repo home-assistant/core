@@ -76,9 +76,9 @@ class ModelContextProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                return self.async_abort(reason="invalid_auth")
             except MissingCapabilities:
-                errors["base"] = "missing_capabilities"
+                return self.async_abort(reason="missing_capabilities")
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
