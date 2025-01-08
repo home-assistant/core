@@ -66,14 +66,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
     except LetPotException as exc:
         raise ConfigEntryNotReady from exc
 
-    supported_devices = [
-        device
+    coordinators: list[LetPotDeviceCoordinator] = [
+        LetPotDeviceCoordinator(hass, auth, device)
         for device in devices
         if any(converter.supports_type(device.device_type) for converter in CONVERTERS)
-    ]
-
-    coordinators: list[LetPotDeviceCoordinator] = [
-        LetPotDeviceCoordinator(hass, auth, device) for device in supported_devices
     ]
 
     await asyncio.gather(
@@ -94,5 +90,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> b
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         for coordinator in entry.runtime_data:
-            coordinator.deviceclient.disconnect()
+            coordinator.device_client.disconnect()
     return unload_ok

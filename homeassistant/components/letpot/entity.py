@@ -19,7 +19,7 @@ class LetPotEntity(CoordinatorEntity[LetPotDeviceCoordinator]):
             identifiers={(DOMAIN, coordinator.device.serial_number)},
             name=coordinator.device.name,
             manufacturer="LetPot",
-            model=coordinator.deviceclient.device_model_name,
-            model_id=coordinator.deviceclient.device_model_code,
+            model=coordinator.device_client.device_model_name,
+            model_id=coordinator.device_client.device_model_code,
             serial_number=coordinator.device.serial_number,
         )

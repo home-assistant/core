@@ -28,7 +28,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
     config_entry: LetPotConfigEntry
 
     device: LetPotDevice
-    deviceclient: LetPotDeviceClient
+    device_client: LetPotDeviceClient
 
     def __init__(
         self, hass: HomeAssistant, info: AuthenticationInfo, device: LetPotDevice
@@ -41,7 +41,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         )
         self._info = info
         self.device = device
-        self.deviceclient = LetPotDeviceClient(info, device.serial_number)
+        self.device_client = LetPotDeviceClient(info, device.serial_number)
 
     def _handle_status_update(self, status: LetPotDeviceStatus) -> None:
         """Distribute status update to entities."""
@@ -50,7 +50,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
     async def _async_setup(self) -> None:
         """Set up subscription for coordinator."""
         try:
-            await self.deviceclient.subscribe(self._handle_status_update)
+            await self.device_client.subscribe(self._handle_status_update)
         except LetPotAuthenticationException as exc:
             raise ConfigEntryError from exc
 
@@ -58,7 +58,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         """Request an update from the device and wait for a status update or timeout."""
         try:
             async with asyncio.timeout(REQUEST_UPDATE_TIMEOUT):
-                await self.deviceclient.get_current_status()
+                await self.device_client.get_current_status()
         except LetPotException as exc:
             raise UpdateFailed(exc) from exc
 

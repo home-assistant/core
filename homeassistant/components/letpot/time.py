@@ -88,4 +88,6 @@ class LetPotTimeEntity(LetPotEntity, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
-        await self.entity_description.set_value_fn(self.coordinator.deviceclient, value)
+        await self.entity_description.set_value_fn(
+            self.coordinator.device_client, value
+        )
