@@ -1893,7 +1893,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.11.1
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.1
+pysuezV2==2.0.3
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
