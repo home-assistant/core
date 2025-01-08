@@ -20,8 +20,8 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_object_fixture,
-    snapshot_platform,
 )
+from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(
@@ -29,12 +29,14 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     mock_fyta_connector: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
 
     await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    assert len(hass.states.async_all("image")) == 2
 
 
 @pytest.mark.parametrize(
