@@ -600,7 +600,7 @@ colorthief==0.2.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.11.2
+cookidoo-api==0.12.2
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
