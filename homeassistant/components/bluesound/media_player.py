@@ -168,7 +168,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_available = self.coordinator.data.is_online
+        self._attr_available = self.coordinator.last_update_success
         self._sync_status = self.coordinator.data.sync_status
         self._status = self.coordinator.data.status
         self._inputs = self.coordinator.data.inputs

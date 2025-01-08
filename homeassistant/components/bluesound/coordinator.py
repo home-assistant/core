@@ -30,8 +30,6 @@ class BluesoundData:
     presets: list[Preset]
     inputs: list[Input]
 
-    is_online: bool
-
 
 def cancel_task(task: asyncio.Task) -> Callable[[], Coroutine[None, None, None]]:
     """Cancel a task."""
@@ -73,7 +71,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                 status=status,
                 presets=preset,
                 inputs=inputs,
-                is_online=True,
             )
         )
 
@@ -98,18 +95,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
     async def _async_update_data(self) -> BluesoundData:
         return self.data
 
-    def _set_offline(self) -> None:
-        _LOGGER.error(
-            "Node %s is offline or threw an unexpected error, retrying later",
-            self.data.sync_status.id,
-        )
-        self.async_set_updated_data(
-            replace(
-                self.data,
-                is_online=False,
-            )
-        )
-
     async def _poll_presets_and_inputs_loop(self) -> None:
         while True:
             await asyncio.sleep(PRESET_AND_INPUTS_INTERVAL.total_seconds())
@@ -121,15 +106,14 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                         self.data,
                         presets=preset,
                         inputs=inputs,
-                        is_online=True,
                     )
                 )
-            except PlayerUnreachableError:
-                self._set_offline()
+            except PlayerUnreachableError as ex:
+                self.async_set_update_error(ex)
             except asyncio.CancelledError:
                 return
-            except:  # noqa: E722 - this loop should never stop
-                self._set_offline()
+            except Exception as ex:  # noqa: BLE001 - this loop should never stop
+                self.async_set_update_error(ex)
 
     async def _poll_status_loop(self) -> None:
         """Loop which polls the status of the player."""
@@ -142,16 +126,15 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                     replace(
                         self.data,
                         status=status,
-                        is_online=True,
                     )
                 )
-            except PlayerUnreachableError:
-                self._set_offline()
+            except PlayerUnreachableError as ex:
+                self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
             except asyncio.CancelledError:
                 return
-            except:  # noqa: E722 - this loop should never stop
-                self._set_offline()
+            except Exception as ex:  # noqa: BLE001 - this loop should never stop
+                self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
 
     async def _poll_sync_status_loop(self) -> None:
@@ -165,14 +148,13 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
                     replace(
                         self.data,
                         sync_status=sync_status,
-                        is_online=True,
                     )
                 )
-            except PlayerUnreachableError:
-                self._set_offline()
+            except PlayerUnreachableError as ex:
+                self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
             except asyncio.CancelledError:
                 raise
-            except:  # noqa: E722 - all errors must be caught for this loop
-                self._set_offline()
+            except Exception as ex:  # noqa: BLE001 - this loop should never stop
+                self.async_set_update_error(ex)
                 await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT.total_seconds())
