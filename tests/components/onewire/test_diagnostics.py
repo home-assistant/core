@@ -6,12 +6,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_owproxy_mock_devices
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
@@ -40,7 +40,7 @@ DEVICE_DETAILS = {
 @pytest.mark.parametrize("device_id", ["EF.111111111113"], indirect=True)
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     owproxy: MagicMock,
     device_id: str,
