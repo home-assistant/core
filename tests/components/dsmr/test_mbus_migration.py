@@ -331,11 +331,6 @@ async def test_migrate_gas_with_devid_to_mbus(
     new_entity = entity_registry.async_get("sensor.gas_meter_reading")
     new_device = device_registry.async_get(new_entity.device_id)
     assert new_device.id == device.id
-    new_dev_entities = er.async_entries_for_device(
-        entity_registry, new_device.id, include_disabled_entities=True
-    )
-    assert new_dev_entities == [new_entity]
-
     # Check entities are still connected to the old device
     dev_entities = er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
