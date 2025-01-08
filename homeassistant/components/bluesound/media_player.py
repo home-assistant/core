@@ -168,7 +168,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_available = self.coordinator.last_update_success
         self._sync_status = self.coordinator.data.sync_status
         self._status = self.coordinator.data.status
         self._inputs = self.coordinator.data.inputs
@@ -179,11 +178,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._group_list = self.rebuild_bluesound_group()
 
         self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._attr_available
 
     @property
     def state(self) -> MediaPlayerState:
