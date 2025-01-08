@@ -1,10 +1,14 @@
 """Fixtures and test data for VegeHub test methods."""
 
 import asyncio
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
 import pytest
 import vegehub
+
+from homeassistant.components.vegehub.coordinator import VegeHubCoordinator
+from homeassistant.core import HomeAssistant
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -13,6 +17,14 @@ IP_ADDR = "192.168.0.100"
 TEST_API_KEY = "1234567890ABCD"
 UNIQUE_ID = "aabbccddeeff"
 TEST_SERVER = "http://example.com"
+
+
+@dataclass
+class VegeHubData:
+    """Define a data class."""
+
+    coordinator: VegeHubCoordinator
+    hub: vegehub.VegeHub
 
 
 @pytest.fixture
@@ -90,11 +102,12 @@ def fixture_basic_hub(mock_aiohttp_session):
 
 
 @pytest.fixture
-def config_entry(basic_hub):
+def config_entry(basic_hub, hass: HomeAssistant):
     """Mock a config entry."""
-    mock = MagicMock(
+    return MagicMock(
         data={"mac": "1234567890AB", "host": "VegeHub1"},
-        runtime_data={},
+        runtime_data=VegeHubData(
+            coordinator=VegeHubCoordinator(hass=hass, device_id=UNIQUE_ID),
+            hub=basic_hub,
+        ),
     )
-    mock.runtime_data.hub = basic_hub
-    return mock
