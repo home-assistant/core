@@ -14,7 +14,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from . import NutRuntimeData
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 
-ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
+ACTION_TYPES = {
+    cmd.command_string.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS
+}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {

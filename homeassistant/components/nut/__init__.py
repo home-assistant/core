@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    INTEGRATION_SUPPORTED_COMMANDS,
+    INTEGRATION_SUPPORTED_COMMANDS_DICT,
     PLATFORMS,
 )
 
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         user_available_commands = {
             device_supported_command
             for device_supported_command in await data.async_list_commands() or {}
-            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS
+            if device_supported_command in INTEGRATION_SUPPORTED_COMMANDS_DICT
         }
     else:
         user_available_commands = set()
