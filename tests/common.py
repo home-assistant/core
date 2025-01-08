@@ -15,7 +15,7 @@ from collections.abc import (
 )
 from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -120,6 +120,14 @@ _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+class QualityScaleStatus(StrEnum):
+    """Source of core configuration."""
+
+    DONE = "done"
+    EXEMPT = "exempt"
+    TODO = "todo"
 
 
 async def async_get_device_automations(
@@ -1835,7 +1843,7 @@ def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
 
 
 @lru_cache
-def get_quality_scale(integration: str) -> dict[str, Literal["done", "exempt", "todo"]]:
+def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
     """Load quality scale for integration."""
     quality_scale_file = pathlib.Path(
         f"homeassistant/components/{integration}/quality_scale.yaml"
@@ -1844,6 +1852,10 @@ def get_quality_scale(integration: str) -> dict[str, Literal["done", "exempt", "
         return {}
     raw = load_yaml_dict(quality_scale_file)
     return {
-        rule: details if isinstance(details, str) else details["status"]
+        rule: (
+            QualityScaleStatus(details)
+            if isinstance(details, str)
+            else QualityScaleStatus(details["status"])
+        )
         for rule, details in raw["rules"].items()
     }

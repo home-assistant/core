@@ -9,7 +9,7 @@ from importlib.util import find_spec
 from pathlib import Path
 import re
 import string
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
@@ -43,7 +43,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import yaml
 
-from tests.common import get_quality_scale
+from tests.common import QualityScaleStatus, get_quality_scale
 
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from .switch.common import MockSwitch
 
 # Regex for accessing the integration name from the test path
-RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([a-zA-Z_]*)\/.*")
+RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
@@ -812,11 +812,11 @@ async def _check_create_issue_translations(
 
 def _get_request_quality_scale(
     request: pytest.FixtureRequest, rule: str
-) -> Literal["done", "exempt", "todo"]:
+) -> QualityScaleStatus:
     if not (match := RE_REQUEST_DOMAIN.match(str(request.path))):
-        return "todo"
+        return QualityScaleStatus.TODO
     integration = match.groups(1)[0]
-    return get_quality_scale(integration).get(rule, "todo")
+    return get_quality_scale(integration).get(rule, QualityScaleStatus.TODO)
 
 
 async def _check_exception_translation(
