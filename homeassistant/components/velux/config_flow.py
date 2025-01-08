@@ -90,7 +90,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: discovery_info[CONF_HOST]}
         )
 
-        # Check if config_entry already exists without unigue_id configured.
+        # Abort if config_entry already exists without unigue_id configured.
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.data[CONF_HOST] == discovery_info[CONF_HOST]
