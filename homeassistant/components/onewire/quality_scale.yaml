@@ -7,7 +7,9 @@ rules:
     comment: unique ID is not available, but duplicates are prevented based on host/port
   config-flow-test-coverage:
     status: todo
-    comment: Under review
+    comment: >
+      Let's have test_user_options_empty_selection end in CREATE_ENTRY
+      Split the happy flow and the not happy flow in test_user_flow
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
