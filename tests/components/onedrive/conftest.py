@@ -1,11 +1,16 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import Generator
+from html import escape
+from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from msgraph.generated.models.drive import Drive
 from msgraph.generated.models.drive_item import DriveItem
+from msgraph.generated.models.drive_item_collection_response import (
+    DriveItemCollectionResponse,
+)
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -16,7 +21,7 @@ from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET
 
 from tests.common import MockConfigEntry
 
@@ -97,6 +102,16 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
 
         client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.post = AsyncMock(
             return_value=DriveItem(id="folder_id")
+        )
+
+        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.get = AsyncMock(
+            return_value=DriveItemCollectionResponse(
+                value=[DriveItem(description=escape(dumps(BACKUP_METADATA)))]
+            )
+        )
+
+        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.delete = AsyncMock(
+            return_value=None
         )
 
         yield client
