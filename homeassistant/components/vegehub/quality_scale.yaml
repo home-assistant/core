@@ -9,7 +9,7 @@ rules:
     comment: |
       This integration does not poll.
   brands: done
-  common-modules: todo
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

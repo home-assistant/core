@@ -1,6 +1,7 @@
 """The Vegetronix VegeHub integration."""
 
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -29,10 +30,19 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
+from .coordinator import VegeHubCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 type VegeHubConfigEntry = ConfigEntry[VegeHub]
+
+
+@dataclass
+class VegeHubData:
+    """Define a data class."""
+
+    coordinator: VegeHubCoordinator
+    hub: VegeHub
 
 
 # The integration is only set up through the UI (config flow)
@@ -66,7 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
         raise ConfigEntryNotReady("Device is not responding") from err
 
     # Initialize runtime data
-    entry.runtime_data = hub
+    entry.runtime_data = VegeHubData(
+        coordinator=VegeHubCoordinator(hass=hass, device_id=entry.unique_id), hub=hub
+    )
 
     # Register the device
     device_registry.async_get_or_create(
@@ -91,7 +103,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
             DOMAIN,
             webhook_name,
             webhook_id,
-            get_webhook_handler(device_mac, entry.entry_id),
+            get_webhook_handler(
+                device_mac, entry.entry_id, entry.runtime_data.coordinator
+            ),
             allowed_methods=[METH_POST],
         )
 
@@ -107,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     )
 
     # Ask the hub for an update, so that we have its initial data
-    hub.request_update()
+    await hub.request_update()
 
     return True
 
@@ -120,7 +134,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> 
 
 
 def get_webhook_handler(
-    device_mac: str, entry_id: str
+    device_mac: str, entry_id: str, coordinator: VegeHubCoordinator
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
     """Return webhook handler."""
 
@@ -134,18 +148,20 @@ def get_webhook_handler(
             )
         data = await request.json()
 
+        sensor_data = {}
         # Process sensor data
         if "sensors" in data:
             for sensor in data["sensors"]:
                 slot = sensor.get("slot")
                 latest_sample = sensor["samples"][-1]
                 value = latest_sample["v"]
-
-                # Use the slot number and key to find entity
                 entity_id = f"vegehub_{device_mac}_{slot}".lower()
 
-                # Update entity with the new sensor data
-                await _update_sensor_entity(hass, value, entity_id, entry_id)
+                # Build a dict of the data we want so that we can pass it to the coordinator
+                sensor_data[entity_id] = value
+
+        if coordinator and sensor_data:
+            await coordinator.async_update_data(sensor_data)
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
@@ -164,7 +180,7 @@ async def _update_sensor_entity(
     # Find the sensor entity and update its state
     entity = None
     try:
-        entity = entry.runtime_data.entities.get(entity_id)
+        entity = entry.runtime_data.hub.entities.get(entity_id)
         if not entity:
             _LOGGER.error("Sensor entity %s not found", entity_id)
         else:

@@ -17,7 +17,7 @@ async def test_async_setup_entry(hass: HomeAssistant, config_entry) -> None:
     """Test async_setup_entry for adding sensors."""
     async_add_entities = MagicMock()
 
-    await config_entry.runtime_data.setup(TEST_API_KEY, TEST_SERVER)
+    await config_entry.runtime_data.hub.setup(TEST_API_KEY, TEST_SERVER)
 
     # Call async_setup_entry to add sensors
     await async_setup_entry(hass, config_entry, async_add_entities)
