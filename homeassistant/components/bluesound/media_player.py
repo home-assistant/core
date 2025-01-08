@@ -22,11 +22,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -38,7 +34,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
