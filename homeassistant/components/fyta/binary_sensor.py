@@ -23,7 +23,7 @@ from .entity import FytaPlantEntity
 
 @dataclass(frozen=True, kw_only=True)
 class FytaBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Describes Fyta sensor entity."""
+    """Describes Fyta binary sensor entity."""
 
     value_fn: Callable[[Plant], bool]
 
@@ -89,12 +89,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            FytaPlantBinarySensor(coordinator, entry, sensor, plant_id)
-            for plant_id in coordinator.fyta.plant_list
-            for sensor in BINARY_SENSORS
-            if sensor.key in dir(coordinator.data.get(plant_id))
-        ]
+        FytaPlantBinarySensor(coordinator, entry, sensor, plant_id)
+        for plant_id in coordinator.fyta.plant_list
+        for sensor in BINARY_SENSORS
+        if sensor.key in dir(coordinator.data.get(plant_id))
     )
 
     def _async_add_new_device(plant_id: int) -> None:
