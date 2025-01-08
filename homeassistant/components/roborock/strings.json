@@ -350,6 +350,15 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "dust_collection_mode": {
+        "name": "Dust collection mode",
+        "state": {
+          "smart": "Smart",
+          "light": "Light",
+          "balanced": "[%key:component::roborock::entity::vacuum::roborock::state_attributes::fan_speed::state::balanced%]",
+          "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]"
+        }
       }
     },
     "switch": {
