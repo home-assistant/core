@@ -35,8 +35,8 @@
 # name: test_all_entities[image.gummibaum_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '953693ab3a2b026be8a6af935165ae407ed6991f0e28628f0948c3d16187fccf',
-      'entity_picture': '/api/image_proxy/image.gummibaum_picture?token=953693ab3a2b026be8a6af935165ae407ed6991f0e28628f0948c3d16187fccf',
+      'access_token': 'ea42448af77e4dbb99efaeb4457551d708f9cc268f148f7051446535eef0bb5b',
+      'entity_picture': '/api/image_proxy/image.gummibaum_picture?token=ea42448af77e4dbb99efaeb4457551d708f9cc268f148f7051446535eef0bb5b',
       'friendly_name': 'Gummibaum picture',
     }),
     'context': <ANY>,
@@ -83,8 +83,8 @@
 # name: test_all_entities[image.kakaobaum_picture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': 'ce7349abf2e7a627a40ec9f7f0c6d2eefefa2bf7eeb899e8589bd6532ded806c',
-      'entity_picture': '/api/image_proxy/image.kakaobaum_picture?token=ce7349abf2e7a627a40ec9f7f0c6d2eefefa2bf7eeb899e8589bd6532ded806c',
+      'access_token': 'bda2febe86b768a2da0798cc1a3c00f747bbb519cdf05171234b7fc695d55efd',
+      'entity_picture': '/api/image_proxy/image.kakaobaum_picture?token=bda2febe86b768a2da0798cc1a3c00f747bbb519cdf05171234b7fc695d55efd',
       'friendly_name': 'Kakaobaum picture',
     }),
     'context': <ANY>,
