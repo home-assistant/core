@@ -1,6 +1,8 @@
 rules:
   ## Bronze
-  config-flow: done
+  config-flow:
+    status: done
+    comment: missing data_description on options flow
   test-before-configure: done
   unique-config-entry:
     status: done
