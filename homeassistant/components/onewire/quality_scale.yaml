@@ -70,7 +70,9 @@ rules:
     comment: mDNS should be possible - https://owfs.org/index_php_page_avahi-discovery.html
   stale-devices:
     status: done
-    comment: Manual removal
+    comment: >
+      Manual removal, as it is not possible to distinguish
+      between a flaky device and a device that has been removed
   diagnostics:
     status: todo
     comment: config-entry diagnostics level available, might be nice to have device-level diagnostics
