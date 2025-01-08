@@ -67,47 +67,14 @@ class GMailNotificationService(BaseNotificationService):
 
     def read_file(self, file_path: str) -> bytes:
         """Read a file's content in a blocking manner."""
-        try:
-            # Open the file in binary mode and read its content
-            with open(file_path, "rb") as file:
-                return file.read()
-
-        except FileNotFoundError:
-            # Handle case where the file does not exist
-            raise FileNotFoundError(f"Error: The file at {file_path} was not found.")
-
-        except PermissionError:
-            # Handle case where there's a permission error
-            raise PermissionError(
-                f"Error: Permission denied to access the file at {file_path}."
-            )
-
-        except IOError as e:
-            # Handle other IO-related errors (e.g., disk errors)
-            raise IOError(f"An I/O error occurred while reading the file: {e}")
-
-        except Exception as e:
-            # Catch any other exceptions that might occur
-            raise RuntimeError(f"An unexpected error occurred: {e}")
+        with open(file_path, "rb") as file:
+            return file.read()
 
     def fetch_url(self, url: str) -> bytes:
         """Make the request in a blocking manner."""
-        try:
-            # Send GET request to the URL
-            response = requests.get(url)
-
-            # Raise an exception for HTTP errors (4xx, 5xx responses)
-            response.raise_for_status()
-
-            # Return the response content if no errors occurred
-            return response.content
-        except requests.exceptions.RequestException as e:
-            # Catch any RequestException (including connection errors, timeouts, etc.)
-            raise requests.exceptions.ConnectionError(f"An error occurred: {e}")
-
-        except Exception as e:
-            # Catch other general exceptions
-            raise RuntimeError(f"An unexpected error occurred: {e}")
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.content
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
@@ -171,10 +138,6 @@ class GMailNotificationService(BaseNotificationService):
         attachment.add_header("Content-ID", file_data["file_name"])
 
         encode_base64(attachment)
-        attachment.add_header(
-            "Content-Disposition", f'attachment; filename="{file_data["file_name"]}"'
-        )
-
         email.attach(attachment)
 
     async def process_file(self, item: dict, kind: str) -> dict:
