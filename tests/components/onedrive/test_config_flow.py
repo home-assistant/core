@@ -31,20 +31,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-async def _setup_oauth_step(
+async def _do_get_token(
     hass: HomeAssistant,
+    result: ConfigFlowResult,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-) -> ConfigFlowResult:
-    """Set up the OAuth2 flow."""
-    assert await setup.async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+) -> None:
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -75,6 +67,24 @@ async def _setup_oauth_step(
             "expires_in": 60,
         },
     )
+
+
+async def _setup_oauth_step(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> ConfigFlowResult:
+    """Set up the OAuth2 flow."""
+    assert await setup.async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+
     return result
 
 
@@ -161,3 +171,54 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_graph_client: MagicMock,
+) -> None:
+    """Test that the reauth flow works."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow_id_changed(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_graph_client: MagicMock,
+    mock_drive: Drive,
+) -> None:
+    """Test that the reauth flow fails on a different drive id."""
+    mock_drive.id = "other-drive-id"
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_drive"

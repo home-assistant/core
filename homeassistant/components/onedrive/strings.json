@@ -4,13 +4,9 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "folder_selection": {
-        "data": {
-          "backup_folder": "Folder"
-        },
-        "data_description": {
-          "backup_folder": "Input the folder you want to use for backups. Will be created if it does not exist."
-        }
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The OneDrive integration needs to re-authenticate your account"
       }
     },
     "abort": {
@@ -26,7 +22,9 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "no_drive": "No possible OneDrive found in your account",
       "connection_error": "Could not fetch drives for your account.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "wrong_drive": "New account does not contain previously configured OneDrive.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

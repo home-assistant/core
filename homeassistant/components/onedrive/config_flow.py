@@ -1,5 +1,6 @@
 """Config flow for OneDrive."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -7,7 +8,7 @@ from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import get_async_client
@@ -66,5 +67,30 @@ class OneDriveConfigFlow(
             return self.async_abort(reason="no_drive")
 
         await self.async_set_unique_id(drive.id)
+
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
+            self._abort_if_unique_id_mismatch(
+                reason="wrong_drive",
+            )
+            return self.async_update_reload_and_abort(
+                entry=reauth_entry,
+                data=data,
+            )
+
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=DOMAIN, data=data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()

@@ -87,14 +87,19 @@ async def test_backup_folder_did_not_exist(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_error_during_backup_folder_creation(
+@pytest.mark.parametrize(
+    "status_code",
+    [404, 500],
+)
+async def test_errors_during_backup_folder_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_graph_client: MagicMock,
+    status_code: int,
 ) -> None:
     """Test error during backup folder creation."""
     mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.get.side_effect = APIError(
-        response_status_code=404
+        response_status_code=status_code
     )
     mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.post.side_effect = APIError()
     await setup_integration(hass, mock_config_entry)

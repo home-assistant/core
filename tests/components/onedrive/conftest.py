@@ -46,9 +46,7 @@ def mock_expires_at() -> int:
 
 
 @pytest.fixture
-def mock_config_entry(
-    expires_at: int, scopes: list[str], mock_drive: Drive
-) -> MockConfigEntry:
+def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title=DOMAIN,
@@ -62,7 +60,7 @@ def mock_config_entry(
                 "scope": " ".join(scopes),
             },
         },
-        unique_id=mock_drive.id,
+        unique_id="mock_drive_id",
     )
 
 
