@@ -109,18 +109,8 @@
       "overheated": {
         "name": "Overheated"
       },
-      "battery_low": {
-        "name": "Battery low"
-      },
       "cloud_connection": {
         "name": "Cloud connection"
-      },
-      "update_available": {
-        "name": "[%key:component::binary_sensor::entity_component::update::name%]",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
-        }
       },
       "is_open": {
         "name": "[%key:component::binary_sensor::entity_component::door::name%]",
@@ -194,12 +184,6 @@
       },
       "signal_level": {
         "name": "Signal level"
-      },
-      "current_firmware_version": {
-        "name": "Current firmware version"
-      },
-      "available_firmware_version": {
-        "name": "Available firmware version"
       },
       "battery_level": {
         "name": "Battery level"
@@ -397,6 +381,12 @@
     },
     "set_custom_effect": {
       "message": "Error trying to set custom effect {effect}: {exc}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
+    "unsupported_mode": {
+      "message": "Tried to set unsupported mode: {mode}"
     }
   },
   "issues": {

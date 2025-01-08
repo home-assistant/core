@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientSession
 from kasa import (
@@ -178,9 +178,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         if not credentials and entry_credentials_hash:
             data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
             hass.config_entries.async_update_entry(entry, data=data)
-        raise ConfigEntryAuthFailed from ex
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="device_authentication",
+            translation_placeholders={
+                "func": "connect",
+                "exc": str(ex),
+            },
+        ) from ex
     except KasaException as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_error",
+            translation_placeholders={
+                "func": "connect",
+                "exc": str(ex),
+            },
+        ) from ex
 
     device_credentials_hash = device.credentials_hash
 
@@ -212,7 +226,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "host": host,
+                # all entries have a unique id
+                "expected": cast(str, entry.unique_id),
+                "found": found_mac,
+            },
         )
 
     parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
