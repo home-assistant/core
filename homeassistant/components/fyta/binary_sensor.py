@@ -14,13 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FytaConfigEntry
-from .coordinator import FytaCoordinator
 from .entity import FytaPlantEntity
 
 BINARY_SENSORS: Final[list[BinarySensorEntityDescription]] = [
     BinarySensorEntityDescription(
         key="low_battery",
-        translation_key="low_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -50,7 +48,6 @@ BINARY_SENSORS: Final[list[BinarySensorEntityDescription]] = [
     ),
     BinarySensorEntityDescription(
         key="sensor_update_available",
-        translation_key="sensor_update_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -69,16 +66,16 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: FytaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FYTA binary sensors."""
-    coordinator: FytaCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
-    plant_entities = [
-        FytaPlantBinarySensor(coordinator, entry, sensor, plant_id)
-        for plant_id in coordinator.fyta.plant_list
-        for sensor in BINARY_SENSORS
-        if sensor.key in dir(coordinator.data.get(plant_id))
-    ]
-
-    async_add_entities(plant_entities)
+    async_add_entities(
+        [
+            FytaPlantBinarySensor(coordinator, entry, sensor, plant_id)
+            for plant_id in coordinator.fyta.plant_list
+            for sensor in BINARY_SENSORS
+            if sensor.key in dir(coordinator.data.get(plant_id))
+        ]
+    )
 
     def _async_add_new_device(plant_id: int) -> None:
         async_add_entities(

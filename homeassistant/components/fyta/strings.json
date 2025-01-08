@@ -39,9 +39,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "low_battery": {
-        "name": "Low battery"
-      },
       "notification_light": {
         "name": "Light notification"
       },
