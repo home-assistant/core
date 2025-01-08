@@ -55,25 +55,17 @@ async def async_setup_entry(
 
     def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
-        entities: list[SensiboDeviceUpdate] = []
-        _added_devices = added_devices.copy()
+        nonlocal added_devices
+        new_devices, _, added_devices = coordinator.get_devices(added_devices)
 
-        for device_id in _added_devices:
-            if device_id not in coordinator.previous_devices:
-                added_devices.discard(device_id)
-
-        for device_id, device_data in coordinator.data.parsed.items():
-            if device_id in added_devices:
-                continue
-            added_devices.add(device_id)
-            entities.extend(
-                [
-                    SensiboDeviceUpdate(coordinator, device_id, description)
-                    for description in DEVICE_SENSOR_TYPES
-                    if description.value_available(device_data) is not None
-                ]
+        if new_devices:
+            async_add_entities(
+                SensiboDeviceUpdate(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_id in new_devices
+                for description in DEVICE_SENSOR_TYPES
+                if description.value_available(device_data) is not None
             )
-        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
     _add_remove_devices()
