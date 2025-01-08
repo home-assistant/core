@@ -72,6 +72,7 @@ ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
+ATTR_TARGET_TEMP_STEP = "target_temp_step"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
@@ -147,6 +148,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "operation_list",
     "current_temperature",
     "target_temperature",
+    "target_temperature_step",
     "target_temperature_high",
     "target_temperature_low",
     "is_away_mode_on",
@@ -157,7 +159,12 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for water heater entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+        {
+            ATTR_OPERATION_LIST,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_TARGET_TEMP_STEP,
+        }
     )
 
     entity_description: WaterHeaterEntityDescription
@@ -174,6 +181,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+    _attr_target_temperature_step: float | None = None
 
     @final
     @property
@@ -201,6 +209,8 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
         }
+        if target_temperature_step := self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
         if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
@@ -283,6 +293,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._attr_target_temperature_low
+
+    @cached_property
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._attr_target_temperature_step
 
     @cached_property
     def is_away_mode_on(self) -> bool | None:
