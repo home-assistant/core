@@ -9,15 +9,17 @@ from unittest.mock import patch
 import pytest
 from pyvlx import PyVLXException
 
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 DUMMY_DATA: dict[str, Any] = {
+    CONF_NAME: "VELUX_KLF_ABCD",
     CONF_HOST: "127.0.0.1",
     CONF_PASSWORD: "NotAStrongPassword",
 }
@@ -46,7 +48,7 @@ async def test_user_success(hass: HomeAssistant) -> None:
         client_mock.return_value.connect.assert_called_once()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == DUMMY_DATA[CONF_HOST]
+        assert result["title"] == DUMMY_DATA[CONF_NAME]
         assert result["data"] == DUMMY_DATA
 
 
@@ -85,3 +87,63 @@ async def test_flow_duplicate_entry(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery(hass: HomeAssistant) -> None:
+    """Test we can setup from dhcp discovery."""
+    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="127.0.0.1",
+                hostname="VELUX_KLF_LAN_ABCD",
+                macaddress="6461800122",
+            ),
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+
+async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test dhcp discovery when already configured."""
+    # Setup entry.
+    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "user"},
+            data=DUMMY_DATA,
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id is None
+    await hass.async_block_till_done()
+
+    # Set unique_id for already configured entry.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=DUMMY_DATA[CONF_HOST],
+            hostname="VELUX_KLF_LAN_ABCD",
+            macaddress="64:61:84:00:AB:CD",
+        ),
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert (
+        hass.config_entries.async_entries(DOMAIN)[0].unique_id == DUMMY_DATA[CONF_NAME]
+    )
+    assert result["reason"] == "already_configured"
+
+    # Update ip address of already configured unique_id.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="127.1.1.2",
+            hostname="VELUX_KLF_LAN_ABCD",
+            macaddress="64:61:84:00:AB:CD",
+        ),
+    )
+    assert hass.config_entries.async_entries(DOMAIN)[0].data[CONF_HOST] == "127.1.1.2"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

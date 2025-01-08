@@ -75,7 +75,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 CONF_HOST: discovery_info.ip,
                 CONF_MAC: format_mac(discovery_info.macaddress),
-                CONF_NAME: discovery_info.hostname.upper().replace("LAN_", "_"),
+                CONF_NAME: discovery_info.hostname.upper().replace("LAN_", ""),
             }
         )
 
@@ -90,8 +90,18 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: discovery_info[CONF_HOST]}
         )
 
+        # Check if config_entry already exists without unigue_id configured.
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.data[CONF_HOST] == discovery_info[CONF_HOST]
+                and entry.unique_id is None
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry=entry, unique_id=discovery_info[CONF_NAME]
+                )
+                return self.async_abort(reason="already_configured")
+
         self.discovery_schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA, discovery_info
         )
-
         return await self.async_step_user()
