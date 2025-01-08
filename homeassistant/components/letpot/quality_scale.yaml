@@ -33,7 +33,7 @@ rules:
   config-entry-unloading:
     status: done
     comment: |
-      Coordinator uses config_entry.async_create_background_task for push connection.
+      Push connection connects in coordinator _async_setup, disconnects in init async_unload_entry.
   docs-configuration-parameters:
     status: exempt
     comment: |

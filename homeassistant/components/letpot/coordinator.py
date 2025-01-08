@@ -7,10 +7,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from letpot.deviceclient import LetPotDeviceClient
-from letpot.exceptions import LetPotException
+from letpot.exceptions import LetPotAuthenticationException, LetPotException
 from letpot.models import AuthenticationInfo, LetPotDevice, LetPotDeviceStatus
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import REQUEST_UPDATE_TIMEOUT
@@ -28,8 +29,6 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
 
     device: LetPotDevice
     deviceclient: LetPotDeviceClient
-    _update_event: asyncio.Event | None = None
-    _subscription: asyncio.Task | None = None
 
     def __init__(
         self, hass: HomeAssistant, info: AuthenticationInfo, device: LetPotDevice
@@ -47,27 +46,19 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
     def _handle_status_update(self, status: LetPotDeviceStatus) -> None:
         """Distribute status update to entities."""
         self.async_set_updated_data(data=status)
-        if self._update_event is not None and not self._update_event.is_set():
-            self._update_event.set()
+
+    async def _async_setup(self) -> None:
+        """Set up subscription for coordinator."""
+        try:
+            await self.deviceclient.subscribe(self._handle_status_update)
+        except LetPotAuthenticationException as exc:
+            raise ConfigEntryError from exc
 
     async def _async_update_data(self) -> LetPotDeviceStatus:
         """Request an update from the device and wait for a status update or timeout."""
-        self._update_event = asyncio.Event()
-
         try:
             async with asyncio.timeout(REQUEST_UPDATE_TIMEOUT):
-                if self._subscription is None or self._subscription.done():
-                    # Set up the subscription, which will request a status update when connected
-                    self._subscription = self.config_entry.async_create_background_task(
-                        hass=self.hass,
-                        target=self.deviceclient.subscribe(self._handle_status_update),
-                        name=f"{self.device.serial_number}_subscription_task",
-                    )
-                else:
-                    # Request an update, existing subscription will receive status update
-                    await self.deviceclient.request_status_update()
-
-                await self._update_event.wait()
+                await self.deviceclient.get_current_status()
         except LetPotException as exc:
             raise UpdateFailed(exc) from exc
 
