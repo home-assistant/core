@@ -104,6 +104,7 @@ async def integration_fixture(
         "pressure_sensor",
         "room_airconditioner",
         "silabs_dishwasher",
+        "silabs_laundrywasher",
         "smoke_detector",
         "switch_unit",
         "temperature_sensor",
