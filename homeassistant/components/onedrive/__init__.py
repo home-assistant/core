@@ -16,7 +16,7 @@ from msgraph.generated.models.folder import Folder
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         approot = await drive_item.special.by_drive_item_id("approot").get()
     except APIError as err:
         if err.response_status_code == 403:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
         raise ConfigEntryNotReady(

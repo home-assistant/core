@@ -57,7 +57,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have platforms.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -124,7 +124,10 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      This integration does not have configuration parameters.
   repair-issues:
     status: exempt
     comment: |
