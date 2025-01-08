@@ -82,9 +82,7 @@ rules:
   icon-translations:
     status: exempt
     comment: It doesn't make sense to override defaults
-  reconfiguration-flow:
-    status: todo
-    comment: see PR 134996
+  reconfiguration-flow: done
   dynamic-devices:
     status: todo
     comment: Not yet implemented
