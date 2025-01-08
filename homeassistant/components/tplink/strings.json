@@ -275,6 +275,11 @@
       }
     }
   },
+  "device": {
+    "unnamed_device": {
+      "name": "Unnamed {model}"
+    }
+  },
   "services": {
     "sequence_effect": {
       "name": "Sequence effect",

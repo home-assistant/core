@@ -284,7 +284,7 @@ def legacy_device_id(device: Device) -> str:
     return device_id.split("_")[1]
 
 
-def get_device_name(device: Device, parent: Device | None = None) -> str:
+def get_device_name(device: Device, parent: Device | None = None) -> str | None:
     """Get a name for the device. alias can be none on some devices."""
     if device.alias:
         return device.alias
@@ -299,7 +299,7 @@ def get_device_name(device: Device, parent: Device | None = None) -> str:
         ]
         suffix = f" {devices.index(device.device_id) + 1}" if len(devices) > 1 else ""
         return f"{device.device_type.value.capitalize()}{suffix}"
-    return f"Unnamed {device.model}"
+    return None
 
 
 async def get_credentials(hass: HomeAssistant) -> Credentials | None:

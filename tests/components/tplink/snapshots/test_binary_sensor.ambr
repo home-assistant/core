@@ -32,39 +32,6 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_states[binary_sensor.my_device_battery_low-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_device_battery_low',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery low',
-    'platform': 'tplink',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_low',
-    'unique_id': '123456789ABCDEFGH_battery_low',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_states[binary_sensor.my_device_cloud_connection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
