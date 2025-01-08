@@ -98,7 +98,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.backup_folder_id
         self._anonymous_auth_adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider,  # type: ignore[arg-type]
+            auth_provider=AnonymousAuthenticationProvider(),
             client=get_async_client(hass),
         )
         self.name = entry.title
