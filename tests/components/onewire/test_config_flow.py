@@ -39,13 +39,31 @@ async def filled_device_registry(
     return device_registry
 
 
-async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
+
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    assert new_entry.title == "1.2.3.4"
+    assert new_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
+
+
+async def test_user_flow_recovery(hass: HomeAssistant) -> None:
+    """Test user flow recovery after invalid server."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     # Invalid server
     with patch(
@@ -57,9 +75,9 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # Valid server
     with patch(
@@ -70,19 +88,14 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             user_input={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
         )
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == "1.2.3.4"
-        assert result["data"] == {
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 1234,
-        }
-        await hass.async_block_till_done()
-
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    assert new_entry.title == "1.2.3.4"
+    assert new_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
 
 
 async def test_user_duplicate(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test user duplicate flow."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -202,7 +215,7 @@ async def test_user_options_clear(
 
 
 @pytest.mark.usefixtures("filled_device_registry")
-async def test_user_options_empty_selection(
+async def test_user_options_empty_selection_recovery(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test leaving the selection of devices empty."""
@@ -216,7 +229,7 @@ async def test_user_options_empty_selection(
         "28.222222222223": False,
     }
 
-    # Verify that an empty selection does not modify the options
+    # Verify that an empty selection shows the form again
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: []},
@@ -224,6 +237,25 @@ async def test_user_options_empty_selection(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_selection"
     assert result["errors"] == {"base": "device_not_selected"}
+
+    # Verify that a single selected device to configure comes back as a form with the device to configure
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={INPUT_ENTRY_DEVICE_SELECTION: ["28.111111111111"]},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["description_placeholders"]["sensor_id"] == "28.111111111111"
+
+    # Verify that the setting for the device comes back as default when no input is given
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result["data"]["device_options"]["28.111111111111"]["precision"]
+        == "temperature"
+    )
 
 
 @pytest.mark.usefixtures("filled_device_registry")
