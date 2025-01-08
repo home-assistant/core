@@ -648,6 +648,7 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    device_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
@@ -671,6 +672,10 @@ def _validate_item(
             unique_id,
             report_issue,
         )
+    if device_id and device_id is not UNDEFINED:
+        device_registry = dr.async_get(hass)
+        if not device_registry.async_get(device_id):
+            raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -859,6 +864,7 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             hidden_by=hidden_by,
@@ -1090,6 +1096,7 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,
                 hidden_by=hidden_by,
