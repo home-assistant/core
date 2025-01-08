@@ -101,6 +101,15 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         self._client.cover_command(key=self._key, stop=True)
 
     @convert_api_error_ha_error
+    async def async_toggle(self, **kwargs: Any) -> None:
+        """Toggle the cover."""
+        if self._static_info.supports_toggle:
+            self._client.cover_command(key=self._key, toggle=True)
+        else:
+            # If cover does not support toggle, let HA handle it
+            await super().async_toggle(**kwargs)
+
+    @convert_api_error_ha_error
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         self._client.cover_command(key=self._key, position=kwargs[ATTR_POSITION] / 100)
