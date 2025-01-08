@@ -132,16 +132,9 @@ async def async_setup_entry(
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
 
-        motion_sensors = {
-            sensor_id
-            for device_data in coordinator.data.parsed.values()
-            if device_data.motion_sensors
-            for sensor_id in device_data.motion_sensors
-        }
-        devices = set(coordinator.data.parsed)
-        new_devices = motion_sensors | devices - added_devices
-        remove_devices = added_devices - devices - motion_sensors
-        added_devices = (added_devices - remove_devices) | new_devices
+        new_devices, remove_devices, added_devices = coordinator.get_devices(
+            added_devices
+        )
 
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(

@@ -51,6 +51,24 @@ class SensiboDataUpdateCoordinator(DataUpdateCoordinator[SensiboData]):
         )
         self.previous_devices: set[str] = set()
 
+    def get_devices(
+        self, added_devices: set[str]
+    ) -> tuple[set[str], set[str], set[str]]:
+        """Addition and removal of devices."""
+        data = self.data
+        motion_sensors = {
+            sensor_id
+            for device_data in data.parsed.values()
+            if device_data.motion_sensors
+            for sensor_id in device_data.motion_sensors
+        }
+        devices: set[str] = set(data.parsed)
+        new_devices: set[str] = motion_sensors | devices - added_devices
+        remove_devices = added_devices - devices - motion_sensors
+        added_devices = (added_devices - remove_devices) | new_devices
+
+        return (new_devices, remove_devices, added_devices)
+
     async def _async_update_data(self) -> SensiboData:
         """Fetch data from Sensibo."""
         try:
