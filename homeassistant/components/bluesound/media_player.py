@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,16 +19,10 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -40,12 +33,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN, INTEGRATION_TITLE
+from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
 from .utils import dispatcher_join_signal, dispatcher_unjoin_signal, format_unique_id
 
@@ -65,64 +57,6 @@ SERVICE_SET_TIMER = "set_sleep_timer"
 SERVICE_UNJOIN = "unjoin"
 
 POLL_TIMEOUT = 120
-
-PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOSTS): vol.All(
-            cv.ensure_list,
-            [
-                {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                }
-            ],
-        )
-    }
-)
-
-
-async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
-    """Import config entry from configuration.yaml."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        # Start import flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        if (
-            result["type"] == FlowResultType.ABORT
-            and result["reason"] == "cannot_connect"
-        ):
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"deprecated_yaml_import_issue_{result['reason']}",
-                breaks_in_ha_version="2025.2.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": INTEGRATION_TITLE,
-                },
-            )
-            return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.2.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
 
 
 async def async_setup_entry(
@@ -151,22 +85,6 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
 
     async_add_entities([bluesound_player], update_before_add=True)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None,
-) -> None:
-    """Trigger import flows."""
-    hosts = config.get(CONF_HOSTS, [])
-    for host in hosts:
-        import_data = {
-            CONF_HOST: host[CONF_HOST],
-            CONF_PORT: host.get(CONF_PORT, 11000),
-        }
-        hass.async_create_task(_async_import(hass, import_data))
 
 
 class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity):

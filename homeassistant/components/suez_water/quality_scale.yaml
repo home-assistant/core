@@ -26,8 +26,10 @@ rules:
   brands: done
 
   # Silver
-  config-entry-unloading: done
-  log-when-unavailable: todo
+  config-entry-unloading:
+    status: todo
+    comment: cleanly close session
+  log-when-unavailable: done
   entity-unavailable: done
   action-exceptions:
     status: exempt
@@ -48,25 +50,35 @@ rules:
   # Gold
   entity-translations: done
   entity-device-class: done
-  devices: done
-  entity-category: todo
-  entity-disabled-by-default: todo
+  devices:
+    status: todo
+    comment: see https://github.com/home-assistant/core/pull/134027#discussion_r1898732463
+  entity-category:
+    status: done
+    comment: default class is fine
+  entity-disabled-by-default:
+    status: todo
+    comment: price can always be disabled and yesterday usage after https://github.com/home-assistant/core/pull/131166
   discovery:
     status: exempt
     comment: api only, nothing on local network to discover services
   stale-devices:
-    status: exempt
-    comment: one device only
+    status: todo
+    comment: see devices
   diagnostics: todo
   exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  dynamic-devices:
+  icon-translations:
     status: exempt
-    comment: one device only
+    comment: no custom icons
+  reconfiguration-flow:
+    status: todo
+    comment: reconfigure every configurations input
+  dynamic-devices:
+    status: todo
+    comment: see devices
   discovery-update-info:
     status: exempt
-    comment: fixed api
+    comment: devices are not network dependent and will not be updated during their lives
   repair-issues:
     status: exempt
     comment: No repair issues to be raised
@@ -78,7 +90,7 @@ rules:
     comment: make it clearer
   docs-known-limitations: todo
   docs-troubleshooting: todo
-  docs-examples: done
+  docs-examples: todo
 
   # Platinum
   async-dependency: done

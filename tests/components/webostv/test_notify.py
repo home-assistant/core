@@ -14,22 +14,24 @@ from homeassistant.components.webostv import DOMAIN
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from . import setup_webostv
 from .const import TV_NAME
 
 ICON_PATH = "/some/path"
 MESSAGE = "one, two, testing, testing"
+SERVICE_NAME = slugify(TV_NAME)
 
 
 async def test_notify(hass: HomeAssistant, client) -> None:
     """Test sending a message."""
     await setup_webostv(hass)
-    assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
+    assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_DATA: {
@@ -44,7 +46,7 @@ async def test_notify(hass: HomeAssistant, client) -> None:
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_DATA: {
@@ -59,7 +61,7 @@ async def test_notify(hass: HomeAssistant, client) -> None:
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: "only message, no data",
         },
@@ -77,12 +79,12 @@ async def test_notify_not_connected(
 ) -> None:
     """Test sending a message when client is not connected."""
     await setup_webostv(hass)
-    assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
+    assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_DATA: {
@@ -104,12 +106,12 @@ async def test_icon_not_found(
 ) -> None:
     """Test notify icon not found error."""
     await setup_webostv(hass)
-    assert hass.services.has_service(NOTIFY_DOMAIN, TV_NAME)
+    assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
     monkeypatch.setattr(client, "send_message", Mock(side_effect=FileNotFoundError))
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_DATA: {
@@ -141,13 +143,13 @@ async def test_connection_errors(
 ) -> None:
     """Test connection errors scenarios."""
     await setup_webostv(hass)
-    assert hass.services.has_service("notify", TV_NAME)
+    assert hass.services.has_service("notify", SERVICE_NAME)
 
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=side_effect))
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        TV_NAME,
+        SERVICE_NAME,
         {
             ATTR_MESSAGE: MESSAGE,
             ATTR_DATA: {
@@ -175,4 +177,4 @@ async def test_no_discovery_info(
     await hass.async_block_till_done()
     assert NOTIFY_DOMAIN in hass.config.components
     assert f"Failed to initialize notification service {DOMAIN}" in caplog.text
-    assert not hass.services.has_service("notify", TV_NAME)
+    assert not hass.services.has_service("notify", SERVICE_NAME)

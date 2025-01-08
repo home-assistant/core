@@ -6,12 +6,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak.backends.device import BLEDevice
 from habluetooth import BluetoothServiceInfoBleak
 from pynecil import (
+    AnimationSpeed,
+    AutostartMode,
+    BatteryType,
     DeviceInfoResponse,
     LatestRelease,
     LiveDataResponse,
+    LockingMode,
+    LogoDuration,
     OperatingMode,
     PowerSource,
+    ScreenOrientationMode,
+    ScrollSpeed,
     SettingsDataResponse,
+    TempUnit,
 )
 import pytest
 
@@ -151,7 +159,7 @@ def mock_pynecil() -> Generator[AsyncMock]:
         client.get_settings.return_value = SettingsDataResponse(
             sleep_temp=150,
             sleep_timeout=5,
-            min_dc_voltage_cells=0,
+            min_dc_voltage_cells=BatteryType.BATTERY_3S,
             min_volltage_per_cell=3.3,
             qc_ideal_voltage=9.0,
             accel_sensitivity=7,
@@ -168,6 +176,21 @@ def mock_pynecil() -> Generator[AsyncMock]:
             hall_sensitivity=7,
             pd_negotiation_timeout=2.0,
             display_brightness=3,
+            orientation_mode=ScreenOrientationMode.RIGHT_HANDED,
+            animation_speed=AnimationSpeed.MEDIUM,
+            autostart_mode=AutostartMode.IDLE,
+            temp_unit=TempUnit.CELSIUS,
+            desc_scroll_speed=ScrollSpeed.FAST,
+            logo_duration=LogoDuration.LOOP,
+            locking_mode=LockingMode.FULL_LOCKING,
+            animation_loop=True,
+            cooling_temp_blink=True,
+            idle_screen_details=True,
+            solder_screen_details=True,
+            invert_buttons=True,
+            display_invert=True,
+            calibrate_cjc=True,
+            usb_pd_mode=True,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,

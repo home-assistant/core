@@ -559,6 +559,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "peblar",
+            "name": "pblr-*",
+        },
+        {
             "domain": "powerfox",
             "name": "powerfox*",
         },
@@ -769,6 +773,11 @@ ZEROCONF = {
             "properties": {
                 "am": "airport*",
             },
+        },
+    ],
+    "_rio._tcp.local.": [
+        {
+            "domain": "russound_rio",
         },
     ],
     "_sideplay._tcp.local.": [

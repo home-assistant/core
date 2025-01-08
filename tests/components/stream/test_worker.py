@@ -41,6 +41,7 @@ from homeassistant.components.stream.const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from homeassistant.components.stream.core import Orientation, StreamSettings
+from homeassistant.components.stream.exceptions import StreamClientError
 from homeassistant.components.stream.worker import (
     StreamEndedError,
     StreamState,
@@ -341,7 +342,18 @@ async def async_decode_stream(
     return py_av.capture_buffer
 
 
-async def test_stream_open_fails(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("exception", "error_code"),
+    [
+        # pylint: disable-next=c-extension-no-member
+        (av.error.InvalidDataError(-2, "error"), StreamClientError.Other),
+        (av.HTTPBadRequestError(400, ""), StreamClientError.BadRequest),
+        (av.HTTPUnauthorizedError(401, ""), StreamClientError.Unauthorized),
+    ],
+)
+async def test_stream_open_fails(
+    hass: HomeAssistant, exception: Exception, error_code: StreamClientError
+) -> None:
     """Test failure on stream open."""
     stream = Stream(
         hass,
@@ -352,12 +364,11 @@ async def test_stream_open_fails(hass: HomeAssistant) -> None:
     )
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open:
-        # pylint: disable-next=c-extension-no-member
-        av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        with pytest.raises(StreamWorkerError):
+        av_open.side_effect = exception
+        with pytest.raises(StreamWorkerError) as err:
             run_worker(hass, stream, STREAM_SOURCE)
-        await hass.async_block_till_done()
         av_open.assert_called_once()
+        assert err.value.error_code == error_code
 
 
 async def test_stream_worker_success(hass: HomeAssistant) -> None:

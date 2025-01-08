@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "total_requests": {
+        "default": "mdi:forum"
+      },
+      "movie_requests": {
+        "default": "mdi:movie-open"
+      },
+      "tv_requests": {
+        "default": "mdi:television-box"
+      },
+      "pending_requests": {
+        "default": "mdi:clock"
+      },
+      "declined_requests": {
+        "default": "mdi:movie-open-off"
+      },
+      "processing_requests": {
+        "default": "mdi:sync"
+      },
+      "available_requests": {
+        "default": "mdi:message-bulleted"
+      }
+    }
+  },
+  "services": {
+    "get_requests": {
+      "service": "mdi:multimedia"
+    }
+  }
+}

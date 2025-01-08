@@ -9,6 +9,7 @@ from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
 ]
 
 

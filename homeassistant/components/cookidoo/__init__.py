@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cookidoo_api import Cookidoo, CookidooConfig, CookidooLocalizationConfig
+from cookidoo_api import Cookidoo, CookidooConfig, get_localization_options
 
 from homeassistant.const import (
     CONF_COUNTRY,
@@ -16,21 +16,23 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.TODO]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CookidooConfigEntry) -> bool:
     """Set up Cookidoo from a config entry."""
+
+    localizations = await get_localization_options(
+        country=entry.data[CONF_COUNTRY].lower(),
+        language=entry.data[CONF_LANGUAGE],
+    )
 
     cookidoo = Cookidoo(
         async_get_clientsession(hass),
         CookidooConfig(
             email=entry.data[CONF_EMAIL],
             password=entry.data[CONF_PASSWORD],
-            localization=CookidooLocalizationConfig(
-                country_code=entry.data[CONF_COUNTRY].lower(),
-                language=entry.data[CONF_LANGUAGE],
-            ),
+            localization=localizations[0],
         ),
     )
 

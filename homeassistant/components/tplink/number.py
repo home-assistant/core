@@ -34,6 +34,11 @@ class TPLinkNumberEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
+
 NUMBER_DESCRIPTIONS: Final = (
     TPLinkNumberEntityDescription(
         key="smooth_transition_on",
@@ -49,6 +54,14 @@ NUMBER_DESCRIPTIONS: Final = (
     ),
     TPLinkNumberEntityDescription(
         key="temperature_offset",
+        mode=NumberMode.BOX,
+    ),
+    TPLinkNumberEntityDescription(
+        key="pan_step",
+        mode=NumberMode.BOX,
+    ),
+    TPLinkNumberEntityDescription(
+        key="tilt_step",
         mode=NumberMode.BOX,
     ),
 )
@@ -106,6 +119,7 @@ class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):
         await self._feature.set_value(int(value))
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_native_value = cast(float | None, self._feature.value)
+        return True

@@ -15,6 +15,10 @@ from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -56,6 +60,7 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
         await self._alarm_module.stop()
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = self._alarm_module.active
+        return True

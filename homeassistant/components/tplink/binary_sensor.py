@@ -26,6 +26,9 @@ class TPLinkBinarySensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 BINARY_SENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="overheated",
@@ -96,6 +99,7 @@ class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntit
     entity_description: TPLinkBinarySensorEntityDescription
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = cast(bool | None, self._feature.value)
+        return True

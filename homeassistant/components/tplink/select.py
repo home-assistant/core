@@ -27,6 +27,10 @@ class TPLinkSelectEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 SELECT_DESCRIPTIONS: Final = [
     TPLinkSelectEntityDescription(
         key="light_preset",
@@ -91,6 +95,7 @@ class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
         await self._feature.set_value(option)
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_current_option = cast(str | None, self._feature.value)
+        return True
