@@ -8,7 +8,7 @@ from pyblu import Player, SyncStatus
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -90,12 +90,6 @@ class SetSleepTimerButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity)
         self._attr_device_info = generate_device_info(sync_status, port)
         self._attr_entity_registry_enabled_default = False
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_available = self.coordinator.data.is_online
-        self.async_write_ha_state()
-
     async def async_press(self) -> None:
         """Set the sleep timer."""
         await self._player.sleep_timer()
@@ -118,12 +112,6 @@ class ClearSleepTimerButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntit
         self._attr_name = f"{sync_status.name} Clear Sleep Timer"
         self._attr_device_info = generate_device_info(sync_status, port)
         self._attr_entity_registry_enabled_default = False
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_available = self.coordinator.data.is_online
-        self.async_write_ha_state()
 
     async def async_press(self) -> None:
         """Clear the sleep timer."""
