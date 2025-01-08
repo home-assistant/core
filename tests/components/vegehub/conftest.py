@@ -92,7 +92,9 @@ def fixture_basic_hub(mock_aiohttp_session):
 @pytest.fixture
 def config_entry(basic_hub):
     """Mock a config entry."""
-    return MagicMock(
+    mock = MagicMock(
         data={"mac": "1234567890AB", "host": "VegeHub1"},
-        runtime_data=basic_hub,
+        runtime_data={},
     )
+    mock.runtime_data.hub = basic_hub
+    return mock

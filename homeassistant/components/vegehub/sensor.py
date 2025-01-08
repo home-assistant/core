@@ -6,8 +6,10 @@ from homeassistant.const import CONF_HOST, CONF_MAC, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
+from .coordinator import VegeHubCoordinator
 
 
 async def async_setup_entry(
@@ -18,8 +20,8 @@ async def async_setup_entry(
     """Set up Vegetronix sensors from a config entry."""
     sensors = []
     mac_address = config_entry.data[CONF_MAC]
-    num_sensors = config_entry.runtime_data.num_sensors
-    num_actuators = config_entry.runtime_data.num_actuators
+    num_sensors = config_entry.runtime_data.hub.num_sensors
+    num_actuators = config_entry.runtime_data.hub.num_actuators
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
@@ -28,10 +30,11 @@ async def async_setup_entry(
             mac_address=mac_address,
             slot=i + 1,
             dev_name=config_entry.data[CONF_HOST],
+            coordinator=config_entry.runtime_data.coordinator,
         )
 
-        # Store the entity by ID in runtime_data
-        config_entry.runtime_data.entities[sensor.unique_id] = sensor
+        # Store the entity by ID in runtime_data hub
+        config_entry.runtime_data.hub.entities[sensor.unique_id] = sensor
 
         sensors.append(sensor)
 
@@ -39,7 +42,7 @@ async def async_setup_entry(
         async_add_entities(sensors)
 
 
-class VegeHubSensor(SensorEntity):
+class VegeHubSensor(CoordinatorEntity, SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
     def __init__(
@@ -47,14 +50,17 @@ class VegeHubSensor(SensorEntity):
         mac_address: str,
         slot: int,
         dev_name: str,
+        coordinator: VegeHubCoordinator,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._attr_has_entity_name = True
         self._attr_translation_placeholders = {"index": str(slot)}
 
         self._unit_of_measurement = UnitOfElectricPotential.VOLT
         self._attr_device_class = SensorDeviceClass.VOLTAGE
         self._attr_translation_key = "analog_sensor"
+        self.value: int | str | float | None = None
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
@@ -73,12 +79,4 @@ class VegeHubSensor(SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if isinstance(self._attr_native_value, (int, str, float)):
-            return float(self._attr_native_value)
-        return None
-
-    async def async_update_sensor(self, value):
-        """Update the sensor state with the latest value."""
-
-        self._attr_native_value = value
-        self.async_write_ha_state()
+        return self.coordinator.data.get(self._attr_unique_id)
