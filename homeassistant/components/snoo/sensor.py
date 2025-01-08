@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import SnooConfigEntry, SnooCoordinator
+from .coordinator import SnooConfigEntry
 from .entity import SnooDescriptionEntity
 
 
@@ -25,7 +25,7 @@ from .entity import SnooDescriptionEntity
 class SnooSensorEntityDescription(SensorEntityDescription):
     """Describes a Snoo sensor."""
 
-    value_fn: Callable[[SnooData], bool]
+    value_fn: Callable[[SnooData], StateType]
 
 
 SENSOR_DESCRIPTIONS: list[SnooSensorEntityDescription] = [

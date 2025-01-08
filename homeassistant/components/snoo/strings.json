@@ -7,8 +7,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "Your Happiest Baby username or email",
-          "password": "Your Happiest Baby password"
+          "username": "Your Snoo username or email",
+          "password": "Your Snoo password"
         }
       }
     },

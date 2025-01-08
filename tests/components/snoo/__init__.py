@@ -19,9 +19,9 @@ def create_entry(
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "sample",
         },
-        unique_id="random_uuid",
+        # This is also gotten from the fake jwt
+        unique_id="123e4567-e89b-12d3-a456-426614174000",
         version=1,
-        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
