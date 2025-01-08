@@ -79,7 +79,7 @@ async def test_init(
 async def test_mcp_server_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
-    """Test the integration is unloaded if the server fails to initialize."""
+    """Test the integration fails to setup if the server fails initialization."""
     mock_mcp_client.side_effect = httpx.HTTPStatusError(
         "", request=None, response=httpx.Response(500)
     )
@@ -91,7 +91,7 @@ async def test_mcp_server_failure(
 async def test_list_tools_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
-    """Test the integration is unloaded if the server fails to initialize."""
+    """Test the integration fails to load if the first data fetch returns an error."""
     mock_mcp_client.return_value.list_tools.side_effect = httpx.HTTPStatusError(
         "", request=None, response=httpx.Response(500)
     )
@@ -103,7 +103,7 @@ async def test_list_tools_failure(
 async def test_llm_get_api_tools(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
-    """Test the integration is unloaded if the server fails to initialize."""
+    """Test MCP tools are returned as LLM API tools."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
         tools=[SEARCH_MEMORY_TOOL, SAVE_MEMORY_TOOL],
     )
@@ -141,7 +141,7 @@ async def test_llm_get_api_tools(
 async def test_call_tool(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
-    """Test the integration is unloaded if the server fails to initialize."""
+    """Test calling an MCP Tool through the LLM API."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
         tools=[SEARCH_MEMORY_TOOL]
     )
@@ -176,7 +176,7 @@ async def test_call_tool(
 async def test_call_tool_fails(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
-    """Test the integration is unloaded if the server fails to initialize."""
+    """Test handling an MCP Tool call failure."""
     mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
         tools=[SEARCH_MEMORY_TOOL]
     )
