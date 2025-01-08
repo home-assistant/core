@@ -128,10 +128,8 @@ async def async_setup_entry(
 
     def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
-
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
-
         new_devices, remove_devices, added_devices = coordinator.get_devices(
             added_devices
         )
