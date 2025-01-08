@@ -16,12 +16,12 @@ from msgraph.generated.models.folder import Folder
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .api import OneDriveConfigEntryAccessTokenProvider
-from .const import CONF_APPROOT_ID, DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
 
 
 @dataclass
@@ -59,16 +59,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         scopes=OAUTH_SCOPES,
     )
     assert entry.unique_id
-    items = graph_client.drives.by_drive_id(entry.unique_id).items
+    drive_item = graph_client.drives.by_drive_id(entry.unique_id)
+
+    try:
+        approot = await drive_item.special.by_drive_item_id("approot").get()
+    except APIError as err:
+        if err.response_status_code == 403:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+        ) from err
+
+    if approot is None or not approot.id:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+        )
 
     backup_folder_id = await _async_create_folder_if_not_exists(
-        items=items,
-        base_folder_id=str(entry.data[CONF_APPROOT_ID]),
-        folder="backups",
+        items=drive_item.items, base_folder_id=approot.id, folder="backups"
     )
 
     entry.runtime_data = OneDriveRuntimeData(
-        items=items,
+        items=drive_item.items,
         backup_folder_id=backup_folder_id,
     )
 

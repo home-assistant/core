@@ -12,11 +12,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.onedrive.const import (
-    CONF_APPROOT_ID,
-    DOMAIN,
-    OAUTH_SCOPES,
-)
+from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -65,7 +61,6 @@ def mock_config_entry(
                 "expires_at": expires_at,
                 "scope": " ".join(scopes),
             },
-            CONF_APPROOT_ID: "approot",
         },
         unique_id=mock_drive.id,
     )
