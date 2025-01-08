@@ -24,6 +24,7 @@ from .coordinator import FytaCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.IMAGE,
     Platform.SENSOR,
 ]
 type FytaConfigEntry = ConfigEntry[FytaCoordinator]
