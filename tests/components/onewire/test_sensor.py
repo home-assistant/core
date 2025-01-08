@@ -78,8 +78,8 @@ async def test_tai8570_sensors(
     """
     mock_devices = deepcopy(MOCK_OWPROXY_DEVICES)
     mock_device = mock_devices[device_id]
-    mock_device[ATTR_INJECT_READS].append(OwnetError)
-    mock_device[ATTR_INJECT_READS].append(OwnetError)
+    mock_device[ATTR_INJECT_READS]["/TAI8570/temperature"] = [OwnetError]
+    mock_device[ATTR_INJECT_READS]["/TAI8570/pressure"] = [OwnetError]
 
     with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
         setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
