@@ -1301,6 +1301,9 @@ led-ble==1.1.1
 # homeassistant.components.lektrico
 lektricowifi==0.0.43
 
+# homeassistant.components.letpot
+letpot==0.2.0
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
