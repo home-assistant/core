@@ -7,14 +7,14 @@
       },
       "pat": {
         "title": "Enter Personal Access Token",
-        "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}).  This will be used to create the Home Assistant integration within your SmartThings account.",
+        "description": "Please enter a SmartThings [Personal Access Token]({token_url}) that has been created per the [instructions]({component_url}). This will be used to create the Home Assistant integration within your SmartThings account.",
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         }
       },
       "select_location": {
         "title": "Select Location",
-        "description": "Please select the SmartThings Location you wish to add to Home Assistant.  We will then open a new window and ask you to login and authorize installation of the Home Assistant integration into the selected location.",
+        "description": "Please select the SmartThings Location you wish to add to Home Assistant. We will then open a new window and ask you to login and authorize installation of the Home Assistant integration into the selected location.",
         "data": { "location_id": "[%key:common::config_flow::data::location%]" }
       },
       "authorize": { "title": "Authorize Home Assistant" }
@@ -27,7 +27,7 @@
       "token_invalid_format": "The token must be in the UID/GUID format",
       "token_unauthorized": "The token is invalid or no longer authorized.",
       "token_forbidden": "The token does not have the required OAuth scopes.",
-      "app_setup_error": "Unable to set up the SmartApp.  Please try again.",
+      "app_setup_error": "Unable to set up the SmartApp. Please try again.",
       "webhook_error": "SmartThings could not validate the webhook URL. Please ensure the webhook URL is reachable from the internet and try again."
     }
   }

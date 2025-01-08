@@ -66,3 +66,26 @@ def load_json_from_path(path: pathlib.Path) -> Any:
         return json.loads(path.read_text())
     except json.JSONDecodeError as err:
         raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err
+
+
+def flatten_translations(translations):
+    """Flatten all translations."""
+    stack = [iter(translations.items())]
+    key_stack = []
+    flattened_translations = {}
+    while stack:
+        for k, v in stack[-1]:
+            key_stack.append(k)
+            if isinstance(v, dict):
+                stack.append(iter(v.items()))
+                break
+            if isinstance(v, str):
+                common_key = "::".join(key_stack)
+                flattened_translations[common_key] = v
+                key_stack.pop()
+        else:
+            stack.pop()
+            if key_stack:
+                key_stack.pop()
+
+    return flattened_translations

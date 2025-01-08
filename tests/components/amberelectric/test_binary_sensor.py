@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.interval import SpikeStatus
-from amberelectric.model.tariff_information import TariffInformation
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.spike_status import SpikeStatus
+from amberelectric.models.tariff_information import TariffInformation
 from dateutil import parser
 import pytest
 
@@ -42,10 +42,10 @@ async def setup_no_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
-        instance.get_current_price = Mock(return_value=GENERAL_CHANNEL)
+        instance.get_current_prices = Mock(return_value=GENERAL_CHANNEL)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value
@@ -65,7 +65,7 @@ async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
         general_channel: list[CurrentInterval] = [
@@ -73,8 +73,8 @@ async def setup_potential_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
                 ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
             ),
         ]
-        general_channel[0].spike_status = SpikeStatus.POTENTIAL
-        instance.get_current_price = Mock(return_value=general_channel)
+        general_channel[0].actual_instance.spike_status = SpikeStatus.POTENTIAL
+        instance.get_current_prices = Mock(return_value=general_channel)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value
@@ -94,7 +94,7 @@ async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
         general_channel: list[CurrentInterval] = [
@@ -102,8 +102,8 @@ async def setup_spike(hass: HomeAssistant) -> AsyncGenerator[Mock]:
                 ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
             ),
         ]
-        general_channel[0].spike_status = SpikeStatus.SPIKE
-        instance.get_current_price = Mock(return_value=general_channel)
+        general_channel[0].actual_instance.spike_status = SpikeStatus.SPIKE
+        instance.get_current_prices = Mock(return_value=general_channel)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value
@@ -156,7 +156,7 @@ async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mo
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
         general_channel: list[CurrentInterval] = [
@@ -164,8 +164,10 @@ async def setup_inactive_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mo
                 ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
             ),
         ]
-        general_channel[0].tariff_information = TariffInformation(demandWindow=False)
-        instance.get_current_price = Mock(return_value=general_channel)
+        general_channel[0].actual_instance.tariff_information = TariffInformation(
+            demandWindow=False
+        )
+        instance.get_current_prices = Mock(return_value=general_channel)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value
@@ -185,7 +187,7 @@ async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock
 
     instance = Mock()
     with patch(
-        "amberelectric.api.AmberApi.create",
+        "amberelectric.AmberApi",
         return_value=instance,
     ) as mock_update:
         general_channel: list[CurrentInterval] = [
@@ -193,8 +195,10 @@ async def setup_active_demand_window(hass: HomeAssistant) -> AsyncGenerator[Mock
                 ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
             ),
         ]
-        general_channel[0].tariff_information = TariffInformation(demandWindow=True)
-        instance.get_current_price = Mock(return_value=general_channel)
+        general_channel[0].actual_instance.tariff_information = TariffInformation(
+            demandWindow=True
+        )
+        instance.get_current_prices = Mock(return_value=general_channel)
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_update.return_value

@@ -1,7 +1,7 @@
 {
   "domain": "tuya",
   "name": "Tuya",
-  "codeowners": ["@Tuya", "@zlinoliver", "@frenck"],
+  "codeowners": ["@Tuya", "@zlinoliver"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "dhcp": [
@@ -43,5 +43,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["tuya_iot"],
-  "requirements": ["tuya-device-sharing-sdk==0.1.9"]
+  "requirements": ["tuya-device-sharing-sdk==0.2.1"]
 }

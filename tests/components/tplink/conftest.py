@@ -1,28 +1,71 @@
 """tplink conftest."""
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import DEFAULT, AsyncMock, patch
 
-from kasa import DeviceConfig
+from kasa import DeviceConfig, Module
 import pytest
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import (
+    ALIAS_CAMERA,
+    CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_LEGACY,
     CREDENTIALS_HASH_AES,
     CREDENTIALS_HASH_KLAP,
     DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_AES_CAMERA,
     DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
+    IP_ADDRESS3,
     MAC_ADDRESS,
     MAC_ADDRESS2,
+    MAC_ADDRESS3,
+    MODEL_CAMERA,
     _mocked_device,
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def override_side_effect(mock: AsyncMock, effect):
+    """Temporarily override a mock side effect and replace afterwards."""
+    try:
+        default_side_effect = mock.side_effect
+        mock.side_effect = effect
+        yield mock
+    finally:
+        mock.side_effect = default_side_effect
+
+
+def _get_mock_devices():
+    return {
+        IP_ADDRESS: _mocked_device(
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
+            credentials_hash=CREDENTIALS_HASH_KLAP,
+            ip_address=IP_ADDRESS,
+        ),
+        IP_ADDRESS2: _mocked_device(
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
+            credentials_hash=CREDENTIALS_HASH_AES,
+            mac=MAC_ADDRESS2,
+            ip_address=IP_ADDRESS2,
+        ),
+        IP_ADDRESS3: _mocked_device(
+            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES_CAMERA.to_dict()),
+            credentials_hash=CREDENTIALS_HASH_AES,
+            mac=MAC_ADDRESS3,
+            ip_address=IP_ADDRESS3,
+            modules=[Module.Camera],
+            alias=ALIAS_CAMERA,
+            model=MODEL_CAMERA,
+        ),
+    }
 
 
 @pytest.fixture
@@ -34,22 +77,15 @@ def mock_discovery():
         discover_single=DEFAULT,
         try_connect_all=DEFAULT,
     ) as mock_discovery:
-        device = _mocked_device(
-            device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
-            credentials_hash=CREDENTIALS_HASH_KLAP,
-            alias="My Bulb",
-        )
-        devices = {
-            "127.0.0.1": _mocked_device(
-                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
-                credentials_hash=CREDENTIALS_HASH_KLAP,
-                alias=None,
-            )
-        }
+        devices = _get_mock_devices()
+
+        def get_device(host, **kwargs):
+            return devices[host]
+
         mock_discovery["discover"].return_value = devices
-        mock_discovery["discover_single"].return_value = device
-        mock_discovery["try_connect_all"].return_value = device
-        mock_discovery["mock_device"] = device
+        mock_discovery["discover_single"].side_effect = get_device
+        mock_discovery["try_connect_all"].side_effect = get_device
+        mock_discovery["mock_devices"] = devices
         yield mock_discovery
 
 
@@ -57,22 +93,9 @@ def mock_discovery():
 def mock_connect():
     """Mock python-kasa connect."""
     with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
-        devices = {
-            IP_ADDRESS: _mocked_device(
-                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict()),
-                credentials_hash=CREDENTIALS_HASH_KLAP,
-                ip_address=IP_ADDRESS,
-            ),
-            IP_ADDRESS2: _mocked_device(
-                device_config=DeviceConfig.from_dict(DEVICE_CONFIG_AES.to_dict()),
-                credentials_hash=CREDENTIALS_HASH_AES,
-                mac=MAC_ADDRESS2,
-                ip_address=IP_ADDRESS2,
-            ),
-        }
+        devices = _get_mock_devices()
 
         def get_device(config):
-            nonlocal devices
             return devices[config.host]
 
         mock_connect.side_effect = get_device
@@ -114,6 +137,17 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={**CREATE_ENTRY_DATA_LEGACY},
         unique_id=MAC_ADDRESS,
+    )
+
+
+@pytest.fixture
+def mock_camera_config_entry() -> MockConfigEntry:
+    """Mock camera ConfigEntry."""
+    return MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_AES_CAMERA},
+        unique_id=MAC_ADDRESS3,
     )
 
 

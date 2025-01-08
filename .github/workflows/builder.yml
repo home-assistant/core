@@ -10,7 +10,7 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.12"
+  DEFAULT_PYTHON: "3.13"
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
@@ -69,7 +69,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@v4.4.3
+        uses: actions/upload-artifact@v4.5.0
         with:
           name: translations
           path: translations.tar.gz
@@ -94,7 +94,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -105,7 +105,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@v7
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/intents-package
@@ -509,7 +509,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -517,12 +517,12 @@ jobs:
           tags: ${{ env.HASSFEST_IMAGE_TAG }}
 
       - name: Run hassfest against core
-        run: docker run --rm -v ${{ github.workspace }}/homeassistant:/github/workspace/homeassistant ${{ env.HASSFEST_IMAGE_TAG }} --core-integrations-path=/github/workspace/homeassistant/components
+        run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
 
       - name: Push Docker image
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
         id: push
-        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
+        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: . # So action will not pull the repository again
           file: ./script/hassfest/docker/Dockerfile
@@ -531,7 +531,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018 # v1.4.4
+        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

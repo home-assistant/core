@@ -4,6 +4,7 @@
     "condition_type": {
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
+      "is_area": "Current {entity_name} area",
       "is_atmospheric_pressure": "Current {entity_name} atmospheric pressure",
       "is_battery_level": "Current {entity_name} battery level",
       "is_blood_glucose_concentration": "Current {entity_name} blood glucose concentration",
@@ -22,7 +23,7 @@
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
-      "is_monetary": "Current {entity_name} money",
+      "is_monetary": "Current {entity_name} balance",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
@@ -55,6 +56,7 @@
     "trigger_type": {
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
+      "area": "{entity_name} area changes",
       "atmospheric_pressure": "{entity_name} atmospheric pressure changes",
       "battery_level": "{entity_name} battery level changes",
       "blood_glucose_concentration": "{entity_name} blood glucose concentration changes",
@@ -73,7 +75,7 @@
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
-      "monetary": "{entity_name} money changes",
+      "monetary": "{entity_name} balance changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
@@ -144,6 +146,9 @@
     },
     "aqi": {
       "name": "Air quality index"
+    },
+    "area": {
+      "name": "Area"
     },
     "atmospheric_pressure": {
       "name": "Atmospheric pressure"

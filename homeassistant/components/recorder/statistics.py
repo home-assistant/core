@@ -11,6 +11,7 @@ from itertools import chain, groupby
 import logging
 from operator import itemgetter
 import re
+from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
@@ -27,8 +28,9 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
-    BloodGlugoseConcentrationConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -61,6 +63,7 @@ from .db_schema import (
     STATISTICS_TABLES,
     Statistics,
     StatisticsBase,
+    StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
 )
@@ -129,11 +132,11 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
     **{
-        unit: BloodGlugoseConcentrationConverter
-        for unit in BloodGlugoseConcentrationConverter.VALID_UNITS
+        unit: BloodGlucoseConcentrationConverter
+        for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
     },
-    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
@@ -445,8 +448,9 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 }
 
     # Insert compiled hourly statistics in the database
+    now_timestamp = time_time()
     session.add_all(
-        Statistics.from_stats_ts(metadata_id, summary_item)
+        Statistics.from_stats_ts(metadata_id, summary_item, now_timestamp)
         for metadata_id, summary_item in summary.items()
     )
 
@@ -577,6 +581,7 @@ def _compile_statistics(
 
     new_short_term_stats: list[StatisticsBase] = []
     updated_metadata_ids: set[int] = set()
+    now_timestamp = time_time()
     # Insert collected statistics in the database
     for stats in platform_stats:
         modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
@@ -586,10 +591,7 @@ def _compile_statistics(
             modified_statistic_ids.add(modified_statistic_id)
         updated_metadata_ids.add(metadata_id)
         if new_stat := _insert_statistics(
-            session,
-            StatisticsShortTerm,
-            metadata_id,
-            stats["stat"],
+            session, StatisticsShortTerm, metadata_id, stats["stat"], now_timestamp
         ):
             new_short_term_stats.append(new_stat)
 
@@ -665,10 +667,11 @@ def _insert_statistics(
     table: type[StatisticsBase],
     metadata_id: int,
     statistic: StatisticData,
+    now_timestamp: float,
 ) -> StatisticsBase | None:
     """Insert statistics in the database."""
     try:
-        stat = table.from_stats(metadata_id, statistic)
+        stat = table.from_stats(metadata_id, statistic, now_timestamp)
         session.add(stat)
     except SQLAlchemyError:
         _LOGGER.exception(
@@ -2032,24 +2035,35 @@ def _generate_statistics_at_time_stmt(
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last start_time_ts before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last start_time_ts
+    # before a specific point in time for all entities.
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    stmt += lambda q: q.join(
-        (
-            most_recent_statistic_ids := (
-                select(
-                    func.max(table.start_ts).label("max_start_ts"),
-                    table.metadata_id.label("max_metadata_id"),
+    stmt += (
+        lambda q: q.select_from(StatisticsMeta)
+        .join(
+            table,
+            and_(
+                table.start_ts
+                == (
+                    select(table.start_ts)
+                    .where(
+                        (StatisticsMeta.id == table.metadata_id)
+                        & (table.start_ts < start_time_ts)
+                    )
+                    .order_by(table.start_ts.desc())
+                    .limit(1)
                 )
-                .filter(table.start_ts < start_time_ts)
-                .filter(table.metadata_id.in_(metadata_ids))
-                .group_by(table.metadata_id)
-                .subquery()
-            )
-        ),
-        and_(
-            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
-            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
-        ),
+                .scalar_subquery()
+                .correlate(StatisticsMeta),
+                table.metadata_id == StatisticsMeta.id,
+            ),
+        )
+        .where(table.metadata_id.in_(metadata_ids))
     )
     return stmt
 
@@ -2346,11 +2360,12 @@ def _import_statistics_with_session(
     _, metadata_id = statistics_meta_manager.update_or_add(
         session, metadata, old_metadata_dict
     )
+    now_timestamp = time_time()
     for stat in statistics:
         if stat_id := _statistics_exists(session, table, metadata_id, stat["start"]):
             _update_statistics(session, table, stat_id, stat)
         else:
-            _insert_statistics(session, table, metadata_id, stat)
+            _insert_statistics(session, table, metadata_id, stat, now_timestamp)
 
     if table != StatisticsShortTerm:
         return True

@@ -29,7 +29,7 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.twentemilieu.TwenteMilieu.update",
+    "homeassistant.components.twentemilieu.coordinator.TwenteMilieu.update",
     side_effect=RuntimeError,
 )
 async def test_config_entry_not_ready(
@@ -44,18 +44,3 @@ async def test_config_entry_not_ready(
 
     assert mock_request.call_count == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("mock_twentemilieu")
-async def test_update_config_entry_unique_id(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the we update old config entries with an unique ID."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.unique_id == "12345"

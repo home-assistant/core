@@ -1,5 +1,21 @@
 # serializer version: 1
-# name: test_api_events[calendar.test_user_dailies]
+# name: test_api_events[date range in the past-calendar.test_user_dailies]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_daily_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_reminders]
+  list([
+  ])
+# ---
+# name: test_api_events[date range in the past-calendar.test_user_to_do_s]
+  list([
+  ])
+# ---
+# name: test_api_events[default date range-calendar.test_user_dailies]
   list([
     dict({
       'description': 'Klicke um Deinen Terminplan festzulegen!',
@@ -577,7 +593,267 @@
     }),
   ])
 # ---
-# name: test_api_events[calendar.test_user_to_do_s]
+# name: test_api_events[default date range-calendar.test_user_daily_reminders]
+  list([
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-21T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-21T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-22T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-22T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-23T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-23T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-24T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-24T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-25T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-25T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-26T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-26T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-27T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-27T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-28T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-28T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-29T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-29T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-09-30T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-30T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-01T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-01T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-02T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-02T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-03T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-03T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-04T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-04T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-05T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-05T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-06T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-06T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+    dict({
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end': dict({
+        'dateTime': '2024-10-07T21:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-10-07T20:00:00+02:00',
+      }),
+      'summary': '5 Minuten ruhig durchatmen',
+      'uid': 'f2c85972-1a19-4426-bc6d-ce3337b9d99f_1491d640-6b21-4d0c-8940-0b7aa61c8836',
+    }),
+  ])
+# ---
+# name: test_api_events[default date range-calendar.test_user_to_do_reminders]
+  list([
+    dict({
+      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      'end': dict({
+        'dateTime': '2024-09-22T03:00:00+02:00',
+      }),
+      'location': None,
+      'recurrence_id': None,
+      'rrule': None,
+      'start': dict({
+        'dateTime': '2024-09-22T02:00:00+02:00',
+      }),
+      'summary': 'Rechnungen bezahlen',
+      'uid': '2f6fcabc-f670-4ec3-ba65-817e8deea490_91c09432-10ac-4a49-bd20-823081ec29ed',
+    }),
+  ])
+# ---
+# name: test_api_events[default date range-calendar.test_user_to_do_s]
   list([
     dict({
       'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
@@ -652,7 +928,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': None,
   })
 # ---
@@ -674,6 +950,110 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_daily_reminders-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_daily_reminders',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Daily reminders',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_daily_reminders',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_daily_reminders-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Klicke um Deinen Terminplan festzulegen!',
+      'end_time': '2024-09-21 21:00:00',
+      'friendly_name': 'test-user Daily reminders',
+      'location': '',
+      'message': '5 Minuten ruhig durchatmen',
+      'start_time': '2024-09-21 20:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_daily_reminders',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_reminders-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.test_user_to_do_reminders',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'To-do reminders',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todo_reminders',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar_platform[calendar.test_user_to_do_reminders-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
+      'end_time': '2024-09-22 03:00:00',
+      'friendly_name': 'test-user To-do reminders',
+      'location': '',
+      'message': 'Rechnungen bezahlen',
+      'start_time': '2024-09-22 02:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.test_user_to_do_reminders',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_calendar_platform[calendar.test_user_to_do_s-entry]
@@ -705,7 +1085,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': None,
   })
 # ---

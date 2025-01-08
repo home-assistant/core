@@ -27,7 +27,9 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
-      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
+      "no_mower_connected": "No mowers connected to this account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -309,6 +311,12 @@
         "mow": "Mow",
         "park": "Park"
       }
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Husqvarna Automower {entity_name} sensor is deprecated",
+      "description": "The Husqvarna Automower entity `{entity}` is deprecated and will be removed in a future release.\nYou can use the new returning state of the lawn mower entity instead.\nPlease update your automations and scripts to replace the sensor entity with the newly added lawn mower entity.\nWhen you are done migrating you can disable `{entity}`."
     }
   },
   "services": {

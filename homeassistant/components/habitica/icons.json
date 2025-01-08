@@ -64,6 +64,12 @@
       },
       "dailys": {
         "default": "mdi:calendar-multiple"
+      },
+      "todo_reminders": {
+        "default": "mdi:reminder"
+      },
+      "daily_reminders": {
+        "default": "mdi:reminder"
       }
     },
     "sensor": {
@@ -114,12 +120,6 @@
           "wizard": "mdi:wizard-hat",
           "rogue": "mdi:ninja"
         }
-      },
-      "todos": {
-        "default": "mdi:checkbox-outline"
-      },
-      "dailys": {
-        "default": "mdi:calendar-month"
       },
       "habits": {
         "default": "mdi:contrast-box"
@@ -187,6 +187,15 @@
     },
     "score_reward": {
       "service": "mdi:sack"
+    },
+    "transformation": {
+      "service": "mdi:flask-round-bottom"
+    },
+    "get_tasks": {
+      "service": "mdi:calendar-export",
+      "sections": {
+        "filter": "mdi:calendar-filter"
+      }
     }
   }
 }
