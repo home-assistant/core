@@ -21,5 +21,4 @@ class VegeHubCoordinator(DataUpdateCoordinator):
 
     async def async_update_data(self, new_data):
         """Update the coordinator with new data from the webhook."""
-        self.data.update(new_data)
-        self.async_update_listeners()
+        super().async_set_updated_data(new_data)
