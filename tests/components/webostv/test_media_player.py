@@ -67,7 +67,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_NAME
+from .const import CHANNEL_2, ENTITY_ID, TV_MODEL, TV_NAME
 
 from tests.common import async_fire_time_changed, mock_restore_cache
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -340,7 +340,7 @@ async def test_entity_attributes(
     assert device.manufacturer == "LG"
     assert device.name == TV_NAME
     assert device.sw_version == "major.minor"
-    assert device.model == "TVFAKE"
+    assert device.model == TV_MODEL
 
     # Sound output when off
     monkeypatch.setattr(client, "sound_output", None)
