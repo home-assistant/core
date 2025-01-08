@@ -494,36 +494,10 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_increase_timer(self) -> int:
         """Increase sleep time on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_SET_TIMER}",
-            breaks_in_ha_version="2025.5.0",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_set_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
         return await self._player.sleep_timer()
 
     async def async_clear_timer(self) -> None:
         """Clear sleep timer on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
-            breaks_in_ha_version="2025.5.0",
-            is_fixable=True,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_clear_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
         sleep = 1
         while sleep > 0:
             sleep = await self._player.sleep_timer()
