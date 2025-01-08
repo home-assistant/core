@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
-from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
+from ring_doorbell import RingChime, RingDoorBell, RingOther
 import ring_doorbell.const
 
 from homeassistant.components.number import (
@@ -46,7 +46,6 @@ class RingNumberEntityDescription(
 
     value_fn: Callable[[RingDeviceT], StateType]
     setter_fn: Callable[[RingDeviceT, float], Awaitable[None]]
-    exists_fn: Callable[[RingGeneric], bool]
 
 
 NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (

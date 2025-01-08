@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Any
 
 from ring_doorbell import RingCapability, RingOther
 
@@ -26,12 +27,15 @@ class RingButtonEntityDescription(
 ):
     """Describes a Ring button entity."""
 
+    press_fn: Callable[[RingDeviceT], Awaitable[Any]]
 
-BUTTONS: Sequence[RingButtonEntityDescription] = (
-    RingButtonEntityDescription(
+
+BUTTON_DESCRIPTIONS: tuple[RingButtonEntityDescription[Any], ...] = (
+    RingButtonEntityDescription[RingOther](
         key="open_door",
         translation_key="open_door",
         exists_fn=lambda device: device.has_capability(RingCapability.OPEN),
+        press_fn=lambda device: device.async_open_door(),
     ),
 )
 
@@ -45,24 +49,26 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    RingDoorButton.process_entities(
+    RingButton.process_entities(
         hass,
         devices_coordinator,
         entry=entry,
         async_add_entities=async_add_entities,
         domain=BUTTON_DOMAIN,
-        descriptions=BUTTONS,
+        descriptions=BUTTON_DESCRIPTIONS,
     )
 
 
-class RingDoorButton(RingEntity[RingOther], ButtonEntity):
-    """Creates a button to open the ring intercom door."""
+class RingButton(RingEntity[RingDeviceT], ButtonEntity):
+    """Creates a button entity."""
+
+    entity_description: RingButtonEntityDescription[RingDeviceT]
 
     def __init__(
         self,
-        device: RingOther,
+        device: RingDeviceT,
         coordinator: RingDataCoordinator,
-        description: RingEntityDescription[RingOther],
+        description: RingButtonEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize the button."""
         super().__init__(
@@ -73,5 +79,5 @@ class RingDoorButton(RingEntity[RingOther], ButtonEntity):
 
     @exception_wrap
     async def async_press(self) -> None:
-        """Open the door."""
-        await self._device.async_open_door()
+        """Press the button."""
+        await self.entity_description.press_fn(self._device)
