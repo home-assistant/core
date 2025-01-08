@@ -5,14 +5,13 @@ from __future__ import annotations
 import base64
 import mimetypes
 import os
-import requests
 from email.encoders import encode_base64
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any
-
+import requests
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -72,7 +71,7 @@ class GMailNotificationService(BaseNotificationService):
 
     def fetch_url(self, url: str) -> bytes:
         """Make the request in a blocking manner."""
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         return response.content
 
@@ -82,7 +81,7 @@ class GMailNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if any(attr in data for attr in [ATTR_HTML, ATTR_IMAGES, ATTR_FILES]):
-            email = MIMEMultipart(_subtype="related")
+            email: MIMEMultipart | MIMEText = MIMEMultipart(_subtype="related")
             html_content = data.get(ATTR_HTML, message)
             email.attach(MIMEText(html_content, "html"))
 
@@ -116,13 +115,16 @@ class GMailNotificationService(BaseNotificationService):
         await self.hass.async_add_executor_job(msg.execute)
 
     async def attach_file(
-        self, email: MIMEMultipart, item: dict, kind: str = ATTR_FILE_KIND_FILE
+        self,
+        email: MIMEMultipart | MIMEText,
+        item: dict,
+        kind: str = ATTR_FILE_KIND_FILE,
     ) -> None:
         """Append a file or image to the email message."""
-        file_data = await self.process_file(item, kind)
+        file_data = await self.process_file(item)
 
         if kind == ATTR_FILE_KIND_IMAGE:
-            attachment = MIMEImage(
+            attachment: MIMEImage | MIMEBase = MIMEImage(
                 file_data["content"], _subtype=file_data["mime_type"].split("/")[-1]
             )
         else:
@@ -140,7 +142,7 @@ class GMailNotificationService(BaseNotificationService):
         encode_base64(attachment)
         email.attach(attachment)
 
-    async def process_file(self, item: dict, kind: str) -> dict:
+    async def process_file(self, item: dict) -> dict:
         """Process file data based on its type."""
         if ATTR_FILE_PATH in item:
             file_path = item[ATTR_FILE_PATH]
