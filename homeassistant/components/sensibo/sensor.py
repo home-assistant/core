@@ -36,6 +36,13 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
+def _smart_type_name(_type: str | None) -> str | None:
+    """Return a lowercase name of smart type."""
+    if _type and _type == "feelsLike":
+        return "feelslike"
+    return _type
+
+
 @dataclass(frozen=True, kw_only=True)
 class SensiboMotionSensorEntityDescription(SensorEntityDescription):
     """Describes Sensibo Motion sensor entity."""
@@ -153,7 +160,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="climate_react_type",
         translation_key="smart_type",
-        value_fn=lambda data: data.smart_type,
+        value_fn=lambda data: _smart_type_name(data.smart_type),
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),

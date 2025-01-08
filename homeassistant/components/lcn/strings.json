@@ -73,7 +73,7 @@
     },
     "deprecated_address_parameter": {
       "title": "Deprecated 'address' parameter",
-      "description": "The 'address' parameter in the LCN service calls is deprecated. The 'devide_id' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+      "description": "The 'address' parameter in the LCN action calls is deprecated. The 'device_id' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {
@@ -167,7 +167,7 @@
     },
     "led": {
       "name": "LED",
-      "description": "Sets the led state.",
+      "description": "Sets the LED state.",
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
@@ -179,11 +179,11 @@
         },
         "led": {
           "name": "[%key:component::lcn::services::led::name%]",
-          "description": "Led."
+          "description": "The LED port of the device."
         },
         "state": {
           "name": "State",
-          "description": "Led state."
+          "description": "The LED state to set."
         }
       }
     },
@@ -384,16 +384,16 @@
       }
     },
     "address_to_device_id": {
-      "name": "Address to device id",
-      "description": "Convert LCN address to device id.",
+      "name": "Address to device ID",
+      "description": "Convert LCN address to device ID.",
       "fields": {
         "id": {
-          "name": "Module or group id",
-          "description": "Target module or group id."
+          "name": "Module or group ID",
+          "description": "Target module or group ID."
         },
         "segment_id": {
-          "name": "Segment id",
-          "description": "Target segment id."
+          "name": "Segment ID",
+          "description": "Target segment ID."
         },
         "type": {
           "name": "Type",
@@ -408,13 +408,13 @@
   },
   "exceptions": {
     "no_device_identifier": {
-      "message": "No device identifier provided. Please provide the device id."
+      "message": "No device identifier provided. Please provide the device ID."
     },
     "invalid_address": {
       "message": "LCN device for given address has not been configured."
     },
     "invalid_device_id": {
-      "message": "LCN device for given device id has not been configured."
+      "message": "LCN device for given device ID has not been configured."
     }
   }
 }
