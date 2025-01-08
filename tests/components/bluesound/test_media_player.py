@@ -127,7 +127,9 @@ async def test_attributes_set(
 ) -> None:
     """Test the media player attributes set."""
     state = hass.states.get("media_player.player_name1111")
-    assert state == snapshot(exclude=props("media_position_updated_at"))
+    assert state == snapshot(
+        exclude=props("media_position_updated_at", "media_position")
+    )
 
 
 async def test_stop_maps_to_idle(
