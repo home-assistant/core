@@ -396,63 +396,13 @@
     }
   },
   "services": {
-    "get_current_data": {
-      "name": "Get current data",
-      "description": "Send GET request to Envoy and return received data as json.",
-      "fields": {
-        "envoy": {
-          "name": "Select Envoy",
-          "description": "Envoy to get data for. Select an Envoy entity from the entity list. The associated Envoy will be used for the action. In yaml mode you can also use envoy.serialnr where serialnr is the envoy serialnumber."
-        },
-        "endpoint": {
-          "name": "Envoy endpoint",
-          "description": "The Envoy endpoint for the data. Start with leading /. Optionally add comma separated list of dict keys and/or list indexes to select sub dict or list elements from returned data. For instance, use /api/v1/production/inverters,0,maxReportWatts to get maxReportWatts for first inverter in /ivp/production/inverters endpoint."
-        }
-      }
-    },
-    "get_last_data": {
-      "name": "Get last collected data",
-      "description": "Returns the as-collected raw json data from last data collection.",
-      "fields": {
-        "envoy": {
-          "name": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::name%]",
-          "description": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::description%]"
-        },
-        "endpoint": {
-          "name": "[%key:component::enphase_envoy::services::get_current_data::fields::endpoint::name%]",
-          "description": "[%key:component::enphase_envoy::services::get_current_data::fields::endpoint::description%]"
-        }
-      }
-    },
     "get_firmware": {
       "name": "Current firmware version",
       "description": "Read current firmware version from Envoy.",
       "fields": {
         "envoy": {
-          "name": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::name%]",
-          "description": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::description%]"
-        }
-      }
-    },
-    "post_data": {
-      "name": "Send data",
-      "description": "Send POST request to Envoy and return received reply as json.",
-      "fields": {
-        "envoy": {
-          "name": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::name%]",
-          "description": "[%key:component::enphase_envoy::services::get_current_data::fields::envoy::description%]"
-        },
-        "endpoint": {
-          "name": "[%key:component::enphase_envoy::services::get_current_data::fields::endpoint::name%]",
-          "description": "[%key:component::enphase_envoy::services::get_current_data::fields::endpoint::description%]"
-        },
-        "data": {
-          "name": "JSON data to send",
-          "description": "The JSON data to send to the Envoy. Only send data if you fully understand the effect of sending data to the Envoy. Sending incompatible data may have undesired results in the Envoy."
-        },
-        "method": {
-          "name": "Send method to use",
-          "description": "HTTP send method to use: POST or PUT. If not specified POST is used."
+          "name": "Select Envoy",
+          "description": "Envoy to get data for. Select an Envoy entity from the entity list. The associated Envoy will be used for the action. In yaml mode you can also use envoy.serialnr where serialnr is the envoy serialnumber."
         }
       }
     }

@@ -1,9 +1,6 @@
 # serializer version: 1
 # name: test_has_services[envoy]
   list([
-    'get_last_data',
-    'get_current_data',
-    'post_data',
     'get_firmware',
   ])
 # ---

@@ -1,16 +1,7 @@
 {
   "services": {
-    "get_current_data": {
-      "service": "mdi:download-box-outline"
-    },
-    "get_last_data": {
-      "service": "mdi:clipboard-text-clock-outline"
-    },
     "get_firmware": {
       "service": "mdi:download-box-outline"
-    },
-    "post_data": {
-      "service": "mdi:upload-box-outline"
     }
   }
 }
