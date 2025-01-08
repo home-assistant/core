@@ -60,7 +60,6 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         self._unit_of_measurement = UnitOfElectricPotential.VOLT
         self._attr_device_class = SensorDeviceClass.VOLTAGE
         self._attr_translation_key = "analog_sensor"
-        self.value: int | str | float | None = None
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
