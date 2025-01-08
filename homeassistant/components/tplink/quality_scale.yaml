@@ -27,9 +27,9 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions: todo
+  action-exceptions: done
   reauthentication-flow: done
-  parallel-updates: todo
+  parallel-updates: done
   test-coverage: done
   integration-owner: done
   docs-installation-parameters: todo
