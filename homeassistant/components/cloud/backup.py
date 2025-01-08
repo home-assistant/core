@@ -30,6 +30,8 @@ from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 _LOGGER = logging.getLogger(__name__)
 _STORAGE_BACKUP = "backup"
 _RETRY_LIMIT = 5
+_RETRY_SECONDS_MIN = 60
+_RETRY_SECONDS_MAX = 600
 
 
 async def _b64md5(stream: AsyncIterator[bytes]) -> str:
@@ -201,7 +203,7 @@ class CloudBackupAgent(BackupAgent):
                 if tries == _RETRY_LIMIT:
                     raise
                 tries += 1
-                retry_timer = random.randint(60, 600)
+                retry_timer = random.randint(_RETRY_SECONDS_MIN, _RETRY_SECONDS_MAX)
                 _LOGGER.info(
                     "Failed to upload backup, retrying (%s/%s) in %ss: %s",
                     tries,
