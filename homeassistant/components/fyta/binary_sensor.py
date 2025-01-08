@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Final
+
+from fyta_cli.fyta_models import Plant
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -16,48 +20,64 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import FytaConfigEntry
 from .entity import FytaPlantEntity
 
-BINARY_SENSORS: Final[list[BinarySensorEntityDescription]] = [
-    BinarySensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class FytaBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Fyta sensor entity."""
+
+    value_fn: Callable[[Plant], bool]
+
+
+BINARY_SENSORS: Final[list[FytaBinarySensorEntityDescription]] = [
+    FytaBinarySensorEntityDescription(
         key="low_battery",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda plant: plant.low_battery,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="notification_light",
         translation_key="notification_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=lambda plant: plant.notification_light,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="notification_nutrition",
         translation_key="notification_nutrition",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=lambda plant: plant.notification_nutrition,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="notification_temperature",
         translation_key="notification_temperature",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=lambda plant: plant.notification_temperature,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="notification_water",
         translation_key="notification_water",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=lambda plant: plant.notification_water,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="sensor_update_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda plant: plant.sensor_update_available,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="productive_plant",
         translation_key="productive_plant",
+        value_fn=lambda plant: plant.productive_plant,
     ),
-    BinarySensorEntityDescription(
+    FytaBinarySensorEntityDescription(
         key="repotted",
         translation_key="repotted",
+        value_fn=lambda plant: plant.repotted,
     ),
 ]
 
