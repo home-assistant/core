@@ -60,6 +60,7 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         self._unit_of_measurement = UnitOfElectricPotential.VOLT
         self._attr_device_class = SensorDeviceClass.VOLTAGE
         self._attr_translation_key = "analog_sensor"
+        self.latest_value: float | None = None
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
@@ -78,4 +79,8 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self._attr_unique_id)
+        value = self.coordinator.data.get(self._attr_unique_id)
+        # Only set a new value if there is one available in the coordinator.
+        if value:
+            self.latest_value = value
+        return self.latest_value
