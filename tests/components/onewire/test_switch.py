@@ -38,7 +38,7 @@ async def test_switches(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for 1-Wire switches."""
-    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -54,7 +54,7 @@ async def test_switches(
     )
     assert entity_entries == snapshot
 
-    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     # Some entities are disabled, enable them and reload before checking states
     for ent in entity_entries:
         entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
@@ -75,7 +75,7 @@ async def test_switch_toggle(
     device_id: str,
 ) -> None:
     """Test for 1-Wire switch TOGGLE service."""
-    setup_owproxy_mock_devices(owproxy, Platform.SWITCH, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

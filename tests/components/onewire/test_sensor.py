@@ -35,7 +35,7 @@ async def test_sensors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for 1-Wire sensors."""
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -51,7 +51,7 @@ async def test_sensors(
     )
     assert entity_entries == snapshot
 
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     # Some entities are disabled, enable them and reload before checking states
     for ent in entity_entries:
         entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
@@ -82,7 +82,7 @@ async def test_tai8570_sensors(
     mock_device[ATTR_INJECT_READS]["/TAI8570/pressure"] = [OwnetError]
 
     with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
-        setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
+        setup_owproxy_mock_devices(owproxy, [device_id])
 
     with caplog.at_level(logging.DEBUG):
         await hass.config_entries.async_setup(config_entry.entry_id)

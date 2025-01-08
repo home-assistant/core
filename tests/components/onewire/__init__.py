@@ -7,14 +7,10 @@ from unittest.mock import MagicMock
 
 from pyownet.protocol import ProtocolError
 
-from homeassistant.const import Platform
-
 from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
 
-def setup_owproxy_mock_devices(
-    owproxy: MagicMock, platform: Platform, device_ids: list[str]
-) -> None:
+def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> None:
     """Set up mock for owproxy."""
     dir_side_effect: dict[str, list] = {}
     read_side_effect: dict[str, list] = {}
@@ -23,12 +19,7 @@ def setup_owproxy_mock_devices(
     dir_side_effect["/"] = [[f"/{device_id}/" for device_id in device_ids]]
 
     for device_id in device_ids:
-        _setup_owproxy_mock_device(
-            dir_side_effect,
-            read_side_effect,
-            device_id,
-            platform,
-        )
+        _setup_owproxy_mock_device(dir_side_effect, read_side_effect, device_id)
 
     def _dir(path: str) -> Any:
         if (side_effect := dir_side_effect.get(path)) is None:
@@ -61,10 +52,7 @@ def setup_owproxy_mock_devices(
 
 
 def _setup_owproxy_mock_device(
-    dir_side_effect: dict[str, list],
-    read_side_effect: dict[str, list],
-    device_id: str,
-    platform: Platform,
+    dir_side_effect: dict[str, list], read_side_effect: dict[str, list], device_id: str
 ) -> None:
     """Set up mock for owproxy."""
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
@@ -82,13 +70,7 @@ def _setup_owproxy_mock_device(
                 ]
             )
 
-    _setup_owproxy_mock_device_reads(
-        read_side_effect,
-        mock_device,
-        "/",
-        device_id,
-        platform,
-    )
+    _setup_owproxy_mock_device_reads(read_side_effect, mock_device, "/", device_id)
 
     if "branches" in mock_device:
         for branch, branch_details in mock_device["branches"].items():
@@ -98,16 +80,11 @@ def _setup_owproxy_mock_device(
                     sub_device,
                     f"/{device_id}/{branch}/",
                     sub_device_id,
-                    platform,
                 )
 
 
 def _setup_owproxy_mock_device_reads(
-    read_side_effect: dict[str, list],
-    mock_device: Any,
-    root_path: str,
-    device_id: str,
-    platform: Platform,
+    read_side_effect: dict[str, list], mock_device: Any, root_path: str, device_id: str
 ) -> None:
     """Set up mock for owproxy."""
     # Setup device reads
