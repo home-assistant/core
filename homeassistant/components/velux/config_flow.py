@@ -6,7 +6,7 @@ from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -15,7 +15,6 @@ from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
@@ -54,7 +53,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME] or user_input[CONF_HOST],
+                    title=self.context.get("unique_id") or user_input[CONF_HOST],
                     data=user_input,
                 )
 
@@ -95,6 +94,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             if (
                 entry.data[CONF_HOST] == discovery_info[CONF_HOST]
                 and entry.unique_id is None
+                and entry.state == ConfigEntryState.LOADED
             ):
                 self.hass.config_entries.async_update_entry(
                     entry=entry, unique_id=discovery_info[CONF_NAME]
