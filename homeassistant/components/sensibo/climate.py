@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -199,7 +199,7 @@ async def async_setup_entry(
             vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
             vol.Required(ATTR_SMART_TYPE): vol.In(
-                ["temperature", "feelsLike", "humidity"]
+                ["temperature", "feelslike", "humidity"]
             ),
         },
         "async_enable_climate_react",
@@ -255,8 +255,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        if not self.device_data.hvac_modes:
-            return [HVACMode.OFF]
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
         return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
 
     @property

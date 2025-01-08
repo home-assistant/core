@@ -38,6 +38,29 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "notification_light": {
+        "name": "Light notification"
+      },
+      "notification_nutrition": {
+        "name": "Nutrition notification"
+      },
+      "notification_temperature": {
+        "name": "Temperature notification"
+      },
+      "notification_water": {
+        "name": "Water notification"
+      },
+      "productive_plant": {
+        "name": "Productive plant"
+      },
+      "repotted": {
+        "name": "Repotted"
+      },
+      "sensor_update_available": {
+        "name": "Sensor update available"
+      }
+    },
     "sensor": {
       "scientific_name": {
         "name": "Scientific name"
