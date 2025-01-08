@@ -6,12 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_owproxy_mock_devices
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -23,7 +24,7 @@ def override_platforms() -> Generator[None]:
 
 async def test_binary_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
     device_registry: dr.DeviceRegistry,
