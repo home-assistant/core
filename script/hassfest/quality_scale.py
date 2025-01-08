@@ -742,7 +742,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "omnilogic",
     "oncue",
     "ondilo_ico",
-    "onewire",
     "onvif",
     "open_meteo",
     "openai_conversation",
