@@ -653,7 +653,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "mikrotik",
     "mill",
     "min_max",
-    "minecraft_server",
     "minio",
     "mjpeg",
     "moat",
