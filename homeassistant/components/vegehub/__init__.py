@@ -166,25 +166,3 @@ def get_webhook_handler(
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
     return async_webhook_handler
-
-
-async def _update_sensor_entity(
-    hass: HomeAssistant, value: float, entity_id: str, entry_id: str
-):
-    """Update the corresponding Home Assistant entity with the latest sensor value."""
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if entry is None:
-        _LOGGER.error("Entry %s not found", entry_id)
-        return
-
-    # Find the sensor entity and update its state
-    entity = None
-    try:
-        entity = entry.runtime_data.hub.entities.get(entity_id)
-        if not entity:
-            _LOGGER.error("Sensor entity %s not found", entity_id)
-        else:
-            await entity.async_update_sensor(value)
-    except Exception as e:
-        _LOGGER.error("Sensor entity %s not found: %s", entity_id, e)
-        raise
