@@ -17,9 +17,9 @@ async def test_form(
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -29,7 +29,6 @@ async def test_form(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
@@ -71,9 +70,6 @@ async def test_form_auth_issues(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
 
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

@@ -52,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Snoo device."""
-    coordinators: dict[str, SnooCoordinator] = entry.runtime_data
+    coordinators = entry.runtime_data
     async_add_entities(
         SnooSensor(coordinator, description)
         for coordinator in coordinators.values()
