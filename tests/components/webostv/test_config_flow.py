@@ -10,26 +10,31 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME, CONF_SOURCE
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
-from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
+from .const import (
+    CLIENT_KEY,
+    FAKE_UUID,
+    HOST,
+    MOCK_APPS,
+    MOCK_INPUTS,
+    TV_MODEL,
+    TV_NAME,
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-MOCK_USER_CONFIG = {
-    CONF_HOST: HOST,
-    CONF_NAME: TV_NAME,
-}
+MOCK_USER_CONFIG = {CONF_HOST: HOST}
 
 MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"http://{HOST}",
     upnp={
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "LG Webostv",
+        ssdp.ATTR_UPNP_FRIENDLY_NAME: f"[LG] webOS TV {TV_MODEL}",
         ssdp.ATTR_UPNP_UDN: f"uuid:{FAKE_UUID}",
     },
 )
@@ -194,6 +199,14 @@ async def test_form_ssdp(hass: HomeAssistant, client) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == TV_NAME
+
 
 async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
     """Test abort if ssdp paring is already in progress."""
@@ -253,10 +266,7 @@ async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    user_config = {
-        CONF_HOST: "new_host",
-        CONF_NAME: TV_NAME,
-    }
+    user_config = {CONF_HOST: "new_host"}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

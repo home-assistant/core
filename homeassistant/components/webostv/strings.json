@@ -1,12 +1,11 @@
 {
   "config": {
-    "flow_title": "LG webOS Smart TV",
+    "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Turn on TV, fill the following fields and select **Submit**",
+        "description": "Turn on the TV, fill the host field and select **Submit**",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "Hostname or IP address of your webOS TV."
