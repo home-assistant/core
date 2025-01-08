@@ -6,16 +6,21 @@ from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import async_connect_gateway
 
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
@@ -31,6 +36,12 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Optional(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
+    }
+)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): bool,
     }
 )
 
@@ -63,8 +74,59 @@ async def async_try_connect_gateway(
     return None
 
 
+class InComfortOptionsFlowHandler(OptionsFlow):
+    """Handle InComfort Lan2RF gateway options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Initiate options flow."""
+        return await self.async_step_gateway()
+
+    async def async_step_gateway(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] | None = None
+        if (
+            user_input is not None
+            and (
+                errors := await async_try_connect_gateway(
+                    self.hass, dict(self.config_entry.data)
+                )
+            )
+            is None
+        ):
+            new_options: dict[str, Any] = self.config_entry.options | user_input
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=new_options
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id),
+                eager_start=False,
+            )
+            return self.async_create_entry(data=new_options)
+
+        data_schema = self.add_suggested_values_to_schema(
+            OPTIONS_SCHEMA, self.config_entry.options
+        )
+        return self.async_show_form(
+            step_id="gateway",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+
 class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow to set up an Intergas InComfort boyler and thermostats."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> InComfortOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return InComfortOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

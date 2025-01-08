@@ -31,6 +31,26 @@
       "unknown": "[%key:component::incomfort::config::abort::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "gateway": {
+        "title": "Intergas InComfort Lan2RF Gateway options",
+        "data": {
+          "legacy_setpoint_status": "Legacy setpoint handling"
+        },
+        "data_description": {
+          "legacy_setpoint_status": "Only enable this option if experience issues in updating the setpoint for your thermostat."
+        }
+      }
+    },
+    "error": {
+      "auth_error": "[%key:component::incomfort::config::abort::auth_error%]",
+      "no_heaters": "[%key:component::incomfort::config::abort::no_heaters%]",
+      "not_found": "[%key:component::incomfort::config::abort::not_found%]",
+      "timeout_error": "[%key:component::incomfort::config::abort::timeout_error%]",
+      "unknown": "[%key:component::incomfort::config::abort::unknown%]"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_unknown": {
       "title": "YAML import failed with unknown error",
