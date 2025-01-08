@@ -1489,7 +1489,7 @@ pyatmo==8.1.0
 pyatv==0.16.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.1.4
+pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
 pybalboa==1.0.2
@@ -2084,7 +2084,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.2.8
+renault-api==0.2.9
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2498,7 +2498,7 @@ yt-dlp[default]==2024.12.23
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.136.2
+zeroconf==0.137.2
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

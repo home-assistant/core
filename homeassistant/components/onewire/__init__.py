@@ -4,16 +4,14 @@ import logging
 
 from pyownet import protocol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, PLATFORMS
-from .onewirehub import CannotConnect, OneWireHub
+from .onewirehub import CannotConnect, OneWireConfigEntry, OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
-type OneWireConfigEntry = ConfigEntry[OneWireHub]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> bool:
