@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import Mock
 
 from aiowebostv import WebOsTvPairError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
@@ -460,13 +461,15 @@ async def test_client_disconnected(
     client,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=TimeoutError))
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert "TimeoutError" not in caplog.text
