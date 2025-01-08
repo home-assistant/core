@@ -96,12 +96,12 @@ async def test_registry_cleanup(
     dead_id = "28.111111111111"
 
     # Initialise with two components
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id, dead_id])
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
     await hass.config_entries.async_setup(entry_id)
     await hass.async_block_till_done()
 
     # Reload with a device no longer on bus
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id])
+    setup_owproxy_mock_devices(owproxy, [live_id])
     await hass.config_entries.async_reload(entry_id)
     await hass.async_block_till_done()
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
