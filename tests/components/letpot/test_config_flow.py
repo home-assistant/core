@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 def _assert_result_success(result: Any) -> None:
     """Assert successful end of flow result, creating an entry."""
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == AUTHENTICATION.email
     assert result["data"] == {
         CONF_ACCESS_TOKEN: AUTHENTICATION.access_token,
@@ -43,7 +43,7 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -94,7 +94,7 @@ async def test_flow_exceptions(
             },
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     # Retry to show recovery.
