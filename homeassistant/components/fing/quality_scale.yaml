@@ -34,9 +34,7 @@ rules:
     status: exempt
     comment: The integration has no options flow.
   docs-installation-parameters: done
-  entity-unavailable: 
-    status: exempt
-    comment: The entities should represent the data received by the coordinator. If an entity in the received data is missing the linked HA entity is removed.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: todo
