@@ -7,7 +7,7 @@ from pyownet import protocol
 import pytest
 
 from homeassistant.components.onewire.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -15,11 +15,14 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
 @pytest.mark.usefixtures("owproxy_with_connerror")
-async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_connect_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test connection failure raises ConfigEntryNotReady."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -29,7 +32,7 @@ async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry) -
 
 
 async def test_listing_failure(
-    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
 ) -> None:
     """Test listing failure raises ConfigEntryNotReady."""
     owproxy.return_value.dir.side_effect = protocol.OwnetError()
@@ -42,7 +45,7 @@ async def test_listing_failure(
 
 
 @pytest.mark.usefixtures("owproxy")
-async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test being able to unload an entry."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -57,7 +60,7 @@ async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> N
 
 
 async def test_update_options(
-    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+    hass: HomeAssistant, config_entry: MockConfigEntry, owproxy: MagicMock
 ) -> None:
     """Test update options triggers reload."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -81,7 +84,7 @@ async def test_update_options(
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -93,12 +96,12 @@ async def test_registry_cleanup(
     dead_id = "28.111111111111"
 
     # Initialise with two components
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id, dead_id])
+    setup_owproxy_mock_devices(owproxy, [live_id, dead_id])
     await hass.config_entries.async_setup(entry_id)
     await hass.async_block_till_done()
 
     # Reload with a device no longer on bus
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id])
+    setup_owproxy_mock_devices(owproxy, [live_id])
     await hass.config_entries.async_reload(entry_id)
     await hass.async_block_till_done()
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2

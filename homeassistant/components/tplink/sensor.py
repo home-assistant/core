@@ -30,6 +30,9 @@ class TPLinkSensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="current_consumption",

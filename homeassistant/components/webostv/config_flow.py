@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
@@ -27,7 +27,6 @@ from .helpers import async_get_sources
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -57,7 +56,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            self._name = user_input[CONF_NAME]
             return await self.async_step_pairing()
 
         return self.async_show_form(
@@ -86,6 +84,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
+
+                if not self._name:
+                    self._name = f"{DEFAULT_NAME} {client.system_info["modelName"]}"
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(step_id="pairing", errors=errors)
@@ -98,7 +99,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert host
         self._host = host
-        self._name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME)
+        self._name = discovery_info.upnp.get(
+            ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
+        ).replace("[LG]", "LG")
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid
