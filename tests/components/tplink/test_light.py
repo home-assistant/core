@@ -141,7 +141,7 @@ async def test_legacy_dimmer_unique_id(
         ),
         (
             _mocked_device(
-                modules=[Module.Light, Module.LightEffect],
+                modules=[Module.Light],
                 features=[
                     _mocked_feature("brightness", value=50),
                     _mocked_feature("hsv", value=(10, 30, 5)),
@@ -164,7 +164,7 @@ async def test_color_light(
     already_migrated_config_entry.add_to_hass(hass)
     light = device.modules[Module.Light]
 
-    # Setting color_temp to None emulates a device with active effects
+    # Setting color_temp to None emulates a device without color temp
     light.color_temp = None
 
     with _patch_discovery(device=device), _patch_connect(device=device):
@@ -183,16 +183,132 @@ async def test_color_light(
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
+    assert attributes.get(ATTR_EFFECT) is None
+
+    assert attributes[ATTR_COLOR_MODE] == "hs"
+    assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
+    assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
+    assert attributes[ATTR_HS_COLOR] == (10, 30)
+    assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
+    assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
+    )
+    light.set_state.assert_called_once_with(
+        LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
+    )
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(LIGHT_DOMAIN, "turn_on", BASE_PAYLOAD, blocking=True)
+    light.set_state.assert_called_once_with(
+        LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
+    )
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    light.set_brightness.assert_called_with(39, transition=KASA_TRANSITION_VALUE)
+    light.set_brightness.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(
+        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+    )
+    light.set_color_temp.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(
+        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+    )
+    light.set_color_temp.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    light.set_hsv.assert_called_with(10, 30, None, transition=KASA_TRANSITION_VALUE)
+    light.set_hsv.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("device", "transition"),
+    [
+        (
+            _mocked_device(
+                modules=[Module.Light, Module.LightEffect],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            2.0,
+        ),
+        (
+            _mocked_device(
+                modules=[Module.Light, Module.LightEffect],
+                features=[
+                    _mocked_feature("brightness", value=50),
+                    _mocked_feature("hsv", value=(10, 30, 5)),
+                    _mocked_feature(
+                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+                    ),
+                ],
+            ),
+            None,
+        ),
+    ],
+)
+async def test_color_light_with_active_effect(
+    hass: HomeAssistant, device: MagicMock, transition: float | None
+) -> None:
+    """Test a color light and that all transitions are correctly passed."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    light = device.modules[Module.Light]
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    KASA_TRANSITION_VALUE = transition * 1_000 if transition is not None else None
+
+    BASE_PAYLOAD = {ATTR_ENTITY_ID: entity_id}
+    if transition:
+        BASE_PAYLOAD[ATTR_TRANSITION] = transition
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
     # If effect is active, only the brightness can be controlled
-    if attributes.get(ATTR_EFFECT) is not None:
-        assert attributes[ATTR_COLOR_MODE] == "brightness"
-    else:
-        assert attributes[ATTR_COLOR_MODE] == "hs"
-        assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
-        assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
-        assert attributes[ATTR_HS_COLOR] == (10, 30)
-        assert attributes[ATTR_RGB_COLOR] == (255, 191, 178)
-        assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
+    assert attributes.get(ATTR_EFFECT) is not None
+    assert attributes[ATTR_COLOR_MODE] == "brightness"
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
@@ -311,42 +427,19 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     light.set_hsv.reset_mock()
 
 
-@pytest.mark.parametrize(
-    ("device", "is_color"),
-    [
-        (
-            _mocked_device(
-                modules=[Module.Light],
-                alias="my_light",
-                features=[
-                    _mocked_feature("brightness", value=50),
-                    _mocked_feature("hsv", value=(10, 30, 5)),
-                    _mocked_feature(
-                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
-                    ),
-                ],
+async def test_color_temp_light_color(hass: HomeAssistant) -> None:
+    """Test a color temp light with color."""
+    device = _mocked_device(
+        modules=[Module.Light],
+        alias="my_light",
+        features=[
+            _mocked_feature("brightness", value=50),
+            _mocked_feature("hsv", value=(10, 30, 5)),
+            _mocked_feature(
+                "color_temp", value=4000, minimum_value=4000, maximum_value=9000
             ),
-            True,
-        ),
-        (
-            _mocked_device(
-                modules=[Module.Light],
-                alias="my_light",
-                features=[
-                    _mocked_feature("brightness", value=50),
-                    _mocked_feature(
-                        "color_temp", value=4000, minimum_value=4000, maximum_value=9000
-                    ),
-                ],
-            ),
-            False,
-        ),
-    ],
-)
-async def test_color_temp_light(
-    hass: HomeAssistant, device: MagicMock, is_color: bool
-) -> None:
-    """Test a light color temp."""
+        ],
+    )
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
@@ -365,10 +458,92 @@ async def test_color_temp_light(
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
-    if is_color:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
-    else:
-        assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
+
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    light.set_state.assert_called_once()
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    light.set_state.assert_called_once()
+    light.set_state.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    light.set_brightness.assert_called_with(39, transition=None)
+    light.set_brightness.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(6666, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(9000, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+    # Verify color temp is clamped to the valid range
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
+        blocking=True,
+    )
+    light.set_color_temp.assert_called_with(4000, brightness=None, transition=None)
+    light.set_color_temp.reset_mock()
+
+
+async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
+    """Test a color temp light with no color."""
+    device = _mocked_device(
+        modules=[Module.Light],
+        alias="my_light",
+        features=[
+            _mocked_feature("brightness", value=50),
+            _mocked_feature(
+                "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+            ),
+        ],
+    )
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    # device = _mocked_device(modules=[Module.Light], alias="my_light")
+    light = device.modules[Module.Light]
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 128
+    assert attributes[ATTR_COLOR_MODE] == "color_temp"
+
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp"]
     assert attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 9000
     assert attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 4000
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
