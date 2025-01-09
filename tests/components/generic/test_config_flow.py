@@ -74,13 +74,12 @@ async def test_form(
     hass_client: ClientSessionGenerator,
     user_flow: ConfigFlowResult,
     mock_create_stream: _patch[MagicMock],
+    mock_setup_entry: _patch[MagicMock],
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test the form with a normal set of settings."""
 
-    with (
-        mock_create_stream as mock_setup,
-    ):
+    with mock_create_stream, mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             TESTDATA,
@@ -126,18 +125,19 @@ async def test_form(
     # Check that the preview image is disabled after.
     resp = await client.get(still_preview_url)
     assert resp.status == HTTPStatus.NOT_FOUND
-    assert len(mock_setup.mock_calls) == 1
 
 
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_only_stillimage(
-    hass: HomeAssistant, user_flow: ConfigFlowResult
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user wants still images only."""
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -233,12 +233,14 @@ async def test_form_still_preview_cam_off(
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_gif")
 async def test_form_only_stillimage_gif(
-    hass: HomeAssistant, user_flow: ConfigFlowResult
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user wants a gif."""
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -256,14 +258,17 @@ async def test_form_only_stillimage_gif(
 
 @respx.mock
 async def test_form_only_svg_whitespace(
-    hass: HomeAssistant, fakeimgbytes_svg: bytes, user_flow: ConfigFlowResult
+    hass: HomeAssistant,
+    fakeimgbytes_svg: bytes,
+    user_flow: ConfigFlowResult,
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if svg starts with whitespace, issue #68889."""
     fakeimgbytes_wspace_svg = bytes("  \n ", encoding="utf-8") + fakeimgbytes_svg
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
+    with mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
             data,
@@ -383,15 +388,13 @@ async def test_form_rtsp_mode(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
     mock_create_stream: _patch[MagicMock],
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we complete ok if the user enters a stream url."""
     data = TESTDATA.copy()
     data[CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
-    with (
-        mock_create_stream as mock_setup,
-        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
-    ):
+    with mock_create_stream, mock_setup_entry:
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"], data
         )
@@ -414,8 +417,6 @@ async def test_form_rtsp_mode(
         CONF_FRAMERATE: 5.0,
         CONF_VERIFY_SSL: False,
     }
-
-    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_form_only_stream(
@@ -583,12 +584,12 @@ async def test_form_stream_invalidimage3(
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_stream_timeout(
-    hass: HomeAssistant, user_flow: ConfigFlowResult
+    hass: HomeAssistant,
+    user_flow: ConfigFlowResult,
+    mock_create_stream: _patch[MagicMock],
 ) -> None:
     """Test we handle invalid auth."""
-    with patch(
-        "homeassistant.components.generic.config_flow.create_stream"
-    ) as create_stream:
+    with mock_create_stream as create_stream:
         create_stream.return_value.start = AsyncMock()
         create_stream.return_value.stop = AsyncMock()
         create_stream.return_value.hass = hass
@@ -720,10 +721,10 @@ async def test_form_oserror(hass: HomeAssistant, user_flow: ConfigFlowResult) ->
 async def test_options_template_error(
     hass: HomeAssistant,
     mock_create_stream: _patch[MagicMock],
-    setup_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the options flow with a template error."""
-    result = await hass.config_entries.options.async_init(setup_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
@@ -743,7 +744,7 @@ async def test_options_template_error(
         )
         assert result2a["type"] is FlowResultType.CREATE_ENTRY
 
-        result3 = await hass.config_entries.options.async_init(setup_entry.entry_id)
+        result3 = await hass.config_entries.options.async_init(config_entry.entry_id)
         assert result3["type"] is FlowResultType.FORM
         assert result3["step_id"] == "init"
 
@@ -930,19 +931,17 @@ async def test_options_use_wallclock_as_timestamps(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     fakeimgbytes_png: bytes,
-    setup_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test the use_wallclock_as_timestamps option flow."""
 
     result = await hass.config_entries.options.async_init(
-        setup_entry.entry_id, context={"show_advanced_options": True}
+        config_entry.entry_id, context={"show_advanced_options": True}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    with (
-        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
-        mock_create_stream,
-    ):
+    with mock_setup_entry, mock_create_stream:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
@@ -973,10 +972,7 @@ async def test_options_use_wallclock_as_timestamps(
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "init"
-    with (
-        patch("homeassistant.components.generic.async_setup_entry", return_value=True),
-        mock_create_stream,
-    ):
+    with mock_setup_entry, mock_create_stream:
         result4 = await hass.config_entries.options.async_configure(
             result3["flow_id"],
             user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},

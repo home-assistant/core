@@ -75,8 +75,8 @@ def fakeimg_gif(fakeimgbytes_gif: bytes) -> Generator[None]:
     respx.pop("fake_img")
 
 
-@pytest.fixture
-def mock_create_stream(hass: HomeAssistant) -> _patch[MagicMock]:
+@pytest.fixture(name="mock_create_stream")
+def mock_create_stream_fixture(hass: HomeAssistant) -> _patch[MagicMock]:
     """Mock create stream."""
     mock_stream = MagicMock()
     mock_stream.hass = hass
@@ -90,6 +90,15 @@ def mock_create_stream(hass: HomeAssistant) -> _patch[MagicMock]:
     return patch(
         "homeassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,
+    )
+
+
+@pytest.fixture(name="mock_setup_entry")
+def mock_async_setup_entry_fixture() -> _patch:
+    """Mock setup entry."""
+    return patch(
+        "homeassistant.components.generic.async_setup_entry",
+        return_value=True,
     )
 
 
@@ -128,13 +137,3 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
     return entry
-
-
-@pytest.fixture(name="setup_entry")
-async def setup_entry_fixture(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up a config entry ready to be used in tests."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    return config_entry
