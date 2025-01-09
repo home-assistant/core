@@ -36,7 +36,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -566,6 +566,7 @@ def setup_connection_for_dialect(
         dialect=SupportedDialect(dialect_name),
         version=version,
         optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
+        max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
 
 

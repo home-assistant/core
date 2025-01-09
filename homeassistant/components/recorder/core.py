@@ -229,6 +229,7 @@ class Recorder(threading.Thread):
         self._nightly_listener: CALLBACK_TYPE | None = None
         self._dialect_name: SupportedDialect | None = None
         self.enabled = True
+
         # We update the value once we connect to the DB
         # and determine what is actually supported.
         self.max_bind_vars = DEFAULT_MAX_BIND_VARS
@@ -1373,6 +1374,7 @@ class Recorder(threading.Thread):
             not self._completed_first_database_setup,
         ):
             self.database_engine = database_engine
+            self.max_bind_vars = database_engine.max_bind_vars
         self._completed_first_database_setup = True
 
     def _setup_connection(self) -> None:
