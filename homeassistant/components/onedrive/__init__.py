@@ -70,13 +70,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="authentication_failed"
             ) from err
+        _LOGGER.debug("Failed to get approot", exc_info=True)
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+            translation_domain=DOMAIN,
+            translation_key="failed_to_get_folder",
+            translation_placeholders={"folder": "approot"},
         ) from err
 
     if approot is None or not approot.id:
+        _LOGGER.debug("Failed to get approot, was None")
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+            translation_domain=DOMAIN,
+            translation_key="failed_to_get_folder",
+            translation_placeholders={"folder": "approot"},
         )
 
     backup_folder_id = await _async_create_folder_if_not_exists(
@@ -114,8 +120,11 @@ async def _async_create_folder_if_not_exists(
         folder_item = await items.by_drive_item_id(f"{base_folder_id}:/{folder}:").get()
     except APIError as err:
         if err.response_status_code != 404:
+            _LOGGER.debug("Failed to get folder %s", folder, exc_info=True)
             raise ConfigEntryNotReady(
-                translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+                translation_domain=DOMAIN,
+                translation_key="failed_to_get_folder",
+                translation_placeholders={"folder": folder},
             ) from err
         # is 404 not found, create folder
         _LOGGER.debug("Creating folder %s", folder)
@@ -131,14 +140,20 @@ async def _async_create_folder_if_not_exists(
                 request_body
             )
         except APIError as create_err:
+            _LOGGER.debug("Failed to create folder %s", folder, exc_info=True)
             raise ConfigEntryNotReady(
-                translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+                translation_domain=DOMAIN,
+                translation_key="failed_to_create_folder",
+                translation_placeholders={"folder": folder},
             ) from create_err
         _LOGGER.debug("Created folder %s", folder)
     else:
         _LOGGER.debug("Found folder %s", folder)
     if folder_item is None or not folder_item.id:
+        _LOGGER.debug("Failed to get folder %s, was None", folder)
         raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="failed_to_get_folder"
+            translation_domain=DOMAIN,
+            translation_key="failed_to_get_folder",
+            translation_placeholders={"folder": folder},
         )
     return folder_item.id

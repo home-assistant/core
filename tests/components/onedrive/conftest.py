@@ -82,7 +82,7 @@ def mock_drive() -> Generator[Drive]:
     return drive
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     with (

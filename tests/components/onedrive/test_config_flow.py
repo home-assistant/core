@@ -93,7 +93,6 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_graph_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Check full flow."""
@@ -111,7 +110,6 @@ async def test_no_drive_in_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_graph_client: MagicMock,
     mock_drive: Drive,
 ) -> None:
     """Test no drive in account."""
@@ -160,7 +158,6 @@ async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_graph_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test already configured account."""
@@ -179,7 +176,6 @@ async def test_reauth_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
-    mock_graph_client: MagicMock,
 ) -> None:
     """Test that the reauth flow works."""
 
@@ -204,7 +200,6 @@ async def test_reauth_flow_id_changed(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
-    mock_graph_client: MagicMock,
     mock_drive: Drive,
 ) -> None:
     """Test that the reauth flow fails on a different drive id."""

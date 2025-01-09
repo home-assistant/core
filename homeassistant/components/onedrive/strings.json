@@ -59,7 +59,10 @@
       "message": "Authentication failed"
     },
     "failed_to_get_folder": {
-      "message": "Failed to get backup folder"
+      "message": "Failed to get {folder} folder"
+    },
+    "failed_to_create_folder": {
+      "message": "Failed to create {folder} folder"
     }
   }
 }

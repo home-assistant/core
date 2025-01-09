@@ -28,7 +28,6 @@ from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_graph_client: MagicMock,
     mock_download: MagicMock,
 ) -> AsyncGenerator[None]:
     """Set up onedrive integration."""
@@ -62,7 +61,6 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_graph_client: MagicMock,
 ) -> None:
     """Test agent list backups."""
 
