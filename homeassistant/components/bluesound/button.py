@@ -46,7 +46,6 @@ async def async_setup_entry(
                 config_entry.data[CONF_PORT],
             ),
         ],
-        update_before_add=True,
     )
 
 
