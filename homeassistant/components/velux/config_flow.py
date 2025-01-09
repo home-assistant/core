@@ -1,5 +1,6 @@
 """Config flow for Velux integration."""
 
+from collections.abc import Sequence
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
@@ -10,6 +11,12 @@ from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlo
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DOMAIN, LOGGER
 
@@ -106,7 +113,24 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="already_configured")
 
-        self.discovery_schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA, discovery_info
+        options: Sequence[SelectOptionDict] = [
+            {
+                "label": f"{discovery_info[CONF_NAME]} ({discovery_info[CONF_HOST]})",
+                "value": discovery_info[CONF_HOST],
+            }
+        ]
+
+        self.discovery_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options,
+                        custom_value=False,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
         )
+
         return await self.async_step_user()
