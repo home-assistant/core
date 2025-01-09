@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from html import escape
+from io import StringIO
 from json import dumps
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from msgraph.generated.models.drive_item import DriveItem
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.onedrive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -18,14 +20,12 @@ from . import setup_integration
 from .const import BACKUP_METADATA
 
 from tests.common import AsyncMock, MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import MagicMock, WebSocketGenerator
+from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
 async def setup_backup_integration(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
     mock_graph_client: MagicMock,
 ) -> AsyncGenerator[None]:
@@ -53,7 +53,7 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "onedrive.onedrive"}],
+        "agents": [{"agent_id": "backup.local"}, {"agent_id": f"{DOMAIN}.{DOMAIN}"}],
     }
 
 
@@ -82,7 +82,7 @@ async def test_agents_list_backups(
             "name": "Core 2024.12.0.dev0",
             "protected": False,
             "size": 34519040,
-            "agent_ids": ["onedrive.onedrive"],
+            "agent_ids": [f"{DOMAIN}.{DOMAIN}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -92,7 +92,6 @@ async def test_agents_list_backups(
 async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_graph_client: MagicMock,
     mock_drive_items: MagicMock,
 ) -> None:
     """Test agent get backup."""
@@ -118,7 +117,7 @@ async def test_agents_get_backup(
         "name": "Core 2024.12.0.dev0",
         "protected": False,
         "size": 34519040,
-        "agent_ids": ["onedrive.onedrive"],
+        "agent_ids": [f"{DOMAIN}.{DOMAIN}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -127,7 +126,6 @@ async def test_agents_get_backup(
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    mock_graph_client: MagicMock,
     mock_drive_items: MagicMock,
 ) -> None:
     """Test agent delete backup."""
@@ -145,3 +143,56 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     mock_drive_items.delete.assert_called_once()
+
+
+async def test_agents_upload(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_upload_task: MagicMock,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{DOMAIN}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    mock_drive_items.create_upload_session.post.assert_called_once()
+    mock_drive_items.patch.assert_called_once()
+    mock_upload_task.upload.assert_called_once()
+
+
+async def test_agents_download(
+    hass_client: ClientSessionGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent download backup."""
+    mock_drive_items.get = AsyncMock(
+        return_value=DriveItem(description=escape(dumps(BACKUP_METADATA)))
+    )
+    client = await hass_client()
+    backup_id = BACKUP_METADATA["backup_id"]
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{DOMAIN}"
+    )
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
+    mock_drive_items.content.get.assert_called_once()

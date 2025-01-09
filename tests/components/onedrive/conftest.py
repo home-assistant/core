@@ -11,6 +11,7 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_collection_response import (
     DriveItemCollectionResponse,
 )
+from msgraph.generated.models.upload_session import UploadSession
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -94,22 +95,22 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         client.me.drive.get = AsyncMock(return_value=mock_drive)
 
         drives = client.drives.by_drive_id.return_value
-
         drives.special.by_drive_item_id.return_value.get = AsyncMock(
             return_value=DriveItem(id="approot")
         )
+
         drive_items = drives.items.by_drive_item_id.return_value
         drive_items.get = AsyncMock(return_value=DriveItem(id="folder_id"))
-
         drive_items.children.post = AsyncMock(return_value=DriveItem(id="folder_id"))
-
         drive_items.children.get = AsyncMock(
             return_value=DriveItemCollectionResponse(
                 value=[DriveItem(description=escape(dumps(BACKUP_METADATA)))]
             )
         )
-
         drive_items.delete = AsyncMock(return_value=None)
+        drive_items.create_upload_session.post = AsyncMock(return_value=UploadSession())
+        drive_items.patch = AsyncMock(return_value=None)
+        drive_items.content.get = AsyncMock(return_value=b"backup data")
 
         yield client
 
@@ -118,6 +119,16 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
 def mock_drive_items(mock_graph_client: MagicMock) -> MagicMock:
     """Return a mocked DriveItems."""
     return mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value
+
+
+@pytest.fixture
+def mock_upload_task() -> Generator[MagicMock]:
+    """Return a mocked UploadTask."""
+    with patch(
+        "homeassistant.components.onedrive.backup.LargeFileUploadTask", autospec=True
+    ) as upload_task:
+        task = upload_task.return_value
+        yield task
 
 
 @pytest.fixture
