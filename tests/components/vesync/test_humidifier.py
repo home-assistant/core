@@ -63,17 +63,19 @@ async def test_set_target_humidity_invalid(
 
     # Setting value out of range results in ServiceValidationError and
     # VeSyncHumid200300S.set_humidity does not get called.
-    with patch("pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity") as method_mock:
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                HUMIDIFIER_DOMAIN,
-                SERVICE_SET_HUMIDITY,
-                {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_HUMIDITY: 20},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
-        method_mock.assert_not_called()
-        mock_schedule_update_ha_state.assert_not_called()
+    with (
+        patch("pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity") as method_mock,
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_HUMIDITY: 20},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    method_mock.assert_not_called()
+    mock_schedule_update_ha_state.assert_not_called()
 
 
 @patch(
