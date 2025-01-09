@@ -26,7 +26,7 @@ async def test_coordinator_consider_home(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    device_tracker = f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(":", "_")}"
+    device_tracker = f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(':', '_')}"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

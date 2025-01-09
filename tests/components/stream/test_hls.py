@@ -119,13 +119,13 @@ def make_playlist(
         response.extend(
             [
                 f"#EXT-X-PART-INF:PART-TARGET={part_target_duration:.3f}",
-                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_target_duration:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_target_duration:.3f},PRECISE=YES",
+                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2 * part_target_duration:.3f}",
+                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS * part_target_duration:.3f},PRECISE=YES",
             ]
         )
     else:
         response.append(
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*segment_duration:.3f},PRECISE=YES",
+            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS * segment_duration:.3f},PRECISE=YES",
         )
     if segments:
         response.extend(segments)

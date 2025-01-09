@@ -220,8 +220,7 @@ def async_subscribe_internal(
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', "
-            "make sure MQTT is set up correctly",
+            f"Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
@@ -815,8 +814,8 @@ class MQTT:
             call_back_name = getattr(msg_callback, "__name__")
         return (
             f"Exception in {call_back_name} when handling msg on "
-            f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
-        )
+            f"'{msg.topic}': '{msg.payload}'"
+        )  # type: ignore[str-bytes-safe]
 
     @callback
     def async_subscribe(

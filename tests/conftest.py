@@ -412,7 +412,9 @@ def verify_cleanup(
 
     try:
         # Verify respx.mock has been cleaned up
-        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        assert not respx.mock.routes, (
+            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        )
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
@@ -580,7 +582,7 @@ async def hass(
             exceptions.append(
                 Exception(
                     "Received exception handler without exception, "
-                    f"but with message: {context["message"]}"
+                    f"but with message: {context['message']}"
                 )
             )
         orig_exception_handler(loop, context)

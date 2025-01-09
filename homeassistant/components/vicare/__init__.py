@@ -146,7 +146,7 @@ async def async_migrate_devices_and_entities(
                 # to `<device_identifier>-heating-<circuit_no>`
                 if entity_entry.domain == DOMAIN_CLIMATE:
                     unique_id_parts[len(unique_id_parts) - 1] = (
-                        f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
+                        f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts) - 1]}"
                     )
                 entity_new_unique_id = "-".join(unique_id_parts)
 

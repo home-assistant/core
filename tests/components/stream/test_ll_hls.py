@@ -99,7 +99,7 @@ def make_segment_with_parts(
     if discontinuity:
         response.append("#EXT-X-DISCONTINUITY")
     response.extend(
-        f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i%independent_period==0 else ""}'
+        f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},URI="./segment/{segment}.{i}.m4s"{",INDEPENDENT=YES" if i % independent_period == 0 else ""}'
         for i in range(num_parts)
     )
     response.extend(
@@ -107,7 +107,7 @@ def make_segment_with_parts(
             "#EXT-X-PROGRAM-DATE-TIME:"
             + FAKE_TIME.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
             + "Z",
-            f"#EXTINF:{math.ceil(SEGMENT_DURATION/TEST_PART_DURATION)*TEST_PART_DURATION:.3f},",
+            f"#EXTINF:{math.ceil(SEGMENT_DURATION / TEST_PART_DURATION) * TEST_PART_DURATION:.3f},",
             f"./segment/{segment}.m4s",
         ]
     )
@@ -166,7 +166,7 @@ async def test_ll_hls_stream(
     # Fetch playlist
     playlist_url = "/" + master_playlist.splitlines()[-1]
     playlist_response = await hls_client.get(
-        playlist_url + f"?_HLS_msn={num_playlist_segments-1}"
+        playlist_url + f"?_HLS_msn={num_playlist_segments - 1}"
     )
     assert playlist_response.status == HTTPStatus.OK
 
@@ -465,7 +465,7 @@ async def test_ll_hls_playlist_bad_msn_part(
     ).status == HTTPStatus.BAD_REQUEST
     assert (
         await hls_client.get(
-            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts-1+hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
+            f"/playlist.m3u8?_HLS_msn=1&_HLS_part={num_completed_parts - 1 + hass.data[DOMAIN][ATTR_SETTINGS].hls_advance_part_limit}"
         )
     ).status == HTTPStatus.BAD_REQUEST
     stream_worker_sync.resume()
@@ -515,13 +515,13 @@ async def test_ll_hls_playlist_rollover_part(
         *(
             [
                 hls_client.get(
-                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts)-1}"
+                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts) - 1}"
                 ),
                 hls_client.get(
                     f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts)}"
                 ),
                 hls_client.get(
-                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts)+1}"
+                    f"/playlist.m3u8?_HLS_msn=1&_HLS_part={len(segment.parts) + 1}"
                 ),
                 hls_client.get("/playlist.m3u8?_HLS_msn=2&_HLS_part=0"),
             ]

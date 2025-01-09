@@ -61,7 +61,7 @@ MODEL_NAMES = [  # https://ollama.com/library
     "goliath",
     "granite-code",
     "granite3-dense",
-    "granite3-guardian" "granite3-moe",
+    "granite3-guardiangranite3-moe",
     "hermes3",
     "internlm2",
     "llama-guard3",

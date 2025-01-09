@@ -2074,8 +2074,7 @@ def _wipe_old_string_time_columns(
         session.commit()
         session.execute(
             text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 100000;"
+                "UPDATE states set last_updated=NULL, last_changed=NULL  LIMIT 100000;"
             )
         )
         session.commit()
@@ -2755,9 +2754,9 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_event_type in missing_db_event_types:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_event_type.event_type is not None
-                        ), "event_type should never be None"
+                        assert db_event_type.event_type is not None, (
+                            "event_type should never be None"
+                        )
                         event_type_to_id[db_event_type.event_type] = (
                             db_event_type.event_type_id
                         )
@@ -2833,9 +2832,9 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_states_metadata in missing_states_metadata:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_states_metadata.entity_id is not None
-                        ), "entity_id should never be None"
+                        assert db_states_metadata.entity_id is not None, (
+                            "entity_id should never be None"
+                        )
                         entity_id_to_metadata_id[db_states_metadata.entity_id] = (
                             db_states_metadata.metadata_id
                         )

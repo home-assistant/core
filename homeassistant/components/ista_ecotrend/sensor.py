@@ -188,8 +188,8 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ista SE",
             model="ista EcoTrend",
-            name=f"{coordinator.details[consumption_unit]["address"]["street"]} "
-            f"{coordinator.details[consumption_unit]["address"]["houseNumber"]}".strip(),
+            name=f"{coordinator.details[consumption_unit]['address']['street']} "
+            f"{coordinator.details[consumption_unit]['address']['houseNumber']}".strip(),
             configuration_url="https://ecotrend.ista.de/",
             identifiers={(DOMAIN, consumption_unit)},
         )

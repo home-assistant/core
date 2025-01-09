@@ -537,7 +537,7 @@ def validate_translation_file(  # noqa: C901
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                f'Lokalise supports only one level of references: "{reference["source"]}" should point to directly to "{match.groups()[0]}"',
             )
 
 
