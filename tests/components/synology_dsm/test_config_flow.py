@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
@@ -15,6 +16,8 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
     CONF_SNAPSHOT_QUALITY,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SNAPSHOT_QUALITY,
@@ -73,7 +76,7 @@ def mock_controller_service():
             update=AsyncMock(return_value=True),
         )
         dsm.information = Mock(serial=SERIAL)
-
+        dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
 
@@ -96,6 +99,7 @@ def mock_controller_service_2sa():
             update=AsyncMock(return_value=True),
         )
         dsm.information = Mock(serial=SERIAL)
+        dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
 
@@ -116,6 +120,39 @@ def mock_controller_service_vdsm():
             update=AsyncMock(return_value=True),
         )
         dsm.information = Mock(serial=SERIAL)
+        dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
+        yield dsm
+
+
+@pytest.fixture(name="service_with_filestation")
+def mock_controller_service_with_filestation():
+    """Mock a successful service with filestation support."""
+    with patch("homeassistant.components.synology_dsm.config_flow.SynologyDSM") as dsm:
+        dsm.login = AsyncMock(return_value=True)
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.storage = Mock(
+            disks_ids=["sda", "sdb", "sdc"],
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=SERIAL)
+        dsm.file = AsyncMock(
+            get_shared_folders=AsyncMock(
+                return_value=[
+                    SynoFileSharedFolder(
+                        additional=None,
+                        is_dir=True,
+                        name="HA Backup",
+                        path="/ha_backup",
+                    )
+                ]
+            )
+        )
 
         yield dsm
 
@@ -137,7 +174,7 @@ def mock_controller_service_failed():
             update=AsyncMock(return_value=True),
         )
         dsm.information = Mock(serial=None)
-
+        dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
 
@@ -277,6 +314,55 @@ async def test_user_vdsm(
                 CONF_PASSWORD: PASSWORD,
             },
         )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == SERIAL
+    assert result["title"] == HOST
+    assert result["data"] == snapshot
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_with_filestation(
+    hass: HomeAssistant,
+    service_with_filestation: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test user config."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=None
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service_with_filestation,
+    ):
+        # test with all provided
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_VERIFY_SSL: VERIFY_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "backup_share"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_BACKUP_SHARE: "/ha_backup", CONF_BACKUP_PATH: "automatic_ha_backups"},
+        )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == HOST
