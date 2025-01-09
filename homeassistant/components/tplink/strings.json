@@ -394,6 +394,9 @@
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
+    },
+    "set_custom_effect": {
+      "message": "Error trying to set custom effect {effect}: {exc}"
     }
   },
   "issues": {
