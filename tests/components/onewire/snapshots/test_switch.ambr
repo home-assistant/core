@@ -1775,3 +1775,51 @@
     'state': 'off',
   })
 # ---
+# name: test_switches_delayed[05.111111111111][switch.05_111111111111_programmed_input_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.05_111111111111_programmed_input_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Programmed input-output',
+    'platform': 'onewire',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pio',
+    'unique_id': '/05.111111111111/PIO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches_delayed[05.111111111111][switch.05_111111111111_programmed_input_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_file': '/05.111111111111/PIO',
+      'friendly_name': '05.111111111111 Programmed input-output',
+      'raw_value': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.05_111111111111_programmed_input_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
