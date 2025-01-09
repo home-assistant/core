@@ -13,6 +13,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -112,31 +113,38 @@ class GrowattNumber(CoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
-        res = await self.hass.async_add_executor_job(
-            self.coordinator.api.update_tlx_inverter_setting,
-            self.coordinator.device_id,
-            self.entity_description.api_key,
-            int(value),
-        )
-        _LOGGER.debug(
-            "Set parameter: %s to value: %s, res: %s",
-            self.entity_description.key,
-            value,
-            res,
-        )
-        if res.get("success"):
-            # If success, update single parameter value in coordinator instead of
-            # fetching all data with coordinator.async_refresh() to off-load the API
-            self.coordinator.set_value(self.entity_description, int(value))
-            self.async_write_ha_state()
-        else:
-            _LOGGER.error(
-                "Set parameter: %s to value: %s failed msg: %s, error: %s",
+        try:
+            res = await self.hass.async_add_executor_job(
+                self.coordinator.api.update_tlx_inverter_setting,
+                self.coordinator.device_id,
+                self.entity_description.api_key,
+                int(value),
+            )
+            _LOGGER.debug(
+                "Set parameter: %s to value: %s, res: %s",
                 self.entity_description.key,
                 value,
-                res.get("msg"),
-                res.get("error"),
+                res,
             )
+            if res.get("success"):
+                # If success, update single parameter value in coordinator instead of
+                # fetching all data with coordinator.async_refresh() to off-load the API
+                self.coordinator.set_value(self.entity_description, int(value))
+                self.async_write_ha_state()
+            else:
+                _LOGGER.error(
+                    "Set parameter: %s to value: %s failed msg: %s, error: %s",
+                    self.entity_description.key,
+                    value,
+                    res.get("msg"),
+                    res.get("error"),
+                )
+                raise HomeAssistantError(
+                    f"Failed to set parameter {self.entity_description.key} to value {value}: {res.get('msg')}"
+                )
+        except (KeyError, ValueError) as e:
+            _LOGGER.error("Error while setting parameter: %s", e)
+            raise HomeAssistantError(f"Error while setting parameter: {e}") from e
 
     @callback
     def _handle_coordinator_update(self) -> None:

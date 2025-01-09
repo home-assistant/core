@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -122,8 +123,12 @@ class GrowattSwitch(CoordinatorEntity, SwitchEntity):
                     res.get("msg"),
                     res.get("error"),
                 )
+                raise HomeAssistantError(
+                    f"Failed to turn off switch {self.entity_description.key}: {res.get('msg')}"
+                )
         except (KeyError, ValueError) as e:
             _LOGGER.error("Error while turning off switch: %s", e)
+            raise HomeAssistantError(f"Error while turning off switch: {e}") from e
 
     @callback
     def _handle_coordinator_update(self) -> None:
