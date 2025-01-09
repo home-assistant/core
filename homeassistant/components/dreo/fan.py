@@ -88,6 +88,13 @@ class DreoFanHA(DreoEntity, FanEntity):
             return self._attr_speed_count
         return 6
 
+    @property
+    def oscillating(self) -> bool | None:
+        """Return the oscillate of the fan."""
+        if hasattr(self, "_attr_oscillating"):
+            return self._attr_oscillating
+        return None
+
     def turn_on(
         self,
         percentage: int | None = None,
