@@ -5,6 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from pyownet import protocol
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
@@ -24,7 +25,7 @@ from .const import (
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
 )
-from .onewirehub import CannotConnect, OneWireConfigEntry, OneWireHub
+from .onewirehub import OneWireConfigEntry
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -38,11 +39,11 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
 ) -> None:
     """Validate the user input allows us to connect."""
-
-    hub = OneWireHub(hass)
     try:
-        await hub.connect(data[CONF_HOST], data[CONF_PORT])
-    except CannotConnect:
+        await hass.async_add_executor_job(
+            protocol.proxy, data[CONF_HOST], data[CONF_PORT]
+        )
+    except protocol.ConnError:
         errors["base"] = "cannot_connect"
 
 
