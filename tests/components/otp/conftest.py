@@ -6,9 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.otp.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TOKEN
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import CONF_NAME, CONF_TOKEN
 
 from tests.common import MockConfigEntry
 
@@ -51,15 +49,3 @@ def mock_otp_config_entry() -> MockConfigEntry:
         },
         unique_id="2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52",
     )
-
-
-@pytest.fixture(name="otp_yaml_config")
-def mock_otp_yaml_config() -> ConfigType:
-    """Mock otp configuration entry."""
-    return {
-        SENSOR_DOMAIN: {
-            CONF_PLATFORM: "otp",
-            CONF_TOKEN: "2FX5FBSYRE6VEC2FSHBQCRKO2GNDVZ52",
-            CONF_NAME: "OTP Sensor",
-        }
-    }

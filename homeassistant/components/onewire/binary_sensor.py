@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import os
 
 from homeassistant.components.binary_sensor import (
@@ -14,10 +15,14 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OneWireConfigEntry
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
 from .entity import OneWireEntity, OneWireEntityDescription
-from .onewirehub import OneWireHub
+from .onewirehub import OneWireConfigEntry, OneWireHub
+
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass(frozen=True)
@@ -93,10 +98,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    entities = await hass.async_add_executor_job(
-        get_entities, config_entry.runtime_data
-    )
-    async_add_entities(entities, True)
+    async_add_entities(get_entities(config_entry.runtime_data), True)
 
 
 def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:

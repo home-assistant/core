@@ -33,6 +33,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
+    INVERTER_ERROR_CODES,
     SOLAR_NET_DISCOVERY_NEW,
     InverterStatusCodeOption,
     MeterLocationCodeOption,
@@ -205,6 +206,15 @@ INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
     FroniusSensorEntityDescription(
         key="error_code",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    FroniusSensorEntityDescription(
+        key="error_message",
+        response_key="error_code",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(dict.fromkeys(INVERTER_ERROR_CODES.values())),
+        value_fn=INVERTER_ERROR_CODES.get,  # type: ignore[arg-type]
     ),
     FroniusSensorEntityDescription(
         key="status_code",

@@ -1,21 +1,34 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::onewire::config::step::user::data_description::host%]",
+          "port": "[%key:component::onewire::config::step::user::data_description::port%]"
+        },
+        "description": "Update OWServer configuration for {name}"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your 1-Wire device."
+          "host": "The hostname or IP address of your OWServer instance.",
+          "port": "The port of your OWServer instance (default is 4304)."
         },
-        "title": "Set server details"
+        "title": "Set OWServer instance details"
       }
     }
   },
@@ -26,6 +39,17 @@
       },
       "hub_short_id": {
         "name": "Hub short on branch {id}"
+      }
+    },
+    "select": {
+      "tempres": {
+        "name": "Temperature resolution",
+        "state": {
+          "9": "9 bits (0.5°C, fastest, up to 93.75ms)",
+          "10": "10 bits (0.25°C, up to 187.5ms)",
+          "11": "11 bits (0.125°C, up to 375ms)",
+          "12": "12 bits (0.0625°C, slowest, up to 750ms)"
+        }
       }
     },
     "sensor": {

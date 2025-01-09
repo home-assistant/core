@@ -68,6 +68,7 @@ SUPPORT_WEBOSTV_VOLUME = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=10)
 
 

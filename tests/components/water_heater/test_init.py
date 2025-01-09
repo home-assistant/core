@@ -13,6 +13,8 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
+    WaterHeaterEntityDescription,
+    WaterHeaterEntityEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -204,3 +206,15 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
+
+
+@pytest.mark.parametrize(
+    ("class_name", "expected_log"),
+    [(WaterHeaterEntityDescription, False), (WaterHeaterEntityEntityDescription, True)],
+)
+async def test_deprecated_entity_description(
+    caplog: pytest.LogCaptureFixture, class_name: type, expected_log: bool
+) -> None:
+    """Test deprecated WaterHeaterEntityEntityDescription logs warning."""
+    class_name(key="test")
+    assert ("is a deprecated class" in caplog.text) is expected_log

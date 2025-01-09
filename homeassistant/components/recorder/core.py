@@ -712,12 +712,24 @@ class Recorder(threading.Thread):
         setup_result = self._setup_recorder()
 
         if not setup_result:
+            _LOGGER.error("Recorder setup failed, recorder shutting down")
             # Give up if we could not connect
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
+            _LOGGER.error("Failed to validate schema, recorder shutting down")
+            return
+        if schema_status.current_version > SCHEMA_VERSION:
+            _LOGGER.error(
+                "The database schema version %s is newer than %s which is the maximum "
+                "database schema version supported by the installed version of "
+                "Home Assistant Core, either upgrade Home Assistant Core or restore "
+                "the database from a backup compatible with this version",
+                schema_status.current_version,
+                SCHEMA_VERSION,
+            )
             return
         self.schema_version = schema_status.current_version
 
@@ -970,6 +982,7 @@ class Recorder(threading.Thread):
                 # which does not need migration or repair.
                 new_schema_status = migration.SchemaValidationStatus(
                     current_version=SCHEMA_VERSION,
+                    initial_version=SCHEMA_VERSION,
                     migration_needed=False,
                     non_live_data_migration_needed=False,
                     schema_errors=set(),
@@ -1430,6 +1443,7 @@ class Recorder(threading.Thread):
         with session_scope(session=self.get_session()) as session:
             end_incomplete_runs(session, self.recorder_runs_manager.recording_start)
             self.recorder_runs_manager.start(session)
+            self.states_manager.load_from_db(session)
 
         self._open_event_session()
 

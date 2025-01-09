@@ -470,7 +470,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         fields: OrderedDict[Any, Any] = OrderedDict()
         validated_user_input: dict[str, Any] = {}
-        broker_config: dict[str, Any] = {}
         if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
             reconfigure_entry = self._get_reconfigure_entry()
         if await async_get_broker_settings(
@@ -482,29 +481,25 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
-                broker_config.update(
-                    update_password_from_user_input(
-                        reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
-                    ),
+                update_password_from_user_input(
+                    reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
                 )
-            else:
-                broker_config = validated_user_input
 
             can_connect = await self.hass.async_add_executor_job(
                 try_connection,
-                broker_config,
+                validated_user_input,
             )
 
             if can_connect:
                 if is_reconfigure:
                     return self.async_update_reload_and_abort(
                         reconfigure_entry,
-                        data_updates=broker_config,
+                        data=validated_user_input,
                     )
                 validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
-                    title=broker_config[CONF_BROKER],
-                    data=broker_config,
+                    title=validated_user_input[CONF_BROKER],
+                    data=validated_user_input,
                 )
 
             errors["base"] = "cannot_connect"

@@ -1,0 +1,78 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Clean up stale docstrings
+  runtime-data:
+    status: todo
+    comment: Use typed config entry in coordinator
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not use events.
+  dependency-transparency: todo
+  action-setup:
+    status: exempt
+    comment: The integration only uses platform services.
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage:
+    status: todo
+    comment: Move test constants to const.py, mock_init \
+      docstrings, entity_registry fixture, unused freezers \
+      match exceptions, use freezer in test_fan, use async_setup \
+      remove if statements from light tests, use constants in service calls
+  integration-owner: done
+  docs-installation-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have any options configuration parameters.
+
+  # Gold
+  entity-translations:
+    status: todo
+    comment: Use device class translations, remove unused translations \
+      translate Unnamed, setup exceptions, mac mismatch, async_set_hvac_mode
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices: todo
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: todo
+  discovery-update-info: done
+  repair-issues: done
+  docs-use-cases: todo
+  docs-supported-devices: done
+  docs-supported-functions: todo
+  docs-data-update: todo
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

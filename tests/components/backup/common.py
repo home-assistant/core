@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -29,6 +29,7 @@ TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     database_included=True,
     date="1970-01-01T00:00:00.000Z",
+    extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
@@ -43,6 +44,7 @@ TEST_BACKUP_DEF456 = AgentBackup(
     backup_id="def456",
     database_included=False,
     date="1980-01-01T00:00:00.000Z",
+    extra_metadata={"instance_id": "unknown_uuid", "with_automatic_settings": True},
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
@@ -69,6 +71,7 @@ class BackupAgentTest(BackupAgent):
                     backup_id="abc123",
                     database_included=True,
                     date="1970-01-01T00:00:00Z",
+                    extra_metadata={},
                     folders=[Folder.MEDIA, Folder.SHARE],
                     homeassistant_included=True,
                     homeassistant_version="2024.12.0",
@@ -163,3 +166,15 @@ async def setup_backup_integration(
                 agent._loaded_backups = True
 
         return result
+
+
+async def setup_backup_platform(
+    hass: HomeAssistant,
+    *,
+    domain: str,
+    platform: Any,
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, f"{domain}.backup", platform)
+    assert await async_setup_component(hass, domain, {})
+    await hass.async_block_till_done()
