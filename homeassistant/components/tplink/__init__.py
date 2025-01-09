@@ -22,7 +22,6 @@ from kasa.iot import IotStrip
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_AUTHENTICATION,
@@ -59,10 +58,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import TPLinkDataUpdateCoordinator
-from .models import TPLinkData
-
-type TPLinkConfigEntry = ConfigEntry[TPLinkData]
+from .coordinator import TPLinkConfigEntry, TPLinkData, TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
