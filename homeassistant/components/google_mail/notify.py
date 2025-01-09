@@ -83,7 +83,8 @@ class GMailNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if any(attr in data for attr in [ATTR_HTML, ATTR_IMAGES, ATTR_FILES]):
-            email: MIMEMultipart | MIMEText = MIMEMultipart(_subtype="related")
+            email: MIMEMultipart | MIMEText
+            email = MIMEMultipart(_subtype="related")
             html_content = data.get(ATTR_HTML, message)
             email.attach(MIMEText(html_content, "html"))
 
@@ -126,7 +127,8 @@ class GMailNotificationService(BaseNotificationService):
         file_data = await self.process_file(item)
 
         if kind == ATTR_FILE_KIND_IMAGE:
-            attachment: MIMEImage | MIMEBase = MIMEImage(
+            attachment: MIMEImage | MIMEBase
+            attachment = MIMEImage(
                 file_data["content"], _subtype=file_data["mime_type"].split("/")[-1]
             )
         else:
