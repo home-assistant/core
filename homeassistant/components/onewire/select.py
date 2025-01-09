@@ -15,7 +15,9 @@ from .const import READ_MODE_INT
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireConfigEntry, OneWireHub
 
-PARALLEL_UPDATES = 1
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
