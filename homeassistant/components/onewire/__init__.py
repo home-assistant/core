@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .onewirehub import CannotConnect, OneWireConfigEntry, OneWireHub
+from .onewirehub import OneWireConfigEntry, OneWireHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +24,11 @@ _PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> bool:
     """Set up a 1-Wire proxy for a config entry."""
-    onewire_hub = OneWireHub(hass)
+    onewire_hub = OneWireHub(hass, entry)
     try:
-        await onewire_hub.initialize(entry)
+        await onewire_hub.initialize()
     except (
-        CannotConnect,  # Failed to connect to the server
+        protocol.ConnError,  # Failed to connect to the server
         protocol.OwnetError,  # Connected to server, but failed to list the devices
     ) as exc:
         raise ConfigEntryNotReady from exc

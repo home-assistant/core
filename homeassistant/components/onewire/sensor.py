@@ -373,7 +373,6 @@ def get_entities(
         return []
 
     entities: list[OneWireSensor] = []
-    assert onewire_hub.owproxy
     for device in onewire_hub.devices:
         family = device.family
         device_type = device.type
