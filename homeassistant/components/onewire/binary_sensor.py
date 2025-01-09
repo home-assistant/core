@@ -19,7 +19,9 @@ from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireConfigEntry, OneWireHub
 
-PARALLEL_UPDATES = 1
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
