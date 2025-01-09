@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from pyownet import protocol
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,6 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_owproxy_mock_devices
+from .const import MOCK_OWPROXY_DEVICES
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -80,7 +82,27 @@ async def test_update_options(
     assert owproxy.call_count == 2
 
 
-@patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test device are correctly registered."""
+    setup_owproxy_mock_devices(owproxy, MOCK_OWPROXY_DEVICES.keys())
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries
+    for device_entry in device_entries:
+        assert device_entry == snapshot(name=f"{device_entry.name}-entry")
+
+
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
