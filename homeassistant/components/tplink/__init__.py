@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -235,17 +235,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     parent_coordinator = TPLinkDataUpdateCoordinator(
         hass, device, timedelta(seconds=5), entry
     )
-    child_coordinators: list[TPLinkDataUpdateCoordinator] = []
-
-    # The iot HS300 allows a limited number of concurrent requests and fetching the
-    # emeter information requires separate ones so create child coordinators here.
-    if isinstance(device, IotStrip):
-        child_coordinators = [
-            # The child coordinators only update energy data so we can
-            # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
-            for child in device.children
-        ]
+    child_coordinators: list[TPLinkDataUpdateCoordinator] = get_child_coordinators(
+        hass, entry, device, device.children
+    )
 
     camera_creds: Credentials | None = None
     if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
@@ -260,6 +252,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def get_child_coordinators(
+    hass: HomeAssistant,
+    entry: TPLinkConfigEntry,
+    device: Device,
+    children: Sequence[Device],
+) -> list[TPLinkDataUpdateCoordinator]:
+    """Get child coordinators for a device or None if not needed."""
+    # The iot HS300 allows a limited number of concurrent requests and fetching the
+    # emeter information requires separate ones so create child coordinators here.
+    if isinstance(device, IotStrip):
+        return [
+            # The child coordinators only update energy data so we can
+            # set a longer update interval to avoid flooding the device
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
+            for child in device.children
+        ]
+    return []
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:

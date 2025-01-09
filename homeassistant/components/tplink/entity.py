@@ -435,6 +435,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         entity_class: type[_E],
         descriptions: Mapping[str, _D],
         child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
+        new_children: list[Device] | None = None,
     ) -> list[_E]:
         """Create entities for device and its children.
 
@@ -442,19 +443,23 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
-        entities.extend(
-            cls._entities_for_device(
-                hass,
-                device,
-                coordinator=coordinator,
-                feature_type=feature_type,
-                entity_class=entity_class,
-                descriptions=descriptions,
+        # Only add the parent entities if new_children is None.
+        if not new_children:
+            entities.extend(
+                cls._entities_for_device(
+                    hass,
+                    device,
+                    coordinator=coordinator,
+                    feature_type=feature_type,
+                    entity_class=entity_class,
+                    descriptions=descriptions,
+                )
             )
-        )
-        if device.children:
-            _LOGGER.debug("Initializing device with %s children", len(device.children))
-            for idx, child in enumerate(device.children):
+
+        children = new_children if new_children else device.children
+        if children:
+            _LOGGER.debug("Initializing device with %s children", len(children))
+            for idx, child in enumerate(children):
                 # HS300 does not like too many concurrent requests and its
                 # emeter data requires a request for each socket, so we receive
                 # separate coordinators.

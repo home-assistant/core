@@ -11,6 +11,7 @@ from kasa import AuthenticationError, Credentials, Device, KasaException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -60,6 +61,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
+        self.previous_child_device_ids = {child.device_id for child in device.children}
 
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
@@ -83,3 +85,16 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     "exc": str(ex),
                 },
             ) from ex
+        current_child_device_ids = {child.device_id for child in self.device.children}
+        if stale_devices := self.previous_child_device_ids - current_child_device_ids:
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_devices:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+            self.previous_child_device_ids = current_child_device_ids
