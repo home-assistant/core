@@ -40,8 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("Unable to login to the VeSync server")
         return False
 
-    # forward_setups = hass.config_entries.async_forward_entry_setups
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
