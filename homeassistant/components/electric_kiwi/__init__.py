@@ -79,7 +79,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # convert title and unique_id to string
-    if config_entry.version == 1:
+    if config_entry.version == 1 and config_entry.minor_version == 0:
         if config_entry.unique_id is not None and config_entry.unique_id.startswith(
             DOMAIN
         ):
