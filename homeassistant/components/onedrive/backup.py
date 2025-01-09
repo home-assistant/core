@@ -132,7 +132,7 @@ class OneDriveBackupAgent(BackupAgent):
         response = await self._request_adapter.get_http_response_message(
             request_info=request_info, parent_span=parent_span
         )
-        return response.aiter_bytes(chunk_size=1024)
+        return response.aiter_bytes(chunk_size=1024)  # type: ignore[no-any-return]
 
     @handle_backup_errors("failed_to_create_backup")
     async def async_upload_backup(
