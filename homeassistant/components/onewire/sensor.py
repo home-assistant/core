@@ -357,6 +357,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
+    # note: we have to go through the executor as SENSOR platform
+    # makes extra calls to the hub during device listing
     entities = await hass.async_add_executor_job(
         get_entities, config_entry.runtime_data, config_entry.options
     )
