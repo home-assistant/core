@@ -487,8 +487,8 @@ async def test_client_key_update_on_connect(
 
     assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
 
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "client_key", "new_key")
+    client.is_connected.return_value = False
+    client.client_key = "new_key"
 
     freezer.tick(timedelta(seconds=20))
     async_fire_time_changed(hass)
