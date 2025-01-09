@@ -37,7 +37,6 @@ async def test_form(
             CONF_URL: "http://1.1.1.1/sse",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
