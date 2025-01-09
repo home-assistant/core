@@ -1,6 +1,5 @@
 """Module contains the CompitClimate class for controlling climate entities."""
 
-import asyncio
 from typing import Any
 
 from compit_inext_api import Device, Parameter
