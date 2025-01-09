@@ -12,7 +12,6 @@ from vegehub import VegeHub
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
-    async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
     async_register as webhook_register,
     async_unregister as webhook_unregister,
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_MAC,
+    CONF_WEBHOOK_ID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -59,21 +59,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
     hub = VegeHub(device_ip, device_mac, entry.unique_id)
 
-    webhook_id = webhook_generate_id()
     webhook_url = webhook_generate_url(
         hass,
-        webhook_id,
+        entry.data[CONF_WEBHOOK_ID],
         allow_external=False,
         allow_ip=True,
     )
 
-    # Send the webhook address to the hub as its server target
-    try:
-        await hub.setup("", webhook_url, retries=1)
-    except ConnectionError as err:
-        raise ConfigEntryError("Error connecting to device") from err
-    except TimeoutError as err:
-        raise ConfigEntryNotReady("Device is not responding") from err
+    # check to see if HA is running, if not, this is being called as part of boot, and setup should not be called
+    if hass.is_running:
+        # Send the webhook address to the hub as its server target
+        try:
+            await hub.setup("", webhook_url, retries=1)
+        except ConnectionError as err:
+            raise ConfigEntryError("Error connecting to device") from err
+        except TimeoutError as err:
+            raise ConfigEntryNotReady("Device is not responding") from err
 
     # Initialize runtime data
     entry.runtime_data = VegeHubData(
@@ -93,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     )
 
     async def unregister_webhook(_: Any) -> None:
-        webhook_unregister(hass, webhook_id)
+        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
 
     async def register_webhook() -> None:
         webhook_name = f"{NAME} {device_mac}"
@@ -102,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
             hass,
             DOMAIN,
             webhook_name,
-            webhook_id,
+            entry.data[CONF_WEBHOOK_ID],
             get_webhook_handler(
                 device_mac, entry.entry_id, entry.runtime_data.coordinator
             ),
@@ -113,15 +114,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
         )
 
-    # Now add in all the entities for this device.
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if hass.is_running:
+        # Now add in all the entities for this device.
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_create_background_task(
         hass, register_webhook(), "vegehub_register_webhook"
     )
 
-    # Ask the hub for an update, so that we have its initial data
-    await hub.request_update()
+    # check to see if HA is running, if not, this is being called as part of boot, and we don't request an update
+    if hass.is_running:
+        # Ask the hub for an update, so that we have its initial data
+        await hub.request_update()
 
     return True
 

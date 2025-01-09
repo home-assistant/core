@@ -81,6 +81,6 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         value = self.coordinator.data.get(self._attr_unique_id)
         # Only set a new value if there is one available in the coordinator.
-        if value:
+        if value is not None:
             self.latest_value = value
         return self.latest_value

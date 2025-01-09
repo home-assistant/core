@@ -8,8 +8,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_MAC, CONF_WEBHOOK_ID
 
 from .const import DOMAIN
 
@@ -87,6 +88,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data[CONF_MAC] = self._hub.mac_address
                     info_data[CONF_IP_ADDRESS] = self._hub.ip_address
                     info_data[CONF_HOST] = self._hostname
+                    info_data[CONF_WEBHOOK_ID] = webhook_generate_id()
 
                     # Create the config entry for the new device
                     return self.async_create_entry(
@@ -128,6 +130,9 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._hub.retrieve_mac_address(retries=2)
         except ConnectionError:
             _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
+            return self.async_abort(reason="cannot_connect")
+        except TimeoutError:
+            _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
             return self.async_abort(reason="cannot_connect")
 
         if len(self._hub.mac_address) <= 0:
