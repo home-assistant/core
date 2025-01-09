@@ -17,6 +17,8 @@ from homeassistant.helpers import device_registry as dr
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -60,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data.get(CONF_VERIFY_SSL) is None:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
+        )
+    if not entry.data.get(CONF_BACKUP_SHARE):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None}
         )
 
     # Continue setup
