@@ -58,11 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ApiException as err:
         raise ConfigEntryNotReady from err
 
-    if entry.version == 1 and entry.unique_id.startswith(DOMAIN):
-        ek_session = await ek_api.get_active_session()
-        unique_id = "_".join(str(num) for num in ek_session.customer_numbers)
-        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         HOP_COORDINATOR: hop_coordinator,
         ACCOUNT_COORDINATOR: account_coordinator,
@@ -79,3 +74,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    # convert title and unique_id to string
+    if config_entry.version == 1:
+        if config_entry.unique_id is not None and config_entry.unique_id.startswith(
+            DOMAIN
+        ):
+            implementation = (
+                await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                    hass, config_entry
+                )
+            )
+
+            session = config_entry_oauth2_flow.OAuth2Session(
+                hass, config_entry, implementation
+            )
+
+            ek_api = ElectricKiwiApi(
+                api.ConfigEntryElectricKiwiAuth(
+                    aiohttp_client.async_get_clientsession(hass), session
+                )
+            )
+
+            ek_session = await ek_api.get_active_session()
+            unique_id = "_".join(str(num) for num in ek_session.customer_numbers)
+            hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+
+    return True
