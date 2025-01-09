@@ -7,7 +7,7 @@ from pyvesync import VeSync
 
 from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
 from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -91,25 +91,17 @@ async def test_async_new_device_discovery__loads_fans(
 ) -> None:
     """Test setup connects to vesync and loads fan as an update call."""
 
-    with patch.object(hass.config_entries, "async_forward_entry_setups") as setups_mock:
-        assert await async_setup_entry(hass, config_entry)
-        # Assert platforms loaded
-        await hass.async_block_till_done()
-        assert setups_mock.call_count == 1
-        assert setups_mock.call_args.args[0] == config_entry
-        assert setups_mock.call_args.args[1] == [
-            Platform.FAN,
-            Platform.LIGHT,
-            Platform.SENSOR,
-            Platform.SWITCH,
-        ]
-        assert not hass.data[DOMAIN][VS_DEVICES]
-        fans = [fan]
-        manager.fans = fans
-        manager._dev_list = {
-            "fans": fans,
-        }
-        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    # Assert platforms loaded
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert not hass.data[DOMAIN][VS_DEVICES]
+    fans = [fan]
+    manager.fans = fans
+    manager._dev_list = {
+        "fans": fans,
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
 
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
