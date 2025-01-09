@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,6 +57,8 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     min_fn: Callable[[dict], float] | None = None
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
+    method: str
+    method_params_fn: Callable[[int, float], dict]
 
 
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
@@ -78,6 +80,24 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
 
 
 RPC_NUMBERS: Final = {
+    "external_sensor_temperature": RpcNumberDescription(
+        key="blutrv",
+        sub_key="current_C",
+        translation_key="external_sensor_temperature",
+        name="External sensor temperature",
+        native_min_value=-50,
+        native_max_value=50,
+        native_step=0.1,
+        mode=NumberMode.BOX,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        method="BluTRV.Call",
+        method_params_fn=lambda idx, value: {
+            "id": idx,
+            "method": "TRV.SetExternalTemperature",
+            "params": {"id": 0, "t_C": value},
+        },
+    ),
     "number": RpcNumberDescription(
         key="number",
         sub_key="value",
@@ -92,6 +112,26 @@ RPC_NUMBERS: Final = {
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
         else None,
+        method="Number.Set",
+        method_params_fn=lambda idx, value: {"id": idx, "value": value},
+    ),
+    "valve_position": RpcNumberDescription(
+        key="blutrv",
+        sub_key="pos",
+        translation_key="valve_position",
+        name="Valve position",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        method="BluTRV.Call",
+        method_params_fn=lambda idx, value: {
+            "id": idx,
+            "method": "Trv.SetPosition",
+            "params": {"id": 0, "pos": value},
+        },
     ),
 }
 
@@ -230,4 +270,10 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
-        await self.call_rpc("Number.Set", {"id": self._id, "value": value})
+        if TYPE_CHECKING:
+            assert isinstance(self._id, int)
+
+        await self.call_rpc(
+            self.entity_description.method,
+            self.entity_description.method_params_fn(self._id, value),
+        )
