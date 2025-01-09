@@ -15,6 +15,9 @@
       },
       "ignition": {
         "default": "mdi:key-variant"
+      },
+      "autostart": {
+        "default": "mdi:auto-mode"
       }
     },
     "button": {

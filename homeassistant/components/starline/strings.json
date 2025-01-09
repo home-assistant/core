@@ -66,6 +66,9 @@
       },
       "ignition": {
         "name": "Ignition"
+      },
+      "autostart": {
+        "name": "Autostart"
       }
     },
     "device_tracker": {
