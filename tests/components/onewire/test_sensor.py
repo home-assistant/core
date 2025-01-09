@@ -11,57 +11,34 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_owproxy_mock_devices
 from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR]):
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     owproxy: MagicMock,
-    device_id: str,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for 1-Wire sensors."""
-    setup_owproxy_mock_devices(owproxy, [device_id])
+    setup_owproxy_mock_devices(owproxy, MOCK_OWPROXY_DEVICES.keys())
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    # Ensure devices are correctly registered
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-    assert device_entries == snapshot
-
-    # Ensure entities are correctly registered
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries == snapshot
-
-    setup_owproxy_mock_devices(owproxy, [device_id])
-    # Some entities are disabled, enable them and reload before checking states
-    for ent in entity_entries:
-        entity_registry.async_update_entity(ent.entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Ensure entity states are correct
-    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
-    assert states == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize("device_id", ["12.111111111111"])

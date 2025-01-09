@@ -41,7 +41,9 @@ from .const import (
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireConfigEntry, OneWireHub
 
-PARALLEL_UPDATES = 1
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
@@ -355,6 +357,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
+    # note: we have to go through the executor as SENSOR platform
+    # makes extra calls to the hub during device listing
     entities = await hass.async_add_executor_job(
         get_entities, config_entry.runtime_data, config_entry.options
     )
@@ -369,7 +373,6 @@ def get_entities(
         return []
 
     entities: list[OneWireSensor] = []
-    assert onewire_hub.owproxy
     for device in onewire_hub.devices:
         family = device.family
         device_type = device.type
