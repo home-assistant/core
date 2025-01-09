@@ -20,7 +20,8 @@
       "missing_data": "Unable to complete setup due to missing data."
     },
     "abort": {
-      "cannot_connect": "Failed to connect to the device. Please try again."
+      "cannot_connect": "Failed to connect to the device. Please try again.",
+      "timeout_connect": "Timed out connecting. Ensure Hub is awake, and try again."
     }
   },
   "entity": {

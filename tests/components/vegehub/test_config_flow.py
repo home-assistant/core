@@ -87,6 +87,38 @@ async def test_user_flow_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
+async def test_user_flow_device_timeout(
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+) -> None:
+    """Test the user flow with bad data."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mocker = mock_aiohttp_session
+
+    async def timeout_side_effect(*args, **kwargs):
+        raise TimeoutError
+
+    mocker.clear_requests()
+    mocker.post(
+        f"http://{TEST_IP}/api/info/get",
+        text="",
+        side_effect=timeout_side_effect,
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"ip_address": TEST_IP}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "timeout_connect"
+
+
 async def test_user_flow_cannot_connect_404(
     hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session_404
 ) -> None:
@@ -144,6 +176,31 @@ async def test_zeroconf_flow_success(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOSTNAME
     assert result["data"]["mac"] == TEST_SIMPLE_MAC
+
+
+async def test_zeroconf_flow_abort_device_asleep(
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+) -> None:
+    """Test when zeroconf gets the same device twice."""
+
+    mocker = mock_aiohttp_session
+
+    async def timeout_side_effect(*args, **kwargs):
+        raise TimeoutError
+
+    mocker.clear_requests()
+    mocker.post(
+        f"http://{TEST_IP}/api/info/get",
+        text="",
+        side_effect=timeout_side_effect,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "timeout_connect"
 
 
 async def test_zeroconf_flow_abort_same_id(
@@ -205,13 +262,9 @@ async def test_zeroconf_flow_device_error_response(
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Snick - Ok, right here we need to figure out how to override the mock for /api/info/get
-    # so that it returns bad data or no response. I think we can do it by just defining a new
-    # mock, and then that one will override the one in the fixture, but I'm not totally sure
-    # how to do it.
-
+    # Part way through the process, we simulate getting bad responses
     mocker.clear_requests()
-    mocker.post(f"http://{TEST_IP}/api/info/get", text="", status=500)
+    mocker.post(f"http://{TEST_IP}/api/config/get", json={}, status=500)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -236,9 +289,10 @@ async def test_zeroconf_flow_device_stopped_responding(
     async def timeout_side_effect(*args, **kwargs):
         raise TimeoutError
 
+    # Part way through the test we simulate getting timeouts
     mocker.clear_requests()
     mocker.post(
-        f"http://{TEST_IP}/api/info/get",
+        f"http://{TEST_IP}/api/config/get",
         text="",
         side_effect=timeout_side_effect,
     )

@@ -8,9 +8,18 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.webhook import async_generate_id as webhook_generate_id
+from homeassistant.components.webhook import (
+    async_generate_id as webhook_generate_id,
+    async_generate_url as webhook_generate_url,
+)
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_MAC, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_WEBHOOK_ID,
+)
 
 from .const import DOMAIN
 
@@ -49,14 +58,20 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except ConnectionError:
                     _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
                     errors["base"] = "cannot_connect"
+                except TimeoutError:
+                    _LOGGER.error(
+                        "Timed out trying to connect to %s", self._hub.ip_address
+                    )
+                    errors["base"] = "timeout_connect"
+
+                if len(errors) > 0:
+                    return self.async_show_form(step_id="user", errors=errors)
 
                 if len(self._hub.mac_address) <= 0:
                     _LOGGER.error(
                         "Failed to get MAC address for %s", self._hub.ip_address
                     )
                     errors["base"] = "cannot_connect"
-
-                if len(errors) > 0:
                     return self.async_show_form(step_id="user", errors=errors)
 
                 self._async_abort_entries_match({CONF_IP_ADDRESS: self._hub.ip_address})
@@ -69,19 +84,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._hostname = self._hub.ip_address
 
             if self._hub is not None:
-                try:
-                    # Attempt communication with the Hub before creating the entry to
-                    # make sure it's awake and ready to be set up.
-                    await self._hub.retrieve_mac_address()
-                except ConnectionError:
-                    _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
-                    errors["base"] = "cannot_connect"
-                except TimeoutError:
-                    _LOGGER.error(
-                        "Timed out trying to connect to %s", self._hub.ip_address
-                    )
-                    errors["base"] = "timeout_connect"
-
                 if len(errors) == 0:
                     info_data: dict[str, Any] = {}
 
@@ -89,6 +91,37 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     info_data[CONF_IP_ADDRESS] = self._hub.ip_address
                     info_data[CONF_HOST] = self._hostname
                     info_data[CONF_WEBHOOK_ID] = webhook_generate_id()
+
+                    webhook_url = webhook_generate_url(
+                        self.hass,
+                        info_data[CONF_WEBHOOK_ID],
+                        allow_external=False,
+                        allow_ip=True,
+                    )
+
+                    hub = VegeHub(
+                        self._hub.ip_address, self._hub.mac_address, self.unique_id
+                    )
+
+                    # Send the webhook address to the hub as its server target.
+                    # This step should only happen when the config flow happens, not
+                    # in the async_setup_entry, which happens again during boot.
+                    try:
+                        await hub.setup("", webhook_url, retries=1)
+                    except ConnectionError:
+                        _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
+                        errors["base"] = "cannot_connect"
+                    except TimeoutError:
+                        _LOGGER.error(
+                            "Timed out trying to connect to %s", self._hub.ip_address
+                        )
+                        errors["base"] = "timeout_connect"
+
+                    if len(errors) > 0:
+                        return self.async_show_form(step_id="user", errors=errors)
+
+                    # Save Hub info to be used later when defining the VegeHub object
+                    info_data[CONF_DEVICE] = hub.info
 
                     # Create the config entry for the new device
                     return self.async_create_entry(
@@ -133,7 +166,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
             _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="timeout_connect")
 
         if len(self._hub.mac_address) <= 0:
             _LOGGER.error("Failed to get MAC address for %s", device_ip)
