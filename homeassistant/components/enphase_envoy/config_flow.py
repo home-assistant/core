@@ -181,16 +181,13 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
-        host = reauth_entry.data[CONF_HOST]
 
         if user_input is not None:
-            username: str = user_input[CONF_USERNAME]
-            password: str = user_input[CONF_PASSWORD]
             await validate_input(
                 self.hass,
-                host,
-                username,
-                password,
+                reauth_entry.data[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
                 errors,
                 description_placeholders,
             )
@@ -200,12 +197,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates=user_input,
                 )
 
+        serial = reauth_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: reauth_entry.unique_id or "-",
+            CONF_SERIAL: serial,
             CONF_HOST: reauth_entry.data[CONF_HOST],
         }
-        description_placeholders["serial"] = reauth_entry.unique_id or "-"
-
+        description_placeholders["serial"] = serial
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self._async_generate_schema(),
@@ -302,11 +299,12 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        serial = reconfigure_entry.unique_id or "-"
         self.context["title_placeholders"] = {
-            CONF_SERIAL: reconfigure_entry.unique_id or "-",
+            CONF_SERIAL: serial,
             CONF_HOST: reconfigure_entry.data[CONF_HOST],
         }
-        description_placeholders["serial"] = reconfigure_entry.unique_id or "-"
+        description_placeholders["serial"] = serial
 
         suggested_values: Mapping[str, Any] = user_input or reconfigure_entry.data
         return self.async_show_form(
