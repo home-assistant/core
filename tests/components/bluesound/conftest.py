@@ -10,10 +10,8 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 import pytest
 
 from homeassistant.components.bluesound.const import DOMAIN
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from .utils import LongPollingMock
 

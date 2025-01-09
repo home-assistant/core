@@ -28,7 +28,6 @@ async def test_set_sleep_timer(
     player_mocks.player_data.player.sleep_timer.assert_called_once()
 
 
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_clear_sleep_timer(
     hass: HomeAssistant,
