@@ -94,7 +94,7 @@ RPC_NUMBERS: Final = {
         method="BluTRV.Call",
         method_params_fn=lambda idx, value: {
             "id": idx,
-            "method": "TRV.SetExternalTemperature",
+            "method": "Trv.SetExternalTemperature",
             "params": {"id": 0, "t_C": value},
         },
     ),
