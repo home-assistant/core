@@ -17,8 +17,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCK_USER_DATA
-
 from tests.common import MockConfigEntry
 
 
@@ -81,7 +79,12 @@ async def test_exception_connection(
     mock_vodafone_station_router.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_USER_DATA
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "fake_host",
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
