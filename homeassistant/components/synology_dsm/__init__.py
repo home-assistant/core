@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
-    if not entry.data.get(CONF_BACKUP_SHARE):
+    if CONF_BACKUP_SHARE not in entry.data:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None}
         )
