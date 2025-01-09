@@ -54,3 +54,23 @@ class TeslemetryClimateSide(StrEnum):
 
     DRIVER = "driver_temp"
     PASSENGER = "passenger_temp"
+
+
+class TeslemetryEnum:
+    """Helper class to handle options for protobuf enums."""
+
+    def __init__(self, prefix: str, options: list[str]):
+        """Create a new options list."""
+        self.prefix = prefix.lower()
+        self.options = [option.lower() for option in options]
+
+    def get(self, value, default: str | None = None) -> str | None:
+        """Get the value if it is a valid option."""
+        if isinstance(value, str):
+            option = value.lower().replace(self.prefix, "")
+            if option in self.options:
+                return option
+        return default
+
+
+WindowState = TeslemetryEnum("WindowState", ["opened", "partiallyopen", "closed"])
