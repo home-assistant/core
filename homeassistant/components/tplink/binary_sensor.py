@@ -23,7 +23,7 @@ from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescripti
 class TPLinkBinarySensorEntityDescription(
     BinarySensorEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Base class for a TPLink feature based sensor entity description."""
+    """Base class for a TPLink feature based binary sensor entity description."""
 
 
 # Coordinator is used to centralize the data updates
