@@ -27,13 +27,17 @@ class MockAsyncSubprocess:
         raise self.killsig
 
 
+@pytest.mark.parametrize("exc", [TypeError, ProcessLookupError])
 async def test_async_ping_expected_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    exc: Exception,
 ) -> None:
     """Test PingDataSubProcess.async_ping handles expected exceptions."""
-    with patch("asyncio.create_subprocess_exec", return_value=MockAsyncSubprocess()):
+    with patch(
+        "asyncio.create_subprocess_exec", return_value=MockAsyncSubprocess(killsig=exc)
+    ):
         # Actual parameters irrelevant, as subprocess will not be created
         ping = PingDataSubProcess(hass, host="10.10.10.10", count=3, privileged=False)
         assert await ping.async_ping() is None
