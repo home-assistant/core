@@ -24,6 +24,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
+NoException = nullcontext()
+
 
 async def test_humidifier_state(
     hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
@@ -49,11 +51,7 @@ async def test_humidifier_state(
     assert state.attributes.get(ATTR_HUMIDITY) == 40
 
 
-@patch(
-    "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
-)
 async def test_set_target_humidity_invalid(
-    mock_schedule_update_ha_state,
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
 ) -> None:
@@ -75,33 +73,28 @@ async def test_set_target_humidity_invalid(
         )
     await hass.async_block_till_done()
     method_mock.assert_not_called()
-    mock_schedule_update_ha_state.assert_not_called()
 
 
-@patch(
-    "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
-)
 @pytest.mark.parametrize(
-    "success",
-    [False, True],
+    ("api_response", "expectation"),
+    [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
 async def test_set_target_humidity_VeSync(
-    mock_schedule_update_ha_state,
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
-    success: bool,
+    api_response: bool,
+    expectation,
 ) -> None:
     """Test handling of return value from VeSyncHumid200300S.set_humidity."""
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
     # If VeSyncHumid200300S.set_humidity fails (returns False), then HomeAssistantError is raised
-    # and schedule_update_ha_state is not called.
-    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
     with (
         expectation,
         patch(
-            "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity", return_value=success
+            "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity",
+            return_value=api_response,
         ) as method_mock,
     ):
         await hass.services.async_call(
@@ -113,34 +106,34 @@ async def test_set_target_humidity_VeSync(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
 
-        if success:
-            mock_schedule_update_ha_state.assert_called_once()
-        else:
-            mock_schedule_update_ha_state.assert_not_called()
-
 
 @pytest.mark.parametrize(
-    ("turn_on", "success"),
-    [(False, False), (False, True), (True, False), (True, True)],
+    ("turn_on", "api_response", "expectation"),
+    [
+        (False, False, pytest.raises(HomeAssistantError)),
+        (False, True, NoException),
+        (True, False, pytest.raises(HomeAssistantError)),
+        (True, True, NoException),
+    ],
 )
 async def test_turn_on_off(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
     turn_on: bool,
-    success: bool,
+    api_response: bool,
+    expectation,
 ) -> None:
     """Test turn_on/off methods."""
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
     # turn_on/turn_off returns False indicating failure in which case humidifier.turn_on/turn_off
-    # raises HomeAssistantError. HA state update is scheduled for success.
-    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
+    # raises HomeAssistantError.
     with (
         expectation,
         patch(
             f"pyvesync.vesyncfan.VeSyncHumid200300S.{"turn_on" if turn_on else "turn_off"}",
-            return_value=success,
+            return_value=api_response,
         ) as method_mock,
     ):
         await hass.services.async_call(
@@ -154,11 +147,7 @@ async def test_turn_on_off(
         method_mock.assert_called_once()
 
 
-@patch(
-    "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
-)
 async def test_set_mode_invalid(
-    mock_schedule_update_ha_state,
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
 ) -> None:
@@ -178,42 +167,35 @@ async def test_set_mode_invalid(
             )
         await hass.async_block_till_done()
         method_mock.assert_not_called()
-        mock_schedule_update_ha_state.assert_not_called()
 
 
-@patch(
-    "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
-)
 @pytest.mark.parametrize(
-    "success",
-    [False, True],
+    ("api_response", "expectation"),
+    [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
 async def test_set_mode_VeSync(
-    mock_schedule_update_ha_state,
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
-    success: bool,
+    api_response: bool,
+    expectation,
 ) -> None:
     """Test handling of value in set_mode method."""
 
     humidifier_entity_id = "humidifier.humidifier_200s"
 
-    # If VeSyncHumid200300S.set_humidity_mode itself fails, then we should get HomeAssistantError
-    expectation = nullcontext() if success else pytest.raises(HomeAssistantError)
-    with patch(
-        "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode", return_value=success
-    ) as method_mock:
-        with expectation:
-            await hass.services.async_call(
-                HUMIDIFIER_DOMAIN,
-                SERVICE_SET_MODE,
-                {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_MODE: "auto"},
-                blocking=True,
-            )
-        await hass.async_block_till_done()
-        method_mock.assert_called_once()
-
-        if success:
-            mock_schedule_update_ha_state.assert_called_once()
-        else:
-            mock_schedule_update_ha_state.assert_not_called()
+    # If VeSyncHumid200300S.set_humidity_mode fails (returns False), then HomeAssistantError is raised
+    with (
+        expectation,
+        patch(
+            "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode",
+            return_value=api_response,
+        ) as method_mock,
+    ):
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_SET_MODE,
+            {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_MODE: "auto"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    method_mock.assert_called_once()
