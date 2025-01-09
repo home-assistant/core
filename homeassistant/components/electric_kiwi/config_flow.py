@@ -8,7 +8,7 @@ from typing import Any
 
 from electrickiwi_api import ElectricKiwiApi
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -62,7 +62,8 @@ class ElectricKiwiOauth2FlowHandler(
         unique_id = "_".join(str(num) for num in session.customer_numbers)
         existing_entry = await self.async_set_unique_id(unique_id)
 
-        self._abort_if_unique_id_configured()
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured()
 
         if existing_entry:
             return self.async_update_reload_and_abort(existing_entry, data=data)

@@ -101,6 +101,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             ek_session = await ek_api.get_active_session()
             unique_id = "_".join(str(num) for num in ek_session.customer_numbers)
-            hass.config_entries.async_update_entry(config_entry, unique_id=unique_id)
+            hass.config_entries.async_update_entry(
+                config_entry, unique_id=unique_id, version=2
+            )
 
     return True
