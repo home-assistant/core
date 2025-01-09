@@ -8,6 +8,7 @@ from io import StringIO
 from json import dumps
 from unittest.mock import Mock, patch
 
+from kiota_abstractions.api_error import APIError
 from msgraph.generated.models.drive_item import DriveItem
 import pytest
 
@@ -130,12 +131,11 @@ async def test_agents_delete(
 ) -> None:
     """Test agent delete backup."""
     client = await hass_ws_client(hass)
-    backup_id = "23e64aec"
 
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
-            "backup_id": backup_id,
+            "backup_id": BACKUP_METADATA["backup_id"],
         }
     )
     response = await client.receive_json()
@@ -196,3 +196,29 @@ async def test_agents_download(
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
     mock_drive_items.content.get.assert_called_once()
+
+
+async def test_error_wrapper(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    mock_drive_items.delete = AsyncMock(
+        side_effect=APIError(response_status_code=404, message="File not found.")
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": BACKUP_METADATA["backup_id"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agent_errors": {f"{DOMAIN}.{DOMAIN}": "Failed to delete backup"}
+    }

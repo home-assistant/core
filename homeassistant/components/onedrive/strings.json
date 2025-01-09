@@ -31,8 +31,20 @@
     }
   },
   "exceptions": {
-    "backup_failure": {
+    "failed_to_create_backup": {
       "message": "Failed to create backup"
+    },
+    "failed_to_get_backup": {
+      "message": "Failed to get backup"
+    },
+    "failed_to_delete_backup": {
+      "message": "Failed to delete backup"
+    },
+    "failed_to_download_backup": {
+      "message": "Failed to download backup"
+    },
+    "failed_to_list_backups": {
+      "message": "Failed to list backups"
     },
     "backup_not_found": {
       "message": "Backup not found"
