@@ -3,9 +3,7 @@ rules:
   config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Clean up stale docstrings
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -32,12 +30,7 @@ rules:
   action-exceptions: done
   reauthentication-flow: done
   parallel-updates: done
-  test-coverage:
-    status: todo
-    comment: Move test constants to const.py, mock_init \
-      docstrings, entity_registry fixture, unused freezers \
-      match exceptions, use freezer in test_fan, use async_setup \
-      remove if statements from light tests, use constants in service calls
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters: todo
   docs-configuration-parameters:
