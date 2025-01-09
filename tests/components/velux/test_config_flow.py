@@ -98,7 +98,7 @@ async def test_flow_duplicate_entry(hass: HomeAssistant) -> None:
 async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test we can setup from dhcp discovery."""
     with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True) as client_mock:
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_DHCP},
             data=DhcpServiceInfo(
@@ -107,10 +107,10 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
                 macaddress="64618400abcd",
             ),
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=DUMMY_DATA,
         )
@@ -118,15 +118,15 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         client_mock.return_value.disconnect.assert_called()
         client_mock.return_value.connect.assert_called()
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == DUMMY_DISCOVERY_DATA[CONF_NAME]
-        assert result2["data"] == {**DUMMY_DISCOVERY_DATA, **DUMMY_DATA}
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == DUMMY_DISCOVERY_DATA[CONF_NAME]
+        assert result["data"] == {**DUMMY_DISCOVERY_DATA, **DUMMY_DATA}
 
 
 async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
     """Test dhcp discovery when already configured."""
     # Setup entry with state LOADED
-    mock_entry: MockConfigEntry = MockConfigEntry(
+    mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data=DUMMY_DATA,
         unique_id=None,
@@ -145,7 +145,7 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
         ),
     )
     assert result["type"] == FlowResultType.ABORT
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "VELUX_KLF_ABCD"
+    assert mock_entry.unique_id == "VELUX_KLF_ABCD"
     assert result["reason"] == "already_configured"
 
     # Update ip address of already configured unique_id.
@@ -158,6 +158,6 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
             macaddress="64:61:84:00:AB:CD",
         ),
     )
-    assert hass.config_entries.async_entries(DOMAIN)[0].data[CONF_HOST] == "127.1.1.2"
+    assert mock_entry.data[CONF_HOST] == "127.1.1.2"
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
