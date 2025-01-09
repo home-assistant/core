@@ -4,7 +4,7 @@
   "after_dependencies": ["hassio", "onboarding", "usb"],
   "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
-  "dependencies": ["file_upload"],
+  "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "iot_class": "local_polling",
   "loggers": [
@@ -21,7 +21,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["universal-silabs-flasher==0.0.25", "zha==0.0.43"],
+  "requirements": ["zha==0.0.45"],
   "usb": [
     {
       "vid": "10C4",

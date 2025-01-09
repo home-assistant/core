@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any, Self
 from urllib.parse import urlparse
 
@@ -17,9 +16,8 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 
 from . import async_control_connect, update_client_key
@@ -29,12 +27,9 @@ from .helpers import async_get_sources
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -61,35 +56,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            self._name = user_input[CONF_NAME]
             return await self.async_step_pairing()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    @callback
-    def _async_check_configured_entry(self) -> None:
-        """Check if entry is configured, update unique_id if needed."""
-        for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] != self._host:
-                continue
-
-            if self._uuid and not entry.unique_id:
-                _LOGGER.debug(
-                    "Updating unique_id for host %s, unique_id: %s",
-                    self._host,
-                    self._uuid,
-                )
-                self.hass.config_entries.async_update_entry(entry, unique_id=self._uuid)
-
-            raise AbortFlow("already_configured")
-
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Display pairing form."""
-        self._async_check_configured_entry()
+        self._async_abort_entries_match({CONF_HOST: self._host})
 
         self.context["title_placeholders"] = {"name": self._name}
         errors = {}
@@ -107,6 +84,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
+
+                if not self._name:
+                    self._name = f"{DEFAULT_NAME} {client.system_info["modelName"]}"
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(step_id="pairing", errors=errors)
@@ -119,7 +99,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert host
         self._host = host
-        self._name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME)
+        self._name = discovery_info.upnp.get(
+            ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
+        ).replace("[LG]", "LG")
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid

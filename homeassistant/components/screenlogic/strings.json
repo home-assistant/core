@@ -184,6 +184,14 @@
       "air_temperature": {
         "name": "Air temperature"
       },
+      "controller_state": {
+        "name": "Controller state",
+        "state": {
+          "ready": "Ready",
+          "sync": "Sync",
+          "service": "Service"
+        }
+      },
       "chem_now": {
         "name": "{chem} now"
       },

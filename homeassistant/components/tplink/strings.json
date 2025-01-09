@@ -14,6 +14,9 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Pick the TP-Link device to add."
         }
       },
       "discovery_confirm": {
@@ -21,10 +24,14 @@
       },
       "user_auth_confirm": {
         "title": "Authenticate",
-        "description": "The device requires authentication, please input your TP-Link credentials below.",
+        "description": "The device requires authentication, please input your TP-Link credentials below. Note, that both e-mail and password are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your TP-Link cloud username which is the full email and is case sensitive.",
+          "password": "Your TP-Link cloud password which is case sensitive."
         }
       },
       "discovery_auth_confirm": {
@@ -33,6 +40,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
         }
       },
       "reauth_confirm": {
@@ -41,6 +52,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -48,15 +63,23 @@
         "description": "Update your configuration for device {mac}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tplink::config::step::user::data_description::host%]"
         }
       },
       "camera_auth_confirm": {
         "title": "Set camera account credentials",
-        "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
+        "description": "Input device camera account credentials.",
         "data": {
           "live_view": "Enable camera live view",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
+          "username": "Your camera account username configured for the device in the Tapo app.",
+          "password": "Your camera account password configured for the device in the Tapo app."
         }
       }
     },
@@ -86,25 +109,8 @@
       "overheated": {
         "name": "Overheated"
       },
-      "battery_low": {
-        "name": "Battery low"
-      },
       "cloud_connection": {
         "name": "Cloud connection"
-      },
-      "update_available": {
-        "name": "[%key:component::binary_sensor::entity_component::update::name%]",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
-        }
-      },
-      "is_open": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]",
-        "state": {
-          "off": "[%key:common::state::closed%]",
-          "on": "[%key:common::state::open%]"
-        }
       },
       "water_alert": {
         "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
@@ -172,27 +178,6 @@
       "signal_level": {
         "name": "Signal level"
       },
-      "current_firmware_version": {
-        "name": "Current firmware version"
-      },
-      "available_firmware_version": {
-        "name": "Available firmware version"
-      },
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "device_time": {
         "name": "Device time"
       },
@@ -207,9 +192,6 @@
       },
       "alarm_source": {
         "name": "Alarm source"
-      },
-      "rssi": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
     "switch": {
@@ -266,6 +248,11 @@
       "tilt_step": {
         "name": "Tilt degrees"
       }
+    }
+  },
+  "device": {
+    "unnamed_device": {
+      "name": "Unnamed {model}"
     }
   },
   "services": {
@@ -371,6 +358,15 @@
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
+    },
+    "set_custom_effect": {
+      "message": "Error trying to set custom effect {effect}: {exc}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
+    "unsupported_mode": {
+      "message": "Tried to set unsupported mode: {mode}"
     }
   },
   "issues": {
