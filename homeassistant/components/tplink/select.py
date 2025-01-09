@@ -27,6 +27,10 @@ class TPLinkSelectEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 SELECT_DESCRIPTIONS: Final = [
     TPLinkSelectEntityDescription(
         key="light_preset",

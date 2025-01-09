@@ -27,10 +27,12 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from . import services
@@ -46,6 +48,8 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,6 +64,12 @@ class HeosRuntimeData:
 
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEOS component."""
+    services.register(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
@@ -141,7 +151,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         controller_manager, group_manager, source_manager, players
     )
 
-    services.register(hass, controller)
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
 
@@ -153,9 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     await entry.runtime_data.controller_manager.disconnect()
-
-    services.remove(hass)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -269,11 +275,11 @@ class GroupManager:
 
         player_id_to_entity_id_map = self.entity_id_map
         for group in groups.values():
-            leader_entity_id = player_id_to_entity_id_map.get(group.leader.player_id)
+            leader_entity_id = player_id_to_entity_id_map.get(group.lead_player_id)
             member_entity_ids = [
-                player_id_to_entity_id_map[member.player_id]
-                for member in group.members
-                if member.player_id in player_id_to_entity_id_map
+                player_id_to_entity_id_map[member]
+                for member in group.member_player_ids
+                if member in player_id_to_entity_id_map
             ]
             # Make sure the group leader is always the first element
             group_info = [leader_entity_id, *member_entity_ids]
@@ -416,7 +422,7 @@ class SourceManager:
             None,
         )
         if index is not None:
-            await player.play_favorite(index)
+            await player.play_preset_station(index)
             return
 
         input_source = next(
@@ -428,7 +434,7 @@ class SourceManager:
             None,
         )
         if input_source is not None:
-            await player.play_input_source(input_source)
+            await player.play_input_source(input_source.media_id)
             return
 
         _LOGGER.error("Unknown source: %s", source)
@@ -441,7 +447,7 @@ class SourceManager:
                 (
                     input_source.name
                     for input_source in self.inputs
-                    if input_source.input_name == now_playing_media.media_id
+                    if input_source.media_id == now_playing_media.media_id
                 ),
                 None,
             )

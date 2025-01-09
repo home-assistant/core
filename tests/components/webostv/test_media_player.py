@@ -5,7 +5,10 @@ from http import HTTPStatus
 from unittest.mock import Mock
 
 from aiowebostv import WebOsTvPairError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import automation
 from homeassistant.components.media_player import (
@@ -19,7 +22,6 @@ from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
-    MediaPlayerDeviceClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
@@ -42,7 +44,6 @@ from homeassistant.components.webostv.media_player import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_COMMAND,
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ENTITY_MATCH_NONE,
@@ -58,7 +59,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -298,6 +298,7 @@ async def test_entity_attributes(
     client,
     monkeypatch: pytest.MonkeyPatch,
     device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test entity attributes."""
     entry = await setup_webostv(hass)
@@ -305,18 +306,7 @@ async def test_entity_attributes(
 
     # Attributes when device is on
     state = hass.states.get(ENTITY_ID)
-    attrs = state.attributes
-
-    assert state.state == STATE_ON
-    assert state.name == TV_NAME
-    assert attrs[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
-    assert attrs[ATTR_MEDIA_VOLUME_MUTED] is False
-    assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
-    assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
-    assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
-    assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
-    assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
-    assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
+    assert state == snapshot(exclude=props("entity_picture"))
 
     # Volume level not available
     monkeypatch.setattr(client, "volume", None)
@@ -334,13 +324,7 @@ async def test_entity_attributes(
 
     # Device Info
     device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
-
-    assert device
-    assert device.identifiers == {(DOMAIN, entry.unique_id)}
-    assert device.manufacturer == "LG"
-    assert device.name == TV_NAME
-    assert device.sw_version == "major.minor"
-    assert device.model == "TVFAKE"
+    assert device == snapshot
 
     # Sound output when off
     monkeypatch.setattr(client, "sound_output", None)
@@ -473,15 +457,22 @@ async def test_update_sources_live_tv_find(
 
 
 async def test_client_disconnected(
-    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
     monkeypatch.setattr(client, "connect", Mock(side_effect=TimeoutError))
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert "TimeoutError" not in caplog.text
 
 
 async def test_control_error_handling(
