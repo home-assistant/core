@@ -6,7 +6,6 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import Any
 
-from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
@@ -105,7 +104,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to download backup") from err
 
-        if not isinstance(resp, StreamReader):
+        if isinstance(resp, bool) or resp is None:
             raise BackupAgentError("Failed to download backup")
 
         return ChunkAsyncStreamIterator(resp)
@@ -177,7 +176,7 @@ class SynologyDSMBackupAgent(BackupAgent):
             except SynologyDSMAPIErrorException as err:
                 raise BackupAgentError("Failed to download meta data") from err
 
-            if not isinstance(resp, StreamReader):
+            if isinstance(resp, bool) or resp is None:
                 raise BackupAgentError("Failed to download meta data")
 
             try:
