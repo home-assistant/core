@@ -7,12 +7,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -29,7 +24,7 @@ from .const import (
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
 )
-from .onewirehub import CannotConnect, OneWireHub
+from .onewirehub import CannotConnect, OneWireConfigEntry, OneWireHub
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -62,8 +57,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle 1-Wire config flow start."""
         errors: dict[str, str] = {}
         if user_input:
-            # Prevent duplicate entries (host+port)
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
 
             await validate_input(self.hass, user_input, errors)
             if not errors:
@@ -77,10 +73,36 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle 1-Wire reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+
+            await validate_input(self.hass, user_input, errors)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data | (user_input or {})
+            ),
+            description_placeholders={"name": reconfigure_entry.title},
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OneWireConfigEntry,
     ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
@@ -104,7 +126,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
     current_device: str
     """Friendly name of the currently selected device."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: OneWireConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
 

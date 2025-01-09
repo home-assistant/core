@@ -14,6 +14,9 @@
       "pick_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Pick the TP-Link device to add."
         }
       },
       "discovery_confirm": {
@@ -25,6 +28,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your TP-Link cloud username which is the full email and is case sensitive.",
+          "password": "Your TP-Link cloud password which is case sensitive."
         }
       },
       "discovery_auth_confirm": {
@@ -33,6 +40,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
         }
       },
       "reauth_confirm": {
@@ -41,6 +52,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::tplink::config::step::user_auth_confirm::data_description::username%]",
+          "password": "[%key:component::tplink::config::step::user_auth_confirm::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -48,15 +63,23 @@
         "description": "Update your configuration for device {mac}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tplink::config::step::user::data_description::host%]"
         }
       },
       "camera_auth_confirm": {
         "title": "Set camera account credentials",
-        "description": "Input device camera account credentials. Leave blank if they are the same as your TPLink cloud credentials.",
+        "description": "Input device camera account credentials.",
         "data": {
           "live_view": "Enable camera live view",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "live_view": "Enabling live view will create the live view camera entity and requires your camera account credentials.",
+          "username": "Your camera account username configured for the device in the Tapo app.",
+          "password": "Your camera account password configured for the device in the Tapo app."
         }
       }
     },
@@ -371,6 +394,9 @@
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
+    },
+    "set_custom_effect": {
+      "message": "Error trying to set custom effect {effect}: {exc}"
     }
   },
   "issues": {

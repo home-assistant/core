@@ -48,7 +48,7 @@ ProgettiHWSW==0.1.3
 PyChromecast==14.0.5
 
 # homeassistant.components.flick_electric
-PyFlick==1.1.2
+PyFlick==1.1.3
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -201,7 +201,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.12.0
+aioautomower==2025.1.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -710,7 +710,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.11.2
+cookidoo-api==0.12.2
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -732,7 +732,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.24.3
+dbus-fast==2.28.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -1301,6 +1301,9 @@ led-ble==1.1.1
 # homeassistant.components.lektrico
 lektricowifi==0.0.43
 
+# homeassistant.components.letpot
+letpot==0.2.0
+
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
 
@@ -1809,7 +1812,7 @@ pyatmo==8.1.0
 pyatv==0.16.0
 
 # homeassistant.components.aussie_broadband
-pyaussiebb==0.1.4
+pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
 pybalboa==1.0.2
@@ -1977,7 +1980,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.8.0
+pyheos==0.9.0
 
 # homeassistant.components.hive
 pyhiveapi==0.5.16
@@ -2324,7 +2327,7 @@ pysqueezebox==0.11.1
 pystiebeleltron==0.0.1.dev2
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.1
+pysuezV2==2.0.3
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
