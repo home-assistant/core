@@ -51,7 +51,10 @@ import homeassistant.util.color as color_util
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import (
+    CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
@@ -82,7 +85,6 @@ CONF_COLOR_TEMP_COMMAND_TEMPLATE = "color_temp_command_template"
 CONF_COLOR_TEMP_COMMAND_TOPIC = "color_temp_command_topic"
 CONF_COLOR_TEMP_STATE_TOPIC = "color_temp_state_topic"
 CONF_COLOR_TEMP_VALUE_TEMPLATE = "color_temp_value_template"
-CONF_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 CONF_EFFECT_COMMAND_TEMPLATE = "effect_command_template"
 CONF_EFFECT_COMMAND_TOPIC = "effect_command_topic"
 CONF_EFFECT_LIST = "effect_list"
@@ -94,8 +96,6 @@ CONF_HS_STATE_TOPIC = "hs_state_topic"
 CONF_HS_VALUE_TEMPLATE = "hs_value_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
-CONF_MAX_KELVIN = "max_kelvin"
-CONF_MIN_KELVIN = "min_kelvin"
 CONF_RGB_COMMAND_TEMPLATE = "rgb_command_template"
 CONF_RGB_COMMAND_TOPIC = "rgb_command_topic"
 CONF_RGB_STATE_TOPIC = "rgb_state_topic"
