@@ -16,7 +16,6 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import (
@@ -138,6 +137,13 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.entity_description.key not in self.device_data.active_features:
+            return False
+        return super().available
+
+    @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.value_fn(self.device_data)
@@ -152,17 +158,6 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
-        if self.entity_description.key not in self.device_data.active_features:
-            hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="select_option_not_available",
-                translation_placeholders={
-                    "hvac_mode": hvac_mode,
-                    "key": self.entity_description.key,
-                },
-            )
-
         await self.async_send_api_call(
             key=self.entity_description.data_key,
             value=option,
