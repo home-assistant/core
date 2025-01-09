@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import TYPE_CHECKING
 
 from pyownet import protocol
 
@@ -57,11 +56,12 @@ def _is_known_device(device_family: str, device_type: str | None) -> bool:
 class OneWireHub:
     """Hub to communicate with server."""
 
+    owproxy: protocol._Proxy
+    devices: list[OWDeviceDescription]
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
         self.hass = hass
-        self.owproxy: protocol._Proxy | None = None
-        self.devices: list[OWDeviceDescription] | None = None
 
     async def connect(self, host: str, port: int) -> None:
         """Connect to the server."""
@@ -78,9 +78,7 @@ class OneWireHub:
         port = config_entry.data[CONF_PORT]
         _LOGGER.debug("Initializing connection to %s:%s", host, port)
         await self.connect(host, port)
-        await self.discover_devices()
-        if TYPE_CHECKING:
-            assert self.devices
+        self.devices = await self.hass.async_add_executor_job(self._discover_devices)
         # Register discovered devices on Hub
         device_registry = dr.async_get(self.hass)
         for device in self.devices:
@@ -94,19 +92,11 @@ class OneWireHub:
                 via_device=device_info.get(ATTR_VIA_DEVICE),
             )
 
-    async def discover_devices(self) -> None:
-        """Discover all devices."""
-        if self.devices is None:
-            self.devices = await self.hass.async_add_executor_job(
-                self._discover_devices
-            )
-
     def _discover_devices(
         self, path: str = "/", parent_id: str | None = None
     ) -> list[OWDeviceDescription]:
         """Discover all server devices."""
         devices: list[OWDeviceDescription] = []
-        assert self.owproxy
         for device_path in self.owproxy.dir(path):
             device_id = os.path.split(os.path.split(device_path)[0])[1]
             device_family = self.owproxy.read(f"{device_path}family").decode()
@@ -148,10 +138,8 @@ class OneWireHub:
 
     def _get_device_type(self, device_path: str) -> str | None:
         """Get device model."""
-        if TYPE_CHECKING:
-            assert self.owproxy
         try:
-            device_type = self.owproxy.read(f"{device_path}type").decode()
+            device_type: str = self.owproxy.read(f"{device_path}type").decode()
         except protocol.ProtocolError as exc:
             _LOGGER.debug("Unable to read `%stype`: %s", device_path, exc)
             return None
@@ -159,8 +147,6 @@ class OneWireHub:
         if device_type == "EDS":
             device_type = self.owproxy.read(f"{device_path}device_type").decode()
             _LOGGER.debug("read `%sdevice_type`: %s", device_path, device_type)
-        if TYPE_CHECKING:
-            assert isinstance(device_type, str)
         return device_type
 
 
