@@ -35,7 +35,7 @@ async def test_selects(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test for 1-Wire switches."""
+    """Test for 1-Wire select entities."""
     setup_owproxy_mock_devices(owproxy, MOCK_OWPROXY_DEVICES.keys())
     await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -43,7 +43,7 @@ async def test_selects(
 
 
 @pytest.mark.parametrize("device_id", ["28.111111111111"])
-async def test_switch_toggle(
+async def test_selection_option_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     owproxy: MagicMock,
