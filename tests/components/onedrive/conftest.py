@@ -1,11 +1,15 @@
 """Fixtures for OneDrive tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
 from html import escape
 from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from httpx import Response
+from msgraph.generated.drives.item.items.item.content.content_request_builder import (
+    ContentRequestBuilder,
+)
 from msgraph.generated.models.drive import Drive
 from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_collection_response import (
@@ -113,7 +117,7 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         drive_items.delete = AsyncMock(return_value=None)
         drive_items.create_upload_session.post = AsyncMock(return_value=UploadSession())
         drive_items.patch = AsyncMock(return_value=None)
-        drive_items.content.get = AsyncMock(return_value=b"backup data")
+        drive_items.content = ContentRequestBuilder("dummy", {})
 
         yield client
 
@@ -141,3 +145,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.onedrive.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_download() -> Generator[MagicMock]:
+    """Return a mocked download."""
+    with patch(
+        "homeassistant.components.onedrive.GraphRequestAdapter", autospec=True
+    ) as mock_adapter:
+        adapter = mock_adapter.return_value
+
+        async def generate_bytes() -> AsyncIterator[bytes]:
+            """Asynchronous generator that yields bytes."""
+            yield b"backup data"
+
+        adapter.get_http_response_message.return_value = Response(
+            status_code=200, content=generate_bytes()
+        )
+        yield adapter

@@ -10,6 +10,8 @@ from typing import Any, Concatenate
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import AnonymousAuthenticationProvider
+from kiota_abstractions.method import Method
+from kiota_abstractions.request_information import RequestInformation
 from msgraph import GraphRequestAdapter
 from msgraph.generated.drives.item.items.item.create_upload_session.create_upload_session_post_request_body import (
     CreateUploadSessionPostRequestBody,
@@ -26,11 +28,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
-from .util import (
-    async_iterator_to_bytesio,
-    backup_from_description,
-    bytes_to_async_iterator,
-)
+from .util import async_iterator_to_bytesio, backup_from_description
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +103,7 @@ class OneDriveBackupAgent(BackupAgent):
         super().__init__()
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.backup_folder_id
+        self._request_adapter = entry.runtime_data.request_adapter
         self._anonymous_auth_adapter = GraphRequestAdapter(
             auth_provider=AnonymousAuthenticationProvider(),
             client=get_async_client(hass),
@@ -118,14 +117,21 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        content = await self._items.by_drive_item_id(
+        content = self._items.by_drive_item_id(
             f"{self._folder_id}:/{backup_id}.tar:"
-        ).content.get()
-        if content is None:
-            raise BackupAgentError(
-                translation_domain=DOMAIN, translation_key="backup_no_content"
-            )
-        return bytes_to_async_iterator(content)
+        ).content
+        request_info = RequestInformation(
+            method=Method.GET,
+            url_template=content.url_template,
+            path_parameters=content.path_parameters,
+        )
+        parent_span = self._request_adapter.start_tracing_span(
+            request_info, "send_no_response_content_async"
+        )
+        response = await self._request_adapter.get_http_response_message(
+            request_info=request_info, parent_span=parent_span
+        )
+        return response.aiter_bytes(1024)
 
     @handle_backup_errors("failed_to_create_backup")
     async def async_upload_backup(

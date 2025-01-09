@@ -29,6 +29,7 @@ async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_graph_client: MagicMock,
+    mock_download: MagicMock,
 ) -> AsyncGenerator[None]:
     """Set up onedrive integration."""
     with (
@@ -215,6 +216,7 @@ async def test_broken_upload_session(
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
+    mock_download: MagicMock,
 ) -> None:
     """Test agent download backup."""
     mock_drive_items.get = AsyncMock(
@@ -228,7 +230,7 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    mock_drive_items.content.get.assert_called_once()
+    mock_download.get_http_response_message.assert_called_once()
 
 
 async def test_error_wrapper(
@@ -255,26 +257,6 @@ async def test_error_wrapper(
     assert response["result"] == {
         "agent_errors": {f"{DOMAIN}.{DOMAIN}": "Failed to delete backup"}
     }
-
-
-async def test_download_no_content(
-    hass_client: ClientSessionGenerator,
-    mock_drive_items: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test agent download backup."""
-    mock_drive_items.get = AsyncMock(
-        return_value=DriveItem(description=escape(dumps(BACKUP_METADATA)))
-    )
-    mock_drive_items.content.get = AsyncMock(return_value=None)
-    client = await hass_client()
-    backup_id = BACKUP_METADATA["backup_id"]
-
-    resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{DOMAIN}"
-    )
-    assert resp.status == 500
-    assert "Backup has no content" in caplog.text
 
 
 async def test_agents_backup_not_found(

@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .api import OneDriveConfigEntryAccessTokenProvider
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
@@ -30,6 +30,7 @@ class OneDriveRuntimeData:
 
     items: ItemsRequestBuilder
     backup_folder_id: str
+    request_adapter: GraphRequestAdapter
 
 
 type OneDriveConfigEntry = ConfigEntry[OneDriveRuntimeData]
@@ -51,7 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         access_token_provider=OneDriveConfigEntryAccessTokenProvider(session)
     )
     adapter = GraphRequestAdapter(
-        auth_provider=auth_provider, client=get_async_client(hass)
+        auth_provider=auth_provider,
+        client=create_async_httpx_client(hass, follow_redirects=True),
     )
 
     graph_client = GraphServiceClient(
@@ -84,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     entry.runtime_data = OneDriveRuntimeData(
         items=drive_item.items,
         backup_folder_id=backup_folder_id,
+        request_adapter=adapter,
     )
 
     return True
