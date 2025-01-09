@@ -63,22 +63,20 @@ class OneWireHub:
         self._hass = hass
         self._config_entry = config_entry
 
-    def _initialize(self, host: str, port: int) -> None:
+    def _initialize(self) -> None:
         """Connect to the server, and discover connected devices.
 
         Needs to be run in executor.
         """
+        host = self._config_entry.data[CONF_HOST]
+        port = self._config_entry.data[CONF_PORT]
         _LOGGER.debug("Initializing connection to %s:%s", host, port)
         self.owproxy = protocol.proxy(host, port)
         self.devices = _discover_devices(self.owproxy)
 
     async def initialize(self) -> None:
         """Initialize a config entry."""
-        await self._hass.async_add_executor_job(
-            self._initialize,
-            self._config_entry.data[CONF_HOST],
-            self._config_entry.data[CONF_PORT],
-        )
+        await self._hass.async_add_executor_job(self._initialize)
         # Populate the device registry
         device_registry = dr.async_get(self._hass)
         for device in self.devices:
