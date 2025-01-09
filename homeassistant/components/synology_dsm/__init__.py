@@ -125,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    _notify_backup_listeners(hass)
+    if entry.data[CONF_BACKUP_SHARE]:
+        _notify_backup_listeners(hass)
 
     return True
 
