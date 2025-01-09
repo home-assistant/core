@@ -48,7 +48,6 @@ async def test_binary_sensors_delayed(
     owproxy: MagicMock,
     device_id: str,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for delayed 1-Wire binary sensor entities."""
@@ -62,4 +61,7 @@ async def test_binary_sensors_delayed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 8
+    )

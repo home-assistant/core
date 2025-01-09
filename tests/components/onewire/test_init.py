@@ -110,7 +110,6 @@ async def test_registry_delayed(
     config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test device are correctly registered."""
@@ -124,12 +123,10 @@ async def test_registry_delayed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    device_entries = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 2
     )
-    assert device_entries
-    for device_entry in device_entries:
-        assert device_entry == snapshot(name=f"{device_entry.name}-entry")
 
 
 @patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])

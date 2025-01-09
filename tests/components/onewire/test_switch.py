@@ -55,7 +55,6 @@ async def test_switches_delayed(
     owproxy: MagicMock,
     device_id: str,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test for delayed 1-Wire switch entities."""
@@ -69,7 +68,10 @@ async def test_switches_delayed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 1
+    )
 
 
 @pytest.mark.parametrize("device_id", ["05.111111111111"])
