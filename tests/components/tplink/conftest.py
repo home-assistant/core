@@ -10,7 +10,8 @@ import pytest
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import (
+from . import _mocked_device
+from .const import (
     ALIAS_CAMERA,
     CREATE_ENTRY_DATA_AES_CAMERA,
     CREATE_ENTRY_DATA_LEGACY,
@@ -26,7 +27,6 @@ from . import (
     MAC_ADDRESS2,
     MAC_ADDRESS3,
     MODEL_CAMERA,
-    _mocked_device,
 )
 
 from tests.common import MockConfigEntry

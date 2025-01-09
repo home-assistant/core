@@ -23,15 +23,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    DEVICE_ID,
-    IP_ADDRESS3,
-    MAC_ADDRESS3,
-    SMALLEST_VALID_JPEG_BYTES,
-    _mocked_device,
-    setup_platform_for_device,
-    snapshot_platform,
-)
+from . import _mocked_device, setup_platform_for_device, snapshot_platform
+from .const import DEVICE_ID, IP_ADDRESS3, MAC_ADDRESS3, SMALLEST_VALID_JPEG_BYTES
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator

@@ -17,7 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
+from . import _mocked_device, setup_platform_for_device, snapshot_platform
+from .const import DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

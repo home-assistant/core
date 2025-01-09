@@ -38,6 +38,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    _mocked_device,
+    _mocked_feature,
+    _patch_connect,
+    _patch_discovery,
+    _patch_single_discovery,
+)
+from .conftest import override_side_effect
+from .const import (
     ALIAS,
     CREATE_ENTRY_DATA_AES,
     CREATE_ENTRY_DATA_KLAP,
@@ -53,13 +61,7 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     MODEL,
-    _mocked_device,
-    _mocked_feature,
-    _patch_connect,
-    _patch_discovery,
-    _patch_single_discovery,
 )
-from .conftest import override_side_effect
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

@@ -56,14 +56,13 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import (
-    DEVICE_ID,
-    MAC_ADDRESS,
     _mocked_device,
     _mocked_feature,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
 )
+from .const import DEVICE_ID, MAC_ADDRESS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
