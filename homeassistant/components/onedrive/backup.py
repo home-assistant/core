@@ -120,6 +120,7 @@ class OneDriveBackupAgent(BackupAgent):
         content = self._items.by_drive_item_id(
             f"{self._folder_id}:/{backup_id}.tar:"
         ).content
+        # since the SDK only supports downloading the full file, we need to use the raw request adapter
         request_info = RequestInformation(
             method=Method.GET,
             url_template=content.url_template,
@@ -131,7 +132,7 @@ class OneDriveBackupAgent(BackupAgent):
         response = await self._request_adapter.get_http_response_message(
             request_info=request_info, parent_span=parent_span
         )
-        return response.aiter_bytes(1024)
+        return response.aiter_bytes(chunk_size=1024)
 
     @handle_backup_errors("failed_to_create_backup")
     async def async_upload_backup(
