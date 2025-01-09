@@ -15,6 +15,8 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
+    BooleanSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -41,7 +43,9 @@ CONFIG_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): bool,
+        vol.Optional(CONF_LEGACY_SETPOINT_STATUS, default=False): BooleanSelector(
+            BooleanSelectorConfig()
+        )
     }
 )
 
