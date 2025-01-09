@@ -29,6 +29,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.discovery_schema: vol.Schema | None = None
+        self.discovery_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -54,7 +55,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_create_entry(
                     title=self.context.get("unique_id") or user_input[CONF_HOST],
-                    data=user_input,
+                    data={**self.discovery_data, **user_input},
                 )
 
         data_schema = self.discovery_schema or self.add_suggested_values_to_schema(
@@ -83,11 +84,13 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Velux device."""
         # The hostname ends with the last 4 digits of the device MAC address.
-        await self.async_set_unique_id(discovery_info[CONF_NAME])
+        self.discovery_data[CONF_HOST] = discovery_info[CONF_HOST]
+        if discovery_info[CONF_MAC]:
+            self.discovery_data[CONF_MAC] = discovery_info[CONF_MAC]
+        self.discovery_data[CONF_NAME] = discovery_info[CONF_NAME]
 
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}
-        )
+        await self.async_set_unique_id(discovery_info[CONF_NAME])
+        self._abort_if_unique_id_configured(updates=self.discovery_data)
 
         # Abort if config_entry already exists without unigue_id configured.
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -97,7 +100,9 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 and entry.state == ConfigEntryState.LOADED
             ):
                 self.hass.config_entries.async_update_entry(
-                    entry=entry, unique_id=discovery_info[CONF_NAME]
+                    entry=entry,
+                    unique_id=discovery_info[CONF_NAME],
+                    data={**entry.data, **self.discovery_data},
                 )
                 return self.async_abort(reason="already_configured")
 
