@@ -54,7 +54,6 @@ class OneWireEntity(Entity):
         """Return the state attributes of the entity."""
         return {
             "device_file": self._device_file,
-            "raw_value": self._value_raw,
         }
 
     def _read_value(self) -> str:

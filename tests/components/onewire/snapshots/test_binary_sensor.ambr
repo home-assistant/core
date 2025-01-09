@@ -201,7 +201,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/12.111111111111/sensed.A',
         'friendly_name': '12.111111111111 Sensed A',
-        'raw_value': 1.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_a',
@@ -214,7 +213,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/12.111111111111/sensed.B',
         'friendly_name': '12.111111111111 Sensed B',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_b',
@@ -853,7 +851,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.0',
         'friendly_name': '29.111111111111 Sensed 0',
-        'raw_value': 1.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_0',
@@ -866,7 +863,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.1',
         'friendly_name': '29.111111111111 Sensed 1',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_1',
@@ -879,7 +875,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.2',
         'friendly_name': '29.111111111111 Sensed 2',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_2',
@@ -892,7 +887,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.3',
         'friendly_name': '29.111111111111 Sensed 3',
-        'raw_value': None,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_3',
@@ -905,7 +899,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.4',
         'friendly_name': '29.111111111111 Sensed 4',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_4',
@@ -918,7 +911,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.5',
         'friendly_name': '29.111111111111 Sensed 5',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_5',
@@ -931,7 +923,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.6',
         'friendly_name': '29.111111111111 Sensed 6',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_6',
@@ -944,7 +935,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.7',
         'friendly_name': '29.111111111111 Sensed 7',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_7',
@@ -1103,7 +1093,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/3A.111111111111/sensed.A',
         'friendly_name': '3A.111111111111 Sensed A',
-        'raw_value': 1.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
@@ -1116,7 +1105,6 @@
       'attributes': ReadOnlyDict({
         'device_file': '/3A.111111111111/sensed.B',
         'friendly_name': '3A.111111111111 Sensed B',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
@@ -1590,7 +1578,6 @@
         'device_class': 'problem',
         'device_file': '/EF.111111111113/hub/short.0',
         'friendly_name': 'EF.111111111113 Hub short on branch 0',
-        'raw_value': 1.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
@@ -1604,7 +1591,6 @@
         'device_class': 'problem',
         'device_file': '/EF.111111111113/hub/short.1',
         'friendly_name': 'EF.111111111113 Hub short on branch 1',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
@@ -1618,7 +1604,6 @@
         'device_class': 'problem',
         'device_file': '/EF.111111111113/hub/short.2',
         'friendly_name': 'EF.111111111113 Hub short on branch 2',
-        'raw_value': 1.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
@@ -1632,7 +1617,6 @@
         'device_class': 'problem',
         'device_file': '/EF.111111111113/hub/short.3',
         'friendly_name': 'EF.111111111113 Hub short on branch 3',
-        'raw_value': 0.0,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',
