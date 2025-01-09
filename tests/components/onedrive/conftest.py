@@ -104,7 +104,10 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         drive_items.children.post = AsyncMock(return_value=DriveItem(id="folder_id"))
         drive_items.children.get = AsyncMock(
             return_value=DriveItemCollectionResponse(
-                value=[DriveItem(description=escape(dumps(BACKUP_METADATA)))]
+                value=[
+                    DriveItem(description=escape(dumps(BACKUP_METADATA))),
+                    DriveItem(),
+                ]
             )
         )
         drive_items.delete = AsyncMock(return_value=None)

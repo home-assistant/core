@@ -179,6 +179,39 @@ async def test_agents_upload(
     mock_upload_task.upload.assert_called_once()
 
 
+async def test_broken_upload_session(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_upload_task: MagicMock,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test broken upload session."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    mock_drive_items.create_upload_session.post = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{DOMAIN}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert "Failed to start backup upload" in caplog.text
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
@@ -203,7 +236,7 @@ async def test_error_wrapper(
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
 ) -> None:
-    """Test agent delete backup."""
+    """Test the error wrapper."""
     mock_drive_items.delete = AsyncMock(
         side_effect=APIError(response_status_code=404, message="File not found.")
     )
@@ -221,4 +254,43 @@ async def test_error_wrapper(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {f"{DOMAIN}.{DOMAIN}": "Failed to delete backup"}
+    }
+
+
+async def test_download_no_content(
+    hass_client: ClientSessionGenerator,
+    mock_drive_items: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent download backup."""
+    mock_drive_items.get = AsyncMock(
+        return_value=DriveItem(description=escape(dumps(BACKUP_METADATA)))
+    )
+    mock_drive_items.content.get = AsyncMock(return_value=None)
+    client = await hass_client()
+    backup_id = BACKUP_METADATA["backup_id"]
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{DOMAIN}"
+    )
+    assert resp.status == 500
+    assert "Backup has no content" in caplog.text
+
+
+async def test_agents_backup_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test backup not found."""
+
+    mock_drive_items.get = AsyncMock(return_value=None)
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {
+        f"{DOMAIN}.{DOMAIN}": "Backup not found"
     }
