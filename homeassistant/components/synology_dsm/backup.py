@@ -17,7 +17,12 @@ from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DOMAIN, SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS
+from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
+    DOMAIN,
+    SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS,
+)
 from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
@@ -33,7 +38,7 @@ async def async_get_backup_agents(
     agents: list[BackupAgent] = []
     for entry in entries:
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
-        if syno_data.api.file_station:
+        if syno_data.api.file_station and entry.data.get(CONF_BACKUP_PATH):
             agents.append(SynologyDSMBackupAgent(hass, entry))
     return agents
 
@@ -69,7 +74,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         super().__init__()
         LOGGER.debug("Initializing Synology DSM backup agent for %s", entry.unique_id)
         self.name = entry.title
-        self.path = "/home/backup"  # To-Do: Replace with actual path from entry
+        self.path = f"{entry.data[CONF_BACKUP_SHARE]}/{entry.data[CONF_BACKUP_PATH]}"
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         self.api = syno_data.api
 

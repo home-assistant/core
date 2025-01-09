@@ -35,6 +35,8 @@ CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
 CONF_SNAPSHOT_QUALITY = "snap_profile_type"
+CONF_BACKUP_SHARE = "backup_share"
+CONF_BACKUP_PATH = "backup_path"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -44,6 +46,7 @@ DEFAULT_PORT_SSL = 5001
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = ClientTimeout(total=60, connect=15)
 DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
+DEFAULT_BACKUP_PATH = "ha_backup"
 
 ENTITY_UNIT_LOAD = "load"
 
