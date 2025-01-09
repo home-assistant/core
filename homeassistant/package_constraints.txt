@@ -28,7 +28,7 @@ certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.0
-dbus-fast==2.24.3
+dbus-fast==2.28.0
 fnv-hash-fast==1.0.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
@@ -73,7 +73,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.18.3
-zeroconf==0.137.2
+zeroconf==0.138.1
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
