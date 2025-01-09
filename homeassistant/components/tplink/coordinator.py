@@ -44,12 +44,14 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         device: Device,
         update_interval: timedelta,
+        config_entry: TPLinkConfigEntry,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=device.host,
             update_interval=update_interval,
             # We don't want an immediate refresh since the device

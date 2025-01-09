@@ -232,7 +232,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             },
         )
 
-    parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
+    parent_coordinator = TPLinkDataUpdateCoordinator(
+        hass, device, timedelta(seconds=5), entry
+    )
     child_coordinators: list[TPLinkDataUpdateCoordinator] = []
 
     # The iot HS300 allows a limited number of concurrent requests and fetching the
@@ -241,7 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
             for child in device.children
         ]
 
