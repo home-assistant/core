@@ -20,6 +20,7 @@ class ElectricKiwiOauth2FlowHandler(
 ):
     """Config flow to handle Electric Kiwi OAuth2 authentication."""
 
+    VERSION = 2
     DOMAIN = DOMAIN
 
     @property

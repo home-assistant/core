@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ApiException as err:
         raise ConfigEntryNotReady from err
 
-    if entry.unique_id.startswith(DOMAIN):
+    if entry.version == 1 and entry.unique_id.startswith(DOMAIN):
         ek_session = await ek_api.get_active_session()
         unique_id = "_".join(str(num) for num in ek_session.customer_numbers)
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
