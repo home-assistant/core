@@ -25,7 +25,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_value_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -100,6 +100,11 @@ async def test_full_flow(
         },
     )
 
+    aioclient_mock.get(
+        "https://api.electrickiwi.co.nz/session/",
+        json=load_json_value_fixture("session.json", DOMAIN),
+    )
+
     await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -120,6 +125,11 @@ async def test_existing_entry(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER, "entry_id": DOMAIN}
+    )
+
+    aioclient_mock.get(
+        "https://api.electrickiwi.co.nz/session/",
+        json=load_json_value_fixture("session.json", DOMAIN),
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
@@ -187,6 +197,11 @@ async def test_reauthentication(
             "expires_in": 3599,
             "refresh_token": "mock-refresh_token",
         },
+    )
+
+    aioclient_mock.get(
+        "https://api.electrickiwi.co.nz/session/",
+        json=load_json_value_fixture("session.json", DOMAIN),
     )
 
     await hass.config_entries.flow.async_configure(result["flow_id"])

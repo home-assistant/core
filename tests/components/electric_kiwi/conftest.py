@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Generator
 from time import time
 from unittest.mock import AsyncMock, patch
 
-from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
+from electrickiwi_api.model import AccountBalance, Hop, HopIntervals, Session
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -73,7 +73,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "expires_at": time() + 60,
             },
         },
-        unique_id=DOMAIN,
+        unique_id="123456",
     )
 
 
@@ -90,7 +90,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def electric_kiwi_auth() -> YieldFixture:
     """Patch access to electric kiwi access token."""
     with patch(
-        "homeassistant.components.electric_kiwi.api.AsyncConfigEntryAuth"
+        "homeassistant.components.electric_kiwi.api.ConfigEntryElectricKiwiAuth"
     ) as mock_auth:
         mock_auth.return_value.async_get_access_token = AsyncMock("auth_token")
         yield mock_auth
@@ -105,6 +105,9 @@ def ek_api() -> YieldFixture:
         mock_ek_api.return_value.customer_number = 123456
         mock_ek_api.return_value.connection_id = 123456
         mock_ek_api.return_value.set_active_session.return_value = None
+        mock_ek_api.return_value.get_active_session.return_value = Session.from_dict(
+            load_json_value_fixture("session.json", DOMAIN)
+        )
         mock_ek_api.return_value.get_hop_intervals.return_value = (
             HopIntervals.from_dict(
                 load_json_value_fixture("hop_intervals.json", DOMAIN)

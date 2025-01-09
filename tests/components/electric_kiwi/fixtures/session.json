@@ -1,0 +1,24 @@
+{
+  "data": {
+    "customer": [
+      {
+        "connection": {
+          "address": "111 Some address rd, 0000",
+          "identifier": "0000DDDRRRR",
+          "connection_id": 123456
+        },
+        "customer_number": 123456,
+        "email": "joe@dirt.kiwi",
+        "first_name": "Joe",
+        "last_name": "Dirt",
+        "is_active": "Y",
+        "subscriptions": {
+          "bill_alert": "N",
+          "stay_ahead": "N"
+        }
+      }
+    ],
+    "customer_numbers": [123456],
+    "type": "session_data"
+  }
+}
