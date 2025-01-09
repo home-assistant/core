@@ -45,10 +45,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    entities = await hass.async_add_executor_job(
-        get_entities, config_entry.runtime_data
-    )
-    async_add_entities(entities, True)
+    async_add_entities(get_entities(config_entry.runtime_data), True)
 
 
 def get_entities(onewire_hub: OneWireHub) -> list[OneWireSelectEntity]:
