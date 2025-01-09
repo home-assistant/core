@@ -102,10 +102,8 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             light_type, {ColorMode.BRIGHTNESS}
         )
 
-        self.supports_warm_cool = light_type in WARM_DEVICE_TYPES
-        self.supports_warm_dim = light_type in (
-            DEVICE_TYPE_SPECTRUM_TUNE,
-            DEVICE_TYPE_COLOR_TUNE,
+        self.supports_warm_cool = self.supports_warm_dim = (
+            light_type in WARM_DEVICE_TYPES
         )
         self.supports_spectrum_tune = light_type in (
             DEVICE_TYPE_SPECTRUM_TUNE,
