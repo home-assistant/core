@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import base64
-import mimetypes
-import os
 from email.encoders import encode_base64
 from email.mime.base import MIMEBase
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import mimetypes
+import os
 from typing import Any
+
 import requests
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -27,20 +29,20 @@ from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_BCC,
     ATTR_CC,
+    ATTR_FILE_CONTENT,
+    ATTR_FILE_KIND_FILE,
+    ATTR_FILE_KIND_IMAGE,
+    ATTR_FILE_MIME_TYPE,
+    ATTR_FILE_NAME,
+    ATTR_FILE_PATH,
+    ATTR_FILE_URL,
+    ATTR_FILES,
     ATTR_FROM,
+    ATTR_HTML,
+    ATTR_IMAGES,
     ATTR_ME,
     ATTR_SEND,
     DATA_AUTH,
-    ATTR_HTML,
-    ATTR_IMAGES,
-    ATTR_FILES,
-    ATTR_FILE_KIND_IMAGE,
-    ATTR_FILE_KIND_FILE,
-    ATTR_FILE_PATH,
-    ATTR_FILE_NAME,
-    ATTR_FILE_URL,
-    ATTR_FILE_MIME_TYPE,
-    ATTR_FILE_CONTENT,
 )
 
 
