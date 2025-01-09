@@ -1428,7 +1428,7 @@ async def test_integration_discovery_with_ip_change(
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
-    """Test reauth flow."""
+    """Test integration updates ip address from discovery."""
     mock_config_entry.add_to_hass(hass)
     with (
         patch("homeassistant.components.tplink.Discover.discover", return_value={}),
@@ -1679,7 +1679,7 @@ async def test_reauth_camera(
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
 ) -> None:
-    """Test async_get_image."""
+    """Test reauth flow on invalid camera credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS3]
     mock_camera_config_entry.add_to_hass(hass)
     mock_camera_config_entry.async_start_reauth(
@@ -1771,7 +1771,7 @@ async def test_reauth_try_connect_all_fail(
         override_side_effect(mock_discovery["discover_single"], TimeoutError),
         override_side_effect(mock_discovery["try_connect_all"], lambda *_, **__: None),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 CONF_USERNAME: "fake_username",
@@ -1783,7 +1783,23 @@ async def test_reauth_try_connect_all_fail(
         IP_ADDRESS, credentials=credentials, port=None
     )
     mock_discovery["try_connect_all"].assert_called_once()
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_discovery["try_connect_all"].reset_mock()
+    with (
+        override_side_effect(mock_discovery["discover_single"], TimeoutError),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "fake_username",
+                CONF_PASSWORD: "fake_password",
+            },
+        )
+
+    mock_discovery["try_connect_all"].assert_called_once()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_update_with_encryption_change(

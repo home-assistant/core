@@ -37,7 +37,7 @@ async def test_states(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states."""
+    """Test camera states."""
     mock_camera_config_entry.add_to_hass(hass)
 
     mock_device = _mocked_device(
@@ -66,6 +66,7 @@ async def test_camera_unique_id(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test camera unique id."""
     mock_device = _mocked_device(
@@ -85,14 +86,13 @@ async def test_camera_unique_id(
     )
     assert device_entries
     entity_id = "camera.my_camera_live_view"
-    entity_registry = er.async_get(hass)
+
     assert entity_registry.async_get(entity_id).unique_id == f"{DEVICE_ID}-live_view"
 
 
 async def test_handle_mjpeg_stream(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handle_async_mjpeg_stream."""
     mock_device = _mocked_device(
@@ -119,7 +119,6 @@ async def test_handle_mjpeg_stream(
 async def test_handle_mjpeg_stream_not_supported(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handle_async_mjpeg_stream."""
     mock_device = _mocked_device(
@@ -209,7 +208,7 @@ async def test_no_camera_image_when_streaming(
     mock_camera_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test async_get_image."""
+    """Test no camera image when streaming."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -265,9 +264,8 @@ async def test_no_camera_image_when_streaming(
 async def test_no_concurrent_camera_image(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test async_get_image."""
+    """Test async_get_image doesn't make concurrent requests."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -314,7 +312,7 @@ async def test_camera_image_auth_error(
     mock_connect: AsyncMock,
     mock_discovery: AsyncMock,
 ) -> None:
-    """Test async_get_image."""
+    """Test async_get_image auth error."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -360,7 +358,7 @@ async def test_camera_stream_source(
     mock_camera_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test async_get_image.
+    """Test camera stream source.
 
     This test would fail if the integration didn't properly
     put stream in the dependencies.

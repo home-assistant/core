@@ -63,7 +63,7 @@ async def setup_platform_for_device(
         _patch_discovery(device=device),
         _patch_connect(device=device),
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         # Good practice to wait background tasks in tests see PR #112726
         await hass.async_block_till_done(wait_background_tasks=True)
 
