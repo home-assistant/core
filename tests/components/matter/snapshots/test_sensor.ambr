@@ -3194,7 +3194,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.592',
+    'state': '0.59',
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_power-entry]

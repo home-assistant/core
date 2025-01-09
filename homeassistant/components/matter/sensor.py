@@ -122,12 +122,16 @@ class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
             self.get_matter_attribute_value(self._entity_info.attributes_to_watch[1]),
             self.get_matter_attribute_value(self._entity_info.attributes_to_watch[2]),
         )
-        for value in (raw_value, divisor, multiplier):
-            if value in (None, NullValue):
+
+        for value in (divisor, multiplier):
+            if value in (None, NullValue, 0):
                 self._attr_native_value = None
                 return
 
-        self._attr_native_value = (raw_value / divisor) * multiplier
+        if raw_value in (None, NullValue):
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = round(raw_value / divisor * multiplier, 2)
 
 
 class MatterOperationalStateSensor(MatterSensor):
