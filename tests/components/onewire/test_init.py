@@ -80,7 +80,7 @@ async def test_update_options(
     assert owproxy.call_count == 2
 
 
-@patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
+@patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
 async def test_registry_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

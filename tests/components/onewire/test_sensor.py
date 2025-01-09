@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR]):
         yield
 
 
