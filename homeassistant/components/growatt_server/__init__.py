@@ -141,9 +141,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         enabled,
                     )
                 except Exception as err:  # noqa: BLE001
-                    _LOGGER.error("Error updating TLX inverter time segment: %s", err)
+                    _LOGGER.error(
+                        "Error updating TLX inverter time segment %d: %s",
+                        segment_id,
+                        err,
+                    )
                     raise HomeAssistantError(
-                        f"Error updating TLX inverter time segment: {err}"
+                        f"Error updating TLX inverter time segment {segment_id}: {err}"
                     ) from None
 
             hass.services.async_register(

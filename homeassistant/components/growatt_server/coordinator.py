@@ -325,6 +325,11 @@ class GrowattCoordinator(DataUpdateCoordinator):
         self, segment_id, batt_mode, start_time, end_time, enabled
     ):
         """Update a TLX inverter time segment."""
+        _LOGGER.debug(
+            "Updating TLX inverter time segment %s for serial number %s",
+            segment_id,
+            self.device_id,
+        )
         response = await self.hass.async_add_executor_job(
             self.api.update_tlx_inverter_time_segment,
             self.device_id,
