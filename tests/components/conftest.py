@@ -74,9 +74,15 @@ def prevent_io() -> Generator[None]:
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures all entities are enabled in the registry."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -684,7 +690,7 @@ async def _check_step_or_section_translations(
                 description_placeholders,
                 data_value.schema,
             )
-            return
+            continue
         iqs_config_flow = _get_integration_quality_scale_rule(
             integration, "config-flow"
         )

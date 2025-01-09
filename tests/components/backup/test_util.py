@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import tarfile
 from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.backup import AddonInfo, AgentBackup, Folder
-from homeassistant.components.backup.util import read_backup
+from homeassistant.components.backup.util import read_backup, validate_password
 
 
 @pytest.mark.parametrize(
@@ -83,6 +84,49 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
     mock_path.stat.return_value.st_size = 1234
 
     with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
-        mock_open_tar.return_value.__enter__.return_value.extractfile().read.return_value = backup_json_content
+        mock_open_tar.return_value.__enter__.return_value.extractfile.return_value.read.return_value = backup_json_content
         backup = read_backup(mock_path)
         assert backup == expected_backup
+
+
+@pytest.mark.parametrize("password", [None, "hunter2"])
+def test_validate_password(password: str | None) -> None:
+    """Test validating a password."""
+    mock_path = Mock()
+
+    with (
+        patch("homeassistant.components.backup.util.tarfile.open"),
+        patch("homeassistant.components.backup.util.SecureTarFile"),
+    ):
+        assert validate_password(mock_path, password) is True
+
+
+@pytest.mark.parametrize("password", [None, "hunter2"])
+@pytest.mark.parametrize("secure_tar_side_effect", [tarfile.ReadError, Exception])
+def test_validate_password_wrong_password(
+    password: str | None, secure_tar_side_effect: Exception
+) -> None:
+    """Test validating a password."""
+    mock_path = Mock()
+
+    with (
+        patch("homeassistant.components.backup.util.tarfile.open"),
+        patch(
+            "homeassistant.components.backup.util.SecureTarFile",
+        ) as mock_secure_tar,
+    ):
+        mock_secure_tar.return_value.__enter__.side_effect = secure_tar_side_effect
+        assert validate_password(mock_path, password) is False
+
+
+def test_validate_password_no_homeassistant() -> None:
+    """Test validating a password."""
+    mock_path = Mock()
+
+    with (
+        patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar,
+    ):
+        mock_open_tar.return_value.__enter__.return_value.extractfile.side_effect = (
+            KeyError
+        )
+        assert validate_password(mock_path, "hunter2") is False

@@ -44,10 +44,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The user identifier does not match the previous identifier"
     }
   },
   "entity": {
+    "button": {
+      "todo_clear": {
+        "name": "Clear shopping list and additional purchases"
+      }
+    },
     "todo": {
       "ingredient_list": {
         "name": "Shopping list"
@@ -58,6 +64,9 @@
     }
   },
   "exceptions": {
+    "button_clear_todo_failed": {
+      "message": "Failed to clear all items from the Cookidoo shopping list"
+    },
     "todo_save_item_failed": {
       "message": "Failed to save {name} to Cookidoo shopping list"
     },

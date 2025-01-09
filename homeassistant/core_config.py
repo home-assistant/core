@@ -509,25 +509,25 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
-    def add(self, component: str) -> None:
+    def add(self, value: str) -> None:
         """Add a component to the store."""
-        if "." not in component:
-            self._top_level_components.add(component)
-            self._all_components.add(component)
+        if "." not in value:
+            self._top_level_components.add(value)
+            self._all_components.add(value)
         else:
-            platform, _, domain = component.partition(".")
+            platform, _, domain = value.partition(".")
             if domain in BASE_PLATFORMS:
                 self._all_components.add(platform)
-        return super().add(component)
+        return super().add(value)
 
-    def remove(self, component: str) -> None:
+    def remove(self, value: str) -> None:
         """Remove a component from the store."""
-        if "." in component:
+        if "." in value:
             raise ValueError("_ComponentSet does not support removing sub-components")
-        self._top_level_components.remove(component)
-        return super().remove(component)
+        self._top_level_components.remove(value)
+        return super().remove(value)
 
-    def discard(self, component: str) -> None:
+    def discard(self, value: str) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 

@@ -61,7 +61,7 @@ async def test_setup_config_entry_not_ready(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -81,7 +81,7 @@ async def test_settings_exception(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

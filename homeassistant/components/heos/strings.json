@@ -20,15 +20,54 @@
         "data_description": {
           "host": "[%key:component::heos::config::step::user::data_description::host%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate HEOS",
+        "description": "Please update your HEOS Account credentials. Alternatively, you can clear the credentials if you do not want the integration to access favorites, playlists, and streaming services.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::heos::options::step::init::data_description::username%]",
+          "password": "[%key:component::heos::options::step::init::data_description::password%]"
+        }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "username_missing": "[%key:component::heos::options::error::username_missing%]",
+      "password_missing": "[%key:component::heos::options::error::password_missing%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HEOS Options",
+        "description": "You can sign-in to your HEOS Account to access favorites, streaming services, and other features. Clearing the credentials will sign-out of your account.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username or email address of your HEOS Account.",
+          "password": "The password to your HEOS Account."
+        }
+      }
+    },
+    "error": {
+      "username_missing": "Username is missing",
+      "password_missing": "Password is missing",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "services": {
@@ -49,6 +88,17 @@
     "sign_out": {
       "name": "Sign out",
       "description": "Signs out of the HEOS account."
+    }
+  },
+  "exceptions": {
+    "integration_not_loaded": {
+      "message": "The HEOS integration is not loaded"
+    }
+  },
+  "issues": {
+    "sign_in_out_deprecated": {
+      "title": "HEOS Actions Deprecated",
+      "description": "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release. Enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically."
     }
   }
 }

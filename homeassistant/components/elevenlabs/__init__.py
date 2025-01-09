@@ -6,11 +6,16 @@ from dataclasses import dataclass
 
 from elevenlabs import AsyncElevenLabs, Model
 from elevenlabs.core import ApiError
+from httpx import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
@@ -35,10 +40,10 @@ class ElevenLabsData:
     model: Model
 
 
-type EleventLabsConfigEntry = ConfigEntry[ElevenLabsData]
+type ElevenLabsConfigEntry = ConfigEntry[ElevenLabsData]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
     """Set up ElevenLabs text-to-speech from a config entry."""
     entry.add_update_listener(update_listener)
     httpx_client = get_async_client(hass)
@@ -48,6 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) 
     model_id = entry.options[CONF_MODEL]
     try:
         model = await get_model_by_id(client, model_id)
+    except ConnectError as err:
+        raise ConfigEntryNotReady("Failed to connect") from err
     except ApiError as err:
         raise ConfigEntryAuthFailed("Auth failed") from err
 
@@ -60,15 +67,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: EleventLabsConfigEntry) 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: EleventLabsConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(
-    hass: HomeAssistant, config_entry: EleventLabsConfigEntry
+    hass: HomeAssistant, config_entry: ElevenLabsConfigEntry
 ) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

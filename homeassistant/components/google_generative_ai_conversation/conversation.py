@@ -204,9 +204,7 @@ class GoogleGenerativeAIConversationEntity(
         """Process a sentence."""
         result = conversation.ConversationResult(
             response=intent.IntentResponse(language=user_input.language),
-            conversation_id=user_input.conversation_id
-            if user_input.conversation_id in self.history
-            else ulid.ulid_now(),
+            conversation_id=user_input.conversation_id or ulid.ulid_now(),
         )
         assert result.conversation_id
 
