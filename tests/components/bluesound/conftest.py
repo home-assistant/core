@@ -169,37 +169,6 @@ async def setup_config_entry(
 
 
 @pytest.fixture
-async def setup_config_entry_buttons_enabled(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    player_mocks: PlayerMocks,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Set up the platform."""
-    player_name = player_mocks.player_data.sync_status_long_polling_mock.get().name
-
-    entity_registry.async_get_or_create(
-        domain=BUTTON_DOMAIN,
-        platform=DOMAIN,
-        unique_id=f"set-sleep-timer-{config_entry.unique_id}",
-        suggested_object_id=f"{player_name}_set_sleep_timer",
-        disabled_by=None,
-    )
-
-    entity_registry.async_get_or_create(
-        domain=BUTTON_DOMAIN,
-        platform=DOMAIN,
-        unique_id=f"clear-sleep-timer-{config_entry.unique_id}",
-        suggested_object_id=f"{player_name}_clear_sleep_timer",
-        disabled_by=None,
-    )
-
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
-@pytest.fixture
 async def setup_config_entry_secondary(
     hass: HomeAssistant,
     config_entry_secondary: MockConfigEntry,

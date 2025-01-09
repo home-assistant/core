@@ -2,6 +2,8 @@
 
 from unittest.mock import call
 
+import pytest
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -9,10 +11,11 @@ from homeassistant.core import HomeAssistant
 from .conftest import PlayerMocks
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_sleep_timer(
     hass: HomeAssistant,
-    setup_config_entry_buttons_enabled: None,
     player_mocks: PlayerMocks,
+    setup_config_entry: None,
 ) -> None:
     """Test the media player volume set."""
     await hass.services.async_call(
@@ -25,10 +28,12 @@ async def test_set_sleep_timer(
     player_mocks.player_data.player.sleep_timer.assert_called_once()
 
 
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_clear_sleep_timer(
     hass: HomeAssistant,
-    setup_config_entry_buttons_enabled: None,
     player_mocks: PlayerMocks,
+    setup_config_entry: None,
 ) -> None:
     """Test the media player volume set."""
     player_mocks.player_data.player.sleep_timer.side_effect = [15, 30, 45, 60, 90, 0]
