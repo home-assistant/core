@@ -125,13 +125,14 @@ RPC_NUMBERS: Final = {
         native_step=1,
         mode=NumberMode.SLIDER,
         native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
         method="BluTRV.Call",
         method_params_fn=lambda idx, value: {
             "id": idx,
             "method": "Trv.SetPosition",
             "params": {"id": 0, "pos": value},
         },
+        removal_condition=lambda config, _status, key: config[key].get("enable", True)
+        is True,
     ),
 }
 

@@ -1230,6 +1230,8 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda config, _status, key: config[key].get("enable", False)
+        is False,
     ),
 }
 
