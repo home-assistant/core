@@ -83,7 +83,9 @@ def mock_drive() -> Generator[Drive]:
 
 
 @pytest.fixture(autouse=True)
-def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
+def mock_graph_client(
+    mock_drive: Drive, mock_download: MagicMock
+) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     with (
         patch(
@@ -96,6 +98,7 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         ),
     ):
         client = graph_client.return_value
+        client.request_adapter = mock_download
         client.me.drive.get = AsyncMock(return_value=mock_drive)
 
         drives = client.drives.by_drive_id.return_value

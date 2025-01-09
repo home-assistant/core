@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, cast
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import AnonymousAuthenticationProvider
@@ -101,9 +101,10 @@ class OneDriveBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
         """Initialize the OneDrive backup agent."""
         super().__init__()
-        self._items = entry.runtime_data.items
+        self._client = entry.runtime_data.client
+        assert entry.unique_id
+        self._items = self._client.drives.by_drive_id(entry.unique_id).items
         self._folder_id = entry.runtime_data.backup_folder_id
-        self._request_adapter = entry.runtime_data.request_adapter
         self._anonymous_auth_adapter = GraphRequestAdapter(
             auth_provider=AnonymousAuthenticationProvider(),
             client=get_async_client(hass),
@@ -126,10 +127,11 @@ class OneDriveBackupAgent(BackupAgent):
             url_template=content.url_template,
             path_parameters=content.path_parameters,
         )
-        parent_span = self._request_adapter.start_tracing_span(
+        request_adapter = cast(GraphRequestAdapter, self._client.request_adapter)
+        parent_span = request_adapter.start_tracing_span(
             request_info, "send_no_response_content_async"
         )
-        response = await self._request_adapter.get_http_response_message(
+        response = await request_adapter.get_http_response_message(
             request_info=request_info, parent_span=parent_span
         )
         return response.aiter_bytes(chunk_size=1024)  # type: ignore[no-any-return]

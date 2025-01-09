@@ -28,9 +28,8 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
 class OneDriveRuntimeData:
     """Runtime data for the OneDrive integration."""
 
-    items: ItemsRequestBuilder
+    client: GraphServiceClient
     backup_folder_id: str
-    request_adapter: GraphRequestAdapter
 
 
 type OneDriveConfigEntry = ConfigEntry[OneDriveRuntimeData]
@@ -90,9 +89,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     )
 
     entry.runtime_data = OneDriveRuntimeData(
-        items=drive_item.items,
+        client=graph_client,
         backup_folder_id=backup_folder_id,
-        request_adapter=adapter,
     )
 
     return True
