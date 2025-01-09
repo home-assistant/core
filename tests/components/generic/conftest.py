@@ -137,3 +137,13 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
     return entry
+
+
+@pytest.fixture(name="setup_entry")
+async def setup_entry_fixture(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up a config entry ready to be used in tests."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
