@@ -1,4 +1,7 @@
 {
+  "common": {
+    "shopping_list_items": "items"
+  },
   "config": {
     "step": {
       "user": {
@@ -23,19 +26,23 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The login details correspond to a different account. Please re-authenticate to the previously configured account."
     }
   },
   "entity": {
     "sensor": {
       "urgent": {
-        "name": "Urgent"
+        "name": "Urgent",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "convenient": {
-        "name": "On occasion"
+        "name": "On occasion",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "discounted": {
-        "name": "Discount only"
+        "name": "Discount only",
+        "unit_of_measurement": "[%key:component::bring::common::shopping_list_items%]"
       },
       "list_language": {
         "name": "Region & language",

@@ -10,13 +10,16 @@ from homeassistant.components.bmw_connected_drive.const import (
     CONF_READ_ONLY,
     DOMAIN as BMW_DOMAIN,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import FIXTURE_CONFIG_ENTRY
 
 from tests.common import MockConfigEntry
+
+BINARY_SENSOR_DOMAIN = Platform.BINARY_SENSOR.value
+SENSOR_DOMAIN = Platform.SENSOR.value
 
 VIN = "WBYYYYYYYYYYYYYYY"
 VEHICLE_NAME = "i3 (+ REX)"
@@ -108,6 +111,28 @@ async def test_migrate_options_from_data(hass: HomeAssistant) -> None:
             },
             f"{VIN}-mileage",
             f"{VIN}-mileage",
+        ),
+        (
+            {
+                "domain": SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-charging_status",
+                "suggested_object_id": f"{VEHICLE_NAME} Charging Status",
+                "disabled_by": None,
+            },
+            f"{VIN}-charging_status",
+            f"{VIN}-fuel_and_battery.charging_status",
+        ),
+        (
+            {
+                "domain": BINARY_SENSOR_DOMAIN,
+                "platform": BMW_DOMAIN,
+                "unique_id": f"{VIN}-charging_status",
+                "suggested_object_id": f"{VEHICLE_NAME} Charging Status",
+                "disabled_by": None,
+            },
+            f"{VIN}-charging_status",
+            f"{VIN}-charging_status",
         ),
     ],
 )

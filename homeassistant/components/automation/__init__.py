@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from functools import partial
 import logging
 from typing import Any, Protocol, cast
 
@@ -51,12 +50,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -86,12 +79,7 @@ from homeassistant.helpers.trace import (
     trace_get,
     trace_path,
 )
-from homeassistant.helpers.trigger import (
-    TriggerActionType,
-    TriggerData,
-    TriggerInfo,
-    async_initialize_triggers,
-)
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
@@ -135,20 +123,6 @@ class IfAction(Protocol):
 
     def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
         """AND all conditions."""
-
-
-# AutomationActionType, AutomationTriggerData,
-# and AutomationTriggerInfo are deprecated as of 2022.9.
-# Can be removed in 2025.1
-_DEPRECATED_AutomationActionType = DeprecatedConstant(
-    TriggerActionType, "TriggerActionType", "2025.1"
-)
-_DEPRECATED_AutomationTriggerData = DeprecatedConstant(
-    TriggerData, "TriggerData", "2025.1"
-)
-_DEPRECATED_AutomationTriggerInfo = DeprecatedConstant(
-    TriggerInfo, "TriggerInfo", "2025.1"
-)
 
 
 @bind_hass
@@ -477,6 +451,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         )
 
     async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
         async_delete_issue(
             self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
@@ -1219,11 +1194,3 @@ def websocket_config(
             "config": automation.raw_config,
         },
     )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

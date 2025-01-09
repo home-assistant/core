@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
@@ -156,7 +156,7 @@ async def async_resolve_media(
         raise Unresolvable("Media Source not loaded")
 
     if target_media_player is UNDEFINED:
-        report(
+        report_usage(
             "calls media_source.async_resolve_media without passing an entity_id",
             exclude_integrations={DOMAIN},
         )

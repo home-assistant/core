@@ -1,19 +1,21 @@
 """Common fixtures for the Suez Water tests."""
 
 from collections.abc import Generator
+from datetime import date
 from unittest.mock import AsyncMock, patch
 
+from pysuez import AggregatedData, PriceResult
+from pysuez.const import ATTRIBUTION
 import pytest
 
-from homeassistant.components.suez_water.const import DOMAIN
-from homeassistant.components.suez_water.coordinator import AggregatedData
+from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     "username": "test-username",
     "password": "test-password",
-    "counter_id": "test-counter",
+    CONF_COUNTER_ID: "test-counter",
 }
 
 
@@ -21,10 +23,11 @@ MOCK_DATA = {
 def mock_config_entry() -> MockConfigEntry:
     """Create mock config_entry needed by suez_water integration."""
     return MockConfigEntry(
-        unique_id=MOCK_DATA["username"],
+        unique_id=MOCK_DATA[CONF_COUNTER_ID],
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
+        version=2,
     )
 
 
@@ -38,7 +41,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="suez_client")
-def mock_suez_data() -> Generator[AsyncMock]:
+def mock_suez_client() -> Generator[AsyncMock]:
     """Create mock for suez_water external api."""
     with (
         patch(
@@ -55,24 +58,25 @@ def mock_suez_data() -> Generator[AsyncMock]:
         result = AggregatedData(
             value=160,
             current_month={
-                "2024-01-01": 130,
-                "2024-01-02": 145,
+                date.fromisoformat("2024-01-01"): 130,
+                date.fromisoformat("2024-01-02"): 145,
             },
             previous_month={
-                "2024-12-01": 154,
-                "2024-12-02": 166,
+                date.fromisoformat("2024-12-01"): 154,
+                date.fromisoformat("2024-12-02"): 166,
             },
             current_year=1500,
             previous_year=1000,
-            attribution="suez water mock test",
+            attribution=ATTRIBUTION,
             highest_monthly_consumption=2558,
             history={
-                "2024-01-01": 130,
-                "2024-01-02": 145,
-                "2024-12-01": 154,
-                "2024-12-02": 166,
+                date.fromisoformat("2024-01-01"): 130,
+                date.fromisoformat("2024-01-02"): 145,
+                date.fromisoformat("2024-12-01"): 154,
+                date.fromisoformat("2024-12-02"): 166,
             },
         )
 
         suez_client.fetch_aggregated_data.return_value = result
+        suez_client.get_price.return_value = PriceResult("4.74")
         yield suez_client

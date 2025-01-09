@@ -95,9 +95,8 @@ RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
 MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
-MIN_VERSION_SQLITE = _simple_version("3.31.0")
-UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
-MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
+MIN_VERSION_SQLITE = _simple_version("3.40.1")
+MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.40.1")
 
 
 # This is the maximum time after the recorder ends the session
@@ -107,6 +106,8 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 # Retry when one of the following MySQL errors occurred:
 RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
+# The error codes are hard coded because the PyMySQL library may not be
+# installed when using database engines other than MySQL or MariaDB.
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
@@ -374,37 +375,6 @@ def _raise_if_version_unsupported(
     raise UnsupportedDialect
 
 
-@callback
-def _async_delete_issue_deprecated_version(
-    hass: HomeAssistant, dialect_name: str
-) -> None:
-    """Delete the issue about upcoming unsupported database version."""
-    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
-
-
-@callback
-def _async_create_issue_deprecated_version(
-    hass: HomeAssistant,
-    server_version: AwesomeVersion,
-    dialect_name: str,
-    min_version: AwesomeVersion,
-) -> None:
-    """Warn about upcoming unsupported database version."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"{dialect_name}_too_old",
-        is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
-        translation_key=f"{dialect_name}_too_old",
-        translation_placeholders={
-            "server_version": str(server_version),
-            "min_version": str(min_version),
-        },
-        breaks_in_ha_version="2025.2.0",
-    )
-
-
 def _extract_version_from_server_response_or_raise(
     server_response: str,
 ) -> AwesomeVersion:
@@ -521,20 +491,6 @@ def setup_connection_for_dialect(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
 
-            # No elif here since _raise_if_version_unsupported raises
-            if version < UPCOMING_MIN_VERSION_SQLITE:
-                instance.hass.add_job(
-                    _async_create_issue_deprecated_version,
-                    instance.hass,
-                    version or version_string,
-                    dialect_name,
-                    UPCOMING_MIN_VERSION_SQLITE,
-                )
-            else:
-                instance.hass.add_job(
-                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
-                )
-
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
                 max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
 
@@ -598,6 +554,12 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
         max_bind_vars = DEFAULT_MAX_BIND_VARS
+        # PostgreSQL does not support a skip/loose index scan so its
+        # also slow for large distinct queries:
+        # https://wiki.postgresql.org/wiki/Loose_indexscan
+        # https://github.com/home-assistant/core/issues/126084
+        # so we set slow_range_in_select to True
+        slow_range_in_select = True
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -892,17 +854,16 @@ def resolve_period(
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":
-            start_time = start_of_day.replace(day=28)
-            # This works for up to 48 months of offset
-            start_time = (start_time + timedelta(days=cal_offset * 31)).replace(day=1)
+            month_now = start_of_day.month
+            new_month = (month_now - 1 + cal_offset) % 12 + 1
+            new_year = start_of_day.year + (month_now - 1 + cal_offset) // 12
+            start_time = start_of_day.replace(year=new_year, month=new_month, day=1)
             end_time = (start_time + timedelta(days=31)).replace(day=1)
         else:  # calendar_period = "year"
-            start_time = start_of_day.replace(month=12, day=31)
-            # This works for 100+ years of offset
-            start_time = (start_time + timedelta(days=cal_offset * 366)).replace(
-                month=1, day=1
+            start_time = start_of_day.replace(
+                year=start_of_day.year + cal_offset, month=1, day=1
             )
-            end_time = (start_time + timedelta(days=365)).replace(day=1)
+            end_time = (start_time + timedelta(days=366)).replace(day=1)
 
         start_time = dt_util.as_utc(start_time)
         end_time = dt_util.as_utc(end_time)

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,8 +32,8 @@ async def set_tz(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Berlin")
 
 
-@pytest.mark.usefixtures("mock_habitica")
-@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
+@pytest.mark.usefixtures("habitica")
+@freeze_time("2024-09-20T22:00:00.000Z")
 async def test_calendar_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -55,16 +56,30 @@ async def test_calendar_platform(
     [
         "calendar.test_user_to_do_s",
         "calendar.test_user_dailies",
+        "calendar.test_user_daily_reminders",
+        "calendar.test_user_to_do_reminders",
     ],
 )
-@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.parametrize(
+    ("start_date", "end_date"),
+    [
+        ("2024-08-29", "2024-10-08"),
+        ("2023-08-01", "2023-08-02"),
+    ],
+    ids=[
+        "default date range",
+        "date range in the past",
+    ],
+)
+@pytest.mark.usefixtures("habitica")
 async def test_api_events(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
     entity: str,
+    start_date: str,
+    end_date: str,
 ) -> None:
     """Test calendar event."""
 
@@ -74,7 +89,7 @@ async def test_api_events(
 
     client = await hass_client()
     response = await client.get(
-        f"/api/calendars/{entity}?start=2024-08-29&end=2024-10-08"
+        f"/api/calendars/{entity}?start={start_date}&end={end_date}"
     )
 
     assert await response.json() == snapshot

@@ -1,0 +1,12 @@
+{
+  "domain": "peblar",
+  "name": "Peblar",
+  "codeowners": ["@frenck"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/peblar",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "platinum",
+  "requirements": ["peblar==0.3.3"],
+  "zeroconf": [{ "type": "_http._tcp.local.", "name": "pblr-*" }]
+}
