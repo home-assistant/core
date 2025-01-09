@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture(autouse=True)
 def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SWITCH]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.SWITCH]):
         yield
 
 
@@ -47,7 +47,7 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
+    setup_owproxy_mock_devices(owproxy, [device_id])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

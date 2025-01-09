@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import re
 from unittest.mock import MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -36,6 +37,10 @@ from homeassistant.components.light import (
     EFFECT_OFF,
 )
 from homeassistant.components.tplink.const import DOMAIN
+from homeassistant.components.tplink.light import (
+    SERVICE_RANDOM_EFFECT,
+    SERVICE_SEQUENCE_EFFECT,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -837,6 +842,84 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
         }
     )
     light_effect.set_custom_effect.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("service_name", "service_params", "expected_extra_params"),
+    [
+        pytest.param(
+            SERVICE_SEQUENCE_EFFECT,
+            {
+                "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
+            },
+            {
+                "type": "sequence",
+                "sequence": [(340, 20, 50), (20, 50, 50), (0, 100, 50)],
+                "repeat_times": 0,
+                "spread": 1,
+                "direction": 4,
+            },
+            id="sequence",
+        ),
+        pytest.param(
+            SERVICE_RANDOM_EFFECT,
+            {"init_states": [340, 20, 50]},
+            {"type": "random", "init_states": [[340, 20, 50]], "random_seed": 100},
+            id="random",
+        ),
+    ],
+)
+async def test_smart_strip_effect_service_error(
+    hass: HomeAssistant,
+    service_name: str,
+    service_params: dict,
+    expected_extra_params: dict,
+) -> None:
+    """Test smart strip custom random effects."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    device = _mocked_device(
+        modules=[Module.Light, Module.LightEffect], alias="my_light"
+    )
+    light_effect = device.modules[Module.LightEffect]
+
+    with _patch_discovery(device=device), _patch_connect(device=device):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_light"
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    light_effect.set_custom_effect.side_effect = KasaException("failed")
+
+    base = {
+        "custom": 1,
+        "id": "yMwcNpLxijmoKamskHCvvravpbnIqAIN",
+        "brightness": 100,
+        "name": "Custom",
+        "segments": [0],
+        "expansion_strategy": 1,
+        "enable": 1,
+        "duration": 0,
+        "transition": 0,
+    }
+    expected_params = {**base, **expected_extra_params}
+    expected_msg = f"Error trying to set custom effect {expected_params}: failed"
+
+    with pytest.raises(HomeAssistantError, match=re.escape(expected_msg)):
+        await hass.services.async_call(
+            DOMAIN,
+            service_name,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                **service_params,
+            },
+            blocking=True,
+        )
 
 
 async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) -> None:
