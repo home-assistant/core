@@ -69,6 +69,8 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -76,9 +78,7 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
-    ENTRY_MINOR_VERSION,
     ENTRY_OPTION_FIELDS,
-    ENTRY_VERSION,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
 )
@@ -287,20 +287,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the options from config entry data."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    for key in ENTRY_OPTION_FIELDS:
-        if key not in data:
-            continue
-        options[key] = data.pop(key)
-    hass.config_entries.async_update_entry(
-        entry,
-        data=data,
-        options=options,
-        version=ENTRY_VERSION,
-        minor_version=ENTRY_MINOR_VERSION,
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Can be removed when config entry is bumped to version 2.1
+        # with HA Core 2026.1.0
+        for key in ENTRY_OPTION_FIELDS:
+            if key not in data:
+                continue
+            options[key] = data.pop(key)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options=options,
+            version=CONFIG_ENTRY_VERSION,
+            minor_version=CONFIG_ENTRY_MINOR_VERSION,
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
     )
-    _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
 
 

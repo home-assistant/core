@@ -1949,8 +1949,8 @@ async def test_cleanup_device_multiple_config_entries(
     config_entry = MockConfigEntry(
         domain="test",
         data={},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -2050,8 +2050,8 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
     config_entry = MockConfigEntry(
         domain="test",
         data={},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
@@ -2513,8 +2513,8 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
         options=ENTRY_DEFAULT_BIRTH_MESSAGE,
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     with (
@@ -2584,8 +2584,8 @@ async def test_mqtt_discovery_flow_starts_once(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
         options=ENTRY_DEFAULT_BIRTH_MESSAGE,
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

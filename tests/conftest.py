@@ -1038,7 +1038,8 @@ async def _mqtt_mock_entry(
         options=mqtt_config_entry_options,
         domain=mqtt.DOMAIN,
         title="MQTT",
-        version=2,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 

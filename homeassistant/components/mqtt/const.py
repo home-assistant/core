@@ -160,8 +160,8 @@ MQTT_CONNECTION_STATE = "mqtt_connection_state"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-ENTRY_VERSION = 1
-ENTRY_MINOR_VERSION = 2
+CONFIG_ENTRY_VERSION = 1
+CONFIG_ENTRY_MINOR_VERSION = 2
 
 # Split mqtt entry data and options
 # Can be removed with HA Core 2026.1.0

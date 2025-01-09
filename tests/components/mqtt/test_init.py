@@ -698,8 +698,8 @@ async def test_reload_entry_with_restored_subscriptions(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -807,8 +807,8 @@ async def test_default_entry_setting_are_applied(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker", "port": 1234},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1622,8 +1622,8 @@ async def test_unload_config_entry(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

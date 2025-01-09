@@ -76,6 +76,8 @@ from .const import (
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -87,9 +89,6 @@ from .const import (
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
     DOMAIN,
-    ENTRY_MINOR_VERSION,
-    ENTRY_OPTION_FIELDS,
-    ENTRY_VERSION,
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
@@ -209,8 +208,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     # Can be bumped to version 2.1 with HA Core 2026.1.0
-    VERSION = ENTRY_VERSION  # 1
-    SUBVERSION = ENTRY_MINOR_VERSION  # 2
+    VERSION = CONFIG_ENTRY_VERSION  # 1
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
@@ -578,14 +577,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         """Manage the MQTT options."""
         errors = {}
 
-        # Can be removed when config entry is bumped to version 2.1
-        # with HA Core 2026.1.0
-        legacy_data_options = {
-            key: self.config_entry.data[key]
-            for key in ENTRY_OPTION_FIELDS
-            if key in self.config_entry.data
-        }
-        options_config: dict[str, Any] = self.config_entry.options | legacy_data_options
+        options_config: dict[str, Any] = dict(self.config_entry.options)
         bad_input: bool = False
 
         def _birth_will(birt_or_will: str) -> dict[str, Any]:

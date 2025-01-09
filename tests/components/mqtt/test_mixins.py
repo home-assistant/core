@@ -316,8 +316,8 @@ async def test_default_entity_and_device_name(
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
         data={mqtt.CONF_BROKER: "mock-broker"},
-        version=mqtt.ENTRY_VERSION,
-        minor_version=mqtt.ENTRY_MINOR_VERSION,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
