@@ -639,6 +639,8 @@ build.json @home-assistant/supervisor
 /tests/components/homeassistant_sky_connect/ @home-assistant/core
 /homeassistant/components/homeassistant_yellow/ @home-assistant/core
 /tests/components/homeassistant_yellow/ @home-assistant/core
+/homeassistant/components/homee/ @Taraman17
+/tests/components/homee/ @Taraman17
 /homeassistant/components/homekit/ @bdraco
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
@@ -688,6 +690,8 @@ build.json @home-assistant/supervisor
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
+/homeassistant/components/igloohome/ @keithle888
+/tests/components/igloohome/ @keithle888
 /homeassistant/components/ign_sismologia/ @exxamalte
 /tests/components/ign_sismologia/ @exxamalte
 /homeassistant/components/image/ @home-assistant/core
@@ -829,6 +833,8 @@ build.json @home-assistant/supervisor
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lektrico/ @lektrico
 /tests/components/lektrico/ @lektrico
+/homeassistant/components/letpot/ @jpelgrom
+/tests/components/letpot/ @jpelgrom
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
@@ -889,6 +895,8 @@ build.json @home-assistant/supervisor
 /tests/components/matrix/ @PaarthShah
 /homeassistant/components/matter/ @home-assistant/matter
 /tests/components/matter/ @home-assistant/matter
+/homeassistant/components/mcp_server/ @allenporter
+/tests/components/mcp_server/ @allenporter
 /homeassistant/components/mealie/ @joostlek @andrew-codechimp
 /tests/components/mealie/ @joostlek @andrew-codechimp
 /homeassistant/components/meater/ @Sotolotl @emontnemery
@@ -1107,6 +1115,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
+/homeassistant/components/overseerr/ @joostlek
+/tests/components/overseerr/ @joostlek
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
