@@ -828,7 +828,7 @@ async def _check_exception_translation(
     if exception.translation_key is None:
         if (
             _get_request_quality_scale(request, "exception-translations")
-            == QualityScaleStatus.DONE
+            is QualityScaleStatus.DONE
         ):
             translation_errors["quality_scale"] = (
                 f"Found untranslated {type(exception).__name__} exception: {exception}"
