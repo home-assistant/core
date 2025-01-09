@@ -12,7 +12,7 @@
       }
     },
     "number": {
-      "external_sensor_temperature": {
+      "external_temperature": {
         "default": "mdi:thermometer-check"
       },
       "valve_position": {

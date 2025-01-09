@@ -80,11 +80,11 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
 
 
 RPC_NUMBERS: Final = {
-    "external_sensor_temperature": RpcNumberDescription(
+    "external_temperature": RpcNumberDescription(
         key="blutrv",
         sub_key="current_C",
-        translation_key="external_sensor_temperature",
-        name="External sensor temperature",
+        translation_key="external_temperature",
+        name="External temperature",
         native_min_value=-50,
         native_max_value=50,
         native_step=0.1,
