@@ -42,6 +42,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[Tool]]):
 
     config_entry: ConfigEntry
     session: ClientSession
+    ctx_mgr: AbstractAsyncContextManager[ClientSession]
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize ModelContextProtocolCoordinator."""
@@ -52,7 +53,6 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[Tool]]):
             config_entry=config_entry,
             update_interval=UPDATE_INTERVAL,
         )
-        self.ctx_mgr: AbstractAsyncContextManager[ClientSession]
 
     async def _async_setup(self) -> None:
         """Set up the client connection."""

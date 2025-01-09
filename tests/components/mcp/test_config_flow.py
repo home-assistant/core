@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 async def test_form(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_mcp_client: Mock
 ) -> None:
-    """Test we get the form."""
+    """Test the complete configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -38,7 +38,7 @@ async def test_form(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {
         CONF_URL: "http://1.1.1.1/sse",
@@ -77,7 +77,7 @@ async def test_form_mcp_client_error(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
     # Reset the error and make sure the config flow can resume successfully.
@@ -92,9 +92,8 @@ async def test_form_mcp_client_error(
             CONF_URL: "http://1.1.1.1/sse",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {
         CONF_URL: "http://1.1.1.1/sse",
@@ -130,7 +129,7 @@ async def test_form_mcp_client_error_abort(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_error
 
 
@@ -155,7 +154,7 @@ async def test_input_form_validation_error(
         result["flow_id"],
         user_input,
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_URL: "invalid_url"}
 
     # Reset the error and make sure the config flow can resume successfully.
@@ -169,9 +168,8 @@ async def test_input_form_validation_error(
             CONF_URL: "http://1.1.1.1/sse",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     assert result["data"] == {
         CONF_URL: "http://1.1.1.1/sse",
@@ -193,7 +191,7 @@ async def test_unique_url(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     response = Mock()
@@ -206,9 +204,8 @@ async def test_unique_url(
             CONF_URL: "http://1.1.1.1/sse",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -233,5 +230,5 @@ async def test_server_missing_capbilities(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_capabilities"
