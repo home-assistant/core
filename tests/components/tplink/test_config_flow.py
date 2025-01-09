@@ -166,7 +166,10 @@ async def test_discovery(
 
 
 async def test_discovery_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    mock_init: dict[str, AsyncMock],
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -226,7 +229,10 @@ async def test_discovery_camera(
 
 
 async def test_discovery_pick_device_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    mock_init: dict[str, AsyncMock],
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -291,7 +297,10 @@ async def test_discovery_pick_device_camera(
 
 
 async def test_discovery_auth(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    mock_init: dict[str, AsyncMock],
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery."""
     mock_device = _mocked_device(
@@ -334,7 +343,10 @@ async def test_discovery_auth(
 
 
 async def test_discovery_auth_camera(
-    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+    mock_init: dict[str, AsyncMock],
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
 ) -> None:
     """Test authenticated discovery for camera with stream."""
     mock_device = _mocked_device(
@@ -405,9 +417,9 @@ async def test_discovery_auth_camera(
     ids=["invalid-auth", "unknown-error"],
 )
 async def test_discovery_auth_errors(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
     error_type,
     errors_msg,
     error_placement,
@@ -463,9 +475,9 @@ async def test_discovery_auth_errors(
 
 
 async def test_discovery_new_credentials(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test setting up discovery with new credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS]
@@ -512,9 +524,9 @@ async def test_discovery_new_credentials(
 
 
 async def test_discovery_new_credentials_invalid(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test setting up discovery with new invalid credentials."""
     mock_device = mock_connect["mock_devices"][IP_ADDRESS]
@@ -975,10 +987,10 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
 
 
 async def test_manual_auth(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test manually setup."""
     result = await hass.config_entries.flow.async_init(
@@ -1081,10 +1093,10 @@ async def test_manual_auth_camera(
     ids=["invalid-auth", "unknown-error"],
 )
 async def test_manual_auth_errors(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
     error_type,
     errors_msg,
     error_placement,
@@ -2125,10 +2137,10 @@ async def test_pick_device_errors(
 
 
 async def test_discovery_timeout_try_connect_all(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(
@@ -2151,10 +2163,10 @@ async def test_discovery_timeout_try_connect_all(
 
 
 async def test_discovery_timeout_try_connect_all_needs_creds(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(
@@ -2189,10 +2201,10 @@ async def test_discovery_timeout_try_connect_all_needs_creds(
 
 
 async def test_discovery_timeout_try_connect_all_fail(
+    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    mock_init,
 ) -> None:
     """Test discovery tries legacy connect on timeout."""
     result = await hass.config_entries.flow.async_init(
