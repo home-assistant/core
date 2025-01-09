@@ -61,6 +61,8 @@ class ElectricKiwiOauth2FlowHandler(
         unique_id = "_".join(str(num) for num in session.customer_numbers)
         existing_entry = await self.async_set_unique_id(unique_id)
 
+        self._abort_if_unique_id_configured()
+
         if existing_entry:
             return self.async_update_reload_and_abort(existing_entry, data=data)
         return self.async_create_entry(title=unique_id, data=data)
