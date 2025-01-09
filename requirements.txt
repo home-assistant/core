@@ -32,7 +32,7 @@ cryptography==44.0.0
 Pillow==11.1.0
 propcache==0.2.1
 pyOpenSSL==24.3.0
-orjson==3.10.12
+orjson==3.10.14
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
