@@ -129,8 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    if not entry.update_listeners:
-        entry.async_on_unload(entry.add_update_listener(async_update_options))
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
