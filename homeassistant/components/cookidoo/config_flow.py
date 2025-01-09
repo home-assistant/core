@@ -7,9 +7,7 @@ import logging
 from typing import Any
 
 from cookidoo_api import (
-    Cookidoo,
     CookidooAuthException,
-    CookidooConfig,
     CookidooRequestException,
     get_country_options,
     get_localization_options,
@@ -23,7 +21,6 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_EMAIL, CONF_LANGUAGE, CONF_PASSWORD
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -35,6 +32,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN
+from .helpers import cookidoo_from_config_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,10 +55,14 @@ AUTH_DATA_SCHEMA = {
 class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cookidoo."""
 
+    VERSION = 1
+    MINOR_VERSION = 2
+
     COUNTRY_DATA_SCHEMA: dict
     LANGUAGE_DATA_SCHEMA: dict
 
     user_input: dict[str, Any]
+    user_uuid: str
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any]
@@ -78,8 +80,11 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None and not (
             errors := await self.validate_input(user_input)
         ):
+            await self.async_set_unique_id(self.user_uuid)
             if self.source == SOURCE_USER:
-                self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
+                self._abort_if_unique_id_configured()
+            if self.source == SOURCE_RECONFIGURE:
+                self._abort_if_unique_id_mismatch()
             self.user_input = user_input
             return await self.async_step_language()
         await self.generate_country_schema()
@@ -153,10 +158,8 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
             if not (
                 errors := await self.validate_input({**reauth_entry.data, **user_input})
             ):
-                if user_input[CONF_EMAIL] != reauth_entry.data[CONF_EMAIL]:
-                    self._async_abort_entries_match(
-                        {CONF_EMAIL: user_input[CONF_EMAIL]}
-                    )
+                await self.async_set_unique_id(self.user_uuid)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry, data_updates=user_input
                 )
@@ -220,21 +223,10 @@ class CookidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 await get_localization_options(country=data_input[CONF_COUNTRY].lower())
             )[0].language  # Pick any language to test login
 
-        localizations = await get_localization_options(
-            country=data_input[CONF_COUNTRY].lower(),
-            language=data_input[CONF_LANGUAGE],
-        )
-
-        cookidoo = Cookidoo(
-            async_get_clientsession(self.hass),
-            CookidooConfig(
-                email=data_input[CONF_EMAIL],
-                password=data_input[CONF_PASSWORD],
-                localization=localizations[0],
-            ),
-        )
+        cookidoo = await cookidoo_from_config_data(self.hass, data_input)
         try:
-            await cookidoo.login()
+            auth_data = await cookidoo.login()
+            self.user_uuid = auth_data.sub
             if language_input:
                 await cookidoo.get_additional_items()
         except CookidooRequestException:

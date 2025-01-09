@@ -2414,6 +2414,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
@@ -3843,7 +3846,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_speed-statealt]
@@ -3859,7 +3862,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-entry]
@@ -3910,7 +3913,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-statealt]
@@ -3926,7 +3929,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_arrival-entry]
@@ -4976,4 +4979,25 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_sensors_streaming[sensor.test_battery_level-state]
+  '90'
+# ---
+# name: test_sensors_streaming[sensor.test_charge_cable-state]
+  'unknown'
+# ---
+# name: test_sensors_streaming[sensor.test_charge_energy_added-state]
+  '10'
+# ---
+# name: test_sensors_streaming[sensor.test_charger_power-state]
+  '2'
+# ---
+# name: test_sensors_streaming[sensor.test_charging-state]
+  'charging'
+# ---
+# name: test_sensors_streaming[sensor.test_time_to_arrival-state]
+  'unknown'
+# ---
+# name: test_sensors_streaming[sensor.test_time_to_full_charge-state]
+  'unknown'
 # ---

@@ -5,15 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from unittest.mock import Mock, patch
 
-from pyheos import (
-    Dispatcher,
-    Heos,
-    HeosGroup,
-    HeosPlayer,
-    HeosSource,
-    InputSource,
-    const,
-)
+from pyheos import Dispatcher, Heos, HeosGroup, HeosPlayer, MediaItem, const
 import pytest
 import pytest_asyncio
 
@@ -124,12 +116,13 @@ def player_fixture(quick_selects):
         player.version = "1.0.0"
         player.is_muted = False
         player.available = True
-        player.state = const.PLAY_STATE_STOP
+        player.state = const.PlayState.STOP
         player.ip_address = f"127.0.0.{i}"
         player.network = "wired"
         player.shuffle = False
-        player.repeat = const.REPEAT_OFF
+        player.repeat = const.RepeatType.OFF
         player.volume = 25
+        player.now_playing_media = Mock()
         player.now_playing_media.supported_controls = const.CONTROLS_ALL
         player.now_playing_media.album_id = 1
         player.now_playing_media.queue_id = 1
@@ -151,34 +144,52 @@ def player_fixture(quick_selects):
 @pytest.fixture(name="group")
 def group_fixture(players):
     """Create a HEOS group consisting of two players."""
-    group = Mock(HeosGroup)
-    group.leader = players[1]
-    group.members = [players[2]]
-    group.group_id = 999
+    group = HeosGroup(
+        name="Group", group_id=999, lead_player_id=1, member_player_ids=[2]
+    )
+
     return {group.group_id: group}
 
 
 @pytest.fixture(name="favorites")
-def favorites_fixture() -> dict[int, HeosSource]:
+def favorites_fixture() -> dict[int, MediaItem]:
     """Create favorites fixture."""
-    station = Mock(HeosSource)
-    station.type = const.TYPE_STATION
-    station.name = "Today's Hits Radio"
-    station.media_id = "123456789"
-    radio = Mock(HeosSource)
-    radio.type = const.TYPE_STATION
-    radio.name = "Classical MPR (Classical Music)"
-    radio.media_id = "s1234"
+    station = MediaItem(
+        source_id=const.MUSIC_SOURCE_PANDORA,
+        name="Today's Hits Radio",
+        media_id="123456789",
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
+    radio = MediaItem(
+        source_id=const.MUSIC_SOURCE_TUNEIN,
+        name="Classical MPR (Classical Music)",
+        media_id="s1234",
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
     return {1: station, 2: radio}
 
 
 @pytest.fixture(name="input_sources")
-def input_sources_fixture() -> Sequence[InputSource]:
+def input_sources_fixture() -> Sequence[MediaItem]:
     """Create a set of input sources for testing."""
-    source = Mock(InputSource)
-    source.player_id = 1
-    source.input_name = const.INPUT_AUX_IN_1
-    source.name = "HEOS Drive - Line In 1"
+    source = MediaItem(
+        source_id=1,
+        name="HEOS Drive - Line In 1",
+        media_id=const.INPUT_AUX_IN_1,
+        type=const.MediaType.STATION,
+        playable=True,
+        browsable=False,
+        image_url="",
+        heos=None,
+    )
     return [source]
 
 
@@ -240,11 +251,17 @@ def quick_selects_fixture() -> dict[int, str]:
 
 
 @pytest.fixture(name="playlists")
-def playlists_fixture() -> Sequence[HeosSource]:
+def playlists_fixture() -> Sequence[MediaItem]:
     """Create favorites fixture."""
-    playlist = Mock(HeosSource)
-    playlist.type = const.TYPE_PLAYLIST
-    playlist.name = "Awesome Music"
+    playlist = MediaItem(
+        source_id=const.MUSIC_SOURCE_PLAYLISTS,
+        name="Awesome Music",
+        type=const.MediaType.PLAYLIST,
+        playable=True,
+        browsable=True,
+        image_url="",
+        heos=None,
+    )
     return [playlist]
 
 
