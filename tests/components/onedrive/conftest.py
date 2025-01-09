@@ -93,28 +93,31 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         client = graph_client.return_value
         client.me.drive.get = AsyncMock(return_value=mock_drive)
 
-        client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get = AsyncMock(
+        drives = client.drives.by_drive_id.return_value
+
+        drives.special.by_drive_item_id.return_value.get = AsyncMock(
             return_value=DriveItem(id="approot")
         )
-        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.get = AsyncMock(
-            return_value=DriveItem(id="folder_id")
-        )
+        drive_items = drives.items.by_drive_item_id.return_value
+        drive_items.get = AsyncMock(return_value=DriveItem(id="folder_id"))
 
-        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.post = AsyncMock(
-            return_value=DriveItem(id="folder_id")
-        )
+        drive_items.children.post = AsyncMock(return_value=DriveItem(id="folder_id"))
 
-        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.children.get = AsyncMock(
+        drive_items.children.get = AsyncMock(
             return_value=DriveItemCollectionResponse(
                 value=[DriveItem(description=escape(dumps(BACKUP_METADATA)))]
             )
         )
 
-        client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.delete = AsyncMock(
-            return_value=None
-        )
+        drive_items.delete = AsyncMock(return_value=None)
 
         yield client
+
+
+@pytest.fixture
+def mock_drive_items(mock_graph_client: MagicMock) -> MagicMock:
+    """Return a mocked DriveItems."""
+    return mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value
 
 
 @pytest.fixture

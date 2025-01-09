@@ -93,10 +93,11 @@ async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_graph_client: MagicMock,
+    mock_drive_items: MagicMock,
 ) -> None:
     """Test agent get backup."""
 
-    mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.get = AsyncMock(
+    mock_drive_items.get = AsyncMock(
         return_value=DriveItem(description=escape(dumps(BACKUP_METADATA)))
     )
     backup_id = BACKUP_METADATA["backup_id"]
@@ -127,6 +128,7 @@ async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_graph_client: MagicMock,
+    mock_drive_items: MagicMock,
 ) -> None:
     """Test agent delete backup."""
     client = await hass_ws_client(hass)
@@ -142,4 +144,4 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value.delete.assert_called_once()
+    mock_drive_items.delete.assert_called_once()
