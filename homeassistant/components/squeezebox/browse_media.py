@@ -46,7 +46,6 @@ MEDIA_TYPE_TO_SQUEEZEBOX = {
     MediaType.PLAYLIST: "playlist",
     MediaType.GENRE: "genre",
     MediaType.APPS: "apps",
-    "Apps": "apps",
     "Radios": "radios",
 }
 
