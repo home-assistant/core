@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from http import HTTPStatus
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from aiowebostv import WebOsTvPairError
 from freezegun.api import FrozenDateTimeFactory
@@ -46,6 +46,7 @@ from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_CLIENT_SECRET,
     ENTITY_MATCH_NONE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -64,7 +65,6 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from . import setup_webostv
 from .const import CHANNEL_2, ENTITY_ID, TV_NAME
@@ -475,6 +475,28 @@ async def test_client_disconnected(
     assert "TimeoutError" not in caplog.text
 
 
+async def test_client_key_update_on_connect(
+    hass: HomeAssistant,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test client key update upon connect."""
+    config_entry = await setup_webostv(hass)
+
+    assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
+
+    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
+    monkeypatch.setattr(client, "client_key", "new_key")
+
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
+
+
 async def test_control_error_handling(
     hass: HomeAssistant,
     client,
@@ -483,7 +505,7 @@ async def test_control_error_handling(
 ) -> None:
     """Test control errors handling."""
     await setup_webostv(hass)
-    monkeypatch.setattr(client, "play", Mock(side_effect=WebOsTvCommandError))
+    monkeypatch.setattr(client, "play", AsyncMock(side_effect=WebOsTvCommandError))
     data = {ATTR_ENTITY_ID: ENTITY_ID}
 
     # Device on, raise HomeAssistantError
@@ -498,7 +520,7 @@ async def test_control_error_handling(
 
     # Device off, log a warning
     monkeypatch.setattr(client, "is_on", False)
-    monkeypatch.setattr(client, "play", Mock(side_effect=TimeoutError))
+    monkeypatch.setattr(client, "play", AsyncMock(side_effect=TimeoutError))
     await client.mock_state_update()
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
@@ -794,16 +816,20 @@ async def test_get_image_https(
 
 
 async def test_reauth_reconnect(
-    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    client,
+    monkeypatch: pytest.MonkeyPatch,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reauth flow triggered by reconnect."""
     entry = await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
+    monkeypatch.setattr(client, "connect", AsyncMock(side_effect=WebOsTvPairError))
 
     assert entry.state is ConfigEntryState.LOADED
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
