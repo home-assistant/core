@@ -125,4 +125,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use web sessions.
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'paho-mqtt==1.6.1' appears untyped

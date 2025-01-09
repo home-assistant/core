@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.backup.manager import WrittenBackup
+from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
 
 from .common import TEST_BACKUP_PATH_ABC123
@@ -76,7 +76,7 @@ def mock_create_backup() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
     ) as mock_create_backup:
-        mock_create_backup.return_value = (MagicMock(), fut)
+        mock_create_backup.return_value = (NewBackup(backup_job_id="abc123"), fut)
         yield mock_create_backup
 
 

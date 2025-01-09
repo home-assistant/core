@@ -1,7 +1,7 @@
 {
   "domain": "plugwise",
   "name": "Plugwise",
-  "codeowners": ["@CoMPaTech", "@bouwew", "@frenck"],
+  "codeowners": ["@CoMPaTech", "@bouwew"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/plugwise",
   "integration_type": "hub",

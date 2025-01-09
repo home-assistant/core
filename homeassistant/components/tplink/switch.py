@@ -26,8 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 class TPLinkSwitchEntityDescription(
     SwitchEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Base class for a TPLink feature based sensor entity description."""
+    """Base class for a TPLink feature based switch entity description."""
 
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
@@ -53,6 +57,18 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     ),
     TPLinkSwitchEntityDescription(
         key="pir_enabled",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="motion_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="person_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="tamper_detection",
+    ),
+    TPLinkSwitchEntityDescription(
+        key="baby_cry_detection",
     ),
 )
 
@@ -97,6 +113,7 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
         await self._feature.set_value(False)
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = cast(bool | None, self._feature.value)
+        return True

@@ -58,6 +58,7 @@ class KitchenSinkBackupAgent(BackupAgent):
                 backup_id="abc123",
                 database_included=False,
                 date="1970-01-01T00:00:00Z",
+                extra_metadata={},
                 folders=[Folder.MEDIA, Folder.SHARE],
                 homeassistant_included=True,
                 homeassistant_version="2024.12.0",

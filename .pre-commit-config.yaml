@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.3
+    rev: v0.8.6
     hooks:
       - id: ruff
         args:
@@ -12,7 +12,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
+          - --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn
           - --skip="./.*,*.csv,*.json,*.ambr"
           - --quiet-level=2
         exclude_types: [csv, json, html]

@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import COUNTRY, EMAIL, LANGUAGE, PASSWORD
+from .test_init import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -182,6 +183,199 @@ async def test_flow_user_init_data_already_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_flow_reconfigure_success(
+    hass: HomeAssistant,
+    cookidoo_config_entry: AsyncMock,
+    mock_cookidoo_client: AsyncMock,
+) -> None:
+    """Test we get the reconfigure flow and create entry with success."""
+    cookidoo_config_entry.add_to_hass(hass)
+    await setup_integration(hass, cookidoo_config_entry)
+
+    result = await cookidoo_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["handler"] == "cookidoo"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            **MOCK_DATA_USER_STEP,
+            CONF_EMAIL: "new-email",
+            CONF_PASSWORD: "new-password",
+            CONF_COUNTRY: "DE",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LANGUAGE: "de-DE"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert cookidoo_config_entry.data == {
+        **MOCK_DATA_USER_STEP,
+        CONF_EMAIL: "new-email",
+        CONF_PASSWORD: "new-password",
+        CONF_COUNTRY: "DE",
+        CONF_LANGUAGE: "de-DE",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CookidooRequestException(), "cannot_connect"),
+        (CookidooException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_1(
+    hass: HomeAssistant,
+    cookidoo_config_entry: AsyncMock,
+    mock_cookidoo_client: AsyncMock,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test unknown errors."""
+    mock_cookidoo_client.login.side_effect = raise_error
+
+    cookidoo_config_entry.add_to_hass(hass)
+    await setup_integration(hass, cookidoo_config_entry)
+
+    result = await cookidoo_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["handler"] == "cookidoo"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == text_error
+
+    # Recover
+    mock_cookidoo_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LANGUAGE: "de-DE"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert cookidoo_config_entry.data == {
+        **MOCK_DATA_USER_STEP,
+        CONF_COUNTRY: "DE",
+        CONF_LANGUAGE: "de-DE",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (CookidooRequestException(), "cannot_connect"),
+        (CookidooException(), "unknown"),
+        (IndexError(), "unknown"),
+    ],
+)
+async def test_flow_reconfigure_init_data_unknown_error_and_recover_on_step_2(
+    hass: HomeAssistant,
+    cookidoo_config_entry: AsyncMock,
+    mock_cookidoo_client: AsyncMock,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test unknown errors."""
+    mock_cookidoo_client.get_additional_items.side_effect = raise_error
+
+    cookidoo_config_entry.add_to_hass(hass)
+    await setup_integration(hass, cookidoo_config_entry)
+
+    result = await cookidoo_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["handler"] == "cookidoo"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_DATA_USER_STEP, CONF_COUNTRY: "DE"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "language"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LANGUAGE: "de-DE"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == text_error
+
+    # Recover
+    mock_cookidoo_client.get_additional_items.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_LANGUAGE: "de-DE"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert cookidoo_config_entry.data == {
+        **MOCK_DATA_USER_STEP,
+        CONF_COUNTRY: "DE",
+        CONF_LANGUAGE: "de-DE",
+    }
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_flow_reconfigure_id_mismatch(
+    hass: HomeAssistant,
+    mock_cookidoo_client: AsyncMock,
+    cookidoo_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort when the new config is not for the same user."""
+
+    cookidoo_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        cookidoo_config_entry, unique_id="some_other_uuid"
+    )
+
+    result = await cookidoo_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            **MOCK_DATA_USER_STEP,
+            CONF_EMAIL: "new-email",
+            CONF_PASSWORD: "new-password",
+            CONF_COUNTRY: "DE",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
 async def test_flow_reauth(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
@@ -261,36 +455,17 @@ async def test_flow_reauth_error_and_recover(
     assert len(hass.config_entries.async_entries()) == 1
 
 
-@pytest.mark.parametrize(
-    ("new_email", "saved_email", "result_reason"),
-    [
-        (EMAIL, EMAIL, "reauth_successful"),
-        ("another-email", EMAIL, "already_configured"),
-    ],
-)
-async def test_flow_reauth_init_data_already_configured(
+async def test_flow_reauth_id_mismatch(
     hass: HomeAssistant,
     mock_cookidoo_client: AsyncMock,
     cookidoo_config_entry: MockConfigEntry,
-    new_email: str,
-    saved_email: str,
-    result_reason: str,
 ) -> None:
-    """Test we abort user data set when entry is already configured."""
+    """Test we abort when the new auth is not for the same user."""
 
     cookidoo_config_entry.add_to_hass(hass)
-
-    another_cookidoo_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_EMAIL: "another-email",
-            CONF_PASSWORD: PASSWORD,
-            CONF_COUNTRY: COUNTRY,
-            CONF_LANGUAGE: LANGUAGE,
-        },
+    hass.config_entries.async_update_entry(
+        cookidoo_config_entry, unique_id="some_other_uuid"
     )
-
-    another_cookidoo_config_entry.add_to_hass(hass)
 
     result = await cookidoo_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -298,9 +473,8 @@ async def test_flow_reauth_init_data_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_EMAIL: new_email, CONF_PASSWORD: PASSWORD},
+        {CONF_EMAIL: "new-email", CONF_PASSWORD: PASSWORD},
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == result_reason
-    assert cookidoo_config_entry.data[CONF_EMAIL] == saved_email
+    assert result["reason"] == "unique_id_mismatch"
