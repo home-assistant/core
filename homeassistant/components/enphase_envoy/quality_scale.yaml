@@ -11,8 +11,7 @@ rules:
   config-flow-test-coverage: done
   config-flow:
     status: todo
-    comment: |
-      - async_step_reaut L160: I believe that the unique is already set when starting a reauth flow
+    comment: Even though redundant as explained in PR133726, add data-description fields for config-flow steps
   dependency-transparency: done
   docs-actions:
     status: done
