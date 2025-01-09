@@ -14,7 +14,11 @@ from compit_inext_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
@@ -45,8 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
                 hass.config.language
             )
         except ValueError as e:
-            _LOGGER.warning("Value error: %s", e)
-            return False
+            raise ConfigEntryError("Invalid data returned from api") from e
 
         coordinator = CompitDataUpdateCoordinator(
             hass, system_info.gates, api, device_definitions
@@ -56,8 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         return True
 
-    _LOGGER.error("Authentication API error")
-    return False
+    raise ConfigEntryAuthFailed("Authentication API error")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:

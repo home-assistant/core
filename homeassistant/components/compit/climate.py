@@ -1,5 +1,6 @@
 """Module contains the CompitClimate class for controlling climate entities."""
 
+import asyncio
 from typing import Any
 
 from compit_inext_api import Device, Parameter
@@ -18,6 +19,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANURFACER_NAME
 from .coordinator import CompitDataUpdateCoordinator
+
+PARAM_PRESET_MODE = "__trybpracytermostatu"
+PARAM_FAN_MODE = "__trybaero"
+PARAM_HVAC_MODE = "__trybpracyinstalacji"
+PARAM_CURRENT_TEMPERATURE = "__tpokojowa"
+PARAM_TARGET_TEMPERATURE = "__tpokzadana"
+PARAM_SET_TARGET_TEMPERATURE = "__tempzadpracareczna"
 
 type CompitConfigEntry = ConfigEntry[CompitDataUpdateCoordinator]
 
@@ -74,88 +82,37 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         self._attr_name = device.label
         self._attr_has_entity_name = True
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self.parameters = {
+        self._attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+        )
+        self._attr_device_info = DeviceInfo(
+            {
+                "identifiers": {(DOMAIN, str(device.id))},
+                "name": device.label,
+                "manufacturer": MANURFACER_NAME,
+                "model": device_name,
+                "sw_version": "1.0",
+            }
+        )
+
+        parametersDict = {
             parameter.parameter_code: parameter for parameter in parameters
         }
         self.device = device
-        self.available_presets: Parameter | None = self.parameters.get(
-            "__trybpracytermostatu"
+        self.available_presets: Parameter | None = parametersDict.get(PARAM_PRESET_MODE)
+        self.available_fan_modes: Parameter | None = parametersDict.get(PARAM_FAN_MODE)
+        self.available_hvac_modes: Parameter | None = parametersDict.get(
+            PARAM_HVAC_MODE
         )
-        self.available_fan_modes: Parameter | None = self.parameters.get("__trybaero")
-        self.available_hvac_modes: Parameter | None = self.parameters.get(
-            "__trybpracyinstalacji"
-        )
-        self.device_name = device_name
-        self._temperature: float | None = None
-        self._preset_mode: int | None = None
-        self._fan_mode: int | None = None
-        self._hvac_mode: HVACMode | None = None
-        self.set_initial_values()
-
-    def set_initial_values(self) -> None:
-        """Set initial values for the climate device."""
-
-        preset_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
-            "__trybpracytermostatu"
-        )
-        if preset_mode and self.available_presets and self.available_presets.details:
-            preset = next(
-                (
-                    item
-                    for item in self.available_presets.details
-                    if item is not None and item.state == preset_mode.value
-                ),
-                None,
-            )
-            self._preset_mode = preset.state if preset is not None else None
-        else:
-            self._preset_mode = None
-        fan_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
-            "__trybaero"
-        )
-        if fan_mode and self.available_fan_modes and self.available_fan_modes.details:
-            fan = next(
-                (
-                    item
-                    for item in self.available_fan_modes.details
-                    if item is not None and item.state == fan_mode.value
-                ),
-                None,
-            )
-            self._fan_mode = fan.state if fan is not None else None
-        else:
-            self._fan_mode = None
-
-        hvac_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
-            "__trybpracyinstalacji"
-        )
-        if hvac_mode is not None:
-            if hvac_mode.value == 0:
-                self._hvac_mode = HVACMode.HEAT
-            if hvac_mode.value == 1:
-                self._hvac_mode = HVACMode.OFF
-            if hvac_mode.value == 2:
-                self._hvac_mode = HVACMode.COOL
-        else:
-            self._hvac_mode = None
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information about this climate device."""
-
-        return {
-            "identifiers": {(DOMAIN, str(self.device.id))},
-            "name": self.device.label,
-            "manufacturer": MANURFACER_NAME,
-            "model": self.device_name,
-            "sw_version": "1.0",
-        }
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         value = self.coordinator.data[self.device.id].state.get_parameter_value(
-            "__tpokojowa"
+            PARAM_CURRENT_TEMPERATURE
         )
         if value is None:
             return None
@@ -165,20 +122,11 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         value = self.coordinator.data[self.device.id].state.get_parameter_value(
-            "__tpokzadana"
+            PARAM_TARGET_TEMPERATURE
         )
         if value is None:
             return None
         return float(value.value) if value is not None else None
-
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        return (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.PRESET_MODE
-        )
 
     @property
     def preset_modes(self) -> list[str] | None:
@@ -203,15 +151,14 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         ]
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the available HVAC modes."""
-        return [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
-
-    @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
+        preset_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
+            PARAM_PRESET_MODE
+        )
+
         if (
-            self._preset_mode is None
+            preset_mode is None
             or self.available_presets is None
             or self.available_presets.details is None
         ):
@@ -221,7 +168,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             (
                 item
                 for item in self.available_presets.details
-                if item is not None and item.state == self._preset_mode
+                if item is not None and item.state == preset_mode.value
             ),
             None,
         )
@@ -232,8 +179,11 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
+        fan_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
+            PARAM_FAN_MODE
+        )
         if (
-            self._fan_mode is None
+            fan_mode is None
             or self.available_fan_modes is None
             or self.available_fan_modes.details is None
         ):
@@ -243,7 +193,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             (
                 item
                 for item in self.available_fan_modes.details
-                if item is not None and item.state == self._fan_mode
+                if item is not None and item.state == fan_mode.value
             ),
             None,
         )
@@ -254,15 +204,24 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
-        return self._hvac_mode
+        hvac_mode = self.coordinator.data[self.device.id].state.get_parameter_value(
+            PARAM_HVAC_MODE
+        )
+        if hvac_mode:
+            if hvac_mode.value == 0:
+                return HVACMode.HEAT
+            if hvac_mode.value == 1:
+                return HVACMode.OFF
+            if hvac_mode.value == 2:
+                return HVACMode.COOL
+        return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get("temperature")
         if temp is None:
             return
-        self._temperature = temp
-        await self.async_call_api("__tempzadpracareczna", temp)
+        await self.async_call_api(PARAM_SET_TARGET_TEMPERATURE, temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
@@ -273,8 +232,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             value = 1
         elif hvac_mode == HVACMode.COOL:
             value = 2
-        self._hvac_mode = hvac_mode
-        await self.async_call_api("__trybpracyinstalacji", value)
+        await self.async_call_api(PARAM_HVAC_MODE, value)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
@@ -290,8 +248,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if value is None:
             return
-        self._preset_mode = value.state
-        await self.async_call_api("__trybpracytermostatu", value.state)
+        await self.async_call_api(PARAM_PRESET_MODE, value.state)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -307,8 +264,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         if value is None:
             return
-        self._fan_mode = value.state
-        await self.async_call_api("__trybaero", value.state)
+        await self.async_call_api(PARAM_FAN_MODE, value.state)
 
     async def async_call_api(self, parameter: str, value: int) -> None:
         """Call the API to set a parameter to a new value."""

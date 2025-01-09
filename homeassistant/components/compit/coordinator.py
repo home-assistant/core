@@ -31,7 +31,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
         device_definitions: DeviceDefinitions,
     ) -> None:
         """Initialize."""
-        self.devices: dict[int, DeviceInstance] = {}
+        self.device_instances: dict[int, DeviceInstance] = {}
         self.api = api
         self.gates = gates
         self.device_definitions = device_definitions
@@ -44,7 +44,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
         for gate in self.gates:
             _LOGGER.debug("Gate: %s, Code: %s", gate.label, gate.code)
             for device in gate.devices:
-                if device.id not in self.devices:
+                if device.id not in self.device_instances:
                     device_definition = next(
                         (
                             item
@@ -62,7 +62,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
                             device.type,
                         )
                         continue
-                    self.devices[device.id] = DeviceInstance(device_definition)
+                    self.device_instances[device.id] = DeviceInstance(device_definition)
 
                 _LOGGER.debug(
                     "Device: %s, id: %s, class: %s, type: %s",
@@ -75,9 +75,9 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
                     state = await self.api.get_state(device.id)
 
                     if state and isinstance(state, DeviceState):
-                        self.devices[device.id].state = state
+                        self.device_instances[device.id].state = state
                     else:
                         _LOGGER.error("Failed to get state for device %s", device.id)
                 except ValueError as exception:
                     raise UpdateFailed from exception
-        return self.devices
+        return self.device_instances
