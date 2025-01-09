@@ -97,7 +97,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_tariff",
         translation_key="active_tariff",
         has_fn=lambda data: data.tariff is not None,
-        value_fn=lambda data: (None if data.tariff is None else str(data.tariff)),
+        value_fn=lambda data: None if data.tariff is None else str(data.tariff),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4"],
     ),
@@ -622,7 +622,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize sensors."""
 
-    measurement: Measurement = entry.runtime_data.data.measurement
+    measurement = entry.runtime_data.data.measurement
 
     # Initialize default sensors
     entities: list = [

@@ -43,16 +43,20 @@ def mock_homewizardenergy(
             measurement=Measurement.from_dict(
                 load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
             ),
-            state=State.from_dict(
-                load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
-            )
-            if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists()
-            else None,
-            system=System.from_dict(
-                load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
-            )
-            if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists()
-            else None,
+            state=(
+                State.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists()
+                else None
+            ),
+            system=(
+                System.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists()
+                else None
+            ),
         )
 
         # device() call is used during configuration flow
