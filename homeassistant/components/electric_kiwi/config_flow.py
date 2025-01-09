@@ -6,9 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from electrickiwi_api import ElectricKiwiApi
+
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from . import api
 from .const import DOMAIN, SCOPE_VALUES
 
 
@@ -45,7 +48,19 @@ class ElectricKiwiOauth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for Electric Kiwi."""
-        existing_entry = await self.async_set_unique_id(DOMAIN)
+
+        ek_api = ElectricKiwiApi(
+            api.ConfigFlowElectricKiwiAuth(self.hass, data["token"]["access_token"])
+        )
+
+        session = await ek_api.get_active_session()
+
+        if len(session.customer_numbers) == 0:
+            return self.async_abort(reason="no_customers")
+
+        unique_id = "_".join(str(num) for num in session.customer_numbers)
+        existing_entry = await self.async_set_unique_id(unique_id)
+
         if existing_entry:
             return self.async_update_reload_and_abort(existing_entry, data=data)
-        return await super().async_oauth_create_entry(data)
+        return self.async_create_entry(title=unique_id, data=data)
