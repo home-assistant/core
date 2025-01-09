@@ -389,6 +389,7 @@ async def test_agents_upload_fail_put(
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
     put_mock_kwargs: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
@@ -417,6 +418,9 @@ async def test_agents_upload_fail_put(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.cloud.backup.asyncio.sleep"),
+        patch("homeassistant.components.cloud.backup.random.randint", return_value=60),
+        patch("homeassistant.components.cloud.backup._RETRY_LIMIT", 2),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
@@ -426,6 +430,8 @@ async def test_agents_upload_fail_put(
         )
         await hass.async_block_till_done()
 
+    assert len(aioclient_mock.mock_calls) == 2
+    assert "Failed to upload backup, retrying (2/2) in 60s" in caplog.text
     assert resp.status == 201
     store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
     assert len(store_backups) == 1
@@ -469,6 +475,7 @@ async def test_agents_upload_fail_cloud(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.cloud.backup.asyncio.sleep"),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
