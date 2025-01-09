@@ -82,12 +82,13 @@ class X10Light(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light, scaled to base class 0..255.
-        This needs to be scaled from 0..x for use with X10 dimmers."""
+
+        This needs to be scaled from 0..x for use with X10 dimmers.
+        """
         return self._brightness
 
     def normalize_x10_brightness(self, brightness: float) -> float:
         """Return calculated brightness values."""
-        # TODO: scaling should be definable in config - some devices have more or fewer levels
         return int((brightness / 255) * 32)
 
     @property
@@ -102,12 +103,11 @@ class X10Light(LightEntity):
             # Dim down from max if applicable, also avoids a "dim" command if an "on" is more appropriate
             old_brightness = 255
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        brightness_diff = (self.normalize_x10_brightness(self._brightness) -
-                           self.normalize_x10_brightness(old_brightness))
-        command_prefix = ""
+        brightness_diff = self.normalize_x10_brightness(
+            self._brightness
+        ) - self.normalize_x10_brightness(old_brightness)
         command_suffix = ""
         # heyu has quite a messy command structure - we'll just deal with it here
-        # TODO: this deserves its own tested function
         if brightness_diff == 0:
             if self._is_cm11a:
                 command_prefix = "on"
@@ -144,7 +144,6 @@ class X10Light(LightEntity):
         """Fetch update state."""
         if self._is_cm11a:
             self._state = bool(get_unit_status(self._id))
-            # TODO: set brightness from "heyu dimstate"
         else:
             # Not supported on CM17A
             pass
