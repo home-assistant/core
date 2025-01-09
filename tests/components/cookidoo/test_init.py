@@ -233,7 +233,6 @@ async def test_migration_from(
         "config_data",
         "unique_id",
         "login_exception",
-        "result",
     ),
     [
         (
@@ -242,7 +241,6 @@ async def test_migration_from(
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
             CookidooRequestException,
-            ConfigEntryState.MIGRATION_ERROR,
         ),
         (
             1,
@@ -250,7 +248,6 @@ async def test_migration_from(
             MOCK_CONFIG_ENTRY_MIGRATION,
             None,
             CookidooAuthException,
-            ConfigEntryState.MIGRATION_ERROR,
         ),
     ],
 )
@@ -263,7 +260,6 @@ async def test_migration_from_with_error(
     config_data,
     unique_id,
     login_exception: Exception,
-    result: ConfigEntryState,
     mock_cookidoo_client: AsyncMock,
 ) -> None:
     """Test different expected migration paths but with connection issues."""
@@ -273,7 +269,7 @@ async def test_migration_from_with_error(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=config_data,
-        title=f"MIGRATION_TEST from {from_version}.{from_minor_version} with login exception '{login_exception}' expecting result '{result}'",
+        title=f"MIGRATION_TEST from {from_version}.{from_minor_version} with login exception '{login_exception}'",
         version=from_version,
         minor_version=from_minor_version,
         unique_id=unique_id,
@@ -310,4 +306,32 @@ async def test_migration_from_with_error(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state is result
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.TODO,
+                DOMAIN,
+                f"{OLD_ENTRY_ID}_ingredients",
+            )
+        )
+    )
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.TODO,
+                DOMAIN,
+                f"{OLD_ENTRY_ID}_additional_items",
+            )
+        )
+    )
+    assert entity_registry.async_is_registered(
+        entity_registry.entities.get_entity_id(
+            (
+                Platform.BUTTON,
+                DOMAIN,
+                f"{OLD_ENTRY_ID}_todo_clear",
+            )
+        )
+    )
