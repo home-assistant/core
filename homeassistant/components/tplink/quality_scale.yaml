@@ -6,9 +6,7 @@ rules:
   config-flow-test-coverage:
     status: todo
     comment: Clean up stale docstrings
-  runtime-data:
-    status: todo
-    comment: Use typed config entry in coordinator
+  runtime-data: done
   test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
@@ -16,7 +14,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: The integration does not use events.
-  dependency-transparency: todo
+  dependency-transparency: done
   action-setup:
     status: exempt
     comment: The integration only uses platform services.
@@ -47,10 +45,7 @@ rules:
     comment: The integration does not have any options configuration parameters.
 
   # Gold
-  entity-translations:
-    status: todo
-    comment: Use device class translations, remove unused translations \
-      translate Unnamed, setup exceptions, mac mismatch, async_set_hvac_mode
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
