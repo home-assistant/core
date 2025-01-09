@@ -806,7 +806,9 @@ async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> No
 @respx.mock
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_options_only_stream(
-    hass: HomeAssistant, mock_create_stream: _patch[MagicMock]
+    hass: HomeAssistant,
+    mock_setup_entry: _patch[MagicMock],
+    mock_create_stream: _patch[MagicMock],
 ) -> None:
     """Test the options flow without a still_image_url."""
     data = TESTDATA.copy()
@@ -818,8 +820,9 @@ async def test_options_only_stream(
         data={},
         options=data,
     )
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
+    with mock_setup_entry:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -843,6 +846,7 @@ async def test_options_only_stream(
 
 async def test_options_still_and_stream_not_provided(
     hass: HomeAssistant,
+    mock_setup_entry: _patch[MagicMock],
 ) -> None:
     """Test we show a suitable error if neither still or stream URL are provided."""
     data = TESTDATA.copy()
@@ -853,8 +857,9 @@ async def test_options_still_and_stream_not_provided(
         data={},
         options=data,
     )
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
+    with mock_setup_entry:
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
