@@ -1,12 +1,18 @@
 """Tests for the Synology DSM backup agent."""
 
+from io import StringIO
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup import (
+    DOMAIN as BACKUP_DOMAIN,
+    AddonInfo,
+    AgentBackup,
+    Folder,
+)
 from homeassistant.components.synology_dsm.const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
@@ -52,7 +58,7 @@ async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
 
 
 @pytest.fixture
-def dsm_with_filestation():
+def mock_dsm_with_filestation():
     """Mock a successful service with filestation support."""
 
     with patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
@@ -97,6 +103,8 @@ def dsm_with_filestation():
                 ]
             ),
             download_file=_mock_download_file,
+            upload_file=AsyncMock(return_value=True),
+            delete_file=AsyncMock(return_value=True),
         )
 
         yield dsm
@@ -105,13 +113,13 @@ def dsm_with_filestation():
 @pytest.fixture
 async def setup_dsm_with_filestation(
     hass: HomeAssistant,
-    dsm_with_filestation: MagicMock,
+    mock_dsm_with_filestation: MagicMock,
 ):
     """Mock setup of synology dsm config entry."""
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
-            return_value=dsm_with_filestation,
+            return_value=mock_dsm_with_filestation,
         ),
         patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]),
     ):
@@ -134,12 +142,12 @@ async def setup_dsm_with_filestation(
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         await hass.async_block_till_done()
 
-        yield entry
+        yield mock_dsm_with_filestation
 
 
 async def test_agents_info(
     hass: HomeAssistant,
-    setup_dsm_with_filestation: MockConfigEntry,
+    setup_dsm_with_filestation: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test backup agent info."""
@@ -159,7 +167,7 @@ async def test_agents_info(
 
 async def test_agents_list_backups(
     hass: HomeAssistant,
-    setup_dsm_with_filestation: MockConfigEntry,
+    setup_dsm_with_filestation: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test agent list backups."""
@@ -220,7 +228,7 @@ async def test_agents_list_backups(
 async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup_dsm_with_filestation: MockConfigEntry,
+    setup_dsm_with_filestation: MagicMock,
     backup_id: str,
     expected_result: dict[str, Any] | None,
 ) -> None:
@@ -237,7 +245,7 @@ async def test_agents_get_backup(
 async def test_agents_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup_dsm_with_filestation: MockConfigEntry,
+    setup_dsm_with_filestation: MagicMock,
 ) -> None:
     """Test agent download backup."""
     client = await hass_client()
@@ -248,3 +256,80 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
+
+
+async def test_agents_upload(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    setup_dsm_with_filestation: MagicMock,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=0,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=synology_dsm.Mock Title",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {backup_id}" in caplog.text
+    mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
+    assert len(mock.mock_calls) == 2
+    assert mock.call_args_list[0].kwargs["filename"] == "test-backup.tar"
+    assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
+    assert mock.call_args_list[1].kwargs["filename"] == "test-backup_meta.json"
+    assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
+
+
+async def test_agents_delete(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_dsm_with_filestation: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    client = await hass_ws_client(hass)
+    backup_id = "abcd12ef"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
+    assert len(mock.mock_calls) == 2
+    assert mock.call_args_list[0].kwargs["filename"] == "abcd12ef.tar"
+    assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
+    assert mock.call_args_list[1].kwargs["filename"] == "abcd12ef_meta.json"
+    assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
