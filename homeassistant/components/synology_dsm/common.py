@@ -163,9 +163,9 @@ class SynoApi:
         # check if file station is used and permitted
         self._with_file_station = bool(self.dsm.apis.get(SynoFileStation.LIST_API_KEY))
         if self._with_file_station:
-            try:
-                await self.dsm.file.get_shared_folders(only_writable=True)
-            except SYNOLOGY_CONNECTION_EXCEPTIONS:
+            with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+                shares = await self.dsm.file.get_shared_folders(only_writable=True)
+            if not shares:
                 self._with_file_station = False
                 self.dsm.reset(SynoFileStation.API_KEY)
                 LOGGER.debug(
