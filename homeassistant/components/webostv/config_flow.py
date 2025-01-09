@@ -105,8 +105,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid
-        if uuid.startswith("uuid:"):
-            uuid = uuid[5:]
+        uuid = uuid.removeprefix("uuid:")
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
