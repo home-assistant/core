@@ -29,6 +29,9 @@
       "tilt": {
         "default": "mdi:angle-acute"
       },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      },
       "valve_status": {
         "default": "mdi:valve"
       }

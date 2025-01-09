@@ -1222,6 +1222,15 @@ RPC_SENSORS: Final = {
         options_fn=lambda config: config["options"],
         device_class=SensorDeviceClass.ENUM,
     ),
+    "valve_position": RpcSensorDescription(
+        key="blutrv",
+        sub_key="pos",
+        name="Valve position",
+        translation_key="valve_position",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
