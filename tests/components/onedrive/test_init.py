@@ -13,6 +13,12 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def mock_get_special_folder(mock_graph_client: MagicMock) -> MagicMock:
+    """Mock the get special folder method."""
+    return mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get
+
+
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -41,12 +47,12 @@ async def test_load_unload_config_entry(
 async def test_approot_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_graph_client: MagicMock,
+    mock_get_special_folder: MagicMock,
     side_effect: Exception,
     state: ConfigEntryState,
 ) -> None:
     """Test errors during approot retrieval."""
-    mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get.side_effect = side_effect
+    mock_get_special_folder.side_effect = side_effect
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is state
 
@@ -54,11 +60,11 @@ async def test_approot_errors(
 async def test_faulty_approot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_graph_client: MagicMock,
+    mock_get_special_folder: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test faulty approot retrieval."""
-    mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get.return_value = None
+    mock_get_special_folder.return_value = None
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Failed to get approot folder" in caplog.text
