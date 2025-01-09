@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import timedelta
 import logging
 import os
 from types import MappingProxyType
@@ -28,7 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import OneWireConfigEntry
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
@@ -39,7 +39,12 @@ from .const import (
     READ_MODE_INT,
 )
 from .entity import OneWireEntity, OneWireEntityDescription
-from .onewirehub import OneWireHub
+from .onewirehub import OneWireConfigEntry, OneWireHub
+
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -352,6 +357,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
+    # note: we have to go through the executor as SENSOR platform
+    # makes extra calls to the hub during device listing
     entities = await hass.async_add_executor_job(
         get_entities, config_entry.runtime_data, config_entry.options
     )
@@ -366,7 +373,6 @@ def get_entities(
         return []
 
     entities: list[OneWireSensor] = []
-    assert onewire_hub.owproxy
     for device in onewire_hub.devices:
         family = device.family
         device_type = device.type

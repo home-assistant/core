@@ -8,9 +8,9 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "No devices discovered",
-      "no_username": "Could not get username",
-      "incorrect_api_key": "Invalid API key for selected account"
+      "no_devices": "No devices found, ensure your Sensibo devices are correctly set up and have a remote defined",
+      "no_username": "Could not retrieve username, ensure your Sensibo account has a proper username and try again",
+      "incorrect_api_key": "The provided API key does not match for this account"
     },
     "step": {
       "user": {
@@ -18,7 +18,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the documentation to get your api key"
+          "api_key": "Follow the [documentation]({url}) to get your api key"
         }
       },
       "reauth_confirm": {
@@ -387,6 +387,21 @@
               "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "stopped": "[%key:common::state::off%]",
+              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
+              "rangeleft": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeleft%]",
+              "rangeright": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeright%]"
+            }
           }
         }
       }
@@ -494,23 +509,65 @@
           "description": "Choose between temperature/feels like/humidity."
         }
       }
+    },
+    "get_device_capabilities": {
+      "name": "Get device mode capabilities",
+      "description": "Retrieve the device capabilities for a specific device according to api requirements.",
+      "fields": {
+        "hvac_mode": {
+          "name": "[%key:component::climate::services::set_hvac_mode::fields::hvac_mode::name%]",
+          "description": "[%key:component::climate::services::set_hvac_mode::fields::hvac_mode::description%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sensitivity": {
+      "options": {
+        "normal": "[%key:component::sensibo::entity::sensor::sensitivity::state::n%]",
+        "sensitive": "[%key:component::sensibo::entity::sensor::sensitivity::state::s%]"
+      }
+    },
+    "assume_state": {
+      "options": {
+        "on": "[%key:common::state::on%]",
+        "off": "[%key:common::state::off%]"
+      }
+    },
+    "hvac_mode": {
+      "options": {
+        "cool": "[%key:component::climate::entity_component::_::state::cool%]",
+        "heat": "[%key:component::climate::entity_component::_::state::heat%]",
+        "fan": "[%key:component::climate::entity_component::_::state::fan_only%]",
+        "auto": "[%key:component::climate::entity_component::_::state::auto%]",
+        "dry": "[%key:component::climate::entity_component::_::state::dry%]",
+        "off": "[%key:common::state::off%]"
+      }
+    },
+    "light_mode": {
+      "options": {
+        "on": "[%key:common::state::on%]",
+        "off": "[%key:common::state::off%]",
+        "dim": "[%key:component::sensibo::entity::select::light::state::dim%]"
+      }
+    },
+    "smart_type": {
+      "options": {
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "feelslike": "[%key:component::sensibo::entity::switch::climate_react_switch::state_attributes::type::state::feelslike%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]"
+      }
     }
   },
   "exceptions": {
-    "no_target_temperature_in_features": {
-      "message": "Current mode doesn't support setting target temperature"
-    },
-    "no_fan_level_in_features": {
-      "message": "Current mode doesn't support setting fan level"
-    },
     "fan_mode_not_supported": {
       "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
     },
-    "no_swing_in_features": {
-      "message": "Current mode doesn't support setting swing"
-    },
     "swing_not_supported": {
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+    },
+    "horizontal_swing_not_supported": {
+      "message": "Climate horizontal swing mode {horizontal_swing_mode} is not supported by the integration, please open an issue"
     },
     "service_result_not_true": {
       "message": "Could not perform action for {name}"
@@ -518,11 +575,26 @@
     "service_raised": {
       "message": "Could not perform action for {name} with error {error}"
     },
-    "select_option_not_available": {
-      "message": "Current mode {hvac_mode} doesn't support setting {key}"
-    },
     "climate_react_not_available": {
       "message": "Use Sensibo Enable Climate React action once to enable switch or the Sensibo app"
+    },
+    "auth_error": {
+      "message": "Authentication failed, please update your API key"
+    },
+    "update_error": {
+      "message": "There was an error updating from the Sensibo API with the error: {error}"
+    },
+    "no_data": {
+      "message": "[%key:component::sensibo::config::error::no_devices%]"
+    },
+    "mode_not_exist": {
+      "message": "The entity does not support the chosen mode"
+    }
+  },
+  "issues": {
+    "deprecated_entity_horizontalswing": {
+      "title": "The Sensibo {name} entity is deprecated",
+      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\n, Disable the `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
     }
   }
 }
