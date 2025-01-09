@@ -20,6 +20,11 @@ from kasa.iot import IotDevice
 import pytest
 
 from homeassistant.components import tplink
+from homeassistant.components.homeassistant.scene import (
+    CONF_SCENE_ID,
+    CONF_SNAPSHOT,
+    SERVICE_CREATE,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -35,7 +40,10 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.components.tplink.light import (
     SERVICE_RANDOM_EFFECT,
@@ -194,14 +202,16 @@ async def test_color_light(
     assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
         LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
     )
     light.set_state.reset_mock()
 
-    await hass.services.async_call(LIGHT_DOMAIN, "turn_on", BASE_PAYLOAD, blocking=True)
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
+    )
     light.set_state.assert_called_once_with(
         LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
     )
@@ -209,7 +219,7 @@ async def test_color_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -218,7 +228,7 @@ async def test_color_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -229,7 +239,7 @@ async def test_color_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -240,7 +250,7 @@ async def test_color_light(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
@@ -311,14 +321,16 @@ async def test_color_light_with_active_effect(
     assert attributes[ATTR_COLOR_MODE] == "brightness"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
         LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
     )
     light.set_state.reset_mock()
 
-    await hass.services.async_call(LIGHT_DOMAIN, "turn_on", BASE_PAYLOAD, blocking=True)
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
+    )
     light.set_state.assert_called_once_with(
         LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
     )
@@ -326,7 +338,7 @@ async def test_color_light_with_active_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -335,7 +347,7 @@ async def test_color_light_with_active_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -346,7 +358,7 @@ async def test_color_light_with_active_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -357,7 +369,7 @@ async def test_color_light_with_active_effect(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
@@ -397,20 +409,20 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     assert attributes[ATTR_XY_COLOR] == (0.42, 0.336)
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -419,7 +431,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
@@ -462,20 +474,20 @@ async def test_color_temp_light_color(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -484,7 +496,7 @@ async def test_color_temp_light_color(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -494,7 +506,7 @@ async def test_color_temp_light_color(hass: HomeAssistant) -> None:
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
         blocking=True,
     )
@@ -504,7 +516,7 @@ async def test_color_temp_light_color(hass: HomeAssistant) -> None:
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
         blocking=True,
     )
@@ -549,20 +561,20 @@ async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
     assert attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -571,7 +583,7 @@ async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6666},
         blocking=True,
     )
@@ -581,7 +593,7 @@ async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 20000},
         blocking=True,
     )
@@ -591,7 +603,7 @@ async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
     # Verify color temp is clamped to the valid range
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 1},
         blocking=True,
     )
@@ -625,20 +637,20 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["brightness"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
@@ -667,13 +679,13 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
@@ -723,7 +735,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once_with(
         LightState(
@@ -778,7 +790,7 @@ async def test_smart_strip_effects(
     # is in progress calls set_effect to clear the effect
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4000},
         blocking=True,
     )
@@ -789,7 +801,7 @@ async def test_smart_strip_effects(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect2"},
         blocking=True,
     )
@@ -806,7 +818,7 @@ async def test_smart_strip_effects(
     # Test setting light effect off
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "off"},
         blocking=True,
     )
@@ -821,7 +833,7 @@ async def test_smart_strip_effects(
     caplog.clear()
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "Effect3"},
         blocking=True,
     )
@@ -850,7 +862,7 @@ async def test_smart_strip_effects(
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -890,7 +902,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -919,7 +931,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -969,7 +981,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -978,7 +990,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "random_effect",
+        SERVICE_RANDOM_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "init_states": [340, 20, 50],
@@ -1122,7 +1134,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     # fallback to set HSV when custom effect is not known so it does turn back on
     await hass.services.async_call(
         LIGHT_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
@@ -1152,7 +1164,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         DOMAIN,
-        "sequence_effect",
+        SERVICE_SEQUENCE_EFFECT,
         {
             ATTR_ENTITY_ID: entity_id,
             "sequence": [[340, 20, 50], [20, 50, 50], [0, 100, 50]],
@@ -1228,7 +1240,7 @@ async def test_light_errors_when_turned_on(
 
     with pytest.raises(HomeAssistantError, match=msg):
         await hass.services.async_call(
-            LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
     await hass.async_block_till_done()
     assert light.set_state.call_count == 1
@@ -1312,13 +1324,13 @@ async def test_scene_effect_light(
         assert await hass.config_entries.async_setup(
             already_migrated_config_entry.entry_id
         )
-        assert await async_setup_component(hass, "scene", {})
+        assert await async_setup_component(hass, SCENE_DOMAIN, {})
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
     freezer.tick(5)
@@ -1330,9 +1342,9 @@ async def test_scene_effect_light(
     assert state.attributes["effect"] is EFFECT_OFF
 
     await hass.services.async_call(
-        "scene",
-        "create",
-        {"scene_id": "effect_off_scene", "snapshot_entities": [entity_id]},
+        SCENE_DOMAIN,
+        SERVICE_CREATE,
+        {CONF_SCENE_ID: "effect_off_scene", CONF_SNAPSHOT: [entity_id]},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -1340,7 +1352,7 @@ async def test_scene_effect_light(
     assert scene_state.state is STATE_UNKNOWN
 
     await hass.services.async_call(
-        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     await hass.async_block_till_done()
     freezer.tick(5)
@@ -1351,10 +1363,10 @@ async def test_scene_effect_light(
     assert state.state is STATE_OFF
 
     await hass.services.async_call(
-        "scene",
-        "turn_on",
+        SCENE_DOMAIN,
+        SERVICE_TURN_ON,
         {
-            "entity_id": "scene.effect_off_scene",
+            ATTR_ENTITY_ID: "scene.effect_off_scene",
         },
         blocking=True,
     )

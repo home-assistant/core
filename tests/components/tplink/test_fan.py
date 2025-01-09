@@ -10,6 +10,8 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -87,7 +89,7 @@ async def test_fan(
     assert state.state == "off"
 
     await hass.services.async_call(
-        FAN_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(4)
     fan.set_fan_speed_level.reset_mock()
@@ -102,14 +104,14 @@ async def test_fan(
     assert state.state == "on"
 
     await hass.services.async_call(
-        FAN_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     fan.set_fan_speed_level.assert_called_once_with(0)
     fan.set_fan_speed_level.reset_mock()
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        "turn_on",
+        SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 50},
         blocking=True,
     )

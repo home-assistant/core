@@ -11,6 +11,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import stream
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     CameraEntityFeature,
     StreamType,
     async_get_image,
@@ -435,16 +438,16 @@ async def test_camera_turn_on_off(
     assert state is not None
 
     await hass.services.async_call(
-        "camera",
-        "turn_on",
+        CAMERA_DOMAIN,
+        SERVICE_TURN_ON,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )
     mock_camera.set_state.assert_called_with(True)
 
     await hass.services.async_call(
-        "camera",
-        "turn_off",
+        CAMERA_DOMAIN,
+        SERVICE_TURN_OFF,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )
