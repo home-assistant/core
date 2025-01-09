@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _notify_backup_listeners(hass)
 
     return True
 
@@ -130,11 +130,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         await entry_data.api.async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _notify_backup_listeners(hass)
     return unload_ok
 
 
-async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
 

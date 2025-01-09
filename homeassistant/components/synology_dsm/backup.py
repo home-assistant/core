@@ -31,7 +31,9 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
-    if not (entries := hass.config_entries.async_loaded_entries(DOMAIN)):
+    if not (
+        entries := hass.config_entries.async_loaded_entries(DOMAIN)
+    ) or not hass.data.get(DOMAIN):
         LOGGER.debug("No proper config entry found")
         return []
     agents: list[BackupAgent] = []
