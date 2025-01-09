@@ -42,11 +42,6 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
         key="cloud_connection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
-    # To be replaced & disabled per default by the upcoming update platform.
-    TPLinkBinarySensorEntityDescription(
-        key="update_available",
-        device_class=BinarySensorDeviceClass.UPDATE,
-    ),
     TPLinkBinarySensorEntityDescription(
         key="temperature_warning",
     ),
