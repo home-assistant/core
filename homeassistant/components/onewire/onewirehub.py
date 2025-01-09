@@ -80,7 +80,7 @@ class OneWireHub:
         # Populate the device registry
         device_registry = dr.async_get(self._hass)
         for device in self.devices:
-            device_info: DeviceInfo = device.device_info
+            device_info = device.device_info
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 identifiers=device_info[ATTR_IDENTIFIERS],
@@ -109,14 +109,12 @@ def _discover_devices(
                 device_id,
             )
             continue
-        device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-            ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
-                device_family, MANUFACTURER_MAXIM
-            ),
-            ATTR_MODEL: device_type,
-            ATTR_NAME: device_id,
-        }
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            manufacturer=DEVICE_MANUFACTURER.get(device_family, MANUFACTURER_MAXIM),
+            model=device_type,
+            name=device_id,
+        )
         if parent_id:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)
         device = OWDeviceDescription(
