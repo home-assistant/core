@@ -1,6 +1,5 @@
 """Config flow for Velux integration."""
 
-from collections.abc import Sequence
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
@@ -11,21 +10,31 @@ from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlo
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .const import DOMAIN, LOGGER
 
-DATA_SCHEMA = vol.Schema(
+USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }
 )
+
+
+async def _check_connection(host: str, password: str) -> dict[str, Any]:
+    """Check if we can connect to the Velux bridge."""
+    pyvlx = PyVLX(host=host, password=password)
+    try:
+        await pyvlx.connect()
+        await pyvlx.disconnect()
+    except (PyVLXException, ConnectionError) as err:
+        LOGGER.debug("Cannot connect: %s", err)
+        return {"base": "cannot_connect"}
+    except Exception as err:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception: %s", err)
+        return {"base": "unknown"}
+
+    return {}
 
 
 class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -35,7 +44,6 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.discovery_schema: vol.Schema | None = None
         self.discovery_data: dict[str, Any] = {}
 
     async def async_step_user(
@@ -46,31 +54,18 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-
-            pyvlx = PyVLX(
-                host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
+            errors = await _check_connection(
+                user_input[CONF_HOST], user_input[CONF_PASSWORD]
             )
-            try:
-                await pyvlx.connect()
-                await pyvlx.disconnect()
-            except (PyVLXException, ConnectionError) as err:
-                errors["base"] = "cannot_connect"
-                LOGGER.debug("Cannot connect: %s", err)
-            except Exception as err:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception: %s", err)
-                errors["base"] = "unknown"
-            else:
+            if not errors:
                 return self.async_create_entry(
-                    title=self.context.get("unique_id") or user_input[CONF_HOST],
-                    data={**self.discovery_data, **user_input},
+                    title=user_input[CONF_HOST],
+                    data=user_input,
                 )
 
-        data_schema = self.discovery_schema or self.add_suggested_values_to_schema(
-            DATA_SCHEMA, user_input
-        )
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
+            data_schema=USER_SCHEMA,
             errors=errors,
         )
 
@@ -78,59 +73,55 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery by DHCP."""
-        return await self._async_handle_discovery(
-            {
-                CONF_HOST: discovery_info.ip,
-                CONF_MAC: format_mac(discovery_info.macaddress),
-                CONF_NAME: discovery_info.hostname.upper().replace("LAN_", ""),
-            }
+        # The hostname ends with the last 4 digits of the device MAC address.
+        self.discovery_data[CONF_HOST] = discovery_info.ip
+        self.discovery_data[CONF_MAC] = format_mac(discovery_info.macaddress)
+        self.discovery_data[CONF_NAME] = discovery_info.hostname.upper().replace(
+            "LAN_", ""
         )
 
-    async def _async_handle_discovery(
-        self, discovery_info: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Prepare configuration for a discovered Velux device."""
-        # The hostname ends with the last 4 digits of the device MAC address.
-        self.discovery_data[CONF_HOST] = discovery_info[CONF_HOST]
-        if discovery_info[CONF_MAC]:
-            self.discovery_data[CONF_MAC] = discovery_info[CONF_MAC]
-        self.discovery_data[CONF_NAME] = discovery_info[CONF_NAME]
-
-        await self.async_set_unique_id(discovery_info[CONF_NAME])
-        self._abort_if_unique_id_configured(updates=self.discovery_data)
+        await self.async_set_unique_id(self.discovery_data[CONF_NAME])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.discovery_data[CONF_HOST]}
+        )
 
         # Abort if config_entry already exists without unigue_id configured.
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
-                entry.data[CONF_HOST] == discovery_info[CONF_HOST]
+                entry.data[CONF_HOST] == self.discovery_data[CONF_HOST]
                 and entry.unique_id is None
-                and entry.state == ConfigEntryState.LOADED
+                and entry.state is ConfigEntryState.LOADED
             ):
                 self.hass.config_entries.async_update_entry(
                     entry=entry,
-                    unique_id=discovery_info[CONF_NAME],
+                    unique_id=self.discovery_data[CONF_NAME],
                     data={**entry.data, **self.discovery_data},
                 )
                 return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: self.discovery_data[CONF_HOST]})
+        return await self.async_step_discovery_confirm()
 
-        options: Sequence[SelectOptionDict] = [
-            {
-                "label": f"{discovery_info[CONF_NAME]} ({discovery_info[CONF_HOST]})",
-                "value": discovery_info[CONF_HOST],
-            }
-        ]
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prepare configuration for a discovered Velux device."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            errors = await _check_connection(
+                self.discovery_data[CONF_HOST], user_input[CONF_PASSWORD]
+            )
+            if not errors:
+                return self.async_create_entry(
+                    title=self.discovery_data[CONF_NAME],
+                    data={**self.discovery_data, **user_input},
+                )
 
-        self.discovery_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST): SelectSelector(
-                    SelectSelectorConfig(
-                        options=options,
-                        custom_value=False,
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            ),
+            errors=errors,
         )
-
-        return await self.async_step_user()
