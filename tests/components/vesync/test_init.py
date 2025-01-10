@@ -4,6 +4,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pyvesync import VeSync
+from pyvesync.vesyncbulb import VeSyncBulb
+from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
+from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
 from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
