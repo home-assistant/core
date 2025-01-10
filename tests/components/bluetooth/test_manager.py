@@ -1665,18 +1665,23 @@ async def test_async_register_disappeared_callback(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"
     )
 
+    failed_disappeared: list[str] = []
+
     def _failing_callback(_address: str) -> None:
         """Failing callback."""
+        failed_disappeared.append(_address)
         raise ValueError("This is a test")
 
-    failing: list[str] = []
+    ok_disappeared: list[str] = []
 
     def _ok_callback(_address: str) -> None:
         """Ok callback."""
-        failing.append(_address)
+        ok_disappeared.append(_address)
 
     manager: HomeAssistantBluetoothManager = _get_manager()
     cancel1 = manager.async_register_disappeared_callback(_failing_callback)
+    # Make sure the second callback still works if the first one fails and
+    # raises an exception
     cancel2 = manager.async_register_disappeared_callback(_ok_callback)
 
     switchbot_adv_signal_100 = generate_advertisement_data(
@@ -1700,8 +1705,10 @@ async def test_async_register_disappeared_callback(
     ):
         async_fire_time_changed(hass, future_time)
 
-    assert len(failing) == 1
-    assert failing[0] == address
+    assert len(ok_disappeared) == 1
+    assert ok_disappeared[0] == address
+    assert len(failed_disappeared) == 1
+    assert failed_disappeared[0] == address
 
     cancel1()
     cancel2()
