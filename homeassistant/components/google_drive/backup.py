@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import Lock
 from collections.abc import AsyncIterator, Awaitable, Callable, Coroutine
 import json
 import logging
@@ -20,12 +19,7 @@ from homeassistant.helpers.aiohttp_client import (
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
 from .api import create_headers
-from .const import (
-    DOMAIN,
-    DRIVE_API_FILES,
-    DRIVE_API_UPLOAD_FILES,
-    DRIVE_FOLDER_URL_PREFIX,
-)
+from .const import DOMAIN, DRIVE_API_FILES, DRIVE_API_UPLOAD_FILES
 
 _LOGGER = logging.getLogger(__name__)
 _UPLOAD_TIMEOUT = 12 * 3600
@@ -75,7 +69,6 @@ class GoogleDriveBackupAgent(BackupAgent):
         self._hass = hass
         self._folder_id = config_entry.unique_id
         self._auth = config_entry.runtime_data
-        self._update_backups_json_lock = Lock()
 
     async def async_upload_backup(
         self,
@@ -92,6 +85,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         headers = await self._async_headers()
         backup_metadata = {
             "name": f"{backup.name} {backup.date}.tar",
+            "description": json.dumps(backup.as_dict()),
             "parents": [self._folder_id],
             "properties": {
                 "ha": "backup",
@@ -114,20 +108,28 @@ class GoogleDriveBackupAgent(BackupAgent):
             _LOGGER.error("Upload backup error: %s", err)
             raise BackupAgentError("Failed to upload backup") from err
 
-        async with self._update_backups_json_lock:
-            backups_json_file_id, backups_json = await self._async_get_backups_json(
-                headers
-            )
-            backups_json.append(backup.as_dict())
-            await self._async_create_or_update_backups_json(
-                headers, backups_json_file_id, backups_json
-            )
-
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         headers = await self._async_headers()
-        _, backups_json = await self._async_get_backups_json(headers)
-        return [AgentBackup.from_dict(backup) for backup in backups_json]
+        query = " and ".join(
+            [
+                f"'{self._folder_id}' in parents",
+                "trashed=false",
+            ]
+        )
+        try:
+            res = await self._async_query(
+                headers, query, "files(description,properties)"
+            )
+        except ClientError as err:
+            raise BackupAgentError("Failed to list backups") from err
+        backups = []
+        for file in res["files"]:
+            if "properties" not in file or "backup_id" not in file["properties"]:
+                continue
+            backup = AgentBackup.from_dict(json.loads(file["description"]))
+            backups.append(backup)
+        return backups
 
     async def async_get_backup(
         self,
@@ -187,14 +189,6 @@ class GoogleDriveBackupAgent(BackupAgent):
             except ClientError as err:
                 _LOGGER.error("Delete backup error: %s", err)
                 raise BackupAgentError("Failed to delete backup") from err
-        async with self._update_backups_json_lock:
-            backups_json_file_id, backups_json = await self._async_get_backups_json(
-                headers
-            )
-            backups_json = [x for x in backups_json if x["backup_id"] != backup_id]
-            await self._async_create_or_update_backups_json(
-                headers, backups_json_file_id, backups_json
-            )
 
     async def _async_headers(self) -> dict[str, str]:
         try:
@@ -202,89 +196,6 @@ class GoogleDriveBackupAgent(BackupAgent):
         except HomeAssistantError as err:
             raise BackupAgentError("Failed to refresh token") from err
         return create_headers(access_token)
-
-    async def _async_get_backups_json(
-        self, headers: dict[str, str]
-    ) -> tuple[str | None, list[dict[str, Any]]]:
-        query = " and ".join(
-            [
-                f"'{self._folder_id}' in parents",
-                "trashed=false",
-                "properties has { key='ha' and value='backups.json' }",
-            ]
-        )
-        try:
-            res = await self._async_query(headers, query, "files(id)")
-        except ClientError as err:
-            _LOGGER.error("_async_get_backups_json error: %s", err)
-            raise BackupAgentError("Failed to get backups.json") from err
-        backups_json_file_id = None
-        files = res["files"]
-        for file in files:
-            backups_json_file_id = str(file["id"])
-        if len(files) > 1:
-            _LOGGER.warning(
-                "Found multiple backups.json in %s/%s. Using %s",
-                DRIVE_FOLDER_URL_PREFIX,
-                self._folder_id,
-                backups_json_file_id,
-            )
-        backups_json = []
-        if backups_json_file_id:
-            all_bytes = bytearray()
-            try:
-                stream = await self._async_download(headers, backups_json_file_id)
-            except ClientError as err:
-                _LOGGER.error("_async_get_backups_json error: %s", err)
-                raise BackupAgentError("Failed to download backups.json") from err
-            async for chunk in stream:
-                all_bytes.extend(chunk)
-            backups_json = json.loads(all_bytes)
-        return backups_json_file_id, backups_json
-
-    async def _async_create_or_update_backups_json(
-        self,
-        headers: dict[str, str],
-        backups_json_file_id: str | None,
-        backups_json: list[dict[str, Any]],
-    ) -> None:
-        def _create_open_stream_backup_json() -> Callable[[], Awaitable[bytes]]:
-            async def _open_stream_backup_json() -> bytes:
-                return json.dumps(backups_json, indent=2).encode("utf-8")
-
-            return _open_stream_backup_json
-
-        if backups_json_file_id:
-            try:
-                _LOGGER.debug("Updating backups.json")
-                await self._async_upload_existing(
-                    headers,
-                    backups_json_file_id,
-                    _create_open_stream_backup_json(),
-                )
-                _LOGGER.debug("Updated backups.json")
-            except ClientError as err:
-                _LOGGER.error("Update backups.json error: %s", err)
-                raise BackupAgentError("Failed to update backups.json") from err
-        else:
-            backups_json_metadata = {
-                "name": "backups.json",
-                "parents": [self._folder_id],
-                "properties": {
-                    "ha": "backups.json",
-                },
-            }
-            try:
-                _LOGGER.debug("Creating backups.json")
-                await self._async_upload(
-                    headers,
-                    backups_json_metadata,
-                    _create_open_stream_backup_json(),
-                )
-                _LOGGER.debug("Created backups.json")
-            except ClientError as err:
-                _LOGGER.error("Create backups.json error: %s", err)
-                raise BackupAgentError("Failed to create backups.json") from err
 
     async def _async_upload(
         self,
@@ -308,22 +219,6 @@ class GoogleDriveBackupAgent(BackupAgent):
                 timeout=ClientTimeout(total=_UPLOAD_TIMEOUT),
             )
             resp.raise_for_status()
-
-    async def _async_upload_existing(
-        self,
-        headers: dict[str, str],
-        file_id: str,
-        open_stream: Callable[
-            [], Coroutine[Any, Any, AsyncIterator[bytes]] | Awaitable[bytes]
-        ],
-    ) -> None:
-        resp = await async_get_clientsession(self._hass).patch(
-            f"{DRIVE_API_UPLOAD_FILES}/{file_id}",
-            params={"fields": ""},
-            data=await open_stream(),
-            headers=headers,
-        )
-        resp.raise_for_status()
 
     async def _async_download(
         self, headers: dict[str, str], file_id: str
