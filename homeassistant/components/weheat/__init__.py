@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
+
+import aiohttp
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.exceptions import UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -27,6 +30,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     implementation = await async_get_config_entry_implementation(hass, entry)
 
     session = OAuth2Session(hass, entry, implementation)
+
+    # await session.async_ensure_token_valid()
+    try:
+        await session.async_ensure_token_valid()
+    except aiohttp.ClientResponseError as ex:
+        LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
+        if ex.status in (
+            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.UNAUTHORIZED,
+            HTTPStatus.FORBIDDEN,
+        ):
+            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
+        raise ConfigEntryNotReady from ex
 
     token = session.token[CONF_ACCESS_TOKEN]
     entry.runtime_data = []
