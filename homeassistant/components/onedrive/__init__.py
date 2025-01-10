@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .api import OneDriveConfigEntryAccessTokenProvider
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
@@ -84,8 +85,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             translation_placeholders={"folder": "approot"},
         )
 
+    instance_id = await async_get_instance_id(hass)
     backup_folder_id = await _async_create_folder_if_not_exists(
-        items=drive_item.items, base_folder_id=approot.id, folder="backups"
+        items=drive_item.items,
+        base_folder_id=approot.id,
+        folder=f"backups_{instance_id[:8]}",
     )
 
     entry.runtime_data = OneDriveRuntimeData(

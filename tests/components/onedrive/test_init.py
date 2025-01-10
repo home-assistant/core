@@ -80,7 +80,7 @@ async def test_faulty_integration_folder(
     mock_drive_items.get.return_value = None
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to get backups folder" in caplog.text
+    assert "Failed to get backups_9f86d081 folder" in caplog.text
 
 
 async def test_backup_folder_did_not_exist(
@@ -96,7 +96,10 @@ async def test_backup_folder_did_not_exist(
 
 @pytest.mark.parametrize(
     ("status_code", "message"),
-    [(404, "Failed to create backups folder"), (500, "Failed to get backups folder")],
+    [
+        (404, "Failed to create backups_9f86d081 folder"),
+        (500, "Failed to get backups_9f86d081 folder"),
+    ],
 )
 async def test_errors_during_backup_folder_creation(
     hass: HomeAssistant,
