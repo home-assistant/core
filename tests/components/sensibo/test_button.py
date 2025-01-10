@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -54,9 +52,7 @@ async def test_button(
 async def test_button_update(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo button press."""
@@ -85,12 +81,12 @@ async def test_button_update(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "filter_clean", False)
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "filter_last_reset",
-        today,
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].filter_clean = False
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].filter_last_reset = today
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

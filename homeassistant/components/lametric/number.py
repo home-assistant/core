@@ -50,7 +50,7 @@ NUMBERS = [
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        has_fn=lambda device: bool(device.audio),
+        has_fn=lambda device: bool(device.audio and device.audio.available),
         value_fn=lambda device: device.audio.volume if device.audio else 0,
         set_value_fn=lambda api, volume: api.audio(volume=int(volume)),
     ),

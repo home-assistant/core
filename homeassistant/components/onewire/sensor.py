@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import timedelta
 import logging
 import os
 from types import MappingProxyType
@@ -25,10 +26,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import OneWireConfigEntry
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
@@ -39,7 +40,17 @@ from .const import (
     READ_MODE_INT,
 )
 from .entity import OneWireEntity, OneWireEntityDescription
-from .onewirehub import OneWireHub
+from .onewirehub import (
+    SIGNAL_NEW_DEVICE_CONNECTED,
+    OneWireConfigEntry,
+    OneWireHub,
+    OWDeviceDescription,
+)
+
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -352,22 +363,35 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    entities = await hass.async_add_executor_job(
-        get_entities, config_entry.runtime_data, config_entry.options
+
+    async def _add_entities(
+        hub: OneWireHub, devices: list[OWDeviceDescription]
+    ) -> None:
+        """Add 1-Wire entities for all devices."""
+        if not devices:
+            return
+        # note: we have to go through the executor as SENSOR platform
+        # makes extra calls to the hub during device listing
+        entities = await hass.async_add_executor_job(
+            get_entities, hub, devices, config_entry.options
+        )
+        async_add_entities(entities, True)
+
+    hub = config_entry.runtime_data
+    await _add_entities(hub, hub.devices)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_NEW_DEVICE_CONNECTED, _add_entities)
     )
-    async_add_entities(entities, True)
 
 
 def get_entities(
-    onewire_hub: OneWireHub, options: MappingProxyType[str, Any]
+    onewire_hub: OneWireHub,
+    devices: list[OWDeviceDescription],
+    options: MappingProxyType[str, Any],
 ) -> list[OneWireSensor]:
     """Get a list of entities."""
-    if not onewire_hub.devices:
-        return []
-
     entities: list[OneWireSensor] = []
-    assert onewire_hub.owproxy
-    for device in onewire_hub.devices:
+    for device in devices:
         family = device.family
         device_type = device.type
         device_id = device.id

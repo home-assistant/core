@@ -620,10 +620,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 12,
+      'max': 120,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      'step': 5,
     }),
     'config_entry_id': <ANY>,
     'device_class': None,
@@ -656,10 +656,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Power limit',
-      'max': 12,
+      'max': 120,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      'step': 5,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,

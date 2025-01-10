@@ -691,10 +691,7 @@ class ConfigEntry(Generic[_DataT]):
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
-                (
-                    "Config entry '%s' for %s integration not %s; Retrying in %d"
-                    " seconds"
-                ),
+                "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,

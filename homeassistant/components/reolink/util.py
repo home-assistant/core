@@ -82,7 +82,8 @@ def get_device_uid_and_ch(
         ch = int(device_uid[1][5:])
         is_chime = True
     else:
-        ch = host.api.channel_for_uid(device_uid[1])
+        device_uid_part = "_".join(device_uid[1:])
+        ch = host.api.channel_for_uid(device_uid_part)
     return (device_uid, ch, is_chime)
 
 
@@ -167,6 +168,10 @@ def raise_translated_error(
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected",
+                translation_placeholders={"err": str(err)},
+            ) from err
 
     return decorator_raise_translated_error
