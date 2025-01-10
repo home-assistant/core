@@ -18,6 +18,7 @@ from homeassistant.components.velbus.const import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+import homeassistant.helpers.issue_registry as ir
 
 from . import init_integration
 
@@ -27,6 +28,7 @@ from tests.common import MockConfigEntry
 async def test_global_services_with_interface(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test services directed at the bus with an interface parameter."""
     await init_integration(hass, config_entry)
@@ -38,6 +40,7 @@ async def test_global_services_with_interface(
         blocking=True,
     )
     config_entry.runtime_data.controller.scan.assert_called_once_with()
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_interface_parameter")
 
     await hass.services.async_call(
         DOMAIN,
@@ -132,7 +135,7 @@ async def test_set_memo_text(
 
     # Test with unfound module
     controller.return_value.get_module.return_value = None
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError, match="Module not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_MEMO_TEXT,
