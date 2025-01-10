@@ -356,7 +356,7 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, ' '"cmps": ""}',
+        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, "cmps": ""}',
     )
     await hass.async_block_till_done()
     assert (
