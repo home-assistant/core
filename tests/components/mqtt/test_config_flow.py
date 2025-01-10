@@ -266,6 +266,9 @@ async def test_user_connection_works(
         "broker": "127.0.0.1",
         "port": 1883,
     }
+    # Check we have the latest Config Entry version
+    assert result["result"].version == 1
+    assert result["result"].minor_version == 2
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
     # Check config entry got setup
