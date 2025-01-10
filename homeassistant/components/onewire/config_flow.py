@@ -123,7 +123,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm hassio discovery."""
+        """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {
@@ -137,7 +137,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="hassio_confirm",
+            step_id="discovery_confirm",
             errors=errors,
         )
 
