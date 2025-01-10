@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_URL
@@ -21,9 +22,6 @@ from .const import (
     DOMAIN,
 )
 from .scrpi.sc_rpi import ScRpiClient
-
-
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
