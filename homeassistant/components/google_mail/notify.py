@@ -81,9 +81,8 @@ class GMailNotificationService(BaseNotificationService):
         """Send a message."""
         data: dict[str, Any] = kwargs.get(ATTR_DATA) or {}
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-
+        email: MIMEMultipart | MIMEText
         if any(attr in data for attr in [ATTR_HTML, ATTR_IMAGES, ATTR_FILES]):
-            email: MIMEMultipart | MIMEText
             email = MIMEMultipart(_subtype="related")
             html_content = data.get(ATTR_HTML, message)
             email.attach(MIMEText(html_content, "html"))
