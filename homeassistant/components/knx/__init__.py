@@ -91,7 +91,7 @@ from .schema import (
     WeatherSchema,
 )
 from .services import register_knx_services
-from .storage.config_store import KNXConfigStore
+from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY, KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
@@ -226,6 +226,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if knxkeys_filename is not None:
             with contextlib.suppress(FileNotFoundError):
                 (storage_dir / knxkeys_filename).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / CONFIG_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):

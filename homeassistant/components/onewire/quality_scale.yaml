@@ -1,0 +1,126 @@
+rules:
+  ## Bronze
+  config-flow:
+    status: todo
+    comment: missing data_description on options flow
+  test-before-configure: done
+  unique-config-entry:
+    status: done
+    comment: unique ID is not available, but duplicates are prevented based on host/port
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: entities do not subscribe to events
+  dependency-transparency:
+    status: todo
+    comment: The package is not built and published inside a CI pipeline
+  action-setup:
+    status: exempt
+    comment: No service actions currently available
+  common-modules:
+    status: done
+    comment: base entity available, but no coordinator
+  docs-high-level-description:
+    status: todo
+    comment: Under review
+  docs-installation-instructions:
+    status: todo
+    comment: Under review
+  docs-removal-instructions:
+    status: todo
+    comment: Under review
+  docs-actions:
+    status: todo
+    comment: Under review
+  brands: done
+
+  ## Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: No service actions currently available
+  reauthentication-flow:
+    status: exempt
+    comment: Local polling without authentication
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters:
+    status: todo
+    comment: Under review
+  docs-configuration-parameters:
+    status: todo
+    comment: Under review
+
+  ## Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: todo
+    comment: mDNS should be possible - https://owfs.org/index_php_page_avahi-discovery.html
+  stale-devices:
+    status: done
+    comment: >
+      Manual removal, as it is not possible to distinguish
+      between a flaky device and a device that has been removed
+  diagnostics:
+    status: todo
+    comment: config-entry diagnostics level available, might be nice to have device-level diagnostics
+  exception-translations:
+    status: todo
+    comment: Under review
+  icon-translations:
+    status: exempt
+    comment: It doesn't make sense to override defaults
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: done
+    comment: The bus is scanned for new devices at regular interval
+  discovery-update-info:
+    status: todo
+    comment: Under review
+  repair-issues:
+    status: exempt
+    comment: No repairs available
+  docs-use-cases:
+    status: todo
+    comment: Under review
+  docs-supported-devices:
+    status: todo
+    comment: Under review
+  docs-supported-functions:
+    status: todo
+    comment: Under review
+  docs-data-update:
+    status: todo
+    comment: Under review
+  docs-known-limitations:
+    status: todo
+    comment: Under review
+  docs-troubleshooting:
+    status: todo
+    comment: Under review
+  docs-examples:
+    status: todo
+    comment: Under review
+
+  ## Platinum
+  async-dependency:
+    status: todo
+    comment: The dependency is not async
+  inject-websession:
+    status: exempt
+    comment: No websession
+  strict-typing:
+    status: todo
+    comment: The dependency is not typed

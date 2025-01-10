@@ -114,7 +114,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if match := re.match(
                 rf"(?:{old_unique_id})-(?P<id>\d+)", entity_entry.unique_id
             ):
-                entity_new_unique_id = f'{new_unique_id}-{match.group("id")}'
+                entity_new_unique_id = f"{new_unique_id}-{match.group('id')}"
                 _LOGGER.debug(
                     "Migrating entity %s from %s to new id %s",
                     entity_entry.entity_id,
