@@ -39,7 +39,7 @@
           "legacy_setpoint_status": "Legacy setpoint handling"
         },
         "data_description": {
-          "legacy_setpoint_status": "Only enable this option if experience issues in updating the setpoint for your thermostat."
+          "legacy_setpoint_status": "Only enable this option if you experience issues in updating the setpoint for your thermostat."
         }
       }
     },
