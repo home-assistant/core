@@ -1,9 +1,9 @@
 {
   "domain": "mill",
   "name": "Mill",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
-  "dependencies": ["recorder"],
   "documentation": "https://www.home-assistant.io/integrations/mill",
   "iot_class": "local_polling",
   "loggers": ["mill", "mill_local"],
