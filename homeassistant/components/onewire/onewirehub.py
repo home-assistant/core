@@ -102,7 +102,7 @@ def _discover_devices(
             model=device_type,
             model_id=device_type,
             name=device_id,
-            serial_number=device_id,
+            serial_number=device_id[3:],
         )
         if parent_id:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)

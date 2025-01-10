@@ -14,7 +14,7 @@
           'model': 'HB_HUB',
           'model_id': 'HB_HUB',
           'name': 'EF.111111111113',
-          'serial_number': 'EF.111111111113',
+          'serial_number': '111111111113',
         }),
         'family': 'EF',
         'id': 'EF.111111111113',
