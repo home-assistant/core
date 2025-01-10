@@ -1,0 +1,13 @@
+{
+  "domain": "unifi_access",
+  "name": "UniFi Access",
+  "codeowners": ["@hagen93"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/unifi_access",
+  "homekit": {},
+  "iot_class": "local_push",
+  "requirements": ["uiaccessclient==0.9.3"],
+  "ssdp": [],
+  "zeroconf": []
+}

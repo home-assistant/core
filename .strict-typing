@@ -507,6 +507,7 @@ homeassistant.components.trend.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*
+homeassistant.components.unifi_access.*
 homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*

@@ -1596,6 +1596,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
+/homeassistant/components/unifi_access/ @hagen93
+/tests/components/unifi_access/ @hagen93
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @RaHehl
 /tests/components/unifiprotect/ @RaHehl
