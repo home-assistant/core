@@ -58,7 +58,7 @@ class TailwindDoorEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.data.device_id}-{door_id}")},
             via_device=(DOMAIN, coordinator.data.device_id),
-            name=f"Door {coordinator.data.doors[door_id].index+1}",
+            name=f"Door {coordinator.data.doors[door_id].index + 1}",
             manufacturer="Tailwind",
             model=coordinator.data.product,
             sw_version=coordinator.data.firmware_version,
