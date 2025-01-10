@@ -4,9 +4,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 from pyvesync import VeSync
-from pyvesync.vesyncbulb import VeSyncBulb
-from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
-from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
 from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
@@ -52,6 +49,7 @@ async def test_async_setup_entry__no_devices(
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
             Platform.FAN,
+            Platform.HUMIDIFIER,
             Platform.LIGHT,
             Platform.SENSOR,
             Platform.SWITCH,
@@ -80,6 +78,7 @@ async def test_async_setup_entry__loads_fans(
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
             Platform.FAN,
+            Platform.HUMIDIFIER,
             Platform.LIGHT,
             Platform.SENSOR,
             Platform.SWITCH,

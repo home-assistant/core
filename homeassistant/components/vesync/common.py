@@ -7,18 +7,8 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.core import HomeAssistant
 
-<<<<<<< HEAD
-=======
-from .const import (
-    VS_FANS,
-    VS_HUMIDIFIERS,
-    VS_LIGHTS,
-    VS_SENSORS,
-    VS_SWITCHES,
-    VeSyncHumidifierDevice,
-)
+from .const import VeSyncHumidifierDevice
 
->>>>>>> 7909a0828ce (Added humidifier entity)
 _LOGGER = logging.getLogger(__name__)
 
 

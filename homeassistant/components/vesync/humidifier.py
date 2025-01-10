@@ -23,12 +23,12 @@ from .common import is_humidifier
 from .const import (
     DOMAIN,
     VS_COORDINATOR,
+    VS_DEVICES,
     VS_DISCOVERY,
     VS_HUMIDIFIER_MODE_AUTO,
     VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL,
     VS_HUMIDIFIER_MODE_SLEEP,
-    VS_HUMIDIFIERS,
     VeSyncHumidifierDevice,
 )
 from .coordinator import VeSyncDataCoordinator
@@ -67,10 +67,10 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_HUMIDIFIERS], async_add_entities, coordinator)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
