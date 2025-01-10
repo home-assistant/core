@@ -114,6 +114,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
                     self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
                     self._attr_color_mode = ColorMode.HS
                 else:
+                    color_temp = self.device["status"].get("color_temp")
                     self._attr_color_temp_kelvin = (
                         None
                         if color_temp is None

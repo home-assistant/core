@@ -19,7 +19,7 @@ DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data):
     """Validate the user host input."""
 
-    api_instance = ProgettiHWSWAPI(f'{data["host"]}:{data["port"]}')
+    api_instance = ProgettiHWSWAPI(f"{data['host']}:{data['port']}")
     is_valid = await api_instance.check_board()
 
     if not is_valid:

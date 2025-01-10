@@ -4,8 +4,8 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_overseerr import RequestCount
-from python_overseerr.models import WebhookNotificationConfig
+from python_overseerr import MovieDetails, RequestCount, RequestResponse
+from python_overseerr.models import TVDetails, WebhookNotificationConfig
 
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.const import (
@@ -54,6 +54,15 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
             )
         )
         client.test_webhook_notification_config.return_value = True
+        client.get_requests.return_value = RequestResponse.from_json(
+            load_fixture("requests.json", DOMAIN)
+        ).results
+        client.get_movie_details.return_value = MovieDetails.from_json(
+            load_fixture("movie.json", DOMAIN)
+        )
+        client.get_tv_details.return_value = TVDetails.from_json(
+            load_fixture("tv.json", DOMAIN)
+        )
         yield client
 
 
