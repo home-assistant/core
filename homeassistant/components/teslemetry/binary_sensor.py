@@ -428,7 +428,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         data: TeslemetryVehicleData,
         description: TeslemetryBinarySensorEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the binary sensor."""
         self.entity_description = description
         super().__init__(data, description.key)
 
