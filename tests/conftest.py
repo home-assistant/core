@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
+from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -579,7 +580,7 @@ async def hass(
             exceptions.append(
                 Exception(
                     "Received exception handler without exception, "
-                    f"but with message: {context["message"]}"
+                    f"but with message: {context['message']}"
                 )
             )
         orig_exception_handler(loop, context)
@@ -1218,6 +1219,30 @@ def disable_translations_once(
     translations_once.stop()
     yield
     translations_once.start()
+
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_zeroconf_resolver() -> Generator[_patch]:
+    """Mock out the zeroconf resolver."""
+    patcher = patch(
+        "homeassistant.helpers.aiohttp_client._async_make_resolver",
+        return_value=AsyncResolver(),
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_mock_zeroconf_resolver(
+    mock_zeroconf_resolver: _patch,
+) -> Generator[None]:
+    """Disable the zeroconf resolver."""
+    mock_zeroconf_resolver.stop()
+    yield
+    mock_zeroconf_resolver.start()
 
 
 @pytest.fixture

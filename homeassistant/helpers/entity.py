@@ -7,7 +7,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
-from enum import Enum, auto
+from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
@@ -1637,6 +1637,31 @@ class Entity(
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
+
+    @callback
+    def _report_deprecated_supported_features_values(
+        self, replacement: IntFlag
+    ) -> None:
+        """Report deprecated supported features values."""
+        if self._deprecated_supported_features_reported is True:
+            return
+        self._deprecated_supported_features_reported = True
+        report_issue = self._suggest_report_issue()
+        report_issue += (
+            " and reference "
+            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
+        )
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using deprecated supported features"
+                " values which will be removed in HA Core 2025.1. Instead it should use"
+                " %s, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            repr(replacement),
+            report_issue,
         )
 
 
