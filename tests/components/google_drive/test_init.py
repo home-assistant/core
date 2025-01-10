@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-TEST_FOLDER_ID = "google-folder-it"
+TEST_USER_EMAIL = "testuser@domain.com"
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 
@@ -30,7 +30,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_FOLDER_ID,
+        unique_id=TEST_USER_EMAIL,
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -66,8 +66,8 @@ async def test_setup_success(
     """Test successful setup and unload."""
     # Setup looks up existing folder to make sure it still exists
     aioclient_mock.get(
-        f"https://www.googleapis.com/drive/v3/files/{TEST_FOLDER_ID}?fields=",
-        json={},
+        "https://www.googleapis.com/drive/v3/files",
+        json={"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
     )
 
     await setup_integration()
@@ -112,7 +112,7 @@ async def test_setup_error(
     """Test setup error."""
     # Simulate failure looking up existing folder
     aioclient_mock.get(
-        f"https://www.googleapis.com/drive/v3/files/{TEST_FOLDER_ID}?fields=",
+        "https://www.googleapis.com/drive/v3/files",
         status=status,
     )
 
@@ -132,8 +132,8 @@ async def test_expired_token_refresh_success(
     """Test expired token is refreshed."""
     # Setup looks up existing folder to make sure it still exists
     aioclient_mock.get(
-        f"https://www.googleapis.com/drive/v3/files/{TEST_FOLDER_ID}?fields=",
-        json={},
+        "https://www.googleapis.com/drive/v3/files",
+        json={"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
     )
 
     aioclient_mock.post(

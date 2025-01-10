@@ -10,17 +10,17 @@ from aiohttp.client_exceptions import ClientError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import create_headers
-from .const import (
-    DEFAULT_NAME,
-    DOMAIN,
-    DRIVE_API_FILES,
-    DRIVE_FOLDER_URL_PREFIX,
-    OAUTH2_SCOPES,
-)
+from .api import DriveClient
+from .const import DOMAIN
+
+DEFAULT_NAME = "Google Drive"
+DRIVE_FOLDER_URL_PREFIX = "https://drive.google.com/drive/folders/"
+OAUTH2_SCOPES = [
+    "https://www.googleapis.com/auth/drive.file",
+]
 
 
 class OAuth2FlowHandler(
@@ -61,38 +61,43 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
+        client = DriveClient(
+            session=async_get_clientsession(self.hass),
+            ha_instance_id=await instance_id.async_get(self.hass),
+            access_token=data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+            auth=None,
+        )
 
-        session = async_get_clientsession(self.hass)
-        headers = create_headers(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        try:
+            email_address = await client.async_get_email_address()
+        except ClientError as err:
+            self.logger.error("Error getting email address: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(email_address)
 
         if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
 
+        self._abort_if_unique_id_configured()
+
         try:
-            resp = await session.post(
-                DRIVE_API_FILES,
-                params={"fields": "id"},
-                json={
-                    "name": "Home Assistant",
-                    "mimeType": "application/vnd.google-apps.folder",
-                    "properties": {
-                        "ha": "root",
-                    },
-                },
-                headers=headers,
-            )
-            resp.raise_for_status()
-            res = await resp.json()
+            (
+                folder_id,
+                folder_name,
+            ) = await client.async_create_ha_root_folder_if_not_exists()
         except ClientError as err:
             self.logger.error("Error creating folder: %s", str(err))
             return self.async_abort(reason="create_folder_failure")
-        folder_id = res["id"]
-        await self.async_set_unique_id(folder_id)
-        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=DEFAULT_NAME,
             data=data,
-            description_placeholders={"url": f"{DRIVE_FOLDER_URL_PREFIX}{folder_id}"},
+            description_placeholders={
+                "folder_name": folder_name,
+                "url": f"{DRIVE_FOLDER_URL_PREFIX}{folder_id}",
+            },
         )

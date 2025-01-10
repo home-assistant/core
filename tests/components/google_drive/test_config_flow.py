@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, instance_id
 
 from .conftest import CLIENT_ID
 
@@ -19,7 +19,9 @@ from tests.typing import ClientSessionGenerator
 
 GOOGLE_AUTH_URI = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
+USER_EMAIL = "user@domain.com"
 FOLDER_ID = "google-folder-id"
+FOLDER_NAME = "folder name"
 TITLE = "Google Drive"
 
 
@@ -53,10 +55,18 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    # Prepare API response when creating the folder
+    # Prepare API responses
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        json={"user": {"emailAddress": USER_EMAIL}},
+    )
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/files",
+        json={"files": []},
+    )
     aioclient_mock.post(
-        "https://www.googleapis.com/drive/v3/files?fields=id",
-        json={"id": FOLDER_ID},
+        "https://www.googleapis.com/drive/v3/files",
+        json={"id": FOLDER_ID, "name": FOLDER_NAME},
     )
 
     aioclient_mock.post(
@@ -76,20 +86,23 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[1][2] == {
+    assert len(aioclient_mock.mock_calls) == 4
+    assert aioclient_mock.mock_calls[3][2] == {
         "name": "Home Assistant",
         "mimeType": "application/vnd.google-apps.folder",
-        "properties": {"ha": "root"},
+        "properties": {
+            "ha": "root",
+            "instance_id": await instance_id.async_get(hass),
+        },
     }
-    assert aioclient_mock.mock_calls[1][3] == {
+    assert aioclient_mock.mock_calls[3][3] == {
         "Authorization": "Bearer mock-access-token"
     }
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
     assert "result" in result
-    assert result.get("result").unique_id == FOLDER_ID
+    assert result.get("result").unique_id == USER_EMAIL
     assert "token" in result.get("result").data
     assert result.get("result").data["token"].get("access_token") == "mock-access-token"
     assert (
@@ -127,9 +140,17 @@ async def test_create_folder_error(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    # Prepare fake exception creating the folder
+    # Prepare API responses
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        json={"user": {"emailAddress": USER_EMAIL}},
+    )
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/files",
+        json={"files": []},
+    )
     aioclient_mock.post(
-        "https://www.googleapis.com/drive/v3/files?fields=id",
+        "https://www.googleapis.com/drive/v3/files",
         exc=ClientError,
     )
 
@@ -149,16 +170,82 @@ async def test_create_folder_error(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_reauth(
+async def test_get_email_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test the reauthentication case updates the existing config entry."""
+    """Test case where getting the email address fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    # Prepare API responses
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        exc=ClientError,
+    )
+    aioclient_mock.post(
+        GOOGLE_TOKEN_URI,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "cannot_connect"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("new_email", "expected_abort_reason"),
+    [
+        (
+            USER_EMAIL,
+            "reauth_successful",
+        ),
+        (
+            "other.user@domain.com",
+            "unique_id_mismatch",
+        ),
+    ],
+    ids=["reauth_successful", "unique_id_mismatch"],
+)
+async def test_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    new_email: str,
+    expected_abort_reason: str,
+) -> None:
+    """Test the reauthentication flow."""
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=FOLDER_ID,
+        unique_id=USER_EMAIL,
         data={
             "token": {
                 "access_token": "mock-access-token",
@@ -194,6 +281,11 @@ async def test_reauth(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    # Prepare API responses
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        json={"user": {"emailAddress": new_email}},
+    )
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={
@@ -211,16 +303,23 @@ async def test_reauth(
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_setup.mock_calls) == 1
+    if expected_abort_reason == "reauth_successful":
+        assert len(mock_setup.mock_calls) == 1
+    else:
+        assert len(mock_setup.mock_calls) == 0
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    assert result.get("reason") == expected_abort_reason
 
-    assert config_entry.unique_id == FOLDER_ID
+    assert config_entry.unique_id == USER_EMAIL
     assert "token" in config_entry.data
     # Verify access token is refreshed
-    assert config_entry.data["token"].get("access_token") == "updated-access-token"
-    assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
+    if expected_abort_reason == "reauth_successful":
+        assert config_entry.data["token"].get("access_token") == "updated-access-token"
+        assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
+    else:
+        assert config_entry.data["token"].get("access_token") == "mock-access-token"
+        assert config_entry.data["token"].get("refresh_token") is None
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -229,10 +328,10 @@ async def test_already_configured(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test case for single_instance_allowed."""
+    """Test already configured account."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=FOLDER_ID,
+        unique_id=USER_EMAIL,
         data={
             "token": {
                 "access_token": "mock-access-token",
@@ -244,5 +343,41 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    # Prepare API responses
+    aioclient_mock.get(
+        "https://www.googleapis.com/drive/v3/about",
+        json={"user": {"emailAddress": USER_EMAIL}},
+    )
+    aioclient_mock.post(
+        GOOGLE_TOKEN_URI,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "single_instance_allowed"
+    assert result.get("reason") == "already_configured"

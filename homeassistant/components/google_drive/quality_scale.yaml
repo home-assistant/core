@@ -100,7 +100,9 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: No configuration options.
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: No repairs.
   stale-devices:
     status: exempt
     comment: No devices.
