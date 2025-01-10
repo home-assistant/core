@@ -106,6 +106,7 @@ async def build_item_response(
     player: Player,
     payload: dict[str, str | None],
     browse_limit: int,
+    known_apps: set[str],
 ) -> BrowseMedia:
     """Create response payload for search described by payload."""
 
@@ -182,15 +183,15 @@ async def build_item_response(
                 )
                 CONTENT_TYPE_TO_CHILD_TYPE.update({_cmd: MediaType.TRACK})
 
-                if _cmd not in KNOWN_APPS:
-                    KNOWN_APPS.add(_cmd)
+                if _cmd not in known_apps:
+                    known_apps.add(_cmd)
 
                 child_item_type = _cmd
                 child_media_class = CONTENT_TYPE_MEDIA_CLASS[_cmd]
                 can_expand = True
                 can_play = False
 
-            if search_type in KNOWN_APPS:
+            if search_type in known_apps:
                 if (
                     item.get("title") in ["Search", None]
                     or item.get("type") in UNPLAYABLE_TYPES

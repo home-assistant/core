@@ -240,6 +240,7 @@ class SqueezeBoxMediaPlayerEntity(
             model=player.model,
             manufacturer=_manufacturer,
         )
+        self._known_apps: set[str] = set()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -659,10 +660,7 @@ class SqueezeBoxMediaPlayerEntity(
         }
 
         return await build_item_response(
-            self,
-            self._player,
-            payload,
-            self.browse_limit,
+            self, self._player, payload, self.browse_limit, self._known_apps
         )
 
     async def async_get_browse_image(
