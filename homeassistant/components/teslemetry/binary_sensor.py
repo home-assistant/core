@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from teslemetry_stream import Signal
 
@@ -19,7 +20,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
-from .const import TeslemetryState, WindowState
+from .const import TeslemetryEnum, TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
@@ -30,16 +31,21 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
+# Protobuf values
+WindowState = TeslemetryEnum("WindowState", ["opened", "partiallyopen", "closed"])
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Teslemetry binary sensor entity."""
 
-    polling_value_fn: Callable[[StateType], bool] = lambda x: bool(x)
+    polling_value_fn: Callable[[StateType], bool | None] = bool
     polling: bool = False
     streaming_key: Signal | None = None
     streaming_firmware: str = "2024.26"
-    streaming_value_fn: Callable[[StateType], bool] = lambda x: x is True or x == "true"
+    streaming_value_fn: Callable[[StateType], bool | None] = (
+        lambda x: x is True or x == "true"
+    )
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
@@ -61,8 +67,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="charge_state_charger_phases",
         polling=True,
         streaming_key=Signal.CHARGER_PHASES,
-        polling_value_fn=lambda x: int(x) > 1,
-        streaming_value_fn=lambda x: int(x) > 1,
+        polling_value_fn=lambda x: cast(int, x) > 1,
+        streaming_value_fn=lambda x: cast(int, x) > 1,
         entity_registry_enabled_default=False,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -183,7 +189,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         polling=True,
         device_class=BinarySensorDeviceClass.DOOR,
         streaming_key=Signal.DOOR_STATE,
-        streaming_value_fn=lambda x: x.get("DriverFront"),
+        streaming_value_fn=lambda x: cast(dict, x).get("DriverFront"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -191,7 +197,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         polling=True,
         device_class=BinarySensorDeviceClass.DOOR,
         streaming_key=Signal.DOOR_STATE,
-        streaming_value_fn=lambda x: x.get("DriverRear"),
+        streaming_value_fn=lambda x: cast(dict, x).get("DriverRear"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -199,7 +205,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         polling=True,
         device_class=BinarySensorDeviceClass.DOOR,
         streaming_key=Signal.DOOR_STATE,
-        streaming_value_fn=lambda x: x.get("PassengerFront"),
+        streaming_value_fn=lambda x: cast(dict, x).get("PassengerFront"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -207,7 +213,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         polling=True,
         device_class=BinarySensorDeviceClass.DOOR,
         streaming_key=Signal.DOOR_STATE,
-        streaming_value_fn=lambda x: x.get("PassengerRear"),
+        streaming_value_fn=lambda x: cast(dict, x).get("PassengerRear"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TeslemetryBinarySensorEntityDescription(
@@ -378,7 +384,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
             if (
@@ -431,6 +437,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
 
         self._attr_available = self._value is not None
         if self._attr_available:
+            assert self._value is not None
             self._attr_is_on = self.entity_description.polling_value_fn(self._value)
 
 
@@ -459,8 +466,8 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
 
     def _async_value_from_stream(self, value) -> None:
         """Update the value of the entity."""
-        self._attr_avaliable = value is not None
-        if self._attr_avaliable:
+        self._attr_available = value is not None
+        if self._attr_available:
             self._attr_is_on = self.entity_description.streaming_value_fn(value)
 
 
