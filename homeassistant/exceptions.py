@@ -174,7 +174,7 @@ class ConditionErrorIndex(ConditionError):
         """Yield an indented representation."""
         if self.total > 1:
             yield self._indent(
-                indent, f"In '{self.type}' (item {self.index+1} of {self.total}):"
+                indent, f"In '{self.type}' (item {self.index + 1} of {self.total}):"
             )
         else:
             yield self._indent(indent, f"In '{self.type}':")

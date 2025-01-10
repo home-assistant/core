@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import async_control_connect
-from .const import DATA_CONFIG_ENTRY, DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
+from .const import DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 
 
 @callback
@@ -55,7 +55,8 @@ def async_get_client_by_device_entry(
     Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        if client := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
+        if entry := hass.config_entries.async_get_entry(config_entry_id):
+            client = entry.runtime_data
             break
 
     if not client:
