@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+from freezegun import freeze_time
 
 # pylint: disable-next=no-name-in-module
 from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
@@ -35,10 +36,12 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.dt import utcnow
 from homeassistant.util.json import json_loads
 
 from . import (
@@ -1641,3 +1644,64 @@ async def test_bluetooth_rediscover_no_match(
     cancel()
     unsetup_connectable_scanner()
     cancel_connectable_scanner()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_register_disappeared_callback(
+    hass: HomeAssistant,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
+    """Test bluetooth async_register_disappeared_callback handles failures."""
+    address = "44:44:33:11:23:12"
+
+    switchbot_device_signal_100 = generate_ble_device(
+        address, "wohand_signal_100", rssi=-100
+    )
+    switchbot_adv_signal_100 = generate_advertisement_data(
+        local_name="wohand_signal_100", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"
+    )
+
+    def _failing_callback(_address: str) -> None:
+        """Failing callback."""
+        raise ValueError("This is a test")
+
+    failing: list[str] = []
+
+    def _ok_callback(_address: str) -> None:
+        """Ok callback."""
+        failing.append(_address)
+
+    manager: HomeAssistantBluetoothManager = _get_manager()
+    cancel1 = manager.async_register_disappeared_callback(_failing_callback)
+    cancel2 = manager.async_register_disappeared_callback(_ok_callback)
+
+    switchbot_adv_signal_100 = generate_advertisement_data(
+        local_name="wohand_signal_100",
+        manufacturer_data={123: b"abc"},
+        service_uuids=[],
+        rssi=-80,
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci1"
+    )
+
+    future_time = utcnow() + timedelta(seconds=3600)
+    future_monotonic_time = time.monotonic() + 3600
+    with (
+        freeze_time(future_time),
+        patch(
+            "habluetooth.manager.monotonic_time_coarse",
+            return_value=future_monotonic_time,
+        ),
+    ):
+        async_fire_time_changed(hass, future_time)
+
+    assert len(failing) == 1
+    assert failing[0] == address
+
+    cancel1()
+    cancel2()
