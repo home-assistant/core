@@ -57,6 +57,8 @@ from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_VOLUME_STEP,
+    ANNOUNCE_TIMEOUT,
+    ANNOUNCE_VOLUME,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
@@ -468,19 +470,23 @@ class SqueezeBoxMediaPlayerEntity(
 
         if announce:
             if media_type not in MediaType.MUSIC:
-                raise ValueError(
+                raise ServiceValidationError(
                     "Announcements must have media type of 'music'.  Playlists are not supported"
                 )
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
             cmd = "announce"
+            if extra.get(ANNOUNCE_VOLUME) == "0":
+                raise ServiceValidationError("Announcements cannot have a volume of 0")
             self._player.set_announce_volume(
-                int(extra["announce_volume"])
-                if extra.get("announce_volume", None)
+                int(extra[ANNOUNCE_VOLUME])
+                if extra.get(ANNOUNCE_VOLUME, None)
                 else None
             )
+            if extra.get(ANNOUNCE_TIMEOUT) == "0":
+                raise ServiceValidationError("Announcements cannot have a timeout of 0")
             self._player.set_announce_timeout(
-                int(extra["announce_timeout"])
-                if extra.get("announce_timeout", None)
+                int(extra[ANNOUNCE_TIMEOUT])
+                if extra.get(ANNOUNCE_TIMEOUT, None)
                 else None
             )
 

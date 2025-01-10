@@ -33,6 +33,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.squeezebox.const import (
+    ANNOUNCE_TIMEOUT,
+    ANNOUNCE_VOLUME,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLAYER_UPDATE_INTERVAL,
@@ -470,7 +472,7 @@ async def test_squeezebox_play_media_with_announce_volume(
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
             ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {"announce_volume": "20"},
+            ATTR_MEDIA_EXTRA: {ANNOUNCE_VOLUME: "20"},
         },
         blocking=True,
     )
@@ -478,6 +480,44 @@ async def test_squeezebox_play_media_with_announce_volume(
     configured_player.async_load_url.assert_called_once_with(
         FAKE_VALID_ITEM_ID, "announce"
     )
+
+
+async def test_squeezebox_play_media_with_announce_volume_zero(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test play service call with announce and volume zero."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                ATTR_MEDIA_ANNOUNCE: True,
+                ATTR_MEDIA_EXTRA: {ANNOUNCE_VOLUME: "0"},
+            },
+            blocking=True,
+        )
+
+
+async def test_squeezebox_play_media_with_announce_timeout_zero(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test play service call with announce and volume zero."""
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                ATTR_MEDIA_ANNOUNCE: True,
+                ATTR_MEDIA_EXTRA: {ANNOUNCE_TIMEOUT: "0"},
+            },
+            blocking=True,
+        )
 
 
 async def test_squeezebox_play_media_with_announce_timeout(
@@ -492,7 +532,7 @@ async def test_squeezebox_play_media_with_announce_timeout(
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
             ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {"announce_timeout": "100"},
+            ATTR_MEDIA_EXTRA: {ANNOUNCE_TIMEOUT: "100"},
         },
         blocking=True,
     )
