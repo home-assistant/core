@@ -59,7 +59,7 @@ class TeslemetryClimateSide(StrEnum):
 class TeslemetryEnum:
     """Helper class to handle options for protobuf enums."""
 
-    def __init__(self, prefix: str, options: list[str]):
+    def __init__(self, prefix: str, options: list[str]) -> None:
         """Create a new options list."""
         self.prefix = prefix.lower()
         self.options = [option.lower() for option in options]
@@ -71,6 +71,3 @@ class TeslemetryEnum:
             if option in self.options:
                 return option
         return default
-
-
-WindowState = TeslemetryEnum("WindowState", ["opened", "partiallyopen", "closed"])
