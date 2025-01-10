@@ -84,23 +84,9 @@ class InComfortOptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Initiate options flow."""
-        return await self.async_step_gateway()
-
-    async def async_step_gateway(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
-        if (
-            user_input is not None
-            and (
-                errors := await async_try_connect_gateway(
-                    self.hass, dict(self.config_entry.data)
-                )
-            )
-            is None
-        ):
+        if user_input is not None:
             new_options: dict[str, Any] = self.config_entry.options | user_input
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=new_options
@@ -115,7 +101,7 @@ class InComfortOptionsFlowHandler(OptionsFlow):
             OPTIONS_SCHEMA, self.config_entry.options
         )
         return self.async_show_form(
-            step_id="gateway",
+            step_id="init",
             data_schema=data_schema,
             errors=errors,
         )

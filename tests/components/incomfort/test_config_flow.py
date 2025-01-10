@@ -138,7 +138,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "gateway"
+    assert result["step_id"] == "init"
 
     with patch("homeassistant.components.incomfort.async_setup_entry") as restart_mock:
         result2 = await hass.config_entries.options.async_configure(
@@ -150,33 +150,3 @@ async def test_options_flow(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {"legacy_setpoint_status": legacy_setpoint_status}
     assert entry.options.get("legacy_setpoint_status", False) is legacy_setpoint_status
-
-
-async def test_options_flow_test_fails(
-    hass: HomeAssistant, mock_incomfort: MagicMock
-) -> None:
-    """Test options flow fails because of setup error."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "gateway"
-
-    # Simulate an issue
-    mock_incomfort().heaters.side_effect = InvalidHeaterList
-
-    with patch("homeassistant.components.incomfort.async_setup_entry") as restart_mock:
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"], {"legacy_setpoint_status": True}
-        )
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert restart_mock.call_count == 0
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_heaters"}
-
-    # Entry options were not updated
-    assert entry.options.get("legacy_setpoint_status", False) is False

@@ -33,7 +33,7 @@
   },
   "options": {
     "step": {
-      "gateway": {
+      "init": {
         "title": "Intergas InComfort Lan2RF Gateway options",
         "data": {
           "legacy_setpoint_status": "Legacy setpoint handling"
@@ -42,13 +42,6 @@
           "legacy_setpoint_status": "Only enable this option if you experience issues in updating the setpoint for your thermostat."
         }
       }
-    },
-    "error": {
-      "auth_error": "[%key:component::incomfort::config::abort::auth_error%]",
-      "no_heaters": "[%key:component::incomfort::config::abort::no_heaters%]",
-      "not_found": "[%key:component::incomfort::config::abort::not_found%]",
-      "timeout_error": "[%key:component::incomfort::config::abort::timeout_error%]",
-      "unknown": "[%key:component::incomfort::config::abort::unknown%]"
     }
   },
   "issues": {
