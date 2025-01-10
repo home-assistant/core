@@ -132,6 +132,12 @@ def mock_drive_items(mock_graph_client: MagicMock) -> MagicMock:
 
 
 @pytest.fixture
+def mock_get_special_folder(mock_graph_client: MagicMock) -> MagicMock:
+    """Mock the get special folder method."""
+    return mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get
+
+
+@pytest.fixture
 def mock_upload_task() -> Generator[MagicMock]:
     """Return a mocked UploadTask."""
     with patch(

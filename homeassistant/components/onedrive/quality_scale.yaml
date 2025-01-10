@@ -128,10 +128,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have configuration parameters.
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

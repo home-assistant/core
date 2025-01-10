@@ -2,24 +2,26 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
-from msgraph.generated.drives.item.items.items_request_builder import (
-    ItemsRequestBuilder,
-)
 from msgraph.generated.models.drive_item import DriveItem
-from msgraph.generated.models.folder import Folder
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .api import OneDriveConfigEntryAccessTokenProvider
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, OAUTH_SCOPES
@@ -63,33 +65,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     assert entry.unique_id
     drive_item = graph_client.drives.by_drive_id(entry.unique_id)
 
-    try:
-        approot = await drive_item.special.by_drive_item_id("approot").get()
-    except APIError as err:
-        if err.response_status_code == 403:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN, translation_key="authentication_failed"
-            ) from err
-        _LOGGER.debug("Failed to get approot", exc_info=True)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": "approot"},
-        ) from err
-
-    if approot is None or not approot.id:
-        _LOGGER.debug("Failed to get approot, was None")
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": "approot"},
-        )
+    # get approot, will be created automatically if it does not exist
+    approot_id = await _get_drive_item_id(
+        hass, drive_item.special.by_drive_item_id("approot").get, "approot"
+    )
 
     instance_id = await async_get_instance_id(hass)
-    backup_folder_id = await _async_create_folder_if_not_exists(
-        items=drive_item.items,
-        base_folder_id=approot.id,
-        folder=f"backups_{instance_id[:8]}",
+    backup_folder_name = f"backups_{instance_id[:8]}"
+
+    # get backup folder, raise issue if it does not exist
+    backup_folder_id = await _get_drive_item_id(
+        hass,
+        drive_item.items.by_drive_item_id(f"{approot_id}/{backup_folder_name}:").get,
+        backup_folder_name,
     )
 
     entry.runtime_data = OneDriveRuntimeData(
@@ -111,51 +99,47 @@ async def _notify_backup_listeners(hass: HomeAssistant) -> None:
         listener()
 
 
-async def _async_create_folder_if_not_exists(
-    items: ItemsRequestBuilder,
-    base_folder_id: str,
+async def _get_drive_item_id(
+    hass: HomeAssistant,
+    func: Callable[[], Awaitable[DriveItem | None]],
     folder: str,
 ) -> str:
-    """Check if a folder exists and create it if it does not exist."""
-    folder_item: DriveItem | None = None
+    """Get drive item id."""
     try:
-        folder_item = await items.by_drive_item_id(f"{base_folder_id}:/{folder}:").get()
+        drive_item = await func()
     except APIError as err:
-        if err.response_status_code != 404:
-            _LOGGER.debug("Failed to get folder %s", folder, exc_info=True)
-            raise ConfigEntryNotReady(
+        if err.response_status_code == 403:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        if err.response_status_code == 404:
+            _LOGGER.debug("Backup folder did not exist")
+            async_create_issue(
+                hass,
+                domain=DOMAIN,
+                is_fixable=True,
+                issue_id="backup_folder_did_not_exist",
+                translation_key="backup_folder_did_not_exist",
+                translation_placeholders={"folder": folder},
+                severity=IssueSeverity.ERROR,
+            )
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_get_folder",
                 translation_placeholders={"folder": folder},
             ) from err
-        # is 404 not found, create folder
-        _LOGGER.debug("Creating folder %s", folder)
-        request_body = DriveItem(
-            name=folder,
-            folder=Folder(),
-            additional_data={
-                "@microsoft_graph_conflict_behavior": "fail",
-            },
-        )
-        try:
-            folder_item = await items.by_drive_item_id(base_folder_id).children.post(
-                request_body
-            )
-        except APIError as create_err:
-            _LOGGER.debug("Failed to create folder %s", folder, exc_info=True)
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_create_folder",
-                translation_placeholders={"folder": folder},
-            ) from create_err
-        _LOGGER.debug("Created folder %s", folder)
-    else:
-        _LOGGER.debug("Found folder %s", folder)
-    if folder_item is None or not folder_item.id:
-        _LOGGER.debug("Failed to get folder %s, was None", folder)
+        _LOGGER.debug("Failed to get backup folder", exc_info=True)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_get_folder",
+            translation_placeholders={"folder": folder},
+        ) from err
+
+    if drive_item is None or not drive_item.id:
+        _LOGGER.debug("Failed to get backup folder, was None")
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",
             translation_placeholders={"folder": folder},
         )
-    return folder_item.id
+    return drive_item.id

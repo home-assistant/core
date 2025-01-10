@@ -158,6 +158,7 @@ async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test already configured account."""
@@ -175,6 +176,7 @@ async def test_reauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the reauth flow works."""
@@ -199,6 +201,7 @@ async def test_reauth_flow_id_changed(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_drive: Drive,
 ) -> None:
@@ -217,3 +220,58 @@ async def test_reauth_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_with_backup_folder_creation(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test backup folder did not exist."""
+    mock_drive_items.get.side_effect = APIError(response_status_code=404)
+
+    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_drive_items.children.post.assert_called_once()
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_errors_during_backup_folder_creation(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test error during backup folder creation."""
+
+    mock_drive_items.get.side_effect = APIError(response_status_code=404)
+    mock_drive_items.children.post.side_effect = APIError()
+
+    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "failed_to_create_folder"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_non_404_error_during_backup_folder_get(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test non 404 during getting the backup folder."""
+
+    mock_drive_items.get.side_effect = APIError(response_status_code=500)
+
+    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "connection_error"
