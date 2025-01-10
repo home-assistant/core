@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
-from pylamarzocco.const import BoilerType, MachineModel, PhysicalKey
+from pylamarzocco.const import BoilerType, MachineModel
 from pylamarzocco.devices.machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
@@ -35,6 +36,9 @@ class LaMarzoccoSensorEntityDescription(
     """Description of a La Marzocco sensor."""
 
     value_fn: Callable[[LaMarzoccoMachine], float | int]
+    extra_state_fn: Callable[[LaMarzoccoMachine], dict[str, Any] | None] = (
+        lambda _: None
+    )
 
 
 ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
@@ -81,7 +85,10 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         translation_key="drink_stats_coffee",
         native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
+        value_fn=lambda device: sum(device.statistics.drink_stats.values()),
+        extra_state_fn=lambda device: {
+            key.name: value for key, value in device.statistics.drink_stats.items()
+        },
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -162,6 +169,11 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
     def native_value(self) -> int | float:
         """State of the sensor."""
         return self.entity_description.value_fn(self.coordinator.device)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        return self.entity_description.extra_state_fn(self.coordinator.device)
 
 
 class LaMarzoccoScaleSensorEntity(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
