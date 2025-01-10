@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from io import BytesIO
-from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from PIL import Image
 import pytest
@@ -76,7 +76,7 @@ def fakeimg_gif(fakeimgbytes_gif: bytes) -> Generator[None]:
 
 
 @pytest.fixture(name="mock_create_stream")
-def mock_create_stream_fixture(hass: HomeAssistant) -> _patch[MagicMock]:
+def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock create stream."""
     mock_stream = MagicMock()
     mock_stream.hass = hass
@@ -87,19 +87,21 @@ def mock_create_stream_fixture(hass: HomeAssistant) -> _patch[MagicMock]:
     mock_stream.start = AsyncMock()
     mock_stream.stop = AsyncMock()
     mock_stream.endpoint_url.return_value = "http://127.0.0.1/nothing"
-    return patch(
+    with patch(
         "homeassistant.components.generic.config_flow.create_stream",
         return_value=mock_stream,
-    )
+    ) as mock_create_stream:
+        yield mock_create_stream
 
 
-@pytest.fixture(name="mock_setup_entry")
-def mock_async_setup_entry_fixture() -> _patch:
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setup entry."""
-    return patch(
+    with patch(
         "homeassistant.components.generic.async_setup_entry",
         return_value=True,
-    )
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="user_flow")

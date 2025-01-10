@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 import contextlib
 import errno
 from http import HTTPStatus
@@ -79,36 +80,35 @@ async def test_form(
 ) -> None:
     """Test the form with a normal set of settings."""
 
-    with mock_create_stream, mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
 
-        # HA should now be serving a WS connection for a preview stream.
-        ws_client = await hass_ws_client()
-        flow_id = user_flow["flow_id"]
-        await ws_client.send_json_auto_id(
-            {
-                "type": "generic_camera/start_preview",
-                "flow_id": flow_id,
-            },
-        )
-        json = await ws_client.receive_json()
+    # HA should now be serving a WS connection for a preview stream.
+    ws_client = await hass_ws_client()
+    flow_id = user_flow["flow_id"]
+    await ws_client.send_json_auto_id(
+        {
+            "type": "generic_camera/start_preview",
+            "flow_id": flow_id,
+        },
+    )
+    json = await ws_client.receive_json()
 
-        client = await hass_client()
-        still_preview_url = json["event"]["attributes"]["still_url"]
-        # Check the preview image works.
-        resp = await client.get(still_preview_url)
-        assert resp.status == HTTPStatus.OK
-        assert await resp.read() == fakeimgbytes_png
+    client = await hass_client()
+    still_preview_url = json["event"]["attributes"]["still_url"]
+    # Check the preview image works.
+    resp = await client.get(still_preview_url)
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == fakeimgbytes_png
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -137,18 +137,17 @@ async def test_form_only_stillimage(
     """Test we complete ok if the user wants still images only."""
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
-        await hass.async_block_till_done()
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    await hass.async_block_till_done()
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -172,11 +171,10 @@ async def test_form_reject_preview(
     user_flow: ConfigFlowResult,
 ) -> None:
     """Test we go back to the config screen if the user rejects the preview."""
-    with mock_create_stream:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
     assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "user_confirm"
     result2 = await hass.config_entries.flow.async_configure(
@@ -202,7 +200,6 @@ async def test_form_still_preview_cam_off(
             "homeassistant.components.generic.camera.GenericCamera.is_on",
             new_callable=PropertyMock(return_value=False),
         ),
-        mock_create_stream,
     ):
         result1 = await hass.config_entries.flow.async_configure(
             user_flow["flow_id"],
@@ -240,18 +237,17 @@ async def test_form_only_stillimage_gif(
     """Test we complete ok if the user wants a gif."""
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
-        await hass.async_block_till_done()
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
+    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
 
@@ -268,17 +264,16 @@ async def test_form_only_svg_whitespace(
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_wspace_svg)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
     await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
@@ -295,7 +290,7 @@ async def test_form_only_svg_whitespace(
     ],
 )
 async def test_form_only_still_sample(
-    hass: HomeAssistant, user_flow: ConfigFlowResult, image_file
+    hass: HomeAssistant, user_flow: ConfigFlowResult, image_file, mock_setup_entry
 ) -> None:
     """Test various sample images #69037."""
     image_path = os.path.join(os.path.dirname(__file__), image_file)
@@ -303,18 +298,17 @@ async def test_form_only_still_sample(
     respx.get("http://127.0.0.1/testurl/1").respond(stream=image_bytes)
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
-        await hass.async_block_till_done()
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
+    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -359,6 +353,7 @@ async def test_form_still_template(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
     fakeimgbytes_png: bytes,
+    mock_setup_entry: Generator[AsyncMock],
     template,
     url,
     expected_result,
@@ -372,12 +367,11 @@ async def test_form_still_template(
     data = TESTDATA.copy()
     data.pop(CONF_STREAM_SOURCE)
     data[CONF_STILL_IMAGE_URL] = template
-    with patch("homeassistant.components.generic.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
+    await hass.async_block_till_done()
     assert result2["step_id"] == expected_result
     assert result2.get("errors") == expected_errors
 
@@ -394,16 +388,13 @@ async def test_form_rtsp_mode(
     data = TESTDATA.copy()
     data[CONF_RTSP_TRANSPORT] = "tcp"
     data[CONF_STREAM_SOURCE] = "rtsp://127.0.0.1/testurl/2"
-    with mock_create_stream, mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"], data
-        )
-        assert result1["type"] is FlowResultType.FORM
-        assert result1["step_id"] == "user_confirm"
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
+    result1 = await hass.config_entries.flow.async_configure(user_flow["flow_id"], data)
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -429,18 +420,16 @@ async def test_form_only_stream(
     data = TESTDATA.copy()
     data.pop(CONF_STILL_IMAGE_URL)
     data[CONF_STREAM_SOURCE] = "rtsp://user:pass@127.0.0.1/testurl/2"
-    with mock_create_stream:
-        result1 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            data,
-        )
+    result1 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        data,
+    )
 
     assert result1["type"] is FlowResultType.FORM
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"],
-            user_input={CONF_CONFIRMED_OK: True},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_CONFIRMED_OK: True},
+    )
 
     assert result2["title"] == "127_0_0_1"
     assert result2["options"] == {
@@ -517,11 +506,10 @@ async def test_form_image_http_exceptions(
 ) -> None:
     """Test we handle image http exceptions."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [side_effect]
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == expected_message
@@ -535,11 +523,10 @@ async def test_form_stream_invalidimage(
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
@@ -553,11 +540,10 @@ async def test_form_stream_invalidimage2(
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=None)
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
@@ -571,11 +557,10 @@ async def test_form_stream_invalidimage3(
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
-    with mock_create_stream:
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
@@ -589,18 +574,17 @@ async def test_form_stream_timeout(
     mock_create_stream: _patch[MagicMock],
 ) -> None:
     """Test we handle invalid auth."""
-    with mock_create_stream as create_stream:
-        create_stream.return_value.start = AsyncMock()
-        create_stream.return_value.stop = AsyncMock()
-        create_stream.return_value.hass = hass
-        create_stream.return_value.add_provider.return_value.part_recv = AsyncMock()
-        create_stream.return_value.add_provider.return_value.part_recv.return_value = (
-            False
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            user_flow["flow_id"],
-            TESTDATA,
-        )
+    mock_create_stream.return_value.start = AsyncMock()
+    mock_create_stream.return_value.stop = AsyncMock()
+    mock_create_stream.return_value.hass = hass
+    mock_create_stream.return_value.add_provider.return_value.part_recv = AsyncMock()
+    mock_create_stream.return_value.add_provider.return_value.part_recv.return_value = (
+        False
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        user_flow["flow_id"],
+        TESTDATA,
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "timeout"}
 
@@ -731,60 +715,59 @@ async def test_options_template_error(
     # try updating the still image url
     data = TESTDATA.copy()
     data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/2"
-    with mock_create_stream:
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input=data,
-        )
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "user_confirm"
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=data,
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user_confirm"
 
-        result2a = await hass.config_entries.options.async_configure(
-            result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
-        )
-        assert result2a["type"] is FlowResultType.CREATE_ENTRY
+    result2a = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={CONF_CONFIRMED_OK: True}
+    )
+    assert result2a["type"] is FlowResultType.CREATE_ENTRY
 
-        result3 = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result3["type"] is FlowResultType.FORM
-        assert result3["step_id"] == "init"
+    result3 = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "init"
 
-        # verify that an invalid template reports the correct UI error.
-        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/{{1/0}}"
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input=data,
-        )
-        assert result4.get("type") is FlowResultType.FORM
-        assert result4["errors"] == {"still_image_url": "template_error"}
+    # verify that an invalid template reports the correct UI error.
+    data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/{{1/0}}"
+    result4 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        user_input=data,
+    )
+    assert result4.get("type") is FlowResultType.FORM
+    assert result4["errors"] == {"still_image_url": "template_error"}
 
-        # verify that an invalid template reports the correct UI error.
-        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
-        data[CONF_STREAM_SOURCE] = "http://127.0.0.2/testurl/{{1/0}}"
-        result5 = await hass.config_entries.options.async_configure(
-            result4["flow_id"],
-            user_input=data,
-        )
+    # verify that an invalid template reports the correct UI error.
+    data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+    data[CONF_STREAM_SOURCE] = "http://127.0.0.2/testurl/{{1/0}}"
+    result5 = await hass.config_entries.options.async_configure(
+        result4["flow_id"],
+        user_input=data,
+    )
 
-        assert result5.get("type") is FlowResultType.FORM
-        assert result5["errors"] == {"stream_source": "template_error"}
+    assert result5.get("type") is FlowResultType.FORM
+    assert result5["errors"] == {"stream_source": "template_error"}
 
-        # verify that an relative stream url is rejected.
-        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
-        data[CONF_STREAM_SOURCE] = "relative/stream.mjpeg"
-        result6 = await hass.config_entries.options.async_configure(
-            result5["flow_id"],
-            user_input=data,
-        )
-        assert result6.get("type") is FlowResultType.FORM
-        assert result6["errors"] == {"stream_source": "relative_url"}
+    # verify that an relative stream url is rejected.
+    data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+    data[CONF_STREAM_SOURCE] = "relative/stream.mjpeg"
+    result6 = await hass.config_entries.options.async_configure(
+        result5["flow_id"],
+        user_input=data,
+    )
+    assert result6.get("type") is FlowResultType.FORM
+    assert result6["errors"] == {"stream_source": "relative_url"}
 
-        # verify that an malformed stream url is rejected.
-        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
-        data[CONF_STREAM_SOURCE] = "http://example.com:45:56"
-        result7 = await hass.config_entries.options.async_configure(
-            result6["flow_id"],
-            user_input=data,
-        )
+    # verify that an malformed stream url is rejected.
+    data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+    data[CONF_STREAM_SOURCE] = "http://example.com:45:56"
+    result7 = await hass.config_entries.options.async_configure(
+        result6["flow_id"],
+        user_input=data,
+    )
     assert result7.get("type") is FlowResultType.FORM
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
@@ -820,20 +803,18 @@ async def test_options_only_stream(
         data={},
         options=data,
     )
-    with mock_setup_entry:
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # try updating the config options
-    with mock_create_stream:
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input=data,
-        )
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=data,
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user_confirm"
 
@@ -857,9 +838,8 @@ async def test_options_still_and_stream_not_provided(
         data={},
         options=data,
     )
-    with mock_setup_entry:
-        mock_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -946,11 +926,10 @@ async def test_options_use_wallclock_as_timestamps(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    with mock_setup_entry, mock_create_stream:
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
-        )
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+    )
     assert result2["type"] is FlowResultType.FORM
 
     ws_client = await hass_ws_client()
@@ -977,11 +956,10 @@ async def test_options_use_wallclock_as_timestamps(
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "init"
-    with mock_setup_entry, mock_create_stream:
-        result4 = await hass.config_entries.options.async_configure(
-            result3["flow_id"],
-            user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
-        )
+    result4 = await hass.config_entries.options.async_configure(
+        result3["flow_id"],
+        user_input={CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True, **TESTDATA},
+    )
     assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "user_confirm"
     result5 = await hass.config_entries.options.async_configure(
