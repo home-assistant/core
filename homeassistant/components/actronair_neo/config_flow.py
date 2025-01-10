@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class ActronNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Actron Air Neo."""
 
-    VERSION = 3
+    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""

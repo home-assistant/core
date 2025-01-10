@@ -69,20 +69,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Handle migration of a config entry."""
-    if entry.version != 3:
-        new_data = {**entry.data}
-
-        if entry.version == 1:
-            if "pairing_token" not in new_data:
-                new_data["pairing_token"] = None
-        if entry.version == 2:
-            if "access_token" in new_data:
-                new_data["access_token"] = None
-
-        hass.config_entries.async_update_entry(entry, data=new_data, version=3)
-
-    return True
