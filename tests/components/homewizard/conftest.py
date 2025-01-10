@@ -3,8 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homewizard_energy.errors import NotFoundError
-from homewizard_energy.v1.models import Data, Device, State, System
+from homewizard_energy.models import CombinedModels, Device, Measurement, State, System
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -37,26 +36,31 @@ def mock_homewizardenergy(
     ):
         client = homewizard.return_value
 
-        client.device.return_value = Device.from_dict(
-            load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
-        )
-        client.data.return_value = Data.from_dict(
-            load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
+        client.combined.return_value = CombinedModels(
+            device=Device.from_dict(
+                load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
+            ),
+            measurement=Measurement.from_dict(
+                load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
+            ),
+            state=(
+                State.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists()
+                else None
+            ),
+            system=(
+                System.from_dict(
+                    load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
+                )
+                if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists()
+                else None
+            ),
         )
 
-        if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
-            client.state.return_value = State.from_dict(
-                load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
-            )
-        else:
-            client.state.side_effect = NotFoundError
-
-        if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
-            client.system.return_value = System.from_dict(
-                load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
-            )
-        else:
-            client.system.side_effect = NotFoundError
+        # device() call is used during configuration flow
+        client.device.return_value = client.combined.return_value.device
 
         yield client
 

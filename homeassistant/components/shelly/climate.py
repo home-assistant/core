@@ -557,7 +557,7 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
         self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
-        name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(":", "")}"
+        name = self._config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}"
         model_id = self._config.get("local_name")
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)},
