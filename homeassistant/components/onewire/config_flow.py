@@ -109,18 +109,18 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle hassio discovery."""
         _LOGGER.warning(
-            "Hassio discovery implementation in progress : %s", discovery_info
+            "Hassio discovery implementation in progress: %s", discovery_info
         )
         await self._async_handle_discovery_without_unique_id()
 
         self._discovery = {
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
-            CONF_PORT: discovery_info.config[CONF_PORT],
+            CONF_PORT: int(discovery_info.config[CONF_PORT]),
         }
-        return await self.async_step_hassio_confirm()
+        return await self.async_step_discovery_confirm()
 
-    async def async_step_hassio_confirm(
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm hassio discovery."""
