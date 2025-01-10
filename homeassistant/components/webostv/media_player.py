@@ -68,6 +68,7 @@ SUPPORT_WEBOSTV_VOLUME = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
@@ -325,7 +326,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         if self._client.is_connected():
             return
 
-        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
+        with suppress(*WEBOSTV_EXCEPTIONS):
             try:
                 await self._client.connect()
             except WebOsTvPairError:

@@ -90,9 +90,9 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
     if domain_name == "cover":
         return cast(str, domain_data["motor"])
     if domain_name == "climate":
-        return f'{domain_data["source"]}.{domain_data["setpoint"]}'
+        return f"{domain_data['source']}.{domain_data['setpoint']}"
     if domain_name == "scene":
-        return f'{domain_data["register"]}.{domain_data["scene"]}'
+        return f"{domain_data['register']}.{domain_data['scene']}"
     raise ValueError("Unknown domain")
 
 
