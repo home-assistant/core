@@ -777,7 +777,7 @@ async def _check_config_flow_result_translations(
             translation_errors,
             category,
             integration,
-            f"{key_prefix}abort.{result["reason"]}",
+            f"{key_prefix}abort.{result['reason']}",
             result["description_placeholders"],
         )
 
