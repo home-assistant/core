@@ -3047,17 +3047,17 @@
   })
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_driver_seat_belt-state]
-  'unknown'
+  'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_driver_door-state]
-  'unknown'
+  'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_driver_window-state]
-  'unknown'
+  'on'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_door-state]
-  'unknown'
+  'off'
 # ---
 # name: test_binary_sensors_streaming[binary_sensor.test_front_passenger_window-state]
-  'unknown'
+  'on'
 # ---

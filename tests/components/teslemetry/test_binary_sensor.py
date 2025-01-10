@@ -64,7 +64,7 @@ async def test_binary_sensors_streaming(
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
-    entry = await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
 
     # Stream update
     mock_add_listener.send(
@@ -72,7 +72,7 @@ async def test_binary_sensors_streaming(
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
                 Signal.FD_WINDOW: "WindowStateOpened",
-                Signal.FP_WINDOW: "WindowStateClosed",
+                Signal.FP_WINDOW: "INVALID_VALUE",
                 Signal.DOOR_STATE: {
                     "DoorState": {
                         "DriverFront": True,
