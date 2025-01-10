@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import os
 
@@ -9,9 +10,12 @@ from pyownet import protocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.signal_type import SignalType
 
 from .const import (
     DEVICE_SUPPORT,
@@ -32,9 +36,14 @@ DEVICE_MANUFACTURER = {
     "EF": MANUFACTURER_HOBBYBOARDS,
 }
 
+_DEVICE_SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 type OneWireConfigEntry = ConfigEntry[OneWireHub]
+
+SIGNAL_NEW_DEVICE_CONNECTED = SignalType["OneWireHub", list[OWDeviceDescription]](
+    f"{DOMAIN}_new_device_connected"
+)
 
 
 def _is_known_device(device_family: str, device_type: str | None) -> bool:
@@ -69,12 +78,40 @@ class OneWireHub:
     async def initialize(self) -> None:
         """Initialize a config entry."""
         await self._hass.async_add_executor_job(self._initialize)
-        # Populate the device registry
+        self._populate_device_registry(self.devices)
+
+    @callback
+    def _populate_device_registry(self, devices: list[OWDeviceDescription]) -> None:
+        """Populate the device registry."""
         device_registry = dr.async_get(self._hass)
-        for device in self.devices:
+        for device in devices:
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 **device.device_info,
+            )
+
+    def schedule_scan_for_new_devices(self) -> None:
+        """Schedule a regular scan of the bus for new devices."""
+        self._config_entry.async_on_unload(
+            async_track_time_interval(
+                self._hass, self._scan_for_new_devices, _DEVICE_SCAN_INTERVAL
+            )
+        )
+
+    async def _scan_for_new_devices(self, _: datetime) -> None:
+        """Scan the bus for new devices."""
+        devices = await self._hass.async_add_executor_job(
+            _discover_devices, self.owproxy
+        )
+        existing_device_ids = [device.id for device in self.devices]
+        new_devices = [
+            device for device in devices if device.id not in existing_device_ids
+        ]
+        if new_devices:
+            self.devices.extend(new_devices)
+            self._populate_device_registry(new_devices)
+            async_dispatcher_send(
+                self._hass, SIGNAL_NEW_DEVICE_CONNECTED, self, new_devices
             )
 
 
