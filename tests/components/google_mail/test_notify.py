@@ -87,7 +87,7 @@ async def test_notify_voluptuous_error(
             },
             blocking=True,
         )
-    assert ex.match("File must include one of path, url, or content.")
+    assert ex.match("File must include one of path, url, or content")
 
     with pytest.raises(ValueError) as ex:
         await hass.services.async_call(

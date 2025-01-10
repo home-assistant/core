@@ -170,6 +170,6 @@ class GMailNotificationService(BaseNotificationService):
             file_name = item.get(ATTR_FILE_NAME, "file.dat")
             mime_type = item.get(ATTR_FILE_MIME_TYPE, "application/octet-stream")
         else:
-            raise ValueError("File must include one of path, url, or content.")
+            raise ValueError("File must include one of path, url, or content")
 
         return {"content": content, "file_name": file_name, "mime_type": mime_type}
