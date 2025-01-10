@@ -4,7 +4,7 @@
       "user": {
         "title": "Set up Azure Event Hub",
         "data": {
-          "event_hub_instance_name": "Event hub instance name",
+          "event_hub_instance_name": "Event Hub instance name",
           "use_connection_string": "Use connection string"
         }
       },
