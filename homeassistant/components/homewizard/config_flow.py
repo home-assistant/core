@@ -8,7 +8,7 @@ from typing import Any, NamedTuple
 
 from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.v1.models import Device
+from homewizard_energy.models import Device
 import voluptuous as vol
 
 from homeassistant.components import onboarding, zeroconf
@@ -206,6 +206,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
