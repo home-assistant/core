@@ -63,7 +63,7 @@ async def test_notify_voluptuous_error(
             },
             blocking=True,
         )
-    assert ex.match("recipient address required")
+    assert ex.match("Recipient address required")
 
     with pytest.raises(Invalid) as ex:
         await hass.services.async_call(
@@ -75,3 +75,29 @@ async def test_notify_voluptuous_error(
             blocking=True,
         )
     assert ex.getrepr("required key not provided")
+
+    with pytest.raises(ValueError) as ex:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
+            {
+                "title": "Test",
+                "message": "test email",
+                "data": {"files": {"invalid": ""}},
+            },
+            blocking=True,
+        )
+    assert ex.match("File must include one of path, url, or content.")
+
+    with pytest.raises(ValueError) as ex:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "example_gmail_com",
+            {
+                "title": "Test",
+                "message": "test email",
+                "data": {"images": {"invalid": ""}},
+            },
+            blocking=True,
+        )
+    assert ex.match("File must include one of path, url, or content")
