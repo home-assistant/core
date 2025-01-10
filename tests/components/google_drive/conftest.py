@@ -14,7 +14,7 @@ CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
     assert await async_setup_component(hass, "application_credentials", {})

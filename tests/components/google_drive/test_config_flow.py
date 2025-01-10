@@ -28,7 +28,6 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -103,7 +102,6 @@ async def test_create_folder_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
 ) -> None:
     """Test case where creating the folder fails."""
     result = await hass.config_entries.flow.async_init(
@@ -155,7 +153,6 @@ async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
 
@@ -231,7 +228,6 @@ async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
 ) -> None:
     """Test case for single_instance_allowed."""
     config_entry = MockConfigEntry(
