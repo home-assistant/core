@@ -108,7 +108,7 @@ def make_segment_with_parts(
         f"#EXT-X-PROGRAM-DATE-TIME:{FAKE_TIME.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3]}Z"
     )
     duration = math.ceil(SEGMENT_DURATION / TEST_PART_DURATION) * TEST_PART_DURATION
-    response.append(f"#EXTINF:{duration:.3f}")
+    response.append(f"#EXTINF:{duration:.3f},")
     response.append(f"./segment/{segment}.m4s")
     return "\n".join(response)
 
