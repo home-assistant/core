@@ -67,6 +67,17 @@
       "vehicle_battery": {
         "name": "Vehicle battery"
       }
+    },
+    "switch": {
+      "lock_buttons": {
+        "name": "Lock buttons"
+      },
+      "require_approval": {
+        "name": "Require approval"
+      },
+      "sleep_when_inactive": {
+        "name": "Sleep when inactive"
+      }
     }
   },
   "exceptions": {

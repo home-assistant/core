@@ -510,8 +510,8 @@ def validate_translation_file(  # noqa: C901
                     ):
                         integration.add_error(
                             "translations",
-                            "Don't specify title in translation strings if it's a brand "
-                            "name or add exception to ALLOW_NAME_TRANSLATION",
+                            "Don't specify title in translation strings if it's "
+                            "a brand name or add exception to ALLOW_NAME_TRANSLATION",
                         )
 
     if config.specific_integrations:
@@ -532,12 +532,15 @@ def validate_translation_file(  # noqa: C901
         if parts or key not in search:
             integration.add_error(
                 "translations",
-                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+                f"{reference['source']} contains invalid reference"
+                f"{reference['ref']}: Could not find {key}",
             )
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                "Lokalise supports only one level of references: "
+                f'"{reference["source"]}" should point to directly '
+                f'to "{match.groups()[0]}"',
             )
 
 
