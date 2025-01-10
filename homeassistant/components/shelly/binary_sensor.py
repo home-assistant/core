@@ -232,6 +232,14 @@ RPC_SENSORS: Final = {
         sub_key="value",
         has_entity_name=True,
     ),
+    "calibration": RpcBinarySensorDescription(
+        key="blutrv",
+        sub_key="errors",
+        name="Calibration",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value=lambda status, _: False if status is None else "not_calibrated" in status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
