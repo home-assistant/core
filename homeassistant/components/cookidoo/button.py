@@ -56,7 +56,8 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
         """Initialize cookidoo button."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        assert coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     async def async_press(self) -> None:
         """Press the button."""

@@ -61,7 +61,10 @@ from homeassistant.util.yaml import dump as yaml_dump
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
+    CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -203,6 +206,7 @@ _PLATFORM_SCHEMA_BASE = (
             # CONF_COLOR_TEMP was deprecated with HA Core 2024.4 and will be
             # removed with HA Core 2025.3
             vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
+            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(
@@ -216,6 +220,8 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
             vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
                 vol.Coerce(int), vol.In([0, 1, 2])
@@ -275,15 +281,16 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
             if (max_mireds := config.get(CONF_MAX_MIREDS))
-            else DEFAULT_MIN_KELVIN
+            else config.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN)
         )
         self._attr_max_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(min_mireds)
             if (min_mireds := config.get(CONF_MIN_MIREDS))
-            else DEFAULT_MAX_KELVIN
+            else config.get(CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN)
         )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
@@ -381,7 +388,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             try:
                 if color_mode == ColorMode.COLOR_TEMP:
                     self._attr_color_temp_kelvin = (
-                        color_util.color_temperature_mired_to_kelvin(
+                        values["color_temp"]
+                        if self._color_temp_kelvin
+                        else color_util.color_temperature_mired_to_kelvin(
                             values["color_temp"]
                         )
                     )
@@ -486,7 +495,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self._attr_color_temp_kelvin = None
                 else:
                     self._attr_color_temp_kelvin = (
-                        color_util.color_temperature_mired_to_kelvin(
+                        values["color_temp"]  # type: ignore[assignment]
+                        if self._color_temp_kelvin
+                        else color_util.color_temperature_mired_to_kelvin(
                             values["color_temp"]  # type: ignore[arg-type]
                         )
                     )
@@ -709,10 +720,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            message["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+            message["color_temp"] = (
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
             )
-
             if self._optimistic:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
                 self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
