@@ -443,7 +443,7 @@ anthemav==1.4.1
 anthropic==0.31.2
 
 # homeassistant.components.mcp_server
-anyio==4.7.0
+anyio==4.8.0
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.3
@@ -793,7 +793,7 @@ flux-led==1.1.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.0.2
+fnv-hash-fast==1.1.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -969,7 +969,7 @@ hole==0.8.0
 holidays==0.64
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250106.0
+home-assistant-frontend==20250109.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.1

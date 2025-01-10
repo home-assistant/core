@@ -163,11 +163,7 @@ class ZHAFirmwareUpdateEntity(
         """
 
         if self.entity_data.device_proxy.device.is_mains_powered:
-            header = (
-                "<ha-alert alert-type='info'>"
-                f"{OTA_MESSAGE_RELIABILITY}"
-                "</ha-alert>"
-            )
+            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
         else:
             header = (
                 "<ha-alert alert-type='info'>"

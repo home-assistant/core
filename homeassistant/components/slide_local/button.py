@@ -44,7 +44,7 @@ class SlideButton(SlideEntity, ButtonEntity):
     def __init__(self, coordinator: SlideCoordinator) -> None:
         """Initialize the slide button."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data["mac"]}-calibrate"
+        self._attr_unique_id = f"{coordinator.data['mac']}-calibrate"
 
     async def async_press(self) -> None:
         """Send out a calibrate command."""
