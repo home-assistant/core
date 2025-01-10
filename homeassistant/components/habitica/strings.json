@@ -310,6 +310,26 @@
             "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
           }
         }
+      },
+      "eggs_total": {
+        "name": "Eggs",
+        "unit_of_measurement": "eggs"
+      },
+      "hatching_potions_total": {
+        "name": "Hatching potions",
+        "unit_of_measurement": "potions"
+      },
+      "food_total": {
+        "name": "Pet food",
+        "unit_of_measurement": "foods"
+      },
+      "saddle": {
+        "name": "Saddles",
+        "unit_of_measurement": "saddles"
+      },
+      "quest_scrolls": {
+        "name": "Quest scrolls",
+        "unit_of_measurement": "scrolls"
       }
     },
     "switch": {
