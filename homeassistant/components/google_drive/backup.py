@@ -112,7 +112,7 @@ class GoogleDriveBackupAgent(BackupAgent):
             _LOGGER.debug("Downloading file_id: %s", file_id)
             try:
                 stream = await self._client.async_download(file_id)
-            except ClientError as err:
+            except (ClientError, TimeoutError) as err:
                 _LOGGER.error("Download error: %s", err)
                 raise BackupAgentError("Failed to download backup") from err
             return ChunkAsyncStreamIterator(stream)

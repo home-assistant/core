@@ -25,7 +25,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 DRIVE_API_ABOUT = "https://www.googleapis.com/drive/v3/about"
 DRIVE_API_FILES = "https://www.googleapis.com/drive/v3/files"
 DRIVE_API_UPLOAD_FILES = "https://www.googleapis.com/upload/drive/v3/files"
-_UPLOAD_TIMEOUT = 12 * 3600
+_UPLOAD_AND_DOWNLOAD_TIMEOUT = 12 * 3600
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,6 +219,7 @@ class DriveClient:
             f"{DRIVE_API_FILES}/{file_id}",
             params={"alt": "media"},
             headers=headers,
+            timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
         )
         resp.raise_for_status()
         return resp.content
@@ -243,7 +244,7 @@ class DriveClient:
                 params={"fields": ""},
                 data=mpwriter,
                 headers=headers,
-                timeout=ClientTimeout(total=_UPLOAD_TIMEOUT),
+                timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
             )
             resp.raise_for_status()
 
