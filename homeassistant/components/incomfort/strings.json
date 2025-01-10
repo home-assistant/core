@@ -39,7 +39,7 @@
           "legacy_setpoint_status": "Legacy setpoint handling"
         },
         "data_description": {
-          "legacy_setpoint_status": "Only enable this option if you experience issues in updating the setpoint for your thermostat."
+          "legacy_setpoint_status": "Some older gateway models with an older firmware versions might not update the thermostat setpoint and override settings correctly. Enable this option if you experience issues in updating the setpoint for your thermostat."
         }
       }
     }
