@@ -5,8 +5,13 @@ import logging
 from pyvesync import VeSync
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_LOGGING_CHANGED,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import async_process_devices
@@ -17,6 +22,7 @@ from .const import (
     VS_DISCOVERY,
     VS_FANS,
     VS_LIGHTS,
+    VS_LISTENERS,
     VS_MANAGER,
     VS_SENSORS,
     VS_SWITCHES,
@@ -36,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     time_zone = str(hass.config.time_zone)
 
     manager = VeSync(
-        username,
-        password,
-        time_zone,
+        username=username,
+        password=password,
+        time_zone=time_zone,
         debug=logging.getLogger("pyvesync").level == logging.DEBUG,
         redact=True,
     )
@@ -84,6 +90,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         platforms.append(Platform.SENSOR)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
+
+    @callback
+    def _async_handle_logging_changed(_event: Event) -> None:
+        """Handle when the logging level changes."""
+        manager.debug = logging.getLogger("pyvesync").level == logging.DEBUG
+
+    cleanup = hass.bus.async_listen(
+        EVENT_LOGGING_CHANGED, _async_handle_logging_changed
+    )
+
+    hass.data[DOMAIN][VS_LISTENERS] = cleanup
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
@@ -157,6 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         in_use_platforms.append(Platform.LIGHT)
     if hass.data[DOMAIN][VS_SENSORS]:
         in_use_platforms.append(Platform.SENSOR)
+    hass.data[DOMAIN][VS_LISTENERS]()
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, in_use_platforms
     )

@@ -24,6 +24,7 @@ VS_LIGHTS = "lights"
 VS_SENSORS = "sensors"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_LISTENERS = "listeners"
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
