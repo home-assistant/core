@@ -35,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bluesound entry."""
 
-    buttons = [
+    async_add_entities(
         BluesoundButton(
             config_entry.runtime_data.coordinator,
             config_entry.runtime_data.player,
@@ -43,15 +43,14 @@ async def async_setup_entry(
             description,
         )
         for description in BUTTON_DESCRIPTIONS
-    ]
-
-    async_add_entities(buttons)
+    )
 
 
 @dataclass(kw_only=True, frozen=True)
 class BluesoundButtonEntityDescription(ButtonEntityDescription):
     """Description for Bluesound button entities."""
 
+    has_entity_name: bool = True
     press_fn: Callable[[Player], Awaitable[None]]
 
 
@@ -70,12 +69,14 @@ async def set_sleep_timer(player: Player) -> None:
 BUTTON_DESCRIPTIONS = [
     BluesoundButtonEntityDescription(
         key="set_sleep_timer",
-        name="Set Sleep Timer",
+        translation_key="set_sleep_timer",
+        entity_registry_enabled_default=False,
         press_fn=set_sleep_timer,
     ),
     BluesoundButtonEntityDescription(
         key="clear_sleep_timer",
-        name="Clear Sleep Timer",
+        translation_key="clear_sleep_timer",
+        entity_registry_enabled_default=False,
         press_fn=clear_sleep_timer,
     ),
 ]
@@ -99,11 +100,9 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
 
         self.entity_description = description
         self._player = player
-        self._attr_entity_registry_enabled_default = False
         self._attr_unique_id = (
-            f"{self.entity_description.key}-{format_unique_id(sync_status.mac, port)}"
+            f"{description.key}-{format_unique_id(sync_status.mac, port)}"
         )
-        self._attr_name = f"{sync_status.name} {description.name}"
 
         if port == DEFAULT_PORT:
             self._attr_device_info = DeviceInfo(

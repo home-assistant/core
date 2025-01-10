@@ -94,5 +94,15 @@
         }
       }
     }
+  },
+  "entity": {
+    "button": {
+      "set_sleep_timer": {
+        "name": "Set sleep timer"
+      },
+      "clear_sleep_timer": {
+        "name": "Clear sleep timer"
+      }
+    }
   }
 }
