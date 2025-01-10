@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
     """Set up pyLoad from a config entry."""
 
     url = (
-        f"{"https" if entry.data[CONF_SSL] else "http"}://"
+        f"{'https' if entry.data[CONF_SSL] else 'http'}://"
         f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/"
     )
 
