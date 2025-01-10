@@ -124,4 +124,8 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "name": self.discovery_data[CONF_NAME],
+                "host": self.discovery_data[CONF_HOST],
+            },
         )
