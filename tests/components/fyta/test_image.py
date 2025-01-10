@@ -20,21 +20,21 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_object_fixture,
+    snapshot_platform,
 )
-from tests.typing import ClientSessionGenerator
 
 
 async def test_all_entities(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_fyta_connector: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test all entities."""
 
     await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     assert len(hass.states.async_all("image")) == 2
 
@@ -62,7 +62,7 @@ async def test_connection_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("image.gummibaum_picture").state == STATE_UNAVAILABLE
+    assert hass.states.get("image.gummibaum").state == STATE_UNAVAILABLE
 
 
 async def test_add_remove_entities(
@@ -72,9 +72,10 @@ async def test_add_remove_entities(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test if entities are added and old are removed."""
+
     await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
 
-    assert hass.states.get("image.gummibaum_picture") is not None
+    assert hass.states.get("image.gummibaum") is not None
 
     plants: dict[int, Plant] = {
         0: Plant.from_dict(load_json_object_fixture("plant_status1.json", FYTA_DOMAIN)),
@@ -90,5 +91,5 @@ async def test_add_remove_entities(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("image.kakaobaum_picture") is None
-    assert hass.states.get("image.tomatenpflanze_picture") is not None
+    assert hass.states.get("image.kakaobaum") is None
+    assert hass.states.get("image.tomatenpflanze") is not None

@@ -20,13 +20,12 @@ async def async_setup_entry(
     """Set up the FYTA plant images."""
     coordinator = entry.runtime_data
 
-    description = ImageEntityDescription(key="plant_image", name="picture")
+    description = ImageEntityDescription(key="plant_image")
 
     async_add_entities(
-        [
-            FytaPlantImageEntity(coordinator, entry, description, plant_id)
-            for plant_id in coordinator.fyta.plant_list
-        ]
+        FytaPlantImageEntity(coordinator, entry, description, plant_id)
+        for plant_id in coordinator.fyta.plant_list
+        if plant_id in coordinator.data
     )
 
     def _async_add_new_device(plant_id: int) -> None:
@@ -52,6 +51,8 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
         """Initiatlize Fyta Image entity."""
         super().__init__(coordinator, entry, description, plant_id)
         ImageEntity.__init__(self, coordinator.hass)
+
+        self._attr_name = None
 
     @property
     def image_url(self) -> str:
