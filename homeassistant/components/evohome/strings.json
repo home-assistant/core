@@ -50,7 +50,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "The entity ID of the zone."
+          "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]"
         }
       }
     }
