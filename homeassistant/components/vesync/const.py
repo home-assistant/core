@@ -17,11 +17,7 @@ total would be 2880.
 Using 30 seconds interval gives 8640 for 3 devices which
 exceeds the quota of 7700.
 """
-
-VS_SWITCHES = "switches"
-VS_FANS = "fans"
-VS_LIGHTS = "lights"
-VS_SENSORS = "sensors"
+VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
 
