@@ -19,6 +19,7 @@ from homewizard_energy.errors import (
     UnsupportedError,
 )
 from homewizard_energy.models import Device
+
 import voluptuous as vol
 
 from homeassistant.components import onboarding
@@ -86,6 +87,43 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+    
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Step where we attempt to get a token."""
+
+        api = HomeWizardEnergyV2(self.ip_address)
+        token = None
+
+        with contextlib.suppress(DisabledError):
+            token = await api.get_token("home-assistant")
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="authorize",
+            )
+
+        if token is None:
+            errors = {"base": "authorization_failed"}
+            return self.async_show_form(step_id="authorize", errors=errors)
+
+        # Now we got a token, we can ask for some more info
+        device_info = await api.device()
+
+        data = {
+            CONF_IP_ADDRESS: self.ip_address,
+            CONF_TOKEN: token,
+        }
+        
+        await self.async_set_unique_id(
+            f"{device_info.product_type}_{device_info.serial}"
+        )
+        self._abort_if_unique_id_configured(updates=data)
+        return self.async_create_entry(
+            title=f"{device_info.product_name}",
+            data=data,
         )
 
     async def async_step_authorize(
@@ -170,6 +208,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         except UnauthorizedError:
             return self.async_abort(reason="unsupported_api_version")
+        except UnauthorizedError as ex:
+            # Device responded, so IP is correct
+            pass
 
         await self.async_set_unique_id(
             f"{device.product_type}_{discovery_info.macaddress}"
@@ -294,17 +335,16 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         Make connection with device to test the connection
         and to get info for unique_id.
         """
-
-        energy_api: HomeWizardEnergy
-
+        api: HomeWizardEnergy
+        
         # Determine if device is v1 or v2 capable
         if await has_v2_api(ip_address):
-            energy_api = HomeWizardEnergyV2(ip_address)
+            api = HomeWizardEnergyV2(ip_address)
         else:
-            energy_api = HomeWizardEnergyV1(ip_address)
-
+            api = HomeWizardEnergyV1(ip_address)
+        
         try:
-            return await energy_api.device()
+            return await api.device()
 
         except DisabledError as ex:
             raise RecoverableError(
@@ -319,6 +359,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise RecoverableError(
                 "Device unreachable or unexpected response", "network_error"
             ) from ex
+        
+        except UnauthorizedError as ex:
+            raise UnauthorizedError("Unauthorized") from ex
 
         except UnauthorizedError as ex:
             raise UnauthorizedError("Unauthorized") from ex
@@ -328,7 +371,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown_error") from ex
 
         finally:
-            await energy_api.close()
+            await api.close()
 
 
 class RecoverableError(HomeAssistantError):
