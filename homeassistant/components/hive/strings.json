@@ -63,7 +63,7 @@
       "description": "Sets the boost mode ON, defining the period of time and the desired target temperature for the boost.",
       "fields": {
         "time_period": {
-          "name": "Time Period",
+          "name": "Time period",
           "description": "The time period for the boost."
         },
         "temperature": {
