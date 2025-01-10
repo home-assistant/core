@@ -8,15 +8,7 @@ import os
 from pyownet import protocol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_VIA_DEVICE,
-    CONF_HOST,
-    CONF_PORT,
-)
+from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -80,14 +72,9 @@ class OneWireHub:
         # Populate the device registry
         device_registry = dr.async_get(self._hass)
         for device in self.devices:
-            device_info = device.device_info
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
-                identifiers=device_info[ATTR_IDENTIFIERS],
-                manufacturer=device_info[ATTR_MANUFACTURER],
-                model=device_info[ATTR_MODEL],
-                name=device_info[ATTR_NAME],
-                via_device=device_info.get(ATTR_VIA_DEVICE),
+                **device.device_info,
             )
 
 
@@ -113,7 +100,9 @@ def _discover_devices(
             identifiers={(DOMAIN, device_id)},
             manufacturer=DEVICE_MANUFACTURER.get(device_family, MANUFACTURER_MAXIM),
             model=device_type,
+            model_id=device_type,
             name=device_id,
+            serial_number=device_id[3:],
         )
         if parent_id:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)
