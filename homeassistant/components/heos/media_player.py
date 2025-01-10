@@ -47,9 +47,9 @@ BASE_SUPPORTED_FEATURES = (
 )
 
 PLAY_STATE_TO_STATE = {
-    heos_const.PLAY_STATE_PLAY: MediaPlayerState.PLAYING,
-    heos_const.PLAY_STATE_STOP: MediaPlayerState.IDLE,
-    heos_const.PLAY_STATE_PAUSE: MediaPlayerState.PAUSED,
+    heos_const.PlayState.PLAY: MediaPlayerState.PLAYING,
+    heos_const.PlayState.STOP: MediaPlayerState.IDLE,
+    heos_const.PlayState.PAUSE: MediaPlayerState.PAUSED,
 }
 
 CONTROL_TO_SUPPORT = {
@@ -61,11 +61,11 @@ CONTROL_TO_SUPPORT = {
 }
 
 HA_HEOS_ENQUEUE_MAP = {
-    None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
-    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
-    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
+    None: heos_const.AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.ADD: heos_const.AddCriteriaType.ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: heos_const.AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.NEXT: heos_const.AddCriteriaType.PLAY_NEXT,
+    MediaPlayerEnqueue.PLAY: heos_const.AddCriteriaType.PLAY_NOW,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,7 +123,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Initialize."""
         self._media_position_updated_at = None
         self._player = player
-        self._signals: list = []
         self._source_manager = source_manager
         self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
@@ -150,13 +149,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
-        self._signals.append(
+        self.async_on_remove(
             self._player.heos.dispatcher.connect(
                 heos_const.SIGNAL_PLAYER_EVENT, self._player_update
             )
         )
         # Update state when heos changes
-        self._signals.append(
+        self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
         )
         # Register this player's entity_id so it can be resolved by the group manager
@@ -269,7 +268,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 )
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
-            await self._player.play_favorite(index)
+            await self._player.play_preset_station(index)
             return
 
         raise ValueError(f"Unsupported media type '{media_type}'")
@@ -303,12 +302,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
         await self._group_manager.async_unjoin_player(
             self._player.player_id, self.entity_id
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect the device when removed."""
-        for signal_remove in self._signals:
-            signal_remove()
-        self._signals.clear()
 
     @property
     def available(self) -> bool:
