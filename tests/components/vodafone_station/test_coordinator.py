@@ -36,7 +36,7 @@ async def test_coordinator_device_cleanup(
             connected=True,
             connection_type="lan",
             ip_address="192.168.1.11",
-            name="LanDevice0",
+            name="LanDevice1",
             mac=DEVICE_2_MAC,
             type="desktop",
             wifi="",
