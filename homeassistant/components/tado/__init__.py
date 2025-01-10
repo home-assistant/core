@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -49,11 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
-
-    coordinator = TadoDataUpdateCoordinator(hass, username, password, fallback)
+    coordinator = TadoDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -12,17 +12,28 @@ from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, INSIDE_TEMPERATURE_MEASUREMENT, PRESET_AUTO, TEMP_OFFSET
+from .const import (
+    CONF_FALLBACK,
+    CONST_OVERLAY_TADO_DEFAULT,
+    DOMAIN,
+    INSIDE_TEMPERATURE_MEASUREMENT,
+    PRESET_AUTO,
+    TEMP_OFFSET,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
+
+type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
 
 
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
@@ -31,13 +42,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     tado: Tado
     home_id: int
     home_name: str
+    config_entry: TadoConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        username: str,
-        password: str,
-        fallback: str,
+        entry: ConfigEntry,
         debug: bool = False,
     ) -> None:
         """Initialize the Tado data update coordinator."""
@@ -47,9 +57,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._username = username
-        self._password = password
-        self._fallback = fallback
+        self._username = entry.data[CONF_USERNAME]
+        self._password = entry.data[CONF_PASSWORD]
+        self._fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
         self._debug = debug
 
         self.home_id: int

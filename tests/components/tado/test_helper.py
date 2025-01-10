@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.tado import TadoDataUpdateCoordinator
 from homeassistant.components.tado.const import (
     CONST_OVERLAY_MANUAL,
@@ -10,38 +12,71 @@ from homeassistant.components.tado.const import (
     CONST_OVERLAY_TIMER,
 )
 from homeassistant.components.tado.helper import decide_duration, decide_overlay_mode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
-def dummy_tado_connector(hass: HomeAssistant, fallback) -> TadoDataUpdateCoordinator:
-    """Return dummy tado connector."""
-    return TadoDataUpdateCoordinator(
-        hass, username="dummy", password="dummy", fallback=fallback
+@pytest.fixture
+def entry(request: pytest.FixtureRequest):
+    """Fixture for ConfigEntry with optional fallback."""
+    fallback = (
+        request.param if hasattr(request, "param") else CONST_OVERLAY_TADO_DEFAULT
+    )
+    return ConfigEntry(
+        version=1,
+        minor_version=0,
+        domain="tado",
+        title="Tado",
+        data={
+            "username": "test-username",
+            "password": "test-password",
+        },
+        options={
+            "fallback": fallback,
+        },
+        source="user",
+        unique_id="unique_id",
+        entry_id="entry_id",
+        discovery_keys="discovery_keys",
     )
 
 
-async def test_overlay_mode_duration_set(hass: HomeAssistant) -> None:
+def dummy_tado_connector(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> TadoDataUpdateCoordinator:
+    """Return dummy tado connector."""
+    return TadoDataUpdateCoordinator(hass, entry)
+
+
+@pytest.mark.parametrize("entry", [CONST_OVERLAY_TADO_MODE], indirect=True)
+async def test_overlay_mode_duration_set(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Test overlay method selection when duration is set."""
-    tado = dummy_tado_connector(hass=hass, fallback=CONST_OVERLAY_TADO_MODE)
+    tado = dummy_tado_connector(hass=hass, entry=entry)
     overlay_mode = decide_overlay_mode(coordinator=tado, duration=3600, zone_id=1)
     # Must select TIMER overlay
     assert overlay_mode == CONST_OVERLAY_TIMER
 
 
-async def test_overlay_mode_next_time_block_fallback(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("entry", [CONST_OVERLAY_TADO_MODE], indirect=True)
+async def test_overlay_mode_next_time_block_fallback(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Test overlay method selection when duration is not set."""
-    integration_fallback = CONST_OVERLAY_TADO_MODE
-    tado = dummy_tado_connector(hass=hass, fallback=integration_fallback)
+    tado = dummy_tado_connector(hass=hass, entry=entry)
     overlay_mode = decide_overlay_mode(coordinator=tado, duration=None, zone_id=1)
     # Must fallback to integration wide setting
-    assert overlay_mode == integration_fallback
+    assert overlay_mode == CONST_OVERLAY_TADO_MODE
 
 
-async def test_overlay_mode_tado_default_fallback(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("entry", [CONST_OVERLAY_TADO_DEFAULT], indirect=True)
+async def test_overlay_mode_tado_default_fallback(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Test overlay method selection when tado default is selected."""
-    integration_fallback = CONST_OVERLAY_TADO_DEFAULT
     zone_fallback = CONST_OVERLAY_MANUAL
-    tado = dummy_tado_connector(hass=hass, fallback=integration_fallback)
+    tado = dummy_tado_connector(hass=hass, entry=entry)
 
     class MockZoneData:
         def __init__(self) -> None:
@@ -58,11 +93,14 @@ async def test_overlay_mode_tado_default_fallback(hass: HomeAssistant) -> None:
         assert overlay_mode == zone_fallback
 
 
-async def test_duration_enabled_without_tado_default(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("entry", [CONST_OVERLAY_MANUAL], indirect=True)
+async def test_duration_enabled_without_tado_default(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Test duration decide method when overlay is timer and duration is set."""
     overlay = CONST_OVERLAY_TIMER
     expected_duration = 600
-    tado = dummy_tado_connector(hass=hass, fallback=CONST_OVERLAY_MANUAL)
+    tado = dummy_tado_connector(hass=hass, entry=entry)
     duration = decide_duration(
         coordinator=tado, duration=expected_duration, overlay_mode=overlay, zone_id=0
     )
@@ -70,11 +108,14 @@ async def test_duration_enabled_without_tado_default(hass: HomeAssistant) -> Non
     assert duration == expected_duration
 
 
-async def test_duration_enabled_with_tado_default(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("entry", [CONST_OVERLAY_TIMER], indirect=True)
+async def test_duration_enabled_with_tado_default(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
     """Test overlay method selection when ended up with timer overlay and None duration."""
     zone_fallback = CONST_OVERLAY_TIMER
     expected_duration = 45000
-    tado = dummy_tado_connector(hass=hass, fallback=zone_fallback)
+    tado = dummy_tado_connector(hass=hass, entry=entry)
 
     class MockZoneData:
         def __init__(self) -> None:
