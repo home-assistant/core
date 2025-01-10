@@ -5,9 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast
-
-from whois import Domain
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,17 +30,18 @@ from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED
 class WhoisSensorEntityDescription(SensorEntityDescription):
     """Describes a Whois sensor entity."""
 
-    value_fn: Callable[[Domain], datetime | int | str | None]
+    value_fn: Callable[[dict[str, Any]], datetime | int | str | None]
 
 
-def _days_until_expiration(domain: Domain) -> int | None:
+def _days_until_expiration(data: dict[str, Any]) -> int | None:
     """Calculate days left until domain expires."""
-    if domain.expiration_date is None:
+    expiration_date = _get_single_value(data, "expiration_date")
+    if expiration_date is None:
         return None
     # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
     return cast(
         int,
-        (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
+        (expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
     )
 
 
@@ -58,20 +57,53 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
     return timestamp
 
 
+def _get_single_value(data: dict[str, Any], name: str) -> Any:
+    """Retrieve and normalize generic single-value attributes from the external whois library."""
+    value = data.get(name)
+    if value is None:
+        return None
+    return value[0] if isinstance(value, list) else value
+
+
+def _get_date(data: dict[str, Any], name: str) -> Any:
+    """Retrieve and normalize generic date attributes from the external whois library."""
+    value = _get_single_value(data, name)
+    return value if isinstance(value, datetime) else None
+
+
+def _get_owner(data: dict[str, Any]) -> str | None:
+    """Retrieve and normalize owner information."""
+    owner = (
+        _get_single_value(data, "name")
+        or _get_single_value(data, "org")
+        or _get_single_value(data, "registrant_name")
+    )
+    return str(owner) if owner else None
+
+
+def _get_name_servers(data: dict[str, Any]) -> list[str] | None:
+    """Retrieve and normalize name_servers attribute from the external library."""
+    name_servers = data.get("name_servers")
+    if name_servers is None:
+        return None
+    ns = name_servers if isinstance(name_servers, list) else [name_servers]
+    return [str(n).lower() for n in ns]
+
+
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
         translation_key="admin",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: getattr(domain, "admin", None),
+        value_fn=lambda data: _get_single_value(data, "admin"),
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
         translation_key="creation_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda domain: _ensure_timezone(domain.creation_date),
+        value_fn=lambda data: _ensure_timezone(_get_date(data, "creation_date")),
     ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
@@ -84,42 +116,42 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
         translation_key="expiration_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
+        value_fn=lambda data: _ensure_timezone(_get_date(data, "expiration_date")),
     ),
     WhoisSensorEntityDescription(
         key="last_updated",
         translation_key="last_updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda domain: _ensure_timezone(domain.last_updated),
+        value_fn=lambda data: _ensure_timezone(_get_date(data, "updated_date")),
     ),
     WhoisSensorEntityDescription(
         key="owner",
         translation_key="owner",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: getattr(domain, "owner", None),
+        value_fn=_get_owner,
     ),
     WhoisSensorEntityDescription(
         key="registrant",
         translation_key="registrant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: getattr(domain, "registrant", None),
+        value_fn=lambda data: _get_single_value(data, "registrant"),
     ),
     WhoisSensorEntityDescription(
         key="registrar",
         translation_key="registrar",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: domain.registrar if domain.registrar else None,
+        value_fn=lambda data: _get_single_value(data, "registrar"),
     ),
     WhoisSensorEntityDescription(
         key="reseller",
         translation_key="reseller",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda domain: getattr(domain, "reseller", None),
+        value_fn=lambda data: _get_single_value(data, "reseller"),
     ),
 )
 
@@ -130,7 +162,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
-    coordinator: DataUpdateCoordinator[Domain | None] = hass.data[DOMAIN][
+    coordinator: DataUpdateCoordinator[dict[str, Any] | None] = hass.data[DOMAIN][
         entry.entry_id
     ]
     async_add_entities(
@@ -146,7 +178,7 @@ async def async_setup_entry(
 
 
 class WhoisSensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[Domain | None]], SensorEntity
+    CoordinatorEntity[DataUpdateCoordinator[dict[str, Any] | None]], SensorEntity
 ):
     """Implementation of a WHOIS sensor."""
 
@@ -155,7 +187,7 @@ class WhoisSensorEntity(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Domain | None],
+        coordinator: DataUpdateCoordinator[dict[str, Any] | None],
         description: WhoisSensorEntityDescription,
         domain: str,
     ) -> None:
@@ -187,18 +219,17 @@ class WhoisSensorEntity(
 
         if self.coordinator.data is None:
             return None
-
         attrs = {}
-        if expiration_date := self.coordinator.data.expiration_date:
+        if expiration_date := _get_date(self.coordinator.data, "expiration_date"):
             attrs[ATTR_EXPIRES] = expiration_date.isoformat()
 
-        if name_servers := self.coordinator.data.name_servers:
+        if name_servers := _get_name_servers(self.coordinator.data):
             attrs[ATTR_NAME_SERVERS] = " ".join(name_servers)
 
-        if last_updated := self.coordinator.data.last_updated:
+        if last_updated := _get_date(self.coordinator.data, "updated_date"):
             attrs[ATTR_UPDATED] = last_updated.isoformat()
 
-        if registrar := self.coordinator.data.registrar:
+        if registrar := _get_single_value(self.coordinator.data, "registrar"):
             attrs[ATTR_REGISTRAR] = registrar
 
         if not attrs:
