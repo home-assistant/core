@@ -5,7 +5,12 @@ import logging
 from actron_neo_api import ActronNeoAPI, ActronNeoAPIError, ActronNeoAuthError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 
 from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH, ERROR_NO_SYSTEMS_FOUND
@@ -13,7 +18,7 @@ from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH, ERROR_NO_SYSTEMS
 _LOGGER = logging.getLogger(__name__)
 
 
-class ActronNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Actron Air Neo."""
 
     VERSION = 1
@@ -23,7 +28,7 @@ class ActronNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.api = None
         self.ac_systems = None
 
-    async def async_step_user(self, user_input=None) -> config_entries.ConfigFlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -122,9 +127,7 @@ class ActronNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_select_system(
-        self, user_input=None
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_select_system(self, user_input=None) -> ConfigFlowResult:
         """Handle system selection step."""
         if not self.ac_systems:
             return self.async_abort(reason=ERROR_NO_SYSTEMS_FOUND)
@@ -151,20 +154,20 @@ class ActronNeoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return ActronNeoOptionsFlowHandler(config_entry)
 
 
-class ActronNeoOptionsFlowHandler(config_entries.OptionsFlow):
+class ActronNeoOptionsFlowHandler(OptionsFlow):
     """Handle options for Actron Air Neo."""
 
     def __init__(self, config_entry) -> None:
         """Handle the initial setup."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
