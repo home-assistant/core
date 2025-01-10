@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import logging
 from typing import Any
 
 from pyownet import protocol
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import (
     DEFAULT_HOST,
@@ -27,6 +29,7 @@ from .const import (
 )
 from .onewirehub import OneWireConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
@@ -99,6 +102,13 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": reconfigure_entry.title},
             errors=errors,
         )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle hassio discovery."""
+        _LOGGER.error("Hassio discovery not implemented: %s", discovery_info)
+        return self.async_abort(reason="not_implemented")
 
     @staticmethod
     @callback
