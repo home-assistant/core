@@ -47,7 +47,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         "hass",
         "storage",
         "_integration_matcher",
-        "_disappeared_callbacks",
         "_callback_index",
         "_cancel_logging_listener",
     )
