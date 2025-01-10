@@ -19,6 +19,7 @@ from pynecil import (
     ScrollSpeed,
     SettingsDataResponse,
     TempUnit,
+    USBPDMode,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -55,6 +56,7 @@ class PinecilSelect(StrEnum):
     DESC_SCROLL_SPEED = "desc_scroll_speed"
     LOCKING_MODE = "locking_mode"
     LOGO_DURATION = "logo_duration"
+    USB_PD_MODE = "usb_pd_mode"
 
 
 def enum_to_str(enum: Enum | None) -> str | None:
@@ -137,6 +139,16 @@ PINECIL_SELECT_DESCRIPTIONS: tuple[IronOSSelectEntityDescription, ...] = (
         value_fn=lambda x: enum_to_str(x.get("logo_duration")),
         raw_value_fn=lambda value: LogoDuration[value.upper()],
         options=[x.name.lower() for x in LogoDuration],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.USB_PD_MODE,
+        translation_key=PinecilSelect.USB_PD_MODE,
+        characteristic=CharSetting.USB_PD_MODE,
+        value_fn=lambda x: enum_to_str(x.get("usb_pd_mode")),
+        raw_value_fn=lambda value: USBPDMode[value.upper()],
+        options=["off", "on"],
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
