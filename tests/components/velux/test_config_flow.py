@@ -22,11 +22,10 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     macaddress="64618400abcd",
 )
 
-pytest.mark.usefixtures("mock_setup_entry")
-
 
 async def test_user_flow(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_velux_client: AsyncMock,
 ) -> None:
     """Test starting a flow by user with valid values."""
@@ -66,7 +65,11 @@ async def test_user_flow(
     ],
 )
 async def test_user_errors(
-    hass: HomeAssistant, mock_velux_client: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    exception: Exception,
+    error: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test starting a flow by user but with exceptions."""
 
@@ -108,7 +111,9 @@ async def test_user_errors(
 
 
 async def test_user_flow_duplicate_entry(
-    hass: HomeAssistant, mock_user_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_user_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test initialized flow with a duplicate entry."""
     mock_user_config_entry.add_to_hass(hass)
@@ -134,7 +139,9 @@ async def test_user_flow_duplicate_entry(
 
 
 async def test_dhcp_discovery(
-    hass: HomeAssistant, mock_velux_client: AsyncMock
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -173,7 +180,11 @@ async def test_dhcp_discovery(
     ],
 )
 async def test_dhcp_discovery_errors(
-    hass: HomeAssistant, mock_velux_client: AsyncMock, exception: Exception, error: str
+    hass: HomeAssistant,
+    mock_velux_client: AsyncMock,
+    exception: Exception,
+    error: str,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can setup from dhcp discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -217,6 +228,7 @@ async def test_dhcp_discovery_already_configured(
     hass: HomeAssistant,
     mock_velux_client: AsyncMock,
     mock_discovered_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test dhcp discovery when already configured."""
     mock_discovered_config_entry.add_to_hass(hass)
@@ -258,6 +270,7 @@ async def test_dhcp_discovery_not_loaded(
     hass: HomeAssistant,
     mock_velux_client: AsyncMock,
     mock_user_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test dhcp discovery when entry with same host not loaded."""
     mock_user_config_entry.add_to_hass(hass)
