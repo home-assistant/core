@@ -371,12 +371,12 @@ class SqueezeBoxMediaPlayerEntity(
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
-        await self._player.async_set_volume("+" + str(self._volume_step))
+        await self._player.async_set_volume(f"+{self._volume_step}")
         await self.coordinator.async_refresh()
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        await self._player.async_set_volume("-" + str(self._volume_step))
+        await self._player.async_set_volume(f"-{self._volume_step}")
         await self.coordinator.async_refresh()
 
     async def async_set_volume_level(self, volume: float) -> None:

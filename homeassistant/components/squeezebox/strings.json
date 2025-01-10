@@ -111,8 +111,7 @@
         "data": {
           "browse_limit": "Number of items to return from media browser.",
           "volume_step": "Step when increasing or decreasing volume."
-        },
-        "description": "Configure settings for LMS."
+        }
       }
     }
   }
