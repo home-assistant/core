@@ -54,6 +54,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
+    _discovery: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -107,8 +108,38 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle hassio discovery."""
-        _LOGGER.error("Hassio discovery not implemented: %s", discovery_info)
-        return self.async_abort(reason="not_implemented")
+        _LOGGER.warning(
+            "Hassio discovery implementation in progress : %s", discovery_info
+        )
+        await self._async_handle_discovery_without_unique_id()
+
+        self._discovery = {
+            "title": discovery_info.config["addon"],
+            CONF_HOST: discovery_info.config[CONF_HOST],
+            CONF_PORT: discovery_info.config[CONF_PORT],
+        }
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm hassio discovery."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {
+                CONF_HOST: self._discovery[CONF_HOST],
+                CONF_PORT: self._discovery[CONF_PORT],
+            }
+            await validate_input(self.hass, data, errors)
+            if not errors:
+                return self.async_create_entry(
+                    title=self._discovery["title"], data=data
+                )
+
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            errors=errors,
+        )
 
     @staticmethod
     @callback
