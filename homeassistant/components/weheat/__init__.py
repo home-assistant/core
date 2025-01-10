@@ -31,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     session = OAuth2Session(hass, entry, implementation)
 
-    # await session.async_ensure_token_valid()
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
