@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["whois"],
-  "requirements": ["whois==0.9.27"]
+  "requirements": ["python-whois==0.9.5"]
 }
