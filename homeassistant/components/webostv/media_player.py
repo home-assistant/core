@@ -22,7 +22,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,13 +33,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import VolDictType
 
-from . import update_client_key
+from . import WebOsTvConfigEntry, update_client_key
 from .const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
-    DATA_CONFIG_ENTRY,
     DOMAIN,
     LIVE_TV_APP_ID,
     SERVICE_BUTTON,
@@ -87,7 +85,9 @@ SERVICES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WebOsTvConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the LG webOS Smart TV platform."""
     platform = entity_platform.async_get_current_platform()
@@ -95,8 +95,7 @@ async def async_setup_entry(
     for service_name, schema, method in SERVICES:
         platform.async_register_entity_service(service_name, schema, method)
 
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
-    async_add_entities([LgWebOSMediaPlayerEntity(entry, client)])
+    async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
 
 def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
@@ -133,10 +132,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
+    def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
         self._entry = entry
-        self._client = client
+        self._client = entry.runtime_data
         self._attr_assumed_state = True
         self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
