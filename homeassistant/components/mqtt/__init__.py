@@ -296,7 +296,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.version == 1 and entry.minor_version < 2:
         # Can be removed when config entry is bumped to version 2.1
-        # with HA Core 2026.1.0
+        # with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+        # From 2026.1 we will write version 2.1
         for key in ENTRY_OPTION_FIELDS:
             if key not in data:
                 continue

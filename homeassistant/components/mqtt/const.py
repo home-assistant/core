@@ -164,7 +164,9 @@ CONFIG_ENTRY_VERSION = 1
 CONFIG_ENTRY_MINOR_VERSION = 2
 
 # Split mqtt entry data and options
-# Can be removed with HA Core 2026.1.0
+# Can be removed when config entry is bumped to version 2.1
+# with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+# From 2026.1 we will write version 2.1
 ENTRY_OPTION_FIELDS = (
     CONF_DISCOVERY,
     CONF_DISCOVERY_PREFIX,
