@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: move actions to entity services
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules:
