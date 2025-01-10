@@ -63,7 +63,7 @@
       "description": "Sets the boost mode ON, defining the period of time and the desired target temperature for the boost.",
       "fields": {
         "time_period": {
-          "name": "Time period",
+          "name": "[%key:component::hive::services::boost_hot_water::fields::time_period::name%]",
           "description": "[%key:component::hive::services::boost_hot_water::fields::time_period::description%]"
         },
         "temperature": {
