@@ -666,7 +666,7 @@ def _validate_item(
         # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
-            ("'%s' from integration %s has a non string unique_id '%s', please %s"),
+            "'%s' from integration %s has a non string unique_id '%s', please %s",
             domain,
             platform,
             unique_id,

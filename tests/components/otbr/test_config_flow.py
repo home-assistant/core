@@ -830,7 +830,9 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={
-            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            "url": (
+                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            )
         },
         domain=otbr.DOMAIN,
         options={},
@@ -861,7 +863,9 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={
-            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            "url": (
+                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            )
         },
         domain=otbr.DOMAIN,
         options={},
