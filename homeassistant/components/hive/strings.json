@@ -64,7 +64,7 @@
       "fields": {
         "time_period": {
           "name": "Time period",
-          "description": "The time period for the boost."
+          "description": "[%key:component::hive::services::boost_hot_water::fields::time_period::description%]"
         },
         "temperature": {
           "name": "Temperature",
