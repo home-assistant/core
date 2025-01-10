@@ -132,7 +132,7 @@ async def test_legacy_dimmer_unique_id(
 
 
 @pytest.mark.parametrize(
-    ("device", "transition"),
+    ("device", "extra_data", "expected_transition"),
     [
         (
             _mocked_device(
@@ -145,7 +145,8 @@ async def test_legacy_dimmer_unique_id(
                     ),
                 ],
             ),
-            2.0,
+            {ATTR_TRANSITION: 2.0},
+            2.0 * 1_000,
         ),
         (
             _mocked_device(
@@ -158,12 +159,16 @@ async def test_legacy_dimmer_unique_id(
                     ),
                 ],
             ),
+            {},
             None,
         ),
     ],
 )
 async def test_color_light(
-    hass: HomeAssistant, device: MagicMock, transition: float | None
+    hass: HomeAssistant,
+    device: MagicMock,
+    extra_data: dict,
+    expected_transition: float | None,
 ) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
@@ -180,11 +185,9 @@ async def test_color_light(
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
-    KASA_TRANSITION_VALUE = transition * 1_000 if transition is not None else None
 
     BASE_PAYLOAD = {ATTR_ENTITY_ID: entity_id}
-    if transition:
-        BASE_PAYLOAD[ATTR_TRANSITION] = transition
+    BASE_PAYLOAD |= extra_data
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -205,7 +208,7 @@ async def test_color_light(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=False, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
@@ -213,7 +216,7 @@ async def test_color_light(
         LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=True, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
@@ -223,7 +226,7 @@ async def test_color_light(
         {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    light.set_brightness.assert_called_with(39, transition=KASA_TRANSITION_VALUE)
+    light.set_brightness.assert_called_with(39, transition=expected_transition)
     light.set_brightness.reset_mock()
 
     await hass.services.async_call(
@@ -233,7 +236,7 @@ async def test_color_light(
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
@@ -244,7 +247,7 @@ async def test_color_light(
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
@@ -254,12 +257,12 @@ async def test_color_light(
         {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    light.set_hsv.assert_called_with(10, 30, None, transition=KASA_TRANSITION_VALUE)
+    light.set_hsv.assert_called_with(10, 30, None, transition=expected_transition)
     light.set_hsv.reset_mock()
 
 
 @pytest.mark.parametrize(
-    ("device", "transition"),
+    ("device", "extra_data", "expected_transition"),
     [
         (
             _mocked_device(
@@ -272,7 +275,8 @@ async def test_color_light(
                     ),
                 ],
             ),
-            2.0,
+            {ATTR_TRANSITION: 2.0},
+            2.0 * 1_000,
         ),
         (
             _mocked_device(
@@ -285,12 +289,16 @@ async def test_color_light(
                     ),
                 ],
             ),
+            {},
             None,
         ),
     ],
 )
 async def test_color_light_with_active_effect(
-    hass: HomeAssistant, device: MagicMock, transition: float | None
+    hass: HomeAssistant,
+    device: MagicMock,
+    extra_data: dict,
+    expected_transition: float | None,
 ) -> None:
     """Test a color light and that all transitions are correctly passed."""
     already_migrated_config_entry = MockConfigEntry(
@@ -304,11 +312,9 @@ async def test_color_light_with_active_effect(
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
-    KASA_TRANSITION_VALUE = transition * 1_000 if transition is not None else None
 
     BASE_PAYLOAD = {ATTR_ENTITY_ID: entity_id}
-    if transition:
-        BASE_PAYLOAD[ATTR_TRANSITION] = transition
+    BASE_PAYLOAD |= extra_data
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -324,7 +330,7 @@ async def test_color_light_with_active_effect(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=False, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
@@ -332,7 +338,7 @@ async def test_color_light_with_active_effect(
         LIGHT_DOMAIN, SERVICE_TURN_ON, BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
+        LightState(light_on=True, transition=expected_transition)
     )
     light.set_state.reset_mock()
 
@@ -342,7 +348,7 @@ async def test_color_light_with_active_effect(
         {**BASE_PAYLOAD, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    light.set_brightness.assert_called_with(39, transition=KASA_TRANSITION_VALUE)
+    light.set_brightness.assert_called_with(39, transition=expected_transition)
     light.set_brightness.reset_mock()
 
     await hass.services.async_call(
@@ -352,7 +358,7 @@ async def test_color_light_with_active_effect(
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
@@ -363,7 +369,7 @@ async def test_color_light_with_active_effect(
         blocking=True,
     )
     light.set_color_temp.assert_called_with(
-        6666, brightness=None, transition=KASA_TRANSITION_VALUE
+        6666, brightness=None, transition=expected_transition
     )
     light.set_color_temp.reset_mock()
 
@@ -373,7 +379,7 @@ async def test_color_light_with_active_effect(
         {**BASE_PAYLOAD, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    light.set_hsv.assert_called_with(10, 30, None, transition=KASA_TRANSITION_VALUE)
+    light.set_hsv.assert_called_with(10, 30, None, transition=expected_transition)
     light.set_hsv.reset_mock()
 
 
@@ -456,7 +462,7 @@ async def test_color_temp_light_color(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    # device = _mocked_device(modules=[Module.Light], alias="my_light")
+
     light = device.modules[Module.Light]
 
     with _patch_discovery(device=device), _patch_connect(device=device):
@@ -540,7 +546,7 @@ async def test_color_temp_light_no_color(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    # device = _mocked_device(modules=[Module.Light], alias="my_light")
+
     light = device.modules[Module.Light]
 
     with _patch_discovery(device=device), _patch_connect(device=device):

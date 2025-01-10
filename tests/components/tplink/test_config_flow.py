@@ -165,8 +165,8 @@ async def test_discovery(
     assert result2["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_camera(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -228,8 +228,8 @@ async def test_discovery_camera(
     assert result["context"]["unique_id"] == MAC_ADDRESS3
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_pick_device_camera(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -296,8 +296,8 @@ async def test_discovery_pick_device_camera(
     assert result["context"]["unique_id"] == MAC_ADDRESS3
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -342,8 +342,8 @@ async def test_discovery_auth(
     assert result2["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth_camera(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -416,13 +416,13 @@ async def test_discovery_auth_camera(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_auth_errors(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test handling of discovery authentication errors.
 
@@ -474,8 +474,8 @@ async def test_discovery_auth_errors(
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_new_credentials(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
 ) -> None:
@@ -523,8 +523,8 @@ async def test_discovery_new_credentials(
     assert result3["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_new_credentials_invalid(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_connect: AsyncMock,
 ) -> None:
@@ -986,8 +986,8 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     assert result["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_manual_auth(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -1092,14 +1092,14 @@ async def test_manual_auth_camera(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_init")
 async def test_manual_auth_errors(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test manually setup auth errors."""
     result = await hass.config_entries.flow.async_init(
@@ -1159,9 +1159,9 @@ async def test_manual_port_override(
     hass: HomeAssistant,
     mock_connect: AsyncMock,
     mock_discovery: AsyncMock,
-    host_str,
-    host,
-    port,
+    host_str: str,
+    host: str,
+    port: int,
 ) -> None:
     """Test manually setup."""
     config = DeviceConfig(
@@ -1351,7 +1351,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     ],
 )
 async def test_discovered_by_dhcp_or_discovery(
-    hass: HomeAssistant, source, data
+    hass: HomeAssistant, source: str, data: dict
 ) -> None:
     """Test we can setup when discovered from dhcp or discovery."""
 
@@ -1405,7 +1405,7 @@ async def test_discovered_by_dhcp_or_discovery(
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
-    hass: HomeAssistant, source, data
+    hass: HomeAssistant, source: str, data: dict
 ) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
@@ -2050,9 +2050,9 @@ async def test_reauth_errors(
     mock_added_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    error_type,
-    errors_msg,
-    error_placement,
+    error_type: Exception,
+    errors_msg: str,
+    error_placement: str,
 ) -> None:
     """Test reauth errors."""
     mock_added_config_entry.async_start_reauth(hass)
@@ -2114,8 +2114,8 @@ async def test_pick_device_errors(
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
-    error_type,
-    expected_flow,
+    error_type: type[Exception],
+    expected_flow: FlowResultType,
 ) -> None:
     """Test errors on pick_device."""
     result = await hass.config_entries.flow.async_init(
@@ -2152,8 +2152,8 @@ async def test_pick_device_errors(
         assert result4["context"]["unique_id"] == MAC_ADDRESS
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -2178,8 +2178,8 @@ async def test_discovery_timeout_try_connect_all(
     assert mock_connect["connect"].call_count == 1
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all_needs_creds(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
@@ -2216,8 +2216,8 @@ async def test_discovery_timeout_try_connect_all_needs_creds(
     assert mock_connect["connect"].call_count == 1
 
 
+@pytest.mark.usefixtures("mock_init")
 async def test_discovery_timeout_try_connect_all_fail(
-    mock_init: dict[str, AsyncMock],
     hass: HomeAssistant,
     mock_discovery: AsyncMock,
     mock_connect: AsyncMock,
