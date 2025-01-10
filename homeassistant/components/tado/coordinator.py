@@ -30,7 +30,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(seconds=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
@@ -113,16 +113,22 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         try:
             # Fetch updated data for devices, mobile devices, zones, and home
-            await self._async_update_devices()
-            await self._async_update_mobile_devices()
-            await self._async_update_zones()
-            await self._async_update_home()
+            devices = await self._async_update_devices()
+            mobile_devices = await self._async_update_mobile_devices()
+            zones = await self._async_update_zones()
+            home = await self._async_update_home()
         except RequestException as err:
             raise UpdateFailed(f"Error updating Tado data: {err}") from err
 
+        self.data["device"] = devices
+        self.data["mobile_device"] = mobile_devices
+        self.data["zone"] = zones
+        self.data["weather"] = home["weather"]
+        self.data["geofence"] = home["geofence"]
+
         return self.data
 
-    async def _async_update_devices(self) -> None:
+    async def _async_update_devices(self) -> dict[str, dict]:
         """Update the device data from Tado."""
 
         try:
@@ -135,10 +141,11 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             _LOGGER.error("No linked devices found for home ID %s", self.home_id)
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
-        await self.hass.async_add_executor_job(self._update_device_info, devices)
+        return await self.hass.async_add_executor_job(self._update_device_info, devices)
 
-    def _update_device_info(self, devices) -> None:
+    def _update_device_info(self, devices: list[dict[str, Any]]) -> dict[str, dict]:
         """Update the device data from Tado."""
+        mapped_devices: dict[str, dict] = {}
         for device in devices:
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)
@@ -154,15 +161,19 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     device[TEMP_OFFSET] = self.tado.get_device_info(
                         device_short_serial_no, TEMP_OFFSET
                     )
-            except RequestException as e:
-                _LOGGER.error("Error updating device %s: %s", device_short_serial_no, e)
+            except RequestException as err:
+                _LOGGER.error(
+                    "Error updating device %s: %s", device_short_serial_no, err
+                )
 
-            self.data["device"][device["shortSerialNo"]] = device
             _LOGGER.debug(
                 "Device %s updated, with data: %s", device_short_serial_no, device
             )
+            mapped_devices[device_short_serial_no] = device
 
-    async def _async_update_mobile_devices(self) -> None:
+        return mapped_devices
+
+    async def _async_update_mobile_devices(self) -> dict[str, dict]:
         """Update the mobile device(s) data from Tado."""
         try:
             mobile_devices = await self.hass.async_add_executor_job(
@@ -172,17 +183,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             _LOGGER.error("Error updating Tado mobile devices: %s", err)
             raise UpdateFailed(f"Error updating Tado mobile devices: {err}") from err
 
-        if not mobile_devices:
-            _LOGGER.error("No linked mobile devices found for home ID %s", self.home_id)
-            raise UpdateFailed(
-                f"No linked mobile devices found for home ID {self.home_id}"
-            )
-
+        mapped_mobile_devices: dict[str, dict] = {}
         for mobile_device in mobile_devices:
             mobile_device_id = mobile_device["id"]
             _LOGGER.debug("Updating mobile device %s", mobile_device_id)
             try:
-                self.data["mobile_device"][mobile_device_id] = mobile_device
+                mapped_mobile_devices[mobile_device_id] = mobile_device
                 _LOGGER.debug(
                     "Mobile device %s updated, with data: %s",
                     mobile_device_id,
@@ -193,9 +199,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     "Unable to connect to Tado while updating mobile device %s",
                     mobile_device_id,
                 )
-                return
 
-    async def _async_update_zones(self) -> None:
+        return mapped_mobile_devices
+
+    async def _async_update_zones(self) -> dict[int, dict]:
         """Update the zone data from Tado."""
 
         try:
@@ -207,10 +214,13 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
+        mapped_zones: dict[int, dict] = {}
         for zone in zone_states:
-            await self._update_zone(int(zone))
+            mapped_zones[int(zone)] = await self._update_zone(int(zone))
 
-    async def _update_zone(self, zone_id: int) -> None:
+        return mapped_zones
+
+    async def _update_zone(self, zone_id: int) -> dict[str, str]:
         """Update the internal data of a zone."""
 
         _LOGGER.debug("Updating zone %s", zone_id)
@@ -222,19 +232,15 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
-        self.data["zone"][zone_id] = data
         _LOGGER.debug("Zone %s updated, with data: %s", zone_id, data)
+        return data
 
-    async def _async_update_home(self) -> None:
+    async def _async_update_home(self) -> dict[str, dict]:
         """Update the home data from Tado."""
 
         try:
-            self.data["weather"] = await self.hass.async_add_executor_job(
-                self.tado.get_weather
-            )
-            self.data["geofence"] = await self.hass.async_add_executor_job(
-                self.tado.get_home_state
-            )
+            weather = await self.hass.async_add_executor_job(self.tado.get_weather)
+            geofence = await self.hass.async_add_executor_job(self.tado.get_home_state)
         except RequestException as err:
             _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
@@ -244,6 +250,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             self.data["weather"],
             self.data["geofence"],
         )
+
+        return {"weather": weather, "geofence": geofence}
 
     async def get_capabilities(self, zone_id: int | str) -> dict:
         """Fetch the capabilities from Tado."""
