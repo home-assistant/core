@@ -1514,7 +1514,7 @@ async def _test_split_light(
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1524,7 +1524,7 @@ async def _test_split_light(
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Channel{idx+num_switches+1} {(idx+1)*10}",
+            f"NoDelay;Channel{idx + num_switches + 1} {(idx + 1) * 10}",
             0,
             False,
         )
@@ -1595,7 +1595,7 @@ async def _test_unlinked_light(
         await common.async_turn_on(hass, entity)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Power{idx+num_switches+1} ON",
+            f"NoDelay;Power{idx + num_switches + 1} ON",
             0,
             False,
         )
@@ -1605,7 +1605,7 @@ async def _test_unlinked_light(
         await common.async_turn_on(hass, entity, brightness=(idx + 1) * 25.5)
         mqtt_mock.async_publish.assert_called_once_with(
             "tasmota_49A3BC/cmnd/Backlog",
-            f"NoDelay;Dimmer{idx+1} {(idx+1)*10}",
+            f"NoDelay;Dimmer{idx + 1} {(idx + 1) * 10}",
             0,
             False,
         )

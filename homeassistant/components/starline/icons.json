@@ -13,8 +13,11 @@
       "moving_ban": {
         "default": "mdi:car-off"
       },
-      "is_running": {
-        "default": "mdi:speedometer"
+      "ignition": {
+        "default": "mdi:key-variant"
+      },
+      "autostart": {
+        "default": "mdi:auto-mode"
       }
     },
     "button": {

@@ -47,9 +47,9 @@ BASE_SUPPORTED_FEATURES = (
 )
 
 PLAY_STATE_TO_STATE = {
-    heos_const.PLAY_STATE_PLAY: MediaPlayerState.PLAYING,
-    heos_const.PLAY_STATE_STOP: MediaPlayerState.IDLE,
-    heos_const.PLAY_STATE_PAUSE: MediaPlayerState.PAUSED,
+    heos_const.PlayState.PLAY: MediaPlayerState.PLAYING,
+    heos_const.PlayState.STOP: MediaPlayerState.IDLE,
+    heos_const.PlayState.PAUSE: MediaPlayerState.PAUSED,
 }
 
 CONTROL_TO_SUPPORT = {
@@ -61,11 +61,11 @@ CONTROL_TO_SUPPORT = {
 }
 
 HA_HEOS_ENQUEUE_MAP = {
-    None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
-    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
-    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
+    None: heos_const.AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.ADD: heos_const.AddCriteriaType.ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: heos_const.AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.NEXT: heos_const.AddCriteriaType.PLAY_NEXT,
+    MediaPlayerEnqueue.PLAY: heos_const.AddCriteriaType.PLAY_NOW,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -268,7 +268,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 )
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
-            await self._player.play_favorite(index)
+            await self._player.play_preset_station(index)
             return
 
         raise ValueError(f"Unsupported media type '{media_type}'")

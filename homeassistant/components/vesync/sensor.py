@@ -36,8 +36,8 @@ from .const import (
     DOMAIN,
     SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
+    VS_DEVICES,
     VS_DISCOVERY,
-    VS_SENSORS,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -204,10 +204,10 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities, coordinator)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
