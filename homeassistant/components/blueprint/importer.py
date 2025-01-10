@@ -136,7 +136,7 @@ def _extract_blueprint_from_community_topic(
         )
 
     return ImportedBlueprint(
-        f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+        f"{post['username']}/{topic['slug']}", block_content, blueprint
     )
 
 
