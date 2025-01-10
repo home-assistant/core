@@ -1,4 +1,4 @@
-"""Tests for the Spotify initialization."""
+"""Tests for the weheat initialization."""
 
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -38,12 +38,12 @@ async def test_setup(
 
 @pytest.mark.usefixtures("setup_credentials")
 @pytest.mark.parametrize(
-    "setup_exception",
+    ("setup_exception", "expected_setup_state"),
     [
-        HTTPStatus.BAD_REQUEST,
-        HTTPStatus.UNAUTHORIZED,
-        HTTPStatus.FORBIDDEN,
-        HTTPStatus.GATEWAY_TIMEOUT,
+        (HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_ERROR),
+        (HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
+        (HTTPStatus.FORBIDDEN, ConfigEntryState.SETUP_ERROR),
+        (HTTPStatus.GATEWAY_TIMEOUT, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_fail(
@@ -53,6 +53,7 @@ async def test_setup_fail(
     mock_heat_pump_info: HeatPumpDiscovery.HeatPumpInfo,
     mock_config_entry: MockConfigEntry,
     setup_exception: Exception,
+    expected_setup_state: ConfigEntryState,
 ) -> None:
     """Test the Weheat setup with invalid token setup."""
     with (
@@ -65,16 +66,7 @@ async def test_setup_fail(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    if setup_exception in (
-        HTTPStatus.BAD_REQUEST,
-        HTTPStatus.UNAUTHORIZED,
-        HTTPStatus.FORBIDDEN,
-    ):
-        # If it is related to authorization, it should error
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    else:
-        # Any other error suggests a retry later will fix it
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_setup_state
 
 
 @pytest.mark.usefixtures("setup_credentials")
