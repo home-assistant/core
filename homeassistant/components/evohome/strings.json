@@ -49,7 +49,7 @@
       "description": "Sets a zone to follow its schedule.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
+          "name": "[%key:component::evohome::services::set_zone_override::fields::entity_id::name%]",
           "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]"
         }
       }
