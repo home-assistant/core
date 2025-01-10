@@ -28,6 +28,10 @@ SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
+    tado: Tado
+    home_id: int
+    home_name: str
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -48,7 +52,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self._fallback = fallback
         self._debug = debug
 
-        self.tado: Tado = Tado
         self.home_id: int
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
