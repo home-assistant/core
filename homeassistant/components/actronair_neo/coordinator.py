@@ -4,10 +4,11 @@ from datetime import timedelta
 import logging
 import re
 
+from actron_neo_api import ActronNeoAPIError
 import aiohttp
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +31,19 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch updates and merge incremental changes into the full state."""
         if self.local_state["full_update"] is None:
-            return await self._fetch_full_update()
+            try:
+                return await self._fetch_full_update()
+            except ActronNeoAPIError as ex:
+                raise UpdateFailed(
+                    f"The device is unavailable: {ex}"
+                ) from ActronNeoAPIError
 
-        return await self._fetch_incremental_updates()
+        try:
+            return await self._fetch_incremental_updates()
+        except ActronNeoAPIError as ex:
+            raise UpdateFailed(
+                f"The device is unavailable: {ex}"
+            ) from ActronNeoAPIError
 
     async def _fetch_full_update(self):
         """Fetch the full update."""
