@@ -42,7 +42,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: |
-      This integration does not have any configuration parameters.
+      No Options flow.
   docs-installation-parameters: done
   entity-unavailable:
     status: exempt
@@ -127,7 +127,7 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: |
-      This integration does not have configuration parameters.
+      Nothing to reconfigure.
   repair-issues: done
   stale-devices:
     status: exempt

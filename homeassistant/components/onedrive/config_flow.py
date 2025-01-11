@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
@@ -19,10 +19,10 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .api import OneDriveConfigFlowAccessTokenProvider
 from .const import DOMAIN, OAUTH_SCOPES
+from .util import get_backup_folder_name
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -47,7 +47,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         auth_provider = BaseBearerTokenAuthenticationProvider(
             access_token_provider=OneDriveConfigFlowAccessTokenProvider(
-                str(data[CONF_TOKEN]["access_token"])
+                cast(str, data[CONF_TOKEN]["access_token"])
             )
         )
         adapter = GraphRequestAdapter(
@@ -84,8 +84,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         # get the backup folder and create it if it doesn't exist
-        instance_id = await async_get_instance_id(self.hass)
-        backup_folder_name = f"backups_{instance_id[:8]}"
+        backup_folder_name = await get_backup_folder_name(self.hass)
         items = graph_client.drives.by_drive_id(drive_id).items
         try:
             await items.by_drive_item_id(f"{approot_id}:/{backup_folder_name}:").get()

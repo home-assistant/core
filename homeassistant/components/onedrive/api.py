@@ -1,6 +1,6 @@
 """API for OneDrive bound to Home Assistant OAuth."""
 
-from typing import Any
+from typing import Any, cast
 
 from kiota_abstractions.authentication import AccessTokenProvider, AllowedHostsValidator
 
@@ -61,4 +61,4 @@ class OneDriveConfigEntryAccessTokenProvider(OneDriveAccessTokenProvider):
     ) -> str:
         """Return a valid authorization token."""
         await self._oauth_session.async_ensure_token_valid()
-        return str(self._oauth_session.token["access_token"])
+        return cast(str, self._oauth_session.token["access_token"])

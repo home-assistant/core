@@ -129,7 +129,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
         request_adapter = cast(GraphRequestAdapter, self._client.request_adapter)
         parent_span = request_adapter.start_tracing_span(
-            request_info, "send_no_response_content_async"
+            request_info, "download_backup"
         )
         response = await request_adapter.get_http_response_message(
             request_info=request_info, parent_span=parent_span
@@ -209,8 +209,7 @@ class OneDriveBackupAgent(BackupAgent):
         items = await self._items.by_drive_item_id(f"{self._folder_id}").children.get()
         if items and (values := items.value):
             for item in values:
-                description = item.description
-                if description is None:
+                if (description := item.description) is None:
                     continue
                 if "homeassistant_version" in description:
                     backups.append(backup_from_description(description))
