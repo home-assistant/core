@@ -363,6 +363,7 @@ async def async_init_integration(
     """Set up the Airzone integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
+        version=2,
         data=CONFIG,
         entry_id="6e7a0798c1734ba81d26ced0e690eaec",
         domain=DOMAIN,

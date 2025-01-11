@@ -290,7 +290,7 @@
       'source': 'user',
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
-      'version': 1,
+      'version': 2,
     }),
     'coord_data': dict({
       'hot-water': dict({
