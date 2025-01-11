@@ -104,6 +104,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
         self._delay_listener = None
         super().__init__(device_id, **kwargs)
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         # Restore RFLink BinarySensor state
