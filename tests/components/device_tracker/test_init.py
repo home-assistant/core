@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
-from types import ModuleType
 from unittest.mock import call, patch
 
 import pytest
@@ -37,8 +36,6 @@ from .common import MockScanner, mock_legacy_device_tracker_setup
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_registry,
     mock_restore_cache,
     patch_yaml_files,
@@ -738,29 +735,4 @@ def test_see_schema_allowing_ios_calls() -> None:
             "gps_accuracy": 300,
             "hostname": "beer",
         }
-    )
-
-
-@pytest.mark.parametrize(
-    "module",
-    [device_tracker, device_tracker.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(("enum"), list(SourceType))
-@pytest.mark.parametrize(
-    "module",
-    [device_tracker, device_tracker.const],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: SourceType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "SOURCE_TYPE_", "2025.1"
     )

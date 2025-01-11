@@ -3,6 +3,7 @@
 from aioswitcher.device import (
     DeviceState,
     DeviceType,
+    ShutterChildLock,
     ShutterDirection,
     SwitcherDualShutterSingleLight,
     SwitcherLight,
@@ -90,6 +91,8 @@ DUMMY_POSITION = [54]
 DUMMY_POSITION_2 = [54, 54]
 DUMMY_DIRECTION = [ShutterDirection.SHUTTER_STOP]
 DUMMY_DIRECTION_2 = [ShutterDirection.SHUTTER_STOP, ShutterDirection.SHUTTER_STOP]
+DUMMY_CHILD_LOCK = [ShutterChildLock.OFF]
+DUMMY_CHILD_LOCK_2 = [ShutterChildLock.OFF, ShutterChildLock.OFF]
 DUMMY_USERNAME = "email"
 DUMMY_TOKEN = "zvVvd7JxtN7CgvkD1Psujw=="
 DUMMY_LIGHT = [DeviceState.ON]
@@ -135,6 +138,7 @@ DUMMY_SHUTTER_DEVICE = SwitcherShutter(
     DUMMY_TOKEN_NEEDED4,
     DUMMY_POSITION,
     DUMMY_DIRECTION,
+    DUMMY_CHILD_LOCK,
 )
 
 DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE = SwitcherSingleShutterDualLight(
@@ -148,6 +152,7 @@ DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE = SwitcherSingleShutterDualLight(
     DUMMY_TOKEN_NEEDED5,
     DUMMY_POSITION,
     DUMMY_DIRECTION,
+    DUMMY_CHILD_LOCK,
     DUMMY_LIGHT_2,
 )
 
@@ -162,6 +167,7 @@ DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE = SwitcherDualShutterSingleLight(
     DUMMY_TOKEN_NEEDED6,
     DUMMY_POSITION_2,
     DUMMY_DIRECTION_2,
+    DUMMY_CHILD_LOCK_2,
     DUMMY_LIGHT,
 )
 
@@ -219,3 +225,9 @@ DUMMY_TRIPLE_LIGHT_DEVICE = SwitcherLight(
 )
 
 DUMMY_SWITCHER_DEVICES = [DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE]
+
+DUMMY_SWITCHER_SENSORS_DEVICES = [
+    DUMMY_PLUG_DEVICE,
+    DUMMY_WATER_HEATER_DEVICE,
+    DUMMY_THERMOSTAT_DEVICE,
+]

@@ -7,7 +7,7 @@ import copy
 from datetime import datetime
 import socket
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer
@@ -286,11 +286,8 @@ async def mock_config_entry(
 
     # Load config_entry.
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     return entry
