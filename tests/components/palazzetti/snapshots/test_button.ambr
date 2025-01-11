@@ -22,7 +22,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:volume-mute',
+    'original_icon': None,
     'original_name': 'Silent',
     'platform': 'palazzetti',
     'previous_unique_id': None,
@@ -36,7 +36,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Stove Silent',
-      'icon': 'mdi:volume-mute',
     }),
     'context': <ANY>,
     'entity_id': 'button.stove_silent',
