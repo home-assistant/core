@@ -47,10 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescription(SensorEntityDescription):
     """Describe VeSync sensor entity."""
 
-    value_fn: Callable[
-        [VeSyncBaseDevice],
-        StateType,
-    ]
+    value_fn: Callable[[VeSyncBaseDevice], StateType]
 
     exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
     update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
@@ -218,7 +215,7 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""

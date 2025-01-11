@@ -76,15 +76,13 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ):
     """Add humidifier entities."""
-    entities = [
+    async_add_entities(
         VeSyncHumidifierHA(dev, coordinator) for dev in devices if is_humidifier(dev)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 def _get_ha_mode(vs_mode: str) -> str | None:
@@ -106,17 +104,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     _attr_max_humidity = MAX_HUMIDITY
     _attr_min_humidity = MIN_HUMIDITY
-    _attr_supported_features = HumidifierEntityFeature(HumidifierEntityFeature.MODES)
+    _attr_supported_features = HumidifierEntityFeature.MODES
 
     device: VeSyncHumidifierDevice
-
-    def __init__(
-        self,
-        humidifier: VeSyncHumidifierDevice,
-        coordinator: VeSyncDataCoordinator,
-    ) -> None:
-        """Initialize the VeSync humidifier device."""
-        super().__init__(humidifier, coordinator)
 
     @property
     def available_modes(self) -> list[str]:
@@ -153,10 +143,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not self.device.set_humidity_mode(_get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
 
-    def turn_on(
-        self,
-        **kwargs: Any,
-    ) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         success = self.device.turn_on()
         if not success:
