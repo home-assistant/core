@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -33,6 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
@@ -70,10 +72,63 @@ class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
+    entity_class: Callable | None = None
+
 
 @dataclass(frozen=True, kw_only=True)
 class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
+
+
+class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
+    """Represent a RPC sensor."""
+
+    entity_description: RpcSensorDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize select."""
+        super().__init__(coordinator, key, attribute, description)
+
+        if self.option_map:
+            self._attr_options = list(self.option_map.values())
+
+    @property
+    def native_value(self) -> StateType:
+        """Return value of sensor."""
+        attribute_value = self.attribute_value
+
+        if not self.option_map:
+            return attribute_value
+
+        if not isinstance(attribute_value, str):
+            return None
+
+        return self.option_map[attribute_value]
+
+
+class RpcBLuTrvSensor(RpcSensor):
+    """Represent a RPC BluTrv sensor."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcSensorDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        )
 
 
 SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1232,6 +1287,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda config, _status, key: config[key].get("enable", False)
         is False,
+        entity_class=RpcBLuTrvSensor,
     ),
     "blutrv_battery": RpcSensorDescription(
         key="blutrv",
@@ -1241,6 +1297,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcBLuTrvSensor,
     ),
     "blutrv_rssi": RpcSensorDescription(
         key="blutrv",
@@ -1250,6 +1307,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcBLuTrvSensor,
     ),
 }
 
@@ -1354,38 +1412,6 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
-
-
-class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
-    """Represent a RPC sensor."""
-
-    entity_description: RpcSensorDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcSensorDescription,
-    ) -> None:
-        """Initialize select."""
-        super().__init__(coordinator, key, attribute, description)
-
-        if self.option_map:
-            self._attr_options = list(self.option_map.values())
-
-    @property
-    def native_value(self) -> StateType:
-        """Return value of sensor."""
-        attribute_value = self.attribute_value
-
-        if not self.option_map:
-            return attribute_value
-
-        if not isinstance(attribute_value, str):
-            return None
-
-        return self.option_map[attribute_value]
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):

@@ -12,11 +12,7 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -178,6 +174,11 @@ def async_setup_rpc_attribute_entities(
     entities = []
     for sensor_id in sensors:
         description = sensors[sensor_id]
+        if (
+            hasattr(description, "entity_class")
+            and description.entity_class is not None
+        ):
+            sensor_class = description.entity_class
         key_instances = get_rpc_key_instances(
             coordinator.device.status, description.key
         )
@@ -356,13 +357,9 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.key = key
-
-        if blu_addr := coordinator.device.config.get(key, {}).get("addr"):
-            self._attr_device_info = {"connections": {(CONNECTION_BLUETOOTH, blu_addr)}}
-        else:
-            self._attr_device_info = {
-                "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
-            }
+        self._attr_device_info = {
+            "connections": {(CONNECTION_NETWORK_MAC, coordinator.mac)}
+        }
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 

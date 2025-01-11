@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -15,11 +16,12 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import CONF_SLEEP_PERIOD
-from .coordinator import ShellyConfigEntry
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,
@@ -53,10 +55,42 @@ class BlockBinarySensorDescription(
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
+    entity_class: Callable | None = None
+
 
 @dataclass(frozen=True, kw_only=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
+
+
+class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
+    """Represent a RPC binary sensor entity."""
+
+    entity_description: RpcBinarySensorDescription
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if RPC sensor state is on."""
+        return bool(self.attribute_value)
+
+
+class RpcBLuTrvBinarySensor(RpcBinarySensor):
+    """Represent a RPC BluTrv binary sensor."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcBinarySensorDescription,
+    ) -> None:
+        """Initialize."""
+
+        super().__init__(coordinator, key, attribute, description)
+        ble_addr: str = coordinator.device.config[key]["addr"]
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        )
 
 
 SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
@@ -239,6 +273,7 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "not_calibrated" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_class=RpcBLuTrvBinarySensor,
     ),
 }
 
@@ -325,17 +360,6 @@ class RestBinarySensor(ShellyRestAttributeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if REST sensor state is on."""
-        return bool(self.attribute_value)
-
-
-class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
-    """Represent a RPC binary sensor entity."""
-
-    entity_description: RpcBinarySensorDescription
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if RPC sensor state is on."""
         return bool(self.attribute_value)
 
 
