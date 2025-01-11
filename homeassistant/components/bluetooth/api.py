@@ -185,7 +185,7 @@ def async_register_scanner(
 
 @hass_callback
 def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
-    """Remove a BleakScanner by source address."""
+    """Permanently remove a BleakScanner by source address."""
     return _get_manager(hass).async_remove_scanner(source)
 
 
