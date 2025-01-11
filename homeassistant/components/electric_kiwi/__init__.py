@@ -79,7 +79,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # convert title and unique_id to string
-    if config_entry.version == 1 and config_entry.minor_version == 0:
+    if config_entry.version == 1 and config_entry.minor_version == 1:
         if config_entry.unique_id is not None and config_entry.unique_id.startswith(
             DOMAIN
         ):
@@ -102,7 +102,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             ek_session = await ek_api.get_active_session()
             unique_id = "_".join(str(num) for num in ek_session.customer_numbers)
             hass.config_entries.async_update_entry(
-                config_entry, unique_id=unique_id, title=unique_id, version=2
+                config_entry, unique_id=unique_id, version=2
             )
 
     return True
