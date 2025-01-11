@@ -21,7 +21,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
-from .const import USERNAME
+from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
@@ -73,15 +73,15 @@ def mock_post_request(install: str) -> Callable:
 
         if "Token" in url:
             return {
-                "access_token": "HojUMRvmn...",
+                "access_token": f"new_{ACCESS_TOKEN}",
                 "token_type": "bearer",
                 "expires_in": 1800,
-                "refresh_token": "vdBdHjxK...",
+                "refresh_token": f"new_{REFRESH_TOKEN}",
                 # "scope": "EMEA-V1-Basic EMEA-V1-Anonymous",  # optional
             }
 
         if "session" in url:
-            return {"sessionId": "1234-ABCD ..."}
+            return {"sessionId": f"new_{SESSION_ID}"}
 
         pytest.fail(f"Unexpected request: {HTTPMethod.POST} {url}")
 
@@ -98,6 +98,8 @@ def mock_make_request(install: str) -> Callable:
 
         if method != HTTPMethod.GET:
             pytest.fail(f"Unmocked method: {method} {url}")
+
+        await self._headers()
 
         # assume a valid GET, and return the JSON for that web API
         if url == "userAccount":  # /userAccount
@@ -175,10 +177,11 @@ async def setup_evohome(
 
         mock_client.assert_called_once()
 
-        assert evo and evo._token_manager.client_id == config[CONF_USERNAME]
-        assert evo and evo._token_manager._secret == config[CONF_PASSWORD]
+        assert isinstance(evo, EvohomeClient)
+        assert evo._token_manager.client_id == config[CONF_USERNAME]
+        assert evo._token_manager._secret == config[CONF_PASSWORD]
 
-        assert evo and evo.user_account
+        assert evo.user_account
 
         mock_client.return_value = evo
         yield mock_client
