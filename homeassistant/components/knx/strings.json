@@ -3,9 +3,9 @@
     "step": {
       "connection_type": {
         "title": "KNX connection",
-        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.) \n\n 'Tunneling' will connect to a specific KNX IP interface over a tunnel. \n\n 'Routing' will use Multicast to communicate with KNX IP routers.",
+        "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
         "data": {
-          "connection_type": "KNX Connection Type"
+          "connection_type": "KNX connection type"
         },
         "data_description": {
           "connection_type": "Please select the connection type you want to use for your KNX connection."
@@ -33,7 +33,7 @@
         "title": "Tunnel settings",
         "description": "Please enter the connection information of your tunneling device.",
         "data": {
-          "tunneling_type": "KNX Tunneling Type",
+          "tunneling_type": "KNX tunneling type",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "route_back": "Route back / NAT mode",
@@ -48,11 +48,11 @@
         }
       },
       "secure_key_source_menu_tunnel": {
-        "title": "KNX IP-Secure",
+        "title": "KNX IP Secure",
         "description": "How do you want to configure KNX/IP Secure?",
         "menu_options": {
-          "secure_knxkeys": "Use a `.knxkeys` file providing IP secure keys",
-          "secure_tunnel_manual": "Configure IP secure credentials manually"
+          "secure_knxkeys": "Use a `.knxkeys` file providing IP Secure keys",
+          "secure_tunnel_manual": "Configure IP Secure credentials manually"
         }
       },
       "secure_key_source_menu_routing": {
@@ -60,7 +60,7 @@
         "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
         "menu_options": {
           "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "Configure IP secure backbone key manually"
+          "secure_routing_manual": "Configure IP Secure backbone key manually"
         }
       },
       "secure_knxkeys": {
@@ -86,7 +86,7 @@
       },
       "secure_tunnel_manual": {
         "title": "Secure tunnelling",
-        "description": "Please enter your IP secure information.",
+        "description": "Please enter your IP Secure information.",
         "data": {
           "user_id": "User ID",
           "user_password": "User password",
@@ -443,7 +443,7 @@
         },
         "entity_id": {
           "name": "Entity",
-          "description": "Entity id whose state or attribute shall be exposed."
+          "description": "Entity ID whose state or attribute shall be exposed."
         },
         "attribute": {
           "name": "Entity attribute",

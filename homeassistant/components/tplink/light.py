@@ -6,7 +6,7 @@ from collections.abc import Sequence
 import logging
 from typing import Any
 
-from kasa import Device, DeviceType, LightState, Module
+from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import Light, LightEffect
 from kasa.iot import IotDevice
 import voluptuous as vol
@@ -24,14 +24,20 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
+from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -458,7 +464,17 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex
 
     async def async_set_sequence_effect(
         self,
@@ -480,4 +496,14 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             "spread": spread,
             "direction": direction,
         }
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex

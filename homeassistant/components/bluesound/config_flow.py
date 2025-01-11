@@ -71,27 +71,6 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import bluesound config entry from configuration.yaml."""
-        session = async_get_clientsession(self.hass)
-        async with Player(
-            import_data[CONF_HOST], import_data[CONF_PORT], session=session
-        ) as player:
-            try:
-                sync_status = await player.sync_status(timeout=1)
-            except PlayerUnreachableError:
-                return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(
-            format_unique_id(sync_status.mac, import_data[CONF_PORT])
-        )
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=sync_status.name,
-            data=import_data,
-        )
-
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:

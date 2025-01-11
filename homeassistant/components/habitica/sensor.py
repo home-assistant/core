@@ -135,14 +135,14 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.GEMS,
         translation_key=HabiticaSensorEntity.GEMS,
-        value_fn=lambda user, _: round(user.balance * 4) if user.balance else None,
+        value_fn=lambda user, _: None if (b := user.balance) is None else round(b * 4),
         suggested_display_precision=0,
         entity_picture="shop_gem.png",
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.TRINKETS,
         translation_key=HabiticaSensorEntity.TRINKETS,
-        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets or 0,
+        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets,
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
         entity_picture="notif_subscriber_reward.png",
