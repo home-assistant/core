@@ -55,3 +55,115 @@
     'state': '3',
   })
 # ---
+# name: test_all_entities[number.stove_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
+      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.stove_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'palazzetti',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_FanType.SECOND_speed',
+    'unique_id': '11:22:33:44:55:66-fan_FanType.SECOND_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.stove_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Stove Wind speed',
+      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
+      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.stove_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='PalazzettiClient().current_fan_speed()' id='281472618481088'>",
+  })
+# ---
+# name: test_all_entities[number.stove_wind_speed_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
+      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.stove_wind_speed_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'palazzetti',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fan_FanType.THIRD_speed',
+    'unique_id': '11:22:33:44:55:66-fan_FanType.THIRD_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[number.stove_wind_speed_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'Stove Wind speed',
+      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
+      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.stove_wind_speed_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': "<MagicMock name='PalazzettiClient().current_fan_speed()' id='281472618481088'>",
+  })
+# ---

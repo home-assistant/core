@@ -53,7 +53,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 18,
-      'fan_mode': '3',
+      'fan_mode': '1',
       'fan_modes': list([
         '1',
         '2',

@@ -27,6 +27,9 @@
     "invalid_fan_mode": {
       "message": "Fan mode {value} is invalid."
     },
+    "invalid_fan_speed": {
+      "message": "Fan {fan} speed {value} is invalid."
+    },
     "invalid_target_temperature": {
       "message": "Target temperature {value} is invalid."
     },
@@ -59,6 +62,15 @@
     "number": {
       "combustion_power": {
         "name": "Combustion power"
+      },
+      "fan_1_speed": {
+        "name": "Main fan speed"
+      },
+      "fan_2_speed": {
+        "name": "Second fan speed"
+      },
+      "fan_3_speed": {
+        "name": "Third fan speed"
       }
     },
     "sensor": {
