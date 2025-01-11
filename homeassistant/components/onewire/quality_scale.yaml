@@ -84,8 +84,8 @@ rules:
     comment: It doesn't make sense to override defaults
   reconfiguration-flow: done
   dynamic-devices:
-    status: todo
-    comment: Not yet implemented
+    status: done
+    comment: The bus is scanned for new devices at regular interval
   discovery-update-info:
     status: todo
     comment: Under review

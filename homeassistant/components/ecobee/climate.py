@@ -603,7 +603,7 @@ class Thermostat(ClimateEntity):
         """Return the remote sensor device name_by_user or name for the thermostat."""
         return sorted(
             [
-                f'{item["name_by_user"]} ({item["id"]})'
+                f"{item['name_by_user']} ({item['id']})"
                 for item in self.remote_sensor_ids_names
             ]
         )
@@ -873,7 +873,7 @@ class Thermostat(ClimateEntity):
                 translation_placeholders={
                     "options": ", ".join(
                         [
-                            f'{item["name_by_user"]} ({item["id"]})'
+                            f"{item['name_by_user']} ({item['id']})"
                             for item in self.remote_sensor_ids_names
                         ]
                     )
