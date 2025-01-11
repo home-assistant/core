@@ -88,7 +88,10 @@ class _AdvertisementSubscription:
         """Start the subscription."""
         connection = self.connection
         cancel_adv_callback = async_register_callback(
-            self.hass, self, self.match_dict, BluetoothScanningMode.PASSIVE
+            self.hass,
+            self._async_on_advertisement,
+            self.match_dict,
+            BluetoothScanningMode.PASSIVE,
         )
         cancel_disappeared_callback = _get_manager(
             self.hass
@@ -134,7 +137,8 @@ class _AdvertisementSubscription:
             )
         )
 
-    def __call__(
+    @callback
+    def _async_on_advertisement(
         self, service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         """Handle the callback."""
