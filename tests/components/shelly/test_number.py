@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -398,19 +399,19 @@ async def test_blu_trv_number_entity(
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV number entity."""
-
-    entity_id = "number.trv_name_valve_position"
     # disable automatic temperature control in the device
     monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
 
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "0"
+    for entity in ("external_temperature", "valve_position"):
+        entity_id = f"{NUMBER_DOMAIN}.trv_name_{entity}"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-blutrv:200-valve_position"
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")

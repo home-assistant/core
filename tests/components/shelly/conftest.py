@@ -255,6 +255,8 @@ MOCK_BLU_TRV_REMOTE_STATUS = {
         "current_C": 15.2,
         "target_C": 17.1,
         "schedule_rev": 0,
+        "rssi": -60,
+        "battery": 100,
         "errors": [],
     },
 }

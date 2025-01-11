@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_GEN3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
@@ -483,17 +484,16 @@ async def test_blu_trv_binary_sensor_entity(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV binary sensor entity."""
-
-    entity_id = "binary_sensor.trv_name_calibration"
-
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+    for entity in ("calibration",):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.trv_name_{entity}"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-blutrv:200-calibration"
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")

@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -1412,17 +1413,16 @@ async def test_blu_trv_sensor_entity(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV sensor entity."""
-
-    entity_id = "sensor.trv_name_valve_position"
-
     await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "0"
+    for entity in ("battery", "signal_strength", "valve_position"):
+        entity_id = f"{SENSOR_DOMAIN}.trv_name_{entity}"
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-blutrv:200-valve_position"
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
