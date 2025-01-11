@@ -110,7 +110,7 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         )
 
 
-class RpcBLuTrvNumber(RpcNumber):
+class RpcBluTrvNumber(RpcNumber):
     """Represent a RPC BluTrv number."""
 
     def __init__(
@@ -165,7 +165,7 @@ RPC_NUMBERS: Final = {
             "method": "Trv.SetExternalTemperature",
             "params": {"id": 0, "t_C": value},
         },
-        entity_class=RpcBLuTrvNumber,
+        entity_class=RpcBluTrvNumber,
     ),
     "number": RpcNumberDescription(
         key="number",
@@ -202,7 +202,7 @@ RPC_NUMBERS: Final = {
         },
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
-        entity_class=RpcBLuTrvNumber,
+        entity_class=RpcBluTrvNumber,
     ),
 }
 

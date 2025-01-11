@@ -74,7 +74,7 @@ class RpcBinarySensor(ShellyRpcAttributeEntity, BinarySensorEntity):
         return bool(self.attribute_value)
 
 
-class RpcBLuTrvBinarySensor(RpcBinarySensor):
+class RpcBluTrvBinarySensor(RpcBinarySensor):
     """Represent a RPC BluTrv binary sensor."""
 
     def __init__(
@@ -273,7 +273,7 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         value=lambda status, _: False if status is None else "not_calibrated" in status,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_class=RpcBLuTrvBinarySensor,
+        entity_class=RpcBluTrvBinarySensor,
     ),
 }
 

@@ -112,7 +112,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.option_map[attribute_value]
 
 
-class RpcBLuTrvSensor(RpcSensor):
+class RpcBluTrvSensor(RpcSensor):
     """Represent a RPC BluTrv sensor."""
 
     def __init__(
@@ -1287,7 +1287,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda config, _status, key: config[key].get("enable", False)
         is False,
-        entity_class=RpcBLuTrvSensor,
+        entity_class=RpcBluTrvSensor,
     ),
     "blutrv_battery": RpcSensorDescription(
         key="blutrv",
@@ -1297,7 +1297,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_class=RpcBLuTrvSensor,
+        entity_class=RpcBluTrvSensor,
     ),
     "blutrv_rssi": RpcSensorDescription(
         key="blutrv",
@@ -1307,7 +1307,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_class=RpcBLuTrvSensor,
+        entity_class=RpcBluTrvSensor,
     ),
 }
 
