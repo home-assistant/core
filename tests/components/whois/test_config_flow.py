@@ -4,12 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
-)
+from whois.parser import PywhoisError
 
 from homeassistant.components.whois.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -48,10 +43,7 @@ async def test_full_user_flow(
 @pytest.mark.parametrize(
     ("throw", "reason"),
     [
-        (UnknownTld, "unknown_tld"),
-        (FailedParsingWhoisOutput, "unexpected_response"),
-        (UnknownDateFormat, "unknown_date_format"),
-        (WhoisCommandFailed, "whois_command_failed"),
+        (PywhoisError, "whois_lookup_failed"),
     ],
 )
 async def test_full_flow_with_error(
