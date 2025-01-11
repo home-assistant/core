@@ -370,22 +370,28 @@ async def async_parse_vehicle_detector(uid: str, msg) -> Event | None:
         return None
 
 
-@PARSERS.register("tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/Intrusion")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/LineCross")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/People")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/Tamper")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/TpSmartEvent")
 @PARSERS.register("tns1:RuleEngine/PeopleDetector/People")
+@PARSERS.register("tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent")
 async def async_parse_tplink_detector(uid: str, msg) -> Event | None:
     """Handle parsing tplink smart event messages.
 
-    Topic: tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent
+    Topic: tns1:RuleEngine/CellMotionDetector/Intrusion
+    Topic: tns1:RuleEngine/CellMotionDetector/LineCross
+    Topic: tns1:RuleEngine/CellMotionDetector/People
+    Topic: tns1:RuleEngine/CellMotionDetector/Tamper
+    Topic: tns1:RuleEngine/CellMotionDetector/TpSmartEvent
     Topic: tns1:RuleEngine/PeopleDetector/People
+    Topic: tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent
     """
-    video_source = ""
-    video_analytics = ""
-    rule = ""
-    topic = ""
-    vehicle = False
-    person = False
-    enabled = False
     try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
         topic, payload = extract_message(msg)
         for source in payload.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
@@ -397,32 +403,56 @@ async def async_parse_tplink_detector(uid: str, msg) -> Event | None:
 
         for item in payload.Data.SimpleItem:
             if item.Name == "IsVehicle":
-                vehicle = True
-                enabled = item.Value == "true"
+                return Event(
+                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                    "Vehicle Detection",
+                    "binary_sensor",
+                    "motion",
+                    None,
+                    item.Value == "true",
+                )
+
             if item.Name == "IsPeople":
-                person = True
-                enabled = item.Value == "true"
+                return Event(
+                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                    "Person Detection",
+                    "binary_sensor",
+                    "motion",
+                    None,
+                    item.Value == "true",
+                )
+
+            if item.Name == "IsLineCross":
+                return Event(
+                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                    "Line Detector Crossed",
+                    "binary_sensor",
+                    "motion",
+                    None,
+                    item.Value == "true",
+                )
+
+            if item.Name == "IsTamper":
+                return Event(
+                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                    "Tamper Detection",
+                    "binary_sensor",
+                    "tamper",
+                    None,
+                    item.Value == "true",
+                )
+
+            if item.Name == "IsIntrusion":
+                return Event(
+                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                    "Intrusion Detection",
+                    "binary_sensor",
+                    "safety",
+                    None,
+                    item.Value == "true",
+                )
     except (AttributeError, KeyError):
         return None
-
-    if vehicle:
-        return Event(
-            f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-            "Vehicle Detection",
-            "binary_sensor",
-            "motion",
-            None,
-            enabled,
-        )
-    if person:
-        return Event(
-            f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-            "Person Detection",
-            "binary_sensor",
-            "motion",
-            None,
-            enabled,
-        )
 
     return None
 
