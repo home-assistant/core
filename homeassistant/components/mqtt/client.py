@@ -814,8 +814,8 @@ class MQTT:
             call_back_name = getattr(msg_callback, "__name__")
         return (
             f"Exception in {call_back_name} when handling msg on "
-            f"'{msg.topic}': '{msg.payload}'"
-        )  # type: ignore[str-bytes-safe]
+            f"'{msg.topic}': '{msg.payload}'"  # type: ignore[str-bytes-safe]
+        )
 
     @callback
     def async_subscribe(
