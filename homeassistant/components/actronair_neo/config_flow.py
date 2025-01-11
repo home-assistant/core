@@ -5,17 +5,24 @@ import logging
 from actron_neo_api import ActronNeoAPI, ActronNeoAPIError, ActronNeoAuthError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_API_TOKEN,
+    CONF_DEVICE_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
 )
-from homeassistant.core import callback
 
-from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH, ERROR_NO_SYSTEMS_FOUND
+from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH
 
 _LOGGER = logging.getLogger(__name__)
+
+ACTRON_AIR_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -32,147 +39,51 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("username"): str,
-                        vol.Required("password"): str,
-                    }
-                ),
-                errors=errors,
-            )
+        if user_input:
+            _LOGGER.debug("Connecting to Actron Neo API")
+            try:
+                self.api = ActronNeoAPI(
+                    username=user_input["username"], password=user_input["password"]
+                )
+            except ActronNeoAuthError:
+                errors["base"] = ERROR_INVALID_AUTH
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required("username"): str,
+                            vol.Required("password"): str,
+                        }
+                    ),
+                    errors=errors,
+                )
 
-        if not user_input.get("username") or not user_input.get("password"):
-            errors["base"] = ERROR_INVALID_AUTH
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("username"): str,
-                        vol.Required("password"): str,
-                    }
-                ),
-                errors=errors,
-            )
+            if self.api:
+                try:
+                    await self.api.request_pairing_token(
+                        "HomeAssistant", "ha-instance-id"
+                    )
+                    await self.api.refresh_token()
+                except ActronNeoAPIError:
+                    errors["base"] = ERROR_API_ERROR
 
-        _LOGGER.debug("Connecting to Actron Neo API")
-        try:
-            self.api = ActronNeoAPI(
-                username=user_input["username"], password=user_input["password"]
-            )
-        except ActronNeoAuthError:
-            errors["base"] = ERROR_INVALID_AUTH
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("username"): str,
-                        vol.Required("password"): str,
-                    }
-                ),
-                errors=errors,
-            )
+                systems = await self.api.get_ac_systems()
+                self.ac_systems = systems.get("_embedded", {}).get("ac-system", [])
 
-        if self.api is None:
-            errors["base"] = ERROR_API_ERROR
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("username"): str,
-                        vol.Required("password"): str,
-                    }
-                ),
-                errors=errors,
-            )
-
-        try:
-            await self.api.request_pairing_token("HomeAssistant", "ha-instance-id")
-            await self.api.refresh_token()
-        except ActronNeoAPIError:
-            errors["base"] = ERROR_API_ERROR
-
-        systems = await self.api.get_ac_systems()
-        self.ac_systems = systems.get("_embedded", {}).get("ac-system", [])
-        if not self.ac_systems:
-            errors["base"] = ERROR_NO_SYSTEMS_FOUND
-
-        if len(self.ac_systems) > 1:
-            return self.async_show_form(
-                step_id="select_system",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("selected_system"): vol.In(
-                            {
-                                system["serial"]: system["description"]
-                                for system in self.ac_systems
-                            }
-                        )
-                    }
-                ),
-            )
-
-        selected_system = self.ac_systems[0]
-
-        serial_number = selected_system["serial"]
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=selected_system["description"],
-            data={
-                "pairing_token": self.api.pairing_token,
-                "serial_number": serial_number,
-            },
-        )
-
-    async def async_step_select_system(self, user_input=None) -> ConfigFlowResult:
-        """Handle system selection step."""
-        if not self.ac_systems:
-            return self.async_abort(reason=ERROR_NO_SYSTEMS_FOUND)
-        if not self.api.pairing_token:
-            return self.async_abort(reason=ERROR_API_ERROR)
-        selected_system = next(
-            (
-                system
-                for system in self.ac_systems
-                if system["serial"] == user_input["selected_system"]
-            ),
-            None,
-        )
-        if not selected_system:
-            return self.async_abort(reason=ERROR_NO_SYSTEMS_FOUND)
-        return self.async_create_entry(
-            title=selected_system["description"],
-            data={
-                "pairing_token": self.api.pairing_token,
-                "serial_number": selected_system["serial"],
-            },
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return ActronNeoOptionsFlowHandler(config_entry)
-
-
-class ActronNeoOptionsFlowHandler(OptionsFlow):
-    """Handle options for Actron Air Neo."""
-
-    def __init__(self, config_entry) -> None:
-        """Handle the initial setup."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+                for system in self.ac_systems:
+                    serial_number = system["serial"]
+                    await self.async_set_unique_id(serial_number)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=system["description"],
+                        data={
+                            CONF_API_TOKEN: self.api.pairing_token,
+                            CONF_DEVICE_ID: serial_number,
+                        },
+                    )
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({}),
+            step_id="user",
+            data_schema=ACTRON_AIR_SCHEMA,
+            errors=errors,
         )

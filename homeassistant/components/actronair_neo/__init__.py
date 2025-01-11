@@ -3,6 +3,7 @@
 from actron_neo_api import ActronNeoAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -11,13 +12,15 @@ from .coordinator import ActronNeoDataUpdateCoordinator
 from .device import ACUnit
 from .models import ActronAirNeoData
 
+type ActronConfigEntry = ConfigEntry[ActronAirNeoData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bool:
     """Set up Actron Air Neo integration from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    pairing_token = entry.data.get("pairing_token")
-    serial_number = entry.data.get("serial_number")
+    pairing_token = entry.data[CONF_API_TOKEN]
+    serial_number = entry.data[CONF_DEVICE_ID]
 
     if not pairing_token or not serial_number:
         raise ConfigEntryAuthFailed("Invalid authentication")
@@ -37,7 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     system = await api.get_ac_systems()
     ac_unit = ACUnit(serial_number, system, coordinator.data)
 
-    entry.runtime_data = ActronAirNeoData(coordinator, api, ac_unit, serial_number)
+    entry.runtime_data = ActronAirNeoData(
+        pairing_token, coordinator, api, ac_unit, serial_number
+    )
 
     # Store objects in hass.data
     hass.data[DOMAIN][entry.entry_id] = {

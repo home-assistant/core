@@ -15,6 +15,7 @@ from .device import ACUnit
 class ActronAirNeoData:
     """Data for the Actron Air Neo integration."""
 
+    pairing_token: str
     coordinator: DataUpdateCoordinator
     api: ActronNeoAPI
     ac_unit: ACUnit
