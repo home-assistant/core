@@ -185,10 +185,9 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
 
     def _handle_event(self, event):
         """Domain specific event handler."""
-
         event_type = identify_event_type(event)
         value = event[event_type]
-        if value in ["on", "allon", "low"]
+        if value in ["on", "allon", "low"]:
             self._state = True
         elif value in ["off", "alloff", "ok"]:
             self._state = False
