@@ -108,6 +108,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if self.entity_description.set_value_fn(self.device, value):
-            self._attr_native_value = value
-            self.async_write_ha_state()
+        if await self.hass.async_add_executor_job(
+            self.entity_description.set_value_fn, self.device, value
+        ):
+            await self.coordinator.async_request_refresh()
