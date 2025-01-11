@@ -416,6 +416,7 @@ FLOWS = {
         "niko_home_control",
         "nina",
         "nmap_tracker",
+        "nmbs",
         "nobo_hub",
         "nordpool",
         "notion",

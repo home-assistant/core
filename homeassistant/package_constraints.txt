@@ -29,10 +29,10 @@ ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.0
 dbus-fast==2.28.0
-fnv-hash-fast==1.0.2
+fnv-hash-fast==1.1.0
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.7.0
+habluetooth==3.8.0
 hass-nabucasa==0.87.0
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0

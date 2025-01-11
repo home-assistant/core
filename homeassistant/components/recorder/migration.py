@@ -2073,10 +2073,7 @@ def _wipe_old_string_time_columns(
         session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 100000;"
-            )
+            text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 100000;")
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
