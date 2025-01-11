@@ -13,7 +13,10 @@ from homeassistant.components.suez_water.const import (
     DATA_REFRESH_INTERVAL,
     DOMAIN,
 )
-from homeassistant.components.suez_water.coordinator import DayDataResult, PySuezError
+from homeassistant.components.suez_water.coordinator import (
+    PySuezError,
+    TelemetryMeasure,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -85,7 +88,9 @@ async def test_statistics_no_price(
     # New data retrieved but no price
     suez_client.get_price.side_effect = PySuezError("will fail")
     suez_client.fetch_all_daily_data.return_value = [
-        DayDataResult(datetime.now().date(), 500, 500)
+        TelemetryMeasure(
+            (datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"), 0.5, 0.5
+        )
     ]
 
     await setup_integration(hass, mock_config_entry)
@@ -126,14 +131,18 @@ async def test_statistics(
     statistic: str,
 ) -> None:
     """Test that suez_water statistics are working."""
-    nb_samples = 120
+    nb_samples = 3
 
     start = datetime.fromisoformat("2024-12-04T02:00:00.0")
     freezer.move_to(start)
 
     origin = dt_util.start_of_local_day(start.date()) - timedelta(days=nb_samples)
     result = [
-        DayDataResult((origin + timedelta(days=d)).date(), 500, 500 * (d + 1))
+        TelemetryMeasure(
+            date=((origin + timedelta(days=d)).date()).strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.5,
+            index=0.5 * (d + 1),
+        )
         for d in range(nb_samples)
     ]
     suez_client.fetch_all_daily_data.return_value = result
@@ -169,7 +178,11 @@ async def test_statistics(
     )
     # Old data retrieved
     suez_client.fetch_all_daily_data.return_value = [
-        DayDataResult(origin.date() - timedelta(days=1), 500, 500 * (121 + 1))
+        TelemetryMeasure(
+            date=(origin.date() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.5,
+            index=0.5 * (121 + 1),
+        )
     ]
     freezer.tick(DATA_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
@@ -186,7 +199,11 @@ async def test_statistics(
 
     # New daily data retrieved
     suez_client.fetch_all_daily_data.return_value = [
-        DayDataResult(datetime.now().date(), 500, 500 * (121 + 1))
+        TelemetryMeasure(
+            date=(datetime.now().date()).strftime("%Y-%m-%d %H:%M:%S"),
+            volume=0.5,
+            index=0.5 * (121 + 1),
+        )
     ]
     freezer.tick(DATA_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
