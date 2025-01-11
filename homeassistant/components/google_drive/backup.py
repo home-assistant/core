@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import Any
 
-from aiohttp import ClientError
+from google_drive_api.exceptions import GoogleDriveApiError
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -73,7 +73,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         """
         try:
             await self._client.async_upload_backup(open_stream, backup)
-        except (ClientError, TimeoutError) as err:
+        except (GoogleDriveApiError, TimeoutError) as err:
             _LOGGER.error("Upload backup error: %s", err)
             raise BackupAgentError("Failed to upload backup") from err
 
@@ -81,7 +81,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         """List backups."""
         try:
             return await self._client.async_list_backups()
-        except ClientError as err:
+        except GoogleDriveApiError as err:
             raise BackupAgentError("Failed to list backups") from err
 
     async def async_get_backup(
@@ -112,7 +112,7 @@ class GoogleDriveBackupAgent(BackupAgent):
             _LOGGER.debug("Downloading file_id: %s", file_id)
             try:
                 stream = await self._client.async_download(file_id)
-            except (ClientError, TimeoutError) as err:
+            except (GoogleDriveApiError, TimeoutError) as err:
                 _LOGGER.error("Download error: %s", err)
                 raise BackupAgentError("Failed to download backup") from err
             return ChunkAsyncStreamIterator(stream)
@@ -131,9 +131,10 @@ class GoogleDriveBackupAgent(BackupAgent):
         _LOGGER.debug("Deleting backup_id: %s", backup_id)
         file_id = await self._client.async_get_backup_file_id(backup_id)
         if file_id:
+            _LOGGER.debug("Deleting file_id: %s", file_id)
             try:
                 await self._client.async_delete(file_id)
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
-            except ClientError as err:
+            except GoogleDriveApiError as err:
                 _LOGGER.error("Delete backup error: %s", err)
                 raise BackupAgentError("Failed to delete backup") from err

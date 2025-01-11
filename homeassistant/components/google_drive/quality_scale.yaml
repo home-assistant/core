@@ -49,7 +49,7 @@ rules:
     status: exempt
     comment: No actions and no entities.
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices:

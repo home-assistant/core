@@ -3,28 +3,24 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
-      },
-      "auth": { "title": "Link Google Account" },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Google Drive integration needs to re-authenticate your account"
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "create_folder_failure": "Error while creating Google Drive folder, see error log for details",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "unique_id_mismatch": "The new email address does not match the previous one"
+      "access_not_configured": "Unable to access the Google Drive API:\n\n{message}",
+      "create_folder_failure": "Error while creating Google Drive folder:\n\n{message}",
+      "wrong_account": "Wrong account: Please authenticate with the right account.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "Using [{folder_name}]({url}) folder. Feel free to rename it in Google Drive as you wish."
@@ -32,10 +28,5 @@
   },
   "application_credentials": {
     "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Drive. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
-  },
-  "exceptions": {
-    "config_entry_error_folder_4xx": {
-      "message": "Unexpected error while setting up Google Drive."
-    }
   }
 }

@@ -1,15 +1,16 @@
 """Test the Google Drive config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientError
+from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow, instance_id
+from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID
 
@@ -30,6 +31,8 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -56,17 +59,10 @@ async def test_full_flow(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/about",
-        json={"user": {"emailAddress": USER_EMAIL}},
-    )
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/files",
-        json={"files": []},
-    )
-    aioclient_mock.post(
-        "https://www.googleapis.com/drive/v3/files",
-        json={"id": FOLDER_ID, "name": FOLDER_NAME},
+    mock_api.get_user = AsyncMock(return_value={"user": {"emailAddress": USER_EMAIL}})
+    mock_api.list_files = AsyncMock(return_value={"files": []})
+    mock_api.create_file = AsyncMock(
+        return_value={"id": FOLDER_ID, "name": FOLDER_NAME}
     )
 
     aioclient_mock.post(
@@ -86,21 +82,15 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-    assert len(aioclient_mock.mock_calls) == 4
-    assert aioclient_mock.mock_calls[3][2] == {
-        "name": "Home Assistant",
-        "mimeType": "application/vnd.google-apps.folder",
-        "properties": {
-            "ha": "root",
-            "instance_id": await instance_id.async_get(hass),
-        },
-    }
-    assert aioclient_mock.mock_calls[3][3] == {
-        "Authorization": "Bearer mock-access-token"
-    }
+    assert len(aioclient_mock.mock_calls) == 1
+    assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
+    assert result.get("description_placeholders") == {
+        "folder_name": FOLDER_NAME,
+        "url": f"https://drive.google.com/drive/folders/{FOLDER_ID}",
+    }
     assert "result" in result
     assert result.get("result").unique_id == USER_EMAIL
     assert "token" in result.get("result").data
@@ -115,6 +105,7 @@ async def test_create_folder_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: MagicMock,
 ) -> None:
     """Test case where creating the folder fails."""
     result = await hass.config_entries.flow.async_init(
@@ -141,18 +132,9 @@ async def test_create_folder_error(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/about",
-        json={"user": {"emailAddress": USER_EMAIL}},
-    )
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/files",
-        json={"files": []},
-    )
-    aioclient_mock.post(
-        "https://www.googleapis.com/drive/v3/files",
-        exc=ClientError,
-    )
+    mock_api.get_user = AsyncMock(return_value={"user": {"emailAddress": USER_EMAIL}})
+    mock_api.list_files = AsyncMock(return_value={"files": []})
+    mock_api.create_file = AsyncMock(side_effect=GoogleDriveApiError("some error"))
 
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
@@ -167,6 +149,7 @@ async def test_create_folder_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "create_folder_failure"
+    assert result.get("description_placeholders") == {"message": "some error"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -174,6 +157,7 @@ async def test_get_email_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: MagicMock,
 ) -> None:
     """Test case where getting the email address fails."""
     result = await hass.config_entries.flow.async_init(
@@ -200,10 +184,7 @@ async def test_get_email_error(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/about",
-        exc=ClientError,
-    )
+    mock_api.get_user = AsyncMock(side_effect=GoogleDriveApiError("some error"))
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={
@@ -216,7 +197,8 @@ async def test_get_email_error(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "cannot_connect"
+    assert result.get("reason") == "access_not_configured"
+    assert result.get("description_placeholders") == {"message": "some error"}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -229,10 +211,10 @@ async def test_get_email_error(
         ),
         (
             "other.user@domain.com",
-            "unique_id_mismatch",
+            "wrong_account",
         ),
     ],
-    ids=["reauth_successful", "unique_id_mismatch"],
+    ids=["reauth_successful", "wrong_account"],
 )
 async def test_reauth(
     hass: HomeAssistant,
@@ -240,6 +222,7 @@ async def test_reauth(
     aioclient_mock: AiohttpClientMocker,
     new_email: str,
     expected_abort_reason: str,
+    mock_api: MagicMock,
 ) -> None:
     """Test the reauthentication flow."""
 
@@ -282,10 +265,7 @@ async def test_reauth(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/about",
-        json={"user": {"emailAddress": new_email}},
-    )
+    mock_api.get_user = AsyncMock(return_value={"user": {"emailAddress": new_email}})
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={
@@ -327,6 +307,7 @@ async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: MagicMock,
 ) -> None:
     """Test already configured account."""
     config_entry = MockConfigEntry(
@@ -364,10 +345,7 @@ async def test_already_configured(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    aioclient_mock.get(
-        "https://www.googleapis.com/drive/v3/about",
-        json={"user": {"emailAddress": USER_EMAIL}},
-    )
+    mock_api.get_user = AsyncMock(return_value={"user": {"emailAddress": USER_EMAIL}})
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={

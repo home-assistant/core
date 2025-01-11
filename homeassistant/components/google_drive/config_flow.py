@@ -6,14 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientError
+from google_drive_api.exceptions import GoogleDriveApiError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow, instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import DriveClient
+from .api import AsyncConfigFlowAuth, DriveClient
 from .const import DOMAIN
 
 DEFAULT_NAME = "Google Drive"
@@ -62,22 +62,25 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         client = DriveClient(
-            session=async_get_clientsession(self.hass),
-            ha_instance_id=await instance_id.async_get(self.hass),
-            access_token=data[CONF_TOKEN][CONF_ACCESS_TOKEN],
-            auth=None,
+            await instance_id.async_get(self.hass),
+            AsyncConfigFlowAuth(
+                async_get_clientsession(self.hass), data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+            ),
         )
 
         try:
             email_address = await client.async_get_email_address()
-        except ClientError as err:
+        except GoogleDriveApiError as err:
             self.logger.error("Error getting email address: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(
+                reason="access_not_configured",
+                description_placeholders={"message": str(err)},
+            )
 
         await self.async_set_unique_id(email_address)
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch()
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )
@@ -89,9 +92,12 @@ class OAuth2FlowHandler(
                 folder_id,
                 folder_name,
             ) = await client.async_create_ha_root_folder_if_not_exists()
-        except ClientError as err:
+        except GoogleDriveApiError as err:
             self.logger.error("Error creating folder: %s", str(err))
-            return self.async_abort(reason="create_folder_failure")
+            return self.async_abort(
+                reason="create_folder_failure",
+                description_placeholders={"message": str(err)},
+            )
 
         return self.async_create_entry(
             title=DEFAULT_NAME,
