@@ -175,7 +175,7 @@
     }),
     'data': dict({
       'ip_address': '2.2.2.2',
-      'token': 'super_secret_token',
+      'token': '00112233445566778899aabbccddeeff',
     }),
     'description': None,
     'description_placeholders': None,
@@ -187,7 +187,7 @@
     'result': ConfigEntrySnapshot({
       'data': dict({
         'ip_address': '2.2.2.2',
-        'token': 'super_secret_token',
+        'token': '00112233445566778899aabbccddeeff',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
