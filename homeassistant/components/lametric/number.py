@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from demetriek import Device, LaMetricDevice
+from demetriek import Device, LaMetricDevice, Range
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +25,7 @@ class LaMetricNumberEntityDescription(NumberEntityDescription):
     """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
+    range_fn: Callable[[Device], Range]
     has_fn: Callable[[Device], bool] = lambda device: True
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
 
@@ -36,8 +37,7 @@ NUMBERS = [
         name="Brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        native_min_value=0,
-        native_max_value=100,
+        range_fn=lambda device: device.display.brightness_range,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.display.brightness,
         set_value_fn=lambda device, bri: device.display(brightness=int(bri)),
@@ -48,8 +48,7 @@ NUMBERS = [
         name="Volume",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        native_min_value=0,
-        native_max_value=100,
+        range_fn=lambda device: device.audio.volume_range,
         has_fn=lambda device: bool(device.audio and device.audio.available),
         value_fn=lambda device: device.audio.volume if device.audio else 0,
         set_value_fn=lambda api, volume: api.audio(volume=int(volume)),
@@ -92,6 +91,16 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
     def native_value(self) -> int | None:
         """Return the number value."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @property
+    def native_min_value(self) -> int:
+        """Return the min range."""
+        return self.entity_description.range_fn(self.coordinator.data).range_min
+
+    @property
+    def native_max_value(self) -> int:
+        """Return the max range."""
+        return self.entity_description.range_fn(self.coordinator.data).range_max
 
     @lametric_exception_handler
     async def async_set_native_value(self, value: float) -> None:
