@@ -47,7 +47,11 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: todo
+    comment: |
+      Zeroconf discovery is not implemented for v2 API.
+      DHCP IP address updates are not implemented for v2 API.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -65,7 +69,10 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Reauthorization for v2 API token revocation is not implemented.
   repair-issues:
     status: exempt
     comment: |
