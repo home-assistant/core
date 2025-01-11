@@ -58,10 +58,12 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
+
         errors: dict[str, str] | None = None
         if user_input is not None:
             try:
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+                _LOGGER.warning(device_info)
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
