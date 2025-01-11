@@ -33,7 +33,6 @@ NUMBERS = [
     LaMetricNumberEntityDescription(
         key="brightness",
         translation_key="brightness",
-        name="Brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -45,11 +44,11 @@ NUMBERS = [
     LaMetricNumberEntityDescription(
         key="volume",
         translation_key="volume",
-        name="Volume",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
         native_max_value=100,
+        native_unit_of_measurement=PERCENTAGE,
         has_fn=lambda device: bool(device.audio and device.audio.available),
         value_fn=lambda device: device.audio.volume if device.audio else 0,
         set_value_fn=lambda api, volume: api.audio(volume=int(volume)),
