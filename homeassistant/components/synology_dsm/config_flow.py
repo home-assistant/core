@@ -74,6 +74,7 @@ from .const import (
     DOMAIN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,6 +242,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_MAC: api.network.macs,
+        }
+        config_options = {
             CONF_BACKUP_PATH: backup_path,
             CONF_BACKUP_SHARE: backup_share,
         }
@@ -256,10 +259,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 "reauth_successful" if self.reauth_conf else "reconfigure_successful"
             )
             return self.async_update_reload_and_abort(
-                existing_entry, data=config_data, reason=reason
+                existing_entry, data=config_data, options=config_options, reason=reason
             )
 
-        return self.async_create_entry(title=friendly_name or host, data=config_data)
+        return self.async_create_entry(
+            title=friendly_name or host, data=config_data, options=config_options
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -448,6 +453,8 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
+
         data_schema = vol.Schema(
             {
                 vol.Required(
@@ -464,6 +471,36 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
             }
         )
+
+        shares: list[SynoFileSharedFolder] | None = None
+        if syno_data.api.file_station:
+            with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+                shares = await syno_data.api.file_station.get_shared_folders(
+                    only_writable=True
+                )
+
+        if shares:
+            data_schema = data_schema.extend(
+                {
+                    vol.Required(
+                        CONF_BACKUP_SHARE,
+                        default=self.config_entry.options[CONF_BACKUP_SHARE],
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=s.path, label=s.name)
+                                for s in shares
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        ),
+                    ),
+                    vol.Required(
+                        CONF_BACKUP_PATH,
+                        default=self.config_entry.options[CONF_BACKUP_PATH],
+                    ): str,
+                }
+            )
+
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 

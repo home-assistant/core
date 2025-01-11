@@ -39,7 +39,7 @@ async def async_get_backup_agents(
     agents: list[BackupAgent] = []
     for entry in entries:
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
-        if syno_data.api.file_station and entry.data.get(CONF_BACKUP_PATH):
+        if syno_data.api.file_station and entry.options.get(CONF_BACKUP_PATH):
             agents.append(SynologyDSMBackupAgent(hass, entry))
     return agents
 
@@ -75,7 +75,9 @@ class SynologyDSMBackupAgent(BackupAgent):
         super().__init__()
         LOGGER.debug("Initializing Synology DSM backup agent for %s", entry.unique_id)
         self.name = entry.title
-        self.path = f"{entry.data[CONF_BACKUP_SHARE]}/{entry.data[CONF_BACKUP_PATH]}"
+        self.path = (
+            f"{entry.options[CONF_BACKUP_SHARE]}/{entry.options[CONF_BACKUP_PATH]}"
+        )
         syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         self.api = syno_data.api
 

@@ -112,11 +112,11 @@ async def test_config_entry_migrations(
         entry.add_to_hass(hass)
 
         assert CONF_VERIFY_SSL not in entry.data
-        assert CONF_BACKUP_SHARE not in entry.data
-        assert CONF_BACKUP_PATH not in entry.data
+        assert CONF_BACKUP_SHARE not in entry.options
+        assert CONF_BACKUP_PATH not in entry.options
 
         assert await hass.config_entries.async_setup(entry.entry_id)
 
         assert entry.data[CONF_VERIFY_SSL] == DEFAULT_VERIFY_SSL
-        assert entry.data[CONF_BACKUP_SHARE] is None
-        assert entry.data[CONF_BACKUP_PATH] is None
+        assert entry.options[CONF_BACKUP_SHARE] is None
+        assert entry.options[CONF_BACKUP_PATH] is None

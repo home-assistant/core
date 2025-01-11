@@ -63,9 +63,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
-    if CONF_BACKUP_SHARE not in entry.data:
+    if CONF_BACKUP_SHARE not in entry.options:
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None}
+            entry,
+            options={**entry.options, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None},
         )
 
     # Continue setup
@@ -125,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    if entry.data[CONF_BACKUP_SHARE]:
+    if entry.options[CONF_BACKUP_SHARE]:
         _notify_backup_listeners(hass)
 
     return True

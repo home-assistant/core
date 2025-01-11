@@ -132,6 +132,8 @@ async def setup_dsm_with_filestation(
                 CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: PASSWORD,
                 CONF_MAC: MACS[0],
+            },
+            options={
                 CONF_BACKUP_PATH: "my_backup_path",
                 CONF_BACKUP_SHARE: "/ha_backup",
             },
