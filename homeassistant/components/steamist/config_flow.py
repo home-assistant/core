@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from aiosteamist import Steamist
 from discovery30303 import Device30303, normalize_mac
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
@@ -24,6 +23,9 @@ from .discovery import (
     async_is_steamist_device,
     async_update_entry_from_discovery,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +43,7 @@ class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: Device30303 | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = Device30303(

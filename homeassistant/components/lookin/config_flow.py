@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from aiolookin import Device, LookInHttpProtocol, NoUsableService
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class LookinFlowHandler(ConfigFlow, domain=DOMAIN):
         self._name: str | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Start a discovery flow from zeroconf."""
         uid: str = discovery_info.hostname.removesuffix(".local.")

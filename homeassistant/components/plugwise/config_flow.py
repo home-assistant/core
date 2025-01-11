@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from plugwise import Smile
 from plugwise.exceptions import (
@@ -16,7 +16,6 @@ from plugwise.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -41,6 +40,9 @@ from .const import (
     STRETCH_USERNAME,
     ZEROCONF_MAP,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

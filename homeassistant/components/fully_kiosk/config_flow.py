@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from fullykiosk import FullyKiosk
 from fullykiosk.exceptions import FullyKioskError
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -25,6 +24,9 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 
 class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):

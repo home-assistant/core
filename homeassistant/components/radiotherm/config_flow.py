@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -17,6 +16,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .data import RadioThermInitData, async_get_init_data
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_init_data: RadioThermInitData | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Discover via DHCP."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})

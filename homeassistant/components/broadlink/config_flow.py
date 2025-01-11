@@ -1,11 +1,13 @@
 """Config flow for Broadlink devices."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import errno
 from functools import partial
 import logging
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -15,7 +17,6 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_REAUTH,
@@ -28,6 +29,9 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
 from .helpers import format_mac
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +69,7 @@ class BroadlinkFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         host = discovery_info.ip

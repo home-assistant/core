@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from aionanoleaf import InvalidToken, Nanoleaf, Unauthorized, Unavailable
 import voluptuous as vol
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -18,6 +18,9 @@ from homeassistant.helpers.json import save_json
 from homeassistant.util.json import JsonObjectType, JsonValueType, load_json_object
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.ssdp import SsdpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,7 +113,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle Nanoleaf SSDP discovery."""
         _LOGGER.debug("SSDP discovered: %s", discovery_info)

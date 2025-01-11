@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gotailwind import (
     MIN_REQUIRED_FIRMWARE_VERSION,
@@ -15,8 +15,6 @@ from gotailwind import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
@@ -29,6 +27,10 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 LOCAL_CONTROL_KEY_URL = (
     "https://web.gotailwind.com/client/integration/local-control-key"
@@ -83,7 +85,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of a Tailwind device."""
         if not (device_id := discovery_info.properties.get("device_id")):

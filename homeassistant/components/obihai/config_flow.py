@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from socket import gaierror, gethostbyname
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyobihai import PyObihai
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -16,6 +15,9 @@ from homeassistant.helpers.device_registry import format_mac
 
 from .connectivity import validate_auth
 from .const import DEFAULT_PASSWORD, DEFAULT_USERNAME, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -54,7 +56,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
     discovery_schema: vol.Schema | None = None
-    _dhcp_discovery_info: dhcp.DhcpServiceInfo | None = None
+    _dhcp_discovery_info: DhcpServiceInfo | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -94,7 +96,7 @@ class ObihaiFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Obihai."""
 

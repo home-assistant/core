@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -22,6 +22,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import RokuConfigEntry
 from .const import CONF_PLAY_MEDIA_APP_ID, DEFAULT_PLAY_MEDIA_APP_ID, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -117,7 +120,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=info["title"], data=user_input)
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
 

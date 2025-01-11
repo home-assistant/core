@@ -5,13 +5,12 @@ from __future__ import annotations
 import copy
 import logging
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyvizio import VizioAsync, async_guess_device_type
 from pyvizio.const import APP_HOME
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
@@ -45,6 +44,9 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -257,7 +259,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host

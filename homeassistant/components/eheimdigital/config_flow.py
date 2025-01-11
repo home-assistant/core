@@ -10,13 +10,15 @@ from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 CONFIG_SCHEMA = vol.Schema(
     {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}

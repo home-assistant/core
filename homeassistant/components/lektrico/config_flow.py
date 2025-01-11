@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from lektricowifi import Device, DeviceConnectionError
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -19,6 +18,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

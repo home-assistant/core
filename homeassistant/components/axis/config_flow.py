@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from ipaddress import ip_address
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp, zeroconf
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_REAUTH,
@@ -45,6 +45,10 @@ from .const import (
 )
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 443
@@ -190,7 +194,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         return await self.async_step_user()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
@@ -217,7 +221,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(

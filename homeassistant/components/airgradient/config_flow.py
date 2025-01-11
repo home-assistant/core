@@ -1,6 +1,8 @@
 """Config flow for Airgradient."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from airgradient import (
     AirGradientClient,
@@ -11,12 +13,14 @@ from airgradient import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 MIN_VERSION = AwesomeVersion("3.1.1")
 
@@ -37,7 +41,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.data[CONF_HOST] = host = discovery_info.host

@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import socket
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
@@ -34,6 +32,10 @@ from .util import (
     lifx_features,
     mac_matches_serial_number,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 
 class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,7 +74,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_handle_discovery(host)
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         return await self._async_handle_discovery(host=discovery_info.host)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-from typing import Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from flux_led.const import (
     ATTR_ID,
@@ -16,7 +16,6 @@ from flux_led.const import (
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -55,6 +54,9 @@ from .discovery import (
 )
 from .util import format_as_flux_mac, mac_matches_by_one
 
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+
 
 class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Magic Home Integration."""
@@ -78,7 +80,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         return FluxLedOptionsFlow()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = FluxLEDDiscovery(

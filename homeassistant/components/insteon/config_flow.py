@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyinsteon import async_connect
 
-from homeassistant.components import dhcp, usb
+from homeassistant.components import usb
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
     ConfigFlow,
@@ -19,6 +19,9 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import CONF_HUB_VERSION, DOMAIN
 from .schemas import build_hub_schema, build_plm_manual_schema, build_plm_schema
 from .utils import async_get_usb_ports
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 STEP_PLM = "plm"
 STEP_PLM_MANUALLY = "plm_manually"
@@ -162,7 +165,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}

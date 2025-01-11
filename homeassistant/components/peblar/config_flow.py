@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import CookieJar
 from peblar import Peblar, PeblarAuthenticationError, PeblarConnectionError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -21,13 +20,16 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
 
 class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Peblar config flow."""
 
     VERSION = 1
 
-    _discovery_info: zeroconf.ZeroconfServiceInfo
+    _discovery_info: ZeroconfServiceInfo
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -128,7 +130,7 @@ class PeblarFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery of a Peblar device."""
         if not (sn := discovery_info.properties.get("sn")):
