@@ -91,10 +91,7 @@ class InComfortOptionsFlowHandler(OptionsFlow):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=new_options
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id),
-                eager_start=False,
-            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             return self.async_create_entry(data=new_options)
 
         data_schema = self.add_suggested_values_to_schema(
