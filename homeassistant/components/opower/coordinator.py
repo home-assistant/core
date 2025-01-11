@@ -231,7 +231,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             compensation_metadata = StatisticMetaData(
                 has_mean=False,
                 has_sum=True,
-                name=f"{name_prefix} return cost",
+                name=f"{name_prefix} compensation",
                 source=DOMAIN,
                 statistic_id=compensation_statistic_id,
                 unit_of_measurement=None,
