@@ -59,7 +59,8 @@ async def test_async_press_error(
     await setup_integration(hass, mock_config_entry)
 
     mock_palazzetti_client.set_fan_silent.side_effect = CommunicationError()
-    with pytest.raises(HomeAssistantError):
+    error_message = "Could not connect to the device"
+    with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

@@ -31,7 +31,6 @@ class PalazzettiSilentButtonEntity(PalazzettiEntity, ButtonEntity):
     """Representation of a Palazzetti Silent button."""
 
     _attr_translation_key = "silent"
-    _attr_icon = "mdi:volume-mute"
 
     def __init__(
         self,
