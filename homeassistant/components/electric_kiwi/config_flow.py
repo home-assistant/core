@@ -60,11 +60,13 @@ class ElectricKiwiOauth2FlowHandler(
             return self.async_abort(reason="no_customers")
 
         unique_id = "_".join(str(num) for num in session.customer_numbers)
-        existing_entry = await self.async_set_unique_id(unique_id)
+        await self.async_set_unique_id(unique_id)
 
         if self.source != SOURCE_REAUTH:
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
 
-        if existing_entry:
-            return self.async_update_reload_and_abort(existing_entry, data=data)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=unique_id, data=data)
