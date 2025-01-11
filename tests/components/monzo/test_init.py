@@ -96,8 +96,6 @@ async def test_webhook_setup_while_hass_not_running(
     polling_config_entry: MonzoConfigEntry,
 ) -> None:
     """Test webhook setup while HA is not running."""
-    # with patch("HomeAssistant.state") as core_state:
-    #     core_state.get.return_value = CoreState.not_running
     hass.state = CoreState.not_running
     await setup_integration(hass, polling_config_entry)
     await hass.async_block_till_done()
