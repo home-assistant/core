@@ -1,7 +1,10 @@
 """Test Shopping List intents."""
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.helpers.intent import IntentHandleError
 
 
 async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
@@ -21,14 +24,11 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
 
 async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> None:
     """Test complete item."""
-    response = await intent.async_handle(
-        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
-    )
-
-    assert (
-        response.speech["plain"]["speech"]
-        == "Item beer not found on your shopping list"
-    )
+    with pytest.raises(IntentHandleError) as excinfo:
+        await intent.async_handle(
+            hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+        )
+    assert str(excinfo.value) == "Item beer not found on your shopping list"
 
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.intent import IntentHandleError
 
 from . import DOMAIN, EVENT_SHOPPING_LIST_UPDATED, NoMatchingShoppingListItem
 
@@ -34,7 +35,7 @@ class AddItemIntent(intent.IntentHandler):
         item = slots["item"]["value"].strip()
         await intent_obj.hass.data[DOMAIN].async_add(item)
 
-        response = intent_obj.create_response()
+        response: intent.IntentResponse = intent_obj.create_response()
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
         return response
 
@@ -54,14 +55,14 @@ class CompleteItemIntent(intent.IntentHandler):
 
         try:
             await intent_obj.hass.data[DOMAIN].async_complete(item)
-        except NoMatchingShoppingListItem:
-            response = intent_obj.create_response()
-            response.async_set_speech(f"Item {item} not found on your shopping list")
-            return response
+        except NoMatchingShoppingListItem as err:
+            raise IntentHandleError(
+                f"Item {item} not found on your shopping list", "item_not_found"
+            ) from err
 
         intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
-        response = intent_obj.create_response()
+        response: intent.IntentResponse = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.ACTION_DONE
 
         return response
@@ -78,7 +79,7 @@ class ListTopItemsIntent(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         items = intent_obj.hass.data[DOMAIN].items[-5:]
-        response = intent_obj.create_response()
+        response: intent.IntentResponse = intent_obj.create_response()
 
         if not items:
             response.async_set_speech("There are no items on your shopping list")
