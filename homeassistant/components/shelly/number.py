@@ -60,7 +60,6 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     mode_fn: Callable[[dict], NumberMode] | None = None
     method: str
     method_params_fn: Callable[[int, float], dict]
-    entity_class: Callable | None = None
 
 
 class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):

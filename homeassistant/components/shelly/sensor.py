@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -71,8 +70,6 @@ class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
 @dataclass(frozen=True, kw_only=True)
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
-
-    entity_class: Callable | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
