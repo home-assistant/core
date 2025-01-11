@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -1405,3 +1406,23 @@ async def test_rpc_voltmeter_value(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-voltmeter:100-voltmeter_value"
+
+
+async def test_blu_trv_sensor_entity(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test BLU TRV sensor entity."""
+
+    entity_id = "sensor.trv_name_valve_position"
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-blutrv:200-valve_position"
