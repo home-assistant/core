@@ -39,6 +39,9 @@ async def async_setup_entry(
 class HaHueBLE(LightEntity):
     """Representation of a light."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, api: HueBleLight) -> None:
         """Initialize the light object. Does not connect."""
 
