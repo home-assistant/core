@@ -666,7 +666,7 @@ def _validate_item(
         # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
-            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            "'%s' from integration %s has a non string unique_id '%s', please %s",
             domain,
             platform,
             unique_id,
@@ -799,7 +799,7 @@ class EntityRegistry(BaseRegistry):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
-                f"{preferred_string[:MAX_LENGTH_STATE_ENTITY_ID-len_suffix]}_{tries}"
+                f"{preferred_string[: MAX_LENGTH_STATE_ENTITY_ID - len_suffix]}_{tries}"
             )
 
         return test_string

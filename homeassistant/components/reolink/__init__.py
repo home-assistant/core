@@ -361,7 +361,7 @@ def migrate_entity_ids(
         if host.api.supported(None, "UID") and not entity.unique_id.startswith(
             host.unique_id
         ):
-            new_id = f"{host.unique_id}_{entity.unique_id.split("_", 1)[1]}"
+            new_id = f"{host.unique_id}_{entity.unique_id.split('_', 1)[1]}"
             entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
 
         if entity.device_id in ch_device_ids:

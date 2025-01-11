@@ -114,6 +114,13 @@
         }
       }
     },
-    "balance": 10
+    "balance": 10,
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "trinkets": 0
+        }
+      }
+    }
   }
 }

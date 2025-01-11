@@ -154,6 +154,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=MODEL_NAMES.get(self.model),
             model_id=self.model,
