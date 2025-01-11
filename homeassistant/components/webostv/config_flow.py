@@ -162,7 +162,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
-                    client.hello_info["deviceUUID"], raise_on_progress=False
+                    client.hello_info["deviceUUID"]
                 )
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
