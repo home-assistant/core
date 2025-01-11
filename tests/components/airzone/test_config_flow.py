@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aioairzone.const import API_MAC, API_SYSTEMS
+from aioairzone.const import API_MAC, API_SYSTEMS, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import (
     AirzoneError,
     HotWaterNotAvailable,
@@ -94,7 +94,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
-        assert CONF_ID not in result["data"]
+        assert result["data"][CONF_ID] == DEFAULT_SYSTEM_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
 

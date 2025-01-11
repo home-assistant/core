@@ -274,6 +274,7 @@
     'config_entry': dict({
       'data': dict({
         'host': '192.168.1.100',
+        'id': 0,
         'port': 3000,
       }),
       'disabled_by': None,

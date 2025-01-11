@@ -53,6 +53,9 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            if CONF_ID not in user_input:
+                user_input[CONF_ID] = DEFAULT_SYSTEM_ID
+
             self._async_abort_entries_match(user_input)
 
             airzone = AirzoneLocalApi(
@@ -60,7 +63,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 ConnectionOptions(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
-                    user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
+                    user_input[CONF_ID],
                 ),
             )
 
