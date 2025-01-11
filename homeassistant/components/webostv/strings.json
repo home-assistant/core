@@ -30,7 +30,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect, please turn on your TV and try again.",
-      "error_pairing": "Pairing failed, please try again."
+      "error_pairing": "Pairing failed, make sure to accept the pairing request on the TV and try again."
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
