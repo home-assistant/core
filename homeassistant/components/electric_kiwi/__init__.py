@@ -24,7 +24,6 @@ PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Electric Kiwi from a config entry."""
-    assert entry.unique_id is not None
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -78,7 +77,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    # convert title and unique_id to string
     if config_entry.version == 1 and config_entry.minor_version == 1:
         if config_entry.unique_id is not None and config_entry.unique_id.startswith(
             DOMAIN
