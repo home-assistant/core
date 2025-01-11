@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyrail import iRail
 import voluptuous as vol
@@ -186,8 +187,8 @@ class NMBSLiveBoard(SensorEntity):
         self._api_client = api_client
         self._station_from = station_from
         self._station_to = station_to
-        self._attrs = {}
-        self._state = None
+        self._attrs: dict[str, Any] | None = {}
+        self._state: str | None = None
 
         self.entity_registry_enabled_default = False
 
@@ -212,12 +213,12 @@ class NMBSLiveBoard(SensorEntity):
         return DEFAULT_ICON
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return sensor state."""
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -280,7 +281,7 @@ class NMBSSensor(SensorEntity):
         self._station_to = station_to
         self._excl_vias = excl_vias
 
-        self._attrs = {}
+        self._attrs: dict[str, Any] | None = {}
         self._state = None
 
     @property
@@ -308,7 +309,7 @@ class NMBSSensor(SensorEntity):
         return "mdi:train"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -355,7 +356,7 @@ class NMBSSensor(SensorEntity):
         return attrs
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> int | None:
         """Return the state of the device."""
         return self._state
 
