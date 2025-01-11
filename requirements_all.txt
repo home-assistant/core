@@ -946,7 +946,7 @@ forecast-solar==4.0.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.2.1
+freebox-api==1.2.2
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
@@ -1097,7 +1097,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.2
 
 # homeassistant.components.bluetooth
-habluetooth==3.7.0
+habluetooth==3.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.87.0
@@ -2853,7 +2853,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.5.3
+teslemetry-stream==0.6.3
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
