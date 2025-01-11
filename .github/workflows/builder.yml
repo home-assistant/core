@@ -240,6 +240,7 @@ jobs:
           - tinker
           - yellow
           - green
+          - rock-3a
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.2.2
