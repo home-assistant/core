@@ -54,6 +54,7 @@ from aioairzone.const import (
     API_WS_AZ,
     API_WS_TYPE,
     API_ZONE_ID,
+    DEFAULT_SYSTEM_ID,
 )
 
 from homeassistant.components.airzone.const import DOMAIN
@@ -62,13 +63,18 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CONFIG = {
+USER_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
 }
 
+CONFIG = {
+    **USER_INPUT,
+    CONF_ID: DEFAULT_SYSTEM_ID,
+}
+
 CONFIG_ID1 = {
-    **CONFIG,
+    **USER_INPUT,
     CONF_ID: 1,
 }
 
