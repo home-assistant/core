@@ -91,10 +91,12 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
         super().__init__(coordinator)
         self.fan = fan
 
-        self._attr_translation_key = f"fan_{fan}_speed"
+        self._attr_translation_key = f"fan_{fan.value}_speed"
         self._attr_native_min_value = coordinator.client.min_fan_speed(fan)
         self._attr_native_max_value = coordinator.client.max_fan_speed(fan)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-fan_{fan}_speed"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-fan_{fan.value}_speed"
+        )
 
     @property
     def native_value(self) -> float:
@@ -114,7 +116,7 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_speed",
                 translation_placeholders={
-                    "fan": str(self.fan),
+                    "fan": str(self.fan.value),
                     "value": str(value),
                 },
             ) from err

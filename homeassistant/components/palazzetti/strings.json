@@ -28,7 +28,7 @@
       "message": "Fan mode {value} is invalid."
     },
     "invalid_fan_speed": {
-      "message": "Fan {fan} speed {value} is invalid."
+      "message": "Fan #{fan} speed {value} is invalid."
     },
     "invalid_target_temperature": {
       "message": "Target temperature {value} is invalid."
