@@ -2,8 +2,9 @@
 
 from dataclasses import dataclass
 from datetime import date, datetime
+import logging
 
-from pysuez import DayDataResult, PySuezError, SuezClient
+from pysuez import PySuezError, SuezClient, TelemetryMeasure
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -19,12 +20,14 @@ from homeassistant.const import (
     CURRENCY_EURO,
     UnitOfVolume,
 )
-from homeassistant.core import _LOGGER, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -95,9 +98,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
 
         price = None
         try:
-            price_result = await self._suez_client.get_price()
-            if price_result:
-                price = price_result.price
+            price = (await self._suez_client.get_price()).price
         except PySuezError:
             _LOGGER.debug("Failed to fetch water price", stack_info=True)
 
@@ -126,31 +127,30 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
 
         water_last_stat = await self._get_last_stat(self._water_statistic_id)
         cost_last_stat = await self._get_last_stat(self._cost_statistic_id)
-
-        consumption_sum = 0.0
-        cost_sum = 0.0
-        last_stats = None
-
-        if water_last_stat is not None:
-            last_stats = datetime.fromtimestamp(water_last_stat["start"]).date()
-            if water_last_stat["sum"] is not None:
-                consumption_sum = water_last_stat["sum"]
-        if cost_last_stat is not None:
-            if cost_last_stat["sum"] is not None and cost_last_stat["sum"] is not None:
-                cost_sum = cost_last_stat["sum"]
-        if last_stats is None:
-            last_stats = datetime.now().date()
-            last_stats = last_stats.replace(year=last_stats.year - 2)
+        consumption_sum = (
+            water_last_stat["sum"]
+            if water_last_stat and water_last_stat["sum"]
+            else 0.0
+        )
+        cost_sum = (
+            cost_last_stat["sum"] if cost_last_stat and cost_last_stat["sum"] else 0.0
+        )
+        last_stats = (
+            datetime.fromtimestamp(water_last_stat["start"]).date()
+            if water_last_stat
+            else None
+        )
 
         _LOGGER.debug(
             "Updating suez stat since %s for %s",
             str(last_stats),
             water_last_stat,
         )
-        usage = await self._suez_client.fetch_all_daily_data(
-            since=last_stats,
-        )
-        if usage is None or len(usage) <= 0:
+        if not (
+            usage := await self._suez_client.fetch_all_daily_data(
+                since=last_stats,
+            )
+        ):
             _LOGGER.debug("No recent usage data. Skipping update")
             return
         _LOGGER.debug("fetched data: %s", len(usage))
@@ -167,27 +167,31 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         consumption_sum: float,
         cost_sum: float,
         last_stats: date | None,
-        usage: list[DayDataResult],
+        usage: list[TelemetryMeasure],
     ) -> tuple[list[StatisticData], list[StatisticData]]:
         """Build statistics data from fetched data."""
         consumption_statistics = []
         cost_statistics = []
 
         for data in usage:
-            if last_stats is not None and data.date <= last_stats:
+            if (
+                (last_stats is not None and data.date <= last_stats)
+                or not data.index
+                or data.volume is None
+            ):
                 continue
             consumption_date = dt_util.start_of_local_day(data.date)
 
-            consumption_sum += data.day_consumption
+            consumption_sum += data.volume
             consumption_statistics.append(
                 StatisticData(
                     start=consumption_date,
-                    state=data.day_consumption,
+                    state=data.volume,
                     sum=consumption_sum,
                 )
             )
             if current_price is not None:
-                day_cost = (data.day_consumption / 1000) * current_price
+                day_cost = (data.volume / 1000) * current_price
                 cost_sum += day_cost
                 cost_statistics.append(
                     StatisticData(
@@ -208,9 +212,6 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         consumption_metadata = self._get_statistics_metadata(
             id=self._water_statistic_id, name="Consumption", unit=UnitOfVolume.LITERS
         )
-        cost_metadata = self._get_statistics_metadata(
-            id=self._cost_statistic_id, name="Cost", unit=CURRENCY_EURO
-        )
 
         _LOGGER.debug(
             "Adding %s statistics for %s",
@@ -220,7 +221,16 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
         async_add_external_statistics(
             self.hass, consumption_metadata, consumption_statistics
         )
+
         if len(cost_statistics) > 0:
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(cost_statistics),
+                self._cost_statistic_id,
+            )
+            cost_metadata = self._get_statistics_metadata(
+                id=self._cost_statistic_id, name="Cost", unit=CURRENCY_EURO
+            )
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
 
         _LOGGER.debug("Updated statistics for %s", self._water_statistic_id)
