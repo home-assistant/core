@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from teslemetry_stream import Signal
+from teslemetry_stream.const import WindowState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -20,7 +21,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
-from .const import TeslemetryEnum, TeslemetryState
+from .const import TeslemetryState
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
@@ -30,9 +31,6 @@ from .entity import (
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
-
-# Protobuf values
-WindowState = TeslemetryEnum("WindowState", ["opened", "partiallyopen", "closed"])
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -156,7 +154,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_fd_window",
         polling=True,
         streaming_key=Signal.FD_WINDOW,
-        streaming_value_fn=lambda x: WindowState.get(x) != "closed",
+        streaming_value_fn=lambda x: WindowState.get(x) != "Closed",
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -164,7 +162,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_fp_window",
         polling=True,
         streaming_key=Signal.FP_WINDOW,
-        streaming_value_fn=lambda x: WindowState.get(x) != "closed",
+        streaming_value_fn=lambda x: WindowState.get(x) != "Closed",
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -172,7 +170,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_rd_window",
         polling=True,
         streaming_key=Signal.RD_WINDOW,
-        streaming_value_fn=lambda x: WindowState.get(x) != "closed",
+        streaming_value_fn=lambda x: WindowState.get(x) != "Closed",
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -180,7 +178,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="vehicle_state_rp_window",
         polling=True,
         streaming_key=Signal.RP_WINDOW,
-        streaming_value_fn=lambda x: WindowState.get(x) != "closed",
+        streaming_value_fn=lambda x: WindowState.get(x) != "Closed",
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -292,7 +290,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="guest_mode_enabled",
         streaming_key=Signal.GUEST_MODE_ENABLED,
         entity_registry_enabled_default=False,
-        streaming_value_fn=lambda x: x is True or x == "true",
     ),
     TeslemetryBinarySensorEntityDescription(
         key="dc_dc_enable",
