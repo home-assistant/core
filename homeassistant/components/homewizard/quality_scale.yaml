@@ -71,7 +71,10 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Reauthorization for v2 API token revocation is not implemented.
   repair-issues:
     status: todo
     comment: |
