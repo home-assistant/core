@@ -180,7 +180,7 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station, station_from, station_to):
+    def __init__(self, api_client, live_station, station_from, station_to) -> None:
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
@@ -192,19 +192,19 @@ class NMBSLiveBoard(SensorEntity):
         self.entity_registry_enabled_default = False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the sensor default name."""
         return f"Trains in {self._station["standardname"]}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
 
         unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
         return f"nmbs_live_{unique_id}"
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the default icon or an alert icon if delays."""
         if self._attrs and int(self._attrs["delay"]) > 0:
             return DEFAULT_ICON_ALERT
@@ -212,12 +212,12 @@ class NMBSLiveBoard(SensorEntity):
         return DEFAULT_ICON
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return sensor state."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -271,7 +271,7 @@ class NMBSSensor(SensorEntity):
 
     def __init__(
         self, api_client, name, show_on_map, station_from, station_to, excl_vias
-    ):
+    ) -> None:
         """Initialize the NMBS connection sensor."""
         self._name = name
         self._show_on_map = show_on_map
@@ -298,7 +298,7 @@ class NMBSSensor(SensorEntity):
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the sensor default icon or an alert icon if any delay."""
         if self._attrs:
             delay = get_delay_in_minutes(self._attrs["departure"]["delay"])
@@ -308,7 +308,7 @@ class NMBSSensor(SensorEntity):
         return "mdi:train"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -355,12 +355,12 @@ class NMBSSensor(SensorEntity):
         return attrs
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state of the device."""
         return self._state
 
     @property
-    def station_coordinates(self):
+    def station_coordinates(self) -> list[float]:
         """Get the lat, long coordinates for station."""
         if self._state is None or not self._attrs:
             return []
@@ -370,7 +370,7 @@ class NMBSSensor(SensorEntity):
         return [latitude, longitude]
 
     @property
-    def is_via_connection(self):
+    def is_via_connection(self) -> bool:
         """Return whether the connection goes through another station."""
         if not self._attrs:
             return False
