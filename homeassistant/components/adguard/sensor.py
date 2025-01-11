@@ -9,7 +9,11 @@ from typing import Any
 
 from adguardhome import AdGuardHome
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -100,6 +104,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
     """Defines a AdGuard Home sensor."""
 
     entity_description: AdGuardHomeEntityDescription
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
