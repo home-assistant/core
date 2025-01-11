@@ -16,7 +16,7 @@ rules:
       This integration does not register actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-removal-instructions: todo
   entity-event-setup:
     status: exempt
     comment: |
