@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+import dataclasses
 import datetime
 from typing import Any
 
@@ -370,6 +371,34 @@ async def async_parse_vehicle_detector(uid: str, msg) -> Event | None:
         return None
 
 
+_TAPO_EVENT_TEMPLATES: dict[str, Event] = {
+    "IsVehicle": Event(
+        uid="",
+        name="Vehicle Detection",
+        platform="binary_sensor",
+        device_class="motion",
+    ),
+    "IsPeople": Event(
+        uid="", name="Person Detection", platform="binary_sensor", device_class="motion"
+    ),
+    "IsLineCross": Event(
+        uid="",
+        name="Line Detector Crossed",
+        platform="binary_sensor",
+        device_class="motion",
+    ),
+    "IsTamper": Event(
+        uid="", name="Tamper Detection", platform="binary_sensor", device_class="tamper"
+    ),
+    "IsIntrusion": Event(
+        uid="",
+        name="Intrusion Detection",
+        platform="binary_sensor",
+        device_class="safety",
+    ),
+}
+
+
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/Intrusion")
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/LineCross")
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/People")
@@ -402,55 +431,16 @@ async def async_parse_tplink_detector(uid: str, msg) -> Event | None:
                 rule = source.Value
 
         for item in payload.Data.SimpleItem:
-            if item.Name == "IsVehicle":
-                return Event(
-                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-                    "Vehicle Detection",
-                    "binary_sensor",
-                    "motion",
-                    None,
-                    item.Value == "true",
-                )
+            event_template = _TAPO_EVENT_TEMPLATES.get(item.Name, None)
+            if event_template is None:
+                continue
 
-            if item.Name == "IsPeople":
-                return Event(
-                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-                    "Person Detection",
-                    "binary_sensor",
-                    "motion",
-                    None,
-                    item.Value == "true",
-                )
+            return dataclasses.replace(
+                event_template,
+                uid=f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                value=item.Value == "true",
+            )
 
-            if item.Name == "IsLineCross":
-                return Event(
-                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-                    "Line Detector Crossed",
-                    "binary_sensor",
-                    "motion",
-                    None,
-                    item.Value == "true",
-                )
-
-            if item.Name == "IsTamper":
-                return Event(
-                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-                    "Tamper Detection",
-                    "binary_sensor",
-                    "tamper",
-                    None,
-                    item.Value == "true",
-                )
-
-            if item.Name == "IsIntrusion":
-                return Event(
-                    f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-                    "Intrusion Detection",
-                    "binary_sensor",
-                    "safety",
-                    None,
-                    item.Value == "true",
-                )
     except (AttributeError, KeyError):
         return None
 
