@@ -61,8 +61,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
-      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'max': 5,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -98,8 +98,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'wind_speed',
       'friendly_name': 'Stove Wind speed',
-      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
-      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'max': 5,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -108,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='PalazzettiClient().current_fan_speed()' id='281472618481088'>",
+    'state': '3',
   })
 # ---
 # name: test_all_entities[number.stove_wind_speed_2-entry]
@@ -117,8 +117,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
-      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'max': 5,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -154,8 +154,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'wind_speed',
       'friendly_name': 'Stove Wind speed',
-      'max': <MagicMock name='PalazzettiClient().max_fan_speed()' id='281472616447200'>,
-      'min': <MagicMock name='PalazzettiClient().min_fan_speed()' id='281472616451920'>,
+      'max': 5,
+      'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -164,6 +164,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='PalazzettiClient().current_fan_speed()' id='281472618481088'>",
+    'state': '3',
   })
 # ---
