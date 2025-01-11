@@ -161,9 +161,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    client.hello_info["deviceUUID"]
-                )
+                await self.async_set_unique_id(client.hello_info["deviceUUID"])
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
                 return self.async_update_reload_and_abort(reconfigure_entry, data=data)
