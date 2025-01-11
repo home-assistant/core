@@ -43,7 +43,7 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return self._device.is_on()
+        return bool(self._device.is_on())
 
     @property
     def mode(self) -> str:
@@ -53,7 +53,11 @@ class SwitchBotHumidifier(SwitchbotSwitchedEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        return self._device.get_target_humidity()
+        try:
+            value = self._device.get_target_humidity()
+            return int(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""

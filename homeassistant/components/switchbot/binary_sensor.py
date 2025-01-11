@@ -103,4 +103,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        value = self.parsed_data.get(self._sensor)
+        if value is None:
+            return False
+        return bool(value)

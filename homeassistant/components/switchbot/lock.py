@@ -20,8 +20,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Switchbot lock based on a config entry."""
-    force_nightlatch = entry.options.get(CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH)
-    async_add_entities([SwitchBotLock(entry.runtime_data, force_nightlatch)])
+    force_nightlatch: bool = entry.options.get(
+        CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+    )
+    coordinator: SwitchbotDataUpdateCoordinator = entry.runtime_data
+
+    async_add_entities([SwitchBotLock(coordinator, force_nightlatch)])
 
 
 # noinspection PyAbstractClass
@@ -33,7 +37,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     _device: switchbot.SwitchbotLock
 
     def __init__(
-        self, coordinator: SwitchbotDataUpdateCoordinator, force_nightlatch
+        self, coordinator: SwitchbotDataUpdateCoordinator, force_nightlatch: bool
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

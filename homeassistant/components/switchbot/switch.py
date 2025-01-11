@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import switchbot
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
@@ -56,12 +54,12 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
-        if not self._device.switch_mode():
+        if not bool(self._device.switch_mode()):
             return self._attr_is_on
-        return self._device.is_on()
+        return bool(self._device.is_on())
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, bool | None]:
         """Return the state attributes."""
         return {
             **super().extra_state_attributes,

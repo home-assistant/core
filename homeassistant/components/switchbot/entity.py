@@ -28,7 +28,7 @@ class SwitchbotEntity(
 ):
     """Generic entity encapsulating common features of Switchbot device."""
 
-    _device: SwitchbotDevice
+    _device: SwitchbotDevice | Switchbot
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
@@ -56,12 +56,15 @@ class SwitchbotEntity(
         )
 
     @property
-    def parsed_data(self) -> dict[str, Any]:
+    def parsed_data(self) -> dict[str, str | int | float | bool | None]:
         """Return parsed device data for this entity."""
-        return self.coordinator.device.parsed_data
+        data = self.coordinator.device.parsed_data
+        if not isinstance(data, dict):
+            return {}
+        return data
 
     @property
-    def extra_state_attributes(self) -> Mapping[Any, Any]:
+    def extra_state_attributes(self) -> Mapping[str, bool | None]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
 

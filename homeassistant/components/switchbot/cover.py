@@ -116,8 +116,19 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Handle updated data from the coordinator."""
         self._attr_is_closing = self._device.is_closing()
         self._attr_is_opening = self._device.is_opening()
-        self._attr_current_cover_position = self.parsed_data["position"]
-        self._attr_is_closed = self.parsed_data["position"] <= 20
+
+        position = self.parsed_data.get("position")
+        if position is not None:
+            try:
+                position_int = int(position)
+                self._attr_current_cover_position = position_int
+                self._attr_is_closed = position_int <= 20
+            except (TypeError, ValueError):
+                self._attr_current_cover_position = None
+                self._attr_is_closed = None
+        else:
+            self._attr_current_cover_position = None
+            self._attr_is_closed = None
 
         self.async_write_ha_state()
 
@@ -188,14 +199,33 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._last_run_success = bool(await self._device.set_position(position))
         self.async_write_ha_state()
 
+    def _process_tilt(self, tilt_value: Any) -> None:
+        """Process tilt value from the coordinator data."""
+        if tilt_value is None:
+            return
+
+        tilt_position = int(tilt_value)
+        self._attr_current_cover_tilt_position = tilt_position
+        self._attr_is_closed = (tilt_position < self.CLOSED_DOWN_THRESHOLD) or (
+            tilt_position > self.CLOSED_UP_THRESHOLD
+        )
+
+    def _process_motion(self, motion_data: Any) -> None:
+        """Process motion direction data from the coordinator."""
+        if not isinstance(motion_data, dict):
+            return
+
+        opening = motion_data.get("opening", False)
+        closing = motion_data.get("closing", False)
+        self._attr_is_opening = bool(opening)
+        self._attr_is_closing = bool(closing)
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        _tilt = self.parsed_data["tilt"]
-        self._attr_current_cover_tilt_position = _tilt
-        self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
-            _tilt > self.CLOSED_UP_THRESHOLD
-        )
-        self._attr_is_opening = self.parsed_data["motionDirection"]["opening"]
-        self._attr_is_closing = self.parsed_data["motionDirection"]["closing"]
+        if not self.parsed_data:
+            return
+
+        self._process_tilt(self.parsed_data.get("tilt"))
+        self._process_motion(self.parsed_data.get("motionDirection"))
         self.async_write_ha_state()

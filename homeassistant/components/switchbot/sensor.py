@@ -132,7 +132,15 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        value = self.parsed_data.get(self._sensor)
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return str(value)
 
 
 class SwitchbotRSSISensor(SwitchBotSensor):
