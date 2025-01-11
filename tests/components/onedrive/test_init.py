@@ -83,12 +83,13 @@ async def test_backup_folder_did_not_exist(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_drive_items: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test backup folder did not exist."""
     mock_drive_items.get.side_effect = APIError(response_status_code=404)
     await setup_integration(hass, mock_config_entry)
+    assert len(issue_registry.issues) == 1
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, "backup_folder_did_not_exist")
     assert issue
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
