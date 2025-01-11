@@ -253,6 +253,10 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         unregister = super().async_register_scanner(scanner, connection_slots)
         return partial(self._async_unregister_scanner, scanner, unregister)
 
+    def async_remove_scanner(self, source: str) -> None:
+        """Remove a scanner."""
+        self.storage.async_remove_advertisement_history(source)
+
     @hass_callback
     def _handle_config_entry_removed(
         self,
