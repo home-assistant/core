@@ -16,7 +16,9 @@
     "-e",
     "GIT_EDITOR=code --wait",
     "--security-opt",
-    "label=disable"
+    "label=disable",
+    "--name",
+    "home-assistant-dev-container"
   ],
   "customizations": {
     "vscode": {
