@@ -120,16 +120,16 @@
         "name": "Rear passenger window"
       },
       "vehicle_state_tpms_soft_warning_fl": {
-        "name": "TPMS warning front left"
+        "name": "Tire pressure warning front left"
       },
       "vehicle_state_tpms_soft_warning_fr": {
-        "name": "TPMS warning front right"
+        "name": "Tire pressure warning front right"
       },
       "vehicle_state_tpms_soft_warning_rl": {
-        "name": "TPMS warning rear left"
+        "name": "Tire pressure warning rear left"
       },
       "vehicle_state_tpms_soft_warning_rr": {
-        "name": "TPMS warning rear right"
+        "name": "Tire pressure warning rear right"
       },
       "pin_to_drive_enabled": {
         "name": "Pin to drive enabled"
