@@ -159,3 +159,14 @@ def get_attributes_total(user: UserData, content: ContentData, attribute: str) -
     return floor(
         sum(value for value in get_attribute_points(user, content, attribute).values())
     )
+
+
+def inventory_list(
+    user: UserData, content: ContentData, item_type: str
+) -> dict[str, int]:
+    """List inventory items of given type."""
+    return {
+        getattr(content, item_type)[k].text: v
+        for k, v in getattr(user.items, item_type, {}).items()
+        if k != "Saddle"
+    }

@@ -13,11 +13,17 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
 from .entity import OneWireEntity, OneWireEntityDescription
-from .onewirehub import OneWireConfigEntry, OneWireHub
+from .onewirehub import (
+    SIGNAL_NEW_DEVICE_CONNECTED,
+    OneWireConfigEntry,
+    OneWireHub,
+    OWDeviceDescription,
+)
 
 # the library uses non-persistent connections
 # and concurrent access to the bus is managed by the server
@@ -98,16 +104,28 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    async_add_entities(get_entities(config_entry.runtime_data), True)
+
+    async def _add_entities(
+        hub: OneWireHub, devices: list[OWDeviceDescription]
+    ) -> None:
+        """Add 1-Wire entities for all devices."""
+        if not devices:
+            return
+        async_add_entities(get_entities(hub, devices), True)
+
+    hub = config_entry.runtime_data
+    await _add_entities(hub, hub.devices)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_NEW_DEVICE_CONNECTED, _add_entities)
+    )
 
 
-def get_entities(onewire_hub: OneWireHub) -> list[OneWireBinarySensor]:
+def get_entities(
+    onewire_hub: OneWireHub, devices: list[OWDeviceDescription]
+) -> list[OneWireBinarySensor]:
     """Get a list of entities."""
-    if not onewire_hub.devices:
-        return []
-
     entities: list[OneWireBinarySensor] = []
-    for device in onewire_hub.devices:
+    for device in devices:
         family = device.family
         device_id = device.id
         device_type = device.type

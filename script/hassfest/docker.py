@@ -94,6 +94,8 @@ COPY . /usr/src/homeassistant
 
 # Uv is only needed during build
 RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
+    # Uv creates a lock file in /tmp
+    --mount=type=tmpfs,target=/tmp \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     && uv pip install \
