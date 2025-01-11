@@ -165,7 +165,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 # so statistics_during_period should also have found at least one.
                 assert stats
 
-                # Instead of directly accessing "[0]", safely handle empty results:
                 def _safe_get_sum(records: list[Any]) -> float:
                     if records and "sum" in records[0]:
                         return float(records[0]["sum"])
