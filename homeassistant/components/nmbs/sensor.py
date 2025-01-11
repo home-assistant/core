@@ -181,7 +181,13 @@ class NMBSLiveBoard(SensorEntity):
 
     _attr_attribution = "https://api.irail.be/"
 
-    def __init__(self, api_client, live_station, station_from, station_to) -> None:
+    def __init__(
+        self,
+        api_client: iRail,
+        live_station: dict[str, Any],
+        station_from: dict[str, Any],
+        station_to: dict[str, Any],
+    ) -> None:
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
@@ -271,7 +277,13 @@ class NMBSSensor(SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, api_client, name, show_on_map, station_from, station_to, excl_vias
+        self,
+        api_client: iRail,
+        name: str,
+        show_on_map: bool,
+        station_from: dict[str, Any],
+        station_to: dict[str, Any],
+        excl_vias: bool,
     ) -> None:
         """Initialize the NMBS connection sensor."""
         self._name = name
