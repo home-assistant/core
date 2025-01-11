@@ -17,7 +17,7 @@ from msgraph.generated.models.folder import Folder
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
@@ -25,9 +25,7 @@ from .api import OneDriveConfigFlowAccessTokenProvider
 from .const import DOMAIN, OAUTH_SCOPES
 
 
-class OneDriveConfigFlow(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle OneDrive OAuth2 authentication."""
 
     DOMAIN = DOMAIN

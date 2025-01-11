@@ -18,7 +18,10 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -42,13 +45,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Set up OneDrive from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    implementation = await async_get_config_entry_implementation(hass, entry)
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    session = OAuth2Session(hass, entry, implementation)
 
     auth_provider = BaseBearerTokenAuthenticationProvider(
         access_token_provider=OneDriveConfigEntryAccessTokenProvider(session)
