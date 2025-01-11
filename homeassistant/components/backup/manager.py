@@ -672,6 +672,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -684,6 +685,7 @@ class BackupManager:
         """Create a backup."""
         new_backup = await self.async_initiate_backup(
             agent_ids=agent_ids,
+            extra_metadata=extra_metadata,
             include_addons=include_addons,
             include_all_addons=include_all_addons,
             include_database=include_database,
@@ -702,6 +704,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -726,6 +729,7 @@ class BackupManager:
         try:
             return await self._async_create_backup(
                 agent_ids=agent_ids,
+                extra_metadata=extra_metadata,
                 include_addons=include_addons,
                 include_all_addons=include_all_addons,
                 include_database=include_database,
@@ -749,6 +753,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -786,6 +791,7 @@ class BackupManager:
                 extra_metadata={
                     "instance_id": await instance_id.async_get(self.hass),
                     "with_automatic_settings": with_automatic_settings,
+                    **(extra_metadata or {}),
                 },
                 include_addons=include_addons,
                 include_all_addons=include_all_addons,
