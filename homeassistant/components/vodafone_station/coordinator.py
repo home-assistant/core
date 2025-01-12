@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .helpers import cleanup_device_tracker
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -148,20 +149,9 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             _LOGGER.debug(
                 "Found %s stale devices: %s", len(stale_devices), stale_devices
             )
-            device_registry = dr.async_get(self.hass)
-            for stale_mac in stale_devices:
-                device = device_registry.async_get_device(
-                    connections={(CONF_MAC, stale_mac)}
-                )
-                if device:
-                    _LOGGER.info(
-                        "Removing stale device: %s [%s]", device.name, stale_mac
-                    )
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
-            self.previous_devices = current_devices
+            await cleanup_device_tracker(self.hass, self.config_entry, data_devices)
+
+        self.previous_devices = current_devices
 
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
