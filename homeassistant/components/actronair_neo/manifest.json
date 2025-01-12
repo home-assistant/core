@@ -3,14 +3,13 @@
   "name": "Actron Air Neo",
   "codeowners": ["@kclif9"],
   "config_flow": true,
-  "dependencies": [],
   "dhcp": [
     {
       "hostname": "neo-*",
       "macaddress": "FC0FE7*"
     }
   ],
-  "documentation": "https://github.com/kclif9/actron-neo",
+  "documentation": "https://www.home-assistant.io/integrations/actronair_neo",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
   "requirements": ["actron-neo-api==0.1.34"]
