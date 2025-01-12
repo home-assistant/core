@@ -65,8 +65,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado water heater platform."""
 
-    tado = entry.runtime_data
-    entities = await _generate_entities(tado)
+    data = entry.runtime_data
+    coordinator = data.coordinator
+    entities = await _generate_entities(coordinator)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -81,18 +82,18 @@ async def async_setup_entry(
     manage_water_heater_fallback_issue(
         hass=hass,
         water_heater_names=[e.zone_name for e in entities],
-        integration_overlay_fallback=tado.fallback,
+        integration_overlay_fallback=coordinator.fallback,
     )
 
 
-async def _generate_entities(tado: TadoDataUpdateCoordinator) -> list:
+async def _generate_entities(coordinator: TadoDataUpdateCoordinator) -> list:
     """Create all water heater entities."""
     entities = []
 
-    for zone in tado.zones:
+    for zone in coordinator.zones:
         if zone["type"] == TYPE_HOT_WATER:
             entity = await create_water_heater_entity(
-                tado, zone["name"], zone["id"], str(zone["name"])
+                coordinator, zone["name"], zone["id"], str(zone["name"])
             )
             entities.append(entity)
 

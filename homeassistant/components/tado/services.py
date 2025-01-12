@@ -43,7 +43,7 @@ def setup_services(hass: HomeAssistant) -> None:
         if entry is None:
             raise ServiceValidationError("Config entry not found")
 
-        coordinator = entry.runtime_data
+        coordinator = entry.runtime_data.coordinator
         response: dict = await coordinator.set_meter_reading(call.data[CONF_READING])
 
         if ATTR_MESSAGE in response:

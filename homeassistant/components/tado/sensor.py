@@ -195,7 +195,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data
+    tado = entry.runtime_data.coordinator
     zones = tado.zones
     entities: list[SensorEntity] = []
 

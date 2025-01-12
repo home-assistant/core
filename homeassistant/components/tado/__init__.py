@@ -1,10 +1,16 @@
 """Support for the (unofficial) Tado API."""
 
 from datetime import timedelta
+import logging
+
+import PyTado
+import PyTado.exceptions
+from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -16,7 +22,8 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
+from .models import TadoData
 from .services import setup_services
 
 PLATFORMS = [
@@ -33,6 +40,8 @@ SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Tado."""
@@ -41,7 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-type TadoConfigEntry = ConfigEntry[TadoDataUpdateCoordinator]
+type TadoConfigEntry = ConfigEntry[TadoData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -49,11 +58,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
-    coordinator = TadoDataUpdateCoordinator(hass, entry)
+    try:
+        _LOGGER.debug("Setting up Tado connection")
+        tado = await hass.async_add_executor_job(
+            Tado,
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+        )
+    except PyTado.exceptions.TadoWrongCredentialsException as err:
+        raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
+    except PyTado.exceptions.TadoException as err:
+        raise HomeAssistantError(f"Error during Tado setup: {err}") from err
+    _LOGGER.debug(
+        "Tado connection established for username: %s", entry.data[CONF_USERNAME]
+    )
 
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
+    await mobile_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = TadoData(coordinator, mobile_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
