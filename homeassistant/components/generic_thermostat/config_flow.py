@@ -19,10 +19,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
+    CONF_DUTY_COOLDOWN,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_MAX_DUTY,
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_DUTY,
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
@@ -68,6 +71,15 @@ OPTIONS_SCHEMA = {
         selector.NumberSelectorConfig(
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
+    ),
+    vol.Optional(CONF_DUTY_COOLDOWN): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
+    ),
+    vol.Optional(CONF_MIN_DUTY): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
+    ),
+    vol.Optional(CONF_MAX_DUTY): selector.DurationSelector(
+        selector.DurationSelectorConfig(allow_negative=False)
     ),
 }
 

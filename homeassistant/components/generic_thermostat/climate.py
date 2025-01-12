@@ -63,8 +63,10 @@ from .const import (
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_MAX_DUTY,
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_DUTY,
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
@@ -93,8 +95,10 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
         vol.Required(CONF_HEATER): cv.entity_id,
         vol.Required(CONF_SENSOR): cv.entity_id,
         vol.Optional(CONF_AC_MODE): cv.boolean,
+        vol.Optional(CONF_MAX_DUTY): cv.positive_time_period,
         vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MIN_DUR): cv.positive_time_period,
+        vol.Optional(CONF_MIN_DUTY): cv.positive_time_period,
         vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
@@ -164,6 +168,8 @@ async def _async_setup_config(
     target_temp: float | None = config.get(CONF_TARGET_TEMP)
     ac_mode: bool | None = config.get(CONF_AC_MODE)
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
+    min_duty_duration: timedelta | None = config.get(CONF_MIN_DUTY)
+    max_duty_duration: timedelta | None = config.get(CONF_MAX_DUTY)
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
@@ -187,6 +193,8 @@ async def _async_setup_config(
                 target_temp,
                 ac_mode,
                 min_cycle_duration,
+                min_duty_duration,
+                max_duty_duration,
                 cold_tolerance,
                 hot_tolerance,
                 keep_alive,
@@ -217,6 +225,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         target_temp: float | None,
         ac_mode: bool | None,
         min_cycle_duration: timedelta | None,
+        min_duty_duration: timedelta | None,
+        max_duty_duration: timedelta | None,
         cold_tolerance: float,
         hot_tolerance: float,
         keep_alive: timedelta | None,
@@ -238,6 +248,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.ac_mode = ac_mode
         self.min_cycle_duration = min_cycle_duration
         self._cold_tolerance = cold_tolerance
+        self.min_duty_duration = min_duty_duration
+        self.max_duty_duration = max_duty_duration
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._hvac_mode = initial_hvac_mode
@@ -493,6 +505,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self, time: datetime | None = None, force: bool = False
     ) -> None:
         """Check if we need to turn heating on or off."""
+        # @todo can we see if there's time remaining on a timer?
+        # if self._is_device_active:
+        #   if self.min_duty_duration is not None: # timer has NOT completed
+        #     return
+        #   if self.max_duty_duration is None: # timer has completed
+        #     await self._async_heater_turn_off()
+        #     return
+        # else:
+        #   if self.duty_cooldown is not None: # timer has NOT completed
+        #     return
         async with self._temp_lock:
             if not self._active and None not in (
                 self._cur_temp,
@@ -571,6 +593,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
+        # @todo begin timers for self.min_duty_duration, self.max_duty_duration
+        # @todo end timer for self.duty_cooldown
 
     async def _async_heater_turn_off(self) -> None:
         """Turn heater toggleable device off."""
@@ -578,6 +602,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
+        # @todo begin timer for self.duty_cooldown
+        # @todo end timers for self.min_duty_duration, self.max_duty_duration
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
