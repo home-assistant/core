@@ -9,6 +9,9 @@ import logging
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
+from msgraph.generated.drives.item.items.items_request_builder import (
+    ItemsRequestBuilder,
+)
 from msgraph.generated.models.drive_item import DriveItem
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,7 +37,7 @@ from .util import get_backup_folder_name
 class OneDriveRuntimeData:
     """Runtime data for the OneDrive integration."""
 
-    client: GraphServiceClient
+    items: ItemsRequestBuilder
     backup_folder_id: str
 
 
@@ -79,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     )
 
     entry.runtime_data = OneDriveRuntimeData(
-        client=graph_client,
+        items=drive_item.items,
         backup_folder_id=backup_folder_id,
     )
 
