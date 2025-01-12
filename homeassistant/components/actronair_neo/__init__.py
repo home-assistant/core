@@ -29,10 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
     coordinator = ActronNeoDataUpdateCoordinator(hass, api, serial_number)
     await coordinator.async_config_entry_first_refresh()
 
-    # Ensure coordinator data is not None
-    if coordinator.data is None:
-        raise ConfigEntryNotReady("Unable to retrieve data from the API")
-
     # Fetch system details and set up ACUnit
     system = await api.get_ac_systems()
     ac_unit = ACUnit(serial_number, system, coordinator.data)
