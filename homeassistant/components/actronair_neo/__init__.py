@@ -5,11 +5,10 @@ from actron_neo_api import ActronNeoAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
+from .climate import ActronAirNeoACUnit
 from .const import DOMAIN, PLATFORM
 from .coordinator import ActronNeoDataUpdateCoordinator
-from .device import ACUnit
 from .models import ActronAirNeoData
 
 type ActronConfigEntry = ConfigEntry[ActronAirNeoData]
@@ -29,9 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
     coordinator = ActronNeoDataUpdateCoordinator(hass, api, serial_number)
     await coordinator.async_config_entry_first_refresh()
 
-    # Fetch system details and set up ACUnit
+    # Fetch system details and set up the AC Unit
     system = await api.get_ac_systems()
-    ac_unit = ACUnit(serial_number, system, coordinator.data)
+    ac_unit = ActronAirNeoACUnit(serial_number, system, coordinator)
 
     entry.runtime_data = ActronAirNeoData(
         pairing_token, coordinator, api, ac_unit, serial_number
