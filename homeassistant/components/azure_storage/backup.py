@@ -160,10 +160,15 @@ class AzureStorageBackupAgent(BackupAgent):
         self,
         backup_id: str,
         **kwargs: Any,
-    ) -> AgentBackup:
+    ) -> AgentBackup | None:
         """Return a backup."""
         blob_client = self._client.get_blob_client(f"{backup_id}.tar")
-        blob_properties = await blob_client.get_blob_properties()
+        try:
+            blob_properties = await blob_client.get_blob_properties()
+        except HttpResponseError as err:
+            if err.status_code == 404:
+                return None
+            raise
 
         return self._parse_blob_metadata(blob_properties.metadata)
 

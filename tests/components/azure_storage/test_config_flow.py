@@ -15,13 +15,9 @@ from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import USER_INPUT
 
-USER_INPUT = {
-    CONF_ACCOUNT_NAME: "test",
-    CONF_CONTAINER_NAME: "test",
-    CONF_STORAGE_ACCOUNT_KEY: "test",
-}
+from tests.common import MockConfigEntry
 
 
 async def __async_start_flow(
@@ -51,10 +47,13 @@ async def test_flow(
     result = await __async_start_flow(hass)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert (
+        result["title"]
+        == f"{USER_INPUT[CONF_ACCOUNT_NAME]}/{USER_INPUT[CONF_CONTAINER_NAME]}"
+    )
     assert result["data"] == {
-        CONF_ACCOUNT_NAME: "test",
-        CONF_CONTAINER_NAME: "test",
+        CONF_ACCOUNT_NAME: "account",
+        CONF_CONTAINER_NAME: "container1",
         CONF_STORAGE_ACCOUNT_KEY: "test",
     }
 
@@ -90,10 +89,13 @@ async def test_flow_errors(
         USER_INPUT,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == DOMAIN
+    assert (
+        result["title"]
+        == f"{USER_INPUT[CONF_ACCOUNT_NAME]}/{USER_INPUT[CONF_CONTAINER_NAME]}"
+    )
     assert result["data"] == {
-        CONF_ACCOUNT_NAME: "test",
-        CONF_CONTAINER_NAME: "test",
+        CONF_ACCOUNT_NAME: "account",
+        CONF_CONTAINER_NAME: "container1",
         CONF_STORAGE_ACCOUNT_KEY: "test",
     }
 

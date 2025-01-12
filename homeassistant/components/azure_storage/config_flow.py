@@ -54,7 +54,10 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown exception occurred")
                 errors["base"] = "unknown"
             if not errors:
-                return self.async_create_entry(title=DOMAIN, data=user_input)
+                return self.async_create_entry(
+                    title=f"{user_input[CONF_ACCOUNT_NAME]}/{user_input[CONF_CONTAINER_NAME]}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             data_schema=vol.Schema(

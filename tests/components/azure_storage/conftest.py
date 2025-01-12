@@ -5,12 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.azure_storage.const import (
-    CONF_ACCOUNT_NAME,
-    CONF_CONTAINER_NAME,
-    CONF_STORAGE_ACCOUNT_KEY,
-    DOMAIN,
-)
+from homeassistant.components.azure_storage.const import DOMAIN
+
+from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -48,9 +45,5 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        data={
-            CONF_ACCOUNT_NAME: "test",
-            CONF_CONTAINER_NAME: "test",
-            CONF_STORAGE_ACCOUNT_KEY: "test",
-        },
+        data=USER_INPUT,
     )
