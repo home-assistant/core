@@ -102,7 +102,7 @@
       "message": "Authentication failed for {email}, check your email and password"
     },
     "notify_missing_argument_item": {
-      "message": "Failed to perform action {service}. Notification type 'Urgent message' requires a value in 'Article'"
+      "message": "Failed to perform action {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for Bring! due to a connection error, try again later"
