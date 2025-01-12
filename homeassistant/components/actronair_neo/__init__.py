@@ -5,7 +5,7 @@ from actron_neo_api import ActronNeoAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import ActronNeoDataUpdateCoordinator
@@ -21,9 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
 
     pairing_token = entry.data[CONF_API_TOKEN]
     serial_number = entry.data[CONF_DEVICE_ID]
-
-    if not pairing_token or not serial_number:
-        raise ConfigEntryAuthFailed("Invalid authentication")
 
     api = ActronNeoAPI(pairing_token=pairing_token)
     await api.refresh_token()
