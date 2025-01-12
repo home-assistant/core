@@ -7,8 +7,10 @@ import logging
 from typing import Any
 
 from pyheos import (
+    Credentials,
     Heos,
     HeosError,
+    HeosOptions,
     HeosPlayer,
     PlayerUpdateResult,
     SignalHeosEvent,
@@ -16,9 +18,9 @@ from pyheos import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -52,7 +54,7 @@ class HeosRuntimeData:
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
 
 
-class HeosCoordinator(DataUpdateCoordinator):
+class HeosCoordinator(DataUpdateCoordinator[None]):
     """Define the HEOS integration coordinator.
 
     Control of HEOS devices is through the HEOS CLI Protocol and a connection is established to only one device
@@ -63,9 +65,65 @@ class HeosCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
         """Set up the coordinator."""
+        self.host: str = config_entry.data[CONF_HOST]
         super().__init__(
-            hass, _LOGGER, config_entry=config_entry, name="HeosCoordinator"
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            setup_method=self.__async_setup,
+            update_method=self.__async_update,
         )
+        self.heos: Heos = self.__create_api()
+
+    @callback
+    def __create_api(self) -> Heos:
+        """Create the HEOS API instance based on the config entry."""
+        credentials: Credentials | None = None
+        assert self.config_entry is not None
+        if self.config_entry.options:
+            credentials = Credentials(
+                self.config_entry.options[CONF_USERNAME],
+                self.config_entry.options[CONF_PASSWORD],
+            )
+
+        # Setting all_progress_events=False ensures that we only receive a
+        # media position update upon start of playback or when media changes
+        return Heos(
+            HeosOptions(
+                self.host,
+                all_progress_events=False,
+                auto_reconnect=True,
+                credentials=credentials,
+            )
+        )
+
+    async def __async_setup(self) -> None:
+        """Connect to the HEOS device and add event callbacks."""
+        self.heos.add_on_user_credentials_invalid(self.__auth_failure)
+
+        try:
+            await self.heos.connect()
+        except HeosError as error:
+            _LOGGER.debug("Unable to connect to host %s: %s", self.host, error)
+            raise ConfigEntryNotReady from error
+
+    async def __async_update(self) -> None:
+        """Load players."""
+
+    async def __auth_failure(self) -> None:
+        """Handle callback when the user credentials are no longer valid.
+
+        This may be raised during setup (inside Heos.connect()) or when calling commands in the API.
+        """
+        assert self.config_entry is not None
+        self.config_entry.async_start_reauth(self.hass)
+
+    async def async_shutdown(self):
+        """Disconnect all callbacks and disconnect from the device."""
+        self.heos.dispatcher.disconnect_all()
+        await self.heos.disconnect()
+        return await super().async_shutdown()
 
 
 class ControllerManager:

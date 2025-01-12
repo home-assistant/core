@@ -26,14 +26,13 @@ import pytest_asyncio
 
 from homeassistant.components import ssdp
 from homeassistant.components.heos import (
-    CONF_PASSWORD,
     DOMAIN,
     ControllerManager,
     GroupManager,
     HeosRuntimeData,
     SourceManager,
 )
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -105,7 +104,7 @@ def controller_fixture(
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
-        patch("homeassistant.components.heos.Heos", new=new_mock),
+        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
         patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
     ):
         yield mock_heos

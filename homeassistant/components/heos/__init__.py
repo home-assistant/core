@@ -4,15 +4,9 @@ from __future__ import annotations
 
 import logging
 
-from pyheos import Credentials, Heos, HeosError, HeosOptions
+from pyheos import HeosError
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +18,7 @@ from .coordinator import (
     ControllerManager,
     GroupManager,
     HeosConfigEntry,
+    HeosCoordinator,
     HeosRuntimeData,
     SourceManager,
 )
@@ -59,39 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
                 )
             break
 
-    host = entry.data[CONF_HOST]
-    credentials: Credentials | None = None
-    if entry.options:
-        credentials = Credentials(
-            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
-        )
+    coordinator = HeosCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    # Setting all_progress_events=False ensures that we only receive a
-    # media position update upon start of playback or when media changes
-    controller = Heos(
-        HeosOptions(
-            host,
-            all_progress_events=False,
-            auto_reconnect=True,
-            credentials=credentials,
-        )
-    )
-
-    # Auth failure handler must be added before connecting to the host, otherwise
-    # the event will be missed when login fails during connection.
-    async def auth_failure() -> None:
-        """Handle authentication failure."""
-        entry.async_start_reauth(hass)
-
-    entry.async_on_unload(controller.add_on_user_credentials_invalid(auth_failure))
-
-    try:
-        # Auto reconnect only operates if initial connection was successful.
-        await controller.connect()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady from error
+    controller = coordinator.heos
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
@@ -139,5 +105,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.controller_manager.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
