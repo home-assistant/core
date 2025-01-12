@@ -469,10 +469,11 @@ async def test_send_remote_file_message_with_auth() -> None:
     mock_client = Mock()
     mock_client.files_remote_add = AsyncMock(
         return_value={
-            "file": {"id": "F12345", "permalink": "http://example.com/image.png"}
+            "ok": True,
+            "file": {"id": "F12345", "permalink": "http://example.com/image.png"},
         }
     )
-    mock_client.files_remote_share = AsyncMock()
+    mock_client.files_remote_share = AsyncMock(return_value={"ok": True})
     mock_hass = Mock()
     mock_hass.config.is_allowed_external_url = Mock(return_value=True)
     mock_hass.data = {"aiohttp_client": {}}
@@ -525,13 +526,12 @@ async def test_send_remote_file_message_with_auth() -> None:
             ],  # Allow dynamic ID
             external_url=url,
             title=title,
+            initial_comment=message,
         )
         mock_client.files_remote_share.assert_called_once_with(
             file="F12345",
-            title=title,
             channels="C12345",
             initial_comment=message,
-            text=message,
         )
 
         # Ensure the session is properly closed
@@ -545,10 +545,11 @@ async def test_send_remote_file_message_success() -> None:
     mock_client = Mock()
     mock_client.files_remote_add = AsyncMock(
         return_value={
-            "file": {"id": "F12345", "permalink": "http://example.com/image.png"}
+            "ok": True,
+            "file": {"id": "F12345", "permalink": "http://example.com/image.png"},
         }
     )
-    mock_client.files_remote_share = AsyncMock()
+    mock_client.files_remote_share = AsyncMock(return_value={"ok": True})
     mock_hass = Mock()
     mock_hass.config.is_allowed_external_url = Mock(return_value=True)
     mock_hass.data = {"aiohttp_client": {}}
@@ -590,13 +591,13 @@ async def test_send_remote_file_message_success() -> None:
             ],  # Allow the test to match dynamic `external_id`
             external_url=url,
             title=title,
+            initial_comment=message,
         )
+
         mock_client.files_remote_share.assert_called_once_with(
             file="F12345",
-            title=title,
             channels="C12345",
             initial_comment=message,
-            text=message,
         )
 
         # Ensure the session is properly closed
