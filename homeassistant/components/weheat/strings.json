@@ -25,7 +25,8 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_devices_found": "Could not find any heat pumps on this account",
-      "wrong_account": "You can only reauthenticate this account with the same user."
+      "wrong_account": "You can only reauthenticate this account with the same user.",
+      "get_user_failed": "Could not retrieve user information from WeHeat due to a HTTP error. Please try again later."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

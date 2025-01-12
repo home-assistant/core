@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from urllib3.exceptions import MaxRetryError
 
 from homeassistant.components.weheat.const import (
     DOMAIN,
@@ -98,6 +99,41 @@ async def test_duplicate_unique_id(
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_http_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry,
+) -> None:
+    """Check that the config flow is aborted when getting the user ID results in an HTTP error."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            side_effect=MaxRetryError(None, ""),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # only care that the config flow is aborted
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "get_user_failed"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

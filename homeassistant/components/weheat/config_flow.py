@@ -4,6 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from urllib3.exceptions import HTTPError
 from weheat.abstractions.user import async_get_user_id_from_token
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import API_URL, DOMAIN, ENTRY_TITLE, OAUTH2_SCOPES
+from .const import API_URL, DOMAIN, ENTRY_TITLE, LOGGER, OAUTH2_SCOPES
 
 
 class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -34,11 +35,16 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Override the create entry method to change to the step to find the heat pumps."""
         # get the user id and use that as unique id for this entry
-        user_id = await async_get_user_id_from_token(
-            API_URL,
-            data[CONF_TOKEN][CONF_ACCESS_TOKEN],
-            async_get_clientsession(self.hass),
-        )
+        try:
+            user_id = await async_get_user_id_from_token(
+                API_URL,
+                data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+                async_get_clientsession(self.hass),
+            )
+        except HTTPError as e:
+            LOGGER.error("Failed to get user id: %s", e)
+            return self.async_abort(reason="get_user_failed")
+
         await self.async_set_unique_id(user_id)
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
