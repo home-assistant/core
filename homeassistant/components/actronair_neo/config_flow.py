@@ -1,6 +1,7 @@
 """Setup config flow for Actron Neo integration."""
 
 import logging
+from typing import Any
 
 from actron_neo_api import ActronNeoAPI, ActronNeoAPIError, ActronNeoAuthError
 import voluptuous as vol
