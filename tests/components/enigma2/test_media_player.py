@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.components.enigma2.media_player import ATTR_MEDIA_CURRENTLY_RECORDING
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
