@@ -103,6 +103,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "John Doe's OneDrive"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

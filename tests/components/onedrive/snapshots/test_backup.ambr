@@ -4,7 +4,7 @@
     'addons': list([
     ]),
     'agent_ids': list([
-      'onedrive.onedrive',
+      "onedrive.John Doe's OneDrive",
     ]),
     'backup_id': '23e64aec',
     'database_included': True,
@@ -27,7 +27,7 @@
       'addons': list([
       ]),
       'agent_ids': list([
-        'onedrive.onedrive',
+        "onedrive.John Doe's OneDrive",
       ]),
       'backup_id': '23e64aec',
       'database_included': True,

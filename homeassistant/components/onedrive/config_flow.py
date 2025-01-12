@@ -61,7 +61,9 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         # get the OneDrive id
-        drive_id = await self._get_drive_or_drive_item_id(graph_client.me.drive.get)
+        drive_id, drive = await self._get_drive_or_drive_item_id(
+            graph_client.me.drive.get
+        )
         await self.async_set_unique_id(drive_id)
 
         if self.source == SOURCE_REAUTH:
@@ -77,7 +79,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         # get the app folder (creates it if it doesn't exist)
-        approot_id = await self._get_drive_or_drive_item_id(
+        approot_id, _ = await self._get_drive_or_drive_item_id(
             graph_client.drives.by_drive_id(drive_id)
             .special.by_drive_item_id("approot")
             .get
@@ -94,7 +96,18 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_abort(reason="connection_error")
             await self._create_backup_folder(items, approot_id, backup_folder_name)
 
-        return self.async_create_entry(title=DOMAIN, data=data)
+        # try to get title from drive owner
+        title = DOMAIN
+        drive = cast(Drive, drive)
+        if (
+            drive is not None
+            and drive.owner is not None
+            and drive.owner.user is not None
+            and drive.owner.user.display_name is not None
+        ):
+            title = f"{drive.owner.user.display_name}'s OneDrive"
+
+        return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -113,7 +126,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def _get_drive_or_drive_item_id(
         self,
         func: Callable[[], Awaitable[DriveItem | Drive | None]],
-    ) -> str:
+    ) -> tuple[str, Drive | DriveItem]:
         """Get drive or drive item id."""
         try:
             item = await func()
@@ -126,7 +139,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         if item is None or not item.id:
             raise AbortFlow(reason="no_drive")
-        return item.id
+        return item.id, item
 
     async def _create_backup_folder(
         self, items: ItemsRequestBuilder, base_folder_id: str, folder: str

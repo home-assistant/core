@@ -46,6 +46,7 @@ async def setup_backup_integration(
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test backup agent info."""
     client = await hass_ws_client(hass)
@@ -55,7 +56,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": f"{DOMAIN}.{DOMAIN}"}],
+        "agents": [
+            {"agent_id": "backup.local"},
+            {"agent_id": f"{DOMAIN}.{mock_config_entry.title}"},
+        ],
     }
 
 
@@ -122,6 +126,7 @@ async def test_agents_upload(
     caplog: pytest.LogCaptureFixture,
     mock_upload_task: MagicMock,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
@@ -140,7 +145,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{DOMAIN}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
             data={"file": StringIO("test")},
         )
 
@@ -156,6 +161,7 @@ async def test_broken_upload_session(
     caplog: pytest.LogCaptureFixture,
     mock_upload_task: MagicMock,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test broken upload session."""
     client = await hass_client()
@@ -176,7 +182,7 @@ async def test_broken_upload_session(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{DOMAIN}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
             data={"file": StringIO("test")},
         )
 
@@ -187,6 +193,7 @@ async def test_broken_upload_session(
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent download backup."""
     mock_drive_items.get = AsyncMock(
@@ -196,7 +203,7 @@ async def test_agents_download(
     backup_id = BACKUP_METADATA["backup_id"]
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{DOMAIN}"
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.title}"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -207,6 +214,7 @@ async def test_error_wrapper(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the error wrapper."""
     mock_drive_items.delete = AsyncMock(
@@ -225,7 +233,9 @@ async def test_error_wrapper(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{DOMAIN}": "Failed to delete backup"}
+        "agent_errors": {
+            f"{DOMAIN}.{mock_config_entry.title}": "Failed to delete backup"
+        }
     }
 
 
@@ -258,6 +268,7 @@ async def test_agents_backup_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test backup not found."""
 
@@ -269,7 +280,7 @@ async def test_agents_backup_error(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{DOMAIN}": "Failed to get backup"
+        f"{DOMAIN}.{mock_config_entry.title}": "Failed to get backup"
     }
 
 
@@ -289,7 +300,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{DOMAIN}": "Failed to get backup"
+        f"{DOMAIN}.{mock_config_entry.title}": "Failed to get backup"
     }
 
     await hass.async_block_till_done()

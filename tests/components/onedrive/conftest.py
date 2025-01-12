@@ -12,6 +12,8 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_collection_response import (
     DriveItemCollectionResponse,
 )
+from msgraph.generated.models.identity import Identity
+from msgraph.generated.models.identity_set import IdentitySet
 from msgraph.generated.models.upload_session import UploadSession
 import pytest
 
@@ -55,7 +57,7 @@ def mock_expires_at() -> int:
 def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title=DOMAIN,
+        title="John Doe's OneDrive",
         domain=DOMAIN,
         data={
             "auth_implementation": DOMAIN,
@@ -73,7 +75,9 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 @pytest.fixture
 def mock_drive() -> Generator[Drive]:
     """Return a mocked Drive."""
-    drive = Drive()
+    drive = Drive(
+        owner=IdentitySet(user=Identity(display_name="John Doe")),
+    )
     drive.id = "mock_drive_id"
     return drive
 

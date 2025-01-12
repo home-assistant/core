@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import json
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, cast
 
 from httpx import Response
 from kiota_abstractions.api_error import APIError
@@ -132,9 +132,12 @@ class OneDriveBackupAgent(BackupAgent):
                 options=[ResponseHandlerOption(NativeResponseHandler())],
             )
         )
-        response: Response = await self._items.by_drive_item_id(  # type: ignore[assignment]
-            f"{self._folder_id}:/{backup_id}.tar:"
-        ).content.get(request_configuration=request_config)
+        response = cast(
+            Response,
+            await self._items.by_drive_item_id(
+                f"{self._folder_id}:/{backup_id}.tar:"
+            ).content.get(request_configuration=request_config),
+        )
 
         return response.aiter_bytes(chunk_size=1024)
 
