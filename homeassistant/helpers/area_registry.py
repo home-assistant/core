@@ -47,12 +47,12 @@ class _AreaStoreData(TypedDict):
 
     aliases: list[str]
     floor_id: str | None
+    humidity_entity_id: str | None
     icon: str | None
     id: str
     labels: list[str]
     name: str
     picture: str | None
-    humidity_entity_id: str | None
     temperature_entity_id: str | None
     created_at: str
     modified_at: str
@@ -151,10 +151,10 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     area["created_at"] = area["modified_at"] = created_at
 
             if old_minor_version < 8:
-                # Version 1.8 adds temperature_entity_id and humidity_entity_id
+                # Version 1.8 adds humidity_entity_id and temperature_entity_id
                 for area in old_data["areas"]:
-                    area["temperature_entity_id"] = None
                     area["humidity_entity_id"] = None
+                    area["temperature_entity_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -416,15 +416,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
                     floor_id=area["floor_id"],
+                    humidity_entity_id=area["humidity_entity_id"],
                     icon=area["icon"],
                     id=area["id"],
                     labels=set(area["labels"]),
                     name=area["name"],
                     picture=area["picture"],
+                    temperature_entity_id=area["temperature_entity_id"],
                     created_at=datetime.fromisoformat(area["created_at"]),
                     modified_at=datetime.fromisoformat(area["modified_at"]),
-                    temperature_entity_id=area["temperature_entity_id"],
-                    humidity_entity_id=area["humidity_entity_id"],
                 )
 
         self.areas = areas
