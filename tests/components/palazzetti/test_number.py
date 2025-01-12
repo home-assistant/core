@@ -18,7 +18,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 POWER_ENTITY_ID = "number.stove_combustion_power"
-FAN_ENTITY_ID = "number.stove_second_fan_speed"
+FAN_ENTITY_ID = "number.stove_left_fan_speed"
 
 
 async def test_all_entities(
@@ -91,7 +91,7 @@ async def test_async_set_data_fan(
         {ATTR_ENTITY_ID: FAN_ENTITY_ID, "value": 1},
         blocking=True,
     )
-    mock_palazzetti_client.set_fan_speed.assert_called_once_with(1, FanType.SECOND)
+    mock_palazzetti_client.set_fan_speed.assert_called_once_with(1, FanType.LEFT)
     mock_palazzetti_client.set_on.reset_mock()
 
     # Set value: Error
@@ -107,7 +107,7 @@ async def test_async_set_data_fan(
     mock_palazzetti_client.set_on.reset_mock()
 
     mock_palazzetti_client.set_fan_speed.side_effect = ValidationError()
-    message = "Fan #2 speed 1.0 is invalid"
+    message = "Fan left speed 1.0 is invalid"
     with pytest.raises(ServiceValidationError, match=message):
         await hass.services.async_call(
             NUMBER_DOMAIN,

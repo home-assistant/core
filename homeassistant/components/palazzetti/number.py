@@ -27,11 +27,11 @@ async def async_setup_entry(
         PalazzettiCombustionPowerEntity(config_entry.runtime_data)
     ]
 
-    if config_entry.runtime_data.client.has_fan(FanType.SECOND):
-        entities.append(PalazzettiFanEntity(config_entry.runtime_data, FanType.SECOND))
+    if config_entry.runtime_data.client.has_fan(FanType.LEFT):
+        entities.append(PalazzettiFanEntity(config_entry.runtime_data, FanType.LEFT))
 
-    if config_entry.runtime_data.client.has_fan(FanType.THIRD):
-        entities.append(PalazzettiFanEntity(config_entry.runtime_data, FanType.THIRD))
+    if config_entry.runtime_data.client.has_fan(FanType.RIGHT):
+        entities.append(PalazzettiFanEntity(config_entry.runtime_data, FanType.RIGHT))
 
     async_add_entities(entities)
 
@@ -91,11 +91,11 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
         super().__init__(coordinator)
         self.fan = fan
 
-        self._attr_translation_key = f"fan_{fan.value}_speed"
+        self._attr_translation_key = f"fan_{str.lower(fan.name)}_speed"
         self._attr_native_min_value = coordinator.client.min_fan_speed(fan)
         self._attr_native_max_value = coordinator.client.max_fan_speed(fan)
         self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}-fan_{fan.value}_speed"
+            f"{coordinator.config_entry.unique_id}-fan_{str.lower(fan.name)}_speed"
         )
 
     @property
@@ -116,7 +116,7 @@ class PalazzettiFanEntity(PalazzettiEntity, NumberEntity):
                 translation_domain=DOMAIN,
                 translation_key="invalid_fan_speed",
                 translation_placeholders={
-                    "fan": str(self.fan.value),
+                    "name": str.lower(self.fan.name),
                     "value": str(value),
                 },
             ) from err
