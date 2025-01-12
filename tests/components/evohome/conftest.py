@@ -12,6 +12,7 @@ from evohomeasync2 import EvohomeClient
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from evohomeasync2.control_system import ControlSystem
 from evohomeasync2.zone import Zone
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.evohome.const import DOMAIN
@@ -191,39 +192,32 @@ async def setup_evohome(
 async def evohome(
     hass: HomeAssistant,
     config: dict[str, str],
+    freezer: FrozenDateTimeFactory,
     install: str,
 ) -> AsyncGenerator[MagicMock]:
     """Return the mocked evohome client for this install fixture."""
+
+    freezer.move_to("2024-07-10T12:00:00Z")  # so schedules are as expected
 
     async for mock_client in setup_evohome(hass, config, install=install):
         yield mock_client
 
 
 @pytest.fixture
-async def ctl_id(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    install: MagicMock,
-) -> AsyncGenerator[str]:
+def ctl_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's controller."""
 
-    async for mock_client in setup_evohome(hass, config, install=install):
-        evo: EvohomeClient = mock_client.return_value
-        ctl: ControlSystem = evo.tcs
+    evo: EvohomeClient = evohome.return_value
+    ctl: ControlSystem = evo.tcs
 
-        yield f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
+    return f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
 
 
 @pytest.fixture
-async def zone_id(
-    hass: HomeAssistant,
-    config: dict[str, str],
-    install: MagicMock,
-) -> AsyncGenerator[str]:
+def zone_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's first zone."""
 
-    async for mock_client in setup_evohome(hass, config, install=install):
-        evo: EvohomeClient = mock_client.return_value
-        zone: Zone = evo.tcs.zones[0]
+    evo: EvohomeClient = evohome.return_value
+    zone: Zone = evo.tcs.zones[0]
 
-        yield f"{Platform.CLIMATE}.{slugify(zone.name)}"
+    return f"{Platform.CLIMATE}.{slugify(zone.name)}"

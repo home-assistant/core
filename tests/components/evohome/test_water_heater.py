@@ -67,7 +67,7 @@ async def test_set_operation_mode(
     results = []
 
     # SERVICE_SET_OPERATION_MODE: auto
-    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -83,7 +83,7 @@ async def test_set_operation_mode(
         assert mock_fcn.await_args.kwargs == {}
 
     # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -101,7 +101,7 @@ async def test_set_operation_mode(
         results.append(mock_fcn.await_args.kwargs)
 
     # SERVICE_SET_OPERATION_MODE: on (until next scheduled setpoint)
-    with patch("evohomeasync2.hotwater.HotWater.set_on") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.on") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_OPERATION_MODE,
@@ -126,7 +126,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
     """Test SERVICE_SET_AWAY_MODE of an evohome DHW zone."""
 
     # set_away_mode: off
-    with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,
@@ -142,7 +142,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
         assert mock_fcn.await_args.kwargs == {}
 
     # set_away_mode: on
-    with patch("evohomeasync2.hotwater.HotWater.set_off") as mock_fcn:
+    with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
         await hass.services.async_call(
             Platform.WATER_HEATER,
             SERVICE_SET_AWAY_MODE,

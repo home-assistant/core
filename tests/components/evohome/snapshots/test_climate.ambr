@@ -137,8 +137,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
@@ -184,8 +184,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -230,12 +230,12 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
+        'active_faults': tuple(
           dict({
-            'faultType': 'TempZoneActuatorLowBattery',
+            'fault_type': 'TempZoneActuatorLowBattery',
             'since': '2022-03-02T04:50:20',
           }),
-        ]),
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
@@ -282,8 +282,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -329,8 +329,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -376,8 +376,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
@@ -423,12 +423,12 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
+        'active_faults': tuple(
           dict({
-            'faultType': 'TempZoneActuatorCommunicationLost',
+            'fault_type': 'TempZoneActuatorCommunicationLost',
             'since': '2022-03-02T15:56:01',
           }),
-        ]),
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 17.0,
@@ -477,8 +477,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -513,8 +513,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
@@ -560,8 +560,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -606,8 +606,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
@@ -654,8 +654,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -701,8 +701,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -748,8 +748,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
@@ -795,8 +795,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 17.0,
@@ -845,8 +845,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -881,8 +881,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 14.0,
@@ -923,8 +923,8 @@
       'max_temp': 35,
       'min_temp': 7,
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '416856',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -959,8 +959,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
@@ -1006,8 +1006,8 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '8557535',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1042,8 +1042,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
@@ -1089,8 +1089,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
@@ -1136,8 +1136,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
@@ -1186,8 +1186,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1222,8 +1222,8 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'active_system_faults': tuple(
+        ),
         'system_id': '4187769',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1258,8 +1258,8 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'active_faults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 15.0,

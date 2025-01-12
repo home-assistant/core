@@ -27,15 +27,12 @@ EVO_PERMOVER: Final = "PermanentOverride"
 
 # These two are used only to help prevent E501 (line too long) violations
 GWS: Final = "gateways"
-TCS: Final = "temperatureControlSystems"
+TCS: Final = "temperature_control_systems"
 
 UTC_OFFSET: Final = "currentOffsetMinutes"
 
 CONF_LOCATION_IDX: Final = "location_idx"
 
-ACCESS_TOKEN: Final = "access_token"
-ACCESS_TOKEN_EXPIRES: Final = "access_token_expires"
-REFRESH_TOKEN: Final = "refresh_token"
 USER_DATA: Final = "user_data"
 
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)

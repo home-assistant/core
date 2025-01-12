@@ -63,13 +63,13 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def handle_evo_exception(err: evo.RequestFailed) -> None:
+def handle_evo_exception(err: evo.ApiRequestFailedError) -> None:
     """Return False if the exception can't be ignored."""
 
     try:
         raise err
 
-    except evo.AuthenticationFailed:
+    except evo.AuthenticationFailedError:
         _LOGGER.error(
             (
                 "Failed to authenticate with the vendor's server. Check your username"
@@ -80,7 +80,7 @@ def handle_evo_exception(err: evo.RequestFailed) -> None:
             err,
         )
 
-    except evo.RequestFailed:
+    except evo.ApiRequestFailedError:
         if err.status is None:
             _LOGGER.warning(
                 (

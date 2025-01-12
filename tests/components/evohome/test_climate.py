@@ -65,7 +65,7 @@ async def test_ctl_set_hvac_mode(
     results = []
 
     # SERVICE_SET_HVAC_MODE: HVACMode.OFF
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_SET_HVAC_MODE,
@@ -83,7 +83,7 @@ async def test_ctl_set_hvac_mode(
         results.append(mock_fcn.await_args.args)
 
     # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_SET_HVAC_MODE,
@@ -134,7 +134,7 @@ async def test_ctl_turn_off(
     results = []
 
     # SERVICE_TURN_OFF
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_TURN_OFF,
@@ -164,7 +164,7 @@ async def test_ctl_turn_on(
     results = []
 
     # SERVICE_TURN_ON
-    with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
+    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_TURN_ON,
@@ -194,7 +194,7 @@ async def test_zone_set_hvac_mode(
     results = []
 
     # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
-    with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_SET_HVAC_MODE,
@@ -243,7 +243,7 @@ async def test_zone_set_preset_mode(
     results = []
 
     # SERVICE_SET_PRESET_MODE: none
-    with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_SET_PRESET_MODE,
@@ -302,12 +302,10 @@ async def test_zone_set_preset_mode(
 async def test_zone_set_temperature(
     hass: HomeAssistant,
     zone_id: str,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test SERVICE_SET_TEMPERATURE of an evohome heating zone."""
 
-    freezer.move_to("2024-07-10T12:00:00Z")
     results = []
 
     # SERVICE_SET_TEMPERATURE: temperature
@@ -369,7 +367,7 @@ async def test_zone_turn_on(
     """Test SERVICE_TURN_ON of an evohome heating zone."""
 
     # SERVICE_TURN_ON
-    with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+    with patch("evohomeasync2.zone.Zone.reset") as mock_fcn:
         await hass.services.async_call(
             Platform.CLIMATE,
             SERVICE_TURN_ON,
