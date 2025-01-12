@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
+import html
+from io import BytesIO
 import json
 import logging
 from typing import Any, Concatenate, cast
@@ -32,7 +34,6 @@ from homeassistant.helpers.httpx_client import get_async_client
 
 from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
-from .util import async_iterator_to_bytesio, backup_from_description
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +172,7 @@ class OneDriveBackupAgent(BackupAgent):
         task = LargeFileUploadTask(
             upload_session=upload_session,
             request_adapter=self._anonymous_auth_adapter,
-            stream=await async_iterator_to_bytesio(await open_stream()),
+            stream=await self._async_iterator_to_bytesio(await open_stream()),
             max_chunk_size=320 * 1024,
         )
 
@@ -217,7 +218,7 @@ class OneDriveBackupAgent(BackupAgent):
                 if (description := item.description) is None:
                     continue
                 if "homeassistant_version" in description:
-                    backups.append(backup_from_description(description))
+                    backups.append(self._backup_from_description(description))
         return backups
 
     @handle_backup_errors("failed_to_get_backup")
@@ -239,5 +240,22 @@ class OneDriveBackupAgent(BackupAgent):
             blob_properties is not None
             and (description := blob_properties.description) is not None
         ):
-            return backup_from_description(description)
+            return self._backup_from_description(description)
         return None
+
+    async def _async_iterator_to_bytesio(
+        self, async_iterator: AsyncIterator[bytes]
+    ) -> BytesIO:
+        """Convert an AsyncIterator[bytes] to a BytesIO object."""
+        buffer = BytesIO()
+        async for chunk in async_iterator:
+            buffer.write(chunk)
+        buffer.seek(0)  # Reset the buffer's position to the beginning
+        return buffer
+
+    def _backup_from_description(self, description: str) -> AgentBackup:
+        """Create a backup object from a description."""
+        description = html.unescape(
+            description
+        )  # OneDrive encodes the description on save automatically
+        return AgentBackup.from_dict(json.loads(description))
