@@ -75,23 +75,18 @@ class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerE
             key=platform,
             translation_key="playstation",
             device_class=MediaPlayerDeviceClass.RECEIVER,
-            name=self.coordinator.user.online_id,
+            name=None,
             has_entity_name=True,
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.user.account_id)},
-            name=self.coordinator.user.online_id,
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=PLATFORM_MAP[self.entity_description.key],
             manufacturer="Sony Interactive Entertainment",
-            model="PlayStation Network",
+            model=PLATFORM_MAP[self.entity_description.key],
         )
-
-    @property
-    def name(self) -> str:
-        """Name getter."""
-        return PLATFORM_MAP[self.entity_description.key]
 
     @property
     def state(self) -> MediaPlayerState:
