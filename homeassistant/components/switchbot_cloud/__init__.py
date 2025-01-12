@@ -91,6 +91,8 @@ def make_device_data(
             "MeterPro",
             "MeterPro(CO2)",
             "Relay Switch 1PM",
+            "Plug Mini (US)",
+            "Plug Mini (JP)",
         ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
