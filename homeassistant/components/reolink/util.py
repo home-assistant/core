@@ -22,6 +22,7 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -51,6 +52,18 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
     )
 
 
+def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
+    """Return the Reolink host from the config entry id."""
+    config_entry: ReolinkConfigEntry | None = hass.config_entries.async_get_entry(
+        config_entry_id
+    )
+    if config_entry is None:
+        raise Unresolvable(
+            f"Could not find Reolink config entry id '{config_entry_id}'."
+        )
+    return config_entry.runtime_data.host
+
+
 def get_device_uid_and_ch(
     device: dr.DeviceEntry, host: ReolinkHost
 ) -> tuple[list[str], int | None, bool]:
@@ -69,7 +82,8 @@ def get_device_uid_and_ch(
         ch = int(device_uid[1][5:])
         is_chime = True
     else:
-        ch = host.api.channel_for_uid(device_uid[1])
+        device_uid_part = "_".join(device_uid[1:])
+        ch = host.api.channel_for_uid(device_uid_part)
     return (device_uid, ch, is_chime)
 
 
@@ -154,6 +168,10 @@ def raise_translated_error(
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected",
+                translation_placeholders={"err": str(err)},
+            ) from err
 
     return decorator_raise_translated_error

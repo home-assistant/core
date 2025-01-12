@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
+from enum import IntFlag
 import logging
 import threading
 from typing import Any
@@ -2483,6 +2484,31 @@ async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
         class EntityWithClassAttribute7(entity.Entity):
             def _attr_attribution(self):
                 return "🤡"
+
+
+async def test_entity_report_deprecated_supported_features_values(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reporting deprecated supported feature values only happens once."""
+    ent = entity.Entity()
+
+    class MockEntityFeatures(IntFlag):
+        VALUE1 = 1
+        VALUE2 = 2
+
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        in caplog.text
+    )
+    assert "MockEntityFeatures.VALUE2" in caplog.text
+
+    caplog.clear()
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        not in caplog.text
+    )
 
 
 async def test_remove_entity_registry(
