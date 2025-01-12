@@ -30,7 +30,6 @@ from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
 async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_download: MagicMock,
 ) -> AsyncGenerator[None]:
     """Set up onedrive integration."""
     with (
@@ -188,7 +187,6 @@ async def test_broken_upload_session(
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
-    mock_download: MagicMock,
 ) -> None:
     """Test agent download backup."""
     mock_drive_items.get = AsyncMock(
@@ -202,7 +200,7 @@ async def test_agents_download(
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
-    mock_download.get_http_response_message.assert_called_once()
+    mock_drive_items.content.get.assert_called_once()
 
 
 async def test_error_wrapper(
