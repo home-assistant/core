@@ -45,7 +45,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
         hass,
         DOMAIN,
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
-        DOMAIN,
     )
 
 

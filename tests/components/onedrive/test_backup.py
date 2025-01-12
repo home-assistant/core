@@ -15,6 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.onedrive.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -247,3 +248,34 @@ async def test_agents_backup_not_found(
     assert response["result"]["agent_errors"] == {
         f"{DOMAIN}.{DOMAIN}": "Backup not found"
     }
+
+
+async def test_reauth_on_403(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we re-authenticate on 403."""
+
+    mock_drive_items.get = AsyncMock(side_effect=APIError(response_status_code=403))
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {
+        f"{DOMAIN}.{DOMAIN}": "Failed to get backup"
+    }
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id

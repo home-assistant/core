@@ -4,6 +4,7 @@ from typing import Any, cast
 
 from kiota_abstractions.authentication import AccessTokenProvider, AllowedHostsValidator
 
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
@@ -61,4 +62,4 @@ class OneDriveConfigEntryAccessTokenProvider(OneDriveAccessTokenProvider):
     ) -> str:
         """Return a valid authorization token."""
         await self._oauth_session.async_ensure_token_valid()
-        return cast(str, self._oauth_session.token["access_token"])
+        return cast(str, self._oauth_session.token[CONF_ACCESS_TOKEN])

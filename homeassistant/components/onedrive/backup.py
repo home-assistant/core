@@ -37,7 +37,9 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
-    entries: list[OneDriveConfigEntry] = hass.config_entries.async_entries(DOMAIN)
+    entries: list[OneDriveConfigEntry] = hass.config_entries.async_loaded_entries(
+        DOMAIN
+    )
     return [OneDriveBackupAgent(hass, entry) for entry in entries]
 
 
@@ -77,6 +79,8 @@ def handle_backup_errors[_R, **P](
             try:
                 return await func(self, *args, **kwargs)
             except APIError as err:
+                if err.response_status_code == 403:
+                    self._entry.async_start_reauth(self._hass)
                 _LOGGER.error(
                     "Error during backup in %s: Status %s, message %s",
                     func.__name__,
@@ -101,6 +105,8 @@ class OneDriveBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
         """Initialize the OneDrive backup agent."""
         super().__init__()
+        self._hass = hass
+        self._entry = entry
         self._client = entry.runtime_data.client
         assert entry.unique_id
         self._items = self._client.drives.by_drive_id(entry.unique_id).items
