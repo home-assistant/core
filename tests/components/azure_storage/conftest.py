@@ -1,13 +1,14 @@
 """Fixtures for Azure Storage tests."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from collections.abc import AsyncIterator, Generator
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from azure.storage.blob import BlobProperties
 import pytest
 
 from homeassistant.components.azure_storage.const import DOMAIN
 
-from .const import USER_INPUT
+from .const import BACKUP_METADATA, USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_client() -> Generator[MagicMock]:
     """Mock the Azure Storage client."""
     with (
@@ -36,6 +37,26 @@ def mock_client() -> Generator[MagicMock]:
     ):
         client = container_client.return_value
         client.exists.return_value = True
+
+        async def async_list_blobs():
+            for blob in BlobProperties(metadata=BACKUP_METADATA):
+                yield blob
+
+        client.list_blobs.return_value = async_list_blobs()
+
+        blob_client = Mock()
+        blob_client.get_blob_properties = AsyncMock(
+            return_value=BlobProperties(metadata=BACKUP_METADATA)
+        )
+
+        client.get_blob_client.return_value = blob_client
+
+        class MockStream:
+            async def chunks(self) -> AsyncIterator[bytes]:
+                yield b"backup data"
+
+        client.download_blob.return_value = MockStream()
+
         yield client
 
 
@@ -43,7 +64,7 @@ def mock_client() -> Generator[MagicMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="My LaMarzocco",
+        title="account/container1",
         domain=DOMAIN,
         data=USER_INPUT,
     )

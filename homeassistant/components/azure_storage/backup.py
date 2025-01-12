@@ -112,17 +112,27 @@ class AzureStorageBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
-        metadata = backup.as_dict()
-        metadata["version"] = 1  # add metadata version
+        # metadata = backup.as_dict()
+        # metadata["version"] = 1  # add metadata version
 
-        if backup.folders:
-            metadata["folders"] = json.dumps(backup.folders)
+        # if backup.folders:
+        #     metadata["folders"] = json.dumps(backup.folders)
 
-        if backup.addons:
-            metadata["addons"] = json.dumps(backup.addons)
+        # if backup.addons:
+        #     metadata["addons"] = json.dumps(backup.addons)
 
-        if backup.extra_metadata:
-            metadata["extra_metadata"] = json.dumps(backup.extra_metadata)
+        # if backup.extra_metadata:
+        #     metadata["extra_metadata"] = json.dumps(backup.extra_metadata)
+
+        metadata = {
+            **backup.as_dict(),
+            "version": 1,
+            "folders": json.dumps(backup.folders) if backup.folders else None,
+            "addons": json.dumps(backup.addons) if backup.addons else None,
+            "extra_metadata": json.dumps(backup.extra_metadata)
+            if backup.extra_metadata
+            else None,
+        }
 
         # ensure dict is [str, str]
         metadata = {str(k): str(v) for k, v in metadata.items()}
@@ -174,7 +184,10 @@ class AzureStorageBackupAgent(BackupAgent):
 
     def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
         """Parse backup metadata."""
-        metadata["folders"] = json.loads(metadata.get("folders", "[]"))
-        metadata["addons"] = json.loads(metadata.get("addons", "[]"))
-        metadata["extra_metadata"] = json.loads(metadata.get("extra_metadata", "{}"))
+        if metadata.get("folders"):
+            metadata["folders"] = json.loads(metadata["folders"])
+        if metadata.get("addons"):
+            metadata["addons"] = json.loads(metadata["addons"])
+        if metadata.get("extra_metadata"):
+            metadata["extra_metadata"] = json.loads(metadata["extra_metadata"])
         return AgentBackup.from_dict(metadata)

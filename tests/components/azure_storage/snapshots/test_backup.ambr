@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_agents_get_backup
+  dict({
+    'addons': list([
+    ]),
+    'agent_ids': list([
+      'azure_storage.account/container1',
+    ]),
+    'backup_id': '23e64aec',
+    'database_included': 'True',
+    'date': '2024-11-22T11:48:48.727189+01:00',
+    'failed_agent_ids': list([
+    ]),
+    'folders': list([
+    ]),
+    'homeassistant_included': 'True',
+    'homeassistant_version': '2024.12.0.dev0',
+    'name': 'Core 2024.12.0.dev0',
+    'protected': 'False',
+    'size': '34519040',
+    'with_automatic_settings': None,
+  })
+# ---
+# name: test_agents_list_backups
+  list([
+    dict({
+      'addons': list([
+      ]),
+      'agent_ids': list([
+        'azure_storage.account/container1',
+      ]),
+      'backup_id': '23e64aec',
+      'database_included': 'True',
+      'date': '2024-11-22T11:48:48.727189+01:00',
+      'failed_agent_ids': list([
+      ]),
+      'folders': list([
+      ]),
+      'homeassistant_included': 'True',
+      'homeassistant_version': '2024.12.0.dev0',
+      'name': 'Core 2024.12.0.dev0',
+      'protected': 'False',
+      'size': '34519040',
+      'with_automatic_settings': None,
+    }),
+  ])
+# ---
