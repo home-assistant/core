@@ -52,8 +52,8 @@ class _AreaStoreData(TypedDict):
     labels: list[str]
     name: str
     picture: str | None
-    temperature_entity_id: str | None
     humidity_entity_id: str | None
+    temperature_entity_id: str | None
     created_at: str
     modified_at: str
 
@@ -81,8 +81,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     id: str
     labels: set[str] = field(default_factory=set)
     picture: str | None
-    temperature_entity_id: str | None
     humidity_entity_id: str | None
+    temperature_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property
@@ -258,8 +258,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         icon: str | None = None,
         labels: set[str] | None = None,
         picture: str | None = None,
-        temperature_entity_id: str | None = None,
         humidity_entity_id: str | None = None,
+        temperature_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
 
@@ -326,8 +326,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -362,8 +362,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
-        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
