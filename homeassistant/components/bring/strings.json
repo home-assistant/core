@@ -102,7 +102,7 @@
       "message": "Authentication failed for {email}, check your email and password"
     },
     "notify_missing_argument_item": {
-      "message": "This action requires field item, please enter a valid value for item"
+      "message": "This action requires field {field}, please enter a valid value for {field}"
     },
     "notify_request_failed": {
       "message": "Failed to send push notification for Bring! due to a connection error, try again later"

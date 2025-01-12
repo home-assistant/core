@@ -263,4 +263,5 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="notify_missing_argument_item",
+                translation_placeholders={"field": "item"},
             ) from e
