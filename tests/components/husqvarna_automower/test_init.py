@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch
 from aioautomower.exceptions import (
     ApiError,
     AuthError,
-    HusqvarnaWSServerHandshakeError,
     HusqvarnaTimeoutError,
+    HusqvarnaWSServerHandshakeError,
 )
 from aioautomower.model import MowerAttributes, WorkArea
 from freezegun.api import FrozenDateTimeFactory

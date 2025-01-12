@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 from aioautomower.exceptions import (
     ApiError,
     AuthError,
-    HusqvarnaWSServerHandshakeError,
     HusqvarnaTimeoutError,
+    HusqvarnaWSServerHandshakeError,
 )
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
