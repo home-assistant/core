@@ -122,7 +122,7 @@
           "description": "Type of push notification to send to list members."
         },
         "item": {
-          "name": "Article (Required if Notification type `Urgent message` selected)",
+          "name": "Article (Required if notification type `Urgent message` is selected)",
           "description": "Article name to include in an urgent message e.g. `Urgent message - Please buy Cilantro urgently`"
         }
       }
