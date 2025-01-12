@@ -53,8 +53,8 @@ rules:
     status: exempt
     comment: No noisy entities.
   discovery:
-    status: exempt
-    comment: bug in hassfest
+    status: done
+    comment: DHCP
   stale-devices: done
   diagnostics: done
   exception-translations: done

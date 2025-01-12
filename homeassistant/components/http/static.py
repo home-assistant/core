@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
+import sys
 from typing import Final
 
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
@@ -16,6 +17,15 @@ CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {CACHE_CONTROL: CACHE_HEADER}
 RESPONSE_CACHE: LRU[tuple[str, Path], tuple[Path, str]] = LRU(512)
+
+if sys.version_info >= (3, 13):
+    # guess_type is soft-deprecated in 3.13
+    # for paths and should only be used for
+    # URLs. guess_file_type should be used
+    # for paths instead.
+    _GUESSER = CONTENT_TYPES.guess_file_type
+else:
+    _GUESSER = CONTENT_TYPES.guess_type
 
 
 class CachingStaticResource(StaticResource):
@@ -37,9 +47,7 @@ class CachingStaticResource(StaticResource):
                 # Must be directory index; ignore caching
                 return response
             file_path = response._path  # noqa: SLF001
-            response.content_type = (
-                CONTENT_TYPES.guess_type(file_path)[0] or FALLBACK_CONTENT_TYPE
-            )
+            response.content_type = _GUESSER(file_path)[0] or FALLBACK_CONTENT_TYPE
             # Cache actual header after setter construction.
             content_type = response.headers[CONTENT_TYPE]
             RESPONSE_CACHE[key] = (file_path, content_type)

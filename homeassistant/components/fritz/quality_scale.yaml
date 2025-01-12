@@ -95,4 +95,7 @@ rules:
     comment: |
       the fritzconnection lib is not async and relies on requests
       changing this might need a bit more efforts to be spent
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirements 'fritzconnection==1.14.0' and 'xmltodict==0.13.0' appear untyped

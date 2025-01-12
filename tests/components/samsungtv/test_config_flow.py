@@ -14,8 +14,6 @@ from samsungtvws.exceptions import (
     UnauthorizedError,
 )
 from websockets import frames
-
-# pylint: disable-next=no-name-in-module
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant import config_entries

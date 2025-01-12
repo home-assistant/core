@@ -25,20 +25,17 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.mark.usefixtures("mock_tailwind")
-async def test_user_flow(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test the full happy path user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_HOST: "127.0.0.1",
@@ -46,8 +43,15 @@ async def test_user_flow(
         },
     )
 
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2 == snapshot
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.unique_id == "3c:e9:0e:6d:21:84"
+    assert config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_TOKEN: "987654",
+    }
+    assert not config_entry.options
 
 
 @pytest.mark.parametrize(
@@ -76,19 +80,27 @@ async def test_user_flow_errors(
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "user"
-    assert result.get("errors") == expected_error
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == expected_error
 
     mock_tailwind.status.side_effect = None
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_HOST: "127.0.0.2",
             CONF_TOKEN: "123456",
         },
     )
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.unique_id == "3c:e9:0e:6d:21:84"
+    assert config_entry.data == {
+        CONF_HOST: "127.0.0.2",
+        CONF_TOKEN: "123456",
+    }
+    assert not config_entry.options
 
 
 async def test_user_flow_unsupported_firmware_version(
@@ -105,8 +117,8 @@ async def test_user_flow_unsupported_firmware_version(
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "unsupported_firmware"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_firmware"
 
 
 @pytest.mark.usefixtures("mock_tailwind")
@@ -129,8 +141,8 @@ async def test_user_flow_already_configured(
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_config_entry.data[CONF_TOKEN] == "987654"
 
@@ -160,19 +172,26 @@ async def test_zeroconf_flow(
         ),
     )
 
-    assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["type"] is FlowResultType.FORM
 
     progress = hass.config_entries.flow.async_progress()
     assert len(progress) == 1
     assert progress[0].get("flow_id") == result["flow_id"]
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_TOKEN: "987654"}
     )
 
-    assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2 == snapshot
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.unique_id == "3c:e9:0e:6d:21:84"
+    assert config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_TOKEN: "987654",
+    }
+    assert not config_entry.options
 
 
 @pytest.mark.parametrize(
@@ -200,8 +219,8 @@ async def test_zeroconf_flow_abort_incompatible_properties(
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == expected_reason
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 @pytest.mark.parametrize(
@@ -240,25 +259,33 @@ async def test_zeroconf_flow_errors(
         ),
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_TOKEN: "123456",
         },
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "zeroconf_confirm"
-    assert result2.get("errors") == expected_error
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+    assert result["errors"] == expected_error
 
     mock_tailwind.status.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_TOKEN: "123456",
         },
     )
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    config_entry = result["result"]
+    assert config_entry.unique_id == "3c:e9:0e:6d:21:84"
+    assert config_entry.data == {
+        CONF_HOST: "127.0.0.1",
+        CONF_TOKEN: "123456",
+    }
+    assert not config_entry.options
 
 
 @pytest.mark.usefixtures("mock_tailwind")
@@ -292,8 +319,8 @@ async def test_zeroconf_flow_not_discovered_again(
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
 
 
@@ -307,17 +334,17 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_TOKEN] == "123456"
 
     result = await mock_config_entry.start_reauth_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_TOKEN: "987654"},
     )
     await hass.async_block_till_done()
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data[CONF_TOKEN] == "987654"
 
@@ -343,27 +370,27 @@ async def test_reauth_flow_errors(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_TOKEN: "123456",
         },
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "reauth_confirm"
-    assert result2.get("errors") == expected_error
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == expected_error
 
     mock_tailwind.status.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_TOKEN: "123456",
         },
     )
 
-    assert result3.get("type") is FlowResultType.ABORT
-    assert result3.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_dhcp_discovery_updates_entry(
@@ -384,8 +411,8 @@ async def test_dhcp_discovery_updates_entry(
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
 
 
@@ -404,5 +431,5 @@ async def test_dhcp_discovery_ignores_unknown(hass: HomeAssistant) -> None:
         ),
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "unknown"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"

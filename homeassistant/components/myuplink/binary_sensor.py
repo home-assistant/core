@@ -155,7 +155,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         self,
         coordinator: MyUplinkDataCoordinator,
         device_id: str,
-        entity_description: BinarySensorEntityDescription | None,
+        entity_description: BinarySensorEntityDescription,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the binary_sensor."""
@@ -165,8 +165,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
             unique_id_suffix=unique_id_suffix,
         )
 
-        if entity_description is not None:
-            self.entity_description = entity_description
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool:
@@ -185,7 +184,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
         coordinator: MyUplinkDataCoordinator,
         system_id: str,
         device_id: str,
-        entity_description: BinarySensorEntityDescription | None,
+        entity_description: BinarySensorEntityDescription,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the binary_sensor."""
@@ -196,8 +195,7 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
             unique_id_suffix=unique_id_suffix,
         )
 
-        if entity_description is not None:
-            self.entity_description = entity_description
+        self.entity_description = entity_description
 
     @property
     def is_on(self) -> bool | None:
