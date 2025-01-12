@@ -1,6 +1,10 @@
 """Test the Enigma2 config flow."""
 
-from openwebif.api import OpenWebIfServiceEvent, OpenWebIfStatus
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
+from openwebif.api import OpenWebIfDevice, OpenWebIfServiceEvent, OpenWebIfStatus
+import pytest
 
 from homeassistant.components.enigma2.const import (
     CONF_DEEP_STANDBY,
@@ -10,6 +14,7 @@ from homeassistant.components.enigma2.const import (
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
+    DOMAIN,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -19,6 +24,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDRESS = "12:34:56:78:90:ab"
 
@@ -45,42 +52,42 @@ EXPECTED_OPTIONS = {
 }
 
 
-class MockDevice:
-    """A mock Enigma2 device."""
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(domain=DOMAIN, data=TEST_REQUIRED, unique_id="123456")
 
-    mac_address: str | None = "12:34:56:78:90:ab"
-    _base = "http://1.1.1.1"
 
-    def __init__(self) -> None:
-        """Initialize the mock Enigma2 device."""
-        self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
+@pytest.fixture
+def openwebifdevice_mock() -> Generator[AsyncMock]:
+    """Mock a OpenWebIf device."""
 
-    async def _call_api(self, url: str) -> dict | None:
-        if url.endswith("/api/about"):
-            return {
-                "info": {
-                    "ifaces": [
-                        {
-                            "mac": self.mac_address,
-                        }
-                    ],
-                    "model": "Mock Enigma2",
-                    "brand": "Enigma2",
-                }
-            }
-        return None
-
-    def get_version(self) -> str | None:
-        """Return the version."""
-        return None
-
-    async def get_about(self) -> dict:
-        """Get mock about endpoint."""
-        return await self._call_api("/api/about")
-
-    async def get_all_bouquets(self) -> dict:
-        """Get all bouquets."""
-        return {
+    with (
+        patch(
+            "homeassistant.components.enigma2.coordinator.OpenWebIfDevice",
+            spec=OpenWebIfDevice,
+        ) as openwebif_device_mock,
+        patch(
+            "homeassistant.components.enigma2.config_flow.OpenWebIfDevice",
+            new=openwebif_device_mock,
+        ),
+    ):
+        openwebif_device_mock.return_value.status = OpenWebIfStatus(
+            currservice=OpenWebIfServiceEvent()
+        )
+        openwebif_device_mock.return_value.turn_off_to_deep = False
+        openwebif_device_mock.return_value.sources = {"Test": "1"}
+        openwebif_device_mock.return_value.source_list = list(
+            openwebif_device_mock.return_value.sources.keys()
+        )
+        openwebif_device_mock.return_value.picon_url = "file:///"
+        openwebif_device_mock.return_value.get_about.return_value = (
+            load_json_object_fixture("device_about.json", DOMAIN)
+        )
+        openwebif_device_mock.return_value.get_status_info.return_value = (
+            load_json_object_fixture("device_statusinfo_on.json", DOMAIN)
+        )
+        openwebif_device_mock.return_value.get_all_bouquets.return_value = {
             "bouquets": [
                 [
                     '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet',
@@ -88,9 +95,4 @@ class MockDevice:
                 ]
             ]
         }
-
-    async def update(self) -> None:
-        """Mock update."""
-
-    async def close(self):
-        """Mock close."""
+        yield openwebif_device_mock
