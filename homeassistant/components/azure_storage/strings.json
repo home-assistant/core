@@ -42,19 +42,19 @@
       "message": "Authentication failed for storage account {account_name}"
     },
     "backup_download_error": {
-      "message": "Error downloading backup {backup_id} from Azure Blob storage"
+      "message": "Error downloading backup from Azure Blob storage"
     },
     "backup_upload_error": {
-      "message": "Error uploading backup {backup_id} to Azure Blob storage"
+      "message": "Error uploading backup to Azure Blob storage"
     },
     "backup_delete_error": {
-      "message": "Error deleting backup {backup_id} from Azure Blob storage"
+      "message": "Error deleting backup from Azure Blob storage"
     },
     "backup_list_error": {
       "message": "Error listing backups from Azure Blob storage"
     },
     "backup_get_error": {
-      "message": "Error getting backup {backup_id} from Azure Blob storage"
+      "message": "Error getting backup from Azure Blob storage"
     },
     "container_not_found": {
       "message": "Storage container {container_name} not found"

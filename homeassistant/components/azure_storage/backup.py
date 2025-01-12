@@ -1,9 +1,12 @@
 """Support for Azure Storage backup."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator, Callable, Coroutine
+from functools import wraps
 import json
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 from azure.core.exceptions import HttpResponseError
 
@@ -42,6 +45,42 @@ def async_register_backup_agents_listener(
     return remove_listener
 
 
+def handle_backup_errors[_R, **P](
+    translation_key: str,
+) -> Callable[
+    [Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]]],
+    Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]],
+]:
+    """Handle backup errors with a specific translation key."""
+
+    def decorator(
+        func: Callable[
+            Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]
+        ],
+    ) -> Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]]:
+        @wraps(func)
+        async def wrapper(
+            self: AzureStorageBackupAgent, *args: P.args, **kwargs: P.kwargs
+        ) -> _R:
+            try:
+                return await func(self, *args, **kwargs)
+            except HttpResponseError as err:
+                _LOGGER.error(
+                    "Error during backup in %s: Status %s, message %s",
+                    func.__name__,
+                    err.status_code,
+                    err.message,
+                )
+                _LOGGER.debug("Full error: %s", err, exc_info=True)
+                raise BackupAgentError(
+                    translation_domain=DOMAIN, translation_key=translation_key
+                ) from err
+
+        return wrapper
+
+    return decorator
+
+
 class AzureStorageBackupAgent(BackupAgent):
     """Azure storage backup agent."""
 
@@ -53,25 +92,17 @@ class AzureStorageBackupAgent(BackupAgent):
         self._client = entry.runtime_data
         self.name = entry.title
 
+    @handle_backup_errors("backup_download_error")
     async def async_download_backup(
         self,
         backup_id: str,
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        try:
-            download_stream = await self._client.download_blob(f"{backup_id}.tar")
-        except HttpResponseError as err:
-            _LOGGER.debug(
-                "Failed to download backup %s: %s", backup_id, err, exc_info=True
-            )
-            raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_download_error",
-                translation_placeholders={"backup_id": backup_id},
-            ) from err
+        download_stream = await self._client.download_blob(f"{backup_id}.tar")
         return download_stream.chunks()
 
+    @handle_backup_errors("backup_upload_error")
     async def async_upload_backup(
         self,
         *,
@@ -96,59 +127,35 @@ class AzureStorageBackupAgent(BackupAgent):
         # ensure dict is [str, str]
         backup_dict = {str(k): str(v) for k, v in backup_dict.items()}
 
-        try:
-            await self._client.upload_blob(
-                name=f"{backup.backup_id}.tar",
-                metadata=backup_dict,
-                data=await open_stream(),
-                length=backup.size,
-            )
-        except HttpResponseError as err:
-            _LOGGER.debug(
-                "Failed to upload backup %s: %s", backup.backup_id, err, exc_info=True
-            )
-            raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_upload_error",
-                translation_placeholders={"backup_id": backup.backup_id},
-            ) from err
+        await self._client.upload_blob(
+            name=f"{backup.backup_id}.tar",
+            metadata=backup_dict,
+            data=await open_stream(),
+            length=backup.size,
+        )
 
+    @handle_backup_errors("backup_delete_error")
     async def async_delete_backup(
         self,
         backup_id: str,
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        try:
-            await self._client.delete_blob(f"{backup_id}.tar")
-        except HttpResponseError as err:
-            _LOGGER.debug(
-                "Failed to delete backup %s: %s", backup_id, err, exc_info=True
-            )
-            raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_delete_error",
-                translation_placeholders={"backup_id": backup_id},
-            ) from err
+        await self._client.delete_blob(f"{backup_id}.tar")
 
+    @handle_backup_errors("backup_list_error")
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
+        async for blob in self._client.list_blobs(include="metadata"):
+            metadata = blob.metadata
 
-        try:
-            async for blob in self._client.list_blobs(include="metadata"):
-                metadata = blob.metadata
+            if "homeassistant_version" in metadata:
+                backups.append(self._parse_blob_metadata(metadata))
 
-                if "homeassistant_version" in metadata:
-                    backups.append(self._parse_blob_metadata(metadata))
-        except HttpResponseError as err:
-            _LOGGER.debug("Failed to list backups: %s", err, exc_info=True)
-            raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_list_error",
-            ) from err
         return backups
 
+    @handle_backup_errors("backup_get_error")
     async def async_get_backup(
         self,
         backup_id: str,
@@ -156,15 +163,8 @@ class AzureStorageBackupAgent(BackupAgent):
     ) -> AgentBackup:
         """Return a backup."""
         blob_client = self._client.get_blob_client(f"{backup_id}.tar")
-        try:
-            blob_properties = await blob_client.get_blob_properties()
-        except HttpResponseError as err:
-            _LOGGER.debug("Failed to get backup %s: %s", backup_id, err, exc_info=True)
-            raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_get_error",
-                translation_placeholders={"backup_id": backup_id},
-            ) from err
+        blob_properties = await blob_client.get_blob_properties()
+
         return self._parse_blob_metadata(blob_properties.metadata)
 
     def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
