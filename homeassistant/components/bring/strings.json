@@ -111,7 +111,7 @@
   "services": {
     "send_message": {
       "name": "[%key:component::notify::services::notify::name%]",
-      "description": "Send a mobile push notification to members of a shared Bring! list.",
+      "description": "Sends a mobile push notification to members of a shared Bring! list.",
       "fields": {
         "entity_id": {
           "name": "List",
@@ -122,8 +122,8 @@
           "description": "Type of push notification to send to list members."
         },
         "item": {
-          "name": "Article (Required if message type `Urgent Message` selected)",
-          "description": "Article name to include in an urgent message e.g. `Urgent Message - Please buy Cilantro urgently`"
+          "name": "Article (Required if notification type `Urgent message` is selected)",
+          "description": "Article name to include in an urgent message e.g. `Urgent message - Please buy Cilantro urgently`"
         }
       }
     }
@@ -134,7 +134,7 @@
         "going_shopping": "I'm going shopping! - Last chance to make changes",
         "changed_list": "List updated - Take a look at the articles",
         "shopping_done": "Shopping done - The fridge is well stocked",
-        "urgent_message": "Urgent Message - Please buy `Article name` urgently"
+        "urgent_message": "Urgent message - Please buy `Article` urgently"
       }
     }
   }
