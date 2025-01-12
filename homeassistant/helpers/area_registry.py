@@ -38,7 +38,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 
 
 class _AreaStoreData(TypedDict):
@@ -51,6 +51,8 @@ class _AreaStoreData(TypedDict):
     labels: list[str]
     name: str
     picture: str | None
+    temperature_entity_id: str | None
+    humidity_entity_id: str | None
     created_at: str
     modified_at: str
 
@@ -78,6 +80,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
     id: str
     labels: set[str] = field(default_factory=set)
     picture: str | None
+    temperature_entity_id: str | None
+    humidity_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
     @under_cached_property
@@ -95,6 +99,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "picture": self.picture,
                     "created_at": self.created_at.timestamp(),
                     "modified_at": self.modified_at.timestamp(),
+                    "temperature_entity_id": self.temperature_entity_id,
+                    "humidity_entity_id": self.humidity_entity_id,
                 }
             )
         )
@@ -138,10 +144,16 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     area["labels"] = []
 
             if old_minor_version < 7:
-                # Version 1.7 adds created_at and modiefied_at
+                # Version 1.7 adds created_at and modified_at
                 created_at = utc_from_timestamp(0).isoformat()
                 for area in old_data["areas"]:
                     area["created_at"] = area["modified_at"] = created_at
+
+            if old_minor_version < 8:
+                # Version 1.8 adds temperature_entity_id and humidity_entity_id
+                for area in old_data["areas"]:
+                    area["temperature_entity_id"] = None
+                    area["humidity_entity_id"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -245,6 +257,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         icon: str | None = None,
         labels: set[str] | None = None,
         picture: str | None = None,
+        temperature_entity_id: str | None = None,
+        humidity_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
         self.hass.verify_event_loop_thread("area_registry.async_create")
@@ -262,6 +276,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             labels=labels or set(),
             name=name,
             picture=picture,
+            temperature_entity_id=temperature_entity_id,
+            humidity_entity_id=humidity_entity_id,
         )
         area_id = area.id
         self.areas[area_id] = area
@@ -302,6 +318,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
@@ -312,6 +330,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             labels=labels,
             name=name,
             picture=picture,
+            temperature_entity_id=temperature_entity_id,
+            humidity_entity_id=humidity_entity_id,
         )
         # Since updated may be the old or the new and we always fire
         # an event even if nothing has changed we cannot use async_fire_internal
@@ -334,6 +354,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
+        temperature_entity_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
@@ -346,6 +368,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 ("labels", labels),
                 ("picture", picture),
                 ("floor_id", floor_id),
+                ("temperature_entity_id", temperature_entity_id),
+                ("humidity_entity_id", humidity_entity_id),
             )
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
@@ -385,6 +409,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     picture=area["picture"],
                     created_at=datetime.fromisoformat(area["created_at"]),
                     modified_at=datetime.fromisoformat(area["modified_at"]),
+                    temperature_entity_id=area["temperature_entity_id"],
+                    humidity_entity_id=area["humidity_entity_id"],
                 )
 
         self.areas = areas
@@ -405,6 +431,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                     "picture": entry.picture,
                     "created_at": entry.created_at.isoformat(),
                     "modified_at": entry.modified_at.isoformat(),
+                    "temperature_entity_id": entry.temperature_entity_id,
+                    "humidity_entity_id": entry.humidity_entity_id,
                 }
                 for entry in self.areas.values()
             ]

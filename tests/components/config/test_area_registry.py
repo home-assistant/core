@@ -43,6 +43,8 @@ async def test_list_areas(
         picture="/image/example.png",
         floor_id="first_floor",
         labels={"label_1", "label_2"},
+        temperature_entity_id="sensor.temperature",
+        humidity_entity_id="sensor.humidity",
     )
 
     await client.send_json_auto_id({"type": "config/area_registry/list"})
@@ -59,6 +61,8 @@ async def test_list_areas(
             "picture": None,
             "created_at": created_area1.timestamp(),
             "modified_at": created_area1.timestamp(),
+            "temperature_entity_id": None,
+            "humidity_entity_id": None,
         },
         {
             "aliases": unordered(["alias_1", "alias_2"]),
@@ -70,6 +74,8 @@ async def test_list_areas(
             "picture": "/image/example.png",
             "created_at": created_area2.timestamp(),
             "modified_at": created_area2.timestamp(),
+            "temperature_entity_id": "sensor.temperature",
+            "humidity_entity_id": "sensor.humidity",
         },
     ]
 
@@ -97,6 +103,8 @@ async def test_create_area(
         "picture": None,
         "created_at": utcnow().timestamp(),
         "modified_at": utcnow().timestamp(),
+        "temperature_entity_id": None,
+        "humidity_entity_id": None,
     }
     assert len(area_registry.areas) == 1
 
@@ -109,12 +117,15 @@ async def test_create_area(
             "labels": ["label_1", "label_2"],
             "name": "mock 2",
             "picture": "/image/example.png",
+            "temperature_entity_id": "sensor.temperature",
+            "humidity_entity_id": "sensor.humidity",
             "type": "config/area_registry/create",
         }
     )
 
     msg = await client.receive_json()
 
+    assert msg["success"]
     assert msg["result"] == {
         "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": ANY,
@@ -125,6 +136,8 @@ async def test_create_area(
         "picture": "/image/example.png",
         "created_at": utcnow().timestamp(),
         "modified_at": utcnow().timestamp(),
+        "temperature_entity_id": "sensor.temperature",
+        "humidity_entity_id": "sensor.humidity",
     }
     assert len(area_registry.areas) == 2
 
@@ -202,6 +215,8 @@ async def test_update_area(
             "labels": ["label_1", "label_2"],
             "name": "mock 2",
             "picture": "/image/example.png",
+            "temperature_entity_id": "sensor.temperature",
+            "humidity_entity_id": "sensor.humidity",
             "type": "config/area_registry/update",
         }
     )
@@ -216,6 +231,8 @@ async def test_update_area(
         "labels": unordered(["label_1", "label_2"]),
         "name": "mock 2",
         "picture": "/image/example.png",
+        "temperature_entity_id": "sensor.temperature",
+        "humidity_entity_id": "sensor.humidity",
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
     }
@@ -232,6 +249,8 @@ async def test_update_area(
             "icon": None,
             "labels": [],
             "picture": None,
+            "temperature_entity_id": None,
+            "humidity_entity_id": None,
             "type": "config/area_registry/update",
         }
     )
@@ -246,6 +265,8 @@ async def test_update_area(
         "labels": [],
         "name": "mock 2",
         "picture": None,
+        "temperature_entity_id": None,
+        "humidity_entity_id": None,
         "created_at": created_at.timestamp(),
         "modified_at": modified_at.timestamp(),
     }

@@ -48,6 +48,8 @@ async def test_create_area(
         picture=None,
         created_at=utcnow(),
         modified_at=utcnow(),
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     assert len(area_registry.areas) == 1
 
@@ -67,6 +69,8 @@ async def test_create_area(
         aliases={"alias_1", "alias_2"},
         labels={"label1", "label2"},
         picture="/image/example.png",
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
 
     assert area2 == ar.AreaEntry(
@@ -79,6 +83,8 @@ async def test_create_area(
         picture="/image/example.png",
         created_at=utcnow(),
         modified_at=utcnow(),
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
     assert len(area_registry.areas) == 2
     assert area.created_at != area2.created_at
@@ -184,6 +190,8 @@ async def test_update_area(
         labels={"label1", "label2"},
         name="mock1",
         picture="/image/example.png",
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
 
     assert updated_area != area
@@ -197,6 +205,8 @@ async def test_update_area(
         picture="/image/example.png",
         created_at=created_at,
         modified_at=modified_at,
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
     )
     assert len(area_registry.areas) == 1
 
@@ -298,6 +308,8 @@ async def test_loading_area_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored areas on start."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
     hass_storage[ar.STORAGE_KEY] = {
         "version": ar.STORAGE_VERSION_MAJOR,
         "minor_version": ar.STORAGE_VERSION_MINOR,
@@ -311,8 +323,10 @@ async def test_loading_area_from_storage(
                     "labels": ["mock-label1", "mock-label2"],
                     "name": "mock",
                     "picture": "blah",
-                    "created_at": utcnow().isoformat(),
-                    "modified_at": utcnow().isoformat(),
+                    "created_at": created_at.isoformat(),
+                    "modified_at": modified_at.isoformat(),
+                    "temperature_entity_id": "sensor.mock_temperature",
+                    "humidity_entity_id": "sensor.mock_humidity",
                 }
             ]
         },
@@ -322,6 +336,20 @@ async def test_loading_area_from_storage(
     registry = ar.async_get(hass)
 
     assert len(registry.areas) == 1
+    area = registry.areas["12345A"]
+    assert area == ar.AreaEntry(
+        aliases={"alias_1", "alias_2"},
+        floor_id="first_floor",
+        icon="mdi:garage",
+        id="12345A",
+        labels={"mock-label1", "mock-label2"},
+        name="mock",
+        picture="blah",
+        created_at=created_at,
+        modified_at=modified_at,
+        temperature_entity_id="sensor.mock_temperature",
+        humidity_entity_id="sensor.mock_humidity",
+    )
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -359,6 +387,8 @@ async def test_migration_from_1_1(
                     "picture": None,
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "temperature_entity_id": None,
+                    "humidity_entity_id": None,
                 }
             ]
         },
