@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from mill import Heater, Mill
 
 from homeassistant.components.mill.const import DOMAIN
-from homeassistant.components.mill.coordinator import MillDataUpdateCoordinator
+from homeassistant.components.mill.coordinator import MillHistoricDataUpdateCoordinator
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.core import HomeAssistant
@@ -30,7 +30,7 @@ async def test_async_setup_entry(recorder_mock: Recorder, hass: HomeAssistant) -
 
     statistic_id = f"{DOMAIN}:energy_dev_id"
 
-    coordinator = MillDataUpdateCoordinator(
+    coordinator = MillHistoricDataUpdateCoordinator(
         hass, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()

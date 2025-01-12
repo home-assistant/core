@@ -25,6 +25,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+ONE_YEAR = 1 * 365 * 24
+
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Mill data."""
@@ -38,6 +40,28 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize global Mill data updater."""
         self.mill_data_connection = mill_data_connection
+
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_method=mill_data_connection.fetch_heater_and_sensor_data,
+            update_interval=update_interval,
+        )
+
+
+class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to manage fetching Mill historic data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        update_interval: timedelta | None = None,
+        *,
+        mill_data_connection: Mill,
+    ) -> None:
+        """Initialize global Mill data updater."""
+        self.mill_data_connection = mill_data_connection
         self._last_stats_time = dt_util.utcnow() - timedelta(days=1)
 
         super().__init__(
@@ -47,15 +71,8 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self):
         """Update data via API."""
-        data = await self.mill_data_connection.fetch_heater_and_sensor_data()
-        if isinstance(self.mill_data_connection, Mill):
-            await self._insert_statistics()
-        return data
-
-    async def _insert_statistics(self) -> None:
-        """Insert Mill statistics."""
         now = dt_util.utcnow()
         if self._last_stats_time > now - timedelta(hours=1):
             return
@@ -70,7 +87,9 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
 
             if not last_stats or not last_stats.get(statistic_id):
                 hourly_data = (
-                    await self.mill_data_connection.fetch_historic_energy_usage(dev_id)
+                    await self.mill_data_connection.fetch_historic_energy_usage(
+                        dev_id, n_days=ONE_YEAR
+                    )
                 )
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
                 _sum = 0.0
@@ -133,3 +152,4 @@ class MillDataUpdateCoordinator(DataUpdateCoordinator):
             )
             async_add_external_statistics(self.hass, metadata, statistics)
             self._last_stats_time = now.replace(minute=0, second=0)
+            return
