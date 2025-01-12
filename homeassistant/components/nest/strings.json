@@ -27,7 +27,7 @@
       },
       "pubsub": {
         "title": "Configure Google Cloud Pub/Sub",
-        "description": "Home Assistant uses Cloud Pub/Sub receive realtime Nest device updates. Nest servers publish updates to a Pub/Sub topic and Home Assistant receives the updates through a Pub/Sub subscription.\n\n1. Visit the [Device Access Console]({device_access_console_url}) and ensure a Pub/Sub topic is configured.\n2. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below.\n3. The next step will attempt to auto-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
+        "description": "Home Assistant uses Cloud Pub/Sub receive realtime Nest device updates. Nest servers publish updates to a Pub/Sub topic and Home Assistant receives the updates through a Pub/Sub subscription.\n\n1. Visit the [Device Access Console]({device_access_console_url}) and ensure a Pub/Sub topic is configured.\n1. Visit the [Cloud Console]({url}) to find your Google Cloud Project ID and confirm it is correct below.\n1. The next step will attempt to auto-discover Pub/Sub topics and subscriptions.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "data": {
           "cloud_project_id": "[%key:component::nest::config::step::cloud_project::data::cloud_project_id%]"
         }

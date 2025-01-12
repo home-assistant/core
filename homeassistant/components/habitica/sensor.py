@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import StateType
 from .const import ASSETS_URL
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import get_attribute_points, get_attributes_total
+from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +73,11 @@ class HabiticaSensorEntity(StrEnum):
     INTELLIGENCE = "intelligence"
     CONSTITUTION = "constitution"
     PERCEPTION = "perception"
+    EGGS_TOTAL = "eggs_total"
+    HATCHING_POTIONS_TOTAL = "hatching_potions_total"
+    FOOD_TOTAL = "food_total"
+    SADDLE = "saddle"
+    QUEST_SCROLLS = "quest_scrolls"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -135,14 +140,14 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.GEMS,
         translation_key=HabiticaSensorEntity.GEMS,
-        value_fn=lambda user, _: round(user.balance * 4) if user.balance else None,
+        value_fn=lambda user, _: None if (b := user.balance) is None else round(b * 4),
         suggested_display_precision=0,
         entity_picture="shop_gem.png",
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.TRINKETS,
         translation_key=HabiticaSensorEntity.TRINKETS,
-        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets or 0,
+        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets,
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
         entity_picture="notif_subscriber_reward.png",
@@ -178,6 +183,44 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         attributes_fn=lambda user, content: get_attribute_points(user, content, "con"),
         suggested_display_precision=0,
         native_unit_of_measurement="CON",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.EGGS_TOTAL,
+        translation_key=HabiticaSensorEntity.EGGS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.eggs.values()),
+        entity_picture="Pet_Egg_Egg.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "eggs"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        translation_key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.hatchingPotions.values()),
+        entity_picture="Pet_HatchingPotion_RoyalPurple.png",
+        attributes_fn=(
+            lambda user, content: inventory_list(user, content, "hatchingPotions")
+        ),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.FOOD_TOTAL,
+        translation_key=HabiticaSensorEntity.FOOD_TOTAL,
+        value_fn=(
+            lambda user, _: sum(n for k, n in user.items.food.items() if k != "Saddle")
+        ),
+        entity_picture="Pet_Food_Strawberry.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "food"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.SADDLE,
+        translation_key=HabiticaSensorEntity.SADDLE,
+        value_fn=lambda user, _: user.items.food.get("Saddle", 0),
+        entity_picture="Pet_Food_Saddle.png",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.QUEST_SCROLLS,
+        translation_key=HabiticaSensorEntity.QUEST_SCROLLS,
+        value_fn=(lambda user, _: sum(n for n in user.items.quests.values())),
+        entity_picture="inventory_quest_scroll_dustbunnies.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "quests"),
     ),
 )
 

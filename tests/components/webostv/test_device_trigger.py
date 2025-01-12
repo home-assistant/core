@@ -129,6 +129,7 @@ async def test_failure_scenarios(
         )
 
     entry = MockConfigEntry(domain="fake", state=ConfigEntryState.LOADED, data={})
+    entry.runtime_data = None
     entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(

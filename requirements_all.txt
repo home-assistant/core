@@ -368,7 +368,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.3.0
+aioshelly==12.3.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -946,7 +946,7 @@ forecast-solar==4.0.0
 fortiosapi==1.0.5
 
 # homeassistant.components.freebox
-freebox-api==1.2.1
+freebox-api==1.2.2
 
 # homeassistant.components.free_mobile
 freesms==0.2.0
@@ -1097,7 +1097,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.2
 
 # homeassistant.components.bluetooth
-habluetooth==3.7.0
+habluetooth==3.8.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.87.0
@@ -1980,7 +1980,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.9.0
+pyheos==1.0.0
 
 # homeassistant.components.hive
 pyhiveapi==0.5.16
@@ -2189,7 +2189,7 @@ pyoverkiz==1.15.5
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.15
+pypalazzetti==0.1.16
 
 # homeassistant.components.elv
 pypca==0.0.7
@@ -2381,7 +2381,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v7.0.1
+python-homewizard-energy==v8.0.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2803,7 +2803,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.2.1
+switchbot-api==2.3.1
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2853,7 +2853,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.5.3
+teslemetry-stream==0.6.3
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
