@@ -112,24 +112,24 @@ class AzureStorageBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
-        backup_dict = backup.as_dict()
-        backup_dict["version"] = 1  # add metadata version
+        metadata = backup.as_dict()
+        metadata["version"] = 1  # add metadata version
 
         if backup.folders:
-            backup_dict["folders"] = json.dumps(backup.folders)
+            metadata["folders"] = json.dumps(backup.folders)
 
         if backup.addons:
-            backup_dict["addons"] = json.dumps(backup.addons)
+            metadata["addons"] = json.dumps(backup.addons)
 
         if backup.extra_metadata:
-            backup_dict["extra_metadata"] = json.dumps(backup.extra_metadata)
+            metadata["extra_metadata"] = json.dumps(backup.extra_metadata)
 
         # ensure dict is [str, str]
-        backup_dict = {str(k): str(v) for k, v in backup_dict.items()}
+        metadata = {str(k): str(v) for k, v in metadata.items()}
 
         await self._client.upload_blob(
             name=f"{backup.backup_id}.tar",
-            metadata=backup_dict,
+            metadata=metadata,
             data=await open_stream(),
             length=backup.size,
         )
