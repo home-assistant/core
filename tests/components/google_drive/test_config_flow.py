@@ -206,15 +206,21 @@ async def test_get_email_error(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    ("new_email", "expected_abort_reason"),
+    (
+        "new_email",
+        "expected_abort_reason",
+        "expected_placeholders",
+        "expected_access_token",
+        "expected_setup_calls",
+    ),
     [
-        (
-            TEST_USER_EMAIL,
-            "reauth_successful",
-        ),
+        (TEST_USER_EMAIL, "reauth_successful", None, "updated-access-token", 1),
         (
             "other.user@domain.com",
             "wrong_account",
+            {"email": TEST_USER_EMAIL},
+            "mock-access-token",
+            0,
         ),
     ],
     ids=["reauth_successful", "wrong_account"],
@@ -224,9 +230,12 @@ async def test_reauth(
     hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    mock_api: MagicMock,
     new_email: str,
     expected_abort_reason: str,
-    mock_api: MagicMock,
+    expected_placeholders: dict[str, str] | None,
+    expected_access_token: str,
+    expected_setup_calls: int,
 ) -> None:
     """Test the reauthentication flow."""
     config_entry.add_to_hass(hass)
@@ -276,22 +285,18 @@ async def test_reauth(
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    if expected_abort_reason == "reauth_successful":
-        assert len(mock_setup.mock_calls) == 1
-    else:
-        assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup.mock_calls) == expected_setup_calls
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == expected_abort_reason
+    assert result.get("description_placeholders") == expected_placeholders
 
     assert config_entry.unique_id == TEST_USER_EMAIL
     assert "token" in config_entry.data
 
     # Verify access token is refreshed
-    if expected_abort_reason == "reauth_successful":
-        assert config_entry.data["token"].get("access_token") == "updated-access-token"
-    else:
-        assert config_entry.data["token"].get("access_token") == "mock-access-token"
+    assert config_entry.data["token"].get("access_token") == expected_access_token
+    assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

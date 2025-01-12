@@ -7,24 +7,27 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Google Drive integration needs to re-authenticate your account"
+      },
+      "auth": {
+        "title": "Link Google Account"
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "access_not_configured": "Unable to access the Google Drive API:\n\n{message}",
       "create_folder_failure": "Error while creating Google Drive folder:\n\n{message}",
-      "wrong_account": "Wrong account: Please authenticate with the right account.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "wrong_account": "Wrong account: Please authenticate with {email}."
     },
     "create_entry": {
       "default": "Using [{folder_name}]({url}) folder. Feel free to rename it in Google Drive as you wish."

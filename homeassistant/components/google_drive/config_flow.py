@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
@@ -80,10 +80,12 @@ class OAuth2FlowHandler(
         await self.async_set_unique_id(email_address)
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+            reauth_entry = self._get_reauth_entry()
+            self._abort_if_unique_id_mismatch(
+                reason="wrong_account",
+                description_placeholders={"email": cast(str, reauth_entry.unique_id)},
             )
+            return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         self._abort_if_unique_id_configured()
 
