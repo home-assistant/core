@@ -443,10 +443,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        # If the target temperature will be None
-        # if the device is performing an action
-        # that does not affect the temperature or
-        # the device is switching states
+        if self._current_tado_hvac_mode == CONST_MODE_OFF:
+            return None
         return self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
 
     def set_timer(
