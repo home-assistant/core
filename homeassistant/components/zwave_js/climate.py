@@ -434,7 +434,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_temp = 80.0  # Not using DEFAULT_MAX_TEMP to allow wider range, including domestic hot water systems
+        # Not using DEFAULT_MAX_TEMP to allow wider range, 
+        # including domestic hot water systems
+        max_temp = 80.0  
         base_unit: str = UnitOfTemperature.CELSIUS
         try:
             temp = self._setpoint_value_or_raise(self._current_mode_setpoint_enums[0])
