@@ -7,7 +7,7 @@ from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORM
 from .coordinator import ActronNeoDataUpdateCoordinator
 from .device import ACUnit
 from .models import ActronAirNeoData
@@ -37,10 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
         pairing_token, coordinator, api, ac_unit, serial_number
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORM)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
