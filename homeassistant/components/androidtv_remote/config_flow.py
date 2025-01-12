@@ -156,7 +156,12 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         # and one of them, which could end up being in discovery_info.host, is from a
         # different device. If any of the discovery_info.ip_addresses matches the
         # existing host, don't update the host.
-        if existing_config_entry and len(discovery_info.ip_addresses) > 1:
+        if (
+            existing_config_entry
+            # Ignored entries don't have host
+            and CONF_HOST in existing_config_entry.data
+            and len(discovery_info.ip_addresses) > 1
+        ):
             existing_host = existing_config_entry.data[CONF_HOST]
             if existing_host != self.host:
                 if existing_host in [

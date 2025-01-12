@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "platinum",
-  "requirements": ["peblar==0.3.0"],
+  "requirements": ["peblar==0.3.3"],
   "zeroconf": [{ "type": "_http._tcp.local.", "name": "pblr-*" }]
 }

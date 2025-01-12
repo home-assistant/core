@@ -9,17 +9,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .common import async_process_devices
+from .common import async_generate_device_list
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
+    VS_COORDINATOR,
+    VS_DEVICES,
     VS_DISCOVERY,
-    VS_FANS,
-    VS_LIGHTS,
     VS_MANAGER,
-    VS_SENSORS,
-    VS_SWITCHES,
 )
+from .coordinator import VeSyncDataCoordinator
 
 PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
@@ -41,90 +40,33 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("Unable to login to the VeSync server")
         return False
 
-    device_dict = await async_process_devices(hass, manager)
-
-    forward_setups = hass.config_entries.async_forward_entry_setups
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
-    switches = hass.data[DOMAIN][VS_SWITCHES] = []
-    fans = hass.data[DOMAIN][VS_FANS] = []
-    lights = hass.data[DOMAIN][VS_LIGHTS] = []
-    sensors = hass.data[DOMAIN][VS_SENSORS] = []
-    platforms = []
+    coordinator = VeSyncDataCoordinator(hass, manager)
 
-    if device_dict[VS_SWITCHES]:
-        switches.extend(device_dict[VS_SWITCHES])
-        platforms.append(Platform.SWITCH)
+    # Store coordinator at domain level since only single integration instance is permitted.
+    hass.data[DOMAIN][VS_COORDINATOR] = coordinator
 
-    if device_dict[VS_FANS]:
-        fans.extend(device_dict[VS_FANS])
-        platforms.append(Platform.FAN)
+    hass.data[DOMAIN][VS_DEVICES] = await async_generate_device_list(hass, manager)
 
-    if device_dict[VS_LIGHTS]:
-        lights.extend(device_dict[VS_LIGHTS])
-        platforms.append(Platform.LIGHT)
-
-    if device_dict[VS_SENSORS]:
-        sensors.extend(device_dict[VS_SENSORS])
-        platforms.append(Platform.SENSOR)
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
-        switches = hass.data[DOMAIN][VS_SWITCHES]
-        fans = hass.data[DOMAIN][VS_FANS]
-        lights = hass.data[DOMAIN][VS_LIGHTS]
-        sensors = hass.data[DOMAIN][VS_SENSORS]
+        devices = hass.data[DOMAIN][VS_DEVICES]
 
-        dev_dict = await async_process_devices(hass, manager)
-        switch_devs = dev_dict.get(VS_SWITCHES, [])
-        fan_devs = dev_dict.get(VS_FANS, [])
-        light_devs = dev_dict.get(VS_LIGHTS, [])
-        sensor_devs = dev_dict.get(VS_SENSORS, [])
+        new_devices = await async_generate_device_list(hass, manager)
 
-        switch_set = set(switch_devs)
-        new_switches = list(switch_set.difference(switches))
-        if new_switches and switches:
-            switches.extend(new_switches)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SWITCHES), new_switches)
+        device_set = set(new_devices)
+        new_devices = list(device_set.difference(devices))
+        if new_devices and devices:
+            devices.extend(new_devices)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
             return
-        if new_switches and not switches:
-            switches.extend(new_switches)
-            hass.async_create_task(forward_setups(config_entry, [Platform.SWITCH]))
-
-        fan_set = set(fan_devs)
-        new_fans = list(fan_set.difference(fans))
-        if new_fans and fans:
-            fans.extend(new_fans)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_FANS), new_fans)
-            return
-        if new_fans and not fans:
-            fans.extend(new_fans)
-            hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
-
-        light_set = set(light_devs)
-        new_lights = list(light_set.difference(lights))
-        if new_lights and lights:
-            lights.extend(new_lights)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
-            return
-        if new_lights and not lights:
-            lights.extend(new_lights)
-            hass.async_create_task(forward_setups(config_entry, [Platform.LIGHT]))
-
-        sensor_set = set(sensor_devs)
-        new_sensors = list(sensor_set.difference(sensors))
-        if new_sensors and sensors:
-            sensors.extend(new_sensors)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
-            return
-        if new_sensors and not sensors:
-            sensors.extend(new_sensors)
-            hass.async_create_task(forward_setups(config_entry, [Platform.SENSOR]))
+        if new_devices and not devices:
+            devices.extend(new_devices)
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
@@ -135,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)

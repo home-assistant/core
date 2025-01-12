@@ -2073,10 +2073,7 @@ def _wipe_old_string_time_columns(
         session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 100000;"
-            )
+            text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 100000;")
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -2453,7 +2450,7 @@ class BaseMigration(ABC):
         self.migration_changes = migration_changes
 
     @abstractmethod
-    def migrate_data(self, instance: Recorder) -> bool:
+    def migrate_data(self, instance: Recorder, /) -> bool:
         """Migrate some data, return True if migration is completed."""
 
     def _migrate_data(self, instance: Recorder) -> bool:

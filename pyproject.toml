@@ -32,6 +32,7 @@ dependencies    = [
     "aiohttp==3.11.11",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
+    "aiohttp-asyncmdnsresolver==0.0.1",
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
@@ -43,7 +44,7 @@ dependencies    = [
     "certifi>=2021.5.30",
     "ciso8601==2.3.2",
     "cronsim==2.6",
-    "fnv-hash-fast==1.0.2",
+    "fnv-hash-fast==1.1.0",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
     "hass-nabucasa==0.87.0",
@@ -57,7 +58,7 @@ dependencies    = [
     "PyJWT==2.10.1",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==44.0.0",
-    "Pillow==11.0.0",
+    "Pillow==11.1.0",
     "propcache==0.2.1",
     "pyOpenSSL==24.3.0",
     "orjson==3.10.12",
@@ -79,9 +80,10 @@ dependencies    = [
     "uv==0.5.8",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
-    "voluptuous-openapi==0.0.5",
+    "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
+    "zeroconf==0.139.0"
 ]
 
 [project.urls]
