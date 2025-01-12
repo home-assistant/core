@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
@@ -261,12 +262,19 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         humidity_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
+
         self.hass.verify_event_loop_thread("area_registry.async_create")
 
         if area := self.async_get_area_by_name(name):
             raise ValueError(
                 f"The name {name} ({area.normalized_name}) is already in use"
             )
+
+        if temperature_entity_id is not None:
+            _validate_temperature_entity(self.hass, temperature_entity_id)
+
+        if humidity_entity_id is not None:
+            _validate_humidity_entity(self.hass, humidity_entity_id)
 
         area = AreaEntry(
             aliases=aliases or set(),
@@ -373,6 +381,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             )
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
+
+        if "temperature_entity_id" in new_values:
+            _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
+
+        if "humidity_entity_id" in new_values:
+            _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name
@@ -505,3 +519,33 @@ def async_entries_for_floor(registry: AreaRegistry, floor_id: str) -> list[AreaE
 def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaEntry]:
     """Return entries that match a label."""
     return registry.areas.get_areas_for_label(label_id)
+
+
+def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate temperature entity."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.sensor import SensorDeviceClass
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "sensor"
+        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.TEMPERATURE
+    ):
+        raise ValueError(f"Entity {entity_id} is not a temperature sensor")
+
+
+def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Validate humidity entity."""
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.sensor import SensorDeviceClass
+
+    if not (state := hass.states.get(entity_id)):
+        raise ValueError(f"Entity {entity_id} does not exist")
+
+    if (
+        state.domain != "sensor"
+        or state.attributes.get(ATTR_DEVICE_CLASS) != SensorDeviceClass.HUMIDITY
+    ):
+        raise ValueError(f"Entity {entity_id} is not a humidity sensor")
