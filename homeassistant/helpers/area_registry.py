@@ -94,14 +94,14 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "aliases": list(self.aliases),
                     "area_id": self.id,
                     "floor_id": self.floor_id,
+                    "humidity_entity_id": self.humidity_entity_id,
                     "icon": self.icon,
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
+                    "temperature_entity_id": self.temperature_entity_id,
                     "created_at": self.created_at.timestamp(),
                     "modified_at": self.modified_at.timestamp(),
-                    "temperature_entity_id": self.temperature_entity_id,
-                    "humidity_entity_id": self.humidity_entity_id,
                 }
             )
         )
@@ -270,22 +270,22 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 f"The name {name} ({area.normalized_name}) is already in use"
             )
 
-        if temperature_entity_id is not None:
-            _validate_temperature_entity(self.hass, temperature_entity_id)
-
         if humidity_entity_id is not None:
             _validate_humidity_entity(self.hass, humidity_entity_id)
+
+        if temperature_entity_id is not None:
+            _validate_temperature_entity(self.hass, temperature_entity_id)
 
         area = AreaEntry(
             aliases=aliases or set(),
             floor_id=floor_id,
             icon=icon,
             id=self._generate_id(name),
+            humidity_entity_id=humidity_entity_id,
             labels=labels or set(),
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
-            humidity_entity_id=humidity_entity_id,
         )
         area_id = area.id
         self.areas[area_id] = area
@@ -334,12 +334,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             area_id,
             aliases=aliases,
             floor_id=floor_id,
+            humidity_entity_id=humidity_entity_id,
             icon=icon,
             labels=labels,
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
-            humidity_entity_id=humidity_entity_id,
         )
         # Since updated may be the old or the new and we always fire
         # an event even if nothing has changed we cannot use async_fire_internal
@@ -372,21 +372,21 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             attr_name: value
             for attr_name, value in (
                 ("aliases", aliases),
+                ("floor_id", floor_id),
+                ("humidity_entity_id", humidity_entity_id),
                 ("icon", icon),
                 ("labels", labels),
                 ("picture", picture),
-                ("floor_id", floor_id),
                 ("temperature_entity_id", temperature_entity_id),
-                ("humidity_entity_id", humidity_entity_id),
             )
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
 
-        if "temperature_entity_id" in new_values:
-            _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
-
         if "humidity_entity_id" in new_values:
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
+
+        if "temperature_entity_id" in new_values:
+            _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
         if name is not UNDEFINED and name != old.name:
             new_values["name"] = name
@@ -438,15 +438,15 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
                 {
                     "aliases": list(entry.aliases),
                     "floor_id": entry.floor_id,
+                    "humidity_entity_id": entry.humidity_entity_id,
                     "icon": entry.icon,
                     "id": entry.id,
                     "labels": list(entry.labels),
                     "name": entry.name,
                     "picture": entry.picture,
+                    "temperature_entity_id": entry.temperature_entity_id,
                     "created_at": entry.created_at.isoformat(),
                     "modified_at": entry.modified_at.isoformat(),
-                    "temperature_entity_id": entry.temperature_entity_id,
-                    "humidity_entity_id": entry.humidity_entity_id,
                 }
                 for entry in self.areas.values()
             ]
