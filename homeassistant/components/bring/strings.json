@@ -105,7 +105,7 @@
       "message": "Failed to perform action {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
     },
     "notify_request_failed": {
-      "message": "Failed to send push notification for Bring! due to a connection error, try again later"
+      "message": "Failed to send push notification for bring due to a connection error, try again later"
     }
   },
   "services": {
