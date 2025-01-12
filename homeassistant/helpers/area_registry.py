@@ -382,10 +382,10 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
 
-        if "humidity_entity_id" in new_values:
+        if "humidity_entity_id" in new_values and humidity_entity_id is not None:
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
 
-        if "temperature_entity_id" in new_values:
+        if "temperature_entity_id" in new_values and temperature_entity_id is not None:
             _validate_temperature_entity(self.hass, new_values["temperature_entity_id"])
 
         if name is not UNDEFINED and name != old.name:
