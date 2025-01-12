@@ -153,6 +153,84 @@
         "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
       ),
       dict({
+        'timeout': dict({
+          'ceil_threshold': 5,
+          'connect': None,
+          'sock_connect': None,
+          'sock_read': None,
+          'total': 43200,
+        }),
+      }),
+    ),
+  ])
+# ---
+# name: test_agents_upload_create_folder_if_missing
+  list([
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='ha' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='ha' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'create_file',
+      tuple(
+      ),
+      dict({
+        'json': dict({
+          'mimeType': 'application/vnd.google-apps.folder',
+          'name': 'Home Assistant',
+          'properties': dict({
+            'ha': 'root',
+            'instance_id': '0a123c',
+          }),
+        }),
+        'params': dict({
+          'fields': 'id,name',
+        }),
+      }),
+    ),
+    tuple(
+      'upload_file',
+      tuple(
+        dict({
+          'description': '{"addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}], "backup_id": "test-backup", "date": "2025-01-01T01:23:45.678Z", "database_included": true, "extra_metadata": {"with_automatic_settings": false}, "folders": [], "homeassistant_included": true, "homeassistant_version": "2024.12.0", "name": "Test", "protected": false, "size": 987}',
+          'name': 'Test 2025-01-01T01:23:45.678Z.tar',
+          'parents': list([
+            'new folder id',
+          ]),
+          'properties': dict({
+            'backup_id': 'test-backup',
+            'ha': 'backup',
+            'instance_id': '0a123c',
+          }),
+        }),
+        "CoreBackupReaderWriter.async_receive_backup.<locals>.open_backup() -> 'AsyncIterator[bytes]'",
+      ),
+      dict({
+        'timeout': dict({
+          'ceil_threshold': 5,
+          'connect': None,
+          'sock_connect': None,
+          'sock_read': None,
+          'total': 43200,
+        }),
       }),
     ),
   ])

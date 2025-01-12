@@ -16,33 +16,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-TEST_USER_EMAIL = "testuser@domain.com"
-
 type ComponentSetup = Callable[[], Awaitable[None]]
-
-
-@pytest.fixture(name="expires_at")
-def mock_expires_at() -> int:
-    """Fixture to set the oauth token expiration time."""
-    return time.time() + 3600
-
-
-@pytest.fixture(name="config_entry")
-def mock_config_entry(expires_at: int) -> MockConfigEntry:
-    """Fixture for MockConfigEntry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_USER_EMAIL,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": "https://www.googleapis.com/auth/drive.file",
-            },
-        },
-    )
 
 
 @pytest.fixture(name="setup_integration")
@@ -83,6 +57,29 @@ async def test_setup_success(
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert not hass.services.async_services().get(DOMAIN, {})
+
+
+async def test_create_folder_if_missing(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    mock_api: MagicMock,
+) -> None:
+    """Test folder is created if missing."""
+    # Setup looks up existing folder to make sure it still exists
+    # and creates it if missing
+    mock_api.list_files = AsyncMock(return_value={"files": []})
+    mock_api.create_file = AsyncMock(
+        return_value={"id": "new folder id", "name": "Home Assistant"}
+    )
+
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    mock_api.list_files.assert_called_once()
+    mock_api.create_file.assert_called_once()
 
 
 async def test_setup_error(

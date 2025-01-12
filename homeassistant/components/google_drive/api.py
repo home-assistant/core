@@ -151,7 +151,11 @@ class DriveClient:
             backup.backup_id,
             backup_metadata,
         )
-        await self._api.upload_file(backup_metadata, open_stream)
+        await self._api.upload_file(
+            backup_metadata,
+            open_stream,
+            timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
+        )
         _LOGGER.debug(
             "Uploaded backup: %s to: '%s'",
             backup.backup_id,

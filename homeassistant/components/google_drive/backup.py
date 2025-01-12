@@ -10,6 +10,7 @@ from google_drive_api.exceptions import GoogleDriveApiError
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
@@ -73,7 +74,7 @@ class GoogleDriveBackupAgent(BackupAgent):
         """
         try:
             await self._client.async_upload_backup(open_stream, backup)
-        except (GoogleDriveApiError, TimeoutError) as err:
+        except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
             _LOGGER.error("Upload backup error: %s", err)
             raise BackupAgentError("Failed to upload backup") from err
 
@@ -81,7 +82,8 @@ class GoogleDriveBackupAgent(BackupAgent):
         """List backups."""
         try:
             return await self._client.async_list_backups()
-        except GoogleDriveApiError as err:
+        except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("List backups error: %s", err)
             raise BackupAgentError("Failed to list backups") from err
 
     async def async_get_backup(
@@ -112,8 +114,8 @@ class GoogleDriveBackupAgent(BackupAgent):
             _LOGGER.debug("Downloading file_id: %s", file_id)
             try:
                 stream = await self._client.async_download(file_id)
-            except (GoogleDriveApiError, TimeoutError) as err:
-                _LOGGER.error("Download error: %s", err)
+            except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+                _LOGGER.error("Download backup error: %s", err)
                 raise BackupAgentError("Failed to download backup") from err
             return ChunkAsyncStreamIterator(stream)
         _LOGGER.error("Download backup_id: %s not found", backup_id)
@@ -135,6 +137,6 @@ class GoogleDriveBackupAgent(BackupAgent):
             try:
                 await self._client.async_delete(file_id)
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
-            except GoogleDriveApiError as err:
+            except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
                 _LOGGER.error("Delete backup error: %s", err)
                 raise BackupAgentError("Failed to delete backup") from err

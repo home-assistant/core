@@ -2,7 +2,6 @@
 
 from io import StringIO
 import json
-import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -11,10 +10,6 @@ from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
     AddonInfo,
@@ -24,13 +19,13 @@ from homeassistant.components.google_drive import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .conftest import CONFIG_ENTRY_TITLE
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import mock_stream
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-FOLDER_ID = "google-folder-it"
-TEST_USER_EMAIL = "testuser@domain.com"
-CONFIG_ENTRY_TITLE = "Google Drive entry title"
+FOLDER_ID = "google-folder-id"
 TEST_AGENT_BACKUP = AgentBackup(
     addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
     backup_id="test-backup",
@@ -48,25 +43,6 @@ TEST_AGENT_BACKUP = AgentBackup(
 )
 
 
-@pytest.fixture(name="config_entry")
-def mock_config_entry() -> MockConfigEntry:
-    """Fixture for MockConfigEntry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_USER_EMAIL,
-        title=CONFIG_ENTRY_TITLE,
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": time.time() + 3600,
-                "scope": "https://www.googleapis.com/auth/drive.file",
-            },
-        },
-    )
-
-
 @pytest.fixture(autouse=True)
 async def setup_integration(
     hass: HomeAssistant,
@@ -76,17 +52,10 @@ async def setup_integration(
     """Set up Google Drive integration."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential("client-id", "client-secret"),
-        DOMAIN,
-    )
     mock_api.list_files = AsyncMock(
         return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
     )
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
 
@@ -318,6 +287,8 @@ async def test_agents_upload(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup."""
+    mock_api.upload_file = AsyncMock(return_value=None)
+
     client = await hass_client()
 
     with (
@@ -338,8 +309,51 @@ async def test_agents_upload(
         )
 
     assert resp.status == 201
-    assert f"Uploading backup {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+    assert f"Uploading backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+    assert f"Uploaded backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
 
+    mock_api.upload_file.assert_called_once()
+    assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
+
+
+async def test_agents_upload_create_folder_if_missing(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test agent upload backup creates folder if missing."""
+    mock_api.list_files = AsyncMock(return_value={"files": []})
+    mock_api.create_file = AsyncMock(
+        return_value={"id": "new folder id", "name": "Home Assistant"}
+    )
+    mock_api.upload_file = AsyncMock(return_value=None)
+
+    client = await hass_client()
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=TEST_AGENT_BACKUP,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = TEST_AGENT_BACKUP
+        resp = await client.post(
+            f"/api/backup/upload?agent_id=google_drive.{CONFIG_ENTRY_TITLE}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+    assert f"Uploaded backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+
+    mock_api.create_file.assert_called_once()
     mock_api.upload_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
