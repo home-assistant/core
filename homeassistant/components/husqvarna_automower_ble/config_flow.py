@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import random
 from typing import Any
 
 from automower_ble.mower import Mower
 from bleak import BleakError
+from bleak_retry_connector import get_device
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
 
@@ -47,6 +49,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.address: str | None
+        self.pin: str | None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -60,7 +63,28 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self.address = discovery_info.address
         await self.async_set_unique_id(self.address)
         self._abort_if_unique_id_configured()
-        return await self.async_step_confirm()
+        return await self.async_step_bluetooth_confirm()
+
+    async def async_step_bluetooth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+
+        if user_input is not None:
+            self.pin = user_input[CONF_PIN]
+            await self.async_set_unique_id(self.address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            return await self.async_step_confirm()
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PIN): str,
+                },
+            ),
+        )
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -86,9 +110,29 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Found device: %s", title)
 
         if user_input is not None:
+            mower = Mower(channel_id, self.address, self.pin)
+
+            try:
+                errors: dict[str, str] = {}
+
+                if not await mower.connect(device):
+                    errors["base"] = "invalid_auth"
+
+                    return self.async_show_form(
+                        step_id="reauth_confirm",
+                        data_schema=vol.Schema({vol.Required(CONF_PIN): str}),
+                        errors=errors,
+                    )
+            except (TimeoutError, BleakError):
+                return self.async_abort(reason="cannot_connect")
+
             return self.async_create_entry(
                 title=title,
-                data={CONF_ADDRESS: self.address, CONF_CLIENT_ID: channel_id},
+                data={
+                    CONF_ADDRESS: self.address,
+                    CONF_CLIENT_ID: channel_id,
+                    CONF_PIN: self.pin,
+                },
             )
 
         self.context["title_placeholders"] = {
@@ -105,8 +149,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+
         if user_input is not None:
             self.address = user_input[CONF_ADDRESS]
+            self.pin = user_input[CONF_PIN]
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
@@ -116,6 +162,62 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): str,
+                    vol.Required(CONF_PIN): str,
                 },
             ),
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            channel_id = random.randint(1, 0xFFFFFFFF)
+            self.address = user_input[CONF_ADDRESS]
+            self.pin = user_input[CONF_PIN]
+
+            mower = Mower(channel_id, self.address, self.pin)
+
+            try:
+                device = bluetooth.async_ble_device_from_address(
+                    self.hass, self.address, connectable=True
+                ) or await get_device(self.address)
+
+                if not await mower.connect(device):
+                    errors["base"] = "invalid_auth"
+
+                    return self.async_show_form(
+                        step_id="reauth_confirm",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(CONF_ADDRESS): str,
+                                vol.Required(CONF_PIN): str,
+                            },
+                        ),
+                        errors=errors,
+                    )
+            except (TimeoutError, BleakError):
+                return self.async_abort(reason="cannot_connect")
+
+            await self.async_set_unique_id(self.address, raise_on_progress=False)
+            self._abort_if_unique_id_configured()
+            return await self.async_step_confirm()
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): str,
+                    vol.Required(CONF_PIN): str,
+                },
+            ),
+            errors=errors,
         )
