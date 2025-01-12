@@ -148,7 +148,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.protocol = self
 
         # Device supports announcements
-        self._attr_supported_features |= (
+        self._attr_supported_features = (
             assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
         )
 
