@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 import re
 
-from actron_neo_api import ActronNeoAPIError
+from actron_neo_api import ActronNeoAPI, ActronNeoAPIError
 import aiohttp
 
 from homeassistant.core import HomeAssistant
@@ -16,7 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator):
     """Custom coordinator for Actron Air Neo integration."""
 
-    def __init__(self, hass: HomeAssistant, api, serial_number) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: ActronNeoAPI, serial_number: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
