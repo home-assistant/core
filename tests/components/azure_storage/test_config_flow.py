@@ -47,6 +47,7 @@ async def test_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test config flow."""
+    mock_client.exists.return_value = False
     result = await __async_start_flow(hass)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

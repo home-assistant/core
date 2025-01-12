@@ -82,6 +82,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Upload a backup."""
 
         backup_dict = backup.as_dict()
+        backup_dict["version"] = 1  # add metadata version
 
         if backup.folders:
             backup_dict["folders"] = json.dumps(backup.folders)

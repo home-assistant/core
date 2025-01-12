@@ -25,6 +25,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   },
+  "issues": {
+    "container_not_found": {
+      "title": "Storage container not found",
+      "description": "The storage container {container_name} has not been found in the storage account. Please re-create it manually, then fix this issue."
+    }
+  },
   "exceptions": {
     "account_not_found": {
       "message": "Storage account {account_name} not found"
@@ -49,6 +55,9 @@
     },
     "backup_get_error": {
       "message": "Error getting backup {backup_id} from Azure Blob storage"
+    },
+    "container_not_found": {
+      "message": "Storage container {container_name} not found"
     }
   }
 }

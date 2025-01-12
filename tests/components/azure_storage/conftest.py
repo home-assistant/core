@@ -38,7 +38,7 @@ def mock_client() -> Generator[MagicMock]:
         ),
     ):
         client = container_client.return_value
-        client.exists.return_value = False
+        client.exists.return_value = True
         yield client
 
 
