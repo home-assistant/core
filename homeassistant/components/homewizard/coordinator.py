@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homewizard_energy import HomeWizardEnergy, HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
@@ -14,9 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
@@ -32,7 +28,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         hass: HomeAssistant,
     ) -> None:
         """Initialize update coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
         self.api = HomeWizardEnergyV1(
             self.config_entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),

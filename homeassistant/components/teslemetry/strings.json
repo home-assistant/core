@@ -610,7 +610,7 @@
   },
   "services": {
     "navigation_gps_request": {
-      "description": "Set vehicle navigation to the provided latitude/longitude coordinates.",
+      "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
       "fields": {
         "device_id": {
           "description": "Vehicle to share to.",
@@ -646,7 +646,7 @@
       "name": "Set scheduled charging"
     },
     "set_scheduled_departure": {
-      "description": "Sets a time at which departure should be completed.",
+      "description": "Sets the departure time for a vehicle to schedule charging and preconditioning.",
       "fields": {
         "departure_time": {
           "description": "Time to be preconditioned by.",
@@ -684,7 +684,7 @@
       "name": "Set scheduled departure"
     },
     "speed_limit": {
-      "description": "Activate the speed limit of the vehicle.",
+      "description": "Activates the speed limit of a vehicle.",
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",
@@ -702,7 +702,7 @@
       "name": "Set speed limit"
     },
     "time_of_use": {
-      "description": "Update the time of use settings for the energy site.",
+      "description": "Updates the time of use settings for an energy site.",
       "fields": {
         "device_id": {
           "description": "Energy Site to configure.",
@@ -716,7 +716,7 @@
       "name": "Time of use settings"
     },
     "valet_mode": {
-      "description": "Activate the valet mode of the vehicle.",
+      "description": "Activates the valet mode of a vehicle.",
       "fields": {
         "device_id": {
           "description": "Vehicle to limit.",

@@ -1887,7 +1887,7 @@ class ConfigEntries:
     def async_loaded_entries(self, domain: str) -> list[ConfigEntry]:
         """Return loaded entries for a specific domain.
 
-        This will exclude ignored or disabled config entruis.
+        This will exclude ignored or disabled config entries.
         """
         entries = self._entries.get_entries_for_domain(domain)
 

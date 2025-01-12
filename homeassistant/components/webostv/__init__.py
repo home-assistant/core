@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,7 +23,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
-    DATA_CONFIG_ENTRY,
     DATA_HASS_CONFIG,
     DOMAIN,
     PLATFORMS,
@@ -34,23 +34,23 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
+type WebOsTvConfigEntry = ConfigEntry[WebOsClient]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG WebOS TV platform."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
-    hass.data[DOMAIN][DATA_HASS_CONFIG] = config
+    hass.data.setdefault(DOMAIN, {DATA_HASS_CONFIG: config})
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
     """Set the config entry up."""
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_CLIENT_SECRET]
 
     # Attempt a connection, but fail gracefully if tv is off for example.
-    client = WebOsClient(host, key)
+    entry.runtime_data = client = WebOsClient(host, key)
     with suppress(*WEBOSTV_EXCEPTIONS):
         try:
             await client.connect()
@@ -61,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Update the stored key without triggering reauth
     update_client_key(hass, entry, client)
 
-    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # set up notify platform, no entry support for notify component yet,
@@ -69,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
-            "notify",
+            Platform.NOTIFY,
             DOMAIN,
             {
                 CONF_NAME: entry.title,
@@ -92,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -122,10 +121,10 @@ def update_client_key(
         hass.config_entries.async_update_entry(entry, data=data)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        client = hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        client = entry.runtime_data
         await hass_notify.async_reload(hass, DOMAIN)
         client.clear_state_update_callbacks()
         await client.disconnect()
