@@ -49,12 +49,7 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = ERROR_INVALID_AUTH
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required("username"): str,
-                            vol.Required("password"): str,
-                        }
-                    ),
+                    data_schema=ACTRON_AIR_SCHEMA,
                     errors=errors,
                 )
 
