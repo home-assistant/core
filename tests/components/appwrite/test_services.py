@@ -1,35 +1,33 @@
 """Test the Appwrite services."""
 
 from hashlib import md5
-import logging
 from unittest.mock import Mock
 
 from appwrite.client import AppwriteException
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.appwrite.const import (
     DOMAIN,
-    EXECUTE_FUNCTION,
     FUNCTION_BODY,
     FUNCTION_HEADERS,
-    FUNCTION_ID,
     FUNCTION_PATH,
 )
 from homeassistant.components.appwrite.services import AppwriteServices
 from homeassistant.core import HomeAssistant
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def test_build_service_name(appwrite_services, mock_appwrite_client) -> None:
+async def test_build_service_name(
+    appwrite_services: AppwriteServices, mock_appwrite_client
+) -> None:
     """Test service name generation."""
-    expected_hash = md5(
+    base_service_id = md5(
         f"{mock_appwrite_client.endpoint}_{mock_appwrite_client.project_id}".encode()
     ).hexdigest()
-    expected_name = f"{EXECUTE_FUNCTION}_{expected_hash}"
+    expected_name = f"{base_service_id}_function_id"
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
     assert service_name == expected_name
 
 
@@ -37,7 +35,9 @@ async def test_service_registration(
     hass: HomeAssistant, appwrite_services: AppwriteServices
 ) -> None:
     """Test service registration."""
-    service_name = appwrite_services._AppwriteServices__build_service_name()
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
     assert hass.services.has_service(DOMAIN, service_name)
 
 
@@ -50,9 +50,10 @@ async def test_execute_function_service_with_body(
     expected_response = {"status": "completed", "response": "test response"}
     mock_appwrite_client.async_execute_function.return_value = expected_response
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
     service_data = {
-        FUNCTION_ID: "test-function",
         FUNCTION_BODY: "test-body",
     }
 
@@ -65,7 +66,7 @@ async def test_execute_function_service_with_body(
     )
 
     mock_appwrite_client.async_execute_function.assert_called_once_with(
-        "test-function", "test-body", None, None, None, False, "GET"
+        "function-id", "test-body", None, None, None, False, "GET"
     )
     assert response == expected_response
 
@@ -79,10 +80,10 @@ async def test_execute_function_service_without_body(
     expected_response = {"status": "completed", "response": "test response"}
     mock_appwrite_client.async_execute_function.return_value = expected_response
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
-    service_data = {
-        FUNCTION_ID: "test-function",
-    }
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
+    service_data = {}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -93,7 +94,7 @@ async def test_execute_function_service_without_body(
     )
 
     mock_appwrite_client.async_execute_function.assert_called_once_with(
-        "test-function", None, None, None, None, False, "GET"
+        "function-id", None, None, None, None, False, "GET"
     )
     assert response == expected_response
 
@@ -107,8 +108,10 @@ async def test_execute_function_service_with_path(
     expected_response = {"status": "completed", "response": "test response"}
     mock_appwrite_client.async_execute_function.return_value = expected_response
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
-    service_data = {FUNCTION_ID: "test-function", FUNCTION_PATH: "?query=param"}
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
+    service_data = {FUNCTION_PATH: "?query=param"}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -119,7 +122,7 @@ async def test_execute_function_service_with_path(
     )
 
     mock_appwrite_client.async_execute_function.assert_called_once_with(
-        "test-function", None, "?query=param", None, None, False, "GET"
+        "function-id", None, "?query=param", None, None, False, "GET"
     )
     assert response == expected_response
 
@@ -133,8 +136,10 @@ async def test_execute_function_service_with_headers(
     expected_response = {"status": "completed", "response": "test response"}
     mock_appwrite_client.async_execute_function.return_value = expected_response
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
-    service_data = {FUNCTION_ID: "test-function", FUNCTION_HEADERS: {"header": "value"}}
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
+    service_data = {FUNCTION_HEADERS: {"header": "value"}}
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -145,7 +150,7 @@ async def test_execute_function_service_with_headers(
     )
 
     mock_appwrite_client.async_execute_function.assert_called_once_with(
-        "test-function", None, None, {"header": "value"}, None, False, "GET"
+        "function-id", None, None, {"header": "value"}, None, False, "GET"
     )
     assert response == expected_response
 
@@ -160,9 +165,10 @@ async def test_execute_function_service_error(
         "Test error"
     )
 
-    service_name = appwrite_services._AppwriteServices__build_service_name()
+    service_name = appwrite_services._AppwriteServices__build_service_name(
+        "function_id"
+    )
     service_data = {
-        FUNCTION_ID: "test-function",
         FUNCTION_BODY: "test-body",
     }
 
@@ -177,25 +183,5 @@ async def test_execute_function_service_error(
 
     assert str(exc_info.value) == "Test error"
     mock_appwrite_client.async_execute_function.assert_called_once_with(
-        "test-function", "test-body", None, None, None, False, "GET"
+        "function-id", "test-body", None, None, None, False, "GET"
     )
-
-
-async def test_execute_function_service_invalid_schema(
-    hass: HomeAssistant,
-    appwrite_services: AppwriteServices,
-) -> None:
-    """Test function service execution with missing function id."""
-    service_name = appwrite_services._AppwriteServices__build_service_name()
-    service_data = {
-        FUNCTION_BODY: "test-body",
-    }
-
-    with pytest.raises(vol.error.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            service_name,
-            service_data,
-            blocking=True,
-            return_response=True,
-        )

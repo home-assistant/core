@@ -4,16 +4,16 @@ rules:
   appropriate-polling:
     status: exempt
     comment: |
-      This integration uses a push API. No polling required.
-  brands: todo
+      This integration does not use polling.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |

@@ -1,6 +1,6 @@
 {
   "services": {
-    "execute_function": {
+    "function": {
       "service": "mdi:function"
     }
   }

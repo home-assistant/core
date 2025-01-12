@@ -26,7 +26,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_appwrite_client():
     """Create a mock Appwrite client."""
-    return Mock()
+    mock = Mock()
+    mock.async_list_functions = Mock(return_value={"function_id": "function-id"})
+    return mock
 
 
 @pytest.fixture
@@ -40,6 +42,7 @@ def mock_config_entry() -> ConfigEntry:
             CONF_HOST: "http://test.appwrite.io",
             CONF_PROJECT_ID: "test-project",
             CONF_API_KEY: "test-api-key",
+            "functions": {"function_id": "function-id"},
         },
         source="test",
         options={},
@@ -56,13 +59,8 @@ def mock_config_entry() -> ConfigEntry:
 def mock_services_yaml() -> dict:
     """Create mock services.yaml content."""
     return {
-        "execute_function": {
+        "function": {
             "fields": {
-                "function_id": {
-                    "required": True,
-                    "example": "123456789",
-                    "selector": {"text": {}},
-                },
                 "function_body": {
                     "required": False,
                     "example": '{"key": "value"}',
@@ -87,7 +85,9 @@ async def appwrite_services(
 ) -> AppwriteServices:
     """Set up Appwrite services with all necessary mocks."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][mock_config_entry.entry_id] = mock_appwrite_client
+    hass.data[DOMAIN][mock_config_entry.entry_id] = {
+        "functions": {"function_id": "function-id"}
+    }
     mock_config_entry.runtime_data = mock_appwrite_client
 
     with (

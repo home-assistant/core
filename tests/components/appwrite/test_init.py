@@ -24,8 +24,6 @@ async def test_async_setup_entry_success(
 ) -> None:
     """Test setting up the Appwrite integration."""
     # Setup mock for validate_credentials to succeed
-    mock_appwrite_client.async_validate_credentials = Mock()
-
     with (
         patch(
             "homeassistant.components.appwrite.AppwriteClient",
@@ -41,7 +39,9 @@ async def test_async_setup_entry_success(
         # Verify data is stored correctly
         assert DOMAIN in hass.data
         assert mock_config_entry.entry_id in hass.data[DOMAIN]
-        assert hass.data[DOMAIN][mock_config_entry.entry_id] == mock_config_entry.data
+        assert hass.data[DOMAIN][mock_config_entry.entry_id] == dict(
+            mock_config_entry.data
+        )
 
         # Verify client is created and stored
         assert mock_config_entry.runtime_data == mock_appwrite_client
@@ -55,7 +55,7 @@ async def test_async_setup_entry_error(
 ) -> None:
     """Test setting up the Appwrite integration."""
     # Setup mock for validate_credentials to fail
-    mock_appwrite_client.async_validate_credentials = Mock(
+    mock_appwrite_client.async_list_functions = Mock(
         side_effect=AppwriteException("Auth failed")
     )
 

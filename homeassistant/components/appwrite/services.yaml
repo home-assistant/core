@@ -1,8 +1,5 @@
-execute_function:
+function:
   fields:
-    function_id:
-      example: "function-id"
-      required: true
     function_body:
       required: false
     function_path:

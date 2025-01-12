@@ -10,6 +10,7 @@ from appwrite.services.health import Health
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import slugify
 
 from .const import CONF_PROJECT_ID
 
@@ -55,6 +56,14 @@ class AppwriteClient:
             _LOGGER.error(ae.message)
             return False
         return True
+
+    def async_list_functions(self) -> dict:
+        """Retrieve list of functions."""
+        functions = Functions(self._appwrite_client)
+        function_list = {}
+        for function in functions.list()["functions"]:
+            function_list[slugify(function["$id"])] = function["$id"]
+        return function_list
 
     def async_execute_function(
         self,

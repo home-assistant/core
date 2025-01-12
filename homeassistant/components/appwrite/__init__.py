@@ -17,16 +17,20 @@ async def async_setup_entry(
 ) -> bool:
     """Save user data in Appwrite config entry and init services."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = config_entry.data
 
-    # Set runtime data
     appwrite_client = AppwriteClient(dict(config_entry.data))
 
     try:
-        appwrite_client.async_validate_credentials()
+        function_list = await hass.async_add_executor_job(
+            appwrite_client.async_list_functions
+        )
+        hass.data[DOMAIN][config_entry.entry_id] = dict(config_entry.data) | {
+            "functions": function_list
+        }
     except AppwriteException as ae:
         raise ConfigEntryAuthFailed("Invalid credentials") from ae
 
+    # Set runtime data
     config_entry.runtime_data = appwrite_client
 
     # Setup services

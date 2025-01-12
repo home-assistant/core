@@ -26,14 +26,10 @@
     }
   },
   "services": {
-    "execute_function": {
+    "function": {
       "name": "Execute Function",
       "description": "Trigger a function in Appwrite.",
       "fields": {
-        "function_id": {
-          "name": "Function ID",
-          "description": "The function id of the function to trigger."
-        },
         "function_body": {
           "name": "Function Body",
           "description": "The stringified json object which will be passed on to the function."
