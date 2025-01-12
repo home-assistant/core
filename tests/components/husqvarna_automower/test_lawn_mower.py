@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -82,7 +82,7 @@ async def test_lawn_mower_commands(
 
     getattr(
         mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    ).side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -142,7 +142,7 @@ async def test_lawn_mower_service_commands(
 
     getattr(
         mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    ).side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -196,7 +196,7 @@ async def test_lawn_mower_override_work_area_command(
 
     getattr(
         mock_automower_client.commands, aioautomower_command
-    ).side_effect = ApiException("Test error")
+    ).side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",

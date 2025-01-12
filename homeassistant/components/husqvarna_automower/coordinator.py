@@ -8,10 +8,10 @@ import logging
 from typing import TYPE_CHECKING
 
 from aioautomower.exceptions import (
-    ApiException,
-    AuthException,
+    ApiError,
+    AuthError,
     HusqvarnaWSServerHandshakeError,
-    TimeoutException,
+    HusqvarnaTimeoutError,
 )
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
@@ -56,9 +56,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.ws_connected = True
         try:
             return await self.api.get_status()
-        except ApiException as err:
+        except ApiError as err:
             raise UpdateFailed(err) from err
-        except AuthException as err:
+        except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
 
     @callback
@@ -83,7 +83,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "Failed to connect to websocket. Trying to reconnect: %s",
                 err,
             )
-        except TimeoutException as err:
+        except HusqvarnaTimeoutError as err:
             _LOGGER.debug(
                 "Failed to listen to websocket. Trying to reconnect: %s",
                 err,
