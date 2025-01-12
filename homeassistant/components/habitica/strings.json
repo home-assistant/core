@@ -3,6 +3,7 @@
     "todos": "To-Do's",
     "dailies": "Dailies",
     "config_entry_name": "Select character",
+    "task_name": "Task name",
     "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
@@ -166,6 +167,11 @@
         "name": "Daily reminders"
       }
     },
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name"
@@ -216,14 +222,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "todos": {
-        "name": "[%key:component::habitica::common::todos%]",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "dailys": {
-        "name": "[%key:component::habitica::common::dailies%]",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "habits": {
         "name": "Habits",
@@ -312,6 +310,26 @@
             "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
           }
         }
+      },
+      "eggs_total": {
+        "name": "Eggs",
+        "unit_of_measurement": "eggs"
+      },
+      "hatching_potions_total": {
+        "name": "Hatching potions",
+        "unit_of_measurement": "potions"
+      },
+      "food_total": {
+        "name": "Pet food",
+        "unit_of_measurement": "foods"
+      },
+      "saddle": {
+        "name": "Saddles",
+        "unit_of_measurement": "saddles"
+      },
+      "quest_scrolls": {
+        "name": "Quest scrolls",
+        "unit_of_measurement": "scrolls"
       }
     },
     "switch": {
@@ -403,10 +421,6 @@
     }
   },
   "issues": {
-    "deprecated_task_entity": {
-      "title": "The Habitica {task_name} sensor is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
-    },
     "deprecated_api_call": {
       "title": "The Habitica action habitica.api_call is deprecated",
       "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."
@@ -433,7 +447,7 @@
     },
     "cast_skill": {
       "name": "Cast a skill",
-      "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
+      "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -444,14 +458,14 @@
           "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
         },
         "task": {
-          "name": "Task name",
+          "name": "[%key:component::habitica::common::task_name%]",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
     },
     "accept_quest": {
       "name": "Accept a quest invitation",
-      "description": "Accept a pending invitation to a quest.",
+      "description": "Accepts a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -461,7 +475,7 @@
     },
     "reject_quest": {
       "name": "Reject a quest invitation",
-      "description": "Reject a pending invitation to a quest.",
+      "description": "Rejects a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -471,7 +485,7 @@
     },
     "leave_quest": {
       "name": "Leave a quest",
-      "description": "Leave the current quest you are participating in.",
+      "description": "Leaves the current quest you are participating in.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -481,7 +495,7 @@
     },
     "abort_quest": {
       "name": "Abort an active quest",
-      "description": "Terminate your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Terminates your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -491,7 +505,7 @@
     },
     "cancel_quest": {
       "name": "Cancel a pending quest",
-      "description": "Cancel a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Cancels a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -501,7 +515,7 @@
     },
     "start_quest": {
       "name": "Force-start a pending quest",
-      "description": "Begin the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
+      "description": "Begins the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -511,7 +525,7 @@
     },
     "score_habit": {
       "name": "Track a habit",
-      "description": "Increase the positive or negative streak of a habit to track its progress.",
+      "description": "Increases the positive or negative streak of a habit to track its progress.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -529,7 +543,7 @@
     },
     "score_reward": {
       "name": "Buy a reward",
-      "description": "Reward yourself and buy one of your custom rewards with gold earned by fulfilling tasks.",
+      "description": "Buys one of your custom rewards with gold earned by fulfilling tasks.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -543,7 +557,7 @@
     },
     "transformation": {
       "name": "Use a transformation item",
-      "description": "Use a transformation item from your Habitica character's inventory on a member of your party or yourself.",
+      "description": "Uses a transformation item from your Habitica character's inventory on a member of your party or yourself.",
       "fields": {
         "config_entry": {
           "name": "Select character",
@@ -556,6 +570,42 @@
         "target": {
           "name": "Target character",
           "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
+        }
+      }
+    },
+    "get_tasks": {
+      "name": "Get tasks",
+      "description": "Retrieves tasks from your Habitica character.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Choose the Habitica character to retrieve tasks from."
+        },
+        "type": {
+          "name": "Task type",
+          "description": "Filter tasks by type."
+        },
+        "priority": {
+          "name": "Difficulty",
+          "description": "Filter tasks by difficulty."
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "Select tasks by matching their name (or task ID)."
+        },
+        "tag": {
+          "name": "Tag",
+          "description": "Filter tasks that have one or more of the selected tags."
+        },
+        "keyword": {
+          "name": "Keyword",
+          "description": "Filter tasks by keyword, searching across titles, notes, and checklists."
+        }
+      },
+      "sections": {
+        "filter": {
+          "name": "Filter options",
+          "description": "Use the optional filters to narrow the returned tasks."
         }
       }
     }
@@ -575,6 +625,22 @@
         "spooky_sparkles": "Spooky sparkles",
         "seafoam": "Seafoam",
         "shiny_seed": "Shiny seed"
+      }
+    },
+    "type": {
+      "options": {
+        "daily": "Daily",
+        "habit": "Habit",
+        "todo": "To-do",
+        "reward": "Reward"
+      }
+    },
+    "priority": {
+      "options": {
+        "trivial": "Trivial",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
       }
     }
   }

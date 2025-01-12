@@ -2,8 +2,8 @@
 
 from fyta_cli.fyta_models import Plant
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FytaConfigEntry
@@ -20,7 +20,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
         self,
         coordinator: FytaCoordinator,
         entry: FytaConfigEntry,
-        description: SensorEntityDescription,
+        description: EntityDescription,
         plant_id: int,
     ) -> None:
         """Initialize the Fyta sensor."""

@@ -15,11 +15,13 @@ from homeassistant.components.heos import (
     async_unload_entry,
 )
 from homeassistant.components.heos.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_returns_true(
@@ -89,6 +91,37 @@ async def test_async_setup_entry_with_options_loads_platforms(
     assert controller.get_favorites.call_count == 1
     assert controller.get_input_sources.call_count == 1
     controller.disconnect.assert_not_called()
+
+
+async def test_async_setup_entry_auth_failure_starts_reauth(
+    hass: HomeAssistant,
+    config_entry_options: MockConfigEntry,
+    controller: Mock,
+) -> None:
+    """Test load with auth failure starts reauth, loads platforms."""
+    config_entry_options.add_to_hass(hass)
+
+    # Simulates what happens when the controller can't sign-in during connection
+    async def connect_send_auth_failure() -> None:
+        controller.is_signed_in = False
+        controller.signed_in_username = None
+        controller.dispatcher.send(
+            const.SIGNAL_HEOS_EVENT, const.EVENT_USER_CREDENTIALS_INVALID
+        )
+
+    controller.connect.side_effect = connect_send_auth_failure
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Assert entry loaded and reauth flow started
+    assert controller.connect.call_count == 1
+    assert controller.get_favorites.call_count == 0
+    controller.disconnect.assert_not_called()
+    assert config_entry_options.state is ConfigEntryState.LOADED
+    assert any(
+        config_entry_options.async_get_active_flows(hass, sources=[SOURCE_REAUTH])
+    )
 
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(

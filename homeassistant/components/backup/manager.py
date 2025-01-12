@@ -435,6 +435,7 @@ class BackupManager:
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
+                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
                 agent_errors[agent_ids[idx]] = result
                 continue
             if isinstance(result, Exception):
@@ -752,7 +753,7 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
+            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
 
         try:
@@ -800,12 +801,10 @@ class BackupManager:
         """Finish a backup."""
         if TYPE_CHECKING:
             assert self._backup_task is not None
+        backup_success = False
         try:
             written_backup = await self._backup_task
         except Exception as err:
-            self.async_on_backup_event(
-                CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
-            )
             if with_automatic_settings:
                 self._update_issue_backup_failed()
 
@@ -831,33 +830,15 @@ class BackupManager:
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
                 )
-            except BaseException:
-                self.async_on_backup_event(
-                    CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
-                )
-                raise  # manager or unexpected error
             finally:
-                try:
-                    await written_backup.release_stream()
-                except Exception:
-                    self.async_on_backup_event(
-                        CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
-                    )
-                    raise
+                await written_backup.release_stream()
             self.known_backups.add(written_backup.backup, agent_errors)
-            if agent_errors:
-                self.async_on_backup_event(
-                    CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
-                )
-            else:
+            if not agent_errors:
                 if with_automatic_settings:
                     # create backup was successful, update last_completed_automatic_backup
                     self.config.data.last_completed_automatic_backup = dt_util.now()
                     self.store.save()
-
-                self.async_on_backup_event(
-                    CreateBackupEvent(stage=None, state=CreateBackupState.COMPLETED)
-                )
+                backup_success = True
 
             if with_automatic_settings:
                 self._update_issue_after_agent_upload(agent_errors)
@@ -868,6 +849,14 @@ class BackupManager:
         finally:
             self._backup_task = None
             self._backup_finish_task = None
+            self.async_on_backup_event(
+                CreateBackupEvent(
+                    stage=None,
+                    state=CreateBackupState.COMPLETED
+                    if backup_success
+                    else CreateBackupState.FAILED,
+                )
+            )
             self.async_on_backup_event(IdleEvent())
 
     async def async_restore_backup(
@@ -1294,6 +1283,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
             tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            await async_add_executor_job(make_backup_dir, tar_file_path.parent)
             await async_add_executor_job(shutil.move, temp_file, tar_file_path)
         else:
             tar_file_path = temp_file
@@ -1386,7 +1376,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
 
         await self._hass.async_add_executor_job(_write_restore_file)
-        await self._hass.services.async_call("homeassistant", "restart", {})
+        await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
 
 def _generate_backup_id(date: str, name: str) -> str:

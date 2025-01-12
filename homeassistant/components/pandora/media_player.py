@@ -310,7 +310,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         station_lines = self._pianobar.before or ""
         _LOGGER.debug("Getting stations: %s", station_lines)
         self._attr_source_list = []
-        for line in station_lines.split("\r\n"):
+        for line in station_lines.splitlines():
             if match := re.search(r"\d+\).....(.+)", line):
                 station = match.group(1).strip()
                 _LOGGER.debug("Found station %s", station)

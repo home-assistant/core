@@ -238,7 +238,7 @@
     },
     "set": {
       "name": "Set",
-      "description": "Creates/Updates a user group.",
+      "description": "Creates/Updates a group.",
       "fields": {
         "object_id": {
           "name": "Object ID",
