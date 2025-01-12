@@ -42,36 +42,3 @@ class ACUnit:
     def manufacturer(self) -> str:
         """Return the manufacturer name."""
         return self._manufacturer
-
-
-class ACZone:
-    """Representation of an Air Conditioner Zone."""
-
-    def __init__(self, ac_unit, zone_number, name) -> None:
-        """Initialize the zone device."""
-        self._ac_unit = ac_unit
-        self._zone_number = zone_number
-        self._serial = f"zone_{self._zone_number}"
-        self._device_type = "Zone"
-        self._name = f"Zone {name}"
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._zone_number)},
-            "name": self._name,
-            "manufacturer": self._ac_unit.manufacturer,
-            "model": self._device_type,
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        ac_unit_entity_id = self._ac_unit.unique_id
-        return f"{ac_unit_entity_id}_{self._name.replace(' ', '_').lower()}"
-
-    @property
-    def zone_number(self) -> int:
-        """Return the zone number."""
-        return self._zone_number
